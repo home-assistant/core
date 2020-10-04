@@ -88,7 +88,7 @@ async def _remove_device(hass, mac):
     if device is None:
         return
 
-    _LOGGER.info("Removing tasmota device %s", mac)
+    _LOGGER.debug("Removing tasmota device %s", mac)
     device_registry.async_remove_device(device.id)
 
 
@@ -96,13 +96,14 @@ async def _update_device(hass, config_entry, config):
     """Add or update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = {"connections": {(CONNECTION_NETWORK_MAC, config[CONF_MAC])}}
-    device_info["manufacturer"] = config[CONF_MANUFACTURER]
-    device_info["model"] = config[CONF_MODEL]
-    device_info["name"] = config[CONF_NAME]
-    device_info["sw_version"] = config[CONF_SW_VERSION]
-
-    device_info["config_entry_id"] = config_entry_id
+    device_info = {
+    	"connections": {(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
+    	"manufacturer": config[CONF_MANUFACTURER],
+	    "model": config[CONF_MODEL],
+    	"name": config[CONF_NAME],
+    	"sw_version": config[CONF_SW_VERSION],
+	    "config_entry_id": config_entry_id,
+    }
     _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])
     device = device_registry.async_get_or_create(**device_info)
     hass.data[DEVICE_MACS][device.id] = config[CONF_MAC]

@@ -2,12 +2,13 @@
 import logging
 
 from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
-from homeassistant.components.tasmota.discovery import set_discovery_hash
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .discovery import TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash
+from .discovery import (
+    TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash, set_discovery_hash
+)
 
 DATA_MQTT = "mqtt"
 
@@ -43,7 +44,7 @@ class TasmotaAvailability(TasmotaEntity):
             )
         )
 
-    async def availability_discovery_update(self, config: dict):
+    async def availability_discovery_update(self, config: dict) -> None:
         """Handle updated discovery message."""
 
     @callback
@@ -76,7 +77,6 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
         self._discovery_update = discovery_update
-        self._remove_signal = None
         self._removed_from_hass = False
         super().__init__(**kwds)
 
@@ -95,7 +95,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             )
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
-                _LOGGER.info("Updating component: %s", self.entity_id)
+                _LOGGER.debug("Updating component: %s", self.entity_id)
                 await self._discovery_update(config)
             else:
                 # Unchanged payload: Ignore to avoid changing states
@@ -103,10 +103,12 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
 
         # Set in case the entity has been removed and is re-added, for example when changing entity_id
         set_discovery_hash(self.hass, self._discovery_hash)
-        self._remove_signal = async_dispatcher_connect(
-            self.hass,
-            TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*self._discovery_hash),
-            discovery_callback,
+        self.async_on_remove(
+        	async_dispatcher_connect(
+            	self.hass,
+	            TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*self._discovery_hash),
+    	        discovery_callback,
+        	)
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -118,7 +120,3 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         if not self._removed_from_hass:
             clear_discovery_hash(self.hass, self._discovery_hash)
             self._removed_from_hass = True
-
-        if self._remove_signal:
-            self._remove_signal()
-            self._remove_signal = None

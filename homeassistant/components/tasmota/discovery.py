@@ -82,7 +82,7 @@ async def async_start(
                         component, DOMAIN, unique_id
                     )
                     if entity_id:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Removing entity: %s %s", component, discovery_hash
                         )
                         entity_registry.async_remove(entity_id)
@@ -100,7 +100,7 @@ async def async_start(
                         tasmota_entity_config,
                     )
                 else:
-                    _LOGGER.info("Adding new entity: %s %s", component, discovery_hash)
+                    _LOGGER.debug("Adding new entity: %s %s", component, discovery_hash)
                     hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
                     tasmota_entity = tasmota_get_entity(

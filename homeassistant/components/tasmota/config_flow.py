@@ -36,13 +36,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             bad_prefix = False
             if self.show_advanced_options:
+				prefix = user_input[CONF_DISCOVERY_PREFIX]
                 try:
-                    prefix = user_input[CONF_DISCOVERY_PREFIX]
                     valid_subscribe_topic(f"{prefix}/#")
-                    data = user_input
                 except vol.Invalid:
                     errors["base"] = "invalid_discovery_topic"
                     bad_prefix = True
+                else:
+					data = user_input
             if not bad_prefix:
                 return self.async_create_entry(title="Tasmota", data=data)
 

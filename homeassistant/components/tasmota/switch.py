@@ -84,8 +84,7 @@ class TasmotaSwitch(
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
         await self._tasmota_entity.unsubscribe_topics()
-        await TasmotaAvailability.async_will_remove_from_hass(self)
-        await TasmotaDiscoveryUpdate.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
 
     @property
     def should_poll(self):
