@@ -162,6 +162,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_hyperion_url(self):
         """Return the URL of the Hyperion UI."""
+        # This is a guess at the web frontend URL for this client. We have no
+        # way of knowing that it is correct. Alternatives may be ask the user
+        # for the http port, to listen on zeroconf (we already have the JSON
+        # port, but not the http port), or to ask Hyperion via JSON for the
+        # network sessions.  However, as it is only used for approving new
+        # tokens, and as the user can just open it manually, the extra
+        # complexity may not be worth it.
         return f"http://{self._data[CONF_HOST]}:{const.DEFAULT_PORT_UI}"
 
     async def async_step_auth(
@@ -172,7 +179,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_auth_form()
 
         if user_input.get(CONF_CREATE_TOKEN):
-            # TODO: See if the UI port can be taken from Zeroconf?
             self._auth_id = client.generate_random_auth_id()
             return self.async_show_form(
                 step_id="create_token",
@@ -279,7 +285,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         #       'version': b'2.0.0-alpha.8'},
         #     'id': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
         #     'version': '2.0.0-alpha.8'}}
-
         data = {}
 
         # Intentionally uses the IP address field, as ".local" cannot
