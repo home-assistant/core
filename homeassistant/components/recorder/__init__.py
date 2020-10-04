@@ -381,9 +381,10 @@ class Recorder(threading.Thread):
                     continue
 
             try:
-                dbevent = Events.from_event(event)
                 if event.event_type == EVENT_STATE_CHANGED:
-                    dbevent.event_data = "{}"
+                    dbevent = Events.from_event(event, event_data="{}")
+                else:
+                    dbevent = Events.from_event(event)
                 self.event_session.add(dbevent)
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
