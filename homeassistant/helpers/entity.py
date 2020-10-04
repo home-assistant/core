@@ -456,7 +456,7 @@ class Entity(ABC):
         try:
             # pylint: disable=no-member
             if hasattr(self, "async_update"):
-                task = asyncio.create_task(self.async_update())  # type: ignore
+                task = self.hass.async_create_task(self.async_update())  # type: ignore
             elif hasattr(self, "update"):
                 task = self.hass.async_add_executor_job(self.update)  # type: ignore
             else:
@@ -466,18 +466,20 @@ class Entity(ABC):
                 await task
                 return
 
-            try:
-                await asyncio.wait_for(
-                    asyncio.shield(task), timeout=SLOW_UPDATE_WARNING
-                )
-            except asyncio.TimeoutError:
-                _LOGGER.warning(
-                    "Update of %s is taking over %s seconds",
-                    self.entity_id,
-                    SLOW_UPDATE_WARNING,
-                )
-                await task
+            done, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
 
+            if done:
+                done_result = list(done)[0]
+                if isinstance(done_result, Exception):
+                    raise done_result
+                return
+
+            _LOGGER.warning(
+                "Update of %s is taking over %s seconds",
+                self.entity_id,
+                SLOW_UPDATE_WARNING,
+            )
+            await task
         finally:
             self._update_staged = False
             if self.parallel_updates:
