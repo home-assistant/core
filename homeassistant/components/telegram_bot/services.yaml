@@ -30,8 +30,8 @@ send_message:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 send_photo:
@@ -70,8 +70,8 @@ send_photo:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 send_sticker:
@@ -107,8 +107,8 @@ send_sticker:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 send_video:
@@ -147,8 +147,8 @@ send_video:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 send_document:
@@ -187,8 +187,8 @@ send_document:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 send_location:
@@ -215,8 +215,8 @@ send_location:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
-    result_code:
-      description: 'The response result code of the sent message. In telegram_sent event data: {{trigger.event.data.result_code}}'
+    internal_request_id:
+      description: 'Internal ID of requests to send messages. In telegram_sent event data: {{trigger.event.data.internal_request_id}}'
       example: 123
 
 edit_message:
