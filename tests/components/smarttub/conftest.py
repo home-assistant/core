@@ -17,4 +17,8 @@ def config_data():
 @pytest.fixture
 def config_entry(config_data):
     """Create a mock config entry."""
-    return MockConfigEntry(domain=DOMAIN, data=config_data, options={},)
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        options={},
+    )

@@ -32,10 +32,12 @@ async def test_form(hass, mock_controller):
     with patch(
         "homeassistant.components.smarttub.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.smarttub.async_setup_entry", return_value=True,
+        "homeassistant.components.smarttub.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"email": "test-email", "password": "test-password"},
+            result["flow_id"],
+            {"email": "test-email", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
@@ -59,7 +61,8 @@ async def test_form_invalid_auth(hass, mock_controller):
     mock_controller.get_account_id.return_value = None
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"email": "test-email", "password": "test-password"},
+        result["flow_id"],
+        {"email": "test-email", "password": "test-password"},
     )
 
     assert result2["type"] == "form"
@@ -68,13 +71,18 @@ async def test_form_invalid_auth(hass, mock_controller):
 
 async def test_form_options(hass, mock_controller, config_data):
     """Test config flow options."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=config_data, options={},)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        options={},
+    )
     config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.smarttub.async_setup", return_value=True
     ), patch(
-        "homeassistant.components.smarttub.async_setup_entry", return_value=True,
+        "homeassistant.components.smarttub.async_setup_entry",
+        return_value=True,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -86,7 +94,8 @@ async def test_form_options(hass, mock_controller, config_data):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
