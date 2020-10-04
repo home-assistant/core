@@ -38,7 +38,8 @@
           "sunrise_time": "sunrise_time, in 'HH:MM:SS' format",
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format",
-          "take_over_control": "take_over_control, (beta feature) if manually adjusting the lights when they are already on",
+          "take_over_control": "take_over_control, if manually adjusting the lights when they are already on",
+          "detect_non_ha_changes": "detect_non_ha_changes, detect changes to lights made outside of HA (calls 'homeassistant.update_entity'!)",
           "transition": "transition, in seconds"
         }
       }

@@ -13,6 +13,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import astral
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -66,6 +70,7 @@ from .const import (
     CONF_ADAPT_BRIGHTNESS,
     CONF_ADAPT_COLOR_TEMP,
     CONF_ADAPT_RGB_COLOR,
+    CONF_DETECT_NON_HA_CHANGES,
     CONF_INITIAL_TRANSITION,
     CONF_INTERVAL,
     CONF_LIGHTS,
@@ -240,6 +245,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         self._adapt_brightness = data[CONF_ADAPT_BRIGHTNESS]
         self._adapt_color_temp = data[CONF_ADAPT_COLOR_TEMP]
         self._adapt_rgb_color = data[CONF_ADAPT_RGB_COLOR]
+        self._detect_non_ha_changes = data[CONF_DETECT_NON_HA_CHANGES]
         self._initial_transition = data[CONF_INITIAL_TRANSITION]
         self._interval = data[CONF_INTERVAL]
         self._only_once = data[CONF_ONLY_ONCE]
@@ -454,8 +460,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
         if (
             self._take_over_control
+            and self._detect_non_ha_changes
             and not force
-            and self.turn_on_off_listener.significant_change(
+            and await self.turn_on_off_listener.significant_change(
                 light,
                 self._adapt_brightness,
                 self._adapt_color_temp,
@@ -859,7 +866,7 @@ class TurnOnOffListener:
             )
         return manually_controlled
 
-    def significant_change(
+    async def significant_change(
         self, light, adapt_brightness, adapt_color_temp, adapt_rgb_color, threshold=5
     ):
         """Has the light made a significant change since last update.
@@ -873,6 +880,12 @@ class TurnOnOffListener:
             return False
         changed = False
         service_data = self.last_service_data[light]
+        await self.hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: light},
+            blocking=True,
+        )
         attributes = self.hass.states.get(light).attributes
         if (
             adapt_brightness
@@ -913,6 +926,7 @@ class TurnOnOffListener:
                         light,
                     )
                     changed = True
+                    break
 
         if (ATTR_RGB_COLOR in service_data and ATTR_RGB_COLOR not in attributes) or (
             ATTR_COLOR_TEMP in service_data and ATTR_COLOR_TEMP not in attributes
