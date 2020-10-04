@@ -2,7 +2,7 @@
     "config": {
         "abort": {},
         "error": {
-            "connection_error": "Unable to connect to OWServer.",
+            "cannot_connect": "Unable to connect to OWServer.",
             "invalid_path": "Directory not found."
         },
         "step": {
