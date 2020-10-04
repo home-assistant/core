@@ -38,8 +38,8 @@
           "sunrise_time": "sunrise_time, in 'HH:MM:SS' format",
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format",
-          "take_over_control": "take_over_control, if manually adjusting the lights when they are already on",
-          "detect_non_ha_changes": "detect_non_ha_changes, detect changes to lights made outside of HA (calls 'homeassistant.update_entity'!)",
+          "take_over_control": "take_over_control, if anything but Adaptive Lighting calls 'light.turn_on' when a light is already on, stop adapting that light until it (or the switch) toggles off -> on.",
+          "detect_non_ha_changes": "detect_non_ha_changes, detects all >5% changes made to the lights (also outside of HA), requires 'take_over_control' to be enabled (calls 'homeassistant.update_entity' every 'interval'!)",
           "transition": "transition, in seconds"
         }
       }
