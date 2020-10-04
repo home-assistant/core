@@ -38,6 +38,7 @@ TEST_EVENT = {
     "kind": "calendar#event",
     "created": "2016-06-23T16:37:57.000Z",
     "transparency": "transparent",
+    "visibility": "default",
     "updated": "2016-06-24T01:57:21.045Z",
     "reminders": {"useDefault": True},
     "organizer": {
@@ -141,12 +142,15 @@ async def test_all_day_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event["summary"],
+        "status": event["status"],
         "all_day": True,
         "offset_reached": False,
         "start_time": week_from_today.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
@@ -170,12 +174,15 @@ async def test_future_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event["summary"],
+        "status": event["status"],
         "all_day": False,
         "offset_reached": False,
         "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
@@ -199,12 +206,15 @@ async def test_in_progress_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event["summary"],
+        "status": event["status"],
         "all_day": False,
         "offset_reached": False,
         "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
@@ -230,12 +240,15 @@ async def test_offset_in_progress_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event_summary,
+        "status": event["status"],
         "all_day": False,
         "offset_reached": True,
         "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
@@ -262,12 +275,15 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event_summary,
+        "status": event["status"],
         "all_day": True,
         "offset_reached": True,
         "start_time": tomorrow.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
@@ -294,12 +310,15 @@ async def test_all_day_offset_event(hass, mock_next_event):
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
         "message": event_summary,
+        "status": event["status"],
         "all_day": True,
         "offset_reached": False,
         "start_time": tomorrow.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "transparency": event["transparency"],
+        "visibility": event["visibility"],
     }
 
 
