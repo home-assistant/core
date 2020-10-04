@@ -65,6 +65,7 @@
                 "data": {
                     "modem_type": "Typ vu Modem."
                 },
+                "description": "Insteon Modem Typ auswielen.",
                 "title": "Insteon"
             }
         }

@@ -26,7 +26,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Scan Intervall (sekonnen)"
-                }
+                },
+                "description": "Plugwise Optioune \u00e4nneren"
             }
         }
     }

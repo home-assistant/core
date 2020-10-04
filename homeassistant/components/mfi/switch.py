@@ -70,11 +70,6 @@ class MfiSwitch(SwitchEntity):
         self._target_state = None
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def unique_id(self):
         """Return the unique ID of the device."""
         return self._port.ident

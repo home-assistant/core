@@ -80,7 +80,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         try:
             await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
@@ -152,7 +152,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         try:
             await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_hassio_form(errors)
 
         return self.async_create_entry(

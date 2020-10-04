@@ -1333,6 +1333,10 @@ async def test_referenced_entities(hass):
                     "data": {"entity_id": ["light.service_list"]},
                 },
                 {
+                    "service": "test.script",
+                    "data": {"entity_id": "{{ 'light.service_template' }}"},
+                },
+                {
                     "condition": "state",
                     "entity_id": "sensor.condition",
                     "state": "100",

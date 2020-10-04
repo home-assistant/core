@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 
 from .const import CONF_API_KEY, DOMAIN
+from .learning_storage import GoveeLearningStorage
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api_key = config[CONF_API_KEY]
 
     # Setup connection with devices/cloud
-    hub = await Govee.create(api_key)
+    hub = await Govee.create(api_key, learning_storage=GoveeLearningStorage(hass.config.config_dir))
     # keep reference for disposing
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["hub"] = hub

@@ -850,7 +850,7 @@ class Script:
 
                 entity_ids = data.get(ATTR_ENTITY_ID)
 
-                if entity_ids is None:
+                if entity_ids is None or isinstance(entity_ids, template.Template):
                     continue
 
                 if isinstance(entity_ids, str):

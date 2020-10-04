@@ -79,7 +79,7 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
                     )
             return device_states
         except Exception as ex:
-            raise UpdateFailed("Exception on getting states: {ex}") from ex
+            raise UpdateFailed(f"Exception on getting states: {ex}") from ex
 
 
 class GoveeLightEntity(LightEntity):
@@ -116,10 +116,6 @@ class GoveeLightEntity(LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
-
-    # async def _async_update(self):
-    #     """Get state of the led strip."""
-    #     return await self._hub.get_state(self._device)
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -186,6 +182,11 @@ class GoveeLightEntity(LightEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._device.power_state
+
+    @property
+    def assumed_state(self):
+        """Returns if the state is assumed, or got from api."""
+        return self._device.source == "history"
 
     @property
     def available(self):

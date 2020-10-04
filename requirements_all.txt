@@ -221,7 +221,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.3
+aioshelly==0.3.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -315,7 +315,7 @@ axis==37
 azure-eventhub==5.1.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.1
+azure-servicebus==0.50.3
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -456,6 +456,9 @@ coronavirus==1.1.1
 # homeassistant.components.crimereports
 crimereports==1.0.1
 
+# homeassistant.components.govee
+dacite==1.5.1
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -481,10 +484,10 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.9.4
+denonavr==0.9.5
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.13.0
+devolo-home-control-api==0.15.0
 
 # homeassistant.components.directv
 directv==0.3.0
@@ -690,7 +693,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee
-govee-api-laggat==0.1.14
+govee-api-laggat==0.1.21
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.5.1
@@ -756,7 +759,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200918.2
+home-assistant-frontend==20201001.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1119,7 +1122,7 @@ plexapi==4.1.1
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.11
+plexwebsocket==0.0.12
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1214,7 +1217,7 @@ pyHS100==0.3.5.1
 pyMetno==0.8.1
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.25
+pyRFXtrx==0.26
 
 # homeassistant.components.switchmate
 # pySwitchmate==0.4.6
@@ -1404,10 +1407,10 @@ pyheos==0.6.0
 pyhik==0.2.7
 
 # homeassistant.components.hive
-pyhiveapi==0.2.20.1
+pyhiveapi==0.2.20.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.68
+pyhomematic==0.1.70
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1449,7 +1452,7 @@ pyitachip2ir==0.0.7
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.2.0
+pykodi==0.2.1
 
 # homeassistant.components.kwb
 pykwb==0.0.8
@@ -1476,7 +1479,7 @@ pylitejet==0.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.6.1
+pylutron-caseta==0.7.0
 
 # homeassistant.components.lutron
 pylutron==0.2.5
@@ -1671,7 +1674,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.33
+pysonos==0.0.34
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1849,7 +1852,7 @@ pyvera==0.3.10
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==1.1.0
+pyvesync==1.2.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.56
@@ -1985,7 +1988,7 @@ sense-hat==2.2.0
 sense_energy==0.8.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.17.8
+sentry-sdk==0.18.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2003,7 +2006,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.3.3
+simplisafe-python==9.4.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
@@ -2111,7 +2114,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.2.5
+surepy==0.2.6
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
@@ -2280,7 +2283,7 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.14.4
+xknx==0.15.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2311,7 +2314,7 @@ zengge==0.2
 zeroconf==0.28.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.44
+zha-quirks==0.0.45
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2332,10 +2335,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.0
+zigpy-znp==0.2.1
 
 # homeassistant.components.zha
-zigpy==0.24.3
+zigpy==0.25.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0

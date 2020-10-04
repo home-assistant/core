@@ -3,7 +3,11 @@
     "step": {
       "init": {
         "title": "OpenTherm Gateway",
-        "data": { "name": "Name", "device": "Path or URL", "id": "ID" }
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "device": "Path or URL",
+          "id": "ID"
+        }
       }
     },
     "error": {
