@@ -55,6 +55,8 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import MagicMock, patch
+
 PLATFORM = "xiaomi_miio"
 
 # calls made when device status is requested
@@ -70,7 +72,7 @@ STATUS_CALLS = [
 @pytest.fixture(name="mock_mirobo_is_got_error")
 def mirobo_is_got_error_fixture():
     """Mock mock_mirobo."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = False
     mock_vacuum.status().fanspeed = 38
@@ -98,21 +100,19 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.dnd_status().start = time(hour=22, minute=0)
     mock_vacuum.dnd_status().end = time(hour=6, minute=0)
 
-    mock_timer_1 = mock.MagicMock()
+    mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
     mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
-    mock_timer_2 = mock.MagicMock()
+    mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
     mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -135,14 +135,12 @@ new_fanspeeds = {
 @pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
 def mirobo_old_speeds_fixture(request):
     """Fixture for testing both types of fanspeeds."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().battery = 32
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -150,7 +148,7 @@ def mirobo_old_speeds_fixture(request):
 @pytest.fixture(name="mock_mirobo_is_on")
 def mirobo_is_on_fixture():
     """Mock mock_mirobo."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = True
     mock_vacuum.status().fanspeed = 99
@@ -176,21 +174,19 @@ def mirobo_is_on_fixture():
     mock_vacuum.status().state_code = 5
     mock_vacuum.dnd_status().enabled = False
 
-    mock_timer_1 = mock.MagicMock()
+    mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
     mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
-    mock_timer_2 = mock.MagicMock()
+    mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
     mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -198,11 +194,9 @@ def mirobo_is_on_fixture():
 @pytest.fixture(name="mock_mirobo_errors")
 def mirobo_errors_fixture():
     """Mock mock_mirobo_errors to simulate a bad vacuum status request."""
-    mock_vacuum = mock.MagicMock()
+    mock_vacuum = MagicMock()
     mock_vacuum.status.side_effect = OSError()
-    with mock.patch(
-        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
-    ) as mock_vaccum_cls:
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
         mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -463,7 +457,7 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
         {"entity_id": entity_id, "fan_speed": "invent"},
         blocking=True,
     )
-    assert "ERROR" in caplog.text
+    assert "Fan speed step not recognized" in caplog.text
 
 
 async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
