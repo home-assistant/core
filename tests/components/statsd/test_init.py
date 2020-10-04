@@ -1,21 +1,22 @@
 """The tests for the StatsD feeder."""
-import unittest
 from unittest import mock
 
 import pytest
+import statsd as statsdlib
 import voluptuous as vol
 
 import homeassistant.components.statsd as statsd
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 import homeassistant.core as ha
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import MagicMock
 
 
 @pytest.fixture
 def mock_client():
-    with patch("statsd.StatsClient") as mock_client:
+    """Pytest fixture for statsd library."""
+    with mock.patch("statsd.StatsClient") as mock_client:
         yield mock_client.return_value
 
 
@@ -29,22 +30,25 @@ def test_invalid_config():
         statsd.CONFIG_SCHEMA(config)
 
 
-async def test_statsd_setup_full(hass, mock_client):
+async def test_statsd_setup_full(hass):
     """Test setup with all data."""
     config = {"statsd": {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
     hass.bus.listen = MagicMock()
-    assert await async_setup_component(hass, statsd.DOMAIN, config)
+    with mock.patch.object(
+        statsdlib.StatsClient, "__init__", return_value=None
+    ) as mock_init:
+        assert await async_setup_component(hass, statsd.DOMAIN, config)
 
-    for attr in dir(mock_client):
-        print("mock_client.{} = {!r}".format(attr, getattr(mock_client, attr)))
-    assert mock_client.call_count == 1
-    assert mock_client.call_args == mock.call(host="host", port=123, prefix="foo")
+        for attr in dir(mock_client):
+            print("mock_client.{} = {!r}".format(attr, getattr(mock_client, attr)))
+        assert mock_init.call_count == 1
+        assert mock_init.call_args == mock.call(host="host", port=123, prefix="foo")
 
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
 
 
-async def test_statsd_setup_defaults(hass, mock_client):
+async def test_statsd_setup_defaults(hass):
     """Test setup with defaults."""
     config = {"statsd": {"host": "host"}}
 
@@ -52,10 +56,13 @@ async def test_statsd_setup_defaults(hass, mock_client):
     config["statsd"][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
     hass.bus.listen = MagicMock()
-    assert await async_setup_component(hass, statsd.DOMAIN, config)
+    with mock.patch.object(
+        statsdlib.StatsClient, "__init__", return_value=None
+    ) as mock_init:
+        assert await async_setup_component(hass, statsd.DOMAIN, config)
 
-    assert mock_client.call_count == 1
-    assert mock_client.call_args == mock.call(host="host", port=8125, prefix="hass")
+        assert mock_init.call_count == 1
+        assert mock_init.call_args == mock.call(host="host", port=8125, prefix="hass")
     assert hass.bus.listen.called
 
 
