@@ -58,7 +58,7 @@ def cached_event_message(iden: int, event: Event) -> str:
     all getting many of the same events (mostly state changed)
     we can avoid serializing the same data for each connection.
     """
-    return message_to_json(event_message(iden, event.as_dict()))
+    return message_to_json(event_message(iden, event))
 
 
 def message_to_json(message: Any) -> str:
