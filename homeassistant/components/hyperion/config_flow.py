@@ -8,7 +8,7 @@ from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -16,6 +16,7 @@ from .const import (
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
     CONF_INSTANCE,
+    CONF_INSTANCE_NAME,
     DEFAULT_ORIGIN,
     DOMAIN,
 )
@@ -23,9 +24,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
+#     +-----------------------+
+#     |Step: Zeroconf         |
+# --->|                       |
+#     |Input: <zeroconf data> |
+#     +-----------------------+
+#           |
+#           |
+#           v
 #     +----------------+
 #     |Step: user      |
-#     |                |
+# --->|                |
 #     |Input: host/port|
 #     +----------------+
 #           |
@@ -56,14 +65,19 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |                   |
 #           v                   |
 #     +----------------+        |
-#     |Form: Instance  |        |
+#     |Step: Instance  |        |
 #     |                |<-------+
 #     |Input: instance |
 #     +----------------+
 #           |
 #           v
 #     +----------------+
-#     |Step: Final     |
+#     |Step: Confirm   |
+#     +----------------+
+#           |
+#           v
+#     +----------------+
+#     |    Create!     |
 #     +----------------+
 
 
@@ -79,6 +93,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data: Optional[Dict[str, Any]] = None
         self._request_token_task = None
         self._auth_id = None
+        self._instances = {}
 
     async def _create_and_connect_hyperion_client(
         self, raw=False
@@ -175,7 +190,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._show_instance_form_if_necessary()
 
     async def async_step_create_token(
-        self, user_input: Optional[ConfigType] = None
+        self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Send a request for a new token."""
         # Cancel the request token task if it's already running, then re-create it.
@@ -191,7 +206,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token_external(
-        self, user_input: Optional[ConfigType] = None
+        self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Await completion of the request for a new token."""
         if self._request_token_task:
@@ -206,7 +221,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_external_step_done(next_step_id="create_token_fail")
 
     async def async_step_create_token_success(
-        self, user_input: Optional[ConfigType] = None
+        self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Create an entry after successful token creation."""
         # Test the token.
@@ -217,15 +232,20 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._show_instance_form_if_necessary()
 
     async def async_step_create_token_fail(
-        self, user_input: Optional[ConfigType] = None
+        self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Show an error on the auth form."""
         return self._show_auth_form({CONF_BASE: "auth_new_token_not_granted_error"})
 
-    async def async_step_final(
+    async def async_step_instance(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Show the instance form if necessary."""
+        # Zeroconf flows will run this step without user info, fetch the
+        # required input via the instance dialog.
+        if user_input is None:
+            return await self._show_instance_form_if_necessary()
+
         self._data[CONF_INSTANCE] = self._instances[user_input.get(CONF_INSTANCE)]
 
         # Test a full connection.
@@ -240,14 +260,12 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(hyperion_id)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+        return self._show_confirm_form()
 
     async def async_step_zeroconf(
-        self, user_input: Optional[ConfigType] = None
+        self, discovery_info: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by zeroconf."""
-        _LOGGER.error("Zeroconf %s", user_input)
-        # Hostname is format: hyperion.local.
 
         # Sample data provided by Zeroconf: {
         #   'host': '192.168.0.1',
@@ -267,12 +285,20 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Intentionally uses the IP address field, as ".local" cannot
         # be resolved by Home Assistant Core in Docker.
         # See related: https://github.com/home-assistant/core/issues/38537
-        data[CONF_HOST] = user_input["host"]
-        data[CONF_PORT] = user_input["port"]
+        data[CONF_HOST] = discovery_info["host"]
+        data[CONF_PORT] = discovery_info["port"]
         # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
         # data[const.KEY_ID] = user_input["properties"]["id"]
 
         return await self.async_step_user(user_input=data)
+
+    async def async_step_confirm(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Get final confirmation before entry creation."""
+        if user_input is None:
+            return self._show_confirm_form()
+        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
@@ -307,7 +333,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hc = await self._create_and_connect_hyperion_client()
         if not hc:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-        self._instances = {}
         for instance in hc.instances:
             if (
                 instance.get(const.KEY_RUNNING, False)
@@ -318,12 +343,11 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     const.KEY_INSTANCE
                 )
         await hc.async_client_disconnect()
-
         if not self._instances:
             return self.async_abort(reason="no_running_instances")
         elif len(self._instances) > 1:
             return self.async_show_form(
-                step_id="final",
+                step_id="instance",
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_INSTANCE): vol.In(
@@ -332,6 +356,26 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 ),
             )
-        return await self.async_step_final(
+        return await self.async_step_instance(
             user_input={CONF_INSTANCE: next(iter(self._instances.keys()))}
+        )
+
+    def _show_confirm_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+        """Show the confirmation form to the user."""
+        instance_name = None
+        for instance in self._instances:
+            if self._instances[instance] == self._data[CONF_INSTANCE]:
+                instance_name = instance
+                break
+        assert instance_name is not None
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={
+                CONF_HOST: self._data[CONF_HOST],
+                CONF_PORT: self._data[CONF_PORT],
+                CONF_INSTANCE: self._data[CONF_INSTANCE],
+                CONF_INSTANCE_NAME: instance_name,
+                CONF_ID: self.unique_id,
+            },
         )

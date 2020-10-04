@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Hyperion Ambilight: {serial_number}",
+    "flow_title": "Hyperion Ambilight",
     "step": {
       "user": {
         "description": "Set up your Hyperion Ambilight with Home Assistant",
@@ -23,9 +23,9 @@
       "create_token_external": {
         "title": "Accept new token in Hyperion UI"
       },
-      "zeroconf_confirm": {
-        "description": "Do you want to add the Hyperion Ambilight with unique id `{serial_number}` to Home Assistant?",
-        "title": "Discovered Hyperion Ambilight device"
+      "confirm": {
+        "description": "Do you want to add this Hyperion Ambilight to Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**Instance:** {instance_name} ({instance})\n**ID**: {id}",
+        "title": "Confirm addition of Hyperion Ambilight device"
       },
       "instance": {
         "description": "Select a Hyperion instance",
