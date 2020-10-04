@@ -1,10 +1,8 @@
 """Tests for 1-Wire config flow."""
 from homeassistant import config_entries
 from homeassistant.components import onewire
-from homeassistant.components.onewire.const import CONF_TYPE_SYSBUS
+from homeassistant.components.onewire.const import CONF_TYPE_SYSBUS, DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-
-from homeassistant.components.onewire.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
