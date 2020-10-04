@@ -485,7 +485,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             cmd = "add"
 
         if media_type == MEDIA_TYPE_MUSIC:
-            await self._player.async_load_url(media_id)
+            await self._player.async_load_url(media_id, cmd)
             return
 
         if media_type == MEDIA_TYPE_PLAYLIST:
