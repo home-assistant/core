@@ -451,6 +451,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_color(self, render):
         """Update the hs_color from the template."""
+        h_str = s_str = None
         if isinstance(render, str):
             if render in ("None", ""):
                 self._color = None
@@ -458,7 +459,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
             )
-        else:
+        elif isinstance(render, (set, list, tuple)) and len(render) == 2:
             h_str, s_str = render
 
         if (
