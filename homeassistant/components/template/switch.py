@@ -136,7 +136,16 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         if isinstance(result, TemplateError):
             self._state = None
             return
-        self._state = str(result).lower() in ("true", STATE_ON)
+
+        if isinstance(result, bool):
+            self._state = result
+            return
+
+        if isinstance(result, str):
+            self._state = result.lower() in ("true", STATE_ON)
+            return
+
+        self._state = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
