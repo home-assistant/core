@@ -9,7 +9,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 from .const import (  # pylint: disable=unused-import
-    CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_HOST,
