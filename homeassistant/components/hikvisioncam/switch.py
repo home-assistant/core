@@ -69,11 +69,6 @@ class HikvisionMotionSwitch(SwitchEntity):
         self._state = STATE_OFF
 
     @property
-    def should_poll(self):
-        """Poll for status regularly."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return self._name
