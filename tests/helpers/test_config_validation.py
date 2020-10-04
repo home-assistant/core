@@ -32,22 +32,10 @@ def test_boolean():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in (
-        "true",
-        "On",
-        "1",
-        "YES",
-        "   true  ",
-        "enable",
-        1,
-        50,
-        True,
-        0.1,
-        "0.1",
-    ):
+    for value in ("true", "On", "1", "YES", "   true  ", "enable", 1, 50, True, 0.1):
         assert schema(value)
 
-    for value in ("false", "Off", "0", "NO", "disable", 0, False, "0.00"):
+    for value in ("false", "Off", "0", "NO", "disable", 0, False):
         assert not schema(value)
 
 
@@ -175,28 +163,6 @@ def test_entity_ids():
         ["invalid_entity"],
         ["sensor.light", "sensor_invalid"],
         ["sensor.light,sensor_invalid"],
-    )
-    for value in options:
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    options = ([], ["sensor.light"], "sensor.light")
-    for value in options:
-        schema(value)
-
-    assert schema("sensor.LIGHT, light.kitchen ") == ["sensor.light", "light.kitchen"]
-
-
-def test_glob_entity_ids():
-    """Test entity ID validation with globs."""
-    schema = vol.Schema(cv.glob_entity_ids)
-
-    options = (
-        "invalid_entity",
-        "sensor.light,sensor_*",
-        ["invalid_entity"],
-        ["sensor.light", "sensor_[i]nvalid"],
-        ["sensor.l[!o]ght,sensor_invalid"],
     )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):

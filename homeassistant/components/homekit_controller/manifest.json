@@ -9,7 +9,7 @@
   "zeroconf": [
     "_hap._tcp.local."
   ],
-  "dependencies": [
+  "after_dependencies": [
     "zeroconf"
   ],
   "codeowners": [

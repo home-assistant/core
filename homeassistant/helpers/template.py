@@ -29,7 +29,7 @@ from homeassistant.const import (
     MATCH_ALL,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, State, callback, split_entity_id, valid_entity_id
+from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, location as loc_helper
 from homeassistant.helpers.frame import report
@@ -221,17 +221,6 @@ class RenderInfo:
         if self.exception is not None:
             raise self.exception
         return self._result
-
-    @callback
-    def event_triggers(self, event: Event) -> bool:
-        """Determine if a template should be re-rendered from an event."""
-        entity_id = event.data.get(ATTR_ENTITY_ID)
-        return (
-            self.filter(entity_id)
-            or event.data.get("new_state") is None
-            or event.data.get("old_state") is None
-            and self.filter_lifecycle(entity_id)
-        )
 
     def _freeze_static(self) -> None:
         self.is_static = True
