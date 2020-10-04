@@ -44,12 +44,6 @@ class HarmonyActivitySwitch(SwitchEntity):
         """Return the unique id."""
         return f"{self._device.unique_id}-{self._activity}"
 
-    @property
-    def should_poll(self):
-        """Return the fact that we should not be polled."""
-        # TODO
-        return True
-
     # TODO private variables
     @property
     def is_on(self):
