@@ -43,6 +43,7 @@ DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
+EVENT_SEND_UPDATES = "send_updates"
 EVENT_DESCRIPTION = "description"
 EVENT_END_CONF = "end"
 EVENT_END_DATE = "end_date"
@@ -55,6 +56,11 @@ EVENT_START_DATE = "start_date"
 EVENT_START_DATETIME = "start_date_time"
 EVENT_SUMMARY = "summary"
 EVENT_TYPES_CONF = "event_types"
+EVENT_LOCATION = "location"
+EVENT_RECURRENCE = "recurrence"
+EVENT_STATUS = "status"
+EVENT_TRANSPARENCY = "transparency"
+EVENT_VISIBILITY = "visibility"
 
 NOTIFICATION_ID = "google_calendar_notification"
 NOTIFICATION_TITLE = "Google Calendar Setup"
@@ -117,12 +123,26 @@ ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
+        vol.Optional(EVENT_STATUS, default="confirmed"): vol.In(
+            ["confirmed", "tentative", "cancelled"]
+        ),
+        vol.Optional(EVENT_SEND_UPDATES, default="none"): vol.In(
+            ["all", "externalOnly", "none"]
+        ),
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
         vol.Exclusive(EVENT_START_DATE, EVENT_START_CONF): cv.date,
         vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
         vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
         vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
         vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
+        vol.Optional(EVENT_LOCATION, default=""): cv.string,
+        vol.Optional(EVENT_RECURRENCE, default=[]): cv.ensure_list_csv,
+        vol.Optional(EVENT_TRANSPARENCY, default="opaque"): vol.In(
+            ["opaque", "transparent"]
+        ),
+        vol.Optional(EVENT_VISIBILITY, default="default"): vol.In(
+            ["default", "public", "private"]
+        ),
     }
 )
 
@@ -302,11 +322,20 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
 
         event = {
             "summary": call.data[EVENT_SUMMARY],
+            "status": call.data[EVENT_STATUS],
             "description": call.data[EVENT_DESCRIPTION],
             "start": start,
             "end": end,
+            "location": call.data[EVENT_LOCATION],
+            "recurrence": call.data[EVENT_RECURRENCE],
+            "transparency": call.data[EVENT_TRANSPARENCY],
+            "visibility": call.data[EVENT_VISIBILITY],
         }
-        service_data = {"calendarId": call.data[EVENT_CALENDAR_ID], "body": event}
+        service_data = {
+            "calendarId": call.data[EVENT_CALENDAR_ID],
+            "send_updates": call.data[EVENT_SEND_UPDATES],
+            "body": event,
+        }
         event = service.events().insert(**service_data).execute()
 
     hass.services.register(
