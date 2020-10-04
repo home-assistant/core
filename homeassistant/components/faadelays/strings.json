@@ -1,0 +1,18 @@
+{
+  "title": "FAA Delays",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id": "Airport"
+        }
+      }
+    },
+    "error": {
+      "invalid_airport": "Airport code is not valid"
+    },
+    "abort": {
+      "already_configured": "This airport is already configured."
+    }
+  }
+}
