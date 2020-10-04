@@ -13,12 +13,11 @@
       }
     },
     "error": {
-      "name_exists": "Name already exists",
-      "wrong_credentials": "Wrong username or password",
-      "cannot_connect": "Unable to Connect to host"
+      "wrong_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "Host is already configured."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "options": {
