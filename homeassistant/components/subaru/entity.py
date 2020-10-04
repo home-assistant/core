@@ -1,16 +1,16 @@
 """Base class for all Subaru Entities."""
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN, ICONS, VEHICLE_NAME, VEHICLE_VIN
 
 
-class SubaruEntity(Entity):
+class SubaruEntity(CoordinatorEntity):
     """Representation of a Subaru Entity."""
 
     def __init__(self, vehicle_info, coordinator):
         """Initialize the Subaru Entity."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.car_name = vehicle_info[VEHICLE_NAME]
         self.vin = vehicle_info[VEHICLE_VIN]
         self.title = "entity"
@@ -31,11 +31,6 @@ class SubaruEntity(Entity):
         return ICONS.get(self.title)
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def device_info(self):
         """Return the device_info of the device."""
         return {
@@ -48,13 +43,3 @@ class SubaruEntity(Entity):
     def available(self):
         """Return if entity is available."""
         return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await self.coordinator.async_request_refresh()

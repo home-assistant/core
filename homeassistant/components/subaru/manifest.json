@@ -4,9 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",
   "requirements": ["subarulink==0.3.6"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@G-Two"]
 }

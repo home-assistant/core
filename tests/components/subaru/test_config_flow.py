@@ -34,7 +34,7 @@ TEST_PIN = "1234"
 
 
 async def test_form(hass):
-    """Test we get the form."""
+    """Test we get the form and a normal login is successful."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -45,7 +45,10 @@ async def test_form(hass):
     with patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_connect, patch(
+        "homeassistant.components.subaru.config_flow.SubaruAPI.test_pin",
+        return_value=True,
+    ) as mock_test_pin:
         device_id = int(datetime.now().timestamp())
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -61,10 +64,49 @@ async def test_form(hass):
     assert result2["data"][CONF_USERNAME] == TEST_USERNAME
     assert result2["data"][CONF_PASSWORD] == TEST_PASSWORD
     assert result2["data"][CONF_PIN] == TEST_PIN
-    assert result2["data"][CONF_DEVICE_ID] == device_id
+    assert result2["data"][CONF_DEVICE_ID] >= device_id
 
     await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 2
+    assert len(mock_connect.mock_calls) == 2
+    assert len(mock_test_pin.mock_calls) == 1
+
+
+async def test_pin_not_required(hass):
+    """Test we get the form and a login where the PIN is not necessary is successful."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        return_value=True,
+    ) as mock_connect, patch(
+        "homeassistant.components.subaru.config_flow.SubaruAPI.test_pin",
+        return_value=False,
+    ) as mock_test_pin:
+        device_id = int(datetime.now().timestamp())
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_PIN: TEST_PIN,
+            },
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == TEST_TITLE
+    assert result2["data"][CONF_USERNAME] == TEST_USERNAME
+    assert result2["data"][CONF_PASSWORD] == TEST_PASSWORD
+    assert result2["data"][CONF_PIN] == TEST_PIN
+    assert result2["data"][CONF_DEVICE_ID] >= device_id
+
+    await hass.async_block_till_done()
+    assert len(mock_connect.mock_calls) == 2
+    assert len(mock_test_pin.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass):

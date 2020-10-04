@@ -4,12 +4,7 @@ from datetime import datetime, timedelta
 import logging
 import time
 
-from subarulink import (
-    Controller as SubaruAPI,
-    InvalidPIN,
-    PINLockoutProtect,
-    SubaruException,
-)
+from subarulink import Controller as SubaruAPI, SubaruException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,8 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, base_config):
-    """Set up of Subaru component."""
-    hass.data.setdefault(DOMAIN, {})
+    """Do nothing since this integration does not support configuration.yml setup."""
     return True
 
 
@@ -74,11 +68,12 @@ async def async_setup_entry(hass, entry):
             ),
         )
         if not await controller.connect():
-            _LOGGER.error("Failed to connect")
-            raise ConfigEntryNotReady
-    except SubaruException as ex:
-        _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
-        raise ConfigEntryNotReady from ex
+            raise ConfigEntryNotReady("Failed to connect")
+    except SubaruException as err:
+        raise ConfigEntryNotReady(err) from err
+
+    if DOMAIN not in hass.data:
+        hass.data.setdefault(DOMAIN, {})
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
@@ -88,18 +83,8 @@ async def async_setup_entry(hass, entry):
         """Fetch data from API endpoint."""
         try:
             return await subaru_update(vehicle_info, controller)
-        except InvalidPIN as err:
-            _LOGGER.error(
-                "Invalid PIN entered. Reconfigure integration with correct PIN."
-            )
-            raise UpdateFailed from err
-        except PINLockoutProtect as err:
-            _LOGGER.error(
-                "Prior invalid PIN entered. Remote command aborted to prevent account lockout. Reconfigure integration with correct PIN."
-            )
-            raise UpdateFailed from err
         except SubaruException as err:
-            raise ConfigEntryNotReady from err
+            raise UpdateFailed(err) from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -150,9 +135,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def update_listener(hass, config_entry):
     """Update when config_entry options update."""
     controller = hass.data[DOMAIN][config_entry.entry_id][ENTRY_CONTROLLER]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
 
     old_update_interval = controller.get_update_interval()
-    old_fetch_interval = controller.get_fetch_interval()
+    old_fetch_interval = coordinator.update_interval
 
     new_update_interval = config_entry.options.get(
         CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
@@ -160,7 +146,6 @@ async def update_listener(hass, config_entry):
     new_fetch_interval = config_entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR]
 
     if old_update_interval != new_update_interval:
         _LOGGER.debug(
