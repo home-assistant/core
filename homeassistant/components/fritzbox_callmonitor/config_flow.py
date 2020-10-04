@@ -31,8 +31,8 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
-RESULT_AUTH_FAILED = "auth_failed"
-RESULT_NOT_FOUND = "not_found"
+RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_NO_DEVIES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
@@ -80,9 +80,9 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return RESULT_SUCCESS
         except FritzConnectionException:
-            return RESULT_AUTH_FAILED
+            return RESULT_INVALID_AUTH
         except requests.exceptions.ConnectionError:
-            return RESULT_NOT_FOUND
+            return RESULT_NO_DEVIES_FOUND
         except ValueError:
             return RESULT_NOT_SUPPORTED
 
@@ -121,7 +121,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            if result != RESULT_AUTH_FAILED:
+            if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
