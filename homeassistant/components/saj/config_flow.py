@@ -40,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(title=host, data=user_input)
             except pysaj.UnauthorizedException:
-                errors["base"] = "unauthorised"
+                errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception as error:  # pylint: disable=broad-except
