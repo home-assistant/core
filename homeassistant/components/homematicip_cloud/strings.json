@@ -6,7 +6,7 @@
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "Pin Code (optional)",
-          "name": "Name (optional, used as name prefix for all devices)"
+          "name": "[%key:common::config_flow::data::name%] (optional, used as name prefix for all devices)"
         }
       },
       "link": {
@@ -23,7 +23,7 @@
     "abort": {
       "unknown": "Unknown error occurred.",
       "connection_aborted": "Could not connect to HMIP server",
-      "already_configured": "Access point is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
