@@ -31,7 +31,7 @@ async def test_duplicate_error(hass, config_entry):
         DOMAIN, context={"source": "user"}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_service"
+    assert result["reason"] == "already_configured"
 
 
 async def test_show_form(hass):
