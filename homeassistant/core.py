@@ -826,12 +826,17 @@ class State:
         Ensures: state == State.from_dict(state.as_dict())
         """
         if not self._as_dict:
+            last_changed_isoformat = self.last_changed.isoformat()
+            if self.last_changed == self.last_updated:
+                last_updated_isoformat = last_changed_isoformat
+            else:
+                last_updated_isoformat = self.last_updated.isoformat()
             self._as_dict = {
                 "entity_id": self.entity_id,
                 "state": self.state,
                 "attributes": dict(self.attributes),
-                "last_changed": self.last_changed.isoformat(),
-                "last_updated": self.last_updated.isoformat(),
+                "last_changed": last_changed_isoformat,
+                "last_updated": last_updated_isoformat,
                 "context": self.context.as_dict(),
             }
         return self._as_dict
