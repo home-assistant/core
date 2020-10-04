@@ -77,11 +77,6 @@ class SimpliSafeBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         return HA_SENSOR_TYPES[self._sensor.type]
 
     @property
-    def unique_id(self):
-        """Return unique ID of sensor."""
-        return f"{self._sensor.serial}-sensor"
-
-    @property
     def device_info(self):
         """Return device registry information for this entity."""
         return {

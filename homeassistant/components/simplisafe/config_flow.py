@@ -183,12 +183,12 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
-                    ): int,
+                    ): vol.All(int, vol.Range(min=15)),
                     vol.Optional(
                         CONF_CODE,
                         default=self.config_entry.options.get(CONF_CODE),
