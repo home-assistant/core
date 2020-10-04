@@ -31,8 +31,8 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
     }
 )
 
-RESULT_AUTH_FAILED = "auth_failed"
-RESULT_NOT_FOUND = "not_found"
+RESULT_AUTH_FAILED = "invalid_auth"
+RESULT_NOT_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
@@ -91,7 +91,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+                    return self.async_abort(reason="already_configured_device")
 
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_HOST]
@@ -131,7 +131,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == host:
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
-                return self.async_abort(reason="already_configured")
+                return self.async_abort(reason="already_configured_device")
 
         self._host = host
         self._name = discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host
