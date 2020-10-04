@@ -679,6 +679,9 @@ pyhaversion==3.4.2
 # homeassistant.components.heos
 pyheos==0.6.0
 
+# homeassistant.components.tahoma
+pyhoma==0.5.0
+
 # homeassistant.components.homematic
 pyhomematic==0.1.70
 

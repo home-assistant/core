@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Entrez vos identifiants TaHoma.",
+        "data": {
+          "username": "Courriel",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connexion impossible",
+      "too_many_requests": "Trop de reqûtees, veuillez réessayer plus tard.",
+      "invalid_auth": "Mot de passe ou nom d'utilisateur incorrect",
+      "unknown": "Une erreur inconnue est survenue."
+    },
+    "abort": {
+      "already_configured": "Votre compte a déjà été ajouté pour cette intégration."
+    }
+  },
+  "options": {
+    "step": {
+      "update_interval": {
+        "title": "Intervalle de mise à jour",
+        "description": "L'intégration Somfy TaHoma récupère régulièrement de nouveaux évènements. Modifiez l'intervalle de mise à jour par une valeur inférieure si vous souhaitez des mises à jour plus fréquentes, par exemple quand vous contrôllez aussi vos appareils en dehors de Home Assistant.",
+        "data": {
+          "update_interval": "Intervalle de mise à jour (en secondes)"
+        }
+      }
+    }
+  }
+}
