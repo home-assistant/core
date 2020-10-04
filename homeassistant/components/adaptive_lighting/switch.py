@@ -904,7 +904,12 @@ class TurnOnOffListener:
             applied_brightness = round(255 * service_data[ATTR_BRIGHTNESS_PCT] / 100)
             current_brightness = attributes["brightness"]
             if abs_rel_diff(current_brightness, applied_brightness) > threshold:
-                _LOGGER.debug("Brightness of '%s' significantly changed", light)
+                _LOGGER.debug(
+                    "Brightness of '%s' significantly changed from %s to %s",
+                    light,
+                    applied_brightness,
+                    current_brightness,
+                )
                 changed = True
 
         if (
@@ -916,8 +921,10 @@ class TurnOnOffListener:
             current_color_temp = attributes[ATTR_COLOR_TEMP]
             if abs_rel_diff(current_color_temp, applied_color_temp) > threshold:
                 _LOGGER.debug(
-                    "Color temperature of '%s' significantly changed",
+                    "Color temperature of '%s' significantly changed from %s to %s",
                     light,
+                    applied_color_temp,
+                    current_color_temp,
                 )
                 changed = True
 
@@ -931,8 +938,10 @@ class TurnOnOffListener:
             for col_applied, col_current in zip(applied_rgb_color, current_rgb_color):
                 if abs_rel_diff(col_applied, col_current) > threshold:
                     _LOGGER.debug(
-                        "color RGB of '%s' significantly changed",
+                        "color RGB of '%s' significantly changed from %s to %s",
                         light,
+                        applied_rgb_color,
+                        current_rgb_color,
                     )
                     changed = True
                     break
