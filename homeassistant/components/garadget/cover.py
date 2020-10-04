@@ -130,11 +130,6 @@ class GaradgetCover(CoverEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
