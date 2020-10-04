@@ -111,8 +111,8 @@ class TrackTemplateResult:
     """
 
     template: Template
-    last_result: Union[str, None, TemplateError]
-    result: Union[str, TemplateError]
+    last_result: Any
+    result: Any
 
 
 def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
