@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    for i in range(50):
+    for i in range(100):
         entities.append(ScaleTestSensor(f"power_sensor_{i}"))
 
     async_add_entities(entities, True)
