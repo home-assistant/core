@@ -337,7 +337,7 @@ class Template:
         try:
             result = literal_eval(render_result)
         except (ValueError, SyntaxError, MemoryError):
-            return render_result.strip()
+            pass
 
         # If the literal_eval result is a string, use the original render
         if isinstance(result, str):
