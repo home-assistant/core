@@ -266,7 +266,7 @@ async def test_lock_action(hass, calls):
     """Test lock action."""
     assert await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
@@ -302,7 +302,7 @@ async def test_unlock_action(hass, calls):
     """Test unlock action."""
     assert await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
@@ -339,7 +339,7 @@ async def test_available_template_with_entities(hass):
 
     await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
@@ -377,7 +377,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     """Test that an invalid availability keeps the device available."""
     await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
@@ -404,7 +404,7 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one lock per id."""
     await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
@@ -422,7 +422,7 @@ async def test_unique_id(hass):
 
     await setup.async_setup_component(
         hass,
-        "lock",
+        lock.DOMAIN,
         {
             "lock": {
                 "platform": "template",
