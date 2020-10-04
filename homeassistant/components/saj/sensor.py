@@ -175,8 +175,8 @@ class SAJInverter:
             else:
                 self._connected = False
                 self._interval = min(self._interval * 2, MAX_INTERVAL)
-        except asyncio.exceptions.TimeoutError:
-            pass
+        except asyncio.TimeoutError:
+            _LOGGER.debug("Update timeout")
         finally:
             self._stop_interval = async_call_later(
                 self._hass, self._interval, self._interval_listener

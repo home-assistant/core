@@ -27,6 +27,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            host = user_input["host"]
+
+            await self.async_set_unique_id(host)
+            self._abort_if_unique_id_configured()
+
             import pysaj
 
             from .sensor import CannotConnect, SAJInverter
@@ -35,9 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 inverter = SAJInverter(user_input)
                 await inverter.connect()
 
-                return self.async_create_entry(
-                    title=user_input["host"], data=user_input
-                )
+                return self.async_create_entry(title=host, data=user_input)
             except pysaj.UnauthorizedException:
                 errors["base"] = "unauthorised"
             except CannotConnect:
