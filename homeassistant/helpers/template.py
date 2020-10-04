@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import collections.abc
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import json
@@ -74,23 +73,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 }
 
 DEFAULT_RATE_LIMIT = timedelta(seconds=1)
-
-
-@dataclass
-class TrackTimePattern:
-    """Class for keeping track of a time pattern the can be used with async_track_time_change.
-
-    hour: Hour to match
-    minute: Minute to match
-    second: Second to match
-    """
-
-    hour: Optional[Any]
-    minute: Optional[Any]
-    second: Optional[Any]
-
-
-DEFAULT_TIME_PATTERN = TrackTimePattern("*", "*", 0)
 
 
 @bind_hass
@@ -219,12 +201,10 @@ class RenderInfo:
         self.domains_lifecycle = set()
         self.entities = set()
         self.rate_limit = None
-        self.time_pattern = None
-        self.has_time = False
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> time_pattern={self.time_pattern}> has_time={self.has_time}"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -266,9 +246,7 @@ class RenderInfo:
     def _freeze(self) -> None:
         self._freeze_sets()
 
-        if self.time_pattern:
-            self.rate_limit = None
-        elif self.rate_limit is None and (
+        if self.rate_limit is None and (
             self.domains or self.domains_lifecycle or self.all_states or self.exception
         ):
             # If the template accesses all states or an entire
@@ -290,9 +268,6 @@ class RenderInfo:
         if self.entities or self.domains:
             self.filter = self._filter_domains_and_entities
         else:
-            if self.has_time and self.time_pattern is None:
-                # Accessing time and no entities
-                self.time_pattern = DEFAULT_TIME_PATTERN
             self.filter = _false
 
 
@@ -543,40 +518,6 @@ class RateLimit:
     def __repr__(self) -> str:
         """Representation of a RateLimit."""
         return "<template RateLimit>"
-
-
-class TemplateTimePattern:
-    """Class to control update time pattern."""
-
-    def __init__(self, hass: HomeAssistantType):
-        """Initialize the time pattern."""
-        self._hass = hass
-
-    def __call__(self, *args: Any, **kwargs: Any) -> str:
-        """Handle a call to the class."""
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is None:
-            return ""
-
-        if args and (args[0] is None or args[0] == "off"):
-            render_info.time_pattern = False
-        else:
-            render_info.time_pattern = TrackTimePattern(
-                cv.TimePattern(maximum=cv.TIME_PATTERN_HOURS_MAX)(
-                    kwargs.get("hours", "*")
-                ),
-                cv.TimePattern(maximum=cv.TIME_PATTERN_MINUTES_MAX)(
-                    kwargs.get("minutes", "*")
-                ),
-                cv.TimePattern(maximum=cv.TIME_PATTERN_SECONDS_MAX)(
-                    kwargs.get("seconds", "*")
-                ),
-            )
-        return ""
-
-    def __repr__(self) -> str:
-        """Representation of a TrackTimePattern."""
-        return "<template TrackTimePattern>"
 
 
 class AllStates:
@@ -1017,24 +958,6 @@ def state_attr(hass, entity_id, name):
     return None
 
 
-def now(hass):
-    """Record fetching now."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
-        render_info.has_time = True
-
-    return dt_util.now()
-
-
-def utcnow(hass):
-    """Record fetching utcnow."""
-    render_info = hass.data.get(_RENDER_INFO)
-    if render_info is not None:
-        render_info.has_time = True
-
-    return dt_util.utcnow()
-
-
 def forgiving_round(value, precision=0, method="common"):
     """Round accepted strings."""
     try:
@@ -1365,7 +1288,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
+        self.globals["now"] = dt_util.now
         self.globals["as_local"] = dt_util.as_local
+        self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
@@ -1397,15 +1322,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
         self.globals["rate_limit"] = RateLimit(hass)
-        self.globals["track_time_pattern"] = TemplateTimePattern(hass)
-        self.globals["utcnow"] = hassfunction(utcnow)
-        self.globals["now"] = hassfunction(now)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(
-            obj, (AllStates, RateLimit, TrackTimePattern)
-        ) or super().is_safe_callable(obj)
+        return isinstance(obj, (AllStates, RateLimit)) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
