@@ -2,14 +2,18 @@
     "config": {
         "abort": {
             "auth_fail": "Nom d'usuari i/o contrasenya incorrectes.",
-            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder."
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder.",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "create_entry": {
             "default": "S'ha afegit el servidor ZoneMinder."
         },
         "error": {
             "auth_fail": "Nom d'usuari i/o contrasenya incorrectes.",
-            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder."
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_error": "No s'ha pogut connectar al servidor ZoneMinder.",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "flow_title": "ZoneMinder",
         "step": {
@@ -19,7 +23,7 @@
                     "password": "Contrasenya",
                     "path": "Ruta de ZM",
                     "path_zms": "Ruta de ZMS",
-                    "ssl": "Utilitza SSL per a les connexions a ZoneMinder",
+                    "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
                 },

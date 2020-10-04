@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "Invalid authentication",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "session_error": "Failed to connect",
             "unknown": "Unexpected error"
         },

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne skriveren er allerede konfigurert.",
+            "already_configured": "Enheten er allerede konfigurert",
             "unsupported_model": "Denne skrivermodellen er ikke st\u00f8ttet."
         },
         "error": {
-            "connection_error": "Tilkoblingen mislyktes.",
+            "connection_error": "Tilkobling mislyktes.",
             "snmp_error": "SNMP verten er skrudd av eller printeren er ikke st\u00f8ttet.",
             "wrong_host": "Ugyldig vertsnavn eller IP-adresse."
         },

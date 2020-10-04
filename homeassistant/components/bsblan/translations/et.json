@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "BSB-Lan seadmega \u00fchenduse loomine nurjus."
+        }
+    }
+}
