@@ -31,7 +31,7 @@
       "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
     },
     "abort": {
-      "already_configured": "Account already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_device": "None of your devices have \"Find my iPhone\" activated"
     }
   }
