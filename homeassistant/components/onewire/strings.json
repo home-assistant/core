@@ -6,12 +6,6 @@
       "invalid_path": "Directory not found."
     },
     "step": {
-      "mount_dir": {
-        "data": {
-          "mount_dir": "Mount directory"
-        },
-        "title": "Set mount directory"
-      },
       "owserver": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

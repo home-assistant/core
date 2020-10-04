@@ -2,16 +2,10 @@
     "config": {
         "abort": {},
         "error": {
-            "cannot_connect": "Unable to connect to OWServer.",
+            "cannot_connect": "Unable to connect.",
             "invalid_path": "Directory not found."
         },
         "step": {
-            "mount_dir": {
-                "data": {
-                    "mount_dir": "Mount directory"
-                },
-                "title": "Set mount directory"
-            },
             "owserver": {
                 "data": {
                     "host": "Host",
