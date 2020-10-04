@@ -7,7 +7,7 @@ from tests.async_mock import AsyncMock
 
 
 async def test_message_includes_default_emoji():
-    """Tests that overriding the default icon emoji when sending a message works."""
+    """Tests that default icon is used when no message icon is given."""
     mock_client = Mock()
     mock_client.chat_postMessage = AsyncMock()
     expected_icon = ":robot_face:"
