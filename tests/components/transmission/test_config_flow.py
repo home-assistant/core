@@ -211,7 +211,7 @@ async def test_host_already_configured(hass, api):
         transmission.DOMAIN, context={"source": "user"}, data=mock_entry_unique_name
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured_device"
 
     mock_entry_unique_port = MOCK_ENTRY.copy()
     mock_entry_unique_port[CONF_PORT] = 9092
@@ -246,7 +246,7 @@ async def test_name_already_configured(hass, api):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured_device"
 
 
 async def test_error_on_wrong_credentials(hass, auth_error):
