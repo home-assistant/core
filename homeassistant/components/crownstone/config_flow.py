@@ -59,10 +59,8 @@ class CrownstoneConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             if auth_error.type == "LOGIN_FAILED_EMAIL_NOT_VERIFIED":
                 errors["base"] = "account_not_verified"
-            if auth_error.type == "USERNAME_EMAIL_REQUIRED":
-                errors["base"] = "auth_input_none"
         except CrownstoneUnknownError:
-            errors["base"] = "unknown_error"
+            errors["base"] = "unknown"
 
         # show form again, with the error
         return self.async_show_form(

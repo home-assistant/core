@@ -2,20 +2,18 @@
   "title": "Crownstone",
   "config": {
     "abort": {
-      "already_configured": "This Sphere is already configured."
+      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "cannot_connect": "Cannot connect to the Crownstone Cloud, Check the internet connection and try again.",
       "account_not_verified": "Account not verified. Please activate your account through the activation email from Crownstone.",
-      "invalid_auth": "Invalid email / password.",
-      "auth_input_none": "Field for email is empty. Please fill in both fields and try again.",
-      "unknown_error": "Unexpected error occurred."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Email"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "Enter your email and password for Crownstone.",
         "title": "Crownstone"

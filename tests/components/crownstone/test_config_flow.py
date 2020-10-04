@@ -178,16 +178,6 @@ async def test_authentication_errors(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "account_not_verified"}
 
-    # side effect: auth error no email/password provided
-    cloud.async_login.side_effect = CrownstoneAuthenticationError(
-        type="USERNAME_EMAIL_REQUIRED"
-    )
-
-    result = await start_flow(hass, cloud)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "auth_input_none"}
-
 
 async def test_unknown_error(hass):
     """Test flow with unknown error."""
@@ -198,4 +188,4 @@ async def test_unknown_error(hass):
     result = await start_flow(hass, cloud)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown_error"}
+    assert result["errors"] == {"base": "unknown"}

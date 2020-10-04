@@ -66,9 +66,9 @@ class CrownstoneHub:
                 auth_err.message,
             )
             return False
-        except CrownstoneUnknownError:
+        except CrownstoneUnknownError as unknown_err:
             _LOGGER.error("Unknown error during login")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from unknown_err
 
         # set the sphere we chose to setup in the flow
         self.sphere = self.cloud.spheres.find(self.config_entry.data[CONF_SPHERE])
