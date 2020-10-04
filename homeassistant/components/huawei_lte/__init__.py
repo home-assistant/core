@@ -146,7 +146,7 @@ class Router:
     suspended = attr.ib(init=False, default=False)
     notify_last_attempt: float = attr.ib(init=False, default=-1)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -176,7 +176,7 @@ class Router:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
-    def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
+    def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
             return
         if key in self.inflight_gets:
@@ -275,7 +275,7 @@ class Router:
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
 
-    def cleanup(self, *_) -> None:
+    def cleanup(self, *_: Any) -> None:
         """Clean up resources."""
 
         self.subscriptions.clear()
@@ -359,7 +359,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
         if username or password:
-            connection = AuthorizedConnection(
+            connection: Connection = AuthorizedConnection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
         else:

@@ -121,7 +121,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
-        conn = None
+        conn: Optional[Connection] = None
 
         def logout():
             if hasattr(conn, "user"):
