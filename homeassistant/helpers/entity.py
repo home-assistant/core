@@ -466,12 +466,12 @@ class Entity(ABC):
                 await task
                 return
 
-            done, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
+            finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
 
-            if done:
-                done_result = list(done)[0]
-                if isinstance(done_result, Exception):
-                    raise done_result
+            for done in finished:
+                exc = done.exception()
+                if exc:
+                    raise exc
                 return
 
             _LOGGER.warning(
