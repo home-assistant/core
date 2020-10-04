@@ -7,6 +7,7 @@ from tests.async_mock import AsyncMock
 async def test_message_includes_default_emoji():
     """Tests that overriding the default icon emoji when sending a message works."""
     mock_client = AsyncMock()
+    mock_client.chat_postMessage = AsyncMock()
     expected_icon = ":robot_face:"
     service = SlackNotificationService(None, mock_client, "_", "_", expected_icon)
 
@@ -20,6 +21,7 @@ async def test_message_includes_default_emoji():
 async def test_message_emoji_overrides_default():
     """Tests that overriding the default icon emoji when sending a message works."""
     mock_client = AsyncMock()
+    mock_client.chat_postMessage = AsyncMock()
     service = SlackNotificationService(None, mock_client, "_", "_", "default_icon")
 
     expected_icon = ":new:"
@@ -33,6 +35,7 @@ async def test_message_emoji_overrides_default():
 async def test_message_includes_default_icon_url():
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = AsyncMock()
+    mock_client.chat_postMessage = AsyncMock()
     expected_icon = "https://example.com/hass.png"
     service = SlackNotificationService(None, mock_client, "_", "_", expected_icon)
 
@@ -46,6 +49,7 @@ async def test_message_includes_default_icon_url():
 async def test_message_icon_url_overrides_default():
     """Tests that overriding the default icon url when sending a message works."""
     mock_client = AsyncMock()
+    mock_client.chat_postMessage = AsyncMock()
     service = SlackNotificationService(None, mock_client, "_", "_", "default_icon")
 
     expected_icon = "https://example.com/hass.png"
