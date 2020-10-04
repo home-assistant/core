@@ -157,6 +157,7 @@ FLOWS = [
     "roomba",
     "roon",
     "rpi_power",
+    "saj",
     "samsungtv",
     "sense",
     "sentry",

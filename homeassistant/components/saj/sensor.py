@@ -1,4 +1,5 @@
 """SAJ solar inverter interface."""
+import asyncio
 from datetime import date
 import logging
 
@@ -6,6 +7,7 @@ import pysaj
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,7 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -23,18 +25,19 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
+from .const import DOMAIN, INVERTER_TYPES
+
 _LOGGER = logging.getLogger(__name__)
 
-MIN_INTERVAL = 5
-MAX_INTERVAL = 300
-
-INVERTER_TYPES = ["ethernet", "wifi"]
+# seconds
+MIN_INTERVAL = 30
+MAX_INTERVAL = 900
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -56,53 +59,85 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up for SAJ inverters."""
+    await async_setup_platform(hass, entry.data, async_add_entities)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
+):
     """Set up the SAJ sensors."""
+    inverter = SAJInverter(config)
+    await inverter.connect()
+    inverter.setup(hass, async_add_entities)
 
-    remove_interval_update = None
-    wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
 
-    # Init all sensors
-    sensor_def = pysaj.Sensors(wifi)
+class SAJInverter:
+    """Representation of a SAJ inverter."""
 
-    # Use all sensors by default
-    hass_sensors = []
+    def __init__(self, config):
+        """Init SAJ Inverter class."""
+        self._name = config[CONF_NAME]
+        self._wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
 
-    kwargs = {}
-    if wifi:
-        kwargs["wifi"] = True
-        if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
-            kwargs["username"] = config[CONF_USERNAME]
-            kwargs["password"] = config[CONF_PASSWORD]
+        kwargs = {}
+        if self._wifi:
+            kwargs["wifi"] = True
+            if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
+                kwargs["username"] = config[CONF_USERNAME]
+                kwargs["password"] = config[CONF_PASSWORD]
 
-    try:
-        saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
-        done = await saj.read(sensor_def)
-    except pysaj.UnauthorizedException:
-        _LOGGER.error("Username and/or password is wrong")
-        return
-    except pysaj.UnexpectedResponseException as err:
-        _LOGGER.error(
-            "Error in SAJ, please check host/ip address. Original error: %s", err
-        )
-        return
+        self._saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
+        self._sensor_def = pysaj.Sensors(self._wifi)
 
-    if not done:
-        raise PlatformNotReady
+        self._hass = None
+        self._hass_sensors = []
+        self._interval = MIN_INTERVAL
+        self._stop_interval = None
 
-    for sensor in sensor_def:
-        if sensor.enabled:
-            hass_sensors.append(
-                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+    @property
+    def name(self):
+        """Return the name of the inverter."""
+        return self._name
+
+    @property
+    def serialnumber(self):
+        """Return the serial number of the inverter."""
+        return self._saj.serialnumber
+
+    async def connect(self):
+        """Try to connect to the inverter."""
+        done = await self._saj.read(self._sensor_def)
+        if done:
+            return
+
+        raise CannotConnect
+
+    def setup(self, hass, async_add_entities):
+        """Add sensors to Core and start update loop."""
+        self._hass = hass
+        for sensor in self._sensor_def:
+            if sensor.enabled:
+                self._hass_sensors.append(SAJSensor(self, sensor))
+
+        async_add_entities(self._hass_sensors)
+
+        if self._hass.state == CoreState.running:
+            self.start_update_interval(None)
+        else:
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self.start_update_interval
             )
+        self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.stop_update_interval)
 
-    async_add_entities(hass_sensors)
-
-    async def async_saj():
+    async def update(self):
         """Update all the SAJ sensors."""
-        values = await saj.read(sensor_def)
+        values = await self._saj.read(self._sensor_def)
 
-        for sensor in hass_sensors:
+        for sensor in self._hass_sensors:
             state_unknown = False
             if not values:
                 # SAJ inverters are powered by DC via solar panels and thus are
@@ -120,61 +155,52 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         return values
 
-    def start_update_interval(event):
+    def start_update_interval(self, _):
         """Start the update interval scheduling."""
-        nonlocal remove_interval_update
-        remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
+        self._stop_interval = async_call_later(
+            self._hass, self._interval, self._interval_listener
+        )
 
-    def stop_update_interval(event):
+    def stop_update_interval(self, _):
         """Properly cancel the scheduled update."""
-        remove_interval_update()  # pylint: disable=not-callable
+        if self._stop_interval:
+            self._stop_interval()
+            self._stop_interval = None
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
-
-
-@callback
-def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
-    """Add a listener that fires repetitively and increases the interval when failed."""
-    remove = None
-    interval = MIN_INTERVAL
-
-    async def interval_listener(now=None):
-        """Handle elapsed interval with backoff."""
-        nonlocal interval, remove
+    async def _interval_listener(self, _):
         try:
-            if await action():
-                interval = MIN_INTERVAL
+            if await self.update():
+                self._connected = True
+                self._interval = MIN_INTERVAL
             else:
-                interval = min(interval * 2, MAX_INTERVAL)
+                self._connected = False
+                self._interval = min(self._interval * 2, MAX_INTERVAL)
+        except asyncio.exceptions.TimeoutError:
+            pass
         finally:
-            remove = async_call_later(hass, interval, interval_listener)
-
-    hass.async_create_task(interval_listener())
-
-    def remove_listener():
-        """Remove interval listener."""
-        if remove:
-            remove()  # pylint: disable=not-callable
-
-    return remove_listener
+            self._stop_interval = async_call_later(
+                self._hass, self._interval, self._interval_listener
+            )
 
 
-class SAJsensor(Entity):
+class SAJSensor(Entity):
     """Representation of a SAJ sensor."""
 
-    def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
+    def __init__(self, inverter: SAJInverter, pysaj_sensor):
         """Initialize the SAJ sensor."""
+        self._inverter = inverter
         self._sensor = pysaj_sensor
-        self._inverter_name = inverter_name
-        self._serialnumber = serialnumber
         self._state = self._sensor.value
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop update loop."""
+        self._inverter.stop_update_interval(None)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._inverter_name:
-            return f"saj_{self._inverter_name}_{self._sensor.name}"
+        if self._inverter.name:
+            return f"saj_{self._inverter.name}_{self._sensor.name}"
 
         return f"saj_{self._sensor.name}"
 
@@ -238,4 +264,20 @@ class SAJsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"{self._serialnumber}_{self._sensor.name}"
+        return f"{self._inverter.serialnumber}_{self._sensor.name}"
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._inverter.serialnumber)
+            },
+            "name": "SAJ Solar Inverter",
+            "manufacturer": "SAJ",
+        }
+
+
+class CannotConnect(PlatformNotReady):
+    """Error to indicate we cannot connect."""

@@ -364,7 +364,7 @@ homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
 homeassistant/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/safe_mode/* @home-assistant/core
-homeassistant/components/saj/* @fredericvl
+homeassistant/components/saj/* @fredericvl @sanyatuning
 homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
