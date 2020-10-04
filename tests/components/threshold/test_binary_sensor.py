@@ -157,7 +157,7 @@ async def test_sensor_in_range_no_hysteresis(hass):
 
     state = hass.states.get("binary_sensor.threshold")
 
-    assert "sensor.test_monitored" == state.attributes.get("entity_id")
+    assert state.attributes.get("entity_id") == "sensor.test_monitored"
     assert 16 == state.attributes.get("sensor_value")
     assert "in_range" == state.attributes.get("position")
     assert float(config["binary_sensor"]["lower"]) == state.attributes.get("lower")
