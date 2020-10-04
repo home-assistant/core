@@ -31,7 +31,8 @@ async def test_general_error(hass):
     conf = {CONF_LATITUDE: "51.528308", CONF_LONGITUDE: "-0.3817765"}
 
     with patch(
-        "pyflunearyou.cdc.CdcReport.status_by_coordinates", side_effect=FluNearYouError,
+        "pyflunearyou.cdc.CdcReport.status_by_coordinates",
+        side_effect=FluNearYouError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
