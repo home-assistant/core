@@ -21,6 +21,7 @@ from typing import (
     Any,
     Awaitable,
     Callable,
+    Collection,
     Coroutine,
     Dict,
     Iterable,
@@ -531,7 +532,15 @@ class EventOrigin(enum.Enum):
 class Event:
     """Representation of an event within the bus."""
 
-    __slots__ = ["event_type", "data", "origin", "time_fired", "context"]
+    __slots__ = [
+        "__weakref__",
+        "event_type",
+        "data",
+        "origin",
+        "time_fired",
+        "context",
+        "_as_dict",
+    ]
 
     def __init__(
         self,
@@ -547,6 +556,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
+        self._as_dict: Optional[Dict[str, Collection[Any]]] = None
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -558,13 +568,15 @@ class Event:
 
         Async friendly.
         """
-        return {
-            "event_type": self.event_type,
-            "data": dict(self.data),
-            "origin": str(self.origin),
-            "time_fired": self.time_fired,
-            "context": self.context.as_dict(),
-        }
+        if not self._as_dict:
+            self._as_dict = {
+                "event_type": self.event_type,
+                "data": dict(self.data),
+                "origin": str(self.origin),
+                "time_fired": self.time_fired.isoformat(),
+                "context": self.context.as_dict(),
+            }
+        return self._as_dict
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -626,6 +638,7 @@ class EventBus:
         event_data: Optional[Dict] = None,
         origin: EventOrigin = EventOrigin.local,
         context: Optional[Context] = None,
+        time_fired: Optional[datetime.datetime] = None,
     ) -> None:
         """Fire an event.
 
@@ -638,7 +651,7 @@ class EventBus:
         if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
-        event = Event(event_type, event_data, origin, None, context)
+        event = Event(event_type, event_data, origin, time_fired, context)
 
         if event_type != EVENT_TIME_CHANGED:
             _LOGGER.debug("Bus:Handling %s", event)
@@ -771,6 +784,7 @@ class State:
         "context",
         "domain",
         "object_id",
+        "_as_dict",
     ]
 
     def __init__(
@@ -805,6 +819,7 @@ class State:
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
+        self._as_dict: Optional[Dict[str, Collection[Any]]] = None
 
     @property
     def name(self) -> str:
@@ -821,14 +836,16 @@ class State:
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        return {
-            "entity_id": self.entity_id,
-            "state": self.state,
-            "attributes": dict(self.attributes),
-            "last_changed": self.last_changed,
-            "last_updated": self.last_updated,
-            "context": self.context.as_dict(),
-        }
+        if not self._as_dict:
+            self._as_dict = {
+                "entity_id": self.entity_id,
+                "state": self.state,
+                "attributes": dict(self.attributes),
+                "last_changed": self.last_changed.isoformat(),
+                "last_updated": self.last_updated.isoformat(),
+                "context": self.context.as_dict(),
+            }
+        return self._as_dict
 
     @classmethod
     def from_dict(cls, json_dict: Dict) -> Any:
@@ -1643,13 +1660,18 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         """Fire next time event."""
         now = dt_util.utcnow()
 
-        hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now}, context=timer_context)
+        hass.bus.async_fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now}, time_fired=now, context=timer_context
+        )
 
         # If we are more than a second late, a tick was missed
         late = monotonic() - target
         if late > 1:
             hass.bus.async_fire(
-                EVENT_TIMER_OUT_OF_SYNC, {ATTR_SECONDS: late}, context=timer_context
+                EVENT_TIMER_OUT_OF_SYNC,
+                {ATTR_SECONDS: late},
+                time_fired=now,
+                context=timer_context,
             )
 
         schedule_tick(now)
