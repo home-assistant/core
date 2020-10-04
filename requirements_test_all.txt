@@ -235,6 +235,9 @@ coronavirus==1.1.1
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
+# homeassistant.components.govee
+dacite==1.5.1
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -349,7 +352,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==0.39.1
 
 # homeassistant.components.govee
-govee-api-laggat==0.1.14
+govee-api-laggat==0.1.21
 
 # homeassistant.components.griddy
 griddypower==0.1.0

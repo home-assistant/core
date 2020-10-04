@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Return info that you want to store in the config entry.y the user.
+    Return info that you want to store in the config entry.
     """
     api_key = data[CONF_API_KEY]
     async with Govee(api_key) as hub:
@@ -41,7 +41,8 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(title=DOMAIN, data=info)
-            except CannotConnect:
+            except CannotConnect as conn_ex:
+                _LOGGER.exception("Cannot connect: %s", conn_ex)
                 errors["base"] = "cannot_connect"
             except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception: %s", ex)

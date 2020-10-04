@@ -456,6 +456,9 @@ coronavirus==1.1.1
 # homeassistant.components.crimereports
 crimereports==1.0.1
 
+# homeassistant.components.govee
+dacite==1.5.1
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -690,7 +693,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee
-govee-api-laggat==0.1.14
+govee-api-laggat==0.1.21
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.5.1
