@@ -3,7 +3,6 @@ import copy
 import json
 
 from hatasmota.const import CONF_ONLINE
-import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -13,7 +12,6 @@ from .test_common import (
     help_test_availability,
     help_test_availability_discovery_update,
     help_test_availability_when_connection_lost,
-    help_test_discovery_broken,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -154,14 +152,6 @@ async def test_discovery_update_unchanged_switch(
         await help_test_discovery_update_unchanged(
             hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG, discovery_update
         )
-
-
-@pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog, setup_tasmota):
-    """Test handling of bad discovery message."""
-    await help_test_discovery_broken(
-        hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG
-    )
 
 
 async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):

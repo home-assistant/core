@@ -22,7 +22,7 @@ from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from tests.async_mock import ANY, patch
+from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 
@@ -228,32 +228,6 @@ async def help_test_discovery_update_unchanged(
     await hass.async_block_till_done()
 
     assert discovery_update.called
-
-
-async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, config):
-    """Test handling of exception when creating discovered entity."""
-    data = json.dumps(config)
-
-    # Trigger an exception when the entity is added
-    with patch(
-        "hatasmota.discovery.get_switch_entities",
-        return_value=[object()],
-    ):
-        async_fire_mqtt_message(
-            hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get(f"{domain}.test")
-    assert state is None
-
-    # Make sure the entity is added, instead of a discovery update
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(f"{domain}.test")
-    assert state is not None
-    assert state.name == "Test"
 
 
 async def help_test_discovery_device_remove(hass, mqtt_mock, domain, config):

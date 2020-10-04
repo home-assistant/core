@@ -31,6 +31,11 @@ TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}"
 
 
+def clear_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    del hass.data[ALREADY_DISCOVERED][discovery_hash]
+
+
 def set_discovery_hash(hass, discovery_hash):
     """Set entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
@@ -60,6 +65,7 @@ async def async_device_discovered(hass, config_entry, tasmota_mqtt, payload, mac
     for component, component_key in SUPPORTED_COMPONENTS.items():
         tasmota_entities = tasmota_get_entities_for_platform(payload, component_key)
         for (idx, tasmota_entity_config) in enumerate(tasmota_entities):
+            # The list order is deterministic, it's safe to use index as part of the key
             discovery_hash = (mac, component, idx)
             if not tasmota_entity_config:
                 # Entity disabled, clean up entity registry
