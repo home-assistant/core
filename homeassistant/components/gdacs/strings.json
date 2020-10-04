@@ -9,7 +9,7 @@
       }
     },
     "abort": {
-      "already_configured_service": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }
