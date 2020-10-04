@@ -107,7 +107,9 @@ class BinarySensorSchema:
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
-                vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+                vol.Optional(CONF_RESET_AFTER): vol.All(
+                    vol.Coerce(float), vol.Range(min=0)
+                ),     
             }
         ),
     )
