@@ -47,7 +47,7 @@ def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
 @pytest.fixture(name="mock_smile_notconnect")
 def mock_smile_notconnect():
     """Mock the Plugwise Smile general connection failure for Home Assistant."""
-    with patch("homeassistant.components.plugwise.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.PlugwiseError = Smile.PlugwiseError
@@ -64,7 +64,7 @@ def _get_device_data(chosen_env, device_id):
 def mock_smile_adam():
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "adam_multiple_devices_per_zone"
-    with patch("homeassistant.components.plugwise.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.XMLDataMissingError = Smile.XMLDataMissingError
@@ -104,7 +104,7 @@ def mock_smile_adam():
 def mock_smile_anna():
     """Create a Mock Anna environment for testing exceptions."""
     chosen_env = "anna_heatpump"
-    with patch("homeassistant.components.plugwise.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.XMLDataMissingError = Smile.XMLDataMissingError
@@ -144,7 +144,7 @@ def mock_smile_anna():
 def mock_smile_p1():
     """Create a Mock P1 DSMR environment for testing exceptions."""
     chosen_env = "p1v3_full_option"
-    with patch("homeassistant.components.plugwise.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.XMLDataMissingError = Smile.XMLDataMissingError
