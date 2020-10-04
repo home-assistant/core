@@ -1,6 +1,7 @@
 """Config flow for saj integration."""
 import logging
 
+import pysaj
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +13,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import DOMAIN, INVERTER_TYPES
+from .const import DOMAIN, INVERTER_TYPES  # pylint:disable=unused-import
+from .sensor import CannotConnect, SAJInverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(host)
             self._abort_if_unique_id_configured()
 
-            import pysaj
-
-            from .sensor import CannotConnect, SAJInverter
-
             try:
                 inverter = SAJInverter(user_input)
                 await inverter.connect()
@@ -45,8 +43,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unauthorised"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception as e:  # pylint: disable=broad-except
-                _LOGGER.error("Unexpected exception: %s", e)
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.error("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
 
         return self.async_show_form(

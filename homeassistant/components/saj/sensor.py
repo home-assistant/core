@@ -170,10 +170,8 @@ class SAJInverter:
     async def _interval_listener(self, _):
         try:
             if await self.update():
-                self._connected = True
                 self._interval = MIN_INTERVAL
             else:
-                self._connected = False
                 self._interval = min(self._interval * 2, MAX_INTERVAL)
         except asyncio.TimeoutError:
             _LOGGER.debug("Update timeout")
