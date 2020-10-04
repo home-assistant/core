@@ -412,7 +412,7 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._available = True
             return
 
-        state = result.lower()
+        state = str(result).lower()
         if state in _VALID_STATES:
             self._state = state in ("true", STATE_ON)
         else:
@@ -451,12 +451,16 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_color(self, render):
         """Update the hs_color from the template."""
-        if render in ("None", ""):
-            self._color = None
-            return
-        h_str, s_str = map(
-            float, render.replace("(", "").replace(")", "").split(",", 1)
-        )
+        if isinstance(render, str):
+            if render in ("None", ""):
+                self._color = None
+                return
+            h_str, s_str = map(
+                float, render.replace("(", "").replace(")", "").split(",", 1)
+            )
+        else:
+            h_str, s_str = render
+
         if (
             h_str is not None
             and s_str is not None

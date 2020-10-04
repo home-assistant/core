@@ -120,7 +120,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         if isinstance(result, TemplateError):
             self._state = None
             return
-        self._state = result.lower() in ("true", STATE_ON, STATE_LOCKED)
+        self._state = str(result).lower() in ("true", STATE_ON, STATE_LOCKED)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
