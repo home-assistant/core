@@ -4,7 +4,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
