@@ -14,9 +14,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import callback
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,17 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
 
-async def register_callback_and_get_calls(hass):
-    """Register a callback function to service test.automation and retrieve the calls."""
-    calls = []
-
-    @callback
-    def record_call(service):
-        """Track function calls."""
-        calls.append(service)
-
-    hass.services.async_register("test", "automation", record_call)
-    return calls
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
 
 
 async def test_template_state_invalid(hass):
@@ -332,12 +324,11 @@ async def test_missing_key(hass, missing_key, count):
         assert hass.states.async_all() == []
 
 
-async def test_on_action(hass):
+async def test_on_action(hass, calls):
     """Test on action."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -383,12 +374,11 @@ async def test_on_action(hass):
     assert len(calls) == 1
 
 
-async def test_on_action_optimistic(hass):
+async def test_on_action_optimistic(hass, calls):
     """Test on action with optimistic state."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -435,12 +425,11 @@ async def test_on_action_optimistic(hass):
     assert state.state == STATE_ON
 
 
-async def test_off_action(hass):
+async def test_off_action(hass, calls):
     """Test off action."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -486,12 +475,11 @@ async def test_off_action(hass):
     assert len(calls) == 1
 
 
-async def test_off_action_optimistic(hass):
+async def test_off_action_optimistic(hass, calls):
     """Test off action with optimistic state."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -535,12 +523,11 @@ async def test_off_action_optimistic(hass):
     assert state.state == STATE_OFF
 
 
-async def test_white_value_action_no_template(hass):
+async def test_white_value_action_no_template(hass, calls):
     """Test setting white value with optimistic template."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -642,12 +629,11 @@ async def test_white_value_template(hass, expected_white_value, template):
     assert state.attributes.get("white_value") == expected_white_value
 
 
-async def test_level_action_no_template(hass):
+async def test_level_action_no_template(hass, calls):
     """Test setting brightness with optimistic template."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -804,12 +790,11 @@ async def test_temperature_template(hass, expected_temp, template):
     assert state.attributes.get("color_temp") == expected_temp
 
 
-async def test_temperature_action_no_template(hass):
+async def test_temperature_action_no_template(hass, calls):
     """Test setting temperature with optimistic template."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -1007,12 +992,11 @@ async def test_entity_picture_template(hass):
     assert state.attributes["entity_picture"] == "/local/light.png"
 
 
-async def test_color_action_no_template(hass):
+async def test_color_action_no_template(hass, calls):
     """Test setting color with optimistic template."""
-    calls = await register_callback_and_get_calls(hass)
     assert await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -1138,7 +1122,7 @@ async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
     await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -1188,7 +1172,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     """Test that an invalid availability keeps the device available."""
     await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
@@ -1228,7 +1212,7 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one light per id."""
     await setup.async_setup_component(
         hass,
-        "light",
+        light.DOMAIN,
         {
             "light": {
                 "platform": "template",
