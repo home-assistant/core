@@ -467,6 +467,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 self._adapt_brightness,
                 self._adapt_color_temp,
                 self._adapt_rgb_color,
+                self.__context,
             )
         ):
             return
@@ -868,7 +869,13 @@ class TurnOnOffListener:
         return manually_controlled
 
     async def significant_change(
-        self, light, adapt_brightness, adapt_color_temp, adapt_rgb_color, threshold=5
+        self,
+        light,
+        adapt_brightness,
+        adapt_color_temp,
+        adapt_rgb_color,
+        context,
+        threshold=5,
     ):
         """Has the light made a significant change since last update.
 
@@ -886,6 +893,7 @@ class TurnOnOffListener:
             SERVICE_UPDATE_ENTITY,
             {ATTR_ENTITY_ID: light},
             blocking=True,
+            context=context,
         )
         attributes = self.hass.states.get(light).attributes
         if (
