@@ -42,10 +42,10 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_owserver()
             if CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
                 if os.path.isdir(DEFAULT_SYSBUS_MOUNT_DIR):
-                    await self.async_set_unique_id(DEFAULT_SYSBUS_MOUNT_DIR)
+                    await self.async_set_unique_id(CONF_TYPE_SYSBUS)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=DEFAULT_SYSBUS_MOUNT_DIR, data=self.onewire_config
+                        title=CONF_TYPE_SYSBUS, data=self.onewire_config
                     )
                 errors["base"] = "invalid_path"
 

@@ -34,8 +34,8 @@ async def test_config_flow_owserver(hass):
     # Invalid server
     with patch(
         "homeassistant.components.onewire.config_flow.protocol.proxy",
-    ) as owproxy:
-        owproxy.return_value.dir.side_effect = protocol.ConnError()
+        side_effect=protocol.ConnError,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
@@ -48,8 +48,7 @@ async def test_config_flow_owserver(hass):
     # Valid server
     with patch(
         "homeassistant.components.onewire.config_flow.protocol.proxy",
-    ) as owproxy:
-        owproxy.return_value.dir.return_value = ["1", "2", "3"]
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
@@ -72,26 +71,17 @@ async def test_config_flow_sysbus(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "mount_dir"
-    assert result["errors"] == {}
-
     # Invalid path
     with patch(
         "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=False
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_MOUNT_DIR: "/sys/bus/invalid_directory"},
+            user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "mount_dir"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_path"}
 
     # Valid path
@@ -100,12 +90,11 @@ async def test_config_flow_sysbus(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_MOUNT_DIR: "/sys/bus/directory"},
+            user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == CONF_TYPE_SYSBUS
     assert result["data"] == {
         CONF_TYPE: CONF_TYPE_SYSBUS,
-        CONF_MOUNT_DIR: "/sys/bus/directory",
     }
