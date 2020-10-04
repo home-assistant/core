@@ -16,7 +16,7 @@ async def test_uptime_min_config(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.uptime")
-    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "days"
 
 
 async def test_uptime_sensor_name_change(hass):
@@ -25,7 +25,7 @@ async def test_uptime_sensor_name_change(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.foobar")
-    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "days"
 
 
 async def test_uptime_sensor_config_hours(hass):
@@ -34,7 +34,7 @@ async def test_uptime_sensor_config_hours(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.uptime")
-    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "hours"
 
 
 async def test_uptime_sensor_config_minutes(hass):
@@ -43,7 +43,7 @@ async def test_uptime_sensor_config_minutes(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.uptime")
-    assert state is not None
+    assert state.attributes.get("unit_of_measurement") == "minutes"
 
 
 class TestUptimeSensor(unittest.TestCase):
