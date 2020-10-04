@@ -8,10 +8,9 @@ import pytest
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
-from .conftest import setup_tasmota
-
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
+from tests.components.tasmota.conftest import setup_tasmota_helper
 
 DEFAULT_CONFIG = {
     "dn": "My Device",
@@ -33,10 +32,8 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_subscribing_config_topic(hass, mqtt_mock):
+async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
     """Test setting up discovery."""
-    await setup_tasmota(hass)
-
     discovery_topic = DEFAULT_PREFIX
 
     assert mqtt_mock.async_subscribe.called
@@ -45,60 +42,71 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
     assert call_args[2] == 0
 
 
+async def test_valid_discovery_message(hass, mqtt_mock, caplog):
+    """Test discovery callback called."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+
+    with patch(
+        "homeassistant.components.tasmota.discovery.async_device_discovered"
+    ) as mock_device_discovered:
+        await setup_tasmota_helper(hass)
+
+        async_fire_mqtt_message(
+            hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+        assert mock_device_discovered.called
+
+
 async def test_invalid_topic(hass, mqtt_mock):
     """Test receiving discovery message on wrong topic."""
-    await setup_tasmota(hass)
     with patch(
-        "homeassistant.components.tasmota.discovery.async_dispatcher_send"
-    ) as mock_dispatcher_send:
-        mock_dispatcher_send = AsyncMock(return_value=None)
+        "homeassistant.components.tasmota.discovery.async_device_discovered"
+    ) as mock_device_discovered:
+        await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/configuration", "{}")
         await hass.async_block_till_done()
-        assert not mock_dispatcher_send.called
+        assert not mock_device_discovered.called
 
 
 async def test_invalid_message(hass, mqtt_mock, caplog):
     """Test receiving an invalid message."""
-    await setup_tasmota(hass)
     with patch(
-        "homeassistant.components.tasmota.discovery.async_dispatcher_send"
-    ) as mock_dispatcher_send:
-        mock_dispatcher_send = AsyncMock(return_value=None)
+        "homeassistant.components.tasmota.discovery.async_device_discovered"
+    ) as mock_device_discovered:
+        await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/config", "asd")
         await hass.async_block_till_done()
         assert "Invalid discovery message" in caplog.text
-        assert not mock_dispatcher_send.called
+        assert not mock_device_discovered.called
 
 
 async def test_invalid_mac(hass, mqtt_mock, caplog):
     """Test topic is not matching device MAC."""
     config = copy.deepcopy(DEFAULT_CONFIG)
 
-    await setup_tasmota(hass)
     with patch(
-        "homeassistant.components.tasmota.discovery.async_dispatcher_send"
-    ) as mock_dispatcher_send:
-        mock_dispatcher_send = AsyncMock(return_value=None)
+        "homeassistant.components.tasmota.discovery.async_device_discovered"
+    ) as mock_device_discovered:
+        await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
             hass, f"{DEFAULT_PREFIX}/00000049A3BA/config", json.dumps(config)
         )
         await hass.async_block_till_done()
         assert "MAC mismatch" in caplog.text
-        assert not mock_dispatcher_send.called
+        assert not mock_device_discovered.called
 
 
 async def test_correct_config_discovery(
-    hass, mqtt_mock, caplog, device_reg, entity_reg
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
 ):
     """Test receiving valid discovery message."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -120,12 +128,12 @@ async def test_correct_config_discovery(
     assert (mac, "switch", 0) in hass.data[ALREADY_DISCOVERED]
 
 
-async def test_device_discover(hass, mqtt_mock, caplog, device_reg, entity_reg):
+async def test_device_discover(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
     """Test setting up a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -143,15 +151,15 @@ async def test_device_discover(hass, mqtt_mock, caplog, device_reg, entity_reg):
     assert device_entry.sw_version == config["sw"]
 
 
-async def test_device_update(hass, mqtt_mock, caplog, device_reg, entity_reg):
+async def test_device_update(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
     """Test updating a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["md"] = "Model 1"
     config["dn"] = "Name 1"
     config["sw"] = "v1.2.3.4"
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -185,13 +193,11 @@ async def test_device_update(hass, mqtt_mock, caplog, device_reg, entity_reg):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg):
+async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg, setup_tasmota):
     """Test handling of exception when creating discovered device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
     data = json.dumps(config)
-
-    await setup_tasmota(hass)
 
     # Trigger an exception when the entity is added
     with patch(
@@ -217,12 +223,12 @@ async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg):
     assert device_entry is not None
 
 
-async def test_device_remove(hass, mqtt_mock, caplog, device_reg, entity_reg):
+async def test_device_remove(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
     """Test removing a discovered device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -247,11 +253,10 @@ async def test_device_remove(hass, mqtt_mock, caplog, device_reg, entity_reg):
     assert device_entry is None
 
 
-async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg):
+async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg, setup_tasmota):
     """Test removing a stale (undiscovered) device does not throw."""
     mac = "00000049A3BC"
 
-    await setup_tasmota(hass)
     config_entry = hass.config_entries.async_entries("tasmota")[0]
 
     # Create a device
@@ -272,12 +277,12 @@ async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg):
     assert device_entry is None
 
 
-async def test_device_rediscover(hass, mqtt_mock, caplog, device_reg, entity_reg):
+async def test_device_rediscover(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
     """Test removing a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -314,13 +319,11 @@ async def test_device_rediscover(hass, mqtt_mock, caplog, device_reg, entity_reg
     assert device_entry1.id == device_entry.id
 
 
-async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog):
+async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog, setup_tasmota):
     """Test entities are not duplicated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -346,13 +349,11 @@ async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog):
     )
 
 
-async def test_entity_duplicate_removal(hass, mqtt_mock, caplog):
+async def test_entity_duplicate_removal(hass, mqtt_mock, caplog, setup_tasmota):
     """Test removing entity twice."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,

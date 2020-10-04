@@ -9,7 +9,6 @@ from homeassistant.components import switch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
 
-from .conftest import setup_tasmota
 from .test_common import (
     help_test_availability,
     help_test_availability_discovery_update,
@@ -46,12 +45,10 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_controlling_state_via_mqtt(hass, mqtt_mock):
+async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -80,12 +77,10 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_sending_mqtt_commands(hass, mqtt_mock):
+async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     """Test the sending MQTT commands."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(
         hass,
@@ -119,26 +114,26 @@ async def test_sending_mqtt_commands(hass, mqtt_mock):
     assert state.state == STATE_OFF
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock):
+async def test_availability_when_connection_lost(hass, mqtt_mock, setup_tasmota):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability(hass, mqtt_mock):
+async def test_availability(hass, mqtt_mock, setup_tasmota):
     """Test availability."""
     await help_test_availability(hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG)
 
 
-async def test_availability_discovery_update(hass, mqtt_mock):
+async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     """Test availability discovery update."""
     await help_test_availability_discovery_update(
         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
+async def test_discovery_removal_switch(hass, mqtt_mock, caplog, setup_tasmota):
     """Test removal of discovered switch."""
     config1 = copy.deepcopy(DEFAULT_CONFIG)
     config2 = copy.deepcopy(DEFAULT_CONFIG)
@@ -149,7 +144,9 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
+async def test_discovery_update_unchanged_switch(
+    hass, mqtt_mock, caplog, setup_tasmota
+):
     """Test update of discovered switch."""
     with patch(
         "homeassistant.components.tasmota.switch.TasmotaSwitch.discovery_update"
@@ -160,28 +157,28 @@ async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog):
+async def test_discovery_broken(hass, mqtt_mock, caplog, setup_tasmota):
     """Test handling of bad discovery message."""
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_device_remove(hass, mqtt_mock):
+async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     """Test device registry remove."""
     await help_test_discovery_device_remove(
         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG

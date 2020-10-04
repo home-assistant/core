@@ -1,13 +1,18 @@
 """Tasnmota entity mixins."""
 import logging
 
-from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
+from homeassistant.components.mqtt import (
+    is_connected as mqtt_connected,
+    subscribe_connection_status,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .discovery import (
-    TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash, set_discovery_hash
+    TASMOTA_DISCOVERY_ENTITY_UPDATED,
+    clear_discovery_hash,
+    set_discovery_hash,
 )
 
 DATA_MQTT = "mqtt"
@@ -36,12 +41,7 @@ class TasmotaAvailability(TasmotaEntity):
         await super().async_added_to_hass()
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, MQTT_CONNECTED, self.async_mqtt_connect)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, MQTT_DISCONNECTED, self.async_mqtt_connect
-            )
+            subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
 
     async def availability_discovery_update(self, config: dict) -> None:
@@ -54,18 +54,15 @@ class TasmotaAvailability(TasmotaEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_mqtt_connect(self):
+    def async_mqtt_connected(self, _):
         """Update state on connection/disconnection to MQTT broker."""
         if not self.hass.is_stopping:
             self.async_write_ha_state()
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
+        if not mqtt_connected(self.hass) and not self.hass.is_stopping:
             return False
         return self._available
 
@@ -85,7 +82,6 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         await super().async_added_to_hass()
         self._removed_from_hass = False
 
-        @callback
         async def discovery_callback(config):
             """Handle discovery update."""
             _LOGGER.debug(
@@ -104,19 +100,15 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         # Set in case the entity has been removed and is re-added, for example when changing entity_id
         set_discovery_hash(self.hass, self._discovery_hash)
         self.async_on_remove(
-        	async_dispatcher_connect(
-            	self.hass,
-	            TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*self._discovery_hash),
-    	        discovery_callback,
-        	)
+            async_dispatcher_connect(
+                self.hass,
+                TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*self._discovery_hash),
+                discovery_callback,
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""
-        self._cleanup_discovery_on_remove()
-
-    def _cleanup_discovery_on_remove(self) -> None:
-        """Stop listening to signal and cleanup discovery data."""
         if not self._removed_from_hass:
             clear_discovery_hash(self.hass, self._discovery_hash)
             self._removed_from_hass = True

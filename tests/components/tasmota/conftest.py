@@ -24,20 +24,25 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def setup_tasmota(hass, entry=None):
+async def setup_tasmota_helper(hass):
     """Set up Tasmota."""
     hass.config.components.add("tasmota")
 
-    if entry is None:
-        entry = MockConfigEntry(
-            connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-            data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
-            domain=DOMAIN,
-            title="Tasmota",
-        )
+    entry = MockConfigEntry(
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
+        domain=DOMAIN,
+        title="Tasmota",
+    )
 
-        entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
 
     assert "tasmota" in hass.config.components
+
+
+@pytest.fixture
+async def setup_tasmota(hass):
+    """Set up Tasmota."""
+    await setup_tasmota_helper(hass)

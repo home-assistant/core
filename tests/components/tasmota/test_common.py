@@ -17,12 +17,10 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
+from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from .conftest import setup_tasmota
 
 from tests.async_mock import ANY, patch
 from tests.common import async_fire_mqtt_message
@@ -30,8 +28,6 @@ from tests.common import async_fire_mqtt_message
 
 async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
     """Test availability after MQTT disconnection."""
-    await setup_tasmota(hass)
-
     async_fire_mqtt_message(
         hass,
         f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
@@ -50,9 +46,16 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
     mqtt_mock.connected = False
     async_dispatcher_send(hass, MQTT_DISCONNECTED)
     await hass.async_block_till_done()
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
+
+    mqtt_mock.connected = True
+    async_dispatcher_send(hass, MQTT_CONNECTED)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_availability(
@@ -65,8 +68,6 @@ async def help_test_availability(
 
     This is a test helper for the TasmotaAvailability mixin.
     """
-    await setup_tasmota(hass)
-
     async_fire_mqtt_message(
         hass,
         f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
@@ -128,8 +129,6 @@ async def help_test_availability_discovery_update(
     online2 = get_state_online(config2)
     assert online1 != online2
 
-    await setup_tasmota(hass)
-
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
@@ -172,8 +171,6 @@ async def help_test_discovery_removal(
     data2 = json.dumps(config2)
     assert config1[CONF_MAC] == config2[CONF_MAC]
 
-    await setup_tasmota(hass)
-
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
@@ -215,8 +212,6 @@ async def help_test_discovery_update_unchanged(
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
 
-    await setup_tasmota(hass)
-
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
 
@@ -238,8 +233,6 @@ async def help_test_discovery_update_unchanged(
 async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, config):
     """Test handling of exception when creating discovered entity."""
     data = json.dumps(config)
-
-    await setup_tasmota(hass)
 
     # Trigger an exception when the entity is added
     with patch(
@@ -271,8 +264,6 @@ async def help_test_discovery_device_remove(hass, mqtt_mock, domain, config):
     config = copy.deepcopy(config)
     unique_id = f"{config[CONF_MAC]}_{domain}_0"
 
-    await setup_tasmota(hass)
-
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
@@ -298,7 +289,6 @@ async def help_test_entity_id_update_subscriptions(
     config = copy.deepcopy(config)
     data = json.dumps(config)
 
-    await setup_tasmota(hass)
     mqtt_mock.async_subscribe.reset_mock()
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
@@ -334,8 +324,6 @@ async def help_test_entity_id_update_discovery_update(hass, mqtt_mock, domain, c
     data = json.dumps(config)
 
     topic = get_topic_tele_will(config)
-
-    await setup_tasmota(hass)
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
