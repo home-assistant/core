@@ -13,7 +13,7 @@ from .const import DEFAULT_HOST, DOMAIN
 DATA_SCHEMA_USER = vol.Schema({vol.Optional(CONF_HOST, default=DEFAULT_HOST): str})
 
 RESULT_SUCCESS = "success"
-RESULT_NOT_FOUND = "not_found"
+RESULT_NO_DEVICES_FOUND = "no_devices_found"
 
 
 class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,7 +44,7 @@ class FritzboxNetMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             requests.exceptions.ConnectionError,
             FritzConnectionException,
         ):
-            return RESULT_NOT_FOUND
+            return RESULT_NO_DEVICES_FOUND
         return RESULT_SUCCESS
 
     async def async_step_import(self, user_input=None):

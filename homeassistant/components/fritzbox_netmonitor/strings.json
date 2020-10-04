@@ -10,8 +10,8 @@
       }
     },
     "abort": {
-      "already_configured": "This AVM FRITZ!Box is already configured.",
-      "not_found": "No supported AVM FRITZ!Box found on the network."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }
