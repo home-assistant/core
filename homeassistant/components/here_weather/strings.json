@@ -4,13 +4,13 @@
         "step": {
             "user": {
                 "title": "HERE Destination Weather",
-                "description": "This will configure the HERE Destination Weather Integration.",
+                "description": "[%key:common::config_flow::description::confirm_setup%]",
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]",
-                    "name": "Name of this Integration Entry",
+                    "name": "[%key:common::config_flow::data::name%]",
                     "mode": "The Weather Mode to use",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "latitude": "[%key:common::config_flow::data::latitude%]",
+                    "longitude": "[%key:common::config_flow::data::longitude%]"
                 }
             }
         },
