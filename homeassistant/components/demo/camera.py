@@ -41,14 +41,6 @@ class DemoCamera(Camera):
         return self._name
 
     @property
-    def should_poll(self):
-        """Demo camera doesn't need poll.
-
-        Need explicitly call async_write_ha_state() after state changed.
-        """
-        return False
-
-    @property
     def supported_features(self):
         """Camera support turn on/off features."""
         return SUPPORT_ON_OFF
