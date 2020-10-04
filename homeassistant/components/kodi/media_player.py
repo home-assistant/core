@@ -767,7 +767,7 @@ class KodiEntity(MediaPlayerEntity):
             if media_id is None:
                 media_id = await self._async_find_song(media_name, artist_name)
             if media_id:
-                self._kodi.add_song_to_playlist(int(media_id))
+                await self._kodi.add_song_to_playlist(int(media_id))
 
         elif media_type == "ALBUM":
             if media_id is None:
@@ -777,7 +777,7 @@ class KodiEntity(MediaPlayerEntity):
 
                 media_id = await self._async_find_album(media_name, artist_name)
             if media_id:
-                self._kodi.add_album_to_playlist(int(media_id))
+                await self._kodi.add_album_to_playlist(int(media_id))
 
         else:
             raise RuntimeError("Unrecognized media type.")
