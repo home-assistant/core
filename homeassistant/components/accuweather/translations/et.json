@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Sidumine juba tehtud. V\u00f5imalik on ainult 1 sidumine,"
+            "single_instance_allowed": "Sidumine juba tehtud. V\u00f5imalik on ainult 1 sidumine."
         },
         "error": {
             "cannot_connect": "\u00dchendus eba\u00f5nnestus",

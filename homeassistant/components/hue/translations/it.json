@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "Tutti i bridge di Philips Hue sono gi\u00e0 configurati",
             "already_configured": "Il bridge \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione per bridge \u00e8 gi\u00e0 in corso.",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi al bridge",
             "discover_timeout": "Impossibile trovare i bridge Hue",
             "no_bridges": "Nessun bridge di Philips Hue trovato",
