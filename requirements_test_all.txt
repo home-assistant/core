@@ -938,6 +938,9 @@ simplehound==0.3
 # homeassistant.components.simplisafe
 simplisafe-python==9.4.1
 
+# homeassistant.components.slack
+slackclient==2.5.0
+
 # homeassistant.components.sleepiq
 sleepyq==0.7
 
