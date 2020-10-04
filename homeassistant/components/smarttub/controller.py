@@ -87,7 +87,7 @@ class SmartTubController:
                 for spa_id, spa in self._spas.items():
                     data[spa_id] = {"status": await spa.get_status()}
         except APIError as err:
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from err
 
         return data
 
