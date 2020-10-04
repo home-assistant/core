@@ -1,4 +1,6 @@
 """The 1-Wire component."""
+import asyncio
+
 import voluptuous as vol
 
 from .const import DOMAIN, SUPPORTED_PLATFORMS
@@ -24,9 +26,12 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = True
-    for component in SUPPORTED_PLATFORMS:
-        unload_ok = unload_ok and await hass.config_entries.async_forward_entry_unload(
-            config_entry, component
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in SUPPORTED_PLATFORMS
+            ]
         )
+    )
     return unload_ok
