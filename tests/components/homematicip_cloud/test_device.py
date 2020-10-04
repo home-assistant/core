@@ -243,7 +243,7 @@ async def test_hmip_reset_energy_counter_services(hass, default_mock_hap_factory
 
 
 async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
-    """Test multi area device."""
+    """Test multi area device. Check if devices are created and referenced."""
     entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
     entity_name = "Wired Eingangsmodul – 32-fach Channel5"
     device_model = "HmIPW-DRI32"
@@ -256,6 +256,7 @@ async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
     )
     assert ha_state
 
+    # get the entity
     entity_registry = await er.async_get_registry(hass)
     entity = entity_registry.async_get(ha_state.entity_id)
     assert entity
@@ -264,6 +265,7 @@ async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
     device_registry = await dr.async_get_registry(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.name == entity_name
+
     # get the base device
     via_device = device_registry.async_get(device.via_device_id)
     assert via_device.name == "Wired Eingangsmodul – 32-fach"
