@@ -3296,7 +3296,10 @@ async def test_media_player_sound_mode_list_unsupported(hass):
 
     # Test equalizer controller is not there
     assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth",
+        appliance,
+        "Alexa",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
     )
 
 
@@ -3832,7 +3835,8 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         {"friendly_name": "Test camera", "supported_features": 3},
     )
     await async_process_ha_core_config(
-        hass, {"external_url": url},
+        hass,
+        {"external_url": url},
     )
 
     appliance = await discovery_test(device, hass)
@@ -3846,7 +3850,8 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     )
 
     await async_process_ha_core_config(
-        hass, {"external_url": "https://mycamerastream.test"},
+        hass,
+        {"external_url": "https://mycamerastream.test"},
     )
 
     with patch(

@@ -43,7 +43,11 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
-        1: {"in_clusters": [hvac.Fan.cluster_id], "out_clusters": [], "device_type": 0}
+        1: {
+            "in_clusters": [hvac.Fan.cluster_id],
+            "out_clusters": [],
+            "device_type": zha.DeviceType.ON_OFF_SWITCH,
+        }
     }
     return zigpy_device_mock(endpoints)
 

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Telldus Live! \u00e4r redan konfigurerad",
             "authorize_url_fail": "Ok\u00e4nt fel n\u00e4r genererar en url f\u00f6r att auktorisera.",
             "authorize_url_timeout": "Timeout n\u00e4r genererar auktorisera url.",
             "unknown": "Ok\u00e4nt fel intr\u00e4ffade"

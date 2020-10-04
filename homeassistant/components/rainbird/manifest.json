@@ -2,6 +2,6 @@
   "domain": "rainbird",
   "name": "Rain Bird",
   "documentation": "https://www.home-assistant.io/integrations/rainbird",
-  "requirements": ["pyrainbird==0.4.1"],
+  "requirements": ["pyrainbird==0.4.2"],
   "codeowners": ["@konikvranik"]
 }

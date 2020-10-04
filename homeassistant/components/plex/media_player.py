@@ -10,6 +10,8 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -35,8 +37,16 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
+from .media_browser import browse_media
 
 LIVE_TV_SECTION = "-4"
+PLAYLISTS_BROWSE_PAYLOAD = {
+    "title": "Playlists",
+    "media_content_id": "all",
+    "media_content_type": "playlists",
+    "can_play": False,
+    "can_expand": True,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -304,7 +314,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._state = STATE_OFF
 
     def _set_media_type(self):
-        if self._session_type in ["clip", "episode"]:
+        if self._session_type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
@@ -333,6 +343,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
+
+        elif self._session_type == "clip":
+            _LOGGER.debug(
+                "Clip content type detected, compatibility may vary: %s", self.name
+            )
+            self._media_content_type = MEDIA_TYPE_VIDEO
 
     def force_idle(self):
         """Force client to idle."""
@@ -397,19 +413,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        if self._session_type == "clip":
-            _LOGGER.debug(
-                "Clip content type detected, compatibility may vary: %s", self.name
-            )
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "episode":
-            return MEDIA_TYPE_TVSHOW
-        if self._session_type == "movie":
-            return MEDIA_TYPE_MOVIE
-        if self._session_type == "track":
-            return MEDIA_TYPE_MUSIC
-
-        return None
+        return self._media_content_type
 
     @property
     def media_artist(self):
@@ -494,9 +498,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
                 | SUPPORT_VOLUME_MUTE
+                | SUPPORT_BROWSE_MEDIA
             )
 
-        return SUPPORT_PLAY_MEDIA
+        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -616,3 +621,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.entity_id,
+            self.plex_server,
+            media_content_type,
+            media_content_id,
+        )

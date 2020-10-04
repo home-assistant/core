@@ -5,6 +5,7 @@
             "unsupported_model": "Este modelo de impresora no es compatible."
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "Error de conexi\u00f3n.",
             "snmp_error": "El servidor SNMP est\u00e1 apagado o la impresora no es compatible.",
             "wrong_host": "Nombre del host o direcci\u00f3n IP no v\u00e1lidos."

@@ -18,7 +18,9 @@ async def test_import(hass):
     """Test that we can import a config entry."""
     with patch("pyalmond.WebAlmondAPI.async_list_apps"):
         assert await setup.async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
+            hass,
+            DOMAIN,
+            {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 
@@ -34,7 +36,9 @@ async def test_import_cannot_connect(hass):
         "pyalmond.WebAlmondAPI.async_list_apps", side_effect=asyncio.TimeoutError
     ):
         assert await setup.async_setup_component(
-            hass, DOMAIN, {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
+            hass,
+            DOMAIN,
+            {DOMAIN: {"type": "local", "host": "http://localhost:3000"}},
         )
         await hass.async_block_till_done()
 
@@ -87,7 +91,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,

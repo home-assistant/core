@@ -107,11 +107,11 @@
             "on": "Connectat"
         },
         "door": {
-            "off": "Tancat/da",
+            "off": "Tancat/ada",
             "on": "Obert/a"
         },
         "garage_door": {
-            "off": "Tancat/da",
+            "off": "Tancat/ada",
             "on": "Obert/a"
         },
         "gas": {
@@ -139,7 +139,7 @@
             "on": "Detectat"
         },
         "opening": {
-            "off": "Tancat/da",
+            "off": "Tancat/ada",
             "on": "Obert/a"
         },
         "presence": {
@@ -167,7 +167,7 @@
             "on": "Detectat"
         },
         "window": {
-            "off": "Tancat/da",
+            "off": "Tancat/ada",
             "on": "Obert/a"
         }
     },

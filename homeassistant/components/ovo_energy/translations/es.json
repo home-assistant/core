@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "authorization_error": "Error de autorizaci\u00f3n. Comprueba tus credenciales.",
+            "connection_error": "No se ha podido conectar a OVO Energy."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "description": "Configurar una instancia de OVO Energy para acceder a su consumo de energ\u00eda.",
+                "title": "A\u00f1adir OVO Energy"
+            }
+        }
+    }
+}

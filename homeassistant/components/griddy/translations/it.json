@@ -4,7 +4,7 @@
             "already_configured": "Questa Zona di Carico \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "unknown": "Errore imprevisto"
         },
         "step": {

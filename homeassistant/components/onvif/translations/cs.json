@@ -33,6 +33,7 @@
             "manual_input": {
                 "data": {
                     "host": "Adresa za\u0159\u00edzen\u00ed",
+                    "name": "N\u00e1zev",
                     "port": "Port"
                 },
                 "title": "Konfigurovat za\u0159\u00edzen\u00ed ONVIF"

@@ -39,7 +39,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.rachio.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.rachio.async_setup_entry", return_value=True,
+        "homeassistant.components.rachio.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,7 +77,8 @@ async def test_form_invalid_auth(hass):
         "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: "api_key"},
+            result["flow_id"],
+            {CONF_API_KEY: "api_key"},
         )
 
     assert result2["type"] == "form"
@@ -97,7 +99,8 @@ async def test_form_cannot_connect(hass):
         "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: "api_key"},
+            result["flow_id"],
+            {CONF_API_KEY: "api_key"},
         )
 
     assert result2["type"] == "form"

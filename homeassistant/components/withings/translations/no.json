@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Konfigurasjon oppdatert for profil.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
-            "missing_configuration": "Withings-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "missing_configuration": "Withings-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, sjekk {docs_url} ] ( {docs_url} )"
         },
         "create_entry": {
             "default": "Vellykket godkjenning med Withings."
@@ -18,7 +19,7 @@
             },
             "profile": {
                 "data": {
-                    "profile": "Profil"
+                    "profile": "Profil navn"
                 },
                 "description": "Oppgi et unikt profilnavn for disse dataene. Dette er vanligvis navnet p\u00e5 profilen du valgte i forrige trinn.",
                 "title": "Brukerprofil."

@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
@@ -111,7 +111,7 @@ class OctoPrintSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
-        if sensor_unit in (TEMP_CELSIUS, UNIT_PERCENTAGE):
+        if sensor_unit in (TEMP_CELSIUS, PERCENTAGE):
             # API sometimes returns null and not 0
             if self._state is None:
                 self._state = 0

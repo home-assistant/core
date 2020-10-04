@@ -10,6 +10,7 @@ from homeassistant.core import callback
 from .const import (
     CONF_AUTOHEAL,
     CONF_DEBUG,
+    CONF_NETWORK_KEY,
     CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH,
     DATA_NETWORK,
@@ -46,8 +47,23 @@ def websocket_get_config(hass, connection, msg):
     )
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zwave/get_migration_config"})
+def websocket_get_migration_config(hass, connection, msg):
+    """Get Z-Wave configuration for migration."""
+    config = hass.data[DATA_ZWAVE_CONFIG]
+    connection.send_result(
+        msg[ID],
+        {
+            CONF_USB_STICK_PATH: config[CONF_USB_STICK_PATH],
+            CONF_NETWORK_KEY: config[CONF_NETWORK_KEY],
+        },
+    )
+
+
 @callback
 def async_load_websocket_api(hass):
     """Set up the web socket API."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_get_config)
+    websocket_api.async_register_command(hass, websocket_get_migration_config)

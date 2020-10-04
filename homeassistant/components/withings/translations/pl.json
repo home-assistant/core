@@ -21,7 +21,7 @@
             },
             "reauth": {
                 "description": "Profil \"{profile}\" musi zosta\u0107 ponownie uwierzytelniony, aby nadal otrzymywa\u0107 dane Withings.",
-                "title": "Ponownie uwierzytelnij {profile}"
+                "title": "Ponownie uwierzytelnij {rofile}"
             }
         }
     }

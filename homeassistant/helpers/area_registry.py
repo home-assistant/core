@@ -3,12 +3,12 @@ from asyncio import Event
 from collections import OrderedDict
 import logging
 from typing import Dict, Iterable, List, MutableMapping, Optional, cast
-import uuid
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+import homeassistant.util.uuid as uuid_util
 
 from .typing import HomeAssistantType
 
@@ -26,7 +26,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
+    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
 
 
 class AreaRegistry:

@@ -156,7 +156,9 @@ class GuardianSwitch(GuardianEntity, SwitchEntity):
         try:
             async with self._client:
                 await self._client.system.upgrade_firmware(
-                    url=url, port=port, filename=filename,
+                    url=url,
+                    port=port,
+                    filename=filename,
                 )
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)

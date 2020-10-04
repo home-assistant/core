@@ -22,7 +22,7 @@
                 "data": {
                     "password": "Contrasenya",
                     "port": "Port",
-                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
+                    "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari"
                 },
                 "description": "Vols configurar {name} ({host})?",
@@ -33,7 +33,7 @@
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
                     "port": "Port",
-                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
+                    "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari"
                 },
                 "title": "Synology DSM"
@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minuts entre escanejos"
+                    "scan_interval": "Minuts entre escanejos",
+                    "timeout": "Temps d'espera (segons)"
                 }
             }
         }

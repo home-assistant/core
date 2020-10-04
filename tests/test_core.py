@@ -174,165 +174,141 @@ def test_stage_shutdown():
     assert len(test_all) == 2
 
 
-class TestHomeAssistant(unittest.TestCase):
-    """Test the Home Assistant core classes."""
+async def test_pending_sheduler(hass):
+    """Add a coro to pending tasks."""
+    call_count = []
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    async def test_coro():
+        """Test Coro."""
+        call_count.append("call")
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    for _ in range(3):
+        hass.async_add_job(test_coro())
 
-    def test_pending_sheduler(self):
-        """Add a coro to pending tasks."""
-        call_count = []
+    await asyncio.wait(hass._pending_tasks)
 
-        @asyncio.coroutine
-        def test_coro():
-            """Test Coro."""
-            call_count.append("call")
-
-        for _ in range(3):
-            self.hass.add_job(test_coro())
-
-        asyncio.run_coroutine_threadsafe(
-            asyncio.wait(self.hass._pending_tasks), loop=self.hass.loop
-        ).result()
-
-        assert len(self.hass._pending_tasks) == 3
-        assert len(call_count) == 3
-
-    def test_async_add_job_pending_tasks_coro(self):
-        """Add a coro to pending tasks."""
-        call_count = []
-
-        @asyncio.coroutine
-        def test_coro():
-            """Test Coro."""
-            call_count.append("call")
-
-        for _ in range(2):
-            self.hass.add_job(test_coro())
-
-        @asyncio.coroutine
-        def wait_finish_callback():
-            """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
-
-        asyncio.run_coroutine_threadsafe(
-            wait_finish_callback(), self.hass.loop
-        ).result()
-
-        assert len(self.hass._pending_tasks) == 2
-        self.hass.block_till_done()
-        assert len(call_count) == 2
-
-    def test_async_add_job_pending_tasks_executor(self):
-        """Run an executor in pending tasks."""
-        call_count = []
-
-        def test_executor():
-            """Test executor."""
-            call_count.append("call")
-
-        @asyncio.coroutine
-        def wait_finish_callback():
-            """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
-
-        for _ in range(2):
-            self.hass.add_job(test_executor)
-
-        asyncio.run_coroutine_threadsafe(
-            wait_finish_callback(), self.hass.loop
-        ).result()
-
-        assert len(self.hass._pending_tasks) == 2
-        self.hass.block_till_done()
-        assert len(call_count) == 2
-
-    def test_async_add_job_pending_tasks_callback(self):
-        """Run a callback in pending tasks."""
-        call_count = []
-
-        @ha.callback
-        def test_callback():
-            """Test callback."""
-            call_count.append("call")
-
-        @asyncio.coroutine
-        def wait_finish_callback():
-            """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
-
-        for _ in range(2):
-            self.hass.add_job(test_callback)
-
-        asyncio.run_coroutine_threadsafe(
-            wait_finish_callback(), self.hass.loop
-        ).result()
-
-        self.hass.block_till_done()
-
-        assert len(self.hass._pending_tasks) == 0
-        assert len(call_count) == 2
-
-    def test_add_job_with_none(self):
-        """Try to add a job with None as function."""
-        with pytest.raises(ValueError):
-            self.hass.add_job(None, "test_arg")
+    assert len(hass._pending_tasks) == 3
+    assert len(call_count) == 3
 
 
-class TestEvent(unittest.TestCase):
-    """A Test Event class."""
+async def test_async_add_job_pending_tasks_coro(hass):
+    """Add a coro to pending tasks."""
+    call_count = []
 
-    def test_eq(self):
-        """Test events."""
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
-        context = ha.Context()
-        event1, event2 = [
-            ha.Event("some_type", data, time_fired=now, context=context)
-            for _ in range(2)
-        ]
+    async def test_coro():
+        """Test Coro."""
+        call_count.append("call")
 
-        assert event1 == event2
+    for _ in range(2):
+        hass.add_job(test_coro())
 
-    def test_repr(self):
-        """Test that repr method works."""
-        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
 
-        assert (
-            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
-            == "<Event TestEvent[R]: beer=nice>"
-        )
+    await wait_finish_callback()
 
-    def test_as_dict(self):
-        """Test as dictionary."""
-        event_type = "some_type"
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
+    assert len(hass._pending_tasks) == 2
+    await hass.async_block_till_done()
+    assert len(call_count) == 2
 
-        event = ha.Event(event_type, data, ha.EventOrigin.local, now)
-        expected = {
-            "event_type": event_type,
-            "data": data,
-            "origin": "LOCAL",
-            "time_fired": now,
-            "context": {
-                "id": event.context.id,
-                "parent_id": None,
-                "user_id": event.context.user_id,
-            },
-        }
-        assert expected == event.as_dict()
+
+async def test_async_add_job_pending_tasks_executor(hass):
+    """Run an executor in pending tasks."""
+    call_count = []
+
+    def test_executor():
+        """Test executor."""
+        call_count.append("call")
+
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    for _ in range(2):
+        hass.async_add_job(test_executor)
+
+    await wait_finish_callback()
+
+    assert len(hass._pending_tasks) == 2
+    await hass.async_block_till_done()
+    assert len(call_count) == 2
+
+
+async def test_async_add_job_pending_tasks_callback(hass):
+    """Run a callback in pending tasks."""
+    call_count = []
+
+    @ha.callback
+    def test_callback():
+        """Test callback."""
+        call_count.append("call")
+
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    for _ in range(2):
+        hass.async_add_job(test_callback)
+
+    await wait_finish_callback()
+
+    await hass.async_block_till_done()
+
+    assert len(hass._pending_tasks) == 0
+    assert len(call_count) == 2
+
+
+async def test_add_job_with_none(hass):
+    """Try to add a job with None as function."""
+    with pytest.raises(ValueError):
+        hass.async_add_job(None, "test_arg")
+
+
+def test_event_eq():
+    """Test events."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = [
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    ]
+
+    assert event1 == event2
+
+
+def test_event_repr():
+    """Test that Event repr method works."""
+    assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+
+    assert (
+        str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+        == "<Event TestEvent[R]: beer=nice>"
+    )
+
+
+def test_event_as_dict():
+    """Test as Event as dictionary."""
+    event_type = "some_type"
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    expected = {
+        "event_type": event_type,
+        "data": data,
+        "origin": "LOCAL",
+        "time_fired": now,
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
+    }
+    assert event.as_dict() == expected
 
 
 class TestEventBus(unittest.TestCase):
@@ -412,8 +388,7 @@ class TestEventBus(unittest.TestCase):
         """Test listen_once_event method."""
         runs = []
 
-        @asyncio.coroutine
-        def event_handler(event):
+        async def event_handler(event):
             runs.append(event)
 
         self.bus.listen_once("test_event", event_handler)
@@ -470,8 +445,7 @@ class TestEventBus(unittest.TestCase):
         """Test coroutine event listener."""
         coroutine_calls = []
 
-        @asyncio.coroutine
-        def coroutine_listener(event):
+        async def coroutine_listener(event):
             coroutine_calls.append(event)
 
         self.bus.listen("test_coroutine", coroutine_listener)
@@ -944,14 +918,14 @@ class TestConfig(unittest.TestCase):
 
             self.config.allowlist_external_dirs = {"/home", "/var"}
 
-            unvalid = [
+            invalid = [
                 "/hass/config/secure",
                 "/etc/passwd",
                 "/root/secure_file",
                 "/var/../etc/passwd",
                 test_file,
             ]
-            for path in unvalid:
+            for path in invalid:
                 assert not self.config.is_allowed_path(path)
 
             with pytest.raises(AssertionError):
@@ -1140,8 +1114,8 @@ async def test_start_taking_too_long(loop, caplog):
     caplog.set_level(logging.WARNING)
 
     try:
-        with patch(
-            "homeassistant.core.timeout", side_effect=asyncio.TimeoutError
+        with patch.object(
+            hass, "async_block_till_done", side_effect=asyncio.TimeoutError
         ), patch("homeassistant.core._async_create_timer") as mock_timer:
             await hass.async_start()
 
@@ -1419,9 +1393,102 @@ async def test_log_blocking_events(hass, caplog):
     hass.async_create_task(_wait_a_bit_1())
     await hass.async_block_till_done()
 
-    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.00001):
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
         hass.async_create_task(_wait_a_bit_2())
         await hass.async_block_till_done()
 
     assert "_wait_a_bit_2" in caplog.text
     assert "_wait_a_bit_1" not in caplog.text
+
+
+async def test_chained_logging_hits_log_timeout(hass, caplog):
+    """Ensure we log which task is blocking startup when there is a task chain and debug logging is on."""
+    caplog.set_level(logging.DEBUG)
+
+    created = 0
+
+    async def _task_chain_1():
+        nonlocal created
+        created += 1
+        if created > 1000:
+            return
+        hass.async_create_task(_task_chain_2())
+
+    async def _task_chain_2():
+        nonlocal created
+        created += 1
+        if created > 1000:
+            return
+        hass.async_create_task(_task_chain_1())
+
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
+        hass.async_create_task(_task_chain_1())
+        await hass.async_block_till_done()
+
+    assert "_task_chain_" in caplog.text
+
+
+async def test_chained_logging_misses_log_timeout(hass, caplog):
+    """Ensure we do not log which task is blocking startup if we do not hit the timeout."""
+    caplog.set_level(logging.DEBUG)
+
+    created = 0
+
+    async def _task_chain_1():
+        nonlocal created
+        created += 1
+        if created > 10:
+            return
+        hass.async_create_task(_task_chain_2())
+
+    async def _task_chain_2():
+        nonlocal created
+        created += 1
+        if created > 10:
+            return
+        hass.async_create_task(_task_chain_1())
+
+    hass.async_create_task(_task_chain_1())
+    await hass.async_block_till_done()
+
+    assert "_task_chain_" not in caplog.text
+
+
+async def test_async_all(hass):
+    """Test async_all."""
+
+    hass.states.async_set("switch.link", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.frog", "on")
+    hass.states.async_set("vacuum.floor", "on")
+
+    assert {state.entity_id for state in hass.states.async_all()} == {
+        "switch.link",
+        "light.bowl",
+        "light.frog",
+        "vacuum.floor",
+    }
+    assert {state.entity_id for state in hass.states.async_all("light")} == {
+        "light.bowl",
+        "light.frog",
+    }
+    assert {
+        state.entity_id for state in hass.states.async_all(["light", "switch"])
+    } == {"light.bowl", "light.frog", "switch.link"}
+
+
+async def test_async_entity_ids_count(hass):
+    """Test async_entity_ids_count."""
+
+    hass.states.async_set("switch.link", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.frog", "on")
+    hass.states.async_set("vacuum.floor", "on")
+
+    assert hass.states.async_entity_ids_count() == 4
+    assert hass.states.async_entity_ids_count("light") == 2
+
+    hass.states.async_set("light.cow", "on")
+
+    assert hass.states.async_entity_ids_count() == 5
+    assert hass.states.async_entity_ids_count("light") == 3

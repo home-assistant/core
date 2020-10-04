@@ -10,6 +10,8 @@ from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.util import dt as dt_util
 
+from .common import wait_recording_done
+
 from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -37,6 +39,7 @@ class TestRecorderPurge(unittest.TestCase):
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
         with recorder.session_scope(hass=self.hass) as session:
             for event_id in range(6):
@@ -72,6 +75,7 @@ class TestRecorderPurge(unittest.TestCase):
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
         with recorder.session_scope(hass=self.hass) as session:
             for event_id in range(6):
@@ -103,6 +107,7 @@ class TestRecorderPurge(unittest.TestCase):
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
         with recorder.session_scope(hass=self.hass) as session:
             for rec_id in range(6):
@@ -183,6 +188,7 @@ class TestRecorderPurge(unittest.TestCase):
             assert recorder_runs.count() == 7
 
             self.hass.data[DATA_INSTANCE].block_till_done()
+            wait_recording_done(self.hass)
 
             # run purge method - no service data, use defaults
             self.hass.services.call("recorder", "purge")
@@ -190,6 +196,7 @@ class TestRecorderPurge(unittest.TestCase):
 
             # Small wait for recorder thread
             self.hass.data[DATA_INSTANCE].block_till_done()
+            wait_recording_done(self.hass)
 
             # only purged old events
             assert states.count() == 4
@@ -201,6 +208,7 @@ class TestRecorderPurge(unittest.TestCase):
 
             # Small wait for recorder thread
             self.hass.data[DATA_INSTANCE].block_till_done()
+            wait_recording_done(self.hass)
 
             # we should only have 2 states left after purging
             assert states.count() == 2
@@ -223,6 +231,7 @@ class TestRecorderPurge(unittest.TestCase):
                 self.hass.services.call("recorder", "purge", service_data=service_data)
                 self.hass.block_till_done()
                 self.hass.data[DATA_INSTANCE].block_till_done()
+                wait_recording_done(self.hass)
                 assert (
                     mock_logger.debug.mock_calls[5][1][0]
                     == "Vacuuming SQL DB to free space"

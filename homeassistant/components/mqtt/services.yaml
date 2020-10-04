@@ -35,3 +35,6 @@ dump:
       description: how long we should listen for messages in seconds
       example: 5
       default: 5
+
+reload:
+  description: Reload all mqtt entities from yaml.

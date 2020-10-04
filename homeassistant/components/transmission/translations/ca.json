@@ -12,9 +12,7 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
-                    "limit": "L\u00edmit",
                     "name": "Nom",
-                    "order": "Ordre",
                     "password": "Contrasenya",
                     "port": "Port",
                     "username": "Nom d'usuari"

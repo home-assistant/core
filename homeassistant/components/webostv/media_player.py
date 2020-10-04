@@ -75,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     turn_on_action = discovery_info.get(CONF_ON_ACTION)
 
     client = hass.data[DOMAIN][host]["client"]
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
 
     entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
 
@@ -162,6 +162,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
 
     def update_sources(self):
         """Update list of sources from current source, apps, inputs and configured list."""
+        source_list = self._source_list
         self._source_list = {}
         conf_sources = self._customize[CONF_SOURCES]
 
@@ -206,6 +207,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 or any(word in app["id"] for word in conf_sources)
             ):
                 self._source_list["Live TV"] = app
+        if not self._source_list and source_list:
+            self._source_list = source_list
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):
@@ -302,7 +305,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Flag media player features that are supported."""
         supported = SUPPORT_WEBOSTV
 
-        if self._client.sound_output == "external_arc":
+        if (self._client.sound_output == "external_arc") or (
+            self._client.sound_output == "external_speaker"
+        ):
             supported = supported | SUPPORT_WEBOSTV_VOLUME
         elif self._client.sound_output != "lineout":
             supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
@@ -328,7 +333,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn on the media player."""
         if self._on_script:
-            await self._on_script.async_run()
+            await self._on_script.async_run(context=self._context)
 
     @cmd
     async def async_volume_up(self):

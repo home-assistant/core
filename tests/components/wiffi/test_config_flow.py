@@ -82,7 +82,8 @@ async def test_form(hass, dummy_tcp_server):
     assert result["step_id"] == config_entries.SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG,
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
 
@@ -94,7 +95,8 @@ async def test_form_addr_in_use(hass, addr_in_use):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG,
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "addr_in_use"
@@ -107,7 +109,8 @@ async def test_form_start_server_failed(hass, start_server_failed):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG,
+        result["flow_id"],
+        user_input=MOCK_CONFIG,
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "start_server_failed"

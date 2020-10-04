@@ -1,9 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured_account": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "account_error": "Ugyldig godkjenning",
+            "session_error": "Tilkobling mislyktes.",
+            "unknown": "Uventet feil"
+        },
         "step": {
             "user": {
                 "data": {
-                    "server": ""
+                    "password": "Passord",
+                    "server": "",
+                    "username": "Brukernavn"
                 },
                 "description": "Angi Dexcom Share-legitimasjon",
                 "title": "Setup Dexcom integrasjon"

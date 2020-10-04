@@ -3,7 +3,7 @@ import logging
 
 import gammu  # pylint: disable=import-error, no-member
 
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
+from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SMS_GATEWAY
@@ -17,7 +17,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     imei = await gateway.get_imei_async()
     name = f"gsm_signal_imei_{imei}"
-    entities.append(GSMSignalSensor(hass, gateway, name,))
+    entities.append(
+        GSMSignalSensor(
+            hass,
+            gateway,
+            name,
+        )
+    )
     async_add_entities(entities, True)
 
 
@@ -25,7 +31,10 @@ class GSMSignalSensor(Entity):
     """Implementation of a GSM Signal sensor."""
 
     def __init__(
-        self, hass, gateway, name,
+        self,
+        hass,
+        gateway,
+        name,
     ):
         """Initialize the GSM Signal sensor."""
         self._hass = hass
@@ -41,7 +50,7 @@ class GSMSignalSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "dB"
+        return SIGNAL_STRENGTH_DECIBELS
 
     @property
     def device_class(self):

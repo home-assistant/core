@@ -26,11 +26,13 @@ async def test_form_user_with_secure_elk(hass):
     mocked_elk = mock_elk(invalid_auth=False)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ), patch(
         "homeassistant.components.elkm1.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry", return_value=True,
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,11 +73,13 @@ async def test_form_user_with_non_secure_elk(hass):
     mocked_elk = mock_elk(invalid_auth=False)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ), patch(
         "homeassistant.components.elkm1.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry", return_value=True,
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -114,11 +118,13 @@ async def test_form_user_with_serial_elk(hass):
     mocked_elk = mock_elk(invalid_auth=False)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ), patch(
         "homeassistant.components.elkm1.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry", return_value=True,
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -154,7 +160,8 @@ async def test_form_cannot_connect(hass):
     mocked_elk = mock_elk(invalid_auth=False)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ), patch(
         "homeassistant.components.elkm1.config_flow.async_wait_for_elk_to_sync",
         return_value=False,
@@ -184,7 +191,8 @@ async def test_form_invalid_auth(hass):
     mocked_elk = mock_elk(invalid_auth=True)
 
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -208,11 +216,13 @@ async def test_form_import(hass):
 
     mocked_elk = mock_elk(invalid_auth=False)
     with patch(
-        "homeassistant.components.elkm1.config_flow.elkm1.Elk", return_value=mocked_elk,
+        "homeassistant.components.elkm1.config_flow.elkm1.Elk",
+        return_value=mocked_elk,
     ), patch(
         "homeassistant.components.elkm1.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.elkm1.async_setup_entry", return_value=True,
+        "homeassistant.components.elkm1.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

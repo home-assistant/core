@@ -20,9 +20,9 @@
             },
             "configure_profile": {
                 "data": {
-                    "include": "\u65b0\u589e\u651d\u5f71\u6a5f\u7269\u4ef6"
+                    "include": "\u65b0\u589e\u651d\u5f71\u6a5f\u5be6\u9ad4"
                 },
-                "description": "\u4ee5 {profile} \u4f7f\u7528\u89e3\u6790\u5ea6 {resolution} \u65b0\u589e\u651d\u5f71\u6a5f\u7269\u4ef6\uff1f",
+                "description": "\u4ee5 {profile} \u4f7f\u7528\u89e3\u6790\u5ea6 {resolution} \u65b0\u589e\u651d\u5f71\u6a5f\u5be6\u9ad4\uff1f",
                 "title": "\u8a2d\u5b9a Profiles"
             },
             "device": {

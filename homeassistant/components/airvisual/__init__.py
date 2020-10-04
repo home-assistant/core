@@ -3,8 +3,13 @@ import asyncio
 from datetime import timedelta
 from math import ceil
 
-from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, NodeProError
+from pyairvisual import CloudAPI, NodeSamba
+from pyairvisual.errors import (
+    AirVisualError,
+    InvalidKeyError,
+    KeyExpiredError,
+    NodeProError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -20,8 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_CITY,
@@ -203,30 +211,38 @@ def _standardize_node_pro_config_entry(hass, config_entry):
 
 async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
-    websession = aiohttp_client.async_get_clientsession(hass)
-
     if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
 
-        client = Client(api_key=config_entry.data[CONF_API_KEY], session=websession)
+        websession = aiohttp_client.async_get_clientsession(hass)
+        cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
         async def async_update_data():
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
-                api_coro = client.api.city(
+                api_coro = cloud_api.air_quality.city(
                     config_entry.data[CONF_CITY],
                     config_entry.data[CONF_STATE],
                     config_entry.data[CONF_COUNTRY],
                 )
             else:
-                api_coro = client.api.nearest_city(
-                    config_entry.data[CONF_LATITUDE], config_entry.data[CONF_LONGITUDE],
+                api_coro = cloud_api.air_quality.nearest_city(
+                    config_entry.data[CONF_LATITUDE],
+                    config_entry.data[CONF_LONGITUDE],
                 )
 
             try:
                 return await api_coro
+            except (InvalidKeyError, KeyExpiredError):
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=config_entry.data,
+                    )
+                )
             except AirVisualError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}")
+                raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
         coordinator = DataUpdateCoordinator(
             hass,
@@ -250,19 +266,15 @@ async def async_setup_entry(hass, config_entry):
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
-        client = Client(session=websession)
-
         async def async_update_data():
             """Get new data from the API."""
             try:
-                return await client.node.from_samba(
-                    config_entry.data[CONF_IP_ADDRESS],
-                    config_entry.data[CONF_PASSWORD],
-                    include_history=False,
-                    include_trends=False,
-                )
+                async with NodeSamba(
+                    config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
+                ) as node:
+                    return await node.async_get_latest_measurements()
             except NodeProError as err:
-                raise UpdateFailed(f"Error while retrieving data: {err}")
+                raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
         coordinator = DataUpdateCoordinator(
             hass,
@@ -350,20 +362,15 @@ async def async_update_options(hass, config_entry):
     await coordinator.async_request_refresh()
 
 
-class AirVisualEntity(Entity):
+class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
     def __init__(self, coordinator):
         """Initialize."""
+        super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = None
         self._unit = None
-        self.coordinator = coordinator
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def device_state_attributes(self):
@@ -374,11 +381,6 @@ class AirVisualEntity(Entity):
     def icon(self):
         """Return the icon."""
         return self._icon
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def unit_of_measurement(self):
@@ -397,13 +399,6 @@ class AirVisualEntity(Entity):
         self.async_on_remove(self.coordinator.async_add_listener(update))
 
         self.update_from_latest_data()
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
 
     @callback
     def update_from_latest_data(self):

@@ -61,7 +61,8 @@ async def test_set_alarm_away(hass):
             mock_set_away.assert_called_once()
 
         with patch(
-            "abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock,
+            "abodepy.ALARM.AbodeAlarm.mode",
+            new_callable=PropertyMock,
         ) as mock_mode:
             mock_mode.return_value = CONST.MODE_AWAY
 

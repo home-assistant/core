@@ -105,7 +105,8 @@ async def test_one_lock_operation(hass):
 async def test_one_lock_unknown_state(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
-        hass, "get_lock.online.unknown_state.json",
+        hass,
+        "get_lock.online.unknown_state.json",
     )
     await _create_august_with_devices(hass, [lock_one])
 

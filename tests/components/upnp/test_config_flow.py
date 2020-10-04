@@ -54,7 +54,8 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
 
         # Confirm via step ssdp_confirm.
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={},
+            result["flow_id"],
+            user_input={},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -119,7 +120,8 @@ async def test_flow_user(hass: HomeAssistantType):
 
         # Confirmed via step user.
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"usn": usn},
+            result["flow_id"],
+            user_input={"usn": usn},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -198,12 +200,15 @@ async def test_options_flow(hass: HomeAssistantType):
         assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         # Options flow with no input results in form.
-        result = await hass.config_entries.options.async_init(config_entry.entry_id,)
+        result = await hass.config_entries.options.async_init(
+            config_entry.entry_id,
+        )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         # Options flow with input results in update to entry.
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONFIG_ENTRY_SCAN_INTERVAL: 60},
+            result["flow_id"],
+            user_input={CONFIG_ENTRY_SCAN_INTERVAL: 60},
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {

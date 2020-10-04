@@ -13,10 +13,21 @@
             "user": {
                 "data": {
                     "host": "Smile IP \u4f4d\u5740",
-                    "password": "Smile ID"
+                    "password": "Smile ID",
+                    "port": "Smile \u901a\u8a0a\u57e0"
                 },
-                "description": "\u8a73\u7d30\u8cc7\u8a0a",
+                "description": "\u8acb\u8f38\u5165\u8cc7\u8a0a\uff1a",
                 "title": "\u9023\u7dda\u81f3 Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
+                },
+                "description": "\u8abf\u6574 Plugwise \u9078\u9805"
             }
         }
     }

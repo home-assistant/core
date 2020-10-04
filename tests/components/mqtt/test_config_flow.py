@@ -505,7 +505,8 @@ async def test_options_bad_birth_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"birth_topic": "ha_state/online/#"},
+        result["flow_id"],
+        user_input={"birth_topic": "ha_state/online/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_birth"
@@ -540,7 +541,8 @@ async def test_options_bad_will_message_fails(hass, mock_try_connection):
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"will_topic": "ha_state/offline/#"},
+        result["flow_id"],
+        user_input={"will_topic": "ha_state/offline/#"},
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "bad_will"

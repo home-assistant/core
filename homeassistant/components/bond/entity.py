@@ -27,7 +27,9 @@ class BondEntity(Entity):
     @property
     def unique_id(self) -> Optional[str]:
         """Get unique ID for the entity."""
-        return self._device.device_id
+        hub_id = self._hub.bond_id
+        device_id = self._device.device_id
+        return f"{hub_id}_{device_id}"
 
     @property
     def name(self) -> Optional[str]:
@@ -64,6 +66,7 @@ class BondEntity(Entity):
                 )
             self._available = False
         else:
+            _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
             if not self._available:
                 _LOGGER.info("Entity %s has come back", self.entity_id)
             self._available = True

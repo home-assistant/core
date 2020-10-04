@@ -66,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Gebuert Message aktiv\u00e9ieren",
                     "birth_payload": "Birth message payload",
                     "birth_qos": "Birth message QoS",
                     "birth_retain": "Birth message retain",
                     "birth_topic": "Birth message topic",
                     "discovery": "Entdeckung aktiv\u00e9ieren",
+                    "will_enable": "Gebuert Message aktiv\u00e9ieren",
                     "will_payload": "Will message payload",
                     "will_qos": "Will message QoS",
                     "will_retain": "Will message retain",
