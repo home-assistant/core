@@ -31,11 +31,6 @@ TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}"
 
 
-def clear_discovery_hash(hass, discovery_hash):
-    """Clear entry in ALREADY_DISCOVERED list."""
-    del hass.data[ALREADY_DISCOVERED][discovery_hash]
-
-
 def set_discovery_hash(hass, discovery_hash):
     """Set entry in ALREADY_DISCOVERED list."""
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
