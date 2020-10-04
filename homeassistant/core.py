@@ -562,7 +562,7 @@ class Event:
         return {
             "event_type": self.event_type,
             "data": dict(self.data),
-            "origin": str(self.origin),
+            "origin": str(self.origin.value),
             "time_fired": self.time_fired.isoformat(),
             "context": self.context.as_dict(),
         }
