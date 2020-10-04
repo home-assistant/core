@@ -569,6 +569,7 @@ class Event:
         Async friendly.
         """
         if not self._as_dict:
+            _LOGGER.debug("Event as_dict: miss")
             self._as_dict = {
                 "event_type": self.event_type,
                 "data": dict(self.data),
@@ -576,6 +577,8 @@ class Event:
                 "time_fired": self.time_fired.isoformat(),
                 "context": self.context.as_dict(),
             }
+        else:
+            _LOGGER.debug("Event as_dict: hit")
         return self._as_dict
 
     def __repr__(self) -> str:
@@ -837,6 +840,7 @@ class State:
         Ensures: state == State.from_dict(state.as_dict())
         """
         if not self._as_dict:
+            _LOGGER.debug("State as_dict: miss")
             self._as_dict = {
                 "entity_id": self.entity_id,
                 "state": self.state,
@@ -845,6 +849,8 @@ class State:
                 "last_updated": self.last_updated.isoformat(),
                 "context": self.context.as_dict(),
             }
+        else:
+            _LOGGER.debug("State as_dict: hit")
         return self._as_dict
 
     @classmethod
