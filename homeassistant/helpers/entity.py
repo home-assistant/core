@@ -462,20 +462,22 @@ class Entity(ABC):
             else:
                 return
 
-            if warning:
-                try:
-                    await asyncio.wait_for(
-                        asyncio.shield(task), timeout=SLOW_UPDATE_WARNING
-                    )
-                except asyncio.TimeoutError:
-                    _LOGGER.warning(
-                        "Update of %s is taking over %s seconds",
-                        self.entity_id,
-                        SLOW_UPDATE_WARNING,
-                    )
-                    await task
-            else:
+            if not warning:
                 await task
+                return
+
+            try:
+                await asyncio.wait_for(
+                    asyncio.shield(task), timeout=SLOW_UPDATE_WARNING
+                )
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "Update of %s is taking over %s seconds",
+                    self.entity_id,
+                    SLOW_UPDATE_WARNING,
+                )
+                await task
+
         finally:
             self._update_staged = False
             if self.parallel_updates:
