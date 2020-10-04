@@ -218,9 +218,9 @@ def _supported_features(hass, light: str):
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
 
 
-def abs_rel_diff(a, b):
+def abs_rel_diff(val_a, val_b):
     """Absolute relative difference in %."""
-    return abs((a - b) / b) * 100
+    return abs((val_a - val_b) / val_b) * 100
 
 
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
