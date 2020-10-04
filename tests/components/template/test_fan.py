@@ -526,14 +526,14 @@ async def test_custom_speed_list(hass, calls):
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == "1"
-    _verify(hass, STATE_ON, "1", None, None)
+    _verify(hass, STATE_ON, 1, None, None)
 
     # Set fan's speed to 'medium' which is invalid
     await common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
 
     # verify that speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == "1"
-    _verify(hass, STATE_ON, "1", None, None)
+    _verify(hass, STATE_ON, 1, None, None)
 
 
 async def test_set_osc(hass, calls):
@@ -662,7 +662,7 @@ def _verify(
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
-    assert state.state == expected_state
+    assert state.state == str(expected_state)
     assert attributes.get(ATTR_SPEED) == expected_speed
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction
