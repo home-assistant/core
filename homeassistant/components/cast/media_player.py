@@ -40,7 +40,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT,
-    CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -59,7 +58,6 @@ from homeassistant.util.logging import async_create_catching_coro
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
-    DEFAULT_PORT,
     DOMAIN as CAST_DOMAIN,
     KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
@@ -154,8 +152,6 @@ async def _async_setup_platform(
         )
     elif CONF_UUID in config:
         info = ChromecastInfo(uuid=config[CONF_UUID], services=None)
-    elif CONF_HOST in config:
-        info = ChromecastInfo(host=config[CONF_HOST], port=DEFAULT_PORT, services=None)
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
