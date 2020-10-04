@@ -80,7 +80,7 @@ class SAJInverter:
 
     def __init__(self, config):
         """Init SAJ Inverter class."""
-        self._name = config[CONF_NAME]
+        self._name = config.get(CONF_NAME)
         self._wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
 
         kwargs = {}
