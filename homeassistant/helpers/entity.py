@@ -459,8 +459,7 @@ class Entity(ABC):
                 task = asyncio.create_task(self.async_update())  # type: ignore
             elif hasattr(self, "update"):
                 task = asyncio.create_task(self.hass.async_add_executor_job(self.update))  # type: ignore
-
-            if not task:
+            else:
                 return
 
             if warning:
