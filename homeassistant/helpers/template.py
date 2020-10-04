@@ -72,7 +72,7 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-DEFAULT_RATE_LIMIT = timedelta(seconds=1)
+DEFAULT_RATE_LIMIT = timedelta(minutes=1)
 
 
 @bind_hass
@@ -487,26 +487,6 @@ class Template:
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
-
-
-class RateLimit:
-    """Class to control update rate limits."""
-
-    def __init__(self, hass: HomeAssistantType):
-        """Initialize rate limit."""
-        self._hass = hass
-
-    def __call__(self, *args: Any, **kwargs: Any) -> str:
-        """Handle a call to the class."""
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
-            render_info.rate_limit = timedelta(*args, **kwargs)
-
-        return ""
-
-    def __repr__(self) -> str:
-        """Representation of a RateLimit."""
-        return "<template RateLimit>"
 
 
 class AllStates:
@@ -1310,11 +1290,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
-        self.globals["rate_limit"] = RateLimit(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, (AllStates, RateLimit)) or super().is_safe_callable(obj)
+        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
