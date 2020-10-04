@@ -3,8 +3,6 @@
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
-# from tests.common import get_test_home_assistant
-
 
 async def test_sensor_upper(hass):
     """Test if source is above threshold."""
