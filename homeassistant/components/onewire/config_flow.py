@@ -71,7 +71,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error(
                     "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
                 )
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="owserver",

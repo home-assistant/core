@@ -43,7 +43,7 @@ async def test_config_flow_owserver(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "owserver"
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
     # Valid server
     with patch(
