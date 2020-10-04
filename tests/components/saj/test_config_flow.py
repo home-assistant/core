@@ -12,14 +12,13 @@ MOCK_USER_DATA = {
 }
 
 
-async def mock_connect():
-    """Mock connect method."""
-    pass
-
-
 @pytest.fixture(name="inverter")
 def remote_fixture():
     """Patch the SAJInverter."""
+
+    async def mock_connect():
+        pass
+
     with patch("homeassistant.components.saj.sensor.SAJInverter") as inverter_class:
         inverter = Mock()
         inverter.connect = mock_connect
