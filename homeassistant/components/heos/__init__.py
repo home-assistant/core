@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()

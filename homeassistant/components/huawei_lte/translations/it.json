@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato configurato",
-            "already_in_progress": "Questo dispositivo \u00e8 gi\u00e0 in fase di configurazione",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
         },
         "error": {
@@ -11,11 +11,14 @@
             "incorrect_password": "Password errata",
             "incorrect_username": "Nome utente errato",
             "incorrect_username_or_password": "Nome utente o password errati",
+            "invalid_auth": "Autenticazione non valida",
             "invalid_url": "URL non valido",
             "login_attempts_exceeded": "Superati i tentativi di accesso massimi, riprovare pi\u00f9 tardi",
             "response_error": "Errore sconosciuto dal dispositivo",
+            "unknown": "Errore imprevisto",
             "unknown_connection_error": "Errore sconosciuto durante la connessione al dispositivo"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

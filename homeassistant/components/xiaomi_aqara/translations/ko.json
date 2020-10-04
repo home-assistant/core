@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uac8c\uc774\ud2b8\uc6e8\uc774 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
+            "not_xiaomi_aqara": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774\uac00 \uc544\ub2d9\ub2c8\ub2e4. \ubc1c\uacac\ub41c \uae30\uae30\uac00 \uc54c\ub824\uc9c4 \uac8c\uc774\ud2b8\uc6e8\uc774\uc640 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "discovery_error": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \ubc1c\uacac\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. HomeAssistant \ub97c \uc778\ud130\ud398\uc774\uc2a4\ub85c \uc0ac\uc6a9\ud558\ub294 \uae30\uae30\uc758 IP \ub85c \uc2dc\ub3c4\ud574\ubcf4\uc138\uc694.",
+            "invalid_interface": "\ub124\ud2b8\uc6cc\ud06c \uc778\ud130\ud398\uc774\uc2a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "invalid_key": "\uac8c\uc774\ud2b8\uc6e8\uc774 \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "not_found_error": "Zeroconf \uc5d0\uc11c \uac8c\uc774\ud2b8\uc6e8\uc774\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc5b4 \ud544\uc694\ud55c \uc815\ubcf4\ub97c \uc5bb\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. HomeAssistant \ub97c \uc778\ud130\ud398\uc774\uc2a4\ub85c \uc0ac\uc6a9\ud558\ub294 \uae30\uae30\uc758 IP \ub85c \uc2dc\ub3c4\ud574\ubcf4\uc138\uc694."
+        },
+        "flow_title": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "\uac8c\uc774\ud2b8\uc6e8\uc774 IP"
+                },
+                "description": "\uac8c\uc774\ud2b8\uc6e8\uc774 \uc5f0\uacb0\uc744 \ucd94\uac00\ud558\ub824\uba74 \uc124\uc815\uc744 \ub2e4\uc2dc \uc2e4\ud589\ud574\uc8fc\uc138\uc694",
+                "title": "\uc5f0\uacb0\ud560 Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774 \uc120\ud0dd\ud558\uae30"
+            },
+            "settings": {
+                "data": {
+                    "key": "\uac8c\uc774\ud2b8\uc6e8\uc774 \ud0a4",
+                    "name": "\uac8c\uc774\ud2b8\uc6e8\uc774 \uc774\ub984"
+                },
+                "description": "\ud0a4(\ube44\ubc00\ubc88\ud638)\ub97c \uc5bb\uc740 \ubc29\ubc95\uc740 \ub2e4\uc74c\uc758 \uc548\ub0b4\ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. \ud0a4\uac00 \uc81c\uacf5\ub418\uc9c0 \uc54a\uc73c\uba74 \uc13c\uc11c\uc5d0\ub9cc \uc561\uc138\uc2a4 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+                "title": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774 \ucd94\uac00 \uc124\uc815\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c (\uc120\ud0dd \uc0ac\ud56d)",
+                    "interface": "\uc0ac\uc6a9\ud560 \ub124\ud2b8\uc6cc\ud06c \uc778\ud130\ud398\uc774\uc2a4",
+                    "mac": "Mac \uc8fc\uc18c(\uc120\ud0dd \uc0ac\ud56d)"
+                },
+                "description": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud569\ub2c8\ub2e4. IP \ubc0f Mac \uc8fc\uc18c\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc740 \uacbd\uc6b0 \uc790\ub3d9 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4",
+                "title": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774"
+            }
+        }
+    }
+}

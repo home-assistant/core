@@ -1,12 +1,12 @@
 """Test the JuiceNet config flow."""
 import aiohttp
-from asynctest import patch
-from asynctest.mock import MagicMock
 from pyjuicenet import TokenError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
+
+from tests.async_mock import MagicMock, patch
 
 
 def _mock_juicenet_return_value(get_devices=None):

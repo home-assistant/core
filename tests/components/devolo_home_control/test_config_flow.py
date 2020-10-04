@@ -17,7 +17,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.async_setup", return_value=True,
+        "homeassistant.components.devolo_home_control.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=True,
@@ -65,7 +66,7 @@ async def test_form_invalid_credentials(hass):
             {"username": "test-username", "password": "test-password"},
         )
 
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_already_configured(hass):
@@ -96,7 +97,8 @@ async def test_form_advanced_options(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.async_setup", return_value=True,
+        "homeassistant.components.devolo_home_control.async_setup",
+        return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=True,

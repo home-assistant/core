@@ -4,13 +4,14 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "No se ha podido conectar con el dispositivo BSB-Lan."
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Host o direcci\u00f3n IP",
+                    "host": "Host",
                     "passkey": "Clave de acceso",
                     "port": "Puerto"
                 },

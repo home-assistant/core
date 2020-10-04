@@ -1,21 +1,23 @@
 """Provides device automations for deconz events."""
 import voluptuous as vol
 
-import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_EVENT,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, CONF_UNIQUE_ID
+from .const import LOGGER
+from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
 
 CONF_SUBTYPE = "subtype"
 
@@ -89,6 +91,14 @@ HUE_DIMMER_REMOTE = {
     (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4002},
     (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 4001},
     (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 4003},
+}
+
+HUE_BUTTON_REMOTE_MODEL = "ROM001"  # Hue smart button
+HUE_BUTTON_REMOTE = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1000},
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
 }
 
 HUE_TAP_REMOTE_MODEL = "ZGPSWITCH"
@@ -237,6 +247,7 @@ AQARA_CUBE = {
 }
 
 AQARA_DOUBLE_WALL_SWITCH_MODEL = "lumi.remote.b286acn01"
+AQARA_DOUBLE_WALL_SWITCH_MODEL_2020 = "lumi.remote.b286acn02"
 AQARA_DOUBLE_WALL_SWITCH = {
     (CONF_SHORT_PRESS, CONF_LEFT): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_LEFT): {CONF_EVENT: 1001},
@@ -257,7 +268,8 @@ AQARA_DOUBLE_WALL_SWITCH_WXKG02LM = {
 }
 
 AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL = "lumi.remote.b186acn01"
-AQARA_SINGLE_WALL_SWITCH_WXKG03LM = {
+AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL = "lumi.remote.b186acn02"
+AQARA_SINGLE_WALL_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
@@ -347,6 +359,7 @@ AQARA_OPPLE_6_BUTTONS = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN1: HUE_DIMMER_REMOTE,
     HUE_DIMMER_REMOTE_MODEL_GEN2: HUE_DIMMER_REMOTE,
+    HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
@@ -357,8 +370,10 @@ REMOTES = {
     AQARA_CUBE_MODEL: AQARA_CUBE,
     AQARA_CUBE_MODEL_ALT1: AQARA_CUBE,
     AQARA_DOUBLE_WALL_SWITCH_MODEL: AQARA_DOUBLE_WALL_SWITCH,
+    AQARA_DOUBLE_WALL_SWITCH_MODEL_2020: AQARA_DOUBLE_WALL_SWITCH,
     AQARA_DOUBLE_WALL_SWITCH_WXKG02LM_MODEL: AQARA_DOUBLE_WALL_SWITCH_WXKG02LM,
-    AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH_WXKG03LM,
+    AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
+    AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
     AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,
     AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH,
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
@@ -415,18 +430,19 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
+        LOGGER.error("No deconz_event tied to device %s found", device.name)
         raise InvalidDeviceAutomationConfig
 
     event_id = deconz_event.serial
 
     event_config = {
-        event.CONF_PLATFORM: "event",
-        event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
+        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
     }
 
-    event_config = event.TRIGGER_SCHEMA(event_config)
-    return await event.async_attach_trigger(
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 

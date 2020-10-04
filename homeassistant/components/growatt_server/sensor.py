@@ -12,10 +12,19 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CURRENCY_EURO,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_WATT,
+    TEMP_CELSIUS,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -29,81 +38,315 @@ DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
+# Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
+
 TOTAL_SENSOR_TYPES = {
-    "total_money_today": ("Total money today", "€", "plantMoneyText", None),
-    "total_money_total": ("Money lifetime", "€", "totalMoneyText", None),
+    "total_money_today": ("Total money today", CURRENCY_EURO, "plantMoneyText", {}),
+    "total_money_total": ("Money lifetime", CURRENCY_EURO, "totalMoneyText", {}),
     "total_energy_today": (
         "Energy Today",
         ENERGY_KILO_WATT_HOUR,
         "todayEnergy",
-        "power",
+        {"device_class": DEVICE_CLASS_ENERGY},
     ),
-    "total_output_power": ("Output Power", POWER_WATT, "invTodayPpv", "power"),
+    "total_output_power": (
+        "Output Power",
+        POWER_WATT,
+        "invTodayPpv",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
     "total_energy_output": (
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
         "totalEnergy",
-        "power",
+        {"device_class": DEVICE_CLASS_ENERGY},
     ),
-    "total_maximum_output": ("Maximum power", POWER_WATT, "nominalPower", "power"),
+    "total_maximum_output": (
+        "Maximum power",
+        POWER_WATT,
+        "nominalPower",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
 }
 
 INVERTER_SENSOR_TYPES = {
     "inverter_energy_today": (
         "Energy today",
         ENERGY_KILO_WATT_HOUR,
-        "e_today",
-        "power",
+        "powerToday",
+        {"round": 1, "device_class": DEVICE_CLASS_ENERGY},
     ),
     "inverter_energy_total": (
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
-        "e_total",
-        "power",
+        "powerTotal",
+        {"round": 1, "device_class": DEVICE_CLASS_ENERGY},
     ),
-    "inverter_voltage_input_1": ("Input 1 voltage", VOLT, "vpv1", None),
+    "inverter_voltage_input_1": (
+        "Input 1 voltage",
+        VOLT,
+        "vpv1",
+        {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
     "inverter_amperage_input_1": (
         "Input 1 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv1",
-        None,
+        {"round": 1, "device_class": DEVICE_CLASS_CURRENT},
     ),
-    "inverter_wattage_input_1": ("Input 1 Wattage", POWER_WATT, "ppv1", "power"),
-    "inverter_voltage_input_2": ("Input 2 voltage", VOLT, "vpv2", None),
+    "inverter_wattage_input_1": (
+        "Input 1 Wattage",
+        POWER_WATT,
+        "ppv1",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
+    "inverter_voltage_input_2": (
+        "Input 2 voltage",
+        VOLT,
+        "vpv2",
+        {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
     "inverter_amperage_input_2": (
         "Input 2 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv2",
-        None,
+        {"round": 1, "device_class": DEVICE_CLASS_CURRENT},
     ),
-    "inverter_wattage_input_2": ("Input 2 Wattage", POWER_WATT, "ppv2", "power"),
-    "inverter_voltage_input_3": ("Input 3 voltage", VOLT, "vpv3", None),
+    "inverter_wattage_input_2": (
+        "Input 2 Wattage",
+        POWER_WATT,
+        "ppv2",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
+    "inverter_voltage_input_3": (
+        "Input 3 voltage",
+        VOLT,
+        "vpv3",
+        {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
     "inverter_amperage_input_3": (
         "Input 3 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "ipv3",
-        None,
+        {"round": 1, "device_class": DEVICE_CLASS_CURRENT},
     ),
-    "inverter_wattage_input_3": ("Input 3 Wattage", POWER_WATT, "ppv3", "power"),
-    "inverter_internal_wattage": ("Internal wattage", POWER_WATT, "ppv", "power"),
-    "inverter_reactive_voltage": ("Reactive voltage", VOLT, "vacr", None),
+    "inverter_wattage_input_3": (
+        "Input 3 Wattage",
+        POWER_WATT,
+        "ppv3",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
+    "inverter_internal_wattage": (
+        "Internal wattage",
+        POWER_WATT,
+        "ppv",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
+    "inverter_reactive_voltage": (
+        "Reactive voltage",
+        VOLT,
+        "vacr",
+        {"round": 1, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
     "inverter_inverter_reactive_amperage": (
         "Reactive amperage",
         ELECTRICAL_CURRENT_AMPERE,
         "iacr",
-        None,
+        {"round": 1, "device_class": DEVICE_CLASS_CURRENT},
     ),
-    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", None),
-    "inverter_current_wattage": ("Output power", POWER_WATT, "pac", "power"),
+    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", {"round": 1}),
+    "inverter_current_wattage": (
+        "Output power",
+        POWER_WATT,
+        "pac",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
     "inverter_current_reactive_wattage": (
         "Reactive wattage",
         POWER_WATT,
         "pacr",
-        "power",
+        {"device_class": DEVICE_CLASS_POWER, "round": 1},
+    ),
+    "inverter_ipm_temperature": (
+        "Intelligent Power Management temperature",
+        TEMP_CELSIUS,
+        "ipmTemperature",
+        {"device_class": DEVICE_CLASS_TEMPERATURE, "round": 1},
+    ),
+    "inverter_temperature": (
+        "Temperature",
+        TEMP_CELSIUS,
+        "temperature",
+        {"device_class": DEVICE_CLASS_TEMPERATURE, "round": 1},
     ),
 }
 
-SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES}
+STORAGE_SENSOR_TYPES = {
+    "storage_storage_production_today": (
+        "Storage production today",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatDisChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_storage_production_lifetime": (
+        "Lifetime Storage production",
+        ENERGY_KILO_WATT_HOUR,
+        "eBatDisChargeTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_grid_discharge_today": (
+        "Grid discharged today",
+        ENERGY_KILO_WATT_HOUR,
+        "eacDisChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_load_consumption_today": (
+        "Load consumption today",
+        ENERGY_KILO_WATT_HOUR,
+        "eopDischrToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_load_consumption_lifetime": (
+        "Lifetime load consumption",
+        ENERGY_KILO_WATT_HOUR,
+        "eopDischrTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_grid_charged_today": (
+        "Grid charged today",
+        ENERGY_KILO_WATT_HOUR,
+        "eacChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_charge_storage_lifetime": (
+        "Lifetime storaged charged",
+        ENERGY_KILO_WATT_HOUR,
+        "eChargeTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_solar_production": (
+        "Solar power production",
+        POWER_WATT,
+        "ppv",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "storage_battery_percentage": (
+        "Battery percentage",
+        PERCENTAGE,
+        "capacity",
+        {"device_class": DEVICE_CLASS_BATTERY},
+    ),
+    "storage_power_flow": (
+        "Storage charging/ discharging(-ve)",
+        POWER_WATT,
+        "pCharge",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "storage_load_consumption_solar_storage": (
+        "Load consumption(Solar + Storage)",
+        "VA",
+        "rateVA",
+        {},
+    ),
+    "storage_charge_today": (
+        "Charge today",
+        ENERGY_KILO_WATT_HOUR,
+        "eChargeToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_import_from_grid": (
+        "Import from grid",
+        POWER_WATT,
+        "pAcInPut",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "storage_import_from_grid_today": (
+        "Import from grid today",
+        ENERGY_KILO_WATT_HOUR,
+        "eToUserToday",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_import_from_grid_total": (
+        "Import from grid total",
+        ENERGY_KILO_WATT_HOUR,
+        "eToUserTotal",
+        {"device_class": DEVICE_CLASS_ENERGY},
+    ),
+    "storage_load_consumption": (
+        "Load consumption",
+        POWER_WATT,
+        "outPutPower",
+        {"device_class": DEVICE_CLASS_POWER},
+    ),
+    "storage_grid_voltage": (
+        "AC input voltage",
+        VOLT,
+        "vGrid",
+        {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "storage_pv_charging_voltage": (
+        "PV charging voltage",
+        VOLT,
+        "vpv",
+        {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "storage_ac_input_frequency_out": (
+        "AC input frequency",
+        FREQUENCY_HERTZ,
+        "freqOutPut",
+        {"round": 2},
+    ),
+    "storage_output_voltage": (
+        "Output voltage",
+        VOLT,
+        "outPutVolt",
+        {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "storage_ac_output_frequency": (
+        "Ac output frequency",
+        FREQUENCY_HERTZ,
+        "freqGrid",
+        {"round": 2},
+    ),
+    "storage_current_PV": (
+        "Solar charge current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iAcCharge",
+        {"round": 2, "device_class": DEVICE_CLASS_CURRENT},
+    ),
+    "storage_current_1": (
+        "Solar current to storage",
+        ELECTRICAL_CURRENT_AMPERE,
+        "iChargePV1",
+        {"round": 2, "device_class": DEVICE_CLASS_CURRENT},
+    ),
+    "storage_grid_amperage_input": (
+        "Grid charge current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "chgCurr",
+        {"round": 2, "device_class": DEVICE_CLASS_CURRENT},
+    ),
+    "storage_grid_out_current": (
+        "Grid out current",
+        ELECTRICAL_CURRENT_AMPERE,
+        "outPutCurrent",
+        {"round": 2, "device_class": DEVICE_CLASS_CURRENT},
+    ),
+    "storage_battery_voltage": (
+        "Battery voltage",
+        VOLT,
+        "vBat",
+        {"round": 2, "device_class": DEVICE_CLASS_VOLTAGE},
+    ),
+    "storage_load_percentage": (
+        "Load percentage",
+        PERCENTAGE,
+        "loadPercent",
+        {"device_class": DEVICE_CLASS_BATTERY, "round": 2},
+    ),
+}
+
+SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES, **STORAGE_SENSOR_TYPES}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -134,25 +377,39 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         plant_info = api.plant_list(user_id)
         plant_id = plant_info["data"][0]["plantId"]
 
-    # Get a list of inverters for specified plant to add sensors for.
-    inverters = api.inverter_list(plant_id)
+    # Get a list of devices for specified plant to add sensors for.
+    devices = api.device_list(plant_id)
     entities = []
-    probe = GrowattData(api, username, password, plant_id, True)
+    probe = GrowattData(api, username, password, plant_id, "total")
     for sensor in TOTAL_SENSOR_TYPES:
         entities.append(
             GrowattInverter(probe, f"{name} Total", sensor, f"{plant_id}-{sensor}")
         )
 
-    # Add sensors for each inverter in the specified plant.
-    for inverter in inverters:
-        probe = GrowattData(api, username, password, inverter["deviceSn"], False)
-        for sensor in INVERTER_SENSOR_TYPES:
+    # Add sensors for each device in the specified plant.
+    for device in devices:
+        probe = GrowattData(
+            api, username, password, device["deviceSn"], device["deviceType"]
+        )
+        sensors = []
+        if device["deviceType"] == "inverter":
+            sensors = INVERTER_SENSOR_TYPES
+        elif device["deviceType"] == "storage":
+            probe.plant_id = plant_id
+            sensors = STORAGE_SENSOR_TYPES
+        else:
+            _LOGGER.debug(
+                "Device type %s was found but is not supported right now.",
+                device["deviceType"],
+            )
+
+        for sensor in sensors:
             entities.append(
                 GrowattInverter(
                     probe,
-                    f"{inverter['deviceAilas']}",
+                    f"{device['deviceAilas']}",
                     sensor,
-                    f"{inverter['deviceSn']}-{sensor}",
+                    f"{device['deviceSn']}-{sensor}",
                 )
             )
 
@@ -188,12 +445,16 @@ class GrowattInverter(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.probe.get_data(SENSOR_TYPES[self.sensor][2])
+        result = self.probe.get_data(SENSOR_TYPES[self.sensor][2])
+        round_to = SENSOR_TYPES[self.sensor][3].get("round")
+        if round_to is not None:
+            result = round(result, round_to)
+        return result
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return SENSOR_TYPES[self.sensor][3]
+        return SENSOR_TYPES[self.sensor][3].get("device_class")
 
     @property
     def unit_of_measurement(self):
@@ -208,12 +469,13 @@ class GrowattInverter(Entity):
 class GrowattData:
     """The class for handling data retrieval."""
 
-    def __init__(self, api, username, password, inverter_id, is_total=False):
+    def __init__(self, api, username, password, device_id, growatt_type):
         """Initialize the probe."""
 
-        self.is_total = is_total
+        self.growatt_type = growatt_type
         self.api = api
-        self.inverter_id = inverter_id
+        self.device_id = device_id
+        self.plant_id = None
         self.data = {}
         self.username = username
         self.password = password
@@ -222,19 +484,27 @@ class GrowattData:
     def update(self):
         """Update probe data."""
         self.api.login(self.username, self.password)
-        _LOGGER.debug("Updating data for %s", self.inverter_id)
+        _LOGGER.debug("Updating data for %s", self.device_id)
         try:
-            if self.is_total:
-                total_info = self.api.plant_info(self.inverter_id)
+            if self.growatt_type == "total":
+                total_info = self.api.plant_info(self.device_id)
                 del total_info["deviceList"]
                 # PlantMoneyText comes in as "3.1/€" remove anything that isn't part of the number
                 total_info["plantMoneyText"] = re.sub(
                     r"[^\d.,]", "", total_info["plantMoneyText"]
                 )
                 self.data = total_info
-            else:
-                inverter_info = self.api.inverter_detail(self.inverter_id)
-                self.data = inverter_info["data"]
+            elif self.growatt_type == "inverter":
+                inverter_info = self.api.inverter_detail(self.device_id)
+                self.data = inverter_info
+            elif self.growatt_type == "storage":
+                storage_info_detail = self.api.storage_params(self.device_id)[
+                    "storageDetailBean"
+                ]
+                storage_energy_overview = self.api.storage_energy_overview(
+                    self.plant_id, self.device_id
+                )
+                self.data = {**storage_info_detail, **storage_energy_overview}
         except json.decoder.JSONDecodeError:
             _LOGGER.error("Unable to fetch data from Growatt server")
 

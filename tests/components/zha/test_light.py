@@ -34,7 +34,7 @@ IEEE_GROUPABLE_DEVICE3 = "03:2d:6f:00:0a:90:69:e7"
 
 LIGHT_ON_OFF = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
+        "device_type": zha.DeviceType.ON_OFF_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.Identify.cluster_id,
@@ -46,7 +46,7 @@ LIGHT_ON_OFF = {
 
 LIGHT_LEVEL = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT,
+        "device_type": zha.DeviceType.DIMMABLE_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.LevelControl.cluster_id,
@@ -58,7 +58,7 @@ LIGHT_LEVEL = {
 
 LIGHT_COLOR = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+        "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
             general.Identify.cluster_id,
@@ -245,6 +245,8 @@ async def test_light(
     cluster_color = getattr(zigpy_device.endpoints[1], "light_color", None)
     cluster_identify = getattr(zigpy_device.endpoints[1], "identify", None)
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the lights were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -401,7 +403,7 @@ async def async_test_level_on_off_from_hass(
         4,
         (zigpy.types.uint8_t, zigpy.types.uint16_t),
         10,
-        0,
+        1,
         expect_reply=True,
         manufacturer=None,
         tsn=None,
@@ -516,6 +518,10 @@ async def test_zha_group_light_entity(
 
     dev1_cluster_level = device_light_1.device.endpoints[1].level
 
+    await async_enable_traffic(
+        hass, [device_light_1, device_light_2, device_light_3], enabled=False
+    )
+    await hass.async_block_till_done()
     # test that the lights were created and that they are unavailable
     assert hass.states.get(group_entity_id).state == STATE_UNAVAILABLE
 

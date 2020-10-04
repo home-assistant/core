@@ -2,6 +2,13 @@
     "config": {
         "error": {
             "device_unavailable": "O dispositivo n\u00e3o est\u00e1 dispon\u00edvel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Porta"
+                }
+            }
         }
     }
 }

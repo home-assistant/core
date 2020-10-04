@@ -191,14 +191,18 @@ class TPLinkSmartBulb(LightEntity):
         await self._async_set_light_state_retry(
             self._light_state,
             self._light_state._replace(
-                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat,
+                state=True,
+                brightness=brightness,
+                color_temp=color_tmp,
+                hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._async_set_light_state_retry(
-            self._light_state, self._light_state._replace(state=False),
+            self._light_state,
+            self._light_state._replace(state=False),
         )
 
     @property

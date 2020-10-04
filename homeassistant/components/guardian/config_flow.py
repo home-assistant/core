@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     async with Client(data[CONF_IP_ADDRESS]) as client:
-        ping_data = await client.device.ping()
+        ping_data = await client.system.ping()
 
     return {
         CONF_UID: ping_data["data"]["uid"],
@@ -80,10 +80,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
-    async def async_step_zeroconf(self, discovery_info=None):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle the configuration via zeroconf."""
         if discovery_info is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
         await self._async_set_unique_id(pin)

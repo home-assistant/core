@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "discovery_confirm": {
+                "description": "Chcete p\u0159idat Volumio (`{name}`) do Home Assistant?",
+                "title": "Objeven\u00e9 instance Volumio"
+            },
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

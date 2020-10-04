@@ -6,7 +6,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, UNIT_PERCENTAGE
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -27,7 +27,7 @@ SENSORS = {
     SENSOR_SIGNAL: (
         "signal strength",
         "Signal Strength",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:signal",
     ),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),

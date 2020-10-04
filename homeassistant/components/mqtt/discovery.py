@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
@@ -31,14 +32,17 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "sensor",
     "switch",
+    "tag",
     "vacuum",
 ]
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
+DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
+DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
+LAST_DISCOVERY = "mqtt_last_discovery"
 
 TOPIC_BASE = "~"
 
@@ -64,6 +68,7 @@ async def async_start(
 
     async def async_device_message_received(msg):
         """Process the received message."""
+        hass.data[LAST_DISCOVERY] = time.time()
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
@@ -103,9 +108,9 @@ async def async_start(
             base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():
                 if isinstance(value, str) and value:
-                    if value[0] == TOPIC_BASE and key.endswith("_topic"):
+                    if value[0] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{base}{value[1:]}"
-                    if value[-1] == TOPIC_BASE and key.endswith("_topic"):
+                    if value[-1] == TOPIC_BASE and key.endswith("topic"):
                         payload[key] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
@@ -150,6 +155,12 @@ async def async_start(
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
+                    elif component == "tag":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
+                        from . import tag
+
+                        await tag.async_setup_entry(hass, config_entry)
                     else:
                         await hass.config_entries.async_forward_entry_setup(
                             config_entry, component
@@ -163,8 +174,16 @@ async def async_start(
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    await mqtt.async_subscribe(
+    hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
         hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
+    hass.data[LAST_DISCOVERY] = time.time()
 
     return True
+
+
+async def async_stop(hass: HomeAssistantType) -> bool:
+    """Stop MQTT Discovery."""
+    if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
+        hass.data[DISCOVERY_UNSUBSCRIBE]()
+        hass.data[DISCOVERY_UNSUBSCRIBE] = None

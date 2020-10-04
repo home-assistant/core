@@ -248,7 +248,7 @@ async def async_setup(hass, config):
             connections.append(connection)
             _LOGGER.info('LCN connected to "%s"', connection_name)
         except TimeoutError:
-            _LOGGER.error('Connection to PCHK server "%s" failed.', connection_name)
+            _LOGGER.error('Connection to PCHK server "%s" failed', connection_name)
             return False
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections

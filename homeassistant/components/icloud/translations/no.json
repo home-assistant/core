@@ -20,6 +20,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
+                    "username": "E-post",
                     "with_family": "Med familie"
                 },
                 "description": "Fyll inn legitimasjonen din",

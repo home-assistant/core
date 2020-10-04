@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto",
+            "wrong_info_relay_modes": "La selezione del modo di funzionamento del rel\u00e8 deve essere monostabile o bistabile."
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Rel\u00e8 1",
+                    "relay_10": "Rel\u00e8 10",
+                    "relay_11": "Rel\u00e8 11",
+                    "relay_12": "Rel\u00e8 12",
+                    "relay_13": "Rel\u00e8 13",
+                    "relay_14": "Rel\u00e8 14",
+                    "relay_15": "Rel\u00e8 15",
+                    "relay_16": "Rel\u00e8 16",
+                    "relay_2": "Rel\u00e8 2",
+                    "relay_3": "Rel\u00e8 3",
+                    "relay_4": "Rel\u00e8 4",
+                    "relay_5": "Rel\u00e8 5",
+                    "relay_6": "Rel\u00e8 6",
+                    "relay_7": "Rel\u00e8 7",
+                    "relay_8": "Rel\u00e8 8",
+                    "relay_9": "Rel\u00e8 9"
+                },
+                "title": "Configurare i rel\u00e8"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Impostare la scheda"
+            }
+        }
+    },
+    "title": "Automazione di ProgettiHWSW"
+}

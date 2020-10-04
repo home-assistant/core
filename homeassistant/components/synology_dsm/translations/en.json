@@ -22,7 +22,7 @@
                 "data": {
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username"
                 },
                 "description": "Do you want to setup {name} ({host})?",
@@ -33,7 +33,7 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username"
                 },
                 "title": "Synology DSM"
@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutes between scans"
+                    "scan_interval": "Minutes between scans",
+                    "timeout": "Timeout (seconds)"
                 }
             }
         }

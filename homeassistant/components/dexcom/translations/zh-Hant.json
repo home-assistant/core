@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "account_error": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "session_error": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "server": "\u4f3a\u670d\u5668",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165 Dexcom \u5171\u4eab\u6191\u8b49",
+                "title": "\u8a2d\u5b9a Dexcom \u6574\u5408"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "\u55ae\u4f4d"
+                }
+            }
+        }
+    }
+}

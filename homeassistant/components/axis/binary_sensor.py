@@ -8,6 +8,10 @@ from axis.event_stream import (
     CLASS_MOTION,
     CLASS_OUTPUT,
     CLASS_SOUND,
+    FenceGuard,
+    LoiteringGuard,
+    MotionGuard,
+    Vmd4,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -42,7 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add binary sensor from Axis device."""
         event = device.api.event[event_id]
 
-        if event.CLASS != CLASS_OUTPUT:
+        if event.CLASS != CLASS_OUTPUT and not (
+            event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
+        ):
             async_add_entities([AxisBinarySensor(event, device)], True)
 
     device.listeners.append(
@@ -101,6 +107,21 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             return (
                 f"{self.device.name} {self.device.api.vapix.ports[self.event.id].name}"
             )
+
+        if self.event.CLASS == CLASS_MOTION:
+
+            for event_class, event_data in (
+                (FenceGuard, self.device.api.vapix.fence_guard),
+                (LoiteringGuard, self.device.api.vapix.loitering_guard),
+                (MotionGuard, self.device.api.vapix.motion_guard),
+                (Vmd4, self.device.api.vapix.vmd4),
+            ):
+                if (
+                    isinstance(self.event, event_class)
+                    and event_data
+                    and self.event.id in event_data
+                ):
+                    return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
 
         return super().name
 

@@ -1,5 +1,6 @@
 """Test zha binary sensor."""
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
 
@@ -15,7 +16,7 @@ from .common import (
 
 DEVICE_IAS = {
     1: {
-        "device_type": 1026,
+        "device_type": zigpy.profiles.zha.DeviceType.IAS_ZONE,
         "in_clusters": [security.IasZone.cluster_id],
         "out_clusters": [],
     }
@@ -24,7 +25,7 @@ DEVICE_IAS = {
 
 DEVICE_OCCUPANCY = {
     1: {
-        "device_type": 263,
+        "device_type": zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
         "in_clusters": [measurement.OccupancySensing.cluster_id],
         "out_clusters": [],
     }
@@ -59,7 +60,7 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
     "device, on_off_test, cluster_name, reporting",
     [
         (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", (0,)),
-        (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
+        # (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
     ],
 )
 async def test_binary_sensor(
@@ -75,9 +76,10 @@ async def test_binary_sensor(
     zigpy_device = zigpy_device_mock(device)
     zha_device = await zha_device_joined_restored(zigpy_device)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
-
     assert entity_id is not None
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the sensors exist and are in the unavailable state
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

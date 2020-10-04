@@ -5,9 +5,9 @@ import logging
 
 import pytest
 
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
@@ -188,8 +188,8 @@ async def test_platform_warn_slow_setup(hass):
         assert mock_call.called
 
         # mock_calls[0] is the warning message for component setup
-        # mock_calls[5] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[5][1][:2]
+        # mock_calls[4] is the warning message for platform setup
+        timeout, logger_method = mock_call.mock_calls[4][1][:2]
 
         assert timeout == entity_platform.SLOW_SETUP_WARNING
         assert logger_method == _LOGGER.warning
@@ -359,6 +359,11 @@ async def test_raise_error_on_update(hass):
     assert len(updates) == 1
     assert 1 in updates
 
+    assert entity1.hass is None
+    assert entity1.platform is None
+    assert entity2.hass is not None
+    assert entity2.platform is not None
+
 
 async def test_async_remove_with_platform(hass):
     """Remove an entity from a platform."""
@@ -370,8 +375,9 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 0
 
 
-async def test_not_adding_duplicate_entities_with_unique_id(hass):
+async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
     """Test for not adding duplicate entities."""
+    caplog.set_level(logging.ERROR)
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_add_entities(
@@ -379,11 +385,23 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass):
     )
 
     assert len(hass.states.async_entity_ids()) == 1
+    assert not caplog.text
 
-    await component.async_add_entities(
-        [MockEntity(name="test2", unique_id="not_very_unique")]
+    ent2 = MockEntity(name="test2", unique_id="not_very_unique")
+    await component.async_add_entities([ent2])
+    assert "test1" in caplog.text
+    assert DOMAIN in caplog.text
+
+    ent3 = MockEntity(
+        name="test2", entity_id="test_domain.test3", unique_id="not_very_unique"
     )
+    await component.async_add_entities([ent3])
+    assert "test1" in caplog.text
+    assert "test3" in caplog.text
+    assert DOMAIN in caplog.text
 
+    assert ent2.hass is None
+    assert ent2.platform is None
     assert len(hass.states.async_entity_ids()) == 1
 
 
@@ -759,7 +777,13 @@ async def test_device_info_not_overrides(hass):
         async_add_entities(
             [
                 MockEntity(
-                    unique_id="qwer", device_info={"connections": {("mac", "abcd")}}
+                    unique_id="qwer",
+                    device_info={
+                        "connections": {("mac", "abcd")},
+                        "default_name": "default name 1",
+                        "default_model": "default model 1",
+                        "default_manufacturer": "default manufacturer 1",
+                    },
                 )
             ]
         )
@@ -792,6 +816,11 @@ async def test_entity_disabled_by_integration(hass):
 
     await component.async_add_entities([entity_default, entity_disabled])
 
+    assert entity_default.hass is not None
+    assert entity_default.platform is not None
+    assert entity_disabled.hass is None
+    assert entity_disabled.platform is None
+
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
@@ -809,7 +838,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capability_attributes={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
-        unit_of_measurement=UNIT_PERCENTAGE,
+        unit_of_measurement=PERCENTAGE,
     )
 
     await component.async_add_entities([entity_default])
@@ -821,7 +850,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
     assert entry_default.device_class == "mock-device-class"
-    assert entry_default.unit_of_measurement == UNIT_PERCENTAGE
+    assert entry_default.unit_of_measurement == PERCENTAGE
 
 
 async def test_override_restored_entities(hass):
@@ -871,6 +900,15 @@ async def test_platforms_sharing_services(hass):
     entity2 = MockEntity(entity_id="mock_integration.entity_2")
     await entity_platform2.async_add_entities([entity2])
 
+    entity_platform3 = MockEntityPlatform(
+        hass,
+        domain="different_integration",
+        platform_name="mock_platform",
+        platform=None,
+    )
+    entity3 = MockEntity(entity_id="different_integration.entity_3")
+    await entity_platform3.async_add_entities([entity3])
+
     entities = []
 
     @callback
@@ -889,3 +927,51 @@ async def test_platforms_sharing_services(hass):
     assert len(entities) == 2
     assert entity1 in entities
     assert entity2 in entities
+
+
+async def test_invalid_entity_id(hass):
+    """Test specifying an invalid entity id."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="invalid_entity_id")
+    with pytest.raises(HomeAssistantError):
+        await platform.async_add_entities([entity])
+    assert entity.hass is None
+    assert entity.platform is None
+
+
+class MockBlockingEntity(MockEntity):
+    """Class to mock an entity that will block adding entities."""
+
+    async def async_added_to_hass(self):
+        """Block for a long time."""
+        await asyncio.sleep(1000)
+
+
+async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
+    """Test we cancel adding entities when we reach the timeout."""
+    registry = mock_registry(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([MockBlockingEntity(name="test1", unique_id="unique")])
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    mock_entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "SLOW_ADD_ENTITY_MAX_WAIT", 0.01), patch.object(
+        entity_platform, "SLOW_ADD_MIN_TIMEOUT", 0.01
+    ):
+        assert await mock_entity_platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
+    full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
+    assert full_name in hass.config.components
+    assert len(hass.states.async_entity_ids()) == 0
+    assert len(registry.entities) == 1
+    assert "Timed out adding entities" in caplog.text
+    assert "test_domain.test1" in caplog.text
+    assert "test_domain" in caplog.text
+    assert "test" in caplog.text

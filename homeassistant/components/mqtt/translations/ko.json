@@ -47,5 +47,37 @@
             "button_short_release": "\"{subtype}\" \uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
             "button_triple_press": "\"{subtype}\" \uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c"
         }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Birth \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "bad_will": "Will \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "cannot_connect": "MQTT \ube0c\ub85c\ucee4\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "\ube0c\ub85c\ucee4",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "MQTT \ube0c\ub85c\ucee4\uc640\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            },
+            "options": {
+                "data": {
+                    "birth_payload": "Birth \uba54\uc2dc\uc9c0 \ud398\uc774\ub85c\ub4dc",
+                    "birth_qos": "Birth \uba54\uc2dc\uc9c0 QoS",
+                    "birth_retain": "Birth \uba54\uc2dc\uc9c0 \ub9ac\ud14c\uc778",
+                    "birth_topic": "Birth \uba54\uc2dc\uc9c0 \ud1a0\ud53d",
+                    "discovery": "\uc7a5\uce58 \uac80\uc0c9 \ud65c\uc131\ud654",
+                    "will_payload": "Will \uba54\uc2dc\uc9c0 \ud398\uc774\ub85c\ub4dc",
+                    "will_qos": "Will \uba54\uc2dc\uc9c0 QoS",
+                    "will_retain": "Will \uba54\uc2dc\uc9c0 \ub9ac\ud14c\uc778",
+                    "will_topic": "Will \uba54\uc2dc\uc9c0 \ud1a0\ud53d"
+                },
+                "description": "MQTT \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
+            }
+        }
     }
 }

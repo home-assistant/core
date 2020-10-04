@@ -4,13 +4,16 @@ import logging
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_GARAGE,
     CoverEntity,
 )
 
-from .const import ATTR_DISCOVER_DEVICES
+from .const import ATTR_DEVICE_TYPE, ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+HM_GARAGE = ("IPGarage",)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -20,7 +23,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMCover(conf)
+        if conf[ATTR_DEVICE_TYPE] in HM_GARAGE:
+            new_device = HMGarage(conf)
+        else:
+            new_device = HMCover(conf)
         devices.append(new_device)
 
     add_entities(devices, True)
@@ -48,7 +54,7 @@ class HMCover(HMDevice, CoverEntity):
 
     @property
     def is_closed(self):
-        """Return if the cover is closed."""
+        """Return whether the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
         return None
@@ -105,3 +111,32 @@ class HMCover(HMDevice, CoverEntity):
         """Stop cover tilt."""
         if "LEVEL_2" in self._data:
             self.stop_cover(**kwargs)
+
+
+class HMGarage(HMCover):
+    """Represents a Homematic Garage cover. Homematic garage covers do not support position attributes."""
+
+    @property
+    def current_cover_position(self):
+        """
+        Return current position of cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        # Garage covers do not support position; always return None
+        return None
+
+    @property
+    def is_closed(self):
+        """Return whether the cover is closed."""
+        return self._hmdevice.is_closed(self._hm_get_state())
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_GARAGE
+
+    def _init_data_struct(self):
+        """Generate a data dictionary (self._data) from metadata."""
+        self._state = "DOOR_STATE"
+        self._data.update({self._state: None})

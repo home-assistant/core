@@ -7,7 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Porta del server"
+                    "port": "Porta"
                 },
                 "title": "Configurare il server TCP per i dispositivi WIFFI"
             }

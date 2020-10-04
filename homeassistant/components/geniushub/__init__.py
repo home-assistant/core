@@ -87,7 +87,8 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4, max=28)
         ),
         vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+            cv.time_period,
+            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )
@@ -167,6 +168,7 @@ class GeniusBroker:
         self.hass = hass
         self.client = client
         self._hub_uid = hub_uid
+        self._connect_error = False
 
     @property
     def hub_uid(self) -> int:
@@ -178,8 +180,19 @@ class GeniusBroker:
         """Update the geniushub client's data."""
         try:
             await self.client.update()
-        except aiohttp.ClientResponseError as err:
-            _LOGGER.warning("Update failed, message is: %s", err)
+            if self._connect_error:
+                self._connect_error = False
+                _LOGGER.info("Connection to geniushub re-established")
+        except (
+            aiohttp.ClientResponseError,
+            aiohttp.client_exceptions.ClientConnectorError,
+        ) as err:
+            if not self._connect_error:
+                self._connect_error = True
+                _LOGGER.error(
+                    "Connection to geniushub failed (unable to update), message is: %s",
+                    err,
+                )
             return
         self.make_debug_log_entries()
 
@@ -240,7 +253,6 @@ class GeniusDevice(GeniusEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
         if self._last_comms:

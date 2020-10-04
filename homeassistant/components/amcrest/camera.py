@@ -130,6 +130,10 @@ class CannotSnapshot(Exception):
     """Conditions are not valid for taking a snapshot."""
 
 
+class AmcrestCommandFailed(Exception):
+    """Amcrest camera command did not work."""
+
+
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
@@ -367,12 +371,12 @@ class AmcrestCam(Camera):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
-            self.is_streaming = self._api.video_enabled
-            self._is_recording = self._api.record_mode == "Manual"
-            self._motion_detection_enabled = self._api.is_motion_detector_on()
-            self._audio_enabled = self._api.audio_enabled
-            self._motion_recording_enabled = self._api.is_record_on_motion_detection()
-            self._color_bw = _CBW[self._api.day_night_color]
+            self.is_streaming = self._get_video()
+            self._is_recording = self._get_recording()
+            self._motion_detection_enabled = self._get_motion_detection()
+            self._audio_enabled = self._get_audio()
+            self._motion_recording_enabled = self._get_motion_recording()
+            self._color_bw = self._get_color_mode()
             self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
@@ -384,11 +388,11 @@ class AmcrestCam(Camera):
 
     def turn_off(self):
         """Turn off camera."""
-        self._enable_video_stream(False)
+        self._enable_video(False)
 
     def turn_on(self):
         """Turn on camera."""
-        self._enable_video_stream(True)
+        self._enable_video(True)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
@@ -465,28 +469,53 @@ class AmcrestCam(Camera):
 
     # Methods to send commands to Amcrest camera and handle errors
 
-    def _enable_video_stream(self, enable):
+    def _change_setting(self, value, attr, description, action="set"):
+        func = description.replace(" ", "_")
+        description = f"camera {description} to {value}"
+        tries = 3
+        while True:
+            try:
+                getattr(self, f"_set_{func}")(value)
+                new_value = getattr(self, f"_get_{func}")()
+                if new_value != value:
+                    raise AmcrestCommandFailed
+            except (AmcrestError, AmcrestCommandFailed) as error:
+                if tries == 1:
+                    log_update_error(_LOGGER, action, self.name, description, error)
+                    return
+                log_update_error(
+                    _LOGGER, action, self.name, description, error, logging.DEBUG
+                )
+            else:
+                if attr:
+                    setattr(self, attr, new_value)
+                    self.schedule_update_ha_state()
+                return
+            tries -= 1
+
+    def _get_video(self):
+        return self._api.video_enabled
+
+    def _set_video(self, enable):
+        self._api.video_enabled = enable
+
+    def _enable_video(self, enable):
         """Enable or disable camera video stream."""
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
             self._enable_recording(False)
-        try:
-            self._api.video_enabled = enable
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera video stream",
-                error,
-            )
-        else:
-            self.is_streaming = enable
-            self.schedule_update_ha_state()
+        self._change_setting(enable, "is_streaming", "video")
         if self._control_light:
-            self._enable_light(self._audio_enabled or self.is_streaming)
+            self._change_light()
+
+    def _get_recording(self):
+        return self._api.record_mode == "Manual"
+
+    def _set_recording(self, enable):
+        rec_mode = {"Automatic": 0, "Manual": 1}
+        self._api.record_mode = rec_mode["Manual" if enable else "Automatic"]
 
     def _enable_recording(self, enable):
         """Turn recording on or off."""
@@ -494,86 +523,56 @@ class AmcrestCam(Camera):
         # is_streaming and is_recording, we can't leave
         # video stream off if recording is being turned on.
         if not self.is_streaming and enable:
-            self._enable_video_stream(True)
-        rec_mode = {"Automatic": 0, "Manual": 1}
-        try:
-            self._api.record_mode = rec_mode["Manual" if enable else "Automatic"]
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera recording",
-                error,
-            )
-        else:
-            self._is_recording = enable
-            self.schedule_update_ha_state()
+            self._enable_video(True)
+        self._change_setting(enable, "_is_recording", "recording")
+
+    def _get_motion_detection(self):
+        return self._api.is_motion_detector_on()
+
+    def _set_motion_detection(self, enable):
+        self._api.motion_detection = str(enable).lower()
 
     def _enable_motion_detection(self, enable):
         """Enable or disable motion detection."""
-        try:
-            self._api.motion_detection = str(enable).lower()
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera motion detection",
-                error,
-            )
-        else:
-            self._motion_detection_enabled = enable
-            self.schedule_update_ha_state()
+        self._change_setting(enable, "_motion_detection_enabled", "motion detection")
+
+    def _get_audio(self):
+        return self._api.audio_enabled
+
+    def _set_audio(self, enable):
+        self._api.audio_enabled = enable
 
     def _enable_audio(self, enable):
         """Enable or disable audio stream."""
-        try:
-            self._api.audio_enabled = enable
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera audio stream",
-                error,
-            )
-        else:
-            self._audio_enabled = enable
-            self.schedule_update_ha_state()
+        self._change_setting(enable, "_audio_enabled", "audio")
         if self._control_light:
-            self._enable_light(self._audio_enabled or self.is_streaming)
+            self._change_light()
 
-    def _enable_light(self, enable):
+    def _get_indicator_light(self):
+        return "true" in self._api.command(
+            "configManager.cgi?action=getConfig&name=LightGlobal"
+        ).content.decode("utf-8")
+
+    def _set_indicator_light(self, enable):
+        self._api.command(
+            f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
+        )
+
+    def _change_light(self):
         """Enable or disable indicator light."""
-        try:
-            self._api.command(
-                f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
-            )
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "indicator light",
-                error,
-            )
+        self._change_setting(
+            self._audio_enabled or self.is_streaming, None, "indicator light"
+        )
+
+    def _get_motion_recording(self):
+        return self._api.is_record_on_motion_detection()
+
+    def _set_motion_recording(self, enable):
+        self._api.motion_recording = str(enable).lower()
 
     def _enable_motion_recording(self, enable):
         """Enable or disable motion recording."""
-        try:
-            self._api.motion_recording = str(enable).lower()
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera motion recording",
-                error,
-            )
-        else:
-            self._motion_recording_enabled = enable
-            self.schedule_update_ha_state()
+        self._change_setting(enable, "_motion_recording_enabled", "motion recording")
 
     def _goto_preset(self, preset):
         """Move camera position and zoom to preset."""
@@ -584,17 +583,15 @@ class AmcrestCam(Camera):
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
+    def _get_color_mode(self):
+        return _CBW[self._api.day_night_color]
+
+    def _set_color_mode(self, cbw):
+        self._api.day_night_color = _CBW.index(cbw)
+
     def _set_color_bw(self, cbw):
         """Set camera color mode."""
-        try:
-            self._api.day_night_color = _CBW.index(cbw)
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER, "set", self.name, f"camera color mode to {cbw}", error
-            )
-        else:
-            self._color_bw = cbw
-            self.schedule_update_ha_state()
+        self._change_setting(cbw, "_color_bw", "color mode")
 
     def _start_tour(self, start):
         """Start camera tour."""

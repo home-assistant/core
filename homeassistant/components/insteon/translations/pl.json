@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "hub2": {
+                "data": {
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                }
+            },
+            "hubv1": {
+                "data": {
+                    "host": "Adres IP",
+                    "port": "Port"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "Adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "plm": {
+                "data": {
+                    "device": "\u015acie\u017cka urz\u0105dzenia USB"
+                }
+            },
+            "user": {
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "host": "Adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    }
+}

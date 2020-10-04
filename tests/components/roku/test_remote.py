@@ -39,7 +39,7 @@ async def test_unique_id(
 async def test_main_services(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the different services."""
+    """Test platform services."""
     await setup_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.roku.Roku.remote") as remote_mock:

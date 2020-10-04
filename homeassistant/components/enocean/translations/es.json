@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ruta a mochila no v\u00e1lida",
+            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "invalid_dongle_path": "No se ha encontrado ninguna mochila v\u00e1lida en esta ruta"
+        },
+        "flow_title": "Configuraci\u00f3n de ENOcean",
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "Ruta a mochila USB"
+                },
+                "title": "Selecciona la ruta a su mochila ENOcean"
+            },
+            "manual": {
+                "data": {
+                    "path": "Ruta a mochila USB"
+                },
+                "title": "Introduce la ruta a tu mochila ENOcean"
+            }
+        }
+    },
+    "title": "EnOcean"
+}

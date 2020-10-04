@@ -33,7 +33,7 @@ def zigpy_device(zigpy_device_mock):
         1: {
             "in_clusters": [general.Basic.cluster_id, general.OnOff.cluster_id],
             "out_clusters": [],
-            "device_type": 0,
+            "device_type": zha.DeviceType.ON_OFF_SWITCH,
         }
     }
     return zigpy_device_mock(endpoints)
@@ -106,6 +106,8 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the switch was created and that its state is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

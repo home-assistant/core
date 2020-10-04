@@ -24,6 +24,8 @@ from .typing import ChannelType
 
 GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
 
+PHILLIPS_REMOTE_CLUSTER = 0xFC00
+
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -178,10 +180,12 @@ class MatchRule:
         """
         weight = 0
         if self.models:
-            weight += 401 - len(self.models)
+            weight += 401 - (1 if callable(self.models) else len(self.models))
 
         if self.manufacturers:
-            weight += 301 - len(self.manufacturers)
+            weight += 301 - (
+                1 if callable(self.manufacturers) else len(self.manufacturers)
+            )
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)
@@ -238,12 +242,9 @@ class MatchRule:
         return matches
 
 
-RegistryDictType = Dict[
-    str, Dict[MatchRule, CALLABLE_T]
-]  # pylint: disable=invalid-name
+RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
 
-
-GroupRegistryDictType = Dict[str, CALLABLE_T]  # pylint: disable=invalid-name
+GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
 class ZHAEntityRegistry:

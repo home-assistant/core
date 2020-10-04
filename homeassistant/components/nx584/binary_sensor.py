@@ -8,6 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASSES,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -59,7 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     zone_sensors = {
-        zone["number"]: NX584ZoneSensor(zone, zone_types.get(zone["number"], "opening"))
+        zone["number"]: NX584ZoneSensor(
+            zone, zone_types.get(zone["number"], DEVICE_CLASS_OPENING)
+        )
         for zone in zones
         if zone["number"] not in exclude
     }
@@ -100,6 +103,11 @@ class NX584ZoneSensor(BinarySensorEntity):
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {"zone_number": self._zone["number"]}
 
 
 class NX584Watcher(threading.Thread):

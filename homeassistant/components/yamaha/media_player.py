@@ -154,7 +154,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Register Service 'select_scene'
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_SELECT_SCENE, {vol.Required(ATTR_SCENE): cv.string}, "set_scene",
+        SERVICE_SELECT_SCENE,
+        {vol.Required(ATTR_SCENE): cv.string},
+        "set_scene",
     )
     # Register Service 'enable_output'
     platform.async_register_entity_service(

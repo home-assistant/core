@@ -191,4 +191,4 @@ class HpIloData:
             hpilo.IloCommunicationError,
             hpilo.IloLoginFailed,
         ) as error:
-            raise ValueError(f"Unable to init HP ILO, {error}")
+            raise ValueError(f"Unable to init HP ILO, {error}") from error

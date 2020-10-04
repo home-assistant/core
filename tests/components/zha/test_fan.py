@@ -43,7 +43,11 @@ IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
-        1: {"in_clusters": [hvac.Fan.cluster_id], "out_clusters": [], "device_type": 0}
+        1: {
+            "in_clusters": [hvac.Fan.cluster_id],
+            "out_clusters": [],
+            "device_type": zha.DeviceType.ON_OFF_SWITCH,
+        }
     }
     return zigpy_device_mock(endpoints)
 
@@ -117,6 +121,8 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the fan was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 

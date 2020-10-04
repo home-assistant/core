@@ -30,7 +30,7 @@ async def test_abort_if_no_implementation_registered(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_config"
+    assert result["reason"] == "oauth2_missing_configuration"
 
 
 async def test_abort_if_already_setup(hass):
@@ -40,12 +40,12 @@ async def test_abort_if_already_setup(hass):
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured_account"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured_account"
 
 
 async def test_full_flow_implementation(hass):
@@ -107,19 +107,21 @@ async def test_already_setup(hass):
         result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured_account"
 
 
 async def test_view(hass):
     """Test view."""
     hass.config_entries.flow.async_init = AsyncMock()
 
-    request = aiohttp.MockRequest(b"", query_string="code=test_code")
+    request = aiohttp.MockRequest(
+        b"", query_string="code=test_code", mock_source="test"
+    )
     request.app = {"hass": hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "OK!"
 
-    request = aiohttp.MockRequest(b"", query_string="")
+    request = aiohttp.MockRequest(b"", query_string="", mock_source="test")
     request.app = {"hass": hass}
     view = config_flow.AmbiclimateAuthCallbackView()
     assert await view.get(request) == "No code"

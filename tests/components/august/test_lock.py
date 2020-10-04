@@ -32,7 +32,7 @@ async def test_lock_device_registry(hass):
     assert reg_device.model == "AUG-MD01"
     assert reg_device.sw_version == "undefined-4.3.0-1.8.14"
     assert reg_device.name == "online_with_doorsense Name"
-    assert reg_device.manufacturer == "August"
+    assert reg_device.manufacturer == "August Home Inc."
 
 
 async def test_lock_changed_by(hass):
@@ -105,7 +105,8 @@ async def test_one_lock_operation(hass):
 async def test_one_lock_unknown_state(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
-        hass, "get_lock.online.unknown_state.json",
+        hass,
+        "get_lock.online.unknown_state.json",
     )
     await _create_august_with_devices(hass, [lock_one])
 

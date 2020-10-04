@@ -6,7 +6,7 @@
             "unknown": "Ukendt fejl opstod"
         },
         "error": {
-            "invalid_pin": "Ugyldig PIN, pr\u00f8v igen.",
+            "invalid_sgtin_or_pin": "Ugyldig PIN, pr\u00f8v igen.",
             "press_the_button": "Tryk venligst p\u00e5 den bl\u00e5 knap.",
             "register_failed": "Fejl ved registrering, pr\u00f8v venligst igen.",
             "timeout_button": "Tryk p\u00e5 bl\u00e5 knap timeout, pr\u00f8v venligst igen."

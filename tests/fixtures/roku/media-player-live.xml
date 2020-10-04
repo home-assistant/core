@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<player error="false" state="play">
+    <plugin bandwidth="10000000 bps" id="74519" name="Pluto TV - It's Free TV"/>
+    <format audio="aac_adts" captions="webvtt" container="hls" drm="none" video="mpeg4_10b"/>
+    <buffering current="1000" max="1000" target="0"/>
+    <new_stream speed="128000 bps"/>
+    <position>73313 ms</position>
+    <duration>95000 ms</duration>
+    <is_live>true</is_live>
+    <runtime>25106 ms</runtime>
+    <stream_segment bitrate="3063648" media_sequence="49" segment_type="mux" time="70013"/>
+</player>

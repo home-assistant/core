@@ -10,10 +10,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import callback
@@ -22,6 +22,7 @@ from homeassistant.helpers.entity import Entity
 from . import SmileGateway
 from .const import (
     COOL_ICON,
+    COORDINATOR,
     DEVICE_STATE,
     DOMAIN,
     FLAME_ICON,
@@ -41,7 +42,7 @@ ATTR_TEMPERATURE = [
 ]
 ATTR_BATTERY_LEVEL = [
     "Charge",
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     DEVICE_CLASS_BATTERY,
 ]
 ATTR_ILLUMINANCE = [
@@ -147,8 +148,8 @@ ENERGY_SENSOR_MAP = {
 MISC_SENSOR_MAP = {
     "battery": ATTR_BATTERY_LEVEL,
     "illuminance": ATTR_ILLUMINANCE,
-    "modulation_level": ["Heater Modulation Level", UNIT_PERCENTAGE, None],
-    "valve_position": ["Valve Position", UNIT_PERCENTAGE, None],
+    "modulation_level": ["Heater Modulation Level", PERCENTAGE, None],
+    "valve_position": ["Valve Position", PERCENTAGE, None],
     "water_pressure": ATTR_PRESSURE,
 }
 
@@ -157,11 +158,18 @@ INDICATE_ACTIVE_LOCAL_DEVICE = [
     "flame_state",
 ]
 
+CUSTOM_ICONS = {
+    "gas_consumed_interval": "mdi:fire",
+    "gas_consumed_cumulative": "mdi:fire",
+    "modulation_level": "mdi:percent",
+    "valve_position": "mdi:valve",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities = []
     all_devices = api.get_all_devices()
@@ -271,6 +279,7 @@ class PwThermostatSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = sensor_type[SENSOR_MAP_MODEL]
         self._unit_of_measurement = sensor_type[SENSOR_MAP_UOM]
         self._dev_class = sensor_type[SENSOR_MAP_DEVICE_CLASS]
@@ -289,9 +298,10 @@ class PwThermostatSensor(SmileSensor, Entity):
             measurement = data[self._sensor]
             if self._sensor == "battery" or self._sensor == "valve_position":
                 measurement = measurement * 100
-            if self._unit_of_measurement == UNIT_PERCENTAGE:
+            if self._unit_of_measurement == PERCENTAGE:
                 measurement = int(measurement)
             self._state = measurement
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
 
@@ -346,6 +356,7 @@ class PwPowerSensor(SmileSensor, Entity):
         """Set up the Plugwise API."""
         super().__init__(api, coordinator, name, dev_id, sensor)
 
+        self._icon = None
         self._model = model
         if model is None:
             self._model = sensor_type[SENSOR_MAP_MODEL]
@@ -371,5 +382,6 @@ class PwPowerSensor(SmileSensor, Entity):
             if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
                 measurement = int(measurement / 1000)
             self._state = measurement
+            self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()

@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -39,6 +39,7 @@ def alexa_client(loop, hass, hass_client):
                 "homeassistant": {},
                 "alexa": {
                     "flash_briefings": {
+                        "password": "pass/abc",
                         "weather": [
                             {
                                 "title": "Weekly forecast",
@@ -63,13 +64,40 @@ def alexa_client(loop, hass, hass_client):
     return loop.run_until_complete(hass_client())
 
 
-def _flash_briefing_req(client, briefing_id):
-    return client.get(f"/api/alexa/flash_briefings/{briefing_id}")
+def _flash_briefing_req(client, briefing_id, password="pass%2Fabc"):
+    if password is None:
+        return client.get(f"/api/alexa/flash_briefings/{briefing_id}")
+
+    return client.get(f"/api/alexa/flash_briefings/{briefing_id}?password={password}")
 
 
 async def test_flash_briefing_invalid_id(alexa_client):
     """Test an invalid Flash Briefing ID."""
     req = await _flash_briefing_req(alexa_client, 10000)
+    assert req.status == HTTP_NOT_FOUND
+    text = await req.text()
+    assert text == ""
+
+
+async def test_flash_briefing_no_password(alexa_client):
+    """Test for no Flash Briefing password."""
+    req = await _flash_briefing_req(alexa_client, "weather", password=None)
+    assert req.status == HTTP_UNAUTHORIZED
+    text = await req.text()
+    assert text == ""
+
+
+async def test_flash_briefing_invalid_password(alexa_client):
+    """Test an invalid Flash Briefing password."""
+    req = await _flash_briefing_req(alexa_client, "weather", password="wrongpass")
+    assert req.status == HTTP_UNAUTHORIZED
+    text = await req.text()
+    assert text == ""
+
+
+async def test_flash_briefing_request_for_password(alexa_client):
+    """Test for "password" Flash Briefing."""
+    req = await _flash_briefing_req(alexa_client, "password")
     assert req.status == HTTP_NOT_FOUND
     text = await req.text()
     assert text == ""

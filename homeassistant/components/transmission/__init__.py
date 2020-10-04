@@ -24,9 +24,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ATTR_DELETE_DATA,
     ATTR_TORRENT,
+    CONF_LIMIT,
+    CONF_ORDER,
     DATA_UPDATED,
     DEFAULT_DELETE_DATA,
+    DEFAULT_LIMIT,
     DEFAULT_NAME,
+    DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -132,13 +136,13 @@ async def get_api(hass, entry):
     except TransmissionError as error:
         if "401: Unauthorized" in str(error):
             _LOGGER.error("Credentials for Transmission client are not valid")
-            raise AuthenticationError
+            raise AuthenticationError from error
         if "111: Connection refused" in str(error):
             _LOGGER.error("Connecting to the Transmission client %s failed", host)
-            raise CannotConnect
+            raise CannotConnect from error
 
         _LOGGER.error(error)
-        raise UnknownError
+        raise UnknownError from error
 
 
 class TransmissionClient:
@@ -162,8 +166,8 @@ class TransmissionClient:
 
         try:
             self.tm_api = await get_api(self.hass, self.config_entry.data)
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as error:
+            raise ConfigEntryNotReady from error
         except (AuthenticationError, UnknownError):
             return False
 
@@ -238,7 +242,13 @@ class TransmissionClient:
             scan_interval = self.config_entry.data.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
-            options = {CONF_SCAN_INTERVAL: scan_interval}
+            limit = self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
+            order = self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
+            options = {
+                CONF_SCAN_INTERVAL: scan_interval,
+                CONF_LIMIT: limit,
+                CONF_ORDER: order,
+            }
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=options
@@ -260,9 +270,9 @@ class TransmissionClient:
     @staticmethod
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        hass.data[DOMAIN][entry.entry_id].set_scan_interval(
-            entry.options[CONF_SCAN_INTERVAL]
-        )
+        tm_client = hass.data[DOMAIN][entry.entry_id]
+        tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
+        await hass.async_add_executor_job(tm_client.api.update)
 
 
 class TransmissionData:

@@ -1,11 +1,8 @@
 """Test discovery helpers."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import setup
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 
 from tests.common import (
@@ -216,15 +213,3 @@ class TestHelpersDiscovery:
 
         # test_component will only be setup once
         assert len(component_calls) == 1
-
-
-async def test_load_platform_forbids_config():
-    """Test you cannot setup config component with load_platform."""
-    with pytest.raises(HomeAssistantError):
-        await discovery.async_load_platform(None, "config", "zwave", {}, {"config": {}})
-
-
-async def test_discover_forbids_config():
-    """Test you cannot setup config component with load_platform."""
-    with pytest.raises(HomeAssistantError):
-        await discovery.async_discover(None, None, None, "config", {})

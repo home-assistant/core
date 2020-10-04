@@ -16,7 +16,6 @@ from homeassistant.components.homekit.type_switches import (
     Switch,
     Valve,
 )
-from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -80,7 +79,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
         ("automation.test", {}),
         ("input_boolean.test", {}),
         ("remote.test", {}),
-        ("script.test", {ATTR_CAN_CANCEL: True}),
+        ("script.test", {}),
         ("switch.test", {}),
     ],
 )
@@ -240,19 +239,12 @@ async def test_vacuum_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-@pytest.mark.parametrize(
-    "entity_id, attrs",
-    [
-        ("scene.test", {}),
-        ("script.test", {}),
-        ("script.test", {ATTR_CAN_CANCEL: False}),
-    ],
-)
-async def test_reset_switch(hass, hk_driver, entity_id, attrs, events):
+async def test_reset_switch(hass, hk_driver, events):
     """Test if switch accessory is reset correctly."""
-    domain = split_entity_id(entity_id)[0]
+    domain = "scene"
+    entity_id = "scene.test"
 
-    hass.states.async_set(entity_id, None, attrs)
+    hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
     await acc.run_handler()
@@ -295,12 +287,8 @@ async def test_reset_switch_reload(hass, hk_driver, events):
     await acc.run_handler()
     await hass.async_block_till_done()
 
-    assert acc.activate_only is True
-
-    hass.states.async_set(entity_id, None, {ATTR_CAN_CANCEL: True})
-    await hass.async_block_till_done()
     assert acc.activate_only is False
 
-    hass.states.async_set(entity_id, None, {ATTR_CAN_CANCEL: False})
+    hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    assert acc.activate_only is True
+    assert acc.char_on.value is False

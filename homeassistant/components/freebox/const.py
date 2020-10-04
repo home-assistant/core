@@ -46,6 +46,15 @@ CONNECTION_SENSORS = {
     },
 }
 
+CALL_SENSORS = {
+    "missed": {
+        SENSOR_NAME: "Freebox missed calls",
+        SENSOR_UNIT: None,
+        SENSOR_ICON: "mdi:phone-missed",
+        SENSOR_DEVICE_CLASS: None,
+    },
+}
+
 TEMPERATURE_SENSOR_TEMPLATE = {
     SENSOR_NAME: None,
     SENSOR_UNIT: TEMP_CELSIUS,

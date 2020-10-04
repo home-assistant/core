@@ -18,7 +18,7 @@
             "armed_away": "{entity_name} armada ausente",
             "armed_home": "{entity_name} armada en casa",
             "armed_night": "{entity_name} armada noche",
-            "disarmed": "{entity_name} desarmado",
+            "disarmed": "{entity_name} desarmada",
             "triggered": "{entity_name} activado"
         }
     },

@@ -78,7 +78,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
             tasks.append(
-                hass.services.async_call(domain, service.service, data, blocking)
+                hass.services.async_call(
+                    domain, service.service, data, blocking, context=service.context
+                )
             )
 
         if tasks:
@@ -110,7 +112,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See [the logs](/developer-tools/logs) for details.",
+                "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",
             )

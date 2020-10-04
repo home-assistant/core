@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Smile pordi number"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Kohanda Plugwise s\u00e4tteid"
+            }
+        }
+    }
+}

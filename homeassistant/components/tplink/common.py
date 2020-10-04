@@ -119,7 +119,14 @@ def get_static_devices(config_data) -> SmartDevices:
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
             elif type_ == CONF_STRIP:
-                for plug in SmartStrip(host).plugs.values():
+                try:
+                    ss_host = SmartStrip(host)
+                except SmartDeviceException as sde:
+                    _LOGGER.error(
+                        "Failed to setup SmartStrip at %s: %s; not retrying", host, sde
+                    )
+                    continue
+                for plug in ss_host.plugs.values():
                     switches.append(plug)
             # Dimmers need to be defined as smart plugs to work correctly.
             elif type_ == CONF_DIMMER:
@@ -184,7 +191,7 @@ async def async_add_entities_retry(
                 result = False
 
             if result is True or result is None:
-                _LOGGER.debug("Added object.")
+                _LOGGER.debug("Added object")
                 add_objects.remove(add_object)
             else:
                 _LOGGER.debug("Failed to add object, will try again later")

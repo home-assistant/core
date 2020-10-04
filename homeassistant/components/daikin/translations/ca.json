@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "error": {
             "device_fail": "Error inesperat",
-            "device_timeout": "No s'ha pogut connectar",
+            "device_timeout": "Ha fallat la connexi\u00f3",
             "forbidden": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {

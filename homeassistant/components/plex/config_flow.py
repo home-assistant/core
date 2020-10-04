@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_HOST,
     CONF_PORT,
+    CONF_SOURCE,
     CONF_SSL,
     CONF_TOKEN,
     CONF_URL,
@@ -70,7 +71,7 @@ async def async_discover(hass):
     for server_data in gdm.entries:
         await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            context={CONF_SOURCE: config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=server_data,
         )
 
@@ -96,7 +97,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(
+        self, user_input=None, errors=None
+    ):  # pylint: disable=arguments-differ
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self.async_step_plex_website_auth()
@@ -207,10 +210,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user(errors=errors)
 
         server_id = plex_server.machine_identifier
-
-        await self.async_set_unique_id(server_id)
-        self._abort_if_unique_id_configured()
-
         url = plex_server.url_in_use
         token = server_config.get(CONF_TOKEN)
 
@@ -224,16 +223,27 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
             )
 
+        data = {
+            CONF_SERVER: plex_server.friendly_name,
+            CONF_SERVER_IDENTIFIER: server_id,
+            PLEX_SERVER_CONFIG: entry_config,
+        }
+
+        entry = await self.async_set_unique_id(server_id)
+        if (
+            self.context[CONF_SOURCE]  # pylint: disable=no-member
+            == config_entries.SOURCE_REAUTH
+        ):
+            self.hass.config_entries.async_update_entry(entry, data=data)
+            _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        self._abort_if_unique_id_configured()
+
         _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
 
-        return self.async_create_entry(
-            title=plex_server.friendly_name,
-            data={
-                CONF_SERVER: plex_server.friendly_name,
-                CONF_SERVER_IDENTIFIER: server_id,
-                PLEX_SERVER_CONFIG: entry_config,
-            },
-        )
+        return self.async_create_entry(title=plex_server.friendly_name, data=data)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
@@ -313,6 +323,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Continue server validation with external token."""
         server_config = {CONF_TOKEN: self.token}
         return await self.async_step_server_validate(server_config)
+
+    async def async_step_reauth(self, data):
+        """Handle a reauthorization flow request."""
+        self.current_login = dict(data)
+        return await self.async_step_user()
 
 
 class PlexOptionsFlowHandler(config_entries.OptionsFlow):

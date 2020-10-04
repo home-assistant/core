@@ -1,6 +1,4 @@
 """Test the Panasonic Viera setup process."""
-from asynctest import patch
-
 from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
@@ -13,7 +11,7 @@ from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG_DATA = {
@@ -54,7 +52,8 @@ async def test_setup_entry_encrypted(hass):
     mock_remote = get_mock_remote()
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote", return_value=mock_remote,
+        "homeassistant.components.panasonic_viera.Remote",
+        return_value=mock_remote,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -68,7 +67,9 @@ async def test_setup_entry_encrypted(hass):
 async def test_setup_entry_unencrypted(hass):
     """Test setup with unencrypted config entry."""
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_CONFIG_DATA[CONF_HOST], data=MOCK_CONFIG_DATA,
+        domain=DOMAIN,
+        unique_id=MOCK_CONFIG_DATA[CONF_HOST],
+        data=MOCK_CONFIG_DATA,
     )
 
     mock_entry.add_to_hass(hass)
@@ -76,7 +77,8 @@ async def test_setup_entry_unencrypted(hass):
     mock_remote = get_mock_remote()
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote", return_value=mock_remote,
+        "homeassistant.components.panasonic_viera.Remote",
+        return_value=mock_remote,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -90,7 +92,11 @@ async def test_setup_entry_unencrypted(hass):
 async def test_setup_config_flow_initiated(hass):
     """Test if config flow is initiated in setup."""
     assert (
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_HOST: "0.0.0.0"}},)
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            {DOMAIN: {CONF_HOST: "0.0.0.0"}},
+        )
         is True
     )
 
@@ -108,7 +114,8 @@ async def test_setup_unload_entry(hass):
     mock_remote = get_mock_remote()
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote", return_value=mock_remote,
+        "homeassistant.components.panasonic_viera.Remote",
+        return_value=mock_remote,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

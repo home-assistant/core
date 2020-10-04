@@ -27,14 +27,18 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors={},
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors={},
             )
 
         username = user_input[CONF_USERNAME].replace(" ", "")
         password = user_input[CONF_PASSWORD].replace(" ", "")
 
         mill_data_connection = Mill(
-            username, password, websession=async_get_clientsession(self.hass),
+            username,
+            password,
+            websession=async_get_clientsession(self.hass),
         )
 
         errors = {}
@@ -42,7 +46,9 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not await mill_data_connection.connect():
             errors["connection_error"] = "connection_error"
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors=errors,
             )
 
         unique_id = username
@@ -51,5 +57,6 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=unique_id, data={CONF_USERNAME: username, CONF_PASSWORD: password},
+            title=unique_id,
+            data={CONF_USERNAME: username, CONF_PASSWORD: password},
         )

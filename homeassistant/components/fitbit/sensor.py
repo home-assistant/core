@@ -16,11 +16,12 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_UNIT_SYSTEM,
+    LENGTH_FEET,
     MASS_KILOGRAMS,
     MASS_MILLIGRAMS,
+    PERCENTAGE,
     TIME_MILLISECONDS,
     TIME_MINUTES,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -96,11 +97,11 @@ FITBIT_RESOURCES_LIST = {
     ],
     "activities/tracker/steps": ["Tracker Steps", "steps", "walk"],
     "body/bmi": ["BMI", "BMI", "human"],
-    "body/fat": ["Body Fat", UNIT_PERCENTAGE, "human"],
+    "body/fat": ["Body Fat", PERCENTAGE, "human"],
     "body/weight": ["Weight", "", "human"],
     "devices/battery": ["Battery", None, None],
     "sleep/awakeningsCount": ["Awakenings Count", "times awaken", "sleep"],
-    "sleep/efficiency": ["Sleep Efficiency", UNIT_PERCENTAGE, "sleep"],
+    "sleep/efficiency": ["Sleep Efficiency", PERCENTAGE, "sleep"],
     "sleep/minutesAfterWakeup": ["Minutes After Wakeup", TIME_MINUTES, "sleep"],
     "sleep/minutesAsleep": ["Sleep Minutes Asleep", TIME_MINUTES, "sleep"],
     "sleep/minutesAwake": ["Sleep Minutes Awake", TIME_MINUTES, "sleep"],
@@ -117,7 +118,7 @@ FITBIT_MEASUREMENTS = {
     "en_US": {
         "duration": TIME_MILLISECONDS,
         "distance": "mi",
-        "elevation": "ft",
+        "elevation": LENGTH_FEET,
         "height": "in",
         "weight": "lbs",
         "body": "in",
@@ -356,7 +357,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get("code") is not None:
-            redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
+            redirect_uri = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
                 result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)

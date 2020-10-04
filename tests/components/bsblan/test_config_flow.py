@@ -5,7 +5,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.bsblan import config_flow
 from homeassistant.components.bsblan.const import CONF_DEVICE_IDENT, CONF_PASSKEY
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -17,7 +17,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER},
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
@@ -39,7 +40,7 @@ async def test_connection_error(
         data={CONF_HOST: "example.local", CONF_PASSKEY: "1234", CONF_PORT: 80},
     )
 
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -66,11 +67,12 @@ async def test_full_user_flow_implementation(
     aioclient_mock.post(
         "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
         text=load_fixture("bsblan/info.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER},
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
