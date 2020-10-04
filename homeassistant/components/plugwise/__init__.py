@@ -26,6 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise components from a config entry."""
     if entry.data.get(CONF_HOST):
         return await async_setup_entry_gw(hass, entry)
+    # PLACEHOLDER USB entry setup
     return False
 
 
