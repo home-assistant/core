@@ -802,7 +802,7 @@ class _TrackTemplateResultInfo:
 
             if self._rate_limit.async_schedule_action(
                 template,
-                info.rate_limit or track_template_.rate_limit,
+                _rate_limit_for_event(event, info, track_template_),
                 now,
                 self._refresh,
                 event,
@@ -1376,3 +1376,22 @@ def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
         return False
 
     return bool(info.filter_lifecycle(entity_id))
+
+
+@callback
+def _rate_limit_for_event(
+    event: Event, info: RenderInfo, track_template_: TrackTemplate
+) -> Optional[timedelta]:
+    """Determine the rate limit for an event."""
+    entity_id = event.data.get(ATTR_ENTITY_ID)
+
+    # Specifically referenced entities are excluded
+    # from the rate limit
+    if entity_id in info.entities:
+        return None
+
+    if track_template_.rate_limit is not None:
+        return track_template_.rate_limit
+
+    rate_limit: Optional[timedelta] = info.rate_limit
+    return rate_limit
