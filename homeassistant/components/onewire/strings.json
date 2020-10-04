@@ -1,6 +1,8 @@
 {
   "config": {
-    "abort": {},
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_path": "Directory not found."

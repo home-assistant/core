@@ -1,6 +1,8 @@
 {
     "config": {
-        "abort": {},
+        "abort": {
+            "already_configured": "Service is already configured"
+          },
         "error": {
             "cannot_connect": "Unable to connect.",
             "invalid_path": "Directory not found."

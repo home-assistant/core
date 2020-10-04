@@ -43,6 +43,8 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_owserver()
             if CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
                 if os.path.isdir(DEFAULT_SYSBUS_MOUNT_DIR):
+                    await self.async_set_unique_id(DEFAULT_SYSBUS_MOUNT_DIR)
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=DEFAULT_SYSBUS_MOUNT_DIR, data=self.onewire_config
                     )
@@ -65,6 +67,8 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             owport = user_input.get(CONF_PORT)
             try:
                 await self.hass.async_add_executor_job(protocol.proxy, owhost, owport)
+                await self.async_set_unique_id(f"{owhost}:{owport}")
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=owhost, data=self.onewire_config)
             except (protocol.Error, protocol.ConnError) as exc:
                 _LOGGER.error(
