@@ -18,8 +18,6 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
     ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
 
 _LOGGER = logging.getLogger(__name__)
