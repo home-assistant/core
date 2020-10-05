@@ -20,13 +20,13 @@ from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt
 
 
-def test_from_event():
+def test_from_event_to_db_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
     assert event == Events.from_event(event).to_native()
 
 
-def test_from_event():
+def test_from_event_to_db_state():
     """Test converting event to db state."""
     state = ha.State("sensor.temperature", "18")
     event = ha.Event(
