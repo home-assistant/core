@@ -511,7 +511,7 @@ class Context:
 
     user_id: str = attr.ib(default=None)
     parent_id: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
     def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
