@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except (TimeoutError, URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
-                errors["base"] = ERROR_NOT_CONNECTED
+                errors["base"] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("An unknown error occurred: %s", err)
                 return self.async_abort(reason="unknown")
