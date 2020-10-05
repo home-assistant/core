@@ -53,9 +53,7 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_setting_sensor_value_expires_availability_topic(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -85,9 +83,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -113,7 +109,8 @@ async def test_setting_sensor_value_expires(
 
 async def expires_helper(hass, mqtt_mock, caplog):
     """Run the basic expiry code."""
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "ON")
@@ -162,7 +159,7 @@ async def expires_helper(hass, mqtt_mock, caplog):
 
 
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
-    hass, mqtt_mock, legacy_patchable_time, caplog
+    hass, mqtt_mock, caplog
 ):
     """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
@@ -178,7 +175,8 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     config_msg = json.dumps(config)
 
     # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(
