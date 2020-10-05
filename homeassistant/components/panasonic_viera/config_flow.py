@@ -17,7 +17,6 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
 )
 
 _LOGGER = logging.getLogger(__name__)
