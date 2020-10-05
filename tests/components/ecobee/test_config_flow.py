@@ -26,7 +26,7 @@ async def test_abort_if_already_setup(hass):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_only"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_step_without_user_input(hass):
