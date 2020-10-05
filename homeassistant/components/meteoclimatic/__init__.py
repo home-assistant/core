@@ -125,4 +125,4 @@ class MeteoclimaticUpdater:
         try:
             self._data = self._client.weather_at_station(self._station_code)
         except MeteoclimaticError as err:
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from err
