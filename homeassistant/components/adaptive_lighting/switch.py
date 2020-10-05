@@ -150,6 +150,8 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities:
     data[config_entry.entry_id]["sleep_mode_switch"] = sleep_mode_switch
     data[config_entry.entry_id][SWITCH_DOMAIN] = switch
 
+    async_add_entities([switch, sleep_mode_switch], update_before_add=True)
+
     # Register `apply` service
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
@@ -167,7 +169,6 @@ async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities:
         },
         handle_apply,
     )
-    async_add_entities([switch, sleep_mode_switch], update_before_add=True)
 
 
 def validate(config_entry):
