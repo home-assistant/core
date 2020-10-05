@@ -1020,14 +1020,18 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @callback
 @bind_hass
 def async_track_point_in_time(
-    hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
+    hass: HomeAssistant,
+    action: Union[HassJob, Callable[..., None]],
+    point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
+
+    job = action if isinstance(action, HassJob) else HassJob(action)
 
     @callback
     def utc_converter(utc_now: datetime) -> None:
         """Convert passed in UTC now to local now."""
-        hass.async_run_job(action, dt_util.as_local(utc_now))
+        hass.async_run_hass_job(job, dt_util.as_local(utc_now))
 
     return async_track_point_in_utc_time(hass, utc_converter, point_in_time)
 
@@ -1038,16 +1042,22 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @callback
 @bind_hass
 def async_track_point_in_utc_time(
-    hass: HomeAssistant, action: Callable[..., Any], point_in_time: datetime
+    hass: HomeAssistant,
+    action: Union[HassJob, Callable[..., None]],
+    point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
+    # Since this is called once, we accept a HassJob so we can avoid
+    # having to figure out how to call the action every time its called.
+    job = action if isinstance(action, HassJob) else HassJob(action)
+
     cancel_callback = hass.loop.call_at(
         hass.loop.time() + point_in_time.timestamp() - time.time(),
-        hass.async_run_job,
-        action,
+        hass.async_run_hass_job,
+        job,
         utc_point_in_time,
     )
 
@@ -1065,7 +1075,7 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 @callback
 @bind_hass
 def async_call_later(
-    hass: HomeAssistant, delay: float, action: Callable[..., None]
+    hass: HomeAssistant, delay: float, action: Union[HassJob, Callable[..., None]]
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     return async_track_point_in_utc_time(
