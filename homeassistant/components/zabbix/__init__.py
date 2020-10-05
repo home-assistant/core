@@ -172,7 +172,7 @@ class ZabbixThread(threading.Thread):
         self.string_keys = set()
 
     def setup(self, hass):
-        """Setup the thread and start it"""
+        """Set up the thread and start it."""
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown)
         self.start()
