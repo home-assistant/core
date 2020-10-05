@@ -11,9 +11,6 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
@@ -139,7 +136,7 @@ async def test_flow_unknown_abort(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_encrypted_valid_pin_code(hass):
