@@ -10,8 +10,24 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Wprowad\u017a DSN Sentry",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Opcjonalna nazwa \u015brodowiska.",
+                    "event_custom_components": "Wysy\u0142aj zdarzenia z niestandardowych komponent\u00f3w",
+                    "logging_event_level": "Poziom wpis\u00f3w dziennika, dla kt\u00f3rego Sentry zarejestruje zdarzenie",
+                    "tracing": "W\u0142\u0105cz \u015bledzenie wydajno\u015bci",
+                    "tracing_sample_rate": "Cz\u0119stotliwo\u015b\u0107 \u015bledzenia; od 0.0 do 1.0 (1.0 = 100%)"
+                }
             }
         }
     }
