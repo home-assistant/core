@@ -17,7 +17,7 @@ from tests.async_mock import patch
 
 
 @pytest.fixture(name="config")
-async def config_data():
+def config_data():
     """Set valid config data."""
     config = {
         "notify": {
