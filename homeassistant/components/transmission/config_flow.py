@@ -59,8 +59,11 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if (
                     entry.data[CONF_HOST] == user_input[CONF_HOST]
                     and entry.data[CONF_PORT] == user_input[CONF_PORT]
-                ) or (entry.data[CONF_NAME] == user_input[CONF_NAME]):
-                    return self.async_abort(reason="already_configured_device")
+                ):
+                    return self.async_abort(reason="already_configured")
+                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
+                    errors[CONF_NAME] = "name_exists"
+                    break
             try:
                 await get_api(self.hass, user_input)
 
