@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta Central Unit de Home Control ja est\u00e0 en \u00fas."
+            "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_credentials": "Nom d'usuari i/o contrasenya incorrectes."
         },
         "step": {

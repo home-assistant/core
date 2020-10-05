@@ -22,7 +22,7 @@
                 "data": {
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",
@@ -33,7 +33,7 @@
                     "host": "\u4e3b\u6a5f\u7aef",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "title": "\u7fa4\u6689 DSM"

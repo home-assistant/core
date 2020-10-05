@@ -209,8 +209,9 @@ class SlackNotificationService(BaseNotificationService):
             "username": username,
         }
 
-        if self._icon:
-            if self._icon.lower().startswith(("http://", "https://")):
+        icon = icon or self._icon
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
                 icon_type = "url"
             else:
                 icon_type = "emoji"
