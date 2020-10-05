@@ -53,7 +53,7 @@ async def test_valid_credentials(hass):
         mock_req.get(url3, text=VALID_MESSAGE)
 
         assert await async_setup_component(hass, "sensor", VALID_CONFIG)
-        await hass.block_till_done()
+        await hass.async_block_till_done()
 
         assert len(hass.states.async_entity_ids()) == 1
         state = hass.states.get("sensor.sigfox_fake_id")
