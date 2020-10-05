@@ -113,7 +113,7 @@ async def test_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == "cannot_connect"
 
 
 async def test_flow_unknown_abort(hass):
@@ -527,7 +527,7 @@ async def test_imported_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == "cannot_connect"
 
 
 async def test_imported_flow_unknown_abort(hass):
