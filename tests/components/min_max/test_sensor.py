@@ -236,7 +236,7 @@ async def test_not_enough_sensor_value(hass):
     assert state.attributes.get("max_value") is None
     assert state.attributes.get("median") is None
 
-    hass.states.async_set(entity_ids[1], values[1])
+    hass.states.async_set(entity_ids[1], VALUES[1])
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
