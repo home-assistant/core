@@ -1,7 +1,7 @@
 """Offer state listening automation rules."""
 from datetime import timedelta
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
@@ -50,8 +50,11 @@ TRIGGER_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def TRIGGER_SCHEMA(value):  # pylint: disable=invalid-name
+def TRIGGER_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
     """Validate trigger."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Expected a dictionary")
+
     # We use this approach instead of vol.Any because
     # this gives better error messages.
     if CONF_ATTRIBUTE in value:
