@@ -333,7 +333,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
         }
         service_data = {
             "calendarId": call.data[EVENT_CALENDAR_ID],
-            "send_updates": call.data[EVENT_SEND_UPDATES],
+            "sendUpdates": call.data[EVENT_SEND_UPDATES],
             "body": event,
         }
         event = service.events().insert(**service_data).execute()

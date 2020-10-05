@@ -4,6 +4,7 @@ import copy
 import httplib2
 import pytest
 
+from homeassistant.components.calendar import convert_date
 from homeassistant.components.google import (
     CONF_CAL_ID,
     CONF_CLIENT_ID,
@@ -147,6 +148,8 @@ async def test_all_day_event(hass, mock_next_event):
         "offset_reached": False,
         "start_time": week_from_today.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],
@@ -179,6 +182,8 @@ async def test_future_event(hass, mock_next_event):
         "offset_reached": False,
         "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],
@@ -211,6 +216,8 @@ async def test_in_progress_event(hass, mock_next_event):
         "offset_reached": False,
         "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],
@@ -245,6 +252,8 @@ async def test_offset_in_progress_event(hass, mock_next_event):
         "offset_reached": True,
         "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],
@@ -280,6 +289,8 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
         "offset_reached": True,
         "start_time": tomorrow.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],
@@ -315,6 +326,8 @@ async def test_all_day_offset_event(hass, mock_next_event):
         "offset_reached": False,
         "start_time": tomorrow.strftime(DATE_STR_FORMAT),
         "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "created": convert_date(event["created"]),
+        "updated": convert_date(event["updated"]),
         "location": event["location"],
         "description": event["description"],
         "transparency": event["transparency"],

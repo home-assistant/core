@@ -52,6 +52,14 @@ def get_date(date):
     return dt.as_local(dt.parse_datetime(date["dateTime"]))
 
 
+def convert_date(date):
+    """Convert Z date/time."""
+    date = re.sub(
+        r"T", " ", re.findall(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", date)[0]
+    )
+    return date
+
+
 def normalize_event(event):
     """Normalize a calendar event."""
     normalized_event = {}
@@ -67,6 +75,14 @@ def normalize_event(event):
     end = end.strftime(DATE_STR_FORMAT) if end is not None else None
     normalized_event["start"] = start
     normalized_event["end"] = end
+    created = event.get("created")
+    updated = event.get("updated")
+    normalized_event["created"] = (
+        convert_date(event.get("created")) if created is not None else None
+    )
+    normalized_event["updated"] = (
+        convert_date(event.get("updated")) if updated is not None else None
+    )
 
     # cleanup the string so we don't have a bunch of double+ spaces
     summary = event.get("summary", "")
@@ -140,6 +156,8 @@ class CalendarEventDevice(Entity):
             "all_day": event["all_day"],
             "start_time": event["start"],
             "end_time": event["end"],
+            "created": event["created"],
+            "updated": event["updated"],
             "location": event["location"],
             "description": event["description"],
             "transparency": event["transparency"],
