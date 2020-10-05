@@ -234,18 +234,7 @@ async def test_application_version(hass, mock_openzwave):
 async def test_network_node_changed_from_value(hass, mock_openzwave):
     """Test for network_node_changed."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     value = mock_zwave.MockValue(node=node)
     with patch.object(entity, "maybe_schedule_update") as mock:
@@ -256,18 +245,7 @@ async def test_network_node_changed_from_value(hass, mock_openzwave):
 async def test_network_node_changed_from_node(hass, mock_openzwave):
     """Test for network_node_changed."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     with patch.object(entity, "maybe_schedule_update") as mock:
         mock_zwave.node_changed(node)
@@ -277,18 +255,7 @@ async def test_network_node_changed_from_node(hass, mock_openzwave):
 async def test_network_node_changed_from_another_node(hass, mock_openzwave):
     """Test for network_node_changed."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     with patch.object(entity, "maybe_schedule_update") as mock:
         another_node = mock_zwave.MockNode(node_id=1024)
@@ -299,18 +266,7 @@ async def test_network_node_changed_from_another_node(hass, mock_openzwave):
 async def test_network_node_changed_from_notification(hass, mock_openzwave):
     """Test for network_node_changed."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     with patch.object(entity, "maybe_schedule_update") as mock:
         mock_zwave.notification(node_id=node.node_id)
@@ -320,18 +276,7 @@ async def test_network_node_changed_from_notification(hass, mock_openzwave):
 async def test_network_node_changed_from_another_notification(hass, mock_openzwave):
     """Test for network_node_changed."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     with patch.object(entity, "maybe_schedule_update") as mock:
         mock_zwave.notification(node_id=1024)
@@ -681,18 +626,7 @@ async def test_node_changed(hass, mock_openzwave):
 async def test_name(hass, mock_openzwave):
     """Test name property."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     assert entity.name == "Mock Node"
 
@@ -700,18 +634,7 @@ async def test_name(hass, mock_openzwave):
 async def test_state_before_update(hass, mock_openzwave):
     """Test state before update was called."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     assert entity.state is None
 
@@ -725,11 +648,6 @@ async def test_state_not_ready(hass, mock_openzwave):
         is_ready=False,
         is_failed=False,
         is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
     )
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
 
@@ -757,11 +675,6 @@ async def test_state_ready(hass, mock_openzwave):
         is_ready=False,
         is_failed=False,
         is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
     )
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
 
@@ -784,18 +697,7 @@ async def test_state_ready(hass, mock_openzwave):
 async def test_not_polled(hass, mock_openzwave):
     """Test should_poll property."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     assert not entity.should_poll
 
@@ -803,18 +705,7 @@ async def test_not_polled(hass, mock_openzwave):
 async def test_unique_id(hass, mock_openzwave):
     """Test unique_id."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     entity = node_entity.ZWaveNodeEntity(node, zwave_network)
     assert entity.unique_id == "node-567"
 
@@ -822,18 +713,7 @@ async def test_unique_id(hass, mock_openzwave):
 async def test_unique_id_missing_data(hass, mock_openzwave):
     """Test unique_id."""
     zwave_network = MagicMock()
-    node = mock_zwave.MockNode(
-        query_stage="Dynamic",
-        is_awake=True,
-        is_ready=False,
-        is_failed=False,
-        is_info_received=True,
-        max_baud_rate=40000,
-        is_zwave_plus=False,
-        capabilities=[],
-        neighbors=[],
-        location=None,
-    )
+    node = mock_zwave.MockNode()
     node.manufacturer_name = None
     node.name = None
     node.is_ready = False
