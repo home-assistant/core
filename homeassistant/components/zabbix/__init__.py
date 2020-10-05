@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import state as state_helper
+from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -41,6 +41,7 @@ TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 RETRY_INTERVAL = 60  # seconds
+RETRY_MESSAGE = f"%s Retrying in {RETRY_INTERVAL} seconds."
 
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
@@ -85,7 +86,9 @@ def setup(hass, config):
     except HTTPError as http_error:
         _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
         zapi = None
-        # Continue even though Zabbix API couldn't be initialized. Zabbix sender later may still work.
+        _LOGGER.error(RETRY_MESSAGE, http_error)
+        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        return True
 
     hass.data[DOMAIN] = zapi
 
