@@ -116,7 +116,7 @@ async def test_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_unknown_abort(hass):
@@ -255,7 +255,7 @@ async def test_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_encrypted_unknown_abort(hass):
@@ -288,7 +288,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_non_encrypted_already_configured_abort(hass):
@@ -475,7 +475,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_imported_flow_encrypted_unknown_abort(hass):
@@ -507,7 +507,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_not_connected_error(hass):
@@ -530,7 +530,7 @@ async def test_imported_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_imported_flow_unknown_abort(hass):
@@ -552,7 +552,7 @@ async def test_imported_flow_unknown_abort(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_non_encrypted_already_configured_abort(hass):
