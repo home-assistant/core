@@ -97,7 +97,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                 errors["base"] = "invalid_auth"
 
             except CannotConnect:
-                errors["base"] = "device_unavailable"
+                errors["base"] = "cannot_connect"
 
         data = self.discovery_schema or {
             vol.Required(CONF_HOST): str,
