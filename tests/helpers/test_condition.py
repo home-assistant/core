@@ -422,7 +422,7 @@ async def test_state_attribute(hass):
                     "condition": "state",
                     "entity_id": "sensor.temperature",
                     "attribute": "attribute1",
-                    "state": "200",
+                    "state": 200,
                 },
             ],
         },
@@ -435,13 +435,38 @@ async def test_state_attribute(hass):
     assert test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": "200"})
-    assert test(hass)
+    assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 201})
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
     assert not test(hass)
+
+
+async def test_state_attribute_boolean(hass):
+    """Test with boolean state attribute in condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "state",
+            "entity_id": "sensor.temperature",
+            "attribute": "happening",
+            "state": False,
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 100, {"happening": 200})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"happening": True})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100, {"happening": False})
+    assert test(hass)
 
 
 async def test_state_using_input_entities(hass):
