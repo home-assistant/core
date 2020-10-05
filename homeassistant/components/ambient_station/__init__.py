@@ -17,8 +17,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     DEGREE,
     EVENT_HOMEASSISTANT_STOP,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
@@ -143,8 +145,8 @@ TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
     TYPE_24HOURRAININ: ("24 Hr Rain", "in", TYPE_SENSOR, None),
-    TYPE_BAROMABSIN: ("Abs Pressure", "inHg", TYPE_SENSOR, "pressure"),
-    TYPE_BAROMRELIN: ("Rel Pressure", "inHg", TYPE_SENSOR, "pressure"),
+    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
+    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
     TYPE_BATT10: ("Battery 10", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT1: ("Battery 1", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT2: ("Battery 2", None, TYPE_BINARY_SENSOR, "battery"),
@@ -213,7 +215,7 @@ SENSOR_TYPES = {
         TYPE_SENSOR,
         None,
     ),
-    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", "lx", TYPE_SENSOR, "illuminance"),
+    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, TYPE_SENSOR, "illuminance"),
     TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),

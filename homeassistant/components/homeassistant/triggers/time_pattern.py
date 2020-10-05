@@ -36,7 +36,7 @@ class TimePattern:
             if isinstance(value, str) and value.startswith("/"):
                 number = int(value[1:])
             else:
-                number = int(value)
+                value = number = int(value)
 
             if not (0 <= number <= self.maximum):
                 raise vol.Invalid(f"must be a value between 0 and {self.maximum}")

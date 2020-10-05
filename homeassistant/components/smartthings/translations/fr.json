@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant n'est pas configur\u00e9 correctement pour recevoir les mises \u00e0 jour de SmartThings. L'URL du webhook n'est pas valide: \n > {webhook_url} \n\n Veuillez mettre \u00e0 jour votre configuration en suivant les [instructions] ({component_url}), red\u00e9marrez Home Assistant et r\u00e9essayez.",
+            "no_available_locations": "Il n'y a pas d'emplacements SmartThings disponibles \u00e0 configurer dans Home Assistant."
+        },
         "error": {
             "app_setup_error": "Impossible de configurer la SmartApp.  Veuillez r\u00e9essayer.",
             "token_forbidden": "Le jeton n'a pas les port\u00e9es OAuth requises.",
@@ -15,12 +19,14 @@
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s"
                 },
+                "description": "Veuillez saisir un [jeton d'acc\u00e8s personnel] {token_url} ( {token_url} ) qui a \u00e9t\u00e9 cr\u00e9\u00e9 conform\u00e9ment aux [instructions] ( {component_url} ). Cela sera utilis\u00e9 pour cr\u00e9er l'int\u00e9gration de Home Assistant dans votre compte SmartThings.",
                 "title": "Entrer un jeton d'acc\u00e8s personnel"
             },
             "select_location": {
                 "data": {
                     "location_id": "Emplacement"
                 },
+                "description": "Veuillez s\u00e9lectionner l'emplacement SmartThings que vous souhaitez ajouter \u00e0 Home Assistant. Nous ouvrirons alors une nouvelle fen\u00eatre et vous demanderons de vous connecter et d'autoriser l'installation de l'int\u00e9gration de Home Assistant \u00e0 l'emplacement s\u00e9lectionn\u00e9.",
                 "title": "S\u00e9lectionnez l'emplacement"
             },
             "user": {

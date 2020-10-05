@@ -15,7 +15,6 @@ from homeassistant.components.climate.const import (
 )
 
 DOMAIN = "knx"
-DATA_KNX = "data_knx"
 
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
@@ -60,3 +59,5 @@ PRESET_MODES = {
     "Standby": PRESET_AWAY,
     "Comfort": PRESET_COMFORT,
 }
+
+ATTR_COUNTER = "counter"

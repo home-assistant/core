@@ -21,6 +21,7 @@ from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -375,9 +376,9 @@ class CastDevice(MediaPlayerEntity):
                 if tts_base_url and media_status.content_id.startswith(tts_base_url):
                     url_description = f" from tts.base_url ({tts_base_url})"
                 if external_url and media_status.content_id.startswith(external_url):
-                    url_description = " from external_url ({external_url})"
+                    url_description = f" from external_url ({external_url})"
                 if internal_url and media_status.content_id.startswith(internal_url):
-                    url_description = " from internal_url ({internal_url})"
+                    url_description = f" from internal_url ({internal_url})"
 
             _LOGGER.error(
                 "Failed to cast media %s%s. Please make sure the URL is: "
@@ -574,7 +575,9 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         else:
-            self._chromecast.media_controller.play_media(media_id, media_type)
+            self._chromecast.media_controller.play_media(
+                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
+            )
 
     # ========== Properties ==========
     @property

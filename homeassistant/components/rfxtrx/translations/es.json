@@ -3,5 +3,29 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         }
-    }
+    },
+    "options": {
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "remove_device": "Seleccione el dispositivo a eliminar"
+                },
+                "title": "Opciones de Rfxtrx"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Valor de bits de datos para comando apagado",
+                    "command_on": "Valor de bits de datos para comando activado",
+                    "data_bit": "N\u00famero de bits de datos",
+                    "fire_event": "Habilitar evento del dispositivo",
+                    "off_delay": "Retraso de apagado",
+                    "off_delay_enabled": "Activar retardo de apagado",
+                    "replace_device": "Seleccione el dispositivo que desea reemplazar",
+                    "signal_repetitions": "N\u00famero de repeticiones de la se\u00f1al"
+                },
+                "title": "Configurar las opciones del dispositivo"
+            }
+        }
+    },
+    "title": "Rfxtrx"
 }

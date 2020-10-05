@@ -5,6 +5,7 @@ from collections import OrderedDict
 import logging
 
 import RFXtrx as rfxtrxmod
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,18 +19,35 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
+    DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+    TIME_HOURS,
     UV_INDEX,
+    VOLT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
+    CONF_DEBUG,
+    CONF_FIRE_EVENT,
+    CONF_OFF_DELAY,
+    CONF_REMOVE_DEVICE,
+    CONF_SIGNAL_REPETITIONS,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -39,12 +57,6 @@ DOMAIN = "rfxtrx"
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
-CONF_FIRE_EVENT = "fire_event"
-CONF_DATA_BITS = "data_bits"
-CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_SIGNAL_REPETITIONS = "signal_repetitions"
-CONF_DEBUG = "debug"
-CONF_OFF_DELAY = "off_delay"
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 DATA_TYPES = OrderedDict(
@@ -52,32 +64,30 @@ DATA_TYPES = OrderedDict(
         ("Temperature", TEMP_CELSIUS),
         ("Temperature2", TEMP_CELSIUS),
         ("Humidity", PERCENTAGE),
-        ("Barometer", ""),
-        ("Wind direction", ""),
-        ("Rain rate", ""),
+        ("Barometer", PRESSURE_HPA),
+        ("Wind direction", DEGREE),
+        ("Rain rate", f"{LENGTH_MILLIMETERS}/{TIME_HOURS}"),
         ("Energy usage", POWER_WATT),
-        ("Total usage", POWER_WATT),
-        ("Sound", ""),
-        ("Sensor Status", ""),
-        ("Counter value", ""),
+        ("Total usage", ENERGY_KILO_WATT_HOUR),
+        ("Sound", None),
+        ("Sensor Status", None),
+        ("Counter value", "count"),
         ("UV", UV_INDEX),
-        ("Humidity status", ""),
-        ("Forecast", ""),
-        ("Forecast numeric", ""),
-        ("Rain total", ""),
-        ("Wind average speed", ""),
-        ("Wind gust", ""),
-        ("Chill", ""),
-        ("Total usage", ""),
-        ("Count", ""),
-        ("Current Ch. 1", ""),
-        ("Current Ch. 2", ""),
-        ("Current Ch. 3", ""),
-        ("Energy usage", ""),
-        ("Voltage", ""),
-        ("Current", ""),
+        ("Humidity status", None),
+        ("Forecast", None),
+        ("Forecast numeric", None),
+        ("Rain total", LENGTH_MILLIMETERS),
+        ("Wind average speed", SPEED_METERS_PER_SECOND),
+        ("Wind gust", SPEED_METERS_PER_SECOND),
+        ("Chill", TEMP_CELSIUS),
+        ("Count", "count"),
+        ("Current Ch. 1", ELECTRICAL_CURRENT_AMPERE),
+        ("Current Ch. 2", ELECTRICAL_CURRENT_AMPERE),
+        ("Current Ch. 3", ELECTRICAL_CURRENT_AMPERE),
+        ("Voltage", VOLT),
+        ("Current", ELECTRICAL_CURRENT_AMPERE),
         ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", "dBm"),
+        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
     ]
 )
 
@@ -120,10 +130,10 @@ DEVICE_DATA_SCHEMA = vol.Schema(
 
 BASE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DEBUG): cv.boolean,
         vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {cv.string: _ensure_device},
-    }
+    },
 )
 
 DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
@@ -133,7 +143,8 @@ PORT_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.All(cv.deprecated(CONF_DEBUG), vol.Any(DEVICE_SCHEMA, PORT_SCHEMA))},
+    extra=vol.ALLOW_EXTRA,
 )
 
 DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
@@ -148,7 +159,6 @@ async def async_setup(hass, config):
         CONF_HOST: config[DOMAIN].get(CONF_HOST),
         CONF_PORT: config[DOMAIN].get(CONF_PORT),
         CONF_DEVICE: config[DOMAIN].get(CONF_DEVICE),
-        CONF_DEBUG: config[DOMAIN].get(CONF_DEBUG),
         CONF_AUTOMATIC_ADD: config[DOMAIN].get(CONF_AUTOMATIC_ADD),
         CONF_DEVICES: config[DOMAIN][CONF_DEVICES],
     }
@@ -217,11 +227,10 @@ def _create_rfx(config):
         rfx = rfxtrxmod.Connect(
             (config[CONF_HOST], config[CONF_PORT]),
             None,
-            debug=config[CONF_DEBUG],
             transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
-        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None, debug=config[CONF_DEBUG])
+        rfx = rfxtrxmod.Connect(config[CONF_DEVICE], None)
 
     return rfx
 
@@ -245,7 +254,11 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    try:
+        async with async_timeout.timeout(5):
+            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady from err
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
@@ -435,6 +448,12 @@ class RfxtrxEntity(RestoreEntity):
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, self._handle_event
+            )
+        )
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
             )
         )
 

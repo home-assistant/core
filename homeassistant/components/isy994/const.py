@@ -46,6 +46,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
@@ -56,11 +57,15 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     MASS_POUNDS,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SPEED_KILOMETERS_PER_HOUR,
@@ -348,7 +353,7 @@ UOM_FRIENDLY_NAME = {
     "33": ENERGY_KILO_WATT_HOUR,
     "34": "liedu",
     "35": VOLUME_LITERS,
-    "36": "lx",
+    "36": LIGHT_LUX,
     "37": "mercalli",
     "38": LENGTH_METERS,
     "39": f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
@@ -358,7 +363,7 @@ UOM_FRIENDLY_NAME = {
     "43": "mV",
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": f"mm/{TIME_HOURS}",
+    "46": f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
@@ -385,7 +390,7 @@ UOM_FRIENDLY_NAME = {
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "Ω",
     "86": "kΩ",
@@ -399,9 +404,9 @@ UOM_FRIENDLY_NAME = {
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
     "103": CURRENCY_DOLLAR,
-    "104": "¢",
+    "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": f"mm/{TIME_DAYS}",
+    "106": f"{LENGTH_MILLIMETERS}/{TIME_DAYS}",
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -411,8 +416,8 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mbar",
-    "118": "hPa",
+    "117": PRESSURE_MBAR,
+    "118": PRESSURE_HPA,
     "119": f"{POWER_WATT}{TIME_HOURS}",
     "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
 }

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "no_results": "Brak wynik\u00f3w. Spr\u00f3buj z inn\u0105 stacj\u0105/adresem."
         },
         "step": {

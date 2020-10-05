@@ -14,7 +14,7 @@ from tests.common import patch
 MODULE = "homeassistant.components.rpi_power.config_flow.new_under_voltage"
 
 
-async def test_setup(hass: HomeAssistant):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setting up manually."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -29,7 +29,7 @@ async def test_setup(hass: HomeAssistant):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_not_supported(hass: HomeAssistant):
+async def test_not_supported(hass: HomeAssistant) -> None:
     """Test setting up on not supported system."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -38,5 +38,26 @@ async def test_not_supported(hass: HomeAssistant):
 
     with patch(MODULE, return_value=None):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_onboarding(hass: HomeAssistant) -> None:
+    """Test setting up via onboarding."""
+    with patch(MODULE, return_value=MagicMock()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "onboarding"},
+        )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_onboarding_not_supported(hass: HomeAssistant) -> None:
+    """Test setting up via onboarding with unsupported system."""
+    with patch(MODULE, return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "onboarding"},
+        )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "no_devices_found"

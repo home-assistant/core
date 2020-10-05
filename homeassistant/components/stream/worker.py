@@ -6,7 +6,7 @@ import time
 
 import av
 
-from .const import MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
+from .const import MAX_TIMESTAMP_GAP, MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +77,9 @@ def _stream_worker_internal(hass, stream, quit_event):
     # compatible with empty_moov and manual bitstream filters not in PyAV
     if container.format.name in {"hls", "mpegts"}:
         audio_stream = None
+    # Some audio streams do not have a profile and throw errors when remuxing
+    if audio_stream and audio_stream.profile is None:
+        audio_stream = None
 
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
@@ -113,7 +116,11 @@ def _stream_worker_internal(hass, stream, quit_event):
             # Get to first video keyframe
             while first_packet[video_stream] is None:
                 packet = next(container.demux())
-                if packet.stream == video_stream and packet.is_keyframe:
+                if (
+                    packet.stream == video_stream
+                    and packet.is_keyframe
+                    and packet.dts is not None
+                ):
                     first_packet[video_stream] = packet
                     initial_packets.append(packet)
             # Get first_pts from subsequent frame to first keyframe
@@ -121,6 +128,8 @@ def _stream_worker_internal(hass, stream, quit_event):
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
                 packet = next(container.demux((video_stream, audio_stream)))
+                if packet.dts is None:
+                    continue  # Discard packets with no dts
                 if (
                     first_packet[packet.stream] is None
                 ):  # actually video already found above so only for audio
@@ -191,6 +200,12 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
+    def finalize_stream():
+        if not stream.keepalive:
+            # End of stream, clear listeners and stop thread
+            for fmt, _ in outputs.items():
+                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+
     if not peek_first_pts():
         container.close()
         return
@@ -213,15 +228,26 @@ def _stream_worker_internal(hass, stream, quit_event):
                 continue
             last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
-            if not stream.keepalive:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error("Error demuxing stream: %s", str(ex))
+            finalize_stream()
             break
 
         # Discard packet if dts is not monotonic
         if packet.dts <= last_dts[packet.stream]:
+            if (last_dts[packet.stream] - packet.dts) > (
+                packet.time_base * MAX_TIMESTAMP_GAP
+            ):
+                _LOGGER.warning(
+                    "Timestamp overflow detected: dts = %s, resetting stream",
+                    packet.dts,
+                )
+                finalize_stream()
+                break
+            _LOGGER.warning(
+                "Dropping out of order packet: %s <= %s",
+                packet.dts,
+                last_dts[packet.stream],
+            )
             continue
 
         # Check for end of segment

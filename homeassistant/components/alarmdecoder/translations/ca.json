@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu AlarmDecoder ja est\u00e0 configurat."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "create_entry": {
             "default": "S'ha connectat correctament amb AlarmDecoder."

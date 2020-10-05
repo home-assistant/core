@@ -1,6 +1,8 @@
 """Support for Vera locks."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, List, Optional
+
+import pyvera as veraApi
 
 from homeassistant.components.lock import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -36,32 +38,32 @@ async def async_setup_entry(
     )
 
 
-class VeraLock(VeraDevice, LockEntity):
+class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
-    def __init__(self, vera_device, controller_data: ControllerData):
+    def __init__(self, vera_device: veraApi.VeraLock, controller_data: ControllerData):
         """Initialize the Vera device."""
         self._state = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.vera_device.lock()
         self._state = STATE_LOCKED
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> Optional[bool]:
         """Return true if device is on."""
         return self._state == STATE_LOCKED
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Who unlocked the lock and did a low battery alert fire.
 
         Reports on the previous poll cycle.
@@ -78,7 +80,7 @@ class VeraLock(VeraDevice, LockEntity):
         return data
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> Optional[str]:
         """Who unlocked the lock.
 
         Reports on the previous poll cycle.
@@ -89,7 +91,7 @@ class VeraLock(VeraDevice, LockEntity):
             return last_user[0]
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Update state by the Vera device callback."""
         self._state = (
             STATE_LOCKED if self.vera_device.is_locked(True) else STATE_UNLOCKED

@@ -502,14 +502,23 @@ class ADBDevice(MediaPlayerEntity):
         return self._unique_id
 
     @adb_decorator()
+    async def _adb_screencap(self):
+        """Take a screen capture from the device."""
+        return await self.aftv.adb_screencap()
+
     async def async_get_media_image(self):
         """Fetch current playing image."""
         if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
             return None, None
 
-        media_data = await self.aftv.adb_screencap()
+        media_data = await self._adb_screencap()
         if media_data:
             return media_data, "image/png"
+
+        # If an exception occurred and the device is no longer available, write the state
+        if not self.available:
+            self.async_write_ha_state()
+
         return None, None
 
     @adb_decorator()

@@ -9,6 +9,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
@@ -41,7 +42,7 @@ SENSORS = {
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
-        "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
+        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": [VOLT, "mdi:flash"],
     "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],

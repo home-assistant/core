@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
         },
         "error": {

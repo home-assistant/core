@@ -42,9 +42,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     instance.get_locations.return_value = [mocked_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
-    ):
+    with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -126,9 +124,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
     instance.get_locations.return_value = [mocked_location]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
-    with patch(
-        "homeassistant.components.canary.CANARY_COMPONENTS", ["alarm_control_panel"]
-    ):
+    with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -141,7 +137,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_AWAY, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_AWAY)
 
     # test arm home
     await hass.services.async_call(
@@ -150,7 +146,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_HOME, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_HOME)
 
     # test arm night
     await hass.services.async_call(
@@ -159,7 +155,7 @@ async def test_alarm_control_panel_services(hass, canary) -> None:
         service_data={"entity_id": entity_id},
         blocking=True,
     )
-    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_NIGHT, False)
+    instance.set_location_mode.assert_called_with(100, LOCATION_MODE_NIGHT)
 
     # test disarm
     await hass.services.async_call(

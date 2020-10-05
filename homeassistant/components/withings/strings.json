@@ -7,7 +7,7 @@
         "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
         "data": { "profile": "Profile Name" }
       },
-      "pick_implementation": { "title": "Pick Authentication Method" },
+      "pick_implementation": { "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]" },
       "reauth": {
         "title": "Re-authenticate Profile",
         "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."

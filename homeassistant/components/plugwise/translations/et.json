@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Smile pordi number"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Kohanda Plugwise s\u00e4tteid"
+            }
+        }
+    }
+}

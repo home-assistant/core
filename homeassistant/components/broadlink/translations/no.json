@@ -5,6 +5,7 @@
             "already_in_progress": "Det p\u00e5g\u00e5r allerede en konfigurasjonsflyt for denne enheten",
             "cannot_connect": "Tilkobling mislyktes.",
             "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "not_supported": "Enheten st\u00f8ttes ikke",
             "unknown": "Uventet feil"
         },
         "error": {

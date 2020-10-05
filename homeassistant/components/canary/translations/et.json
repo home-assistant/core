@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus"
+        },
+        "flow_title": "Canary {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Loo \u00fchendus Canary-iga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "P\u00e4ringu ajal\u00f5pp (sekundites)"
+                }
+            }
+        }
+    }
+}

@@ -538,7 +538,7 @@ class Event:
         event_type: str,
         data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
-        time_fired: Optional[int] = None,
+        time_fired: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
     ) -> None:
         """Initialize a new event."""
@@ -547,6 +547,11 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
+
+    def __hash__(self) -> int:
+        """Make hashable."""
+        # The only event type that shares context are the TIME_CHANGED
+        return hash((self.event_type, self.context.id, self.time_fired))
 
     def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
@@ -754,6 +759,7 @@ class State:
     last_updated: last time this object was updated.
     context: Context in which it was created
     domain: Domain of this state.
+    object_id: Object id of this state.
     """
 
     __slots__ = [
@@ -764,6 +770,7 @@ class State:
         "last_updated",
         "context",
         "domain",
+        "object_id",
     ]
 
     def __init__(
@@ -797,12 +804,7 @@ class State:
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
-        self.domain = split_entity_id(self.entity_id)[0]
-
-    @property
-    def object_id(self) -> str:
-        """Object id of this state."""
-        return split_entity_id(self.entity_id)[1]
+        self.domain, self.object_id = split_entity_id(self.entity_id)
 
     @property
     def name(self) -> str:
@@ -907,7 +909,7 @@ class StateMachine:
         This method must be run in the event loop.
         """
         if domain_filter is None:
-            return list(self._states.keys())
+            return list(self._states)
 
         if isinstance(domain_filter, str):
             domain_filter = (domain_filter.lower(),)
@@ -917,6 +919,24 @@ class StateMachine:
             for state in self._states.values()
             if state.domain in domain_filter
         ]
+
+    @callback
+    def async_entity_ids_count(
+        self, domain_filter: Optional[Union[str, Iterable]] = None
+    ) -> int:
+        """Count the entity ids that are being tracked.
+
+        This method must be run in the event loop.
+        """
+        if domain_filter is None:
+            return len(self._states)
+
+        if isinstance(domain_filter, str):
+            domain_filter = (domain_filter.lower(),)
+
+        return len(
+            [None for state in self._states.values() if state.domain in domain_filter]
+        )
 
     def all(self, domain_filter: Optional[Union[str, Iterable]] = None) -> List[State]:
         """Create a list of all states."""
@@ -1389,6 +1409,9 @@ class Config:
 
         # List of allowed external URLs that integrations may use
         self.allowlist_external_urls: Set[str] = set()
+
+        # Dictionary of Media folders that integrations may use
+        self.media_dirs: Dict[str, str] = {}
 
         # If Home Assistant is running in safe mode
         self.safe_mode: bool = False

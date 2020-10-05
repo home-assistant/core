@@ -81,6 +81,7 @@ async def test_gateway_setup(hass):
         assert gateway.master is True
         assert gateway.option_allow_clip_sensor is False
         assert gateway.option_allow_deconz_groups is True
+        assert gateway.option_allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
@@ -90,9 +91,10 @@ async def test_gateway_setup(hass):
         assert forward_entry_setup.mock_calls[1][1] == (entry, "climate")
         assert forward_entry_setup.mock_calls[2][1] == (entry, "cover")
         assert forward_entry_setup.mock_calls[3][1] == (entry, "light")
-        assert forward_entry_setup.mock_calls[4][1] == (entry, "scene")
-        assert forward_entry_setup.mock_calls[5][1] == (entry, "sensor")
-        assert forward_entry_setup.mock_calls[6][1] == (entry, "switch")
+        assert forward_entry_setup.mock_calls[4][1] == (entry, "lock")
+        assert forward_entry_setup.mock_calls[5][1] == (entry, "scene")
+        assert forward_entry_setup.mock_calls[6][1] == (entry, "sensor")
+        assert forward_entry_setup.mock_calls[7][1] == (entry, "switch")
 
 
 async def test_gateway_retry(hass):

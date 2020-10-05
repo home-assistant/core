@@ -31,6 +31,7 @@ FLOWS = [
     "broadlink",
     "brother",
     "bsblan",
+    "canary",
     "cast",
     "cert_expiry",
     "control4",
@@ -67,6 +68,7 @@ FLOWS = [
     "geonetnz_volcano",
     "gios",
     "glances",
+    "goalzero",
     "gogogate2",
     "gpslogger",
     "griddy",
@@ -126,6 +128,7 @@ FLOWS = [
     "nut",
     "nws",
     "nzbget",
+    "omnilogic",
     "onvif",
     "opentherm_gw",
     "openuv",
@@ -147,6 +150,7 @@ FLOWS = [
     "pvpc_hourly_pricing",
     "rachio",
     "rainmachine",
+    "rfxtrx",
     "ring",
     "risco",
     "roku",
@@ -214,5 +218,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
+    "zoneminder",
     "zwave"
 ]

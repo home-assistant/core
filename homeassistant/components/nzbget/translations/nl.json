@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Naam"
+                    "name": "Naam",
+                    "username": "Gebruikersnaam"
                 }
             }
         }

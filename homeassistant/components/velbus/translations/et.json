@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "port_exists": "See port on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendus nurjus"
+        }
+    }
+}

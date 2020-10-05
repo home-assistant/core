@@ -48,14 +48,19 @@
             },
             "init": {
                 "data": {
-                    "hubv1": "Hub Version 1 (avant 2014)"
+                    "hubv1": "Hub Version 1 (avant 2014)",
+                    "hubv2": "Hub version 2",
+                    "plm": "Modem PowerLink (PLM)"
                 },
+                "description": "S\u00e9lectionnez le type de modem Insteon.",
                 "title": "Insteon"
             },
             "plm": {
                 "data": {
                     "device": "Chemin du p\u00e9riph\u00e9rique USB"
-                }
+                },
+                "description": "Configurez le modem Insteon PowerLink (PLM).",
+                "title": "Insteon PLM"
             },
             "user": {
                 "data": {
@@ -68,21 +73,27 @@
     },
     "options": {
         "abort": {
+            "already_configured": "Une connexion Insteon par modem est d\u00e9j\u00e0 configur\u00e9e",
             "cannot_connect": "Impossible de se connecter au modem Insteon"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "input_error": "Entr\u00e9es non valides, veuillez v\u00e9rifier vos valeurs.",
             "select_single": "S\u00e9lectionnez une option"
         },
         "step": {
             "add_override": {
                 "data": {
-                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)"
+                    "address": "Adresse de l'appareil (par exemple 1a2b3c)",
+                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)",
+                    "subcat": "Sous-cat\u00e9gorie de p\u00e9riph\u00e9rique (par exemple 0x0a)"
                 },
+                "description": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
                 "title": "Insteon"
             },
             "add_x10": {
                 "data": {
+                    "housecode": "Code maison (a - p)",
                     "platform": "Plate-forme",
                     "steps": "Pas de gradateur (pour les appareils d'\u00e9clairage uniquement, par d\u00e9faut 22)",
                     "unitcode": "Code de l'unit\u00e9 (1-16)"
@@ -97,6 +108,7 @@
                     "port": "Port",
                     "username": "Nom d'utilisateur"
                 },
+                "description": "Modifiez les informations de connexion Insteon Hub. Vous devez red\u00e9marrer Home Assistant apr\u00e8s avoir effectu\u00e9 cette modification. Cela ne change pas la configuration du Hub lui-m\u00eame. Pour modifier la configuration dans le Hub, utilisez l'application Hub.",
                 "title": "Insteon"
             },
             "init": {

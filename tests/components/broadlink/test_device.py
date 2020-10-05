@@ -62,11 +62,11 @@ async def test_device_setup_authentication_error(hass):
     }
 
 
-async def test_device_setup_device_offline(hass):
-    """Test we handle a device offline."""
+async def test_device_setup_network_timeout(hass):
+    """Test we handle a network timeout."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.auth.side_effect = blke.DeviceOfflineError()
+    mock_api.auth.side_effect = blke.NetworkTimeoutError()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -119,11 +119,11 @@ async def test_device_setup_broadlink_exception(hass):
     assert mock_init.call_count == 0
 
 
-async def test_device_setup_update_device_offline(hass):
-    """Test we handle a device offline in the update step."""
+async def test_device_setup_update_network_timeout(hass):
+    """Test we handle a network timeout in the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
+    mock_api.check_sensors.side_effect = blke.NetworkTimeoutError()
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -164,7 +164,7 @@ async def test_device_setup_update_authorization_error(hass):
 
 async def test_device_setup_update_authentication_error(hass):
     """Test we handle an authentication error in the update step."""
-    device = get_device("Living Room")
+    device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.AuthorizationError()
     mock_api.auth.side_effect = (None, blke.AuthenticationError())
@@ -190,7 +190,7 @@ async def test_device_setup_update_authentication_error(hass):
 
 async def test_device_setup_update_broadlink_exception(hass):
     """Test we handle a Broadlink exception in the update step."""
-    device = get_device("Living Room")
+    device = get_device("Garage")
     mock_api = device.get_mock_api()
     mock_api.check_sensors.side_effect = blke.BroadlinkException()
 
@@ -308,7 +308,7 @@ async def test_device_unload_update_failed(hass):
     """Test we unload a device that failed the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = blke.DeviceOfflineError()
+    mock_api.check_sensors.side_effect = blke.NetworkTimeoutError()
 
     with patch.object(hass.config_entries, "async_forward_entry_setup"):
         _, mock_entry = await device.setup_entry(hass, mock_api=mock_api)

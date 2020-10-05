@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
         "step": {
             "pick_device": {
                 "data": {
@@ -8,7 +15,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "ip_address": "IP adres"
                 },
                 "description": "Als u host leeg laat, wordt detectie gebruikt om apparaten te vinden."
             }
@@ -20,6 +28,7 @@
                 "data": {
                     "model": "Model (optioneel)",
                     "nightlight_switch": "Gebruik Nachtlichtschakelaar",
+                    "save_on_change": "Bewaar status bij wijziging",
                     "transition": "Overgangstijd (ms)",
                     "use_music_mode": "Schakel de muziekmodus in"
                 },
