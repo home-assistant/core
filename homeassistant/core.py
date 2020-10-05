@@ -1161,7 +1161,7 @@ class StateMachine:
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["func", "schema", "is_callback", "is_coroutinefunction"]
+    __slots__ = ["job", "schema"]
 
     def __init__(
         self,
@@ -1170,13 +1170,8 @@ class Service:
         context: Optional[Context] = None,
     ) -> None:
         """Initialize a service."""
-        self.func = func
+        self.job = HassJob(func)
         self.schema = schema
-        # Properly detect wrapped functions
-        while isinstance(func, functools.partial):
-            func = func.func
-        self.is_callback = is_callback(func)
-        self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
 
 class ServiceCall:
@@ -1444,12 +1439,12 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.is_coroutinefunction:
-            await handler.func(service_call)
-        elif handler.is_callback:
-            handler.func(service_call)
+        if handler.job.job_type == HassJobType.Coroutinefunction:
+            await handler.job.target(service_call)
+        elif handler.job.job_type == HassJobType.Callback:
+            handler.job.target(service_call)
         else:
-            await self._hass.async_add_executor_job(handler.func, service_call)
+            await self._hass.async_add_executor_job(handler.job.target, service_call)
 
 
 class Config:
