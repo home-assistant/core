@@ -313,12 +313,12 @@ class HomeAssistant:
         while isinstance(check_target, functools.partial):
             check_target = check_target.func
 
-        if asyncio.iscoroutine(check_target):
+        if is_callback(check_target):
+            self.loop.call_soon(target, *args)
+        elif asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
         elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
-        elif is_callback(check_target):
-            self.loop.call_soon(target, *args)
         else:
             task = self.loop.run_in_executor(None, target, *args)  # type: ignore
 
@@ -377,11 +377,7 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if (
-            not asyncio.iscoroutine(target)
-            and not asyncio.iscoroutinefunction(target)
-            and is_callback(target)
-        ):
+        if is_callback(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
