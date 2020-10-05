@@ -37,6 +37,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_OPTIMISTIC,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -70,6 +71,7 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT HVAC"
+DEFAULT_OPTIMISTIC = False
 
 CONF_ACTION_TEMPLATE = "action_template"
 CONF_ACTION_TOPIC = "action_topic"
@@ -197,6 +199,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
             vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
             vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -300,6 +303,7 @@ class MqttClimate(
         self._target_temp = None
         self._target_temp_high = None
         self._target_temp_low = None
+        self._optimistic = None
         self._topic = None
         self._value_templates = None
 
@@ -338,6 +342,8 @@ class MqttClimate(
         ) = self._current_operation = self._current_swing_mode = None
         self._target_temp_low = None
         self._target_temp_high = None
+
+        self._optimistic = config[CONF_OPTIMISTIC]
 
         if self._topic[CONF_TEMP_STATE_TOPIC] is None:
             self._target_temp = config[CONF_TEMP_INITIAL]
@@ -686,7 +692,10 @@ class MqttClimate(
 
     def _set_temperature(self, temp, cmnd_topic, state_topic, attr):
         if temp is not None:
-            if self._topic[state_topic] is None:
+            if (
+                self._topic[state_topic] is None
+                or self._optimistic
+            ):
                 # optimistic mode
                 setattr(self, attr, temp)
 
@@ -753,7 +762,10 @@ class MqttClimate(
 
         self._publish(CONF_MODE_COMMAND_TOPIC, hvac_mode)
 
-        if self._topic[CONF_MODE_STATE_TOPIC] is None:
+        if (
+            self._topic[CONF_MODE_STATE_TOPIC] is None
+            or self._optimistic
+        ):
             self._current_operation = hvac_mode
             self.async_write_ha_state()
 
