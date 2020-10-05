@@ -338,6 +338,7 @@ def test_state_as_dict():
     assert state.as_dict() == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
+    assert state.as_dict() is state.as_dict()
 
 
 class TestEventBus(unittest.TestCase):
