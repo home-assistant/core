@@ -3,6 +3,10 @@ import pytest
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.tuya.config_flow import (
+    RESULT_AUTH_FAILED,
+    RESULT_CONN_ERROR,
+)
 from homeassistant.components.tuya.const import CONF_COUNTRYCODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
@@ -120,14 +124,14 @@ async def test_abort_on_invalid_credentials(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "auth_failed"}
+    assert result["errors"] == {"base": RESULT_AUTH_FAILED}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "auth_failed"
+    assert result["reason"] == RESULT_AUTH_FAILED
 
 
 async def test_abort_on_connection_error(hass, tuya):
@@ -139,11 +143,11 @@ async def test_abort_on_connection_error(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
+    assert result["reason"] == RESULT_CONN_ERROR
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
+    assert result["reason"] == RESULT_CONN_ERROR
