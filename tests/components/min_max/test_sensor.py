@@ -329,7 +329,6 @@ async def test_last_sensor(hass):
     await hass.async_block_till_done()
 
     entity_ids = config["sensor"]["entity_ids"]
-    state = hass.states.get("sensor.test_last")
 
     for entity_id, value in dict(zip(entity_ids, VALUES)).items():
         hass.states.async_set(entity_id, value)
