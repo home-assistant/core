@@ -458,7 +458,6 @@ class HueLight(CoordinatorEntity, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
         if self.is_group:
-            attributes[ATTR_IS_HUE_GROUP] = self.is_group
-        return attributes
+            return {ATTR_IS_HUE_GROUP: self.is_group}
+        return {}
