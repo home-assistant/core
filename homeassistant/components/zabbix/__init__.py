@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PUBLISH_STATES_HOST, default=""): cv.string,
+                vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
             }
         )
     },
@@ -176,6 +176,7 @@ class ZabbixThread(threading.Thread):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown)
         self.start()
+        _LOGGER.info("Started publishing state changes to Zabbix")
 
     def _shutdown(self, event):
         """Shut down the thread."""
