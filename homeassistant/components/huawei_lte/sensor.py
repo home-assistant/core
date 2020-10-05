@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Callable, Dict, NamedTuple, Optional, Pattern, Tuple, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union
 
 import attr
 
@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 
 from . import HuaweiLteBaseEntity
@@ -324,7 +325,7 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    sensors = []
+    sensors: List[Entity] = []
     for key in SENSOR_KEYS:
         items = router.data.get(key)
         if not items:
@@ -370,15 +371,15 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
     item: str = attr.ib()
     meta: SensorMeta = attr.ib()
 
-    _state = attr.ib(init=False, default=STATE_UNKNOWN)
-    _unit: str = attr.ib(init=False)
+    _state: StateType = attr.ib(init=False, default=STATE_UNKNOWN)
+    _unit: Optional[str] = attr.ib(init=False)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
         self.router.subscriptions[self.key].add(f"{SENSOR_DOMAIN}/{self.item}")
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/{self.item}")
@@ -392,7 +393,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
         return f"{self.key}.{self.item}"
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return sensor state."""
         return self._state
 
@@ -402,12 +403,12 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
         return self.meta.device_class
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return sensor's unit of measurement."""
         return self.meta.unit or self._unit
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return icon for sensor."""
         icon = self.meta.icon
         if callable(icon):
@@ -419,7 +420,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self.meta.enabled_default
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         try:
             value = self.router.data[self.key][self.item]
