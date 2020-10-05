@@ -167,7 +167,7 @@ class HassJob:
     we run the job.
     """
 
-    __slots__ = ["job_type", "target"]
+    __slots__ = ("job_type", "target")
 
     def __init__(self, target: Callable):
         """Create a job object."""
@@ -741,10 +741,7 @@ class EventBus:
 
     @callback
     def _async_listen_job(self, event_type: str, hassjob: HassJob) -> CALLBACK_TYPE:
-        if event_type in self._listeners:
-            self._listeners[event_type].append(hassjob)
-        else:
-            self._listeners[event_type] = [hassjob]
+        self._listeners.setdefault(event_type, []).append(hassjob)
 
         def remove_listener() -> None:
             """Remove the listener."""
