@@ -40,6 +40,11 @@ OFF_TEMPERATURE = 4.5
 # On (valve fully open)
 ON_TEMPERATURE = 30.5
 
+# Lowest Value without turning off
+MIN_TEMPERATURE = 5.0
+# Largest Value without fully opening
+MAX_TEMPERATURE = 30.0
+
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 HASS_PRESET_TO_MAX_MODE = {
@@ -101,7 +106,7 @@ class MaxCubeClimate(ClimateEntity):
         """Return the minimum temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if device.min_temperature is None:
-            return 5.0
+            return MIN_TEMPERATURE
         return device.min_temperature
 
     @property
@@ -109,7 +114,7 @@ class MaxCubeClimate(ClimateEntity):
         """Return the maximum temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if device.max_temperature is None:
-            return 30.0
+            return MAX_TEMPERATURE
         return device.max_temperature
 
     @property
@@ -121,6 +126,12 @@ class MaxCubeClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        if (
+            device.actual_temperature is None
+            or device.actual_temperature < self.min_temp
+            or device.actual_temperature > self.max_temp
+        ):
+            return None
         return device.actual_temperature
 
     @property
@@ -197,6 +208,12 @@ class MaxCubeClimate(ClimateEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        if (
+            device.target_temperature is None
+            or device.target_temperature < self.min_temp
+            or device.target_temperature > self.max_temp
+        ):
+            return None
         return device.target_temperature
 
     def set_temperature(self, **kwargs):
