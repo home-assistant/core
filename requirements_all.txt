@@ -1656,7 +1656,7 @@ pysmappee==0.2.13
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.3
+pysmartthings==0.7.4
 
 # homeassistant.components.smarty
 pysmarty==0.8
