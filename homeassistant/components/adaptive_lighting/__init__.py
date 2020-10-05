@@ -25,10 +25,13 @@ Resources:
   lights to 2700K (warm white) until your hub goes into "Sleep mode".
 """
 import logging
+from typing import Any, Dict
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_SOURCE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -45,7 +48,7 @@ PLATFORMS = ["switch"]
 
 
 def _all_unique_names(value):
-    """Validate that all enties have a unique profile name."""
+    """Validate that all entities have a unique profile name."""
     hosts = [device[CONF_NAME] for device in value]
     schema = vol.Schema(vol.Unique())
     schema(hosts)
@@ -58,20 +61,20 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: Dict[str, Any]):
     """Import integration from config."""
 
     if DOMAIN in config:
         for entry in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+                    DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=entry
                 )
             )
     return True
 
 
-async def async_setup_entry(hass, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up the component."""
     data = hass.data.setdefault(DOMAIN, {})
 

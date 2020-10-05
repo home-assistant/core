@@ -48,7 +48,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import Context, Event, ServiceCall
+from homeassistant.core import Context, Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -136,7 +136,9 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
             )
 
 
-async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities: bool):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: bool
+):
     """Set up the AdaptiveLighting switch."""
     data = hass.data[DOMAIN]
 
@@ -197,7 +199,7 @@ def match_state_event(event: Event, from_or_to_state: List[str]):
     return match
 
 
-def _expand_light_groups(hass, lights: List[str]) -> List[str]:
+def _expand_light_groups(hass: HomeAssistant, lights: List[str]) -> List[str]:
     all_lights = set()
     for light in lights:
         state = hass.states.get(light)
@@ -213,13 +215,13 @@ def _expand_light_groups(hass, lights: List[str]) -> List[str]:
     return list(all_lights)
 
 
-def _supported_features(hass, light: str):
+def _supported_features(hass: HomeAssistant, light: str):
     state = hass.states.get(light)
     supported_features = state.attributes["supported_features"]
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
 
 
-def abs_rel_diff(val_a, val_b):
+def abs_rel_diff(val_a, val_b) -> float:
     """Absolute relative difference in %."""
     if val_b == 0:
         # To avoid ZeroDivisionError
@@ -538,7 +540,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             await self._adapt_light(light, transition, force=force)
 
     async def _sleep_state_event(self, event: Event):
-        if not match_state_event(event, ("on", "off")):
+        if not match_state_event(event, (STATE_ON, STATE_OFF)):
             return
         _LOGGER.debug("%s: _sleep_state_event, event: '%s'", self._name, event)
         self.turn_on_off_listener.reset(*self._lights)
@@ -552,9 +554,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         entity_id = event.data.get("entity_id")
         if (
             old_state is not None
-            and old_state.state == "off"
+            and old_state.state == STATE_OFF
             and new_state is not None
-            and new_state.state == "on"
+            and new_state.state == STATE_ON
         ):
             _LOGGER.debug(
                 "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
@@ -584,9 +586,9 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             )
         elif (
             old_state is not None
-            and old_state.state == "on"
+            and old_state.state == STATE_ON
             and new_state is not None
-            and new_state.state == "off"
+            and new_state.state == STATE_OFF
         ):
             # Tracks 'off' → 'on' state changes
             self._on_to_off_event[entity_id] = event
@@ -596,7 +598,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Adaptive Lighting switch."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry):
         """Initialize the Adaptive Lighting switch."""
         self.hass = hass
         data = validate(config_entry)
