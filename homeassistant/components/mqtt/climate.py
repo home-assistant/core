@@ -692,10 +692,7 @@ class MqttClimate(
 
     def _set_temperature(self, temp, cmnd_topic, state_topic, attr):
         if temp is not None:
-            if (
-                self._topic[state_topic] is None
-                or self._optimistic
-            ):
+            if self._topic[state_topic] is None or self._optimistic:
                 # optimistic mode
                 setattr(self, attr, temp)
 
@@ -762,10 +759,7 @@ class MqttClimate(
 
         self._publish(CONF_MODE_COMMAND_TOPIC, hvac_mode)
 
-        if (
-            self._topic[CONF_MODE_STATE_TOPIC] is None
-            or self._optimistic
-        ):
+        if self._topic[CONF_MODE_STATE_TOPIC] is None or self._optimistic:
             self._current_operation = hvac_mode
             self.async_write_ha_state()
 
