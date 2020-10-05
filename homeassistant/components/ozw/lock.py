@@ -59,10 +59,11 @@ def _call_util_lock_function(function, *args):
     """Call an openzwavemqtt.util.lock function and return success of call."""
     try:
         function(*args)
-        return True
     except BaseOZWError as err:
         _LOGGER.error("%s: %s", type(err), err.args[0])
         return False
+
+    return True
 
 
 class ZWaveLock(ZWaveDeviceEntity, LockEntity):
