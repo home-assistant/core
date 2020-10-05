@@ -187,7 +187,6 @@ def websocket_set_config_parameter(hass, connection, msg):
             msg[PARAMETER],
             msg[VALUE],
         )
-        connection.send_result(msg[ID])
     except NotFoundError as err:
         connection.send_error(
             msg[ID],
@@ -202,6 +201,8 @@ def websocket_set_config_parameter(hass, connection, msg):
             err.args[0],
         )
         return
+
+    connection.send_result(msg[ID])
 
 
 @websocket_api.websocket_command(
