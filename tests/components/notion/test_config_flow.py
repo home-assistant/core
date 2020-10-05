@@ -53,7 +53,7 @@ async def test_invalid_credentials(hass, mock_aionotion):
     flow.context = {"source": SOURCE_USER}
 
     result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {"base": "invalid_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_show_form(hass):

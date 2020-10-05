@@ -146,6 +146,7 @@ FLOWS = [
     "point",
     "poolsense",
     "powerwall",
+    "profiler",
     "progettihwsw",
     "ps4",
     "pvpc_hourly_pricing",

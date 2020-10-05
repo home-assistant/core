@@ -158,7 +158,7 @@ androidtv[async]==0.0.50
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.8
+apprise==0.8.9
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -382,7 +382,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.0
+home-assistant-frontend==20201001.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -780,6 +780,9 @@ pyowm==2.10.0
 # homeassistant.components.point
 pypoint==1.1.2
 
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1
 
@@ -842,7 +845,7 @@ python-miio==0.5.3
 python-nest==4.1.0
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.5
+python-openzwave-mqtt==1.2.0
 
 # homeassistant.components.songpal
 python-songpal==0.12

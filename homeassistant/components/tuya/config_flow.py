@@ -22,8 +22,8 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
-RESULT_AUTH_FAILED = "auth_failed"
-RESULT_CONN_ERROR = "conn_error"
+RESULT_AUTH_FAILED = "invalid_auth"
+RESULT_CONN_ERROR = "cannot_connect"
 RESULT_SUCCESS = "success"
 
 RESULT_LOG_MESSAGE = {

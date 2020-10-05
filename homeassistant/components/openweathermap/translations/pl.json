@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana. dla tych wsp\u00f3\u0142rz\u0119dnych."
+        },
         "error": {
             "auth": "Klucz API jest nieprawid\u0142owy.",
             "connection": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z OWM"
@@ -14,6 +17,7 @@
                     "mode": "Tryb",
                     "name": "Nazwa integracji"
                 },
+                "description": "Konfiguracja integracji OpenWeatherMap. Aby wygenerowa\u0107 klucz API, przejd\u017a do https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

@@ -10,6 +10,9 @@
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "title": "R\u00e9-authentifier avec Sonarr"
+            },
             "user": {
                 "data": {
                     "api_key": "Cl\u00e9 API",

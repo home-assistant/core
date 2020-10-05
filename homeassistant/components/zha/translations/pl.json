@@ -65,6 +65,7 @@
             "device_dropped": "nast\u0105pi upadek urz\u0105dzenia",
             "device_flipped": "nast\u0105pi odwr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_knocked": "nast\u0105pi pukni\u0119cie w urz\u0105dzenie \"{subtype}\"",
+            "device_offline": "Urz\u0105dzenie offline",
             "device_rotated": "nast\u0105pi obr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
             "device_shaken": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
             "device_slid": "nast\u0105pi przesuni\u0119cie urz\u0105dzenia \"{subtype}\"",
