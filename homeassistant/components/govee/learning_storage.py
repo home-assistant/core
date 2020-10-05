@@ -1,18 +1,20 @@
-"""Manages storage of learned informations into a yaml file."""
+"""The Govee learned storage yaml file manager."""
+
+from dataclasses import asdict
+import logging
 
 import dacite
-from dataclasses import asdict
 from govee_api_laggat import GoveeAbstractLearningStorage, GoveeLearnedInfo
-from homeassistant.util.yaml import load_yaml, save_yaml
-import logging
 import yaml
+
+from homeassistant.util.yaml import load_yaml, save_yaml
 
 _LOGGER = logging.getLogger(__name__)
 LEARNING_STORAGE_YAML = "/govee_learning.yaml"
 
 
 class GoveeLearningStorage(GoveeAbstractLearningStorage):
-    """The govee_api_laggat library uses this to store learned informations about led strips."""
+    """The govee_api_laggat library uses this to store learned information about led strips."""
 
     def __init__(self, config_dir, *args, **kwargs):
         """Get the config directory."""
@@ -36,12 +38,17 @@ class GoveeLearningStorage(GoveeAbstractLearningStorage):
             )
         except FileNotFoundError:
             _LOGGER.warning(
-                "There is no %s file containing learned informations about your devices. This is normal for first start of Govee integration.",
+                "There is no %s file containing learned information about your devices. This is normal for first start of Govee integration.",
                 self._config_dir + LEARNING_STORAGE_YAML,
             )
-        except (dacite.DaciteError, TypeError, UnicodeDecodeError, yaml.YAMLError) as ex:
+        except (
+            dacite.DaciteError,
+            TypeError,
+            UnicodeDecodeError,
+            yaml.YAMLError,
+        ) as ex:
             _LOGGER.warning(
-                "The %s file containing learned informations about your devices is invalid: %s. Learning starts from scratch.",
+                "The %s file containing learned information about your devices is invalid: %s. Learning starts from scratch.",
                 self._config_dir + LEARNING_STORAGE_YAML,
                 ex,
             )

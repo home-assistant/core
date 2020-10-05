@@ -71,13 +71,25 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed("Govee instance not available")
         try:
             govee = self.hass.data[DOMAIN]["hub"]
-            device_states = await govee.get_states()
-            for device in device_states:
-                if device.error:
-                    self.logger.warning(
-                        "update failed for %s: %s", device.device, device.error
-                    )
-            return device_states
+            online = govee.online
+            try:
+                if online:
+                    device_states = await govee.get_states()
+                    for device in device_states:
+                        if device.error:
+                            self.logger.warning(
+                                "update failed for %s: %s", device.device, device.error
+                            )
+                    return device_states
+                else:
+                    await govee.check_connection()
+            finally:
+                # print a single warning when going offline/online
+                if online != govee.online:
+                    if govee.online:
+                        _LOGGER.info("API is back online.")
+                    else:
+                        _LOGGER.warning("API is offline.")
         except Exception as ex:
             raise UpdateFailed(f"Exception on getting states: {ex}") from ex
 
@@ -185,7 +197,7 @@ class GoveeLightEntity(LightEntity):
 
     @property
     def assumed_state(self):
-        """Returns if the state is assumed, or got from api."""
+        """Return true if the state is assumed."""
         return self._device.source == "history"
 
     @property
