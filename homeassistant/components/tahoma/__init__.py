@@ -1,5 +1,4 @@
 """The TaHoma integration."""
-import asyncio
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -7,23 +6,14 @@ import logging
 from aiohttp import ClientError, ServerDisconnectedError
 from pyhoma.client import TahomaClient
 from pyhoma.exceptions import BadCredentialsException, TooManyRequestsException
-from pyhoma.models import Command
 import voluptuous as vol
 
 from homeassistant.components.scene import DOMAIN as SCENE
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv, discovery
 
-from .const import (
-    CONF_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-    IGNORED_TAHOMA_TYPES,
-    TAHOMA_TYPES,
-)
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, IGNORED_TAHOMA_TYPES, TAHOMA_TYPES
 from .coordinator import TahomaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,31 +44,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
     configuration = config.get(DOMAIN)
 
     if configuration is None:
-        return True
+        return False
 
-    if any(
-        configuration.get(CONF_USERNAME) in entry.data.get(CONF_USERNAME)
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    ):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=configuration,
-        )
-    )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up TaHoma from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    username = entry.data.get(CONF_USERNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    username = configuration.get(CONF_USERNAME)
+    password = configuration.get(CONF_PASSWORD)
 
     session = aiohttp_client.async_create_clientsession(hass)
     client = TahomaClient(username, password, session=session)
@@ -90,17 +61,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except BadCredentialsException:
         _LOGGER.error("invalid_auth")
         return False
-    except TooManyRequestsException as exception:
+    except TooManyRequestsException:
         _LOGGER.error("too_many_requests")
-        raise ConfigEntryNotReady from exception
-    except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
+        return False
+    except (TimeoutError, ClientError, ServerDisconnectedError):
         _LOGGER.error("cannot_connect")
-        raise ConfigEntryNotReady from exception
+        return False
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.exception(exception)
         return False
-
-    update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
     tahoma_coordinator = TahomaDataUpdateCoordinator(
         hass,
@@ -108,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name="TaHoma Event Fetcher",
         client=client,
         devices=devices,
-        update_interval=timedelta(seconds=update_interval),
+        update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
     )
 
     await tahoma_coordinator.async_refresh()
@@ -116,10 +85,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entities = defaultdict(list)
     entities[SCENE] = scenarios
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN] = {
         "entities": entities,
         "coordinator": tahoma_coordinator,
-        "update_listener": entry.add_update_listener(update_listener),
     }
 
     for device in tahoma_coordinator.data.values():
@@ -138,64 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
 
     for platform in entities:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-
-    async def handle_execute_command(call):
-        """Handle execute command service."""
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
-        entity = entity_registry.entities.get(call.data.get("entity_id"))
-        await tahoma_coordinator.client.execute_command(
-            entity.unique_id,
-            Command(call.data.get("command"), call.data.get("args")),
-            "Home Assistant Service",
-        )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_EXECUTE_COMMAND,
-        handle_execute_command,
-        vol.Schema(
-            {
-                vol.Required("entity_id"): cv.string,
-                vol.Required("command"): cv.string,
-                vol.Optional("args", default=[]): vol.All(
-                    cv.ensure_list, [vol.Any(str, int)]
-                ),
-            }
-        ),
-    )
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    entities_per_platform = hass.data[DOMAIN][entry.entry_id]["entities"]
-
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in entities_per_platform
-            ]
-        )
-    )
-
-    if unload_ok:
-        hass.data[DOMAIN][entry.entry_id]["update_listener"]()
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Update when config_entry options update."""
-    if entry.options[CONF_UPDATE_INTERVAL]:
-        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-        new_update_interval = timedelta(seconds=entry.options[CONF_UPDATE_INTERVAL])
-        coordinator.update_interval = new_update_interval
-        coordinator.original_update_interval = new_update_interval
-
-        await coordinator.async_refresh()

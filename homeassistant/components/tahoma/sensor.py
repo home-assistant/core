@@ -94,9 +94,9 @@ UNITS = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the TaHoma sensors from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN]
     coordinator = data["coordinator"]
 
     entities = [

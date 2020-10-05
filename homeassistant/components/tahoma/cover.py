@@ -1,8 +1,6 @@
 """Support for TaHoma cover - shutters etc."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -24,7 +22,6 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.helpers import entity_platform
 
 from .const import DOMAIN
 from .tahoma_device import TahomaDevice
@@ -106,9 +103,9 @@ TAHOMA_COVER_DEVICE_CLASSES = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the TaHoma covers from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN]
     coordinator = data["coordinator"]
 
     entities = [
@@ -117,22 +114,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
 
     async_add_entities(entities)
-
-    platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_COVER_MY_POSITION, {}, "async_my", [SUPPORT_MY]
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_COVER_POSITION_LOW_SPEED,
-        {
-            vol.Required(ATTR_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            )
-        },
-        "async_set_cover_position_low_speed",
-        [SUPPORT_COVER_POSITION_LOW_SPEED],
-    )
 
 
 class TahomaCover(TahomaDevice, CoverEntity):
@@ -181,18 +162,6 @@ class TahomaCover(TahomaDevice, CoverEntity):
 
         await self.async_execute_command(
             self.select_command(*COMMANDS_SET_POSITION), position
-        )
-
-    async def async_set_cover_position_low_speed(self, **kwargs):
-        """Move the cover to a specific position with a low speed."""
-        position = 100 - kwargs.get(ATTR_POSITION, 0)
-
-        # HorizontalAwning devices need a reversed position that can not be obtained via the API
-        if "Horizontal" in self.device.widget:
-            position = kwargs.get(ATTR_POSITION, 0)
-
-        await self.async_execute_command(
-            COMMAND_SET_POSITION_AND_LINEAR_SPEED, position, "lowspeed"
         )
 
     async def async_set_cover_tilt_position(self, **kwargs):
@@ -316,10 +285,6 @@ class TahomaCover(TahomaDevice, CoverEntity):
         # Fallback to available stop commands when no executions are found
         # Stop commands don't work with all devices, due to a bug in Somfy service
         await self.async_execute_command(self.select_command(*stop_commands))
-
-    async def async_my(self, **_):
-        """Set cover to preset position."""
-        await self.async_execute_command(COMMAND_MY)
 
     @property
     def is_opening(self):
