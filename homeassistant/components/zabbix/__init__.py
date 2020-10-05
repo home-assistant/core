@@ -191,7 +191,6 @@ class ZabbixThread(threading.Thread):
         """Listen for new messages on the bus and queue them for Zabbix."""
         item = (time.monotonic(), event)
         self.queue.put(item)
-        _LOGGER.info("Added item")
 
     def get_metrics(self):
         """Return a batch of events formatted for writing."""
@@ -236,9 +235,7 @@ class ZabbixThread(threading.Thread):
 
         for retry in range(self.MAX_TRIES + 1):
             try:
-                _LOGGER.info("Sending item")
                 self.zabbix_sender.send(metrics)
-                _LOGGER.info("Sent item")
 
                 if self.write_errors:
                     _LOGGER.error("Resumed, lost %d events", self.write_errors)
