@@ -81,8 +81,8 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
                                 "update failed for %s: %s", device.device, device.error
                             )
                     return device_states
-                else:
-                    await govee.check_connection()
+                # this will set govee.online
+                await govee.check_connection()
             finally:
                 # print a single warning when going offline/online
                 if online != govee.online:
