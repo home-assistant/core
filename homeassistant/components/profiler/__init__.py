@@ -12,10 +12,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
+
 SERVICE_START = "start"
 CONF_SECONDS = "seconds"
-
-DOMAIN = "profiler"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     profiler = cProfile.Profile()
     profiler.enable()
-    await asyncio.sleep(float(call.data.get(CONF_SECONDS)))
+    await asyncio.sleep(float(call.data[CONF_SECONDS]))
     profiler.disable()
 
     cprofile_path = hass.config.path(f"profile.{start_time}.cprof")
