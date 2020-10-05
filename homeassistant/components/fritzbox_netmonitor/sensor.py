@@ -96,21 +96,20 @@ class FritzboxMonitorSensor(Entity):
     def state_attributes(self):
         """Return the device state attributes."""
         # Don't return attributes if FritzBox is unreachable
-        attr = {}
-        if self._state != STATE_UNAVAILABLE:
-            attr = {
-                ATTR_IS_LINKED: self._is_linked,
-                ATTR_IS_CONNECTED: self._is_connected,
-                ATTR_EXTERNAL_IP: self._external_ip,
-                ATTR_UPTIME: self._uptime,
-                ATTR_BYTES_SENT: self._bytes_sent,
-                ATTR_BYTES_RECEIVED: self._bytes_received,
-                ATTR_TRANSMISSION_RATE_UP: self._transmission_rate_up,
-                ATTR_TRANSMISSION_RATE_DOWN: self._transmission_rate_down,
-                ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
-                ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
-            }
-        return attr
+        if self._state == STATE_UNAVAILABLE:
+            return {}
+        return {
+            ATTR_IS_LINKED: self._is_linked,
+            ATTR_IS_CONNECTED: self._is_connected,
+            ATTR_EXTERNAL_IP: self._external_ip,
+            ATTR_UPTIME: self._uptime,
+            ATTR_BYTES_SENT: self._bytes_sent,
+            ATTR_BYTES_RECEIVED: self._bytes_received,
+            ATTR_TRANSMISSION_RATE_UP: self._transmission_rate_up,
+            ATTR_TRANSMISSION_RATE_DOWN: self._transmission_rate_down,
+            ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
+            ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
+        }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
