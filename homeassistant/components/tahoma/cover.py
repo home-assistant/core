@@ -1,258 +1,377 @@
-"""Support for Tahoma cover - shutters etc."""
-from datetime import timedelta
+"""Support for TaHoma cover - shutters etc."""
 import logging
+
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DEVICE_CLASS_AWNING,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_CURTAIN,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
+    DOMAIN as COVER,
+    SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers import entity_platform
 
-from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
+from .const import DOMAIN
+from .tahoma_device import TahomaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MEM_POS = "memorized_position"
-ATTR_RSSI_LEVEL = "rssi_level"
-ATTR_LOCK_START_TS = "lock_start_ts"
-ATTR_LOCK_END_TS = "lock_end_ts"
-ATTR_LOCK_LEVEL = "lock_level"
-ATTR_LOCK_ORIG = "lock_originator"
+COMMAND_CYCLE = "cycle"
+COMMAND_CLOSE = "close"
+COMMAND_CLOSE_SLATS = "closeSlats"
+COMMAND_DOWN = "down"
+COMMAND_MY = "my"
+COMMAND_OPEN = "open"
+COMMAND_OPEN_SLATS = "openSlats"
+COMMAND_SET_CLOSURE = "setClosure"
+COMMAND_SET_ORIENTATION = "setOrientation"
+COMMAND_SET_PEDESTRIAN_POSITION = "setPedestrianPosition"
+COMMAND_SET_POSITION = "setPosition"
+COMMAND_SET_POSITION_AND_LINEAR_SPEED = "setPositionAndLinearSpeed"
+COMMAND_STOP = "stop"
+COMMAND_STOP_IDENTIFY = "stopIdentify"
+COMMAND_UP = "up"
 
-HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
+COMMANDS_STOP = [COMMAND_STOP, COMMAND_STOP_IDENTIFY, COMMAND_MY]
+COMMANDS_STOP_TILT = [COMMAND_STOP, COMMAND_STOP_IDENTIFY, COMMAND_MY]
+COMMANDS_OPEN = [COMMAND_OPEN, COMMAND_UP, COMMAND_CYCLE]
+COMMANDS_OPEN_TILT = [COMMAND_OPEN_SLATS]
+COMMANDS_CLOSE = [COMMAND_CLOSE, COMMAND_DOWN, COMMAND_CYCLE]
+COMMANDS_CLOSE_TILT = [COMMAND_CLOSE_SLATS]
+COMMANDS_SET_POSITION = [
+    COMMAND_SET_POSITION,
+    COMMAND_SET_CLOSURE,
+    COMMAND_SET_PEDESTRIAN_POSITION,
+]
+COMMANDS_SET_TILT_POSITION = [COMMAND_SET_ORIENTATION]
 
-TAHOMA_DEVICE_CLASSES = {
-    HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
-    "io:AwningValanceIOComponent": DEVICE_CLASS_AWNING,
-    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": DEVICE_CLASS_GARAGE,
-    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
-    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
-    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
-    "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterUnoIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterVeluxIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterWithLowSpeedManagementIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
-    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
-    "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
-    "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
-    "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
-    "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
-    "rts:ExteriorVenetianBlindRTSComponent": DEVICE_CLASS_BLIND,
-    "rts:RollerShutterRTSComponent": DEVICE_CLASS_SHUTTER,
-    "rts:VenetianBlindRTSComponent": DEVICE_CLASS_BLIND,
+CORE_CLOSURE_STATE = "core:ClosureState"
+CORE_CLOSURE_OR_ROCKER_POSITION_STATE = "core:ClosureOrRockerPositionState"
+CORE_DEPLOYMENT_STATE = "core:DeploymentState"
+CORE_MEMORIZED_1_POSITION_STATE = "core:Memorized1PositionState"
+CORE_OPEN_CLOSED_PARTIAL_STATE = "core:OpenClosedPartialState"
+CORE_OPEN_CLOSED_PEDESTRIAN_STATE = "core:OpenClosedPedestrianState"
+CORE_OPEN_CLOSED_STATE = "core:OpenClosedState"
+CORE_OPEN_CLOSED_UNKNOWN_STATE = "core:OpenClosedUnknownState"
+CORE_PEDESTRIAN_POSITION_STATE = "core:PedestrianPositionState"
+CORE_PRIORITY_LOCK_TIMER_STATE = "core:PriorityLockTimerState"
+CORE_SLATS_OPEN_CLOSED_STATE = "core:SlatsOpenClosedState"
+CORE_SLATS_ORIENTATION_STATE = "core:SlatsOrientationState"
+CORE_TARGET_CLOSURE_STATE = "core:TargetClosureState"
+MYFOX_SHUTTER_STATUS_STATE = "myfox:ShutterStatusState"
+
+ICON_LOCK_ALERT = "mdi:lock-alert"
+ICON_WEATHER_WINDY = "mdi:weather-windy"
+
+IO_PRIORITY_LOCK_ORIGINATOR_STATE = "io:PriorityLockOriginatorState"
+
+STATE_CLOSED = "closed"
+
+SERVICE_COVER_MY_POSITION = "set_cover_my_position"
+SERVICE_COVER_POSITION_LOW_SPEED = "set_cover_position_low_speed"
+
+SUPPORT_MY = 512
+SUPPORT_COVER_POSITION_LOW_SPEED = 1024
+
+
+TAHOMA_COVER_DEVICE_CLASSES = {
+    "Awning": DEVICE_CLASS_AWNING,
+    "Blind": DEVICE_CLASS_BLIND,
+    "Curtain": DEVICE_CLASS_CURTAIN,
+    "ExteriorScreen": DEVICE_CLASS_BLIND,
+    "ExteriorVenetianBlind": DEVICE_CLASS_BLIND,
+    "GarageDoor": DEVICE_CLASS_GARAGE,
+    "Gate": DEVICE_CLASS_GATE,
+    "MyFoxSecurityCamera": DEVICE_CLASS_SHUTTER,
+    "Pergola": DEVICE_CLASS_AWNING,
+    "RollerShutter": DEVICE_CLASS_SHUTTER,
+    "SwingingShutter": DEVICE_CLASS_SHUTTER,
+    "VeluxInteriorBlind": DEVICE_CLASS_BLIND,
+    "Window": DEVICE_CLASS_WINDOW,
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Tahoma covers."""
-    if discovery_info is None:
-        return
-    controller = hass.data[TAHOMA_DOMAIN]["controller"]
-    devices = []
-    for device in hass.data[TAHOMA_DOMAIN]["devices"]["cover"]:
-        devices.append(TahomaCover(device, controller))
-    add_entities(devices, True)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the TaHoma covers from a config entry."""
+    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
+
+    entities = [
+        TahomaCover(device.deviceurl, coordinator)
+        for device in data["entities"].get(COVER)
+    ]
+
+    async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_COVER_MY_POSITION, {}, "async_my", [SUPPORT_MY]
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_COVER_POSITION_LOW_SPEED,
+        {
+            vol.Required(ATTR_POSITION): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_set_cover_position_low_speed",
+        [SUPPORT_COVER_POSITION_LOW_SPEED],
+    )
 
 
 class TahomaCover(TahomaDevice, CoverEntity):
-    """Representation a Tahoma Cover."""
-
-    def __init__(self, tahoma_device, controller):
-        """Initialize the device."""
-        super().__init__(tahoma_device, controller)
-
-        self._closure = 0
-        # 100 equals open
-        self._position = 100
-        self._closed = False
-        self._rssi_level = None
-        self._icon = None
-        # Can be 0 and bigger
-        self._lock_timer = 0
-        self._lock_start_ts = None
-        self._lock_end_ts = None
-        # Can be 'comfortLevel1', 'comfortLevel2', 'comfortLevel3',
-        # 'comfortLevel4', 'environmentProtection', 'humanProtection',
-        # 'userLevel1', 'userLevel2'
-        self._lock_level = None
-        # Can be 'LSC', 'SAAC', 'SFC', 'UPS', 'externalGateway', 'localUser',
-        # 'myself', 'rain', 'security', 'temperature', 'timer', 'user', 'wind'
-        self._lock_originator = None
-
-    def update(self):
-        """Update method."""
-        self.controller.get_states([self.tahoma_device])
-
-        # For vertical covers
-        self._closure = self.tahoma_device.active_states.get("core:ClosureState")
-        # For horizontal covers
-        if self._closure is None:
-            self._closure = self.tahoma_device.active_states.get("core:DeploymentState")
-
-        # For all, if available
-        if "core:PriorityLockTimerState" in self.tahoma_device.active_states:
-            old_lock_timer = self._lock_timer
-            self._lock_timer = self.tahoma_device.active_states[
-                "core:PriorityLockTimerState"
-            ]
-            # Derive timestamps from _lock_timer, only if not already set or
-            # something has changed
-            if self._lock_timer > 0:
-                _LOGGER.debug("Update %s, lock_timer: %d", self._name, self._lock_timer)
-                if self._lock_start_ts is None:
-                    self._lock_start_ts = utcnow()
-                if self._lock_end_ts is None or old_lock_timer != self._lock_timer:
-                    self._lock_end_ts = utcnow() + timedelta(seconds=self._lock_timer)
-            else:
-                self._lock_start_ts = None
-                self._lock_end_ts = None
-        else:
-            self._lock_timer = 0
-            self._lock_start_ts = None
-            self._lock_end_ts = None
-
-        self._lock_level = self.tahoma_device.active_states.get(
-            "io:PriorityLockLevelState"
-        )
-
-        self._lock_originator = self.tahoma_device.active_states.get(
-            "io:PriorityLockOriginatorState"
-        )
-
-        self._rssi_level = self.tahoma_device.active_states.get("core:RSSILevelState")
-
-        # Define which icon to use
-        if self._lock_timer > 0:
-            if self._lock_originator == "wind":
-                self._icon = "mdi:weather-windy"
-            else:
-                self._icon = "mdi:lock-alert"
-        else:
-            self._icon = None
-
-        # Define current position.
-        #   _position: 0 is closed, 100 is fully open.
-        #   'core:ClosureState': 100 is closed, 0 is fully open.
-        if self._closure is not None:
-            if self.tahoma_device.type == HORIZONTAL_AWNING:
-                self._position = self._closure
-            else:
-                self._position = 100 - self._closure
-            if self._position <= 5:
-                self._position = 0
-            if self._position >= 95:
-                self._position = 100
-            self._closed = self._position == 0
-        else:
-            self._position = None
-            if "core:OpenClosedState" in self.tahoma_device.active_states:
-                self._closed = (
-                    self.tahoma_device.active_states["core:OpenClosedState"] == "closed"
-                )
-            if "core:OpenClosedPartialState" in self.tahoma_device.active_states:
-                self._closed = (
-                    self.tahoma_device.active_states["core:OpenClosedPartialState"]
-                    == "closed"
-                )
-            else:
-                self._closed = False
-
-        _LOGGER.debug("Update %s, position: %d", self._name, self._position)
+    """Representation of a TaHoma Cover."""
 
     @property
     def current_cover_position(self):
-        """Return current position of cover."""
-        return self._position
+        """
+        Return current position of cover.
 
-    def set_cover_position(self, **kwargs):
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        position = self.select_state(
+            CORE_CLOSURE_STATE,
+            CORE_DEPLOYMENT_STATE,
+            CORE_PEDESTRIAN_POSITION_STATE,
+            CORE_TARGET_CLOSURE_STATE,
+            CORE_CLOSURE_OR_ROCKER_POSITION_STATE,
+        )
+
+        # Uno devices can have a position not in 0 to 100 range when unknown
+        if position is None or position < 0 or position > 100:
+            return None
+
+        if "Horizontal" not in self.device.widget:
+            position = 100 - position
+
+        return position
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        position = self.select_state(CORE_SLATS_ORIENTATION_STATE)
+        return 100 - position if position is not None else None
+
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.tahoma_device.type == "io:WindowOpenerVeluxIOComponent":
-            command = "setClosure"
-        else:
-            command = "setPosition"
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
 
-        if self.tahoma_device.type == HORIZONTAL_AWNING:
-            self.apply_action(command, kwargs.get(ATTR_POSITION, 0))
-        else:
-            self.apply_action(command, 100 - kwargs.get(ATTR_POSITION, 0))
+        # HorizontalAwning devices need a reversed position that can not be obtained via the API
+        if "Horizontal" in self.device.widget:
+            position = kwargs.get(ATTR_POSITION, 0)
+
+        await self.async_execute_command(
+            self.select_command(*COMMANDS_SET_POSITION), position
+        )
+
+    async def async_set_cover_position_low_speed(self, **kwargs):
+        """Move the cover to a specific position with a low speed."""
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
+
+        # HorizontalAwning devices need a reversed position that can not be obtained via the API
+        if "Horizontal" in self.device.widget:
+            position = kwargs.get(ATTR_POSITION, 0)
+
+        await self.async_execute_command(
+            COMMAND_SET_POSITION_AND_LINEAR_SPEED, position, "lowspeed"
+        )
+
+    async def async_set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        await self.async_execute_command(
+            self.select_command(*COMMANDS_SET_TILT_POSITION),
+            100 - kwargs.get(ATTR_TILT_POSITION, 0),
+        )
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._closed
+        state = self.select_state(
+            CORE_OPEN_CLOSED_STATE,
+            CORE_SLATS_OPEN_CLOSED_STATE,
+            CORE_OPEN_CLOSED_PARTIAL_STATE,
+            CORE_OPEN_CLOSED_PEDESTRIAN_STATE,
+            CORE_OPEN_CLOSED_UNKNOWN_STATE,
+            MYFOX_SHUTTER_STATUS_STATE,
+        )
+
+        if state is not None:
+            return state == STATE_CLOSED
+
+        if self.current_cover_position is not None:
+            return self.current_cover_position == 0
+
+        if self.current_cover_tilt_position is not None:
+            return self.current_cover_tilt_position == 0
+
+        return None
 
     @property
     def device_class(self):
         """Return the class of the device."""
-        return TAHOMA_DEVICE_CLASSES.get(self.tahoma_device.type)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attr = {}
-        super_attr = super().device_state_attributes
-        if super_attr is not None:
-            attr.update(super_attr)
-
-        if "core:Memorized1PositionState" in self.tahoma_device.active_states:
-            attr[ATTR_MEM_POS] = self.tahoma_device.active_states[
-                "core:Memorized1PositionState"
-            ]
-        if self._rssi_level is not None:
-            attr[ATTR_RSSI_LEVEL] = self._rssi_level
-        if self._lock_start_ts is not None:
-            attr[ATTR_LOCK_START_TS] = self._lock_start_ts.isoformat()
-        if self._lock_end_ts is not None:
-            attr[ATTR_LOCK_END_TS] = self._lock_end_ts.isoformat()
-        if self._lock_level is not None:
-            attr[ATTR_LOCK_LEVEL] = self._lock_level
-        if self._lock_originator is not None:
-            attr[ATTR_LOCK_ORIG] = self._lock_originator
-        return attr
+        return (
+            TAHOMA_COVER_DEVICE_CLASSES.get(self.device.widget)
+            or TAHOMA_COVER_DEVICE_CLASSES.get(self.device.ui_class)
+            or DEVICE_CLASS_BLIND
+        )
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    def open_cover(self, **kwargs):
-        """Open the cover."""
-        self.apply_action("open")
-
-    def close_cover(self, **kwargs):
-        """Close the cover."""
-        self.apply_action("close")
-
-    def stop_cover(self, **kwargs):
-        """Stop the cover."""
         if (
-            self.tahoma_device.type
-            == "io:RollerShutterWithLowSpeedManagementIOComponent"
+            self.has_state(CORE_PRIORITY_LOCK_TIMER_STATE)
+            and self.select_state(CORE_PRIORITY_LOCK_TIMER_STATE) > 0
         ):
-            self.apply_action("setPosition", "secured")
-        elif self.tahoma_device.type in {
-            "io:ExteriorVenetianBlindIOComponent",
-            "rts:BlindRTSComponent",
-            "rts:DualCurtainRTSComponent",
-            "rts:ExteriorVenetianBlindRTSComponent",
-            "rts:VenetianBlindRTSComponent",
-        }:
-            self.apply_action("my")
-        elif self.tahoma_device.type in {
-            HORIZONTAL_AWNING,
-            "io:AwningValanceIOComponent",
-            "io:RollerShutterGenericIOComponent",
-            "io:VerticalExteriorAwningIOComponent",
-            "io:VerticalInteriorBlindVeluxIOComponent",
-            "io:WindowOpenerVeluxIOComponent",
-        }:
-            self.apply_action("stop")
-        else:
-            self.apply_action("stopIdentify")
+            if self.select_state(IO_PRIORITY_LOCK_ORIGINATOR_STATE) == "wind":
+                return ICON_WEATHER_WINDY
+            return ICON_LOCK_ALERT
+
+        return None
+
+    async def async_open_cover(self, **_):
+        """Open the cover."""
+        await self.async_execute_command(self.select_command(*COMMANDS_OPEN))
+
+    async def async_open_cover_tilt(self, **_):
+        """Open the cover tilt."""
+        await self.async_execute_command(self.select_command(*COMMANDS_OPEN_TILT))
+
+    async def async_close_cover(self, **_):
+        """Close the cover."""
+        await self.async_execute_command(self.select_command(*COMMANDS_CLOSE))
+
+    async def async_close_cover_tilt(self, **_):
+        """Close the cover tilt."""
+        await self.async_execute_command(self.select_command(*COMMANDS_CLOSE_TILT))
+
+    async def async_stop_cover(self, **_):
+        """Stop the cover."""
+        await self.async_cancel_or_stop_cover(
+            COMMANDS_OPEN + COMMANDS_SET_POSITION + COMMANDS_CLOSE,
+            COMMANDS_STOP,
+        )
+
+    async def async_stop_cover_tilt(self, **_):
+        """Stop the cover tilt."""
+        await self.async_cancel_or_stop_cover(
+            COMMANDS_OPEN_TILT + COMMANDS_SET_TILT_POSITION + COMMANDS_CLOSE_TILT,
+            COMMANDS_STOP_TILT,
+        )
+
+    async def async_cancel_or_stop_cover(self, cancel_commands, stop_commands) -> None:
+        """Cancel running execution or send stop command."""
+        # Cancelling a running execution will stop the cover movement
+        # Retrieve executions initiated via Home Assistant from Data Update Coordinator queue
+        exec_id = next(
+            (
+                exec_id
+                # Reverse dictionary to cancel the last added execution
+                for exec_id, execution in reversed(self.coordinator.executions.items())
+                if execution.get("deviceurl") == self.device.deviceurl
+                and execution.get("command_name") in cancel_commands
+            ),
+            None,
+        )
+
+        if exec_id:
+            return await self.async_cancel_command(exec_id)
+
+        # Retrieve executions initiated outside Home Assistant via API
+        executions = await self.coordinator.client.get_current_executions()
+        exec_id = next(
+            (
+                execution.id
+                for execution in executions
+                # Reverse dictionary to cancel the last added execution
+                for action in reversed(execution.action_group.get("actions"))
+                for command in action.get("commands")
+                if action.get("deviceurl") == self.device.deviceurl
+                and command.get("name") in cancel_commands
+            ),
+            None,
+        )
+
+        if exec_id:
+            return await self.async_cancel_command(exec_id)
+
+        # Fallback to available stop commands when no executions are found
+        # Stop commands don't work with all devices, due to a bug in Somfy service
+        await self.async_execute_command(self.select_command(*stop_commands))
+
+    async def async_my(self, **_):
+        """Set cover to preset position."""
+        await self.async_execute_command(COMMAND_MY)
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return any(
+            execution.get("deviceurl") == self.device.deviceurl
+            and execution.get("command_name") in COMMANDS_OPEN + COMMANDS_OPEN_TILT
+            for execution in self.coordinator.executions.values()
+        )
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return any(
+            execution.get("deviceurl") == self.device.deviceurl
+            and execution.get("command_name") in COMMANDS_CLOSE + COMMANDS_CLOSE_TILT
+            for execution in self.coordinator.executions.values()
+        )
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = 0
+
+        if self.has_command(*COMMANDS_OPEN_TILT):
+            supported_features |= SUPPORT_OPEN_TILT
+
+            if self.has_command(*COMMANDS_STOP_TILT):
+                supported_features |= SUPPORT_STOP_TILT
+
+        if self.has_command(*COMMANDS_CLOSE_TILT):
+            supported_features |= SUPPORT_CLOSE_TILT
+
+        if self.has_command(*COMMANDS_SET_TILT_POSITION):
+            supported_features |= SUPPORT_SET_TILT_POSITION
+
+        if self.has_command(*COMMANDS_SET_POSITION):
+            supported_features |= SUPPORT_SET_POSITION
+
+        if self.has_command(*COMMANDS_OPEN):
+            supported_features |= SUPPORT_OPEN
+
+            if self.has_command(*COMMANDS_STOP):
+                supported_features |= SUPPORT_STOP
+
+        if self.has_command(*COMMANDS_CLOSE):
+            supported_features |= SUPPORT_CLOSE
+
+        if self.has_command(COMMAND_SET_POSITION_AND_LINEAR_SPEED):
+            supported_features |= SUPPORT_COVER_POSITION_LOW_SPEED
+
+        if self.has_command(COMMAND_MY):
+            supported_features |= SUPPORT_MY
+
+        return supported_features

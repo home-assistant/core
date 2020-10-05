@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Voer uw TaHoma inloggegevens in voor de TaHoma-app of het tahomalink.com platform.",
+        "data": {
+          "username": "E-mailadres",
+          "password": "Wachtwoord"
+        }
+      }
+    },
+    "error": {
+      "too_many_requests": "Te veel verzoeken, probeer het later opnieuw.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "update_interval": {
+        "title": "Update interval",
+        "description": "De Somfy TaHoma-integratie haalt periodiek nieuwe gebeurtenissen op. Wijzig de update-interval naar een lagere waarde als je vaker updates wilt, bijvoorbeeld wanneer je je apparaten ook buiten Home Assistant bedient.",
+        "data": {
+          "update_interval": "Update interval (in seconden)"
+        }
+      }
+    }
+  }
+}
