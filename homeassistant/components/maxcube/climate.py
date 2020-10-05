@@ -100,13 +100,17 @@ class MaxCubeClimate(ClimateEntity):
     def min_temp(self):
         """Return the minimum temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        return self.map_temperature_max_hass(device.min_temperature)
+        if device.min_temperature is None:
+            return 5.0
+        return device.min_temperature
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        return self.map_temperature_max_hass(device.max_temperature)
+        if device.max_temperature is None:
+            return 30.0
+        return device.max_temperature
 
     @property
     def temperature_unit(self):
@@ -117,9 +121,7 @@ class MaxCubeClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Map and return current temperature
-        return self.map_temperature_max_hass(device.actual_temperature)
+        return device.actual_temperature
 
     @property
     def hvac_mode(self):
@@ -195,7 +197,7 @@ class MaxCubeClimate(ClimateEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        return self.map_temperature_max_hass(device.target_temperature)
+        return device.target_temperature
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -283,11 +285,3 @@ class MaxCubeClimate(ClimateEntity):
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-
-    @staticmethod
-    def map_temperature_max_hass(temperature):
-        """Map Temperature from MAX! to Home Assistant."""
-        if temperature is None:
-            return 0.0
-
-        return temperature
