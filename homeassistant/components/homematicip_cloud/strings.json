@@ -21,7 +21,7 @@
       "timeout_button": "Blue button press timeout, please try again."
     },
     "abort": {
-      "unknown": "Unknown error occurred.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "connection_aborted": "Could not connect to HMIP server",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
