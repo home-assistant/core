@@ -150,7 +150,7 @@ def setup(hass, config):
     if publish_states_host:
         zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
         instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
-        instance.setup()
+        instance.setup(hass)
 
     return True
 
