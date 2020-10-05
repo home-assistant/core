@@ -18,16 +18,15 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt
-import homeassistant.util.dt as dt_util
 
 
-def test_from_event_to_db_event():
+def test_from_event():
     """Test converting event to db event."""
     event = ha.Event("test_event", {"some_data": 15})
     assert event == Events.from_event(event).to_native()
 
 
-def test_from_event_to_db_state():
+def test_from_event():
     """Test converting event to db state."""
     state = ha.State("sensor.temperature", "18")
     event = ha.Event(
@@ -203,16 +202,3 @@ async def test_process_timestamp_to_utc_isoformat():
         == "2016-07-09T21:31:00+00:00"
     )
     assert process_timestamp_to_utc_isoformat(None) is None
-
-
-async def test_event_to_db_model():
-    """Test we can round trip Event conversion."""
-    event = ha.Event(
-        "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
-    )
-    native = Events.from_event(event).to_native()
-    assert native == event
-
-    native = Events.from_event(event, event_data="{}").to_native()
-    event.data = {}
-    assert native == event
