@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.components.zwave import const
 
-from tests.async_mock import MagicMock, patch
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.mock.zwave import MockNetwork, MockNode, MockOption, MockValue
 
 
@@ -29,13 +29,24 @@ def mock_openzwave():
 
 
 @pytest.fixture
-def mock_platform():
-    """Mock platform."""
+def mock_discovery():
+    """Mock discovery."""
+    discovery = MagicMock()
+    discovery.async_load_platform = AsyncMock(return_value=None)
+    yield discovery
+
+
+@pytest.fixture
+def mock_import_module():
+    """Mock import module."""
     platform = MagicMock()
     mock_device = MagicMock()
     mock_device.name = "test_device"
     platform.get_device.return_value = mock_device
-    yield platform
+
+    import_module = MagicMock()
+    import_module.return_value = platform
+    yield import_module
 
 
 @pytest.fixture
