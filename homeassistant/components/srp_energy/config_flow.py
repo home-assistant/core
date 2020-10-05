@@ -4,42 +4,42 @@ import logging
 from srpenergy.client import SrpEnergyClient
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_IS_TOU, DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ID): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-    }
-)
+# DATA_SCHEMA = vol.Schema(
+#     {
+#         vol.Required(CONF_ID): str,
+#         vol.Required(CONF_USERNAME): str,
+#         vol.Required(CONF_PASSWORD): str,
+#         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+#     }
+# )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
+# async def validate_input(hass: core.HomeAssistant, data):
+#     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    try:
-        srp_client = SrpEnergyClient(
-            data[CONF_ID], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
+#     Data has the keys from DATA_SCHEMA with values provided by the user.
+#     """
+#     try:
+#         srp_client = SrpEnergyClient(
+#             data[CONF_ID], data[CONF_USERNAME], data[CONF_PASSWORD]
+#         )
 
-        is_valid = await hass.async_add_executor_job(srp_client.validate)
+#         is_valid = await hass.async_add_executor_job(srp_client.validate)
 
-        if is_valid:
-            return True
+#         if is_valid:
+#             return True
 
-        raise InvalidAuth
+#         raise InvalidAuth
 
-    except ValueError as err:
-        raise CannotConnect from err
+#     except ValueError as err:
+# raise CannotConnect from err
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,48 +48,50 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
-        """
-        Handle a flow initialized by the user.
+    options = {
+        vol.Required(CONF_ID): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Optional(CONF_IS_TOU, default=False): bool,
+    }
 
-        user_input is a dict with keys defined in DATA_SCHEMA
-        with values provided by the user.
-        """
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
         errors = {}
 
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             try:
 
-                await validate_input(self.hass, user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                srp_client = SrpEnergyClient(
+                    user_input[CONF_ID],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
                 )
 
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                is_valid = await self.hass.async_add_executor_job(srp_client.validate)
+
+                if is_valid:
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
+
                 errors["base"] = "invalid_auth"
+
+            except ValueError:
+                errors["base"] = "invalid_account"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-        # Show a form to capture config settings from user
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=vol.Schema(self.options), errors=errors
         )
 
     async def async_step_import(self, import_config):
         """Import from config."""
         # Validate config values
         return await self.async_step_user(user_input=import_config)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

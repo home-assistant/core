@@ -1,19 +1,20 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Only a single instance is necessary."
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Unable to connect to SRP. Please check your account id.",
-            "invalid_auth": "Unable to authenticate. Please check your username and password.",
-            "unknown": "Something went wrong configuring SRP."
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
                     "id": "Account Id",
+                    "username": "Username",
                     "password": "Password",
-                    "username": "Username"
+                    "is_tou": "Is Time of Use Plan"
                 }
             }
         }

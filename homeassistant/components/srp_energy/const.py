@@ -4,6 +4,8 @@ from datetime import timedelta
 DOMAIN = "srp_energy"
 DEFAULT_NAME = "SRP Energy"
 
+CONF_IS_TOU = "is_tou"
+
 ATTRIBUTION = "Powered by SRP Energy"
 ENERGY_KWH = "kWh"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)

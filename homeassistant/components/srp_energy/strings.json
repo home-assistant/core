@@ -6,7 +6,8 @@
         "data": {
           "id": "Account Id",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "is_tou": "Is Time of Use Plan"
         }
       }
     },
