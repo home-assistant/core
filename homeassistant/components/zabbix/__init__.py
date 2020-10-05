@@ -124,14 +124,14 @@ def setup(hass, config):
                 float_value = float(value)
             except (ValueError, TypeError):
                 float_value = None
-            if float_value is None or math.isfinite(float_value):
+            if float_value is None or not math.isfinite(float_value):
                 strings[attribute_id] = str(value)
             else:
                 floats[attribute_id] = float_value
 
         metrics = []
         float_keys_count = len(float_keys)
-        float_keys.update(floats.keys())
+        float_keys.update(floats)
         if len(float_keys) != float_keys_count:
             floats_discovery = []
             for float_key in float_keys:
