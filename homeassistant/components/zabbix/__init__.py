@@ -26,12 +26,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+    generate_filter,
+)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RETRY_COUNT = "max_retries"
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
 
 DEFAULT_SSL = False
@@ -48,7 +52,7 @@ BATCH_BUFFER_SIZE = 100
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_PASSWORD): cv.string,
@@ -56,23 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PUBLISH_STATES_HOST, default=""): cv.string,
-                vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
-                vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
-                vol.Optional(CONF_INCLUDE, default={}): vol.Schema(
-                    {
-                        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-                        vol.Optional(CONF_DOMAINS, default=[]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                ),
             }
         )
     },
@@ -92,14 +79,7 @@ def setup(hass, config):
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
 
-    include = conf.get(CONF_INCLUDE, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
-    whitelist_e = set(include.get(CONF_ENTITIES, []))
-    whitelist_d = set(include.get(CONF_DOMAINS, []))
-    blacklist_e = set(exclude.get(CONF_ENTITIES, []))
-    blacklist_d = set(exclude.get(CONF_DOMAINS, []))
-
-    max_tries = conf.get(CONF_RETRY_COUNT)
+    entities_filter = convert_include_exclude_filter(conf)
 
     try:
         zapi = ZabbixAPI(url=url, user=username, password=password)
@@ -120,22 +100,16 @@ def setup(hass, config):
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
-            or state.entity_id in blacklist_e
-            or state.domain in blacklist_d
         ):
             return
 
         entity_id = state.entity_id
+        if not entities_filter(entity_id):
+            return
+
         floats = {}
         strings = {}
         try:
-            if (
-                (whitelist_e or whitelist_d)
-                and entity_id not in whitelist_e
-                and state.domain not in whitelist_d
-            ):
-                return
-
             _state_as_value = float(state.state)
             floats[entity_id] = _state_as_value
         except ValueError:
@@ -152,16 +126,16 @@ def setup(hass, config):
             attribute_id = f"{entity_id}/{key}"
             try:
                 float_value = float(value)
-                if math.isfinite(float_value):
-                    floats[attribute_id] = float_value
-                else:
-                    strings[attribute_id] = str(value)
             except (ValueError, TypeError):
+                float_value = None
+            if float_value is None or math.isfinite(float_value):
                 strings[attribute_id] = str(value)
+            else:
+                floats[attribute_id] = float_value
 
         metrics = []
         float_keys_count = len(float_keys)
-        float_keys.update(floats.keys())
+        float_keys.update(floats)
         if len(float_keys) != float_keys_count:
             floats_discovery = []
             for float_key in float_keys:
@@ -188,11 +162,8 @@ def setup(hass, config):
 
     if publish_states_host:
         zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
-        _LOGGER.info("Initialized Zabbix sender")
-        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics, max_tries)
-        instance.start()
-        _LOGGER.info("Started ZabbixThread")
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
+        instance.setup()
 
     return True
 
@@ -200,33 +171,32 @@ def setup(hass, config):
 class ZabbixThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, zabbix_sender, event_to_metrics, max_tries):
+    MAX_TRIES = 3
+
+    def __init__(self, hass, zabbix_sender, event_to_metrics):
         """Initialize the listener."""
         threading.Thread.__init__(self, name="Zabbix")
         self.queue = queue.Queue()
         self.zabbix_sender = zabbix_sender
         self.event_to_metrics = event_to_metrics
-        self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
         self.float_keys = set()
         self.string_keys = set()
 
+    def setup(self, hass):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+        self.start()
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Zabbix."""
         item = (time.monotonic(), event)
         self.queue.put(item)
 
-    @staticmethod
-    def batch_timeout():
-        """Return number of seconds to wait for more events."""
-        return BATCH_TIMEOUT
-
     def get_metrics(self):
         """Return a batch of events formatted for writing."""
-        queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries * RETRY_DELAY
+        queue_seconds = QUEUE_BACKLOG_SECONDS + self.MAX_TRIES * RETRY_DELAY
 
         count = 0
         metrics = []
@@ -235,7 +205,7 @@ class ZabbixThread(threading.Thread):
 
         try:
             while len(metrics) < BATCH_BUFFER_SIZE and not self.shutdown:
-                timeout = None if count == 0 else self.batch_timeout()
+                timeout = None if count == 0 else BATCH_TIMEOUT
                 item = self.queue.get(timeout=timeout)
                 count += 1
 
@@ -265,7 +235,7 @@ class ZabbixThread(threading.Thread):
     def write_to_zabbix(self, metrics):
         """Write preprocessed events to zabbix, with retry."""
 
-        for retry in range(self.max_tries + 1):
+        for retry in range(self.MAX_TRIES + 1):
             try:
                 self.zabbix_sender.send(metrics)
 
@@ -276,7 +246,7 @@ class ZabbixThread(threading.Thread):
                 _LOGGER.debug("Wrote %d metrics", len(metrics))
                 break
             except OSError as err:
-                if retry < self.max_tries:
+                if retry < self.MAX_TRIES:
                     time.sleep(RETRY_DELAY)
                 else:
                     if not self.write_errors:
