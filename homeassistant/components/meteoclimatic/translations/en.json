@@ -2,8 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Station already configured",
-            "not_found": "Station code did not return any data. Check that the code belongs to a station and it is in the right format (e.g. ESCAT4300000043206B)",
-            "unknown": "Unknown error: please retry later"
+            "unknown": "Unknown error: please try again later"
+        },
+        "error": {
+            "not_found": "The station code did not return any data. Check that the code belongs to a station and it has the right format (e.g. ESCAT4300000043206B)"
         },
         "step": {
             "user": {

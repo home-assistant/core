@@ -10,9 +10,11 @@
       }
     },
     "abort": {
-      "already_configured": "Station already configured",
-      "not_found": "Station code did not return any data. Check that the code belongs to a station and it is in the right format (e.g. ESCAT4300000043206B)",
-      "unknown": "Unknown error: please retry later"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "not_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

@@ -53,10 +53,11 @@ class MeteoclimaticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except StationNotFound as exp:
             _LOGGER.error("Station not found: %s", exp)
-            return self.async_abort(reason="not_found")
+            errors["base"] = "not_found"
+            return self._show_setup_form(user_input, errors)
         except MeteoclimaticError as exp:
             _LOGGER.error("Error when obtaining Meteoclimatic weather: %s", exp)
-            return self.async_abort(reason="unknown_error")
+            return self.async_abort(reason="unknown")
 
         # Check if already configured
         await self.async_set_unique_id(station_code)

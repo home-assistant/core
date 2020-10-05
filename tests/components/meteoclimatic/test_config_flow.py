@@ -32,9 +32,11 @@ def mock_controller_client():
 def mock_setup():
     """Prevent setup."""
     with patch(
-        "homeassistant.components.meteoclimatic.async_setup", return_value=True,
+        "homeassistant.components.meteoclimatic.async_setup",
+        return_value=True,
     ), patch(
-        "homeassistant.components.meteoclimatic.async_setup_entry", return_value=True,
+        "homeassistant.components.meteoclimatic.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -111,8 +113,9 @@ async def test_not_found(hass):
             context={"source": SOURCE_USER},
             data={CONF_STATION_CODE: TEST_STATION_CODE},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "not_found"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "not_found"
 
 
 async def test_unknown_error(hass):
@@ -127,4 +130,4 @@ async def test_unknown_error(hass):
             data={CONF_STATION_CODE: TEST_STATION_CODE},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "unknown_error"
+        assert result["reason"] == "unknown"
