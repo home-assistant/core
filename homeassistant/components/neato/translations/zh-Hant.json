@@ -1,15 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5df2\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_credentials": "\u6191\u8b49\u7121\u6548"
         },
         "create_entry": {
             "default": "\u8acb\u53c3\u95b1 [Neato \u6587\u4ef6]({docs_url})\u3002"
         },
         "error": {
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_credentials": "\u6191\u8b49\u7121\u6548",
-            "unexpected_error": "\u672a\u9810\u671f\u932f\u8aa4"
+            "unexpected_error": "\u672a\u9810\u671f\u932f\u8aa4",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "user": {
