@@ -92,3 +92,12 @@ overgeneral-exceptions = [
     "Exception",
     "HomeAssistantError",
 ]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+norecursedirs = [
+    ".git",
+    "testing_config",
+]
