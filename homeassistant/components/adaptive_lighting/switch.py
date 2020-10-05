@@ -980,7 +980,10 @@ class TurnOnOffListener:
         id_on_to_off = on_to_off_event.context.id
 
         turn_off_event = self.turn_off_event.get(entity_id)
-        transition = turn_off_event.data.get(ATTR_SERVICE_DATA, {}).get(ATTR_TRANSITION)
+        if turn_off_event is not None:
+            transition = turn_off_event.data[ATTR_SERVICE_DATA].get(ATTR_TRANSITION)
+        else:
+            transition = None
 
         turn_on_event = self.turn_on_event.get(entity_id)
         id_turn_on = turn_on_event.context.id
