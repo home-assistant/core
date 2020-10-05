@@ -1,21 +1,31 @@
 """Web socket API for OpenZWave."""
-
-import logging
-
-from openzwavemqtt.const import EVENT_NODE_ADDED, EVENT_NODE_CHANGED
+from openzwavemqtt.const import (
+    ATTR_LABEL,
+    ATTR_POSITION,
+    ATTR_VALUE,
+    EVENT_NODE_ADDED,
+    EVENT_NODE_CHANGED,
+)
+from openzwavemqtt.exceptions import NotFoundError, NotSupportedError
+from openzwavemqtt.util.node import (
+    get_config_parameters,
+    get_node_from_manager,
+    set_config_parameter,
+)
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, MANAGER, OPTIONS
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
 
 TYPE = "type"
 ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
+PARAMETER = ATTR_CONFIG_PARAMETER
+VALUE = ATTR_CONFIG_VALUE
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -45,6 +55,8 @@ def async_register_api(hass):
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_statistics)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
+    websocket_api.async_register_command(hass, websocket_get_config_parameters)
+    websocket_api.async_register_command(hass, websocket_set_config_parameter)
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -104,6 +116,97 @@ def websocket_get_nodes(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
+        vol.Required(TYPE): "ozw/get_config_parameters",
+        vol.Required(NODE_ID): vol.Coerce(int),
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+    }
+)
+def websocket_get_config_parameters(hass, connection, msg):
+    """Get a list of configuration parameters for an OZW node instance."""
+    try:
+        node = get_node_from_manager(
+            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
+        )
+        return
+
+    connection.send_result(
+        msg[ID],
+        get_config_parameters(node),
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/set_config_parameter",
+        vol.Required(NODE_ID): vol.Coerce(int),
+        vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
+        vol.Required(PARAMETER): vol.Coerce(int),
+        vol.Required(VALUE): vol.Any(
+            vol.All(
+                cv.ensure_list,
+                [
+                    vol.All(
+                        {
+                            vol.Exclusive(ATTR_LABEL, "bit"): cv.string,
+                            vol.Exclusive(ATTR_POSITION, "bit"): vol.Coerce(int),
+                            vol.Required(ATTR_VALUE): bool,
+                        },
+                        cv.has_at_least_one_key(ATTR_LABEL, ATTR_POSITION),
+                    )
+                ],
+            ),
+            vol.Coerce(int),
+            bool,
+            cv.string,
+        ),
+    }
+)
+def websocket_set_config_parameter(hass, connection, msg):
+    """Set a config parameter to a node."""
+    try:
+        node = get_node_from_manager(
+            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
+        )
+        return
+
+    try:
+        set_config_parameter(
+            node,
+            msg[PARAMETER],
+            msg[VALUE],
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
+        )
+        return
+    except NotSupportedError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            err.args[0],
+        )
+        return
+
+    connection.send_result(msg[ID])
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required(TYPE): "ozw/network_status",
         vol.Optional(OZW_INSTANCE, default=1): vol.Coerce(int),
     }
@@ -148,14 +251,15 @@ def websocket_network_statistics(hass, connection, msg):
 )
 def websocket_node_status(hass, connection, msg):
     """Get the status for a Z-Wave node."""
-    manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
-
-    if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
-            )
+    try:
+        node = get_node_from_manager(
+            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
         )
         return
 
@@ -192,14 +296,15 @@ def websocket_node_status(hass, connection, msg):
 )
 def websocket_node_metadata(hass, connection, msg):
     """Get the metadata for a Z-Wave node."""
-    manager = hass.data[DOMAIN][MANAGER]
-    node = manager.get_instance(msg[OZW_INSTANCE]).get_node(msg[NODE_ID])
-
-    if not node:
-        connection.send_message(
-            websocket_api.error_message(
-                msg[ID], websocket_api.const.ERR_NOT_FOUND, "OZW Node not found"
-            )
+    try:
+        node = get_node_from_manager(
+            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
         )
         return
 
