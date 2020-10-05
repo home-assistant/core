@@ -110,7 +110,7 @@ async def test_form_repeat_identifier(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_USERNAME: "already_configured_account"}
+    assert result2["errors"] == {CONF_USERNAME: "already_configured"}
 
 
 async def test_import(hass):
