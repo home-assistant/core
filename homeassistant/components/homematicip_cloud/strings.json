@@ -22,7 +22,7 @@
     },
     "abort": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "connection_aborted": "Could not connect to HMIP server",
+      "connection_aborted": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
