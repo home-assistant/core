@@ -28,7 +28,7 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle user initiated flow."""
         if user_input is None:
-            return await self._async_show_form(step_id="user")
+            return self._async_show_form(step_id="user")
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
 
@@ -47,7 +47,7 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("cannot_connect", exc_info=True)
 
         if errors:
-            return await self._async_show_form(
+            return self._async_show_form(
                 step_id="user", user_input=user_input, errors=errors
             )
 
@@ -60,7 +60,8 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input=user_input)
 
-    async def _async_show_form(self, step_id, user_input=None, errors=None):
+    @callback
+    def _async_show_form(self, step_id, user_input=None, errors=None):
         """Show our form."""
         if user_input is None:
             user_input = {}
