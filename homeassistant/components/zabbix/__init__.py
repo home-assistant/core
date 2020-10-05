@@ -254,7 +254,3 @@ class ZabbixThread(threading.Thread):
                 self.write_to_zabbix(metrics)
             for _ in range(count):
                 self.queue.task_done()
-
-    def block_till_done(self):
-        """Block till all events processed."""
-        self.queue.join()
