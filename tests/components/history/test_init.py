@@ -1,5 +1,6 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
+from copy import copy
 from datetime import timedelta
 import json
 import unittest
@@ -17,7 +18,7 @@ from tests.common import (
     init_recorder_component,
     mock_state_change_event,
 )
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import trigger_db_commit, wait_recording_done
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -60,7 +61,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
-        self.init_recorder()
+        self.test_setup()
         states = []
 
         now = dt_util.utcnow()
@@ -114,7 +115,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "media_player.test"
 
         def set_state(state):
@@ -155,7 +156,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state):
@@ -187,6 +188,39 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.get_last_state_changes(self.hass, 2, entity_id)
 
         assert states == hist[entity_id]
+
+    def test_ensure_state_can_be_copied(self):
+        """Ensure a state can pass though copy().
+
+        The filter integration uses copy() on states
+        from history.
+        """
+        self.test_setup()
+        entity_id = "sensor.test"
+
+        def set_state(state):
+            """Set the state."""
+            self.hass.states.set(entity_id, state)
+            wait_recording_done(self.hass)
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("1")
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=point
+        ):
+            set_state("2")
+
+        hist = history.get_last_state_changes(self.hass, 2, entity_id)
+
+        assert copy(hist[entity_id][0]) == hist[entity_id][0]
+        assert copy(hist[entity_id][1]) == hist[entity_id][1]
 
     def test_get_significant_states(self):
         """Test that only significant states are returned.
@@ -223,7 +257,8 @@ class TestComponentHistory(unittest.TestCase):
         # will happen with encoding a native state
         input_state = states["media_player.test"][1]
         orig_last_changed = json.dumps(
-            process_timestamp(input_state.last_changed), cls=JSONEncoder,
+            process_timestamp(input_state.last_changed),
+            cls=JSONEncoder,
         ).replace('"', "")
         orig_state = input_state.state
         states["media_player.test"][1] = {
@@ -574,7 +609,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_get_significant_states_only(self):
         """Test significant states when significant_states_only is set."""
-        self.init_recorder()
+        self.test_setup()
         entity_id = "sensor.test"
 
         def set_state(state, **kwargs):
@@ -649,14 +684,13 @@ class TestComponentHistory(unittest.TestCase):
         We inject a bunch of state updates from media player, zone and
         thermostat.
         """
-        self.init_recorder()
+        self.test_setup()
         mp = "media_player.test"
         mp2 = "media_player.test2"
         mp3 = "media_player.test3"
         therm = "thermostat.test"
         therm2 = "thermostat.test2"
         zone = "zone.home"
-        script_nc = "script.cannot_cancel_this_one"
         script_c = "script.can_cancel_this_one"
 
         def set_state(entity_id, state, **kwargs):
@@ -696,15 +730,8 @@ class TestComponentHistory(unittest.TestCase):
         ):
             # This state will be skipped only different in time
             set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
-            # This state will be skipped as it hidden
-            set_state(
-                mp3,
-                "Apple TV",
-                attributes={"media_title": str(sentinel.mt2), "hidden": True},
-            )
-            # This state will be skipped because domain blacklisted
+            # This state will be skipped because domain is excluded
             set_state(zone, "zoning")
-            set_state(script_nc, "off")
             states[script_c].append(
                 set_state(script_c, "off", attributes={"can_cancel": True})
             )
@@ -728,8 +755,6 @@ class TestComponentHistory(unittest.TestCase):
             states[therm].append(
                 set_state(therm, 21, attributes={"current_temperature": 20})
             )
-            # state will be skipped since entity is hidden
-            set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
 
         return zero, four, states
 
@@ -768,6 +793,16 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     assert response.status == 200
 
 
+async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
+    """Test the fetch period view for history with no timestamp."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {})
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get("/api/history/period")
+    assert response.status == 200
+
+
 async def test_fetch_period_api_with_include_order(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_executor_job(init_recorder_component, hass)
@@ -788,3 +823,150 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
         params={"filter_entity_id": "non.existing,something.else"},
     )
     assert response.status == 200
+
+
+async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "include": {"entity_globs": ["light.k*"]},
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+
+
+async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "exclude": {
+                    "entity_globs": ["light.k*"],
+                    "domains": "switch",
+                    "entities": "media_player.test",
+                },
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.match", "on")
+    hass.states.async_set("switch.match", "on")
+    hass.states.async_set("media_player.test", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.cow"
+    assert response_json[1][0]["entity_id"] == "light.match"
+
+
+async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "exclude": {
+                    "entity_globs": ["light.many*"],
+                },
+                "include": {
+                    "entity_globs": ["light.m*"],
+                    "domains": "switch",
+                    "entities": "media_player.test",
+                },
+            }
+        },
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.match", "on")
+    hass.states.async_set("light.many_state_changes", "on")
+    hass.states.async_set("switch.match", "on")
+    hass.states.async_set("media_player.test", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 3
+    assert response_json[0][0]["entity_id"] == "light.match"
+    assert response_json[1][0]["entity_id"] == "media_player.test"
+    assert response_json[2][0]["entity_id"] == "switch.match"
+
+
+async def test_entity_ids_limit_via_api(hass, hass_client):
+    """Test limiting history to entity_ids."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("light.kitchen", "on")
+    hass.states.async_set("light.cow", "on")
+    hass.states.async_set("light.nomatch", "on")
+
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow",
+    )
+    assert response.status == 200
+    response_json = await response.json()
+    assert len(response_json) == 2
+    assert response_json[0][0]["entity_id"] == "light.kitchen"
+    assert response_json[1][0]["entity_id"] == "light.cow"

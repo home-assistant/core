@@ -38,6 +38,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
+    SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
     SERVICE_MOVE_REMOTE_CONTROL,
@@ -209,21 +210,9 @@ def mirobo_errors_fixture():
 async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_error"
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "127.0.0.1",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    await setup_component(hass, entity_name)
 
-    assert "Initializing with host 127.0.0.1 (token 12345...)" in caplog.text
+    assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
     assert mock_mirobo_errors.status.call_count == 1
     assert "ERROR" in caplog.text
     assert "Got OSError while fetching the state" in caplog.text
@@ -232,23 +221,9 @@ async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
 async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_1"
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = await setup_component(hass, entity_name)
 
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "127.0.0.1",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert "Initializing with host 127.0.0.1 (token 12345...)" in caplog.text
+    assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
 
     # Check state attributes
     state = hass.states.get(entity_id)
@@ -347,21 +322,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
 async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
-    entity_id = f"{DOMAIN}.{entity_name}"
-
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "192.168.1.100",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    entity_id = await setup_component(hass, entity_name)
 
     assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
 
@@ -458,21 +419,7 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
     """Test Xiaomi vacuum fanspeeds."""
     entity_name = "test_vacuum_cleaner_2"
-    entity_id = f"{DOMAIN}.{entity_name}"
-
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "192.168.1.100",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    entity_id = await setup_component(hass, entity_name)
 
     assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
 
@@ -522,6 +469,50 @@ async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
 async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
+    entity_id = await setup_component(hass, entity_name)
+
+    data = {"entity_id": entity_id, "x_coord": 25500, "y_coord": 25500}
+    await hass.services.async_call(XIAOMI_DOMAIN, SERVICE_GOTO, data, blocking=True)
+    mock_mirobo_is_on.goto.assert_has_calls(
+        [mock.call(x_coord=data["x_coord"], y_coord=data["y_coord"])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+
+
+async def test_xiaomi_vacuum_clean_segment_service(hass, caplog, mock_mirobo_is_on):
+    """Test vacuum supported features."""
+    entity_name = "test_vacuum_cleaner_2"
+    entity_id = await setup_component(hass, entity_name)
+
+    data = {"entity_id": entity_id, "segments": ["1", "2"]}
+    await hass.services.async_call(
+        XIAOMI_DOMAIN, SERVICE_CLEAN_SEGMENT, data, blocking=True
+    )
+    mock_mirobo_is_on.segment_clean.assert_has_calls(
+        [mock.call(segments=[int(i) for i in data["segments"]])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+
+
+async def test_xiaomi_vacuum_clean_segment_service_single_segment(
+    hass, caplog, mock_mirobo_is_on
+):
+    """Test vacuum supported features."""
+    entity_name = "test_vacuum_cleaner_2"
+    entity_id = await setup_component(hass, entity_name)
+
+    data = {"entity_id": entity_id, "segments": 1}
+    await hass.services.async_call(
+        XIAOMI_DOMAIN, SERVICE_CLEAN_SEGMENT, data, blocking=True
+    )
+    mock_mirobo_is_on.segment_clean.assert_has_calls(
+        [mock.call(segments=[data["segments"]])], any_order=True
+    )
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+
+
+async def setup_component(hass, entity_name):
+    """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
     await async_setup_component(
@@ -537,10 +528,4 @@ async def test_xiaomi_vacuum_goto_service(hass, caplog, mock_mirobo_is_on):
         },
     )
     await hass.async_block_till_done()
-
-    data = {"entity_id": entity_id, "x_coord": 25500, "y_coord": 25500}
-    await hass.services.async_call(XIAOMI_DOMAIN, SERVICE_GOTO, data, blocking=True)
-    mock_mirobo_is_on.goto.assert_has_calls(
-        [mock.call(x_coord=data["x_coord"], y_coord=data["y_coord"])], any_order=True
-    )
-    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
+    return entity_id

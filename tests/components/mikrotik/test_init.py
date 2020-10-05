@@ -16,7 +16,10 @@ async def test_setup_with_no_config(hass):
 
 async def test_successful_config_entry(hass):
     """Test config entry successful setup."""
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
+    entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN,
+        data=MOCK_DATA,
+    )
     entry.add_to_hass(hass)
     mock_registry = Mock()
 
@@ -50,7 +53,10 @@ async def test_successful_config_entry(hass):
 
 async def test_hub_fail_setup(hass):
     """Test that a failed setup will not store the hub."""
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
+    entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN,
+        data=MOCK_DATA,
+    )
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub:
@@ -62,11 +68,15 @@ async def test_hub_fail_setup(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
+    entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN,
+        data=MOCK_DATA,
+    )
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub, patch(
-        "homeassistant.helpers.device_registry.async_get_registry", return_value=Mock(),
+        "homeassistant.helpers.device_registry.async_get_registry",
+        return_value=Mock(),
     ):
         mock_hub.return_value.async_setup = AsyncMock(return_value=True)
         mock_hub.return_value.serial_num = "12345678"

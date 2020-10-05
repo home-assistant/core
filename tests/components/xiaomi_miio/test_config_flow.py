@@ -21,6 +21,7 @@ TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
+TEST_SUB_DEVICE_LIST = []
 
 
 def get_mock_info(
@@ -49,7 +50,10 @@ async def test_config_flow_step_user_no_device(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -67,7 +71,8 @@ async def test_config_flow_step_gateway_connect_error(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {config_flow.CONF_GATEWAY: True},
+        result["flow_id"],
+        {config_flow.CONF_GATEWAY: True},
     )
 
     assert result["type"] == "form"
@@ -99,7 +104,8 @@ async def test_config_flow_gateway_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {config_flow.CONF_GATEWAY: True},
+        result["flow_id"],
+        {config_flow.CONF_GATEWAY: True},
     )
 
     assert result["type"] == "form"
@@ -111,6 +117,9 @@ async def test_config_flow_gateway_success(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
+        return_value=TEST_SUB_DEVICE_LIST,
     ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
@@ -152,10 +161,14 @@ async def test_zeroconf_gateway_success(hass):
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         return_value=mock_info,
     ), patch(
+        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
+        return_value=TEST_SUB_DEVICE_LIST,
+    ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            result["flow_id"],
+            {CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"

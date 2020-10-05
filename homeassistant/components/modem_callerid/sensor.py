@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     modem = bm(port)
     if modem.state == modem.STATE_FAILED:
-        _LOGGER.error("Unable to initialize modem.")
+        _LOGGER.error("Unable to initialize modem")
         return
 
     add_entities([ModemCalleridSensor(hass, name, port, modem)])

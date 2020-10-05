@@ -14,7 +14,6 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -203,7 +202,7 @@ def test_core_config_schema():
 
 def test_customize_dict_schema():
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_HIDDEN: "2"}, {ATTR_ASSUMED_STATE: "2"})
+    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
 
     for val in values:
         print(val)
@@ -211,8 +210,8 @@ def test_customize_dict_schema():
             config_util.CUSTOMIZE_DICT_SCHEMA(val)
 
     assert config_util.CUSTOMIZE_DICT_SCHEMA(
-        {ATTR_FRIENDLY_NAME: 2, ATTR_HIDDEN: "1", ATTR_ASSUMED_STATE: "0"}
-    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_HIDDEN: True, ATTR_ASSUMED_STATE: False}
+        {ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}
+    ) == {ATTR_FRIENDLY_NAME: "2", ATTR_ASSUMED_STATE: False}
 
 
 def test_customize_glob_is_ordered():
@@ -354,7 +353,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/etc"}
+        hass, {"allowlist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 55
@@ -365,8 +364,8 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/etc" in hass.config.whitelist_external_dirs
+    assert len(hass.config.allowlist_external_dirs) == 3
+    assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
 
 
@@ -388,7 +387,7 @@ async def test_updating_configuration(hass, hass_storage):
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/etc"}
+        hass, {"allowlist_external_dirs": "/etc"}
     )
     await hass.config.async_update(latitude=50)
 
@@ -413,7 +412,7 @@ async def test_override_stored_configuration(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"latitude": 60, "whitelist_external_dirs": "/etc"}
+        hass, {"latitude": 60, "allowlist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 60
@@ -422,8 +421,8 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.location_name == "Home"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
-    assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/etc" in hass.config.whitelist_external_dirs
+    assert len(hass.config.allowlist_external_dirs) == 3
+    assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -438,9 +437,10 @@ async def test_loading_configuration(hass):
             "name": "Huis",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
-            "whitelist_external_dirs": "/etc",
+            "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
         },
     )
 
@@ -452,8 +452,10 @@ async def test_loading_configuration(hass):
     assert hass.config.time_zone.zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
-    assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/etc" in hass.config.whitelist_external_dirs
+    assert len(hass.config.allowlist_external_dirs) == 3
+    assert "/etc" in hass.config.allowlist_external_dirs
+    assert "/usr" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -482,6 +484,22 @@ async def test_loading_configuration_temperature_unit(hass):
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
     assert hass.config.config_source == config_util.SOURCE_YAML
+
+
+async def test_loading_configuration_default_media_dirs_docker(hass):
+    """Test loading core config onto hass object."""
+    with patch("homeassistant.config.is_docker_env", return_value=True):
+        await config_util.async_process_ha_core_config(
+            hass,
+            {
+                "name": "Huis",
+            },
+        )
+
+    assert hass.config.location_name == "Huis"
+    assert len(hass.config.allowlist_external_dirs) == 2
+    assert "/media" in hass.config.allowlist_external_dirs
+    assert hass.config.media_dirs == {"local": "/media"}
 
 
 async def test_loading_configuration_from_packages(hass):
@@ -959,20 +977,23 @@ async def test_component_config_exceptions(hass, caplog):
 
     # component.PLATFORM_SCHEMA
     caplog.clear()
-    assert await config_util.async_process_component_config(
-        hass,
-        {"test_domain": {"platform": "test_platform"}},
-        integration=Mock(
-            domain="test_domain",
-            get_platform=Mock(return_value=None),
-            get_component=Mock(
-                return_value=Mock(
-                    spec=["PLATFORM_SCHEMA_BASE"],
-                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
-                )
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(
+                    return_value=Mock(
+                        spec=["PLATFORM_SCHEMA_BASE"],
+                        PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+                    )
+                ),
             ),
-        ),
-    ) == {"test_domain": []}
+        )
+        == {"test_domain": []}
+    )
     assert "ValueError: broken" in caplog.text
     assert (
         "Unknown error validating test_platform platform config with test_domain component platform schema"
@@ -991,15 +1012,20 @@ async def test_component_config_exceptions(hass, caplog):
             )
         ),
     ):
-        assert await config_util.async_process_component_config(
-            hass,
-            {"test_domain": {"platform": "test_platform"}},
-            integration=Mock(
-                domain="test_domain",
-                get_platform=Mock(return_value=None),
-                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
-            ),
-        ) == {"test_domain": []}
+        assert (
+            await config_util.async_process_component_config(
+                hass,
+                {"test_domain": {"platform": "test_platform"}},
+                integration=Mock(
+                    domain="test_domain",
+                    get_platform=Mock(return_value=None),
+                    get_component=Mock(
+                        return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])
+                    ),
+                ),
+            )
+            == {"test_domain": []}
+        )
         assert "ValueError: broken" in caplog.text
         assert (
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
@@ -1026,7 +1052,11 @@ async def test_component_config_exceptions(hass, caplog):
         ),
         ("zone", vol.Schema({vol.Optional("zone"): int}), None),
         ("zone", vol.Schema({"zone": int}), None),
-        ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
+        (
+            "not_existing",
+            vol.Schema({vol.Optional("zone", default=dict): dict}),
+            None,
+        ),
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
         ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),

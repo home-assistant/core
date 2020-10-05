@@ -28,10 +28,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         await juicenet.get_devices()
     except TokenError as error:
         _LOGGER.error("Token Error %s", error)
-        raise InvalidAuth
+        raise InvalidAuth from error
     except aiohttp.ClientError as error:
         _LOGGER.error("Error connecting %s", error)
-        raise CannotConnect
+        raise CannotConnect from error
 
     # Return info that you want to store in the config entry.
     return {"title": "JuiceNet"}

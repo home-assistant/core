@@ -22,8 +22,8 @@
         "step": {
             "advanced": {
                 "data": {
-                    "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)",
-                    "zeroconf_default_interface": "Bruk standard zeroconf-grensesnitt (aktiver hvis broen ikke kan finnes i Hjem-appen)"
+                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
+                    "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)"
                 },
                 "description": "Disse innstillingene m\u00e5 bare justeres dersom HomeKit bridge er ikke i bruk.",
                 "title": "Avansert konfigurasjon"

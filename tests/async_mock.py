@@ -3,6 +3,7 @@ import sys
 
 if sys.version_info[:2] < (3, 8):
     from asynctest.mock import *  # noqa
-    from asynctest.mock import CoroutineMock as AsyncMock  # noqa
+
+    AsyncMock = CoroutineMock  # noqa: F405
 else:
     from unittest.mock import *  # noqa

@@ -22,7 +22,7 @@ async def async_setup_entry(
     integration_id = entry.data[CONF_ID]
 
     try:
-        each_upcoming = client.upcoming_of_each()
+        each_upcoming = await hass.async_add_executor_job(client.upcoming_of_each)
     except AvriException as ex:
         raise PlatformNotReady from ex
     else:

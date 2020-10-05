@@ -1,11 +1,11 @@
 """Support for Home Assistant iOS app sensors."""
 from homeassistant.components import ios
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 SENSOR_TYPES = {
-    "level": ["Battery Level", UNIT_PERCENTAGE],
+    "level": ["Battery Level", PERCENTAGE],
     "state": ["Battery State", None],
 }
 

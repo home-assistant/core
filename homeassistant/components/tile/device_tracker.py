@@ -84,13 +84,26 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
 
         Value in meters.
         """
-        return round(
-            (
-                self._tile["last_tile_state"]["h_accuracy"]
-                + self._tile["last_tile_state"]["v_accuracy"]
+        state = self._tile["last_tile_state"]
+        h_accuracy = state.get("h_accuracy")
+        v_accuracy = state.get("v_accuracy")
+
+        if h_accuracy is not None and v_accuracy is not None:
+            return round(
+                (
+                    self._tile["last_tile_state"]["h_accuracy"]
+                    + self._tile["last_tile_state"]["v_accuracy"]
+                )
+                / 2
             )
-            / 2
-        )
+
+        if h_accuracy is not None:
+            return h_accuracy
+
+        if v_accuracy is not None:
+            return v_accuracy
+
+        return None
 
     @property
     def latitude(self) -> float:

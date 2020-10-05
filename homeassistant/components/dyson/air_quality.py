@@ -27,9 +27,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get Dyson Devices from parent component
     device_ids = [device.unique_id for device in hass.data[DYSON_AIQ_DEVICES]]
+    new_entities = []
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool) and device.serial not in device_ids:
-            hass.data[DYSON_AIQ_DEVICES].append(DysonAirSensor(device))
+            new_entities.append(DysonAirSensor(device))
+
+    if not new_entities:
+        return
+
+    hass.data[DYSON_AIQ_DEVICES].extend(new_entities)
     add_entities(hass.data[DYSON_AIQ_DEVICES])
 
 

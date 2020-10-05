@@ -4,8 +4,6 @@
             "all_configured": "Alla l\u00e4nkade servrar har redan konfigurerats",
             "already_configured": "Denna Plex-server \u00e4r redan konfigurerad",
             "already_in_progress": "Plex konfigureras",
-            "invalid_import": "Importerad konfiguration \u00e4r ogiltig",
-            "non-interactive": "Icke-interaktiv import",
             "token_request_timeout": "Timeout att erh\u00e5lla token",
             "unknown": "Misslyckades av ok\u00e4nd anledning"
         },

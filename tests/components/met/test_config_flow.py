@@ -91,7 +91,7 @@ async def test_flow_entry_already_exists(hass):
     )
 
     assert result["type"] == "form"
-    assert result["errors"]["name"] == "name_exists"
+    assert result["errors"]["name"] == "already_configured"
 
 
 async def test_onboarding_step(hass):
@@ -103,3 +103,21 @@ async def test_onboarding_step(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == HOME_LOCATION_NAME
     assert result["data"] == {"track_home": True}
+
+
+async def test_import_step(hass):
+    """Test initializing via import step."""
+    test_data = {
+        "name": "home",
+        CONF_LONGITUDE: None,
+        CONF_LATITUDE: None,
+        CONF_ELEVATION: 0,
+        "track_home": True,
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data=test_data
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "home"
+    assert result["data"] == test_data

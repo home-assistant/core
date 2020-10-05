@@ -124,7 +124,7 @@ class TcpSensor(Entity):
             if not readable:
                 _LOGGER.warning(
                     "Timeout (%s second(s)) waiting for a response after "
-                    "sending %r to %s on port %s.",
+                    "sending %r to %s on port %s",
                     self._config[CONF_TIMEOUT],
                     self._config[CONF_PAYLOAD],
                     self._config[CONF_HOST],

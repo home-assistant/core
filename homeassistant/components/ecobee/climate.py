@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert
 
@@ -49,6 +50,10 @@ ATTR_RESUME_ALL = "resume_all"
 ATTR_START_DATE = "start_date"
 ATTR_START_TIME = "start_time"
 ATTR_VACATION_NAME = "vacation_name"
+ATTR_DST_ENABLED = "dst_enabled"
+ATTR_MIC_ENABLED = "mic_enabled"
+ATTR_AUTO_AWAY = "auto_away"
+ATTR_FOLLOW_ME = "follow_me"
 
 DEFAULT_RESUME_ALL = False
 PRESET_TEMPERATURE = "temp"
@@ -98,6 +103,9 @@ SERVICE_CREATE_VACATION = "create_vacation"
 SERVICE_DELETE_VACATION = "delete_vacation"
 SERVICE_RESUME_PROGRAM = "resume_program"
 SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
+SERVICE_SET_DST_MODE = "set_dst_mode"
+SERVICE_SET_MIC_MODE = "set_mic_mode"
+SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
 
 DTGROUP_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE}, {ATTR_START_TIME}, {ATTR_END_DATE}, "
@@ -164,6 +172,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]
 
     async_add_entities(devices, True)
+
+    platform = entity_platform.current_platform.get()
 
     def create_vacation_service(service):
         """Create a vacation on the target thermostat."""
@@ -248,6 +258,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         schema=RESUME_PROGRAM_SCHEMA,
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_DST_MODE,
+        {vol.Required(ATTR_DST_ENABLED): cv.boolean},
+        "set_dst_mode",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_MIC_MODE,
+        {vol.Required(ATTR_MIC_ENABLED): cv.boolean},
+        "set_mic_mode",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_OCCUPANCY_MODES,
+        {
+            vol.Optional(ATTR_AUTO_AWAY): cv.boolean,
+            vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
+        },
+        "set_occupancy_modes",
+    )
+
 
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
@@ -320,7 +351,7 @@ class Thermostat(ClimateEntity):
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "
                 "Please visit this link and provide the following information: "
-                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "https://github.com/home-assistant/core/issues/27172 "
                 "Unrecognized model number: %s",
                 self.name,
                 self.thermostat["modelNumber"],
@@ -471,6 +502,16 @@ class Thermostat(ClimateEntity):
     def is_aux_heat(self):
         """Return true if aux heater."""
         return "auxHeat" in self.thermostat["equipmentStatus"]
+
+    async def async_turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        if not self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
+
+    async def async_turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        if self.is_aux_heat:
+            _LOGGER.warning("# Changing aux heat is not supported")
 
     def set_preset_mode(self, preset_mode):
         """Activate a preset."""
@@ -710,3 +751,17 @@ class Thermostat(ClimateEntity):
             self._last_active_hvac_mode,
         )
         self.set_hvac_mode(self._last_active_hvac_mode)
+
+    def set_dst_mode(self, dst_enabled):
+        """Enable/disable automatic daylight savings time."""
+        self.data.ecobee.set_dst_mode(self.thermostat_index, dst_enabled)
+
+    def set_mic_mode(self, mic_enabled):
+        """Enable/disable Alexa mic (only for Ecobee 4)."""
+        self.data.ecobee.set_mic_mode(self.thermostat_index, mic_enabled)
+
+    def set_occupancy_modes(self, auto_away=None, follow_me=None):
+        """Enable/disable Smart Home/Away and Follow Me modes."""
+        self.data.ecobee.set_occupancy_modes(
+            self.thermostat_index, auto_away, follow_me
+        )

@@ -596,9 +596,7 @@ class TelegramNotificationService:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
             text = f"{title}\n{message}" if title else message
-            _LOGGER.debug(
-                "Editing message with ID %s.", message_id or inline_message_id
-            )
+            _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
             return self._send_msg(
                 self.bot.editMessageText,
                 "Error editing text message",
@@ -628,7 +626,7 @@ class TelegramNotificationService:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Answer callback query with callback ID %s: %s, alert: %s.",
+            "Answer callback query with callback ID %s: %s, alert: %s",
             callback_query_id,
             message,
             show_alert,
@@ -663,7 +661,7 @@ class TelegramNotificationService:
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
-                _LOGGER.debug("Send file to chat ID %s. Caption: %s.", chat_id, caption)
+                _LOGGER.debug("Send file to chat ID %s. Caption: %s", chat_id, caption)
                 self._send_msg(
                     func_send,
                     "Error sending file",
@@ -683,7 +681,7 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug(
-                "Send location %s/%s to chat ID %s.", latitude, longitude, chat_id
+                "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
             self._send_msg(
                 self.bot.sendLocation,

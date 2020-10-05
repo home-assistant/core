@@ -7,7 +7,12 @@ from homeassistant.components import jewish_calendar
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+from . import (
+    HDATE_DEFAULT_ALTITUDE,
+    alter_time,
+    make_jerusalem_test_params,
+    make_nyc_test_params,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -144,7 +149,16 @@ TEST_IDS = [
     ids=TEST_IDS,
 )
 async def test_jewish_calendar_sensor(
-    hass, now, tzname, latitude, longitude, language, sensor, diaspora, result
+    hass,
+    legacy_patchable_time,
+    now,
+    tzname,
+    latitude,
+    longitude,
+    language,
+    sensor,
+    diaspora,
+    result,
 ):
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
@@ -478,6 +492,7 @@ SHABBAT_TEST_IDS = [
 )
 async def test_shabbat_times_sensor(
     hass,
+    legacy_patchable_time,
     language,
     now,
     candle_lighting,
@@ -495,6 +510,8 @@ async def test_shabbat_times_sensor(
     hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
 
     with alter_time(test_time):
         assert await async_setup_component(
@@ -533,6 +550,26 @@ async def test_shabbat_times_sensor(
             result_value
         ), f"Value for {sensor_type}"
 
+        entity = registry.async_get(f"sensor.test_{sensor_type}")
+        target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
+        target_uid = "_".join(
+            map(
+                str,
+                [
+                    latitude,
+                    longitude,
+                    time_zone,
+                    HDATE_DEFAULT_ALTITUDE,
+                    diaspora,
+                    language,
+                    candle_lighting,
+                    havdalah,
+                    target_sensor_type,
+                ],
+            )
+        )
+        assert entity.unique_id == target_uid
+
 
 OMER_PARAMS = [
     (dt(2019, 4, 21, 0), "1"),
@@ -553,7 +590,7 @@ OMER_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
-async def test_omer_sensor(hass, test_time, result):
+async def test_omer_sensor(hass, legacy_patchable_time, test_time, result):
     """Test Omer Count sensor output."""
     test_time = hass.config.time_zone.localize(test_time)
 
@@ -587,7 +624,7 @@ DAFYOMI_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
-async def test_dafyomi_sensor(hass, test_time, result):
+async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
     """Test Daf Yomi sensor output."""
     test_time = hass.config.time_zone.localize(test_time)
 

@@ -23,7 +23,7 @@ STATE_NOT_SCROBBLING = "Not Scrobbling"
 
 CONF_USERS = "users"
 
-ICON = "mdi:lastfm"
+ICON = "mdi:radio-fm"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

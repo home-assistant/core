@@ -16,6 +16,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
@@ -81,7 +82,7 @@ def async_add_new_entities(hass, router_url, async_add_entities, tracked):
         _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
         return
 
-    new_entities = []
+    new_entities: List[Entity] = []
     for host in (x for x in hosts if x.get("MacAddress")):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:
@@ -116,7 +117,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _hostname: Optional[str] = attr.ib(init=False, default=None)
     _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Initialize internal state."""
         self._device_state_attributes["mac_address"] = self.mac
 
@@ -148,17 +149,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
         self._is_connected = host is not None
-        if self._is_connected:
+        if host is not None:
             self._hostname = host.get("HostName")
             self._device_state_attributes = {
                 _better_snakecase(k): v for k, v in host.items() if k != "HostName"
             }
-
-
-def get_scanner(*args, **kwargs):  # pylint: disable=useless-return
-    """Old no longer used way to set up Huawei LTE device tracker."""
-    _LOGGER.warning(
-        "Loading and configuring as a platform is no longer supported or "
-        "required, convert to enabling/disabling available entities"
-    )
-    return None

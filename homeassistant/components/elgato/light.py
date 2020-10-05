@@ -49,7 +49,10 @@ class ElgatoLight(LightEntity):
     """Defines a Elgato Key Light."""
 
     def __init__(
-        self, entry_id: str, elgato: Elgato, info: Info,
+        self,
+        entry_id: str,
+        elgato: Elgato,
+        info: Info,
     ):
         """Initialize Elgato Key Light."""
         self._brightness: Optional[int] = None

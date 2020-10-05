@@ -5,7 +5,7 @@ from homeassistant.components.bsblan.const import (
     CONF_PASSKEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -13,7 +13,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def init_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, skip_setup: bool = False,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the BSBLan integration in Home Assistant."""
 
@@ -21,7 +23,7 @@ async def init_integration(
         "http://example.local:80/1234/JQ?Parameter=6224,6225,6226",
         params={"Parameter": "6224,6225,6226"},
         text=load_fixture("bsblan/info.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     entry = MockConfigEntry(

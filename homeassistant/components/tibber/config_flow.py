@@ -54,7 +54,9 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if errors:
                 return self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors=errors,
                 )
 
             unique_id = tibber_connection.user_id
@@ -62,7 +64,12 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=tibber_connection.name, data={CONF_ACCESS_TOKEN: access_token},
+                title=tibber_connection.name,
+                data={CONF_ACCESS_TOKEN: access_token},
             )
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors={},)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors={},
+        )

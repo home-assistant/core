@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Conta j\u00e1 configurada"
+        },
+        "error": {
+            "account_error": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "session_error": "Falha na liga\u00e7\u00e3o",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "server": "Servidor",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

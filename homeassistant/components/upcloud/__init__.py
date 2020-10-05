@@ -73,7 +73,7 @@ def setup(hass, config):
         manager.authenticate()
         hass.data[DATA_UPCLOUD] = UpCloud(manager)
     except upcloud_api.UpCloudAPIError:
-        _LOGGER.error("Authentication failed.")
+        _LOGGER.error("Authentication failed")
         return False
 
     def upcloud_update(event_time):

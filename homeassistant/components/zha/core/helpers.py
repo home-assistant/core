@@ -6,15 +6,19 @@ https://home-assistant.io/integrations/zha/
 """
 
 import asyncio
+import binascii
 import collections
 import functools
 import itertools
 import logging
 from random import uniform
-from typing import Any, Callable, Iterator, List, Optional
+import re
+from typing import Any, Callable, Iterator, List, Optional, Tuple
 
+import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
+import zigpy.util
 
 from homeassistant.core import State, callback
 
@@ -205,3 +209,63 @@ def retryable_req(
         return wrapper
 
     return decorator
+
+
+def convert_install_code(value: str) -> bytes:
+    """Convert string to install code bytes and validate length."""
+
+    try:
+        code = binascii.unhexlify(value.replace("-", "").lower())
+    except binascii.Error as exc:
+        raise vol.Invalid(f"invalid hex string: {value}") from exc
+
+    if len(code) != 18:  # 16 byte code + 2 crc bytes
+        raise vol.Invalid("invalid length of the install code")
+
+    if zigpy.util.convert_install_code(code) is None:
+        raise vol.Invalid("invalid install code")
+
+    return code
+
+
+QR_CODES = (
+    # Consciot
+    r"^([\da-fA-F]{16})\|([\da-fA-F]{36})$",
+    # Enbrighten
+    r"""
+        ^Z:
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
+        $
+    """,
+    # Aqara
+    r"""
+        \$A:
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
+        $
+    """,
+)
+
+
+def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
+    """Try to parse the QR code.
+
+    if successful, return a tuple of a EUI64 address and install code.
+    """
+
+    for code_pattern in QR_CODES:
+        match = re.search(code_pattern, qr_code, re.VERBOSE)
+        if match is None:
+            continue
+
+        ieee_hex = binascii.unhexlify(match[1])
+        ieee = zigpy.types.EUI64(ieee_hex[::-1])
+        install_code = match[2]
+        # install_code sanity check
+        install_code = convert_install_code(install_code)
+        return ieee, install_code
+
+    raise vol.Invalid(f"couldn't convert qr code: {qr_code}")

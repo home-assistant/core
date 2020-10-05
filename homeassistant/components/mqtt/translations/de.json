@@ -47,5 +47,17 @@
             "button_short_release": "\"{subtype}\" losgelassen",
             "button_triple_press": "\"{subtype}\" dreifach geklickt"
         }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            }
+        }
     }
 }

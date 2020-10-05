@@ -6,8 +6,8 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of Sonos is necessary.",
-      "no_devices_found": "No Sonos devices found on the network."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

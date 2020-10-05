@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "invalid_host": "A entrada do host n\u00e3o est\u00e1 no formato de URL completo, por exemplo, http://192.168.10.100:80"
+            "invalid_host": "A entrada do host n\u00e3o est\u00e1 no formato de URL completo, por exemplo, http://192.168.10.100:80",
+            "unknown": "Erro inesperado."
         },
         "flow_title": "Dispositivos universais ISY994 {name} ({host})",
         "step": {

@@ -169,14 +169,6 @@ class FinTsAccount(Entity):
         self._balance: float = None
         self._currency: str = None
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
-
     def update(self) -> None:
         """Get the current balance and currency for the account."""
         bank = self._client.client
@@ -228,14 +220,6 @@ class FinTsHoldingsAccount(Entity):
         self._account = account
         self._holdings = []
         self._total: float = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
 
     def update(self) -> None:
         """Get the current holdings for the account."""

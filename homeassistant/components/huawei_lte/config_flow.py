@@ -30,8 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
 from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
+
+# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +121,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
-        conn = None
+        conn: Optional[Connection] = None
 
         def logout():
             if hasattr(conn, "user"):
@@ -188,7 +189,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except LoginErrorPasswordWrongException:
             errors[CONF_PASSWORD] = "incorrect_password"
         except LoginErrorUsernamePasswordWrongException:
-            errors[CONF_USERNAME] = "incorrect_username_or_password"
+            errors[CONF_USERNAME] = "invalid_auth"
         except LoginErrorUsernamePasswordOverrunException:
             errors["base"] = "login_attempts_exceeded"
         except ResponseErrorException:
@@ -199,14 +200,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_URL] = "connection_timeout"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
-            errors[CONF_URL] = "unknown_connection_error"
+            errors[CONF_URL] = "unknown"
         if errors:
             await self.hass.async_add_executor_job(logout)
             return await self._async_show_user_form(
                 user_input=user_input, errors=errors
             )
 
-        title = await self.hass.async_add_executor_job(get_router_title, conn)
+        # pylint: disable=no-member
+        title = self.context.get("title_placeholders", {}).get(
+            CONF_NAME
+        ) or await self.hass.async_add_executor_job(get_router_title, conn)
         await self.hass.async_add_executor_job(logout)
 
         return self.async_create_entry(title=title, data=user_input)
@@ -238,6 +242,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
+        # pylint: disable=no-member
+        self.context["title_placeholders"] = {
+            CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        }
         return await self._async_show_user_form(user_input)
 
 

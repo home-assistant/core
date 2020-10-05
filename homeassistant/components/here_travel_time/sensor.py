@@ -156,7 +156,7 @@ async def async_setup_platform(
         _are_valid_client_credentials, here_client
     ):
         _LOGGER.error(
-            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
+            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token"
         )
         return
 

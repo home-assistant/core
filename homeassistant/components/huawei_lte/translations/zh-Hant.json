@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "already_in_progress": "\u6b64\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "not_huawei_lte": "\u4e26\u975e\u83ef\u70ba LTE \u8a2d\u5099"
         },
         "error": {
@@ -11,11 +11,14 @@
             "incorrect_password": "\u5bc6\u78bc\u932f\u8aa4",
             "incorrect_username": "\u4f7f\u7528\u8005\u540d\u7a31\u932f\u8aa4",
             "incorrect_username_or_password": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_url": "\u7db2\u5740\u7121\u6548",
             "login_attempts_exceeded": "\u5df2\u9054\u5617\u8a66\u767b\u5165\u6700\u5927\u6b21\u6578\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
             "response_error": "\u4f86\u81ea\u8a2d\u5099\u672a\u77e5\u932f\u8aa4",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
             "unknown_connection_error": "\u9023\u7dda\u81f3\u8a2d\u5099\u672a\u77e5\u932f\u8aa4"
         },
+        "flow_title": "\u83ef\u70ba LTE\uff1a{name}",
         "step": {
             "user": {
                 "data": {

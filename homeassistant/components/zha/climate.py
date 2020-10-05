@@ -393,7 +393,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 
@@ -587,3 +587,13 @@ class ZenWithinThermostat(Thermostat):
         if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Centralite",
+    models="3157100",
+)
+class CentralitePearl(ZenWithinThermostat):
+    """Centralite Pearl Thermostat implementation."""

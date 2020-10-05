@@ -68,7 +68,9 @@ async def test_call_to_component(hass):
             context = "dummy_context"
 
             await state.async_reproduce_state(
-                hass, [state_media_player, state_climate], context=context,
+                hass,
+                [state_media_player, state_climate],
+                context=context,
             )
 
             media_player_fun.assert_called_once_with(

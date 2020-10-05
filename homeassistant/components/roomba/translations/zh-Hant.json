@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "user": {

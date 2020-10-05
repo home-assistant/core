@@ -141,9 +141,6 @@ class ComponentFactory:
                 CONF_CLIENT_ID: self._client_id,
                 CONF_CLIENT_SECRET: self._client_secret,
                 const.CONF_USE_WEBHOOK: True,
-                const.CONF_PROFILES: [
-                    profile_config.profile for profile_config in self._profile_configs
-                ],
             },
         }
 
@@ -233,11 +230,9 @@ class ComponentFactory:
         result = await self._hass.config_entries.flow.async_configure(result["flow_id"])
         assert result.get("type") == "form"
         assert result.get("step_id") == "profile"
-        assert result.get("data_schema").schema["profile"].container == [
-            profile.profile for profile in self._profile_configs
-        ]
+        assert "profile" in result.get("data_schema").schema
 
-        # Select the user profile.
+        # Provide the user profile.
         result = await self._hass.config_entries.flow.async_configure(
             result["flow_id"], {const.PROFILE: profile_config.profile}
         )
@@ -257,7 +252,8 @@ class ComponentFactory:
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.request(
-            "HEAD", data_manager.webhook_config.url,
+            "HEAD",
+            data_manager.webhook_config.url,
         )
 
         return self._api_class_mock.return_value

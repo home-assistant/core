@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9.",
+            "already_in_progress": "Le flux de configuration pour cette passerelle est d\u00e9j\u00e0 en cours",
+            "not_xiaomi_aqara": "Ce n'est pas une passerelle Xiaomi Aqara, l'appareil d\u00e9couvert ne correspond pas aux passerelles connues"
+        },
+        "error": {
+            "discovery_error": "Impossible de d\u00e9couvrir une passerelle Xiaomi Aqara, essayez d'utiliser l'IP du p\u00e9riph\u00e9rique ex\u00e9cutant HomeAssistant comme interface",
+            "invalid_host": "Adresse IP non valide, voir https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Interface r\u00e9seau non valide",
+            "invalid_key": "Cl\u00e9 de passerelle non valide",
+            "invalid_mac": "Adresse MAC non valide",
+            "not_found_error": "La passerelle d\u00e9couverte par Zeroconf  ne permet pas d'obtenir les informations n\u00e9cessaires, essayez d'utiliser l'IP du p\u00e9riph\u00e9rique ex\u00e9cutant HomeAssistant comme interface"
+        },
+        "flow_title": "Passerelle Xiaomi Aqara: {nom}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP de la passerelle"
+                },
+                "description": "Ex\u00e9cutez \u00e0 nouveau la configuration si vous souhaitez connecter des passerelles suppl\u00e9mentaires",
+                "title": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"
+            },
+            "settings": {
+                "data": {
+                    "key": "Cl\u00e9 de votre passerelle",
+                    "name": "Nom de la passerelle"
+                },
+                "description": "La cl\u00e9 (mot de passe) peut \u00eatre r\u00e9cup\u00e9r\u00e9e \u00e0 l'aide de ce tutoriel: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si la cl\u00e9 n'est pas fournie, seuls les capteurs seront accessibles",
+                "title": "Passerelle Xiaomi Aqara, param\u00e8tres optionnels"
+            },
+            "user": {
+                "data": {
+                    "host": "Adresse IP (facultatif)",
+                    "interface": "Interface r\u00e9seau \u00e0 utiliser",
+                    "mac": "Adresse MAC (facultatif)"
+                },
+                "description": "Connectez-vous \u00e0 votre passerelle Xiaomi Aqara, si les adresses IP et mac sont laiss\u00e9es vides, la d\u00e9tection automatique est utilis\u00e9e",
+                "title": "Passerelle Xiaomi Aqara"
+            }
+        }
+    }
+}

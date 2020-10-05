@@ -10,7 +10,8 @@
         "error": {
             "invalid_credentials": "Ugyldig legitimasjon",
             "invalid_username": "Ugyldig brukernavn",
-            "unexpected": "Uventet feil under kommunikasjon med Life360-servern"
+            "unexpected": "Uventet feil under kommunikasjon med Life360-servern",
+            "user_already_configured": "Kontoen er allerede konfigurert"
         },
         "step": {
             "user": {

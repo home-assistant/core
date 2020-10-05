@@ -5,7 +5,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
-from asynctest import MagicMock
 import pytest
 import requests_mock
 from withings_api.common import NotifyAppli, NotifyListProfile, NotifyListResponse
@@ -18,6 +17,7 @@ from homeassistant.components.withings.common import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
+from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 from tests.components.withings.common import (
     ComponentFactory,
@@ -104,7 +104,9 @@ async def test_webhook_post(
 
 
 async def test_webhook_head(
-    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aiohttp_client,
 ) -> None:
     """Test head method on webhook view."""
     person0 = new_profile_config("person0", 0)
@@ -119,7 +121,9 @@ async def test_webhook_head(
 
 
 async def test_webhook_put(
-    hass: HomeAssistant, component_factory: ComponentFactory, aiohttp_client,
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    aiohttp_client,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", 0)
@@ -187,7 +191,9 @@ async def test_data_manager_webhook_subscription(
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
-        "HEAD", data_manager.webhook_config.url, status=200,
+        "HEAD",
+        data_manager.webhook_config.url,
+        status=200,
     )
 
     # Test subscribing

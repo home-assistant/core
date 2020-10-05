@@ -12,9 +12,20 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.util.json import load_json, save_json
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_ACTION_BACKGROUND_COLOR,
+    CONF_ACTION_ICON,
+    CONF_ACTION_ICON_COLOR,
+    CONF_ACTION_ICON_ICON,
+    CONF_ACTION_LABEL,
+    CONF_ACTION_LABEL_COLOR,
+    CONF_ACTION_LABEL_TEXT,
+    CONF_ACTION_NAME,
+    CONF_ACTIONS,
+    DOMAIN,
+)
 
-DOMAIN = "ios"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -31,6 +42,8 @@ CONF_PUSH_ACTIONS_BEHAVIOR = "behavior"
 CONF_PUSH_ACTIONS_CONTEXT = "context"
 CONF_PUSH_ACTIONS_TEXT_INPUT_BUTTON_TITLE = "textInputButtonTitle"
 CONF_PUSH_ACTIONS_TEXT_INPUT_PLACEHOLDER = "textInputPlaceholder"
+
+CONF_USER = "user"
 
 ATTR_FOREGROUND = "foreground"
 ATTR_BACKGROUND = "background"
@@ -87,7 +100,7 @@ BATTERY_STATES = [
 
 ATTR_DEVICES = "devices"
 
-ACTION_SCHEMA = vol.Schema(
+PUSH_ACTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PUSH_ACTIONS_IDENTIFIER): vol.Upper,
         vol.Required(CONF_PUSH_ACTIONS_TITLE): cv.string,
@@ -107,25 +120,40 @@ ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_SCHEMA_LIST = vol.All(cv.ensure_list, [ACTION_SCHEMA])
+PUSH_ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_ACTION_SCHEMA])
+
+PUSH_CATEGORY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
+        vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
+        vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): PUSH_ACTION_LIST_SCHEMA,
+    }
+)
+
+PUSH_CATEGORY_LIST_SCHEMA = vol.All(cv.ensure_list, [PUSH_CATEGORY_SCHEMA])
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACTION_NAME): cv.string,
+        vol.Optional(CONF_ACTION_BACKGROUND_COLOR): cv.string,
+        vol.Optional(CONF_ACTION_LABEL): {
+            vol.Optional(CONF_ACTION_LABEL_TEXT): cv.string,
+            vol.Optional(CONF_ACTION_LABEL_COLOR): cv.string,
+        },
+        vol.Optional(CONF_ACTION_ICON): {
+            vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
+            vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
+        },
+    },
+)
+
+ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            CONF_PUSH: {
-                CONF_PUSH_CATEGORIES: vol.All(
-                    cv.ensure_list,
-                    [
-                        {
-                            vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                            vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
-                            vol.Required(
-                                CONF_PUSH_CATEGORIES_ACTIONS
-                            ): ACTION_SCHEMA_LIST,
-                        }
-                    ],
-                )
-            }
+            CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+            CONF_ACTIONS: ACTION_LIST_SCHEMA,
         }
     },
     extra=vol.ALLOW_EXTRA,
@@ -226,7 +254,10 @@ async def async_setup(hass, config):
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_PUSH] = (conf or {}).get(CONF_PUSH, {})
+    ios_config[CONF_USER] = conf or {}
+
+    if CONF_PUSH not in ios_config[CONF_USER]:
+        ios_config[CONF_USER][CONF_PUSH] = {}
 
     hass.data[DOMAIN] = ios_config
 
@@ -250,7 +281,8 @@ async def async_setup_entry(hass, entry):
     )
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
-    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
+    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
+    hass.http.register_view(iOSConfigView(hass.data[DOMAIN][CONF_USER]))
 
     return True
 
@@ -270,6 +302,22 @@ class iOSPushConfigView(HomeAssistantView):
     def get(self, request):
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
+
+
+class iOSConfigView(HomeAssistantView):
+    """A view that provides the whole user-defined configuration."""
+
+    url = "/api/ios/config"
+    name = "api:ios:config"
+
+    def __init__(self, config):
+        """Init the view."""
+        self.config = config
+
+    @callback
+    def get(self, request):
+        """Handle the GET request for the user-defined configuration."""
+        return self.json(self.config)
 
 
 class iOSIdentifyDeviceView(HomeAssistantView):

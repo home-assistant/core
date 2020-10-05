@@ -217,7 +217,7 @@ class ONVIFDevice:
                 raise fault
 
             LOGGER.debug(
-                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",
                 self.name,
                 fault,
             )
@@ -284,7 +284,7 @@ class ONVIFDevice:
             )
 
             # Configure PTZ options
-            if onvif_profile.PTZConfiguration:
+            if self.capabilities.ptz and onvif_profile.PTZConfiguration:
                 profile.ptz = PTZ(
                     onvif_profile.PTZConfiguration.DefaultContinuousPanTiltVelocitySpace
                     is not None,

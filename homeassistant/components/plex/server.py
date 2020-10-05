@@ -4,7 +4,7 @@ import ssl
 import time
 from urllib.parse import urlparse
 
-from plexapi.exceptions import NotFound, Unauthorized
+from plexapi.exceptions import BadRequest, NotFound, Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -14,6 +14,7 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_VIDEO,
@@ -31,7 +32,7 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
-    DOMAIN,
+    PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -41,7 +42,13 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .errors import (
+    MediaNotFound,
+    NoServersFound,
+    ServerNotSpecified,
+    ShouldUpdateConfigEntry,
+)
+from .media_search import lookup_movie, lookup_music, lookup_tv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +62,12 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, hass, server_config, known_server_id=None, options=None):
+    def __init__(
+        self, hass, server_config, known_server_id=None, options=None, entry_id=None
+    ):
         """Initialize a Plex server instance."""
         self.hass = hass
+        self.entry_id = entry_id
         self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
@@ -75,6 +85,7 @@ class PlexServer:
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
         self._plextv_device_cache = {}
+        self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
             hass,
@@ -93,18 +104,27 @@ class PlexServer:
     @property
     def account(self):
         """Return a MyPlexAccount instance."""
-        if not self._plex_account:
-            self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+        if not self._plex_account and self._use_plex_tv:
+            try:
+                self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
+            except (BadRequest, Unauthorized):
+                self._use_plex_tv = False
+                _LOGGER.error("Not authorized to access plex.tv with provided token")
+                raise
         return self._plex_account
 
     def plextv_clients(self):
         """Return available clients linked to Plex account."""
+        if self.account is None:
+            return []
+
         now = time.time()
         if now - self._plextv_client_timestamp > PLEXTV_THROTTLE:
             self._plextv_client_timestamp = now
-            resources = self.account.resources()
             self._plextv_clients = [
-                x for x in resources if "player" in x.provides and x.presence
+                x
+                for x in self.account.resources()
+                if "player" in x.provides and x.presence and x.publicAddressMatches
             ]
             _LOGGER.debug(
                 "Current available clients from plex.tv: %s", self._plextv_clients
@@ -144,14 +164,18 @@ class PlexServer:
             )
 
         def _update_plexdirect_hostname():
-            matching_server = [
+            matching_servers = [
                 x.name
                 for x in self.account.resources()
                 if x.clientIdentifier == self._server_id
-            ][0]
-            self._plex_server = self.account.resource(matching_server).connect(
-                timeout=10
-            )
+            ]
+            if matching_servers:
+                self._plex_server = self.account.resource(matching_servers[0]).connect(
+                    timeout=10
+                )
+                return True
+            _LOGGER.error("Attempt to update plex.direct hostname failed")
+            return False
 
         if self._url:
             try:
@@ -165,10 +189,14 @@ class PlexServer:
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
-                            "Plex SSL certificate's hostname changed, updating."
+                            "Plex SSL certificate's hostname changed, updating"
                         )
-                        _update_plexdirect_hostname()
-                        config_entry_update_needed = True
+                        if _update_plexdirect_hostname():
+                            config_entry_update_needed = True
+                        else:
+                            raise Unauthorized(  # pylint: disable=raise-missing-from
+                                "New certificate cannot be validated with provided token"
+                            )
                     else:
                         raise
                 else:
@@ -180,7 +208,7 @@ class PlexServer:
             system_accounts = self._plex_server.systemAccounts()
         except Unauthorized:
             _LOGGER.warning(
-                "Plex account has limited permissions, shared account filtering will not be available."
+                "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
             self._accounts = [
@@ -245,6 +273,12 @@ class PlexServer:
             devices, sessions, plextv_clients = await self.hass.async_add_executor_job(
                 self._fetch_platform_data
             )
+        except plexapi.exceptions.Unauthorized:
+            _LOGGER.debug(
+                "Token has expired for '%s', reloading integration", self.friendly_name
+            )
+            await self.hass.config_entries.async_reload(self.entry_id)
+            return
         except (
             plexapi.exceptions.BadRequest,
             requests.exceptions.RequestException,
@@ -257,6 +291,9 @@ class PlexServer:
         def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
+            available_clients[device.machineIdentifier].setdefault(
+                PLAYER_SOURCE, source
+            )
 
             if device.machineIdentifier not in ignored_clients:
                 if self.option_ignore_plexweb_clients and device.product == "Plex Web":
@@ -275,11 +312,14 @@ class PlexServer:
             ):
                 new_clients.add(device.machineIdentifier)
                 _LOGGER.debug(
-                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                    "New %s from %s: %s",
+                    device.product,
+                    source,
+                    device.machineIdentifier,
                 )
 
         for device in devices:
-            process_device("device", device)
+            process_device("PMS", device)
 
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
@@ -293,6 +333,8 @@ class PlexServer:
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
             except NotFound:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+            else:
+                client.proxyThroughServer(value=False, server=self._plex_server)
 
             self._plextv_device_cache[client_id] = client
             return client
@@ -303,7 +345,7 @@ class PlexServer:
                     connect_to_resource, plextv_client
                 )
                 if device:
-                    process_device("resource", device)
+                    process_device("plex.tv", device)
 
         for session in sessions:
             if session.TYPE == "photo":
@@ -422,6 +464,10 @@ class PlexServer:
         """Return playlist from server object."""
         return self._plex_server.playlist(title)
 
+    def playlists(self):
+        """Return available playlists from server object."""
+        return self._plex_server.playlists()
+
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
@@ -434,7 +480,7 @@ class PlexServer:
         """Lookup a piece of media."""
         media_type = media_type.lower()
 
-        if media_type == DOMAIN:
+        if isinstance(kwargs.get("plex_key"), int):
             key = kwargs["plex_key"]
             try:
                 return self.fetch_item(key)
@@ -451,12 +497,13 @@ class PlexServer:
                 return None
             except NotFound:
                 _LOGGER.error(
-                    "Playlist '%s' not found", playlist_name,
+                    "Playlist '%s' not found",
+                    playlist_name,
                 )
                 return None
 
         try:
-            library_name = kwargs["library_name"]
+            library_name = kwargs.pop("library_name")
             library_section = self.library.section(library_name)
         except KeyError:
             _LOGGER.error("Must specify 'library_name' for this search")
@@ -465,121 +512,23 @@ class PlexServer:
             _LOGGER.error("Library '%s' not found", library_name)
             return None
 
-        def lookup_music():
-            """Search for music and return a Plex media object."""
-            album_name = kwargs.get("album_name")
-            track_name = kwargs.get("track_name")
-            track_number = kwargs.get("track_number")
-
-            try:
-                artist_name = kwargs["artist_name"]
-                artist = library_section.get(artist_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'artist_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error(
-                    "Artist '%s' not found in '%s'", artist_name, library_name
-                )
-                return None
-
-            if album_name:
+        try:
+            if media_type == MEDIA_TYPE_EPISODE:
+                return lookup_tv(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_MOVIE:
+                return lookup_movie(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_MUSIC:
+                return lookup_music(library_section, **kwargs)
+            if media_type == MEDIA_TYPE_VIDEO:
+                # Legacy method for compatibility
                 try:
-                    album = artist.album(album_name)
-                except NotFound:
-                    _LOGGER.error(
-                        "Album '%s' by '%s' not found", album_name, artist_name
-                    )
+                    video_name = kwargs["video_name"]
+                    return library_section.get(video_name)
+                except KeyError:
+                    _LOGGER.error("Must specify 'video_name' for this search")
                     return None
-
-                if track_name:
-                    try:
-                        return album.track(track_name)
-                    except NotFound:
-                        _LOGGER.error(
-                            "Track '%s' on '%s' by '%s' not found",
-                            track_name,
-                            album_name,
-                            artist_name,
-                        )
-                        return None
-
-                if track_number:
-                    for track in album.tracks():
-                        if int(track.index) == int(track_number):
-                            return track
-
-                    _LOGGER.error(
-                        "Track %d on '%s' by '%s' not found",
-                        track_number,
-                        album_name,
-                        artist_name,
-                    )
-                    return None
-                return album
-
-            if track_name:
-                try:
-                    return artist.get(track_name)
-                except NotFound:
-                    _LOGGER.error(
-                        "Track '%s' by '%s' not found", track_name, artist_name
-                    )
-                    return None
-
-            return artist
-
-        def lookup_tv():
-            """Find TV media and return a Plex media object."""
-            season_number = kwargs.get("season_number")
-            episode_number = kwargs.get("episode_number")
-
-            try:
-                show_name = kwargs["show_name"]
-                show = library_section.get(show_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'show_name' for this search")
-                return None
-            except NotFound:
-                _LOGGER.error("Show '%s' not found in '%s'", show_name, library_name)
-                return None
-
-            if not season_number:
-                return show
-
-            try:
-                season = show.season(int(season_number))
-            except NotFound:
-                _LOGGER.error(
-                    "Season %d of '%s' not found", season_number, show_name,
-                )
-                return None
-
-            if not episode_number:
-                return season
-
-            try:
-                return season.episode(episode=int(episode_number))
-            except NotFound:
-                _LOGGER.error(
-                    "Episode not found: %s - S%sE%s",
-                    show_name,
-                    str(season_number).zfill(2),
-                    str(episode_number).zfill(2),
-                )
-                return None
-
-        if media_type == MEDIA_TYPE_MUSIC:
-            return lookup_music()
-        if media_type == MEDIA_TYPE_EPISODE:
-            return lookup_tv()
-        if media_type == MEDIA_TYPE_VIDEO:
-            try:
-                video_name = kwargs["video_name"]
-                return library_section.get(video_name)
-            except KeyError:
-                _LOGGER.error("Must specify 'video_name' for this search")
-            except NotFound:
-                _LOGGER.error(
-                    "Movie '%s' not found in '%s'", video_name, library_name,
-                )
+                except NotFound as err:
+                    raise MediaNotFound(f"Video {video_name}") from err
+        except MediaNotFound as failed_item:
+            _LOGGER.error("%s not found in %s", failed_item, library_name)
+            return None

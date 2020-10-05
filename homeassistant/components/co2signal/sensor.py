@@ -78,7 +78,7 @@ class CO2Sensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return "mdi:periodic-table-co2"
+        return "mdi:molecule-co2"
 
     @property
     def state(self):

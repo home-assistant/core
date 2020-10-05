@@ -30,6 +30,7 @@ KEY_MODEL = "model"
 KEY_ON = "on"
 KEY_DURATION = "totalDuration"
 KEY_RAIN_DELAY = "rainDelayExpirationDate"
+KEY_RAIN_DELAY_END = "endTime"
 KEY_RAIN_SENSOR_TRIPPED = "rainSensorTripped"
 KEY_STATUS = "status"
 KEY_SUBTYPE = "subType"
@@ -58,6 +59,10 @@ RACHIO_API_EXCEPTIONS = (
 )
 
 STATUS_ONLINE = "ONLINE"
+
+SCHEDULE_TYPE_FIXED = "FIXED"
+SCHEDULE_TYPE_FLEX = "FLEX"
+SERVICE_SET_ZONE_MOISTURE = "set_zone_moisture_percent"
 
 SIGNAL_RACHIO_UPDATE = f"{DOMAIN}_update"
 SIGNAL_RACHIO_CONTROLLER_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_controller"

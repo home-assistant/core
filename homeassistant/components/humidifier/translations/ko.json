@@ -1,0 +1,28 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "{entity_name} \uc2b5\ub3c4 \uc124\uc815\ud558\uae30",
+            "set_mode": "{entity_name} \uc758 \uc6b4\uc804 \ubaa8\ub4dc \ubcc0\uacbd",
+            "toggle": "{entity_name} \ud1a0\uae00",
+            "turn_off": "{entity_name} \ub044\uae30",
+            "turn_on": "{entity_name} \ucf1c\uae30"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} \uc774(\uac00) \ud2b9\uc815 \ubaa8\ub4dc\ub85c \uc124\uc815\ub418\uc5b4\uc788\uc73c\uba74",
+            "is_off": "{entity_name} \uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
+            "is_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} \ubaa9\ud45c \uc2b5\ub3c4\uac00 \ubcc0\uacbd\ub420 \ub54c",
+            "turned_off": "{entity_name} \uc774(\uac00) \uaebc\uc9c8 \ub54c",
+            "turned_on": "{entity_name} \uc774(\uac00) \ucf1c\uc9c8 \ub54c"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0"
+        }
+    },
+    "title": "\uac00\uc2b5\uae30"
+}

@@ -6,13 +6,16 @@ import unittest
 
 import pytest
 
-from homeassistant import core as ha
 from homeassistant.components import pilight
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    get_test_home_assistant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,13 +199,13 @@ class TestPilight(unittest.TestCase):
             service_data1["protocol"] = [service_data1["protocol"]]
             service_data2["protocol"] = [service_data2["protocol"]]
 
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+            async_fire_time_changed(self.hass, dt_util.utcnow())
             self.hass.block_till_done()
             error_log_call = mock_pilight_error.call_args_list[-1]
             assert str(service_data1) in str(error_log_call)
 
             new_time = dt_util.utcnow() + timedelta(seconds=5)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: new_time})
+            async_fire_time_changed(self.hass, new_time)
             self.hass.block_till_done()
             error_log_call = mock_pilight_error.call_args_list[-1]
             assert str(service_data2) in str(error_log_call)
@@ -407,6 +410,6 @@ class TestPilightCallrateThrottler(unittest.TestCase):
         for i in range(3):
             exp.append(i)
             shifted_time = now + (timedelta(seconds=delay + 0.1) * i)
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+            async_fire_time_changed(self.hass, shifted_time)
             self.hass.block_till_done()
             assert runs == exp

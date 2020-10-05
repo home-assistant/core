@@ -90,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    async_add_entities([BrWeather(data, config)])
+    async_add_entities([BrWeather(data, config, coordinates)])
 
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
@@ -99,11 +99,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, data, config):
+    def __init__(self, data, config, coordinates):
         """Initialise the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME)
         self._forecast = config[CONF_FORECAST]
         self._data = data
+
+        self._unique_id = "{:2.6f}{:2.6f}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE]
+        )
 
     @property
     def attribution(self):
@@ -120,7 +124,6 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
             if ccode:
@@ -170,7 +173,6 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-
         if not self._forecast:
             return None
 
@@ -197,3 +199,8 @@ class BrWeather(WeatherEntity):
             fcdata_out.append(data_out)
 
         return fcdata_out
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id

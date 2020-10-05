@@ -16,6 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
+from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -88,6 +89,10 @@ class HKDevice:
         # This just tracks aid/iid pairs so we know if a HK service has been
         # mapped to a HA entity.
         self.entities = []
+
+        # A map of aid -> device_id
+        # Useful when routing events to triggers
+        self.devices = {}
 
         self.available = True
 
@@ -162,6 +167,60 @@ class HKDevice:
 
         return True
 
+    async def async_create_devices(self):
+        """
+        Build device registry entries for all accessories paired with the bridge.
+
+        This is done as well as by the entities for 2 reasons. First, the bridge
+        might not have any entities attached to it. Secondly there are stateless
+        entities like doorbells and remote controls.
+        """
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+
+        devices = {}
+
+        for accessory in self.entity_map.accessories:
+            info = accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION,
+            )
+
+            device_info = {
+                "identifiers": {
+                    (
+                        DOMAIN,
+                        "serial-number",
+                        info.value(CharacteristicsTypes.SERIAL_NUMBER),
+                    )
+                },
+                "name": info.value(CharacteristicsTypes.NAME),
+                "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
+                "model": info.value(CharacteristicsTypes.MODEL, ""),
+                "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            }
+
+            if accessory.aid == 1:
+                # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
+                # Link the root device to the pairing id for the connection.
+                device_info["identifiers"].add((DOMAIN, "accessory-id", self.unique_id))
+            else:
+                # Every pairing has an accessory 1
+                # It *doesn't* have a via_device, as it is the device we are connecting to
+                # Every other accessory should use it as its via device.
+                device_info["via_device"] = (
+                    DOMAIN,
+                    "serial-number",
+                    self.connection_info["serial-number"],
+                )
+
+            device = device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                **device_info,
+            )
+
+            devices[accessory.aid] = device.id
+
+        self.devices = devices
+
     async def async_process_entity_map(self):
         """
         Process the entity map and load any platforms or entities that need adding.
@@ -176,6 +235,11 @@ class HKDevice:
         self.pairing.pairing_data["accessories"] = self.accessories
 
         await self.async_load_platforms()
+
+        await self.async_create_devices()
+
+        # Load any triggers for this config entry
+        await async_setup_triggers_for_entry(self.hass, self.config_entry)
 
         self.add_entities()
 
@@ -275,7 +339,7 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            _LOGGER.debug("HomeKit connection not polling any characteristics.")
+            _LOGGER.debug("HomeKit connection not polling any characteristics")
             return
 
         if self._polling_lock.locked():
@@ -316,6 +380,9 @@ class HKDevice:
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
         self.available = True
+
+        # Process any stateless events (via device_triggers)
+        async_fire_triggers(self, new_values_dict)
 
         for (aid, cid), value in new_values_dict.items():
             accessory = self.current_state.setdefault(aid, {})

@@ -12,10 +12,10 @@ from homeassistant.components.vera import (
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
 
-from .common import ComponentFactory, new_simple_controller_config
+from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
 from tests.async_mock import MagicMock
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_init(
@@ -24,7 +24,7 @@ async def test_init(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
@@ -33,7 +33,7 @@ async def test_init(
         hass=hass,
         controller_config=new_simple_controller_config(
             config={CONF_CONTROLLER: "http://127.0.0.1:111"},
-            config_from_file=False,
+            config_source=ConfigSource.CONFIG_FLOW,
             serial_number="first_serial",
             devices=(vera_device1,),
         ),
@@ -41,8 +41,8 @@ async def test_init(
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entry1 = entity_registry.async_get(entity1_id)
-
     assert entry1
+    assert entry1.unique_id == "vera_first_serial_1"
 
 
 async def test_init_from_file(
@@ -51,7 +51,7 @@ async def test_init_from_file(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
@@ -60,7 +60,7 @@ async def test_init_from_file(
         hass=hass,
         controller_config=new_simple_controller_config(
             config={CONF_CONTROLLER: "http://127.0.0.1:111"},
-            config_from_file=True,
+            config_source=ConfigSource.FILE,
             serial_number="first_serial",
             devices=(vera_device1,),
         ),
@@ -69,6 +69,62 @@ async def test_init_from_file(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
+    assert entry1.unique_id == "vera_first_serial_1"
+
+
+async def test_multiple_controllers_with_legacy_one(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
+    """Test multiple controllers with one legacy controller."""
+    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1.device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
+    vera_device1.name = "first_dev"
+    vera_device1.is_tripped = False
+    entity1_id = "binary_sensor.first_dev_1"
+
+    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2.device_id = 2
+    vera_device2.vera_device_id = vera_device2.device_id
+    vera_device2.name = "second_dev"
+    vera_device2.is_tripped = False
+    entity2_id = "binary_sensor.second_dev_2"
+
+    # Add existing entity registry entry from previous setup.
+    entity_registry = mock_registry(hass)
+    entity_registry.async_get_or_create(
+        domain="switch", platform=DOMAIN, unique_id="12"
+    )
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:111"},
+            config_source=ConfigSource.FILE,
+            serial_number="first_serial",
+            devices=(vera_device1,),
+        ),
+    )
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:222"},
+            config_source=ConfigSource.CONFIG_FLOW,
+            serial_number="second_serial",
+            devices=(vera_device2,),
+        ),
+    )
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry1 = entity_registry.async_get(entity1_id)
+    assert entry1
+    assert entry1.unique_id == "1"
+
+    entry2 = entity_registry.async_get(entity2_id)
+    assert entry2
+    assert entry2.unique_id == "vera_second_serial_2"
 
 
 async def test_unload(
@@ -77,7 +133,7 @@ async def test_unload(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
 
@@ -145,6 +201,7 @@ async def test_exclude_and_light_ids(
 
     vera_device3 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
     vera_device3.device_id = 3
+    vera_device3.vera_device_id = 3
     vera_device3.name = "dev3"
     vera_device3.category = pv.CATEGORY_SWITCH
     vera_device3.is_switched_on = MagicMock(return_value=False)
@@ -152,6 +209,7 @@ async def test_exclude_and_light_ids(
 
     vera_device4 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
     vera_device4.device_id = 4
+    vera_device4.vera_device_id = 4
     vera_device4.name = "dev4"
     vera_device4.category = pv.CATEGORY_SWITCH
     vera_device4.is_switched_on = MagicMock(return_value=False)
@@ -160,6 +218,7 @@ async def test_exclude_and_light_ids(
     component_data = await vera_component_factory.configure_component(
         hass=hass,
         controller_config=new_simple_controller_config(
+            config_source=ConfigSource.CONFIG_ENTRY,
             devices=(vera_device1, vera_device2, vera_device3, vera_device4),
             config={**{CONF_CONTROLLER: "http://127.0.0.1:123"}, **options},
         ),
@@ -167,12 +226,10 @@ async def test_exclude_and_light_ids(
 
     # Assert the entries were setup correctly.
     config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-    assert config_entry.options == {
-        CONF_LIGHTS: [4, 10, 12],
-        CONF_EXCLUDE: [1],
-    }
+    assert config_entry.options[CONF_LIGHTS] == [4, 10, 12]
+    assert config_entry.options[CONF_EXCLUDE] == [1]
 
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     update_callback(vera_device1)
     update_callback(vera_device2)

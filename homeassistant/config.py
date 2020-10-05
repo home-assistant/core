@@ -20,6 +20,8 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    CONF_ALLOWLIST_EXTERNAL_DIRS,
+    CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -31,6 +33,7 @@ from homeassistant.const import (
     CONF_INTERNAL_URL,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MEDIA_DIRS,
     CONF_NAME,
     CONF_PACKAGES,
     CONF_TEMPERATURE_UNIT,
@@ -38,7 +41,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_WHITELIST_EXTERNAL_DIRS,
+    LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     TEMP_CELSIUS,
     __version__,
 )
@@ -182,9 +185,13 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         CONF_TIME_ZONE: cv.time_zone,
         vol.Optional(CONF_INTERNAL_URL): cv.url,
         vol.Optional(CONF_EXTERNAL_URL): cv.url,
-        vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
             cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
         ),
+        vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
+            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+        ),
+        vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(cv.ensure_list, [cv.url]),
         vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
         vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
             cv.ensure_list,
@@ -215,6 +222,8 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
             ],
             _no_duplicate_auth_mfa_module,
         ),
+        # pylint: disable=no-value-for-parameter
+        vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
     }
 )
 
@@ -479,6 +488,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
+            CONF_MEDIA_DIRS,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -490,6 +500,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_ELEVATION, "elevation"),
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
+        (CONF_MEDIA_DIRS, "media_dirs"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -497,10 +508,34 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
     if CONF_TIME_ZONE in config:
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
+    if CONF_MEDIA_DIRS not in config:
+        if is_docker_env():
+            hac.media_dirs = {"local": "/media"}
+        else:
+            hac.media_dirs = {"local": hass.config.path("media")}
+
     # Init whitelist external dir
-    hac.whitelist_external_dirs = {hass.config.path("www")}
-    if CONF_WHITELIST_EXTERNAL_DIRS in config:
-        hac.whitelist_external_dirs.update(set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
+    hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}
+    if CONF_ALLOWLIST_EXTERNAL_DIRS in config:
+        hac.allowlist_external_dirs.update(set(config[CONF_ALLOWLIST_EXTERNAL_DIRS]))
+
+    elif LEGACY_CONF_WHITELIST_EXTERNAL_DIRS in config:
+        _LOGGER.warning(
+            "Key %s has been replaced with %s. Please update your config",
+            LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
+            CONF_ALLOWLIST_EXTERNAL_DIRS,
+        )
+        hac.allowlist_external_dirs.update(
+            set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
+        )
+
+    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # already have it so that we can properly test "path ownership"
+    if CONF_ALLOWLIST_EXTERNAL_URLS in config:
+        hac.allowlist_external_urls.update(
+            url if url.endswith("/") else f"{url}/"
+            for url in config[CONF_ALLOWLIST_EXTERNAL_URLS]
+        )
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
@@ -785,9 +820,7 @@ async def async_process_component_config(
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
-                    p_config
-                )
+                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,

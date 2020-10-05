@@ -16,6 +16,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -30,17 +31,17 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
+from tests.async_mock import patch
+from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
 }
 
 
-async def test_run_camera_setup(hass, aiohttp_client):
+async def test_run_camera_setup(hass, aiohttp_client, mqtt_mock):
     """Test that it fetches the given payload."""
     topic = "test/camera"
-    await async_mock_mqtt_component(hass)
     await async_setup_component(
         hass,
         "camera",
@@ -122,7 +123,7 @@ async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     )
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one camera per unique_id."""
     config = {
         camera.DOMAIN: [
@@ -140,7 +141,7 @@ async def test_unique_id(hass):
             },
         ]
     }
-    await help_test_unique_id(hass, camera.DOMAIN, config)
+    await help_test_unique_id(hass, mqtt_mock, camera.DOMAIN, config)
 
 
 async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
@@ -154,12 +155,23 @@ async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     await async_start(hass, "homeassistant", entry)
 
-    data1 = '{ "name": "Beer",' '  "topic": "test_topic"}'
-    data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
+    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, camera.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_camera(hass, mqtt_mock, caplog):
+    """Test update of discovered camera."""
+    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    with patch(
+        "homeassistant.components.mqtt.camera.MqttCamera.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, camera.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -169,7 +181,7 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     await async_start(hass, "homeassistant", entry)
 
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, camera.DOMAIN, data1, data2

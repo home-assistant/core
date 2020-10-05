@@ -1,7 +1,13 @@
 """Support for Toon thermostat."""
-
 import logging
 from typing import Any, Dict, List, Optional
+
+from toonapi import (
+    ACTIVE_STATE_AWAY,
+    ACTIVE_STATE_COMFORT,
+    ACTIVE_STATE_HOME,
+    ACTIVE_STATE_SLEEP,
+)
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -19,56 +25,38 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ToonData, ToonDisplayDeviceEntity
-from .const import (
-    DATA_TOON,
-    DATA_TOON_CLIENT,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-)
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .helpers import toon_exception_handler
+from .models import ToonDisplayDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
-    toon_client = hass.data[DATA_TOON_CLIENT][entry.entry_id]
-    toon_data = hass.data[DATA_TOON][entry.entry_id]
-    async_add_entities([ToonThermostatDevice(toon_client, toon_data)], True)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [ToonThermostatDevice(coordinator, name="Thermostat", icon="mdi:thermostat")]
+    )
 
 
 class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     """Representation of a Toon climate device."""
 
-    def __init__(self, toon_client, toon_data: ToonData) -> None:
-        """Initialize the Toon climate device."""
-        self._client = toon_client
-
-        self._current_temperature = None
-        self._target_temperature = None
-        self._heating = False
-        self._next_target_temperature = None
-        self._preset = None
-
-        self._heating_type = None
-
-        super().__init__(toon_data, "Toon Thermostat", "mdi:thermostat")
-
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this thermostat."""
-        return "_".join([DOMAIN, self.toon.agreement.id, "climate"])
+        agreement_id = self.coordinator.data.agreement.agreement_id
+        # This unique ID is a bit ugly and contains unneeded information.
+        # It is here for lecagy / backward compatible reasons.
+        return f"{DOMAIN}_{agreement_id}_climate"
 
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def hvac_mode(self) -> str:
@@ -83,7 +71,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation."""
-        if self._heating:
+        if self.coordinator.data.thermostat.heating:
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -95,24 +83,28 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._preset is not None:
-            return self._preset.lower()
-        return None
+        mapping = {
+            ACTIVE_STATE_AWAY: PRESET_AWAY,
+            ACTIVE_STATE_COMFORT: PRESET_COMFORT,
+            ACTIVE_STATE_HOME: PRESET_HOME,
+            ACTIVE_STATE_SLEEP: PRESET_SLEEP,
+        }
+        return mapping.get(self.coordinator.data.thermostat.active_state)
 
     @property
     def preset_modes(self) -> List[str]:
         """Return a list of available preset modes."""
-        return SUPPORT_PRESET
+        return [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._current_temperature
+        return self.coordinator.data.thermostat.current_display_temperature
 
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self.coordinator.data.thermostat.current_setpoint
 
     @property
     def min_temp(self) -> float:
@@ -127,30 +119,27 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the current state of the burner."""
-        return {"heating_type": self._heating_type}
+        return {"heating_type": self.coordinator.data.agreement.heating_type}
 
-    def set_temperature(self, **kwargs) -> None:
+    @toon_exception_handler
+    async def async_set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        self._client.thermostat = self._target_temperature = temperature
-        self.schedule_update_ha_state()
+        await self.coordinator.toon.set_current_setpoint(temperature)
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    @toon_exception_handler
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        self._client.thermostat_state = self._preset = preset_mode
-        self.schedule_update_ha_state()
+        mapping = {
+            PRESET_AWAY: ACTIVE_STATE_AWAY,
+            PRESET_COMFORT: ACTIVE_STATE_COMFORT,
+            PRESET_HOME: ACTIVE_STATE_HOME,
+            PRESET_SLEEP: ACTIVE_STATE_SLEEP,
+        }
+        if preset_mode in mapping:
+            await self.coordinator.toon.set_active_state(mapping[preset_mode])
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-
-    def update(self) -> None:
-        """Update local state."""
-        if self.toon.thermostat_state is None:
-            self._preset = None
-        else:
-            self._preset = self.toon.thermostat_state.name
-
-        self._current_temperature = self.toon.temperature
-        self._target_temperature = self.toon.thermostat
-        self._heating_type = self.toon.agreement.heating_type
-        self._heating = self.toon.thermostat_info.burner_info == 1
+        # Intentionally left empty
+        # The HAVC mode is always HEAT

@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "A\u011fda Wemo cihaz\u0131 bulunamad\u0131."
+        }
+    }
+}

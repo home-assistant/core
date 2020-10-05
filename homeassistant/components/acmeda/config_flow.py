@@ -26,10 +26,8 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_hubs is not None
-            # pylint: disable=unsupported-membership-test
             and user_input["id"] in self.discovered_hubs
         ):
-            # pylint: disable=unsubscriptable-object
             return await self.async_create(self.discovered_hubs[user_input["id"]])
 
         # Already configured hosts
@@ -47,7 +45,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pass
 
         if len(hubs) == 0:
-            return self.async_abort(reason="all_configured")
+            return self.async_abort(reason="no_devices_found")
 
         if len(hubs) == 1:
             return await self.async_create(hubs[0])

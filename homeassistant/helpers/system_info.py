@@ -1,7 +1,7 @@
 """Helper to gather system info."""
 import os
 import platform
-from typing import Dict
+from typing import Any, Dict
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.loader import bind_hass
@@ -11,7 +11,7 @@ from .typing import HomeAssistantType
 
 
 @bind_hass
-async def async_get_system_info(hass: HomeAssistantType) -> Dict:
+async def async_get_system_info(hass: HomeAssistantType) -> Dict[str, Any]:
     """Return info about the system."""
     info_object = {
         "installation_type": "Unknown",
@@ -51,7 +51,7 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict:
         info_object["docker_version"] = info.get("docker")
 
         if info.get("hassos") is not None:
-            info_object["installation_type"] = "Home Assistant"
+            info_object["installation_type"] = "Home Assistant OS"
         else:
             info_object["installation_type"] = "Home Assistant Supervised"
 

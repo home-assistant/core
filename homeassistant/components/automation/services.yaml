@@ -12,6 +12,9 @@ turn_off:
     entity_id:
       description: Name of the automation to turn off.
       example: "automation.notify_home"
+    stop_actions:
+      description: Stop currently running actions (defaults to true).
+      example: false
 
 toggle:
   description: Toggle an automation.
@@ -27,7 +30,7 @@ trigger:
       description: Name of the automation to trigger.
       example: "automation.notify_home"
     skip_condition:
-      description: Whether or not the condition will be skipped (defaults to True).
+      description: Whether or not the condition will be skipped (defaults to true).
       example: true
 
 reload:

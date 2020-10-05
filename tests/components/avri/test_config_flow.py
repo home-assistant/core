@@ -1,8 +1,8 @@
 """Test the Avri config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.avri.const import DOMAIN
+
+from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -15,7 +15,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.avri.async_setup_entry", return_value=True,
+        "homeassistant.components.avri.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

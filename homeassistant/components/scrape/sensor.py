@@ -122,7 +122,7 @@ class ScrapeSensor(Entity):
         """Get the latest data from the source and updates the state."""
         self.rest.update()
         if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data")
+            _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
 
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
@@ -139,7 +139,7 @@ class ScrapeSensor(Entity):
                     value = tag.text
             _LOGGER.debug(value)
         except IndexError:
-            _LOGGER.error("Unable to extract data from HTML")
+            _LOGGER.error("Unable to extract data from HTML for %s", self.name)
             return
 
         if self._value_template is not None:

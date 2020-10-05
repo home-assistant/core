@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 de MQTT."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar amb el broker."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "broker": {
@@ -46,6 +46,40 @@
             "button_short_press": "\"{subtype}\" premut",
             "button_short_release": "\"{subtype}\" alliberat",
             "button_triple_press": "\"{subtype}\" clicat tres vegades"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_birth": "Topic missatge de naixement inv\u00e0lid.",
+            "bad_will": "Topic missatge d'\u00faltima voluntat inv\u00e0lid.",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
+            },
+            "options": {
+                "data": {
+                    "birth_enable": "Activa el missatge de naixement",
+                    "birth_payload": "Dades (payload) missatge de naixement",
+                    "birth_qos": "QoS missatge de naixement",
+                    "birth_retain": "Retenci\u00f3 missatge de naixement",
+                    "birth_topic": "Topic missatge de naixement",
+                    "discovery": "Activar descobriment",
+                    "will_enable": "Activa el missatge d'\u00faltima voluntat",
+                    "will_payload": "Dades (payload) missatge d'\u00faltima voluntat",
+                    "will_qos": "QoS missatge d'\u00faltima voluntat",
+                    "will_retain": "Retenci\u00f3 missatge d'\u00faltima voluntat",
+                    "will_topic": "Topic missatge d'\u00faltima voluntat"
+                },
+                "description": "Selecciona les opcions MQTT."
+            }
         }
     }
 }

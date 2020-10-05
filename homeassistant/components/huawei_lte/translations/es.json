@@ -11,11 +11,14 @@
             "incorrect_password": "Contrase\u00f1a incorrecta",
             "incorrect_username": "Nombre de usuario incorrecto",
             "incorrect_username_or_password": "Nombre de usuario o contrase\u00f1a incorrectos",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_url": "URL no v\u00e1lida",
             "login_attempts_exceeded": "Se han superado los intentos de inicio de sesi\u00f3n m\u00e1ximos, int\u00e9ntelo de nuevo m\u00e1s tarde.",
             "response_error": "Error desconocido del dispositivo",
+            "unknown": "Error inesperado",
             "unknown_connection_error": "Error desconocido al conectarse al dispositivo"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {
@@ -32,7 +35,7 @@
         "step": {
             "init": {
                 "data": {
-                    "name": "Nombre del servicio de notificaci\u00f3n",
+                    "name": "Nombre del servicio de notificaci\u00f3n (el cambio requiere reiniciar)",
                     "recipient": "Destinatarios de notificaciones por SMS",
                     "track_new_devices": "Rastrea nuevos dispositivos"
                 }

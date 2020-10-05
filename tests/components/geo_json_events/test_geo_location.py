@@ -54,7 +54,7 @@ def _generate_mock_feed_entry(external_id, title, distance_to_home, coordinates)
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
@@ -176,7 +176,7 @@ async def test_setup_with_custom_location(hass):
             assert mock_feed.call_args == call((15.1, 25.2), URL, filter_radius=200.0)
 
 
-async def test_setup_race_condition(hass):
+async def test_setup_race_condition(hass, legacy_patchable_time):
     """Test a particular race condition experienced."""
     # 1. Feed returns 1 entry -> Feed manager creates 1 entity.
     # 2. Feed returns error -> Feed manager removes 1 entity.

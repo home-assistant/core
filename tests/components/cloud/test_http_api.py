@@ -25,15 +25,15 @@ from tests.components.google_assistant import MockConfig
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
-@pytest.fixture()
-def mock_auth():
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
     """Mock check token."""
     with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"):
         yield
 
 
-@pytest.fixture()
-def mock_cloud_login(hass, setup_api):
+@pytest.fixture(name="mock_cloud_login")
+def mock_cloud_login_fixture(hass, setup_api):
     """Mock cloud is logged in."""
     hass.data[DOMAIN].id_token = jwt.encode(
         {
@@ -45,8 +45,8 @@ def mock_cloud_login(hass, setup_api):
     )
 
 
-@pytest.fixture(autouse=True)
-def setup_api(hass, aioclient_mock):
+@pytest.fixture(autouse=True, name="setup_api")
+def setup_api_fixture(hass, aioclient_mock):
     """Initialize HTTP API."""
     hass.loop.run_until_complete(
         mock_cloud(
@@ -68,15 +68,15 @@ def setup_api(hass, aioclient_mock):
     return mock_cloud_prefs(hass)
 
 
-@pytest.fixture
-def cloud_client(hass, hass_client):
+@pytest.fixture(name="cloud_client")
+def cloud_client_fixture(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
     with patch("hass_nabucasa.Cloud.write_user_info"):
         yield hass.loop.run_until_complete(hass_client())
 
 
-@pytest.fixture
-def mock_cognito():
+@pytest.fixture(name="mock_cognito")
+def mock_cognito_fixture():
     """Mock warrant."""
     with patch("hass_nabucasa.auth.CognitoAuth._cognito") as mock_cog:
         yield mock_cog()
@@ -355,6 +355,8 @@ async def test_websocket_status(
             "google_enabled": True,
             "google_entity_configs": {},
             "google_secure_devices_pin": None,
+            "google_default_expose": None,
+            "alexa_default_expose": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
             "google_report_state": False,
@@ -362,14 +364,18 @@ async def test_websocket_status(
         },
         "alexa_entities": {
             "include_domains": [],
+            "include_entity_globs": [],
             "include_entities": ["light.kitchen", "switch.ac"],
             "exclude_domains": [],
+            "exclude_entity_globs": [],
             "exclude_entities": [],
         },
         "google_entities": {
             "include_domains": ["light"],
+            "include_entity_globs": [],
             "include_entities": [],
             "exclude_domains": [],
+            "exclude_entity_globs": [],
             "exclude_entities": [],
         },
         "remote_domain": None,
@@ -458,7 +464,8 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
-        "hass_nabucasa.Cloud.fetch_subscription_info", return_value={"return": "value"},
+        "hass_nabucasa.Cloud.fetch_subscription_info",
+        return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
@@ -482,6 +489,8 @@ async def test_websocket_update_preferences(
             "alexa_enabled": False,
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
+            "google_default_expose": ["light", "switch"],
+            "alexa_default_expose": ["sensor", "media_player"],
         }
     )
     response = await client.receive_json()
@@ -490,6 +499,8 @@ async def test_websocket_update_preferences(
     assert not setup_api.google_enabled
     assert not setup_api.alexa_enabled
     assert setup_api.google_secure_devices_pin == "1234"
+    assert setup_api.google_default_expose == ["light", "switch"]
+    assert setup_api.alexa_default_expose == ["sensor", "media_player"]
 
 
 async def test_websocket_update_preferences_require_relink(
@@ -594,6 +605,7 @@ async def test_enabling_remote_trusted_networks_local4(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we cannot enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(
@@ -626,6 +638,7 @@ async def test_enabling_remote_trusted_networks_local6(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we cannot enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(
@@ -658,6 +671,7 @@ async def test_enabling_remote_trusted_networks_other(
     hass, hass_ws_client, setup_api, mock_cloud_login
 ):
     """Test we can enable remote UI when trusted networks active."""
+    # pylint: disable=protected-access
     hass.auth._providers[
         ("trusted_networks", None)
     ] = tn_auth.TrustedNetworksAuthProvider(
@@ -733,6 +747,25 @@ async def test_update_google_entity(hass, hass_ws_client, setup_api, mock_cloud_
     prefs = hass.data[DOMAIN].client.prefs
     assert prefs.google_entity_configs["light.kitchen"] == {
         "should_expose": False,
+        "override_name": "updated name",
+        "aliases": ["lefty", "righty"],
+        "disable_2fa": False,
+    }
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "cloud/google_assistant/entities/update",
+            "entity_id": "light.kitchen",
+            "should_expose": None,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.google_entity_configs["light.kitchen"] == {
+        "should_expose": None,
         "override_name": "updated name",
         "aliases": ["lefty", "righty"],
         "disable_2fa": False,
@@ -825,6 +858,20 @@ async def test_update_alexa_entity(hass, hass_ws_client, setup_api, mock_cloud_l
     assert response["success"]
     prefs = hass.data[DOMAIN].client.prefs
     assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": False}
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "cloud/alexa/entities/update",
+            "entity_id": "light.kitchen",
+            "should_expose": None,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    prefs = hass.data[DOMAIN].client.prefs
+    assert prefs.alexa_entity_configs["light.kitchen"] == {"should_expose": None}
 
 
 async def test_sync_alexa_entities_timeout(

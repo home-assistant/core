@@ -27,7 +27,7 @@
                     "location_id": "Lokasjon"
                 },
                 "description": "Vennligst velg SmartThings lokasjon du vil legge til Home Assistant. Vi \u00e5pner deretter et nytt vindu og ber deg om \u00e5 logge inn og godkjenne installasjon av Home Assistant-integrasjonen p\u00e5 det valgte stedet.",
-                "title": "Velg Posisjon"
+                "title": "Velg beliggenhet"
             },
             "user": {
                 "description": "SmartThings konfigureres til \u00e5 sende push-oppdateringer til Home Assistant p\u00e5:\n\" {webhook_url}\n\nHvis dette ikke er riktig, m\u00e5 du oppdatere konfigurasjonen, starte Home Assistant p\u00e5 nytt og pr\u00f8ve p\u00e5 nytt.",

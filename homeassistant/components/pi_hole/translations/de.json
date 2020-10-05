@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service ist bereits konfiguriert",
-            "duplicated_name": "Name existiert bereits"
+            "already_configured": "Service ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung konnte nicht hergestellt werden"
