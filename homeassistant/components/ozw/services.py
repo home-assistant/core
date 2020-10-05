@@ -152,4 +152,6 @@ class ZWaveServices:
         """Tell the controller to cancel an add or remove command."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         instance = self._manager.get_instance(instance_id)
+        if instance is None:
+            raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
         instance.cancel_controller_command()
