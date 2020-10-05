@@ -1,0 +1,32 @@
+set_on:
+  description: Adds a time range when state will be on.
+  fields:
+    entity_id:
+      description: Entity id of the input schedule that should be set.
+      example: input_schedule.lights
+    start:
+      description: The start time of the time range.
+      example: '"05:04:20"'
+    end:
+      description: The end time of the time range.
+      example: '"06:24:50"'
+set_off:
+  description: Adds a time range when state will be off.
+  fields:
+    entity_id:
+      description: Entity id of the input schedule that should be set.
+      example: input_schedule.lights
+    start:
+      description: The start time of the time range.
+      example: '"05:04:20"'
+    end:
+      description: The end time of the time range.
+      example: '"06:24:50"'
+reset:
+  description: Resets the time causing it to be always off.
+  fields:
+    entity_id:
+      description: Entity id of the input schedule that should be set.
+      example: input_schedule.lights
+reload:
+  description: Reload the input_schedule configuration.
