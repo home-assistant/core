@@ -47,40 +47,40 @@ async def test_valid_discovery_message(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     with patch(
-        "homeassistant.components.tasmota.discovery.async_device_discovered"
-    ) as mock_device_discovered:
+        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
+    ) as mock_tasmota_has_entities:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
             hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
         )
         await hass.async_block_till_done()
-        assert mock_device_discovered.called
+        assert mock_tasmota_has_entities.called
 
 
 async def test_invalid_topic(hass, mqtt_mock):
     """Test receiving discovery message on wrong topic."""
     with patch(
-        "homeassistant.components.tasmota.discovery.async_device_discovered"
-    ) as mock_device_discovered:
+        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
+    ) as mock_tasmota_has_entities:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/configuration", "{}")
         await hass.async_block_till_done()
-        assert not mock_device_discovered.called
+        assert not mock_tasmota_has_entities.called
 
 
 async def test_invalid_message(hass, mqtt_mock, caplog):
     """Test receiving an invalid message."""
     with patch(
-        "homeassistant.components.tasmota.discovery.async_device_discovered"
-    ) as mock_device_discovered:
+        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
+    ) as mock_tasmota_has_entities:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/config", "asd")
         await hass.async_block_till_done()
         assert "Invalid discovery message" in caplog.text
-        assert not mock_device_discovered.called
+        assert not mock_tasmota_has_entities.called
 
 
 async def test_invalid_mac(hass, mqtt_mock, caplog):
@@ -88,8 +88,8 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     with patch(
-        "homeassistant.components.tasmota.discovery.async_device_discovered"
-    ) as mock_device_discovered:
+        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
+    ) as mock_tasmota_has_entities:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
@@ -97,7 +97,7 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
         )
         await hass.async_block_till_done()
         assert "MAC mismatch" in caplog.text
-        assert not mock_device_discovered.called
+        assert not mock_tasmota_has_entities.called
 
 
 async def test_correct_config_discovery(

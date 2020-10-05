@@ -17,16 +17,16 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components.mqtt.const import MQTT_CONNECTED, MQTT_DISCONNECTED
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 
-async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
+async def help_test_availability_when_connection_lost(
+    hass, mqtt_client_mock, mqtt_mock, domain, config
+):
     """Test availability after MQTT disconnection."""
     async_fire_mqtt_message(
         hass,
@@ -44,14 +44,16 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
     assert state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
-    async_dispatcher_send(hass, MQTT_DISCONNECTED)
+    mqtt_client_mock.on_disconnect(None, None, 0)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
 
     mqtt_mock.connected = True
-    async_dispatcher_send(hass, MQTT_CONNECTED)
+    mqtt_client_mock.on_connect(None, None, None, 0)
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.test")

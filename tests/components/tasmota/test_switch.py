@@ -112,10 +112,12 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_OFF
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock, setup_tasmota):
+async def test_availability_when_connection_lost(
+    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
+):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_client_mock, mqtt_mock, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
