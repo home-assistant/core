@@ -79,13 +79,6 @@ IO_PRIORITY_LOCK_ORIGINATOR_STATE = "io:PriorityLockOriginatorState"
 
 STATE_CLOSED = "closed"
 
-SERVICE_COVER_MY_POSITION = "set_cover_my_position"
-SERVICE_COVER_POSITION_LOW_SPEED = "set_cover_position_low_speed"
-
-SUPPORT_MY = 512
-SUPPORT_COVER_POSITION_LOW_SPEED = 1024
-
-
 TAHOMA_COVER_DEVICE_CLASSES = {
     "Awning": DEVICE_CLASS_AWNING,
     "Blind": DEVICE_CLASS_BLIND,
@@ -332,11 +325,5 @@ class TahomaCover(TahomaDevice, CoverEntity):
 
         if self.has_command(*COMMANDS_CLOSE):
             supported_features |= SUPPORT_CLOSE
-
-        if self.has_command(COMMAND_SET_POSITION_AND_LINEAR_SPEED):
-            supported_features |= SUPPORT_COVER_POSITION_LOW_SPEED
-
-        if self.has_command(COMMAND_MY):
-            supported_features |= SUPPORT_MY
 
         return supported_features

@@ -14,7 +14,6 @@ from pyhoma.exceptions import (
 from pyhoma.models import DataType, Device, State
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 TYPES = {
@@ -99,8 +98,6 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
                 self.devices = await self._get_devices()
 
             elif event.name == EventName.DEVICE_REMOVED:
-                registry = await device_registry.async_get_registry(self.hass)
-                registry.async_remove_device(event.deviceurl)
                 del self.devices[event.deviceurl]
 
             elif event.name == EventName.DEVICE_STATE_CHANGED:
