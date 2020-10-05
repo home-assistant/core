@@ -1,8 +1,10 @@
 """Fixtures for Z-Wave tests."""
 import pytest
 
+from homeassistant.components.zwave import const
+
 from tests.async_mock import MagicMock, patch
-from tests.mock.zwave import MockNetwork, MockOption
+from tests.mock.zwave import MockNetwork, MockNode, MockOption, MockValue
 
 
 @pytest.fixture
@@ -24,3 +26,42 @@ def mock_openzwave():
         },
     ):
         yield base_mock
+
+
+@pytest.fixture
+def mock_platform():
+    """Mock platform."""
+    platform = MagicMock()
+    mock_device = MagicMock()
+    mock_device.name = "test_device"
+    platform.get_device.return_value = mock_device
+    yield platform
+
+
+@pytest.fixture
+def mock_values():
+    """Mock values."""
+    node = MockNode()
+    mock_schema = {
+        const.DISC_COMPONENT: "mock_component",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {const.DISC_COMMAND_CLASS: ["mock_primary_class"]},
+            "secondary": {const.DISC_COMMAND_CLASS: ["mock_secondary_class"]},
+            "optional": {
+                const.DISC_COMMAND_CLASS: ["mock_optional_class"],
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    }
+    value_class = MagicMock()
+    value_class.primary = MockValue(
+        command_class="mock_primary_class", node=node, value_id=1000
+    )
+    value_class.secondary = MockValue(command_class="mock_secondary_class", node=node)
+    value_class.duplicate_secondary = MockValue(
+        command_class="mock_secondary_class", node=node
+    )
+    value_class.optional = MockValue(command_class="mock_optional_class", node=node)
+    value_class.no_match_value = MockValue(command_class="mock_bad_class", node=node)
+
+    yield (node, value_class, mock_schema)

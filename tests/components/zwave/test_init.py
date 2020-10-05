@@ -817,8 +817,10 @@ async def test_network_complete_some_dead(hass, mock_openzwave):
     assert len(events) == 1
 
 
-async def test_entity_discovery(hass, mock_openzwave):
+async def test_entity_discovery(hass, mock_platform, mock_values, mock_openzwave):
     """Test the creation of a new entity."""
+    (node, value_class, mock_schema) = mock_values
+
     registry = mock_registry(hass)
 
     mock_receivers = []
@@ -831,49 +833,28 @@ async def test_entity_discovery(hass, mock_openzwave):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
 
-    node = MockNode()
-    mock_schema = {
-        const.DISC_COMPONENT: "mock_component",
-        const.DISC_VALUES: {
-            const.DISC_PRIMARY: {const.DISC_COMMAND_CLASS: ["mock_primary_class"]},
-            "secondary": {const.DISC_COMMAND_CLASS: ["mock_secondary_class"]},
-            "optional": {
-                const.DISC_COMMAND_CLASS: ["mock_optional_class"],
-                const.DISC_OPTIONAL: True,
-            },
-        },
-    }
-    primary = MockValue(command_class="mock_primary_class", node=node, value_id=1000)
-    secondary = MockValue(command_class="mock_secondary_class", node=node)
-    duplicate_secondary = MockValue(command_class="mock_secondary_class", node=node)
-    optional = MockValue(command_class="mock_optional_class", node=node)
-    no_match_value = MockValue(command_class="mock_bad_class", node=node)
+    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
-
-    mock_platform = MagicMock()
-    mock_device = MagicMock()
-    mock_device.name = "test_device"
-    mock_platform.get_device.return_value = mock_device
 
     with patch.object(zwave, "discovery") as discovery:
         discovery.async_load_platform = AsyncMock(return_value=None)
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
-            primary_value=primary,
+            primary_value=value_class.primary,
             zwave_config=zwave_config,
             device_config=device_config,
             registry=registry,
         )
         assert not discovery.async_load_platform.called
 
-    assert values.primary is primary
+    assert values.primary is value_class.primary
     assert len(list(values)) == 3
     assert sorted(list(values), key=lambda a: id(a)) == sorted(
-        [primary, None, None], key=lambda a: id(a)
+        [value_class.primary, None, None], key=lambda a: id(a)
     )
 
     with patch.object(zwave, "discovery") as discovery, patch.object(
@@ -881,7 +862,7 @@ async def test_entity_discovery(hass, mock_openzwave):
     ) as import_module:
         discovery.async_load_platform = AsyncMock(return_value=None)
         import_module.return_value = mock_platform
-        values.check_value(secondary)
+        values.check_value(value_class.secondary)
         await hass.async_block_till_done()
 
         assert discovery.async_load_platform.called
@@ -891,29 +872,30 @@ async def test_entity_discovery(hass, mock_openzwave):
         assert args[0] == hass
         assert args[1] == "mock_component"
         assert args[2] == "zwave"
-        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_platform.get_device().unique_id}
         assert args[4] == zwave_config
 
-    assert values.secondary is secondary
+    assert values.secondary is value_class.secondary
     assert len(list(values)) == 3
     assert sorted(list(values), key=lambda a: id(a)) == sorted(
-        [primary, secondary, None], key=lambda a: id(a)
+        [value_class.primary, value_class.secondary, None], key=lambda a: id(a)
     )
 
     with patch.object(zwave, "discovery") as discovery:
         discovery.async_load_platform = AsyncMock(return_value=None)
 
-        values.check_value(optional)
-        values.check_value(duplicate_secondary)
-        values.check_value(no_match_value)
+        values.check_value(value_class.optional)
+        values.check_value(value_class.duplicate_secondary)
+        values.check_value(value_class.no_match_value)
         await hass.async_block_till_done()
 
         assert not discovery.async_load_platform.called
 
-    assert values.optional is optional
+    assert values.optional is value_class.optional
     assert len(list(values)) == 3
     assert sorted(list(values), key=lambda a: id(a)) == sorted(
-        [primary, secondary, optional], key=lambda a: id(a)
+        [value_class.primary, value_class.secondary, value_class.optional],
+        key=lambda a: id(a),
     )
 
     assert values._entity.value_added.called
@@ -922,8 +904,10 @@ async def test_entity_discovery(hass, mock_openzwave):
     assert len(values._entity.value_changed.mock_calls) == 1
 
 
-async def test_entity_existing_values(hass, mock_openzwave):
+async def test_entity_existing_values(hass, mock_platform, mock_values, mock_openzwave):
     """Test the loading of already discovered values."""
+    (node, value_class, mock_schema) = mock_values
+
     registry = mock_registry(hass)
 
     mock_receivers = []
@@ -936,36 +920,15 @@ async def test_entity_existing_values(hass, mock_openzwave):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
 
-    node = MockNode()
-    mock_schema = {
-        const.DISC_COMPONENT: "mock_component",
-        const.DISC_VALUES: {
-            const.DISC_PRIMARY: {const.DISC_COMMAND_CLASS: ["mock_primary_class"]},
-            "secondary": {const.DISC_COMMAND_CLASS: ["mock_secondary_class"]},
-            "optional": {
-                const.DISC_COMMAND_CLASS: ["mock_optional_class"],
-                const.DISC_OPTIONAL: True,
-            },
-        },
-    }
-    primary = MockValue(command_class="mock_primary_class", node=node, value_id=1000)
-    secondary = MockValue(command_class="mock_secondary_class", node=node)
-    optional = MockValue(command_class="mock_optional_class", node=node)
-    no_match_value = MockValue(command_class="mock_bad_class", node=node)
-
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
 
-    mock_platform = MagicMock()
-    mock_device = MagicMock()
-    mock_device.name = "test_device"
-    mock_platform.get_device.return_value = mock_device
     node.values = {
-        primary.value_id: primary,
-        secondary.value_id: secondary,
-        optional.value_id: optional,
-        no_match_value.value_id: no_match_value,
+        value_class.primary.value_id: value_class.primary,
+        value_class.secondary.value_id: value_class.secondary,
+        value_class.optional.value_id: value_class.optional,
+        value_class.no_match_value.value_id: value_class.no_match_value,
     }
 
     with patch.object(zwave, "discovery") as discovery, patch.object(
@@ -976,7 +939,7 @@ async def test_entity_existing_values(hass, mock_openzwave):
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
-            primary_value=primary,
+            primary_value=value_class.primary,
             zwave_config=zwave_config,
             device_config=device_config,
             registry=registry,
@@ -989,16 +952,17 @@ async def test_entity_existing_values(hass, mock_openzwave):
         assert args[0] == hass
         assert args[1] == "mock_component"
         assert args[2] == "zwave"
-        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_platform.get_device().unique_id}
         assert args[4] == zwave_config
-        assert not primary.enable_poll.called
+        assert not value_class.primary.enable_poll.called
 
-    assert values.primary is primary
-    assert values.secondary is secondary
-    assert values.optional is optional
+    assert values.primary is value_class.primary
+    assert values.secondary is value_class.secondary
+    assert values.optional is value_class.optional
     assert len(list(values)) == 3
     assert sorted(list(values), key=lambda a: id(a)) == sorted(
-        [primary, secondary, optional], key=lambda a: id(a)
+        [value_class.primary, value_class.secondary, value_class.optional],
+        key=lambda a: id(a),
     )
 
 
