@@ -649,7 +649,6 @@ class EventBus:
             return
 
         for func in listeners:
-            _LOGGER.debug("Bus:Handling %s -> %s", event, func)
             self._hass.async_add_job(func, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
