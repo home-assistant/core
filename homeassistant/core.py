@@ -781,22 +781,22 @@ class EventBus:
         job: Optional[HassJob] = None
 
         @callback
-        def onetime_listener(event: Event) -> None:
+        def _onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
             nonlocal job
-            if hasattr(onetime_listener, "run"):
+            if hasattr(_onetime_listener, "run"):
                 return
             # Set variable so that we will never run twice.
             # Because the event bus loop might have async_fire queued multiple
             # times, its possible this listener may already be lined up
             # multiple times as well.
             # This will make sure the second time it does nothing.
-            setattr(onetime_listener, "run", True)
+            setattr(_onetime_listener, "run", True)
             assert job is not None
             self._async_remove_listener(event_type, job)
             self._hass.async_run_job(listener, event)
 
-        job = HassJob(onetime_listener)
+        job = HassJob(_onetime_listener)
 
         return self._async_listen_job(event_type, job)
 
