@@ -18,8 +18,6 @@ from .coordinator import TahomaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_EXECUTE_COMMAND = "execute_command"
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
