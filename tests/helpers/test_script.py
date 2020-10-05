@@ -1873,6 +1873,13 @@ async def test_validate_action_config(hass):
     for key in cv.ACTION_TYPE_SCHEMAS:
         assert key in configs, f"No validate config test found for {key}"
 
+    # Verify we raise if we don't know the action type
+    with patch(
+        "homeassistant.helpers.config_validation.determine_script_action",
+        return_value="non-existing",
+    ), pytest.raises(ValueError):
+        await script.async_validate_action_config(hass, {})
+
     for action_type, config in configs.items():
         assert cv.determine_script_action(config) == action_type
         try:
