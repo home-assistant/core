@@ -24,7 +24,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -39,6 +42,7 @@ from .const import (
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
+    SIGNAL_UPDATE_ACTIVITY,
     UNIQUE_ID,
 )
 from .util import (
@@ -311,6 +315,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._state = bool(activity_id != -1)
         self._available = True
         self.async_write_ha_state()
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_ACTIVITY)
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
