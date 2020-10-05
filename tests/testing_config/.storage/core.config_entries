@@ -1,0 +1,25 @@
+{
+    "version": 1,
+    "key": "core.config_entries",
+    "data": {
+        "entries": [
+            {
+                "entry_id": "ac6d1415073311eb8643a3f5e5721192",
+                "version": 1,
+                "domain": "zwave",
+                "title": "Z-Wave (import from configuration.yaml)",
+                "data": {
+                    "usb_path": "/zwaveusbstick",
+                    "network_key": null
+                },
+                "options": {},
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "source": "import",
+                "connection_class": "local_push",
+                "unique_id": null
+            }
+        ]
+    }
+}
