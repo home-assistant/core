@@ -242,7 +242,7 @@ async def async_unload_entry(hass, config_entry):
         DATA_UPCLOUD
     ].coordinators.pop(config_entry.data[CONF_USERNAME])
     while coordinator.unsub_handlers:
-        coordinator.unsub_handlers.pop(0)()
+        coordinator.unsub_handlers.pop()()
 
     return True
 
