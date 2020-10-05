@@ -1,0 +1,43 @@
+{
+  "title": "Daily Schedule",
+  "config": {
+    "error": {
+      "invalid_schedule": "Invalid time periods in schedule. Enter the last period again."
+    },
+    "step": {
+      "user": {
+        "title": "Add Daily Schedule Sensor",
+        "description": "Create a binary sensor which turns on according to a daily schedule.",
+        "data": {
+          "name": "Name",
+          "add_period": "Add a time period"
+        }
+      },
+      "period": {
+        "title": "Add Time Period",
+        "description": "Set a time period when the sensor will be on.",
+        "data": {
+          "start": "Start time",
+          "end": "End time",
+          "add_period": "Add an additional time period"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_schedule": "Invalid time periods in schedule. Enter the new period again."
+    },
+    "step": {
+      "init": {
+        "title": "Edit Daily Schedule Sensor",
+        "description": "Modify the time periods in the daily schedule.",
+        "data": {
+          "add_period": "Add a time period",
+          "start": "Start time",
+          "end": "End time"
+        }
+      }
+    }
+  }
+}

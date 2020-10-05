@@ -440,6 +440,7 @@ FLOWS = {
         "zwave_me"
     ],
     "helper": [
+        "daily_schedule",
         "derivative",
         "group",
         "integration",

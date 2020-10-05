@@ -214,6 +214,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
+/homeassistant/components/daily_schedule/ @amitfin
+/tests/components/daily_schedule/ @amitfin
 /homeassistant/components/darksky/ @fabaff
 /tests/components/darksky/ @fabaff
 /homeassistant/components/debugpy/ @frenck
