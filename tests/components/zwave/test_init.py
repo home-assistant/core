@@ -922,6 +922,86 @@ async def test_entity_discovery(hass, mock_openzwave):
     assert len(values._entity.value_changed.mock_calls) == 1
 
 
+async def test_entity_existing_values(hass, mock_openzwave):
+    """Test the loading of already discovered values."""
+    registry = mock_registry(hass)
+
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        await async_setup_component(hass, "zwave", {"zwave": {}})
+        await hass.async_block_till_done()
+
+    node = MockNode()
+    mock_schema = {
+        const.DISC_COMPONENT: "mock_component",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {const.DISC_COMMAND_CLASS: ["mock_primary_class"]},
+            "secondary": {const.DISC_COMMAND_CLASS: ["mock_secondary_class"]},
+            "optional": {
+                const.DISC_COMMAND_CLASS: ["mock_optional_class"],
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    }
+    primary = MockValue(command_class="mock_primary_class", node=node, value_id=1000)
+    secondary = MockValue(command_class="mock_secondary_class", node=node)
+    optional = MockValue(command_class="mock_optional_class", node=node)
+    no_match_value = MockValue(command_class="mock_bad_class", node=node)
+
+    entity_id = "mock_component.mock_node_mock_value"
+    zwave_config = {"zwave": {}}
+    device_config = {entity_id: {}}
+
+    mock_platform = MagicMock()
+    mock_device = MagicMock()
+    mock_device.name = "test_device"
+    mock_platform.get_device.return_value = mock_device
+    node.values = {
+        primary.value_id: primary,
+        secondary.value_id: secondary,
+        optional.value_id: optional,
+        no_match_value.value_id: no_match_value,
+    }
+
+    with patch.object(zwave, "discovery") as discovery, patch.object(
+        zwave, "import_module"
+    ) as import_module:
+        discovery.async_load_platform = AsyncMock(return_value=None)
+        import_module.return_value = mock_platform
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=hass,
+            schema=mock_schema,
+            primary_value=primary,
+            zwave_config=zwave_config,
+            device_config=device_config,
+            registry=registry,
+        )
+        await hass.async_block_till_done()
+
+        assert discovery.async_load_platform.called
+        assert len(discovery.async_load_platform.mock_calls) == 1
+        args = discovery.async_load_platform.mock_calls[0][1]
+        assert args[0] == hass
+        assert args[1] == "mock_component"
+        assert args[2] == "zwave"
+        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
+        assert args[4] == zwave_config
+        assert not primary.enable_poll.called
+
+    assert values.primary is primary
+    assert values.secondary is secondary
+    assert values.optional is optional
+    assert len(list(values)) == 3
+    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+        [primary, secondary, optional], key=lambda a: id(a)
+    )
+
+
 class TestZWaveDeviceEntityValues(unittest.TestCase):
     """Tests for the ZWaveDeviceEntityValues helper."""
 
@@ -969,51 +1049,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
-
-    @patch.object(zwave, "import_module")
-    @patch.object(zwave, "discovery")
-    def test_entity_existing_values(self, discovery, import_module):
-        """Test the loading of already discovered values."""
-        discovery.async_load_platform = AsyncMock(return_value=None)
-        mock_platform = MagicMock()
-        import_module.return_value = mock_platform
-        mock_device = MagicMock()
-        mock_device.name = "test_device"
-        mock_platform.get_device.return_value = mock_device
-        self.node.values = {
-            self.primary.value_id: self.primary,
-            self.secondary.value_id: self.secondary,
-            self.optional.value_id: self.optional,
-            self.no_match_value.value_id: self.no_match_value,
-        }
-
-        values = zwave.ZWaveDeviceEntityValues(
-            hass=self.hass,
-            schema=self.mock_schema,
-            primary_value=self.primary,
-            zwave_config=self.zwave_config,
-            device_config=self.device_config,
-            registry=self.registry,
-        )
-        self.hass.block_till_done()
-
-        assert values.primary is self.primary
-        assert values.secondary is self.secondary
-        assert values.optional is self.optional
-        assert len(list(values)) == 3
-        assert sorted(list(values), key=lambda a: id(a)) == sorted(
-            [self.primary, self.secondary, self.optional], key=lambda a: id(a)
-        )
-
-        assert discovery.async_load_platform.called
-        assert len(discovery.async_load_platform.mock_calls) == 1
-        args = discovery.async_load_platform.mock_calls[0][1]
-        assert args[0] == self.hass
-        assert args[1] == "mock_component"
-        assert args[2] == "zwave"
-        assert args[3] == {const.DISCOVERY_DEVICE: mock_device.unique_id}
-        assert args[4] == self.zwave_config
-        assert not self.primary.enable_poll.called
 
     @patch.object(zwave, "import_module")
     @patch.object(zwave, "discovery")
