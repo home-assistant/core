@@ -139,11 +139,10 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         )
 
         if domain_config[CONF_SCAN_INTERVAL]:
-            hass.data.setdefault(
-                DATA_UPCLOUD, UpCloudHassData()
-            ).scan_interval_migrations[domain_config[CONF_USERNAME]] = domain_config[
-                CONF_SCAN_INTERVAL
-            ]
+            hass.data[DATA_UPCLOUD] = UpCloudHassData()
+            hass.data[DATA_UPCLOUD].scan_interval_migrations[
+                domain_config[CONF_USERNAME]
+            ] = domain_config[CONF_SCAN_INTERVAL]
 
     return True
 
