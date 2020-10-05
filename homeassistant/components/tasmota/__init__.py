@@ -1,4 +1,4 @@
-"""Support for MQTT message handling."""
+"""The Tasmota integration."""
 import logging
 
 from hatasmota.const import (

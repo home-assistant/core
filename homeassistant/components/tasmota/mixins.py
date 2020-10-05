@@ -44,9 +44,6 @@ class TasmotaAvailability(TasmotaEntity):
             subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
 
-    async def availability_discovery_update(self, config: dict) -> None:
-        """Handle updated discovery message."""
-
     @callback
     def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
