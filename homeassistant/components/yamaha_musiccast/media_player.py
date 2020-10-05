@@ -138,11 +138,6 @@ class YamahaDevice(MediaPlayerEntity):
         return self.power
 
     @property
-    def should_poll(self):
-        """Push an update after each command."""
-        return True
-
-    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self.mute

@@ -47,6 +47,6 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
             )
         except NotionError:
-            return await self._show_form({"base": "invalid_credentials"})
+            return await self._show_form({"base": "invalid_auth"})
 
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)

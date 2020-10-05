@@ -73,11 +73,6 @@ class TwitchSensor(Entity):
         self._statistics = None
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._channel.display_name

@@ -263,7 +263,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.8
+apprise==0.8.9
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -1587,6 +1587,9 @@ pypjlink2==1.2.1
 
 # homeassistant.components.point
 pypoint==1.1.2
+
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1

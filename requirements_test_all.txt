@@ -158,7 +158,7 @@ androidtv[async]==0.0.50
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.8
+apprise==0.8.9
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -774,6 +774,9 @@ pyowm==2.10.0
 # homeassistant.components.point
 pypoint==1.1.2
 
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1
 
@@ -937,6 +940,9 @@ simplehound==0.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==9.4.1
+
+# homeassistant.components.slack
+slackclient==2.5.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

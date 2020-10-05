@@ -60,12 +60,12 @@ class Events(Base):  # type: ignore
     )
 
     @staticmethod
-    def from_event(event):
+    def from_event(event, event_data=None):
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=json.dumps(event.data, cls=JSONEncoder),
-            origin=str(event.origin),
+            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,

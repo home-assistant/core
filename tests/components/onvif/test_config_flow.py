@@ -531,7 +531,7 @@ async def test_flow_import_onvif_auth_error(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"]["base"] == "connection_failed"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_option_flow(hass):
