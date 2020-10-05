@@ -12,11 +12,7 @@ from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_DOMAINS,
-    CONF_ENTITIES,
-    CONF_EXCLUDE,
     CONF_HOST,
-    CONF_INCLUDE,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_SSL,
@@ -29,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
-    generate_filter,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -155,11 +150,6 @@ def setup(hass, config):
         string_keys.update(strings.keys())
         return metrics
 
-    def shutdown(event):
-        """Shut down the thread."""
-        instance.queue.put(None)
-        instance.join()
-
     if publish_states_host:
         zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
         instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
@@ -185,9 +175,15 @@ class ZabbixThread(threading.Thread):
         self.string_keys = set()
 
     def setup(self, hass):
+        """Setup the thread and start it"""
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown)
         self.start()
+
+    def _shutdown(self, event):
+        """Shut down the thread."""
+        self.queue.put(None)
+        self.join()
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Zabbix."""
