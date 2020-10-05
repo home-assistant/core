@@ -384,7 +384,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         """Return the attributes of the switch."""
         if not self.is_on:
             return {key: None for key in self._settings}
-        return self._settings
+        manually_controlled = [
+            light
+            for light in self._lights
+            if self.turn_on_off_listener.manually_controlled.get(light)
+        ]
+        return dict(self._settings, manually_controlled=manually_controlled)
 
     async def async_turn_on(  # pylint: disable=arguments-differ
         self, adapt_lights: bool = True
