@@ -15,8 +15,6 @@ from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
-    CONF_INSTANCE,
-    CONF_INSTANCE_NAME,
     DEFAULT_ORIGIN,
     DOMAIN,
 )
@@ -65,14 +63,7 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |                   |
 #           v                   |
 #     +----------------+        |
-#     |Step: Instance  |        |
-#     |                |<-------+
-#     |Input: instance |
-#     +----------------+
-#           |
-#           v
-#     +----------------+
-#     |Step: Confirm   |
+#     | Step: Confirm  |<-------+
 #     +----------------+
 #           |
 #           v
@@ -93,7 +84,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data: Optional[Dict[str, Any]] = None
         self._request_token_task = None
         self._auth_id = None
-        self._instances = {}
 
     async def _create_and_connect_hyperion_client(
         self, raw=False
@@ -105,10 +95,38 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),
-            instance=self._data.get(CONF_INSTANCE, const.DEFAULT_INSTANCE),
         )
         if await hc.async_client_connect(raw=raw):
             return hc
+
+    async def async_step_zeroconf(
+        self, discovery_info: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by zeroconf."""
+
+        # Sample data provided by Zeroconf: {
+        #   'host': '192.168.0.1',
+        #   'port': 19444,
+        #   'hostname': 'hyperion.local.',
+        #   'type': '_hyperiond-json._tcp.local.',
+        #   'name': 'hyperion:19444._hyperiond-json._tcp.local.',
+        #   'properties': {
+        #     '_raw': {
+        #       'id': b'f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #       'version': b'2.0.0-alpha.8'},
+        #     'id': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #     'version': '2.0.0-alpha.8'}}
+        data = {}
+
+        # Intentionally uses the IP address field, as ".local" cannot
+        # be resolved by Home Assistant Core in Docker.
+        # See related: https://github.com/home-assistant/core/issues/38537
+        data[CONF_HOST] = discovery_info["host"]
+        data[CONF_PORT] = discovery_info["port"]
+        # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
+        # data[const.KEY_ID] = user_input["properties"]["id"]
+
+        return await self.async_step_user(user_input=data)
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
@@ -118,8 +136,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
         self._data = user_input
 
-        # First connect without attempting to login or select instance,
-        # and determine if authentication is required.
+        # First connect without attempting to login and determine if
+        # authentication is required.
         hc = await self._create_and_connect_hyperion_client(raw=True)
         if not hc:
             return self._show_setup_form({CONF_BASE: "connection_error"})
@@ -133,7 +151,14 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED) is True:
             # Auth is required, show the form to get the token.
             return self._show_auth_form()
-        return await self._show_instance_form_if_necessary()
+
+        # Test a full connection with state load.
+        hc = await self._create_and_connect_hyperion_client()
+        if not hc:
+            return self._show_setup_form({CONF_BASE: "connection_error"})
+        await hc.async_client_disconnect()
+
+        return await self._show_confirm_form()
 
     async def _cancel_request_token_task(self) -> None:
         """Cancel the request token task if it exists."""
@@ -193,7 +218,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not hc:
             return self._show_auth_form({CONF_BASE: "auth_error"})
         await hc.async_client_disconnect()
-        return await self._show_instance_form_if_necessary()
+        return await self._show_confirm_form()
 
     async def async_step_create_token(
         self, _: Optional[ConfigType] = None
@@ -235,7 +260,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not hc:
             return self._show_auth_form({CONF_BASE: "auth_new_token_not_work_error"})
         await hc.async_client_disconnect()
-        return await self._show_instance_form_if_necessary()
+        return await self._show_confirm_form()
 
     async def async_step_create_token_fail(
         self, _: Optional[ConfigType] = None
@@ -243,67 +268,17 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Show an error on the auth form."""
         return self._show_auth_form({CONF_BASE: "auth_new_token_not_granted_error"})
 
-    async def async_step_instance(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Show the instance form if necessary."""
-        # Zeroconf flows will run this step without user info, fetch the
-        # required input via the instance dialog.
-        if user_input is None:
-            return await self._show_instance_form_if_necessary()
-
-        self._data[CONF_INSTANCE] = self._instances[user_input.get(CONF_INSTANCE)]
-
-        # Test a full connection.
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
-            return await self._show_instance_form_if_necessary(
-                {CONF_BASE: "instance_error"}
-            )
-        hyperion_id = hc.id
-        await hc.async_client_disconnect()
-
-        await self.async_set_unique_id(hyperion_id)
-        self._abort_if_unique_id_configured()
-
-        return self._show_confirm_form()
-
-    async def async_step_zeroconf(
-        self, discovery_info: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by zeroconf."""
-
-        # Sample data provided by Zeroconf: {
-        #   'host': '192.168.0.1',
-        #   'port': 19444,
-        #   'hostname': 'hyperion.local.',
-        #   'type': '_hyperiond-json._tcp.local.',
-        #   'name': 'hyperion:19444._hyperiond-json._tcp.local.',
-        #   'properties': {
-        #     '_raw': {
-        #       'id': b'f9aab089-f85a-55cf-b7c1-222a72faebe9',
-        #       'version': b'2.0.0-alpha.8'},
-        #     'id': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
-        #     'version': '2.0.0-alpha.8'}}
-        data = {}
-
-        # Intentionally uses the IP address field, as ".local" cannot
-        # be resolved by Home Assistant Core in Docker.
-        # See related: https://github.com/home-assistant/core/issues/38537
-        data[CONF_HOST] = discovery_info["host"]
-        data[CONF_PORT] = discovery_info["port"]
-        # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
-        # data[const.KEY_ID] = user_input["properties"]["id"]
-
-        return await self.async_step_user(user_input=data)
-
     async def async_step_confirm(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Get final confirmation before entry creation."""
         if user_input is None:
             return self._show_confirm_form()
-        return self.async_create_entry(title=self.context["unique_id"], data=self._data)
+
+        # TODO: Consider the implications of this title.
+        return self.async_create_entry(
+            title="Hyperion %s" % self.context["unique_id"], data=self._data
+        )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
@@ -331,56 +306,25 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _show_instance_form_if_necessary(
-        self, errors: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Show the instance form to the user."""
+    async def _show_confirm_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+        """Show the confirmation form to the user."""
         hc = await self._create_and_connect_hyperion_client()
         if not hc:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-        for instance in hc.instances:
-            if (
-                instance.get(const.KEY_RUNNING, False)
-                and const.KEY_FRIENDLY_NAME in instance
-                and const.KEY_INSTANCE in instance
-            ):
-                self._instances[instance.get(const.KEY_FRIENDLY_NAME)] = instance.get(
-                    const.KEY_INSTANCE
-                )
+        hyperion_id = await hc.async_id()
         await hc.async_client_disconnect()
-        if not self._instances:
-            return self.async_abort(reason="no_running_instances")
-        elif len(self._instances) > 1:
-            return self.async_show_form(
-                step_id="instance",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_INSTANCE): vol.In(
-                            list(self._instances.keys())
-                        ),
-                    }
-                ),
-            )
-        return await self.async_step_instance(
-            user_input={CONF_INSTANCE: next(iter(self._instances.keys()))}
-        )
 
-    def _show_confirm_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the confirmation form to the user."""
-        instance_name = None
-        for instance in self._instances:
-            if self._instances[instance] == self._data[CONF_INSTANCE]:
-                instance_name = instance
-                break
-        assert instance_name is not None
+        if not hyperion_id:
+            return self.async_abort(reason="no_id")
+
+        await self.async_set_unique_id(hyperion_id)
+        self._abort_if_unique_id_configured()
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
                 CONF_HOST: self._data[CONF_HOST],
                 CONF_PORT: self._data[CONF_PORT],
-                CONF_INSTANCE: self._data[CONF_INSTANCE],
-                CONF_INSTANCE_NAME: instance_name,
                 CONF_ID: self.unique_id,
             },
         )

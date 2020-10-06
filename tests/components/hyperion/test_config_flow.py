@@ -10,12 +10,10 @@ from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
-    CONF_INSTANCE,
-    CONF_INSTANCE_NAME,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 
 from . import (
     TEST_HOST,
@@ -71,13 +69,6 @@ TEST_ZEROCONF_SERVICE_INFO = {
         "version": "2.0.0-alpha.8",
     },
 }
-
-
-TEST_MULTIPLE_INSTANCES = [
-    {"friendly_name": "Test instance 1", "instance": 0, "running": True},
-    {"friendly_name": "Test instance 2", "instance": 1, "running": False},
-    {"friendly_name": "Test instance 3", "instance": 2, "running": True},
-]
 
 
 async def _create_mock_entry(hass):
@@ -178,22 +169,13 @@ async def test_user_noauth_flow_success(hass):
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["description_placeholders"] == {
-            **TEST_HOST_PORT,
-            CONF_INSTANCE: const.DEFAULT_INSTANCE,
-            CONF_INSTANCE_NAME: "Test instance 1",
-            CONF_ID: TEST_ID,
-        }
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == client.id
+    assert result["title"] == "Hyperion %s" % TEST_ID
     assert result["data"] == {
         **TEST_HOST_PORT,
-        CONF_INSTANCE: const.DEFAULT_INSTANCE,
     }
 
 
@@ -249,11 +231,10 @@ async def test_auth_static_token(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == client.id
+    assert result["title"] == "Hyperion %s" % TEST_ID
     assert result["data"] == {
         **TEST_HOST_PORT,
-        **{CONF_TOKEN: TEST_TOKEN},
-        **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+        CONF_TOKEN: TEST_TOKEN,
     }
 
 
@@ -382,57 +363,11 @@ async def test_auth_create_token_success(hass):
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["handler"] == DOMAIN
-        assert result["title"] == client.id
+        assert result["title"] == "Hyperion %s" % TEST_ID
         assert result["data"] == {
             **TEST_HOST_PORT,
-            **{CONF_TOKEN: TEST_TOKEN},
-            **{CONF_INSTANCE: const.DEFAULT_INSTANCE},
+            CONF_TOKEN: TEST_TOKEN,
         }
-
-
-async def test_noauth_multiple_instances_success(hass):
-    """Check a full flow without auth and with multiple instances."""
-    result = await _init_flow(hass)
-
-    client = create_mock_client()
-    client.instances = TEST_MULTIPLE_INSTANCES
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "instance"
-    assert result["data_schema"].schema[CONF_INSTANCE].container == [
-        "Test instance 1",
-        "Test instance 3",
-    ]
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(
-            hass, result, user_input={CONF_INSTANCE: "Test instance 3"}
-        )
-
-    # Accept the confirmation.
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == client.id
-    assert result["data"] == {**TEST_HOST_PORT, **{CONF_INSTANCE: 2}}
-
-
-async def test_noauth_no_instances_abort(hass):
-    """Check a flow with no running instances aborts."""
-    result = await _init_flow(hass)
-
-    client = create_mock_client()
-    client.instances = []
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_running_instances"
 
 
 async def test_zeroconf_success(hass):
@@ -451,48 +386,8 @@ async def test_zeroconf_success(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == client.id
+    assert result["title"] == "Hyperion %s" % TEST_ID
     assert result["data"] == {
         CONF_HOST: TEST_IP_ADDRESS,
         CONF_PORT: TEST_PORT,
-        CONF_INSTANCE: const.DEFAULT_INSTANCE,
-    }
-
-
-async def test_zeroconf_multiple_instances_success(hass):
-    """Check a full flow without auth."""
-
-    client = create_mock_client()
-    client.instances = TEST_MULTIPLE_INSTANCES
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _init_flow(
-            hass, source=SOURCE_ZEROCONF, data=TEST_ZEROCONF_SERVICE_INFO
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "instance"
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=None)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "instance"
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(
-            hass, result, user_input={CONF_INSTANCE: "Test instance 3"}
-        )
-
-    # Accept the confirmation.
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == client.id
-    assert result["data"] == {
-        CONF_HOST: TEST_IP_ADDRESS,
-        CONF_PORT: TEST_PORT,
-        CONF_INSTANCE: 2,
     }

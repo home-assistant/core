@@ -111,17 +111,21 @@ async def async_setup_entry_from_data(hass, data, async_add_entities):
 
     if not await hyperion_client.async_client_connect():
         raise PlatformNotReady
+    unique_id = await hyperion_client.async_id()
+    if not unique_id:
+        raise PlatformNotReady
 
     async_add_entities(
-        [Hyperion(data[CONF_NAME], data[CONF_PRIORITY], hyperion_client)]
+        [Hyperion(unique_id, data[CONF_NAME], data[CONF_PRIORITY], hyperion_client)]
     )
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, priority, hyperion_client):
+    def __init__(self, unique_id, name, priority, hyperion_client):
         """Initialize the light."""
+        self._unique_id = unique_id
         self._name = name
         self._priority = priority
         self._client = hyperion_client
@@ -189,7 +193,7 @@ class Hyperion(LightEntity):
     @property
     def unique_id(self):
         """Return a unique id for this instance."""
-        return self._client.id
+        return self._unique_id
 
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""

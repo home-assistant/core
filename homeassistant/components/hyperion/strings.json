@@ -26,10 +26,6 @@
       "confirm": {
         "description": "Do you want to add this Hyperion Ambilight to Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**Instance:** {instance_name} ({instance})\n**ID**: {id}",
         "title": "Confirm addition of Hyperion Ambilight device"
-      },
-      "instance": {
-        "description": "Select a Hyperion instance",
-        "title": "Hyperion instance"
       }
     },
     "error": {
@@ -38,12 +34,11 @@
       "auth_error": "Failed to authenticate using token",
       "auth_new_token_not_granted_error": "Newly created token was not approved on Hyperion UI",
       "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
-      "create_token_error": "Failed to create new token",
-      "instance_error": "Could not load selected instance"
+      "create_token_error": "Failed to create new token"
     },
     "abort": {
       "already_configured": "The Hyperion Ambilight instance is already configured",
-      "no_running_instances": "The Hyperion Ambilight instance has no running instances"
+      "no_id": "The Hyperion Ambilight instance did not report its id"
     }
   }
 }
