@@ -1,5 +1,6 @@
 """Support for MQTT discovery."""
 import asyncio
+import functools
 import json
 import logging
 import re
@@ -46,6 +47,7 @@ ALREADY_DISCOVERED = "mqtt_discovered_components"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
+INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
 MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 LAST_DISCOVERY = "mqtt_last_discovery"
@@ -187,19 +189,34 @@ async def async_start(
     hass.data[LAST_DISCOVERY] = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
+    hass.data[INTEGRATION_UNSUBSCRIBE] = {}
+
     for (integration, topics) in mqtt_integrations.items():
 
-        async def async_integration_message_received(msg):
+        async def async_integration_message_received(integration, msg):
             """Process the received message."""
-            hass.add_job(
-                hass.config_entries.flow.async_init(
-                    integration, context={"source": DOMAIN}, data=msg
-                )
+            result = await hass.config_entries.flow.async_init(
+                integration, context={"source": DOMAIN}, data=msg
             )
+            if (
+                result
+                and result["type"] == "abort"
+                and result["reason"]
+                in ["already_configured", "single_instance_allowed"]
+            ):
+                key = f"{integration}_{msg.subscribed_topic}"
+                unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
+                if unsub is None:
+                    return
+                unsub()
 
         for topic in topics:
-            await mqtt.async_subscribe(
-                hass, topic, async_integration_message_received, 0
+            key = f"{integration}_{topic}"
+            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await mqtt.async_subscribe(
+                hass,
+                topic,
+                functools.partial(async_integration_message_received, integration),
+                0,
             )
 
     return True
@@ -210,3 +227,7 @@ async def async_stop(hass: HomeAssistantType) -> bool:
     if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
         hass.data[DISCOVERY_UNSUBSCRIBE]()
         hass.data[DISCOVERY_UNSUBSCRIBE] = None
+    if INTEGRATION_UNSUBSCRIBE in hass.data:
+        for key, unsub in hass.data[INTEGRATION_UNSUBSCRIBE].items():
+            unsub()
+            hass.data[INTEGRATION_UNSUBSCRIBE].pop(key)
