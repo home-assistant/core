@@ -9,7 +9,7 @@
           "encryption_key": "Encryption Key",
           "ping_interval": "Ping Interval (min)",
           "zones": "Number of zones for the account",
-          "additional_account": "Add more accounts?"
+          "additional_account": "Additional accounts"
         },
         "title": "Create a connection for SIA based alarm systems."
       },
@@ -31,10 +31,10 @@
       "invalid_account_length": "The account is not the right length, it has to be between 3 and 16 characters.",
       "invalid_ping": "The ping interval needs to be between 1 and 1440 minutes.",
       "invalid_zones": "There needs to be at least 1 zone.",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }
