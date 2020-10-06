@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.lock as lock
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.setup import async_setup_component
@@ -48,7 +49,8 @@ async def test_locks(hass):
     """Test that all supported lock entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(LOCKS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
@@ -96,6 +98,6 @@ async def test_locks(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
