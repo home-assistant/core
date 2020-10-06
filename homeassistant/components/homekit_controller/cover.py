@@ -120,10 +120,9 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            return {"obstruction-detected": obstruction_detected}
-
-        return {}
+        if not obstruction_detected:
+            return {}
+        return {"obstruction-detected": obstruction_detected}
 
 
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
@@ -250,6 +249,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            return {"obstruction-detected": obstruction_detected}
-        return {}
+        if not obstruction_detected:
+            return {}
+        return {"obstruction-detected": obstruction_detected}

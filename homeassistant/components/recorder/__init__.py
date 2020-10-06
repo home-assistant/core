@@ -60,6 +60,10 @@ DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
 KEEPALIVE_TIME = 30
 
+# Controls how often we clean up
+# States and Events objects
+EXPIRE_AFTER_COMMITS = 120
+
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
 CONF_DB_MAX_RETRIES = "db_max_retries"
@@ -238,6 +242,7 @@ class Recorder(threading.Thread):
         self.exclude_t = exclude_t
 
         self._timechanges_seen = 0
+        self._commits_without_expire = 0
         self._keepalive_count = 0
         self._old_states = {}
         self._pending_expunge = []
@@ -490,6 +495,8 @@ class Recorder(threading.Thread):
             _LOGGER.exception("Error while creating new event session: %s", err)
 
     def _commit_event_session(self):
+        self._commits_without_expire += 1
+
         try:
             self.event_session.flush()
             for dbstate in self._pending_expunge:
@@ -502,6 +509,10 @@ class Recorder(threading.Thread):
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
             raise
+
+        if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
+            self._commits_without_expire = 0
+            self.event_session.expire_all()
 
     @callback
     def event_listener(self, event):
