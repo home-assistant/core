@@ -29,7 +29,7 @@ DOMAIN = "input_schedule"
 
 ATTR_START = "start"
 ATTR_END = "end"
-ATTR_STATUS = "status"
+ATTR_ON_PERIODS = "on_periods"
 
 SERVICE_SET_ON = "set_on"
 SERVICE_SET_OFF = "set_off"
@@ -157,13 +157,14 @@ class ScheduleStorageCollection(collection.StorageCollection):
 
 
 class InputSchedule(RestoreEntity):
-    """Representation of a slider."""
+    """Representation of a schedule."""
 
     def __init__(self, config: typing.Dict):
         """Initialize an input schedule."""
         self._config = config
         self._on_periods = []
         self.editable = True
+        self._event_unsub = None
 
     @classmethod
     def from_yaml(cls, config: typing.Dict) -> "InputSchedule":
@@ -174,8 +175,13 @@ class InputSchedule(RestoreEntity):
         return input_schedule
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
     def name(self):
-        """Return the name of the input slider."""
+        """Return the name of the input schedule."""
         return self._config.get(CONF_NAME)
 
     @property
@@ -185,15 +191,19 @@ class InputSchedule(RestoreEntity):
 
     @property
     def state(self):
-        """Return the list of on periods as a single string."""
-        return self._to_string()
+        """Return 'on' when we are in an on period."""
+        now = datetime.datetime.now().time()
+        for period in self._on_periods:
+            if _is_in_period(now, period):
+                return STATE_ON
+        return STATE_OFF
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,
-            ATTR_STATUS: self._status(),
+            ATTR_ON_PERIODS: self._on_periods_to_attribute(),
         }
 
     @property
@@ -205,30 +215,21 @@ class InputSchedule(RestoreEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.state:
-            self._from_string(state.state)
-            await self._schedule_update()
+        if state and state.attributes.get(ATTR_ON_PERIODS):
+            self._on_periods_from_attribute(state.attributes[ATTR_ON_PERIODS])
+        self._update_state()
 
-    def _to_string(self) -> str:
-        return ", ".join(
-            f"{period.start.isoformat()} - {period.end.isoformat()}"
+    def _on_periods_to_attribute(self):
+        return [
+            {ATTR_START: period.start.isoformat(), ATTR_END: period.end.isoformat()}
             for period in self._on_periods
-        )
+        ]
 
-    def _from_string(self, value) -> None:
-        self._on_periods = []
-        value = value.replace(" ", "")
-        for period in value.split(","):
-            start, end = period.split("-")
-            self._on_periods.append(Period(_read_time(start), _read_time(end)))
-
-    def _status(self):
-        """Return true if the current time is in an on period."""
-        now = datetime.datetime.now().time()
-        for period in self._on_periods:
-            if _is_in_period(now, period):
-                return STATE_ON
-        return STATE_OFF
+    def _on_periods_from_attribute(self, periods):
+        self._on_periods = [
+            Period(_read_time(period[ATTR_START]), _read_time(period[ATTR_END]))
+            for period in periods
+        ]
 
     async def async_set_on(self, start, end):
         """Add on period."""
@@ -254,8 +255,7 @@ class InputSchedule(RestoreEntity):
         on_periods.sort(key=lambda period: period.start)
 
         self._on_periods = on_periods
-        self.async_write_ha_state()
-        await self._schedule_update()
+        self._update_state()
 
     async def async_set_off(self, start, end):
         """Add off period (subtracting the on periods)."""
@@ -288,21 +288,26 @@ class InputSchedule(RestoreEntity):
         on_periods.sort(key=lambda period: period.start)
 
         self._on_periods = on_periods
-        self.async_write_ha_state()
-        await self._schedule_update()
+        self._update_state()
 
     async def async_reset(self):
         """Delete all on periods."""
         self._on_periods = []
-        self.async_write_ha_state()
-        await self._schedule_update()
+        self._update_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
-        self.async_write_ha_state()
+        self._update_state()
 
-    async def _schedule_update(self):
+    def _schedule_update(self):
+        if self._event_unsub:
+            self._event_unsub()
+            self._event_unsub = None
+
+        if not self._on_periods:
+            return
+
         now = datetime.datetime.now()
         time = now.time()
         midnight = datetime.time.fromisoformat("00:00:00")
@@ -319,9 +324,16 @@ class InputSchedule(RestoreEntity):
             next_change = datetime.datetime.combine(
                 datetime.date.today() + datetime.timedelta(days=1), midnight
             )
-        event.async_track_point_in_time(
-            self.hass, self.async_write_ha_state, next_change
+
+        self._event_unsub = event.async_track_point_in_time(
+            self.hass, self._update_state, next_change
         )
+
+    @callback
+    def _update_state(self, now=None):
+        """Update the state to reflect the current time."""
+        self._schedule_update()
+        self.async_write_ha_state()
 
 
 class Period:
