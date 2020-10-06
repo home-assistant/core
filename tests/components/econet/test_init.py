@@ -1,7 +1,7 @@
 """Tests for the Econet component."""
 
 from pyeconet import EcoNetApiInterface, EquipmentType
-from pyeconet.equipments.water_heater import WaterHeater, WaterHeaterOperationMode
+from pyeconet.equipment.water_heater import WaterHeater, WaterHeaterOperationMode
 from pyeconet.errors import InvalidCredentialsError
 import pytest
 

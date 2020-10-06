@@ -3,7 +3,7 @@ import logging
 from typing import Callable, Dict, List, Optional
 
 from pyeconet import EquipmentType
-from pyeconet.equipments.water_heater import WaterHeater, WaterHeaterOperationMode
+from pyeconet.equipment.water_heater import WaterHeater, WaterHeaterOperationMode
 import voluptuous as vol
 
 from homeassistant.components.water_heater import (
@@ -53,7 +53,7 @@ SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 ECONET_DATA = "econet"
 
 ECONET_STATE_TO_HA: Dict[WaterHeaterOperationMode, str] = {
-    WaterHeaterOperationMode.ENERGY_SAVER: STATE_ECO,
+    WaterHeaterOperationMode.ENERGY_SAVING: STATE_ECO,
     WaterHeaterOperationMode.GAS: STATE_GAS,
     WaterHeaterOperationMode.HIGH_DEMAND: STATE_HIGH_DEMAND,
     WaterHeaterOperationMode.OFF: STATE_OFF,
@@ -91,6 +91,7 @@ class EcoNetWaterHeater(WaterHeaterEntity):
     def __init__(self, water_heater: WaterHeater):
         """Initialize the water heater."""
         self.water_heater = water_heater
+        self._unique_id = f"rheem_econet_{self.water_heater.serial_number}"
         self.supported_modes = self.water_heater.modes
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
@@ -112,6 +113,11 @@ class EcoNetWaterHeater(WaterHeaterEntity):
     def _update_callback(self):
         """Update the state."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
