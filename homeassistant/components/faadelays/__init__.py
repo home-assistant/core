@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id] = faadata
     except ClientConnectionError as err:
         _LOGGER.error("Connection error during setup: %s", err)
-        raise ConfigEntryNotReady from err
+        raise PlatformNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
