@@ -121,9 +121,9 @@ COLOR_TEMP_CHANGE = 20  # ≈5% of total range
 RGB_CHANGE = 30  # ≈12% of total range per component
 
 
-def create_context(name: str, index: int) -> Context:
+def create_context(which: str, index: int) -> Context:
     """Create a context that can identify this integration."""
-    return Context(id=f"{DOMAIN}_{name}_{index}")
+    return Context(id=f"{DOMAIN}_{which}_{index}")
 
 
 def is_our_context(context: Optional[Context]) -> bool:
@@ -219,6 +219,7 @@ def match_state_event(event: Event, from_or_to_state: List[str]):
 
 def _expand_light_groups(hass: HomeAssistant, lights: List[str]) -> List[str]:
     all_lights = set()
+    turn_on_off_listener = hass.data[DOMAIN][ATTR_TURN_ON_OFF_LISTENER]
     for light in lights:
         state = hass.states.get(light)
         if state is None:
@@ -226,6 +227,7 @@ def _expand_light_groups(hass: HomeAssistant, lights: List[str]) -> List[str]:
             all_lights.add(light)
         elif "entity_id" in state.attributes:  # it's a light group
             group = state.attributes["entity_id"]
+            turn_on_off_listener.lights.discard(light)
             all_lights.update(group)
             _LOGGER.debug("Expanded %s to %s", light, group)
         else:
@@ -419,7 +421,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             await self._update_attrs_and_maybe_adapt_lights(
                 transition=self._initial_transition,
                 force=True,
-                context=self.create_context(),
+                context=self.create_context("turn_on"),
             )
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -432,12 +434,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     async def _async_update_at_interval(self, now=None) -> None:
         await self._update_attrs_and_maybe_adapt_lights(
-            force=False, context=self.create_context()
+            force=False, context=self.create_context("interval")
         )
 
-    def create_context(self) -> Context:
+    def create_context(self, which="default") -> Context:
         """Create a context that identifies this Adaptive Lighting instance."""
-        context = create_context(self._name, self._context_cnt)
+        context = create_context(which, self._context_cnt)
         self._context_cnt += 1
         return context
 
@@ -485,7 +487,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             service_data[ATTR_COLOR_TEMP] = color_temp_mired
         elif "color" in features and adapt_rgb_color:
             service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
-        context = context or self.create_context()
+        context = context or self.create_context("adapt_lights")
         if (
             self._take_over_control
             and self._detect_non_ha_changes
@@ -571,7 +573,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         await self._update_attrs_and_maybe_adapt_lights(
             transition=self._initial_transition,
             force=True,
-            context=self.create_context(),
+            context=self.create_context("sleep"),
         )
 
     async def _light_event(self, event: Event):
@@ -609,7 +611,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 lights=[entity_id],
                 transition=self._initial_transition,
                 force=True,
-                context=self.create_context(),
+                context=self.create_context("light_event"),
             )
         elif (
             old_state is not None
@@ -869,7 +871,11 @@ class TurnOnOffListener:
                 self.reset(eid)
 
         elif service == SERVICE_TURN_ON:
-            _LOGGER.debug("Detected an 'light.turn_on('%s')' event", entity_ids)
+            _LOGGER.debug(
+                "Detected an 'light.turn_on('%s')' event with %s",
+                entity_ids,
+                event.context,
+            )
             for eid in entity_ids:
                 task = self.sleep_tasks.get(eid)
                 if task is not None:
@@ -889,9 +895,10 @@ class TurnOnOffListener:
             and is_our_context(new_state.context)
         ):
             _LOGGER.debug(
-                "Detected a '%s' 'state_changed' event: '%s'",
+                "Detected a '%s' 'state_changed' event: '%s' with '%s'",
                 entity_id,
                 new_state.attributes,
+                new_state.context,
             )
             # If there is already a state change event from this event (with this
             # context) then ignore. This is because a
@@ -901,7 +908,11 @@ class TurnOnOffListener:
             # `new_state=dict(brightness=50, ...)`.
             old_state = self.last_state_change.get(entity_id)
             if old_state is not None and old_state.context.id == new_state.context.id:
-                # state is already in
+                # state is already in 'self.last_state_change'
+                _LOGGER.debug(
+                    "State change event ('%s') was already in 'self.last_state_change'",
+                    new_state.context.id,
+                )
                 return
 
             self.last_state_change[entity_id] = new_state
