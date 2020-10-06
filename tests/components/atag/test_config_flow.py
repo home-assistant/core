@@ -71,7 +71,7 @@ async def test_unauthorized(hass):
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unauthorized"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_full_flow_implementation(

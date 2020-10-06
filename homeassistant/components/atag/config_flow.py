@@ -34,7 +34,7 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await atag.update(force=True)
 
         except pyatag.errors.Unauthorized:
-            return await self._show_form({"base": "unauthorized"})
+            return await self._show_form({"base": "invalid_auth"})
         except pyatag.errors.AtagException:
             return await self._show_form({"base": "cannot_connect"})
 
