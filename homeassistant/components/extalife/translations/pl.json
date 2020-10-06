@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "confirm": {
-        "description": "![Supla logo](/static/icons/supla_zamel_logo.png)\n\nCzy chcesz skonfigurować teraz integrację Exta Life oraz wyszukać swoje urządzenia z tej serii?",
+        "description": "Czy chcesz skonfigurować teraz integrację Exta Life oraz wyszukać swoje urządzenia z tej serii?",
         "title": "Połączenie z kontrolerem EFC-01"
       },
       "init": {
