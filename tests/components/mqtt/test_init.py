@@ -123,7 +123,7 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
     mqtt.async_publish_template(hass, "test/topic", "{{ 1+1 }}")
     await hass.async_block_till_done()
     assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "2"
+    assert mqtt_mock.async_publish.call_args[0][1] == 2
 
 
 async def test_service_call_with_payload_doesnt_render_template(hass, mqtt_mock):

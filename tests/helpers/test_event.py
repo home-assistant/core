@@ -958,7 +958,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "light")
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
-    assert specific_runs[0].strip() == "['light.one']"
+    assert specific_runs[0] == ["light.one"]
 
     assert info.listeners == {
         "all": False,
@@ -969,7 +969,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
-    assert specific_runs[1].strip() == "['lock.one']"
+    assert specific_runs[1] == ["lock.one"]
     assert info.listeners == {
         "all": False,
         "domains": {"lock"},
@@ -987,7 +987,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "light")
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
-    assert specific_runs[3].strip() == "['light.one']"
+    assert specific_runs[3] == ["light.one"]
     assert info.listeners == {
         "all": False,
         "domains": {"light"},
@@ -1022,7 +1022,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 7
-    assert specific_runs[6].strip() == "['lock.one']"
+    assert specific_runs[6] == ["lock.one"]
     assert info.listeners == {
         "all": False,
         "domains": {"lock"},
@@ -1032,7 +1032,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "single_binary_sensor")
     await hass.async_block_till_done()
     assert len(specific_runs) == 8
-    assert specific_runs[7].strip() == "unknown"
+    assert specific_runs[7] == "unknown"
     assert info.listeners == {
         "all": False,
         "domains": set(),
@@ -1042,7 +1042,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("binary_sensor.single", "binary_sensor_on")
     await hass.async_block_till_done()
     assert len(specific_runs) == 9
-    assert specific_runs[8].strip() == "binary_sensor_on"
+    assert specific_runs[8] == "binary_sensor_on"
     assert info.listeners == {
         "all": False,
         "domains": set(),
@@ -1052,7 +1052,7 @@ async def test_track_template_result_complex(hass):
     hass.states.async_set("sensor.domain", "lock")
     await hass.async_block_till_done()
     assert len(specific_runs) == 10
-    assert specific_runs[9].strip() == "['lock.one']"
+    assert specific_runs[9] == ["lock.one"]
     assert info.listeners == {
         "all": False,
         "domains": {"lock"},
@@ -1144,13 +1144,13 @@ async def test_track_template_result_with_group(hass):
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    assert specific_runs[0] == str(100.1 + 200.2 + 400.4)
+    assert specific_runs[0] == 100.1 + 200.2 + 400.4
 
     hass.states.async_set("sensor.power_3", 0)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
-    assert specific_runs[1] == str(100.1 + 200.2 + 0)
+    assert specific_runs[1] == 100.1 + 200.2 + 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -1165,7 +1165,7 @@ async def test_track_template_result_with_group(hass):
 
     info.async_refresh()
     await hass.async_block_till_done()
-    assert specific_runs[-1] == str(100.1 + 200.2 + 0 + 800.8)
+    assert specific_runs[-1] == 100.1 + 200.2 + 0 + 800.8
 
 
 async def test_track_template_result_and_conditional(hass):
@@ -1421,38 +1421,38 @@ async def test_track_template_rate_limit(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["0"]
+    assert refresh_runs == [0]
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0"]
+    assert refresh_runs == [0]
     info.async_refresh()
-    assert refresh_runs == ["0", "1"]
+    assert refresh_runs == [0, 1]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1"]
+    assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
         "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1", "2"]
+    assert refresh_runs == [0, 1, 2]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1", "2"]
+    assert refresh_runs == [0, 1, 2]
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1", "2"]
+    assert refresh_runs == [0, 1, 2]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
         "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
     ):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1", "2", "4"]
+    assert refresh_runs == [0, 1, 2, 4]
     hass.states.async_set("sensor.five", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1", "2", "4"]
+    assert refresh_runs == [0, 1, 2, 4]
 
 
 async def test_track_template_rate_limit_five(hass):
@@ -1474,18 +1474,18 @@ async def test_track_template_rate_limit_five(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["0"]
+    assert refresh_runs == [0]
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0"]
+    assert refresh_runs == [0]
     info.async_refresh()
-    assert refresh_runs == ["0", "1"]
+    assert refresh_runs == [0, 1]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1"]
+    assert refresh_runs == [0, 1]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["0", "1"]
+    assert refresh_runs == [0, 1]
 
 
 async def test_track_template_has_default_rate_limit(hass):
@@ -1508,18 +1508,18 @@ async def test_track_template_has_default_rate_limit(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     info.async_refresh()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
 
 
 async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
@@ -1545,21 +1545,21 @@ async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     hass.states.async_set("sensor.one", "unknown")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     info.async_refresh()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.three", "unknown")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     info.async_refresh()
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2", "3"]
+    assert refresh_runs == [1, 2, 3]
 
 
 async def test_specifically_referenced_entity_is_not_rate_limited(hass):
@@ -1628,19 +1628,19 @@ async def test_track_two_templates_with_different_rate_limits(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs[template_one] == ["0"]
-    assert refresh_runs[template_five] == ["0"]
+    assert refresh_runs[template_one] == [0]
+    assert refresh_runs[template_five] == [0]
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0"]
-    assert refresh_runs[template_five] == ["0"]
+    assert refresh_runs[template_one] == [0]
+    assert refresh_runs[template_five] == [0]
     info.async_refresh()
-    assert refresh_runs[template_one] == ["0", "1"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1]
+    assert refresh_runs[template_five] == [0, 1]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0", "1"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1]
+    assert refresh_runs[template_five] == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 1)
     with patch(
         "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
@@ -1648,20 +1648,20 @@ async def test_track_two_templates_with_different_rate_limits(hass):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0", "1", "2"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1, 2]
+    assert refresh_runs[template_five] == [0, 1]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0", "1", "2"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1, 2]
+    assert refresh_runs[template_five] == [0, 1]
     hass.states.async_set("sensor.four", "any")
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0", "1", "2"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1, 2]
+    assert refresh_runs[template_five] == [0, 1]
     hass.states.async_set("sensor.five", "any")
     await hass.async_block_till_done()
-    assert refresh_runs[template_one] == ["0", "1", "2"]
-    assert refresh_runs[template_five] == ["0", "1"]
+    assert refresh_runs[template_one] == [0, 1, 2]
+    assert refresh_runs[template_five] == [0, 1]
 
 
 async def test_string(hass):
@@ -1702,7 +1702,7 @@ async def test_track_template_result_refresh_cancel(hass):
     hass.states.async_set("switch.test", "off")
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["False"]
+    assert refresh_runs == [False]
 
     assert len(refresh_runs) == 1
 
@@ -1770,9 +1770,9 @@ async def test_async_track_template_result_multiple_templates(hass):
 
     assert refresh_runs == [
         [
-            TrackTemplateResult(template_1, None, "True"),
-            TrackTemplateResult(template_2, None, "True"),
-            TrackTemplateResult(template_3, None, "False"),
+            TrackTemplateResult(template_1, None, True),
+            TrackTemplateResult(template_2, None, True),
+            TrackTemplateResult(template_3, None, False),
         ]
     ]
 
@@ -1782,9 +1782,9 @@ async def test_async_track_template_result_multiple_templates(hass):
 
     assert refresh_runs == [
         [
-            TrackTemplateResult(template_1, "True", "False"),
-            TrackTemplateResult(template_2, "True", "False"),
-            TrackTemplateResult(template_3, "False", "True"),
+            TrackTemplateResult(template_1, True, False),
+            TrackTemplateResult(template_2, True, False),
+            TrackTemplateResult(template_3, False, True),
         ]
     ]
 
@@ -1793,7 +1793,7 @@ async def test_async_track_template_result_multiple_templates(hass):
     await hass.async_block_till_done()
 
     assert refresh_runs == [
-        [TrackTemplateResult(template_4, None, "['binary_sensor.test']")]
+        [TrackTemplateResult(template_4, None, ["binary_sensor.test"])]
     ]
 
 
@@ -1827,10 +1827,10 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
 
     assert refresh_runs == [
         [
-            TrackTemplateResult(template_1, None, "True"),
-            TrackTemplateResult(template_2, None, "True"),
-            TrackTemplateResult(template_3, None, "False"),
-            TrackTemplateResult(template_4, None, "['switch.test']"),
+            TrackTemplateResult(template_1, None, True),
+            TrackTemplateResult(template_2, None, True),
+            TrackTemplateResult(template_3, None, False),
+            TrackTemplateResult(template_4, None, ["switch.test"]),
         ]
     ]
 
@@ -1840,9 +1840,9 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
 
     assert refresh_runs == [
         [
-            TrackTemplateResult(template_1, "True", "False"),
-            TrackTemplateResult(template_2, "True", "False"),
-            TrackTemplateResult(template_3, "False", "True"),
+            TrackTemplateResult(template_1, True, False),
+            TrackTemplateResult(template_2, True, False),
+            TrackTemplateResult(template_3, False, True),
         ]
     ]
 
@@ -1859,7 +1859,7 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(hass
     assert refresh_runs == [
         [
             TrackTemplateResult(
-                template_4, "['switch.test']", "['switch.new', 'switch.test']"
+                template_4, ["switch.test"], ["switch.new", "switch.test"]
             )
         ]
     ]
