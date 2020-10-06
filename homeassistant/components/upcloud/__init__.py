@@ -282,7 +282,7 @@ class UpCloudServerEntity(CoordinatorEntity):
     def state(self):
         """Return state of the server."""
         try:
-            return STATE_MAP.get(self._server.state)
+            return STATE_MAP.get(self._server.state, self._server.state)
         except AttributeError:
             return None
 
@@ -306,7 +306,6 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_TITLE,
                 ATTR_HOSTNAME,
                 ATTR_ZONE,
-                ATTR_STATE,
                 ATTR_CORE_NUMBER,
                 ATTR_MEMORY_AMOUNT,
             )
