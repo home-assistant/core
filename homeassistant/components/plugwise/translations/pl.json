@@ -13,7 +13,8 @@
             "user": {
                 "data": {
                     "host": "Adres IP Smile",
-                    "password": "Smile ID"
+                    "password": "Smile ID",
+                    "port": "Numer portu dla Smile"
                 },
                 "description": "Szczeg\u00f3\u0142y",
                 "title": "Po\u0142\u0105cz si\u0119 ze Smile"

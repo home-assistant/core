@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo nome utente \u00e8 gi\u00e0 in uso."
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
+            "invalid_auth": "Autenticazione non valida",
             "invalid_credentials": "Nome utente o password non validi",
             "no_devices": "Nessun dispositivo trovato nell'account"
         },
