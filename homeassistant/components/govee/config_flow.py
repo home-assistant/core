@@ -55,7 +55,3 @@ class GoveeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-    def __init__(self, *args, **kwargs):
-        """Create cannot connect error."""
-        super().__init__(*args, **kwargs)

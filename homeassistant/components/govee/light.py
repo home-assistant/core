@@ -73,6 +73,10 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             hub = self.hass.data[DOMAIN]["hub"]
 
+            if not hub.online:
+                # when offline, check connection, this will set hub.online
+                await hub.check_connection()
+
             if hub.online:
                 # govee will change this to a single request in 2021
                 device_states = await hub.get_states()
@@ -82,8 +86,6 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
                             "update failed for %s: %s", device.device, device.error
                         )
                 return device_states
-            # when offline, check connection, this will set govee.online
-            await hub.check_connection()
         except GoveeError as ex:
             raise UpdateFailed(f"Exception on getting states: {ex}") from ex
 
