@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.fan as fan
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -52,7 +53,8 @@ async def test_fans(hass):
     """Test that all supported fan entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(FANS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2  # Light and fan
     assert hass.states.get("fan.ceiling_fan")
@@ -177,3 +179,7 @@ async def test_fans(hass):
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_MEDIUM
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert len(hass.states.async_all()) == 0
