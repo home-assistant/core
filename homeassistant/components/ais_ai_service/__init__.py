@@ -4386,11 +4386,24 @@ class AisGetWeather(intent.IntentHandler):
 
     async def async_handle(self, intent_obj):
         """Handle the intent."""
-        hass = intent_obj.hass
-        weather = "Pogoda "
-        attr = hass.states.get("group.ais_pogoda").attributes
-        weather = "pogoda jest bardzo..."
-        return weather, True
+        answer = "niestety nie wiem jaka jest pogoda"
+        try:
+            # try to do reverse_geocode
+            import reverse_geocode
+
+            coordinates = (
+                (intent_obj.hass.config.latitude, intent_obj.hass.config.longitude),
+            )
+            geo = reverse_geocode.search(coordinates)
+            command = "pogoda w " + geo[0]["city"]
+            # ask AIS
+            ws_resp = aisCloudWS.ask(command, "niestety nie wiem jaka jest pogoda")
+            answer = ws_resp.text.split("---")[0]
+        except Exception as e:
+            _LOGGER.warning("Handle the intent problem " + str(e))
+            return answer, False
+
+        return answer, True
 
 
 class AisGetWeather48(intent.IntentHandler):
@@ -4400,9 +4413,23 @@ class AisGetWeather48(intent.IntentHandler):
 
     async def async_handle(self, intent_obj):
         """Handle the intent."""
-        hass = intent_obj.hass
-        weather = "prognoza pogody ..."
-        return weather, True
+        answer = "niestety nie wiem jaka będzie pogoda"
+        try:
+            # try to do reverse_geocode
+            import reverse_geocode
+
+            coordinates = (
+                (intent_obj.hass.config.latitude, intent_obj.hass.config.longitude),
+            )
+            geo = reverse_geocode.search(coordinates)
+            command = "jaka będzie pogoda jutro w " + geo[0]["city"]
+            ws_resp = aisCloudWS.ask(command, answer)
+            answer = ws_resp.text.split("---")[0]
+        except Exception as e:
+            _LOGGER.warning("Handle the intent problem " + str(e))
+            return answer, False
+
+        return answer, True
 
 
 class AisLampsOn(intent.IntentHandler):
