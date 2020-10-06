@@ -154,7 +154,7 @@ class Sensor(ZhaEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="XBee")
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
