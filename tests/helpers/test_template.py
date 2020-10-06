@@ -155,9 +155,25 @@ def test_iterating_all_states(hass):
     hass.states.async_set("sensor.temperature", 10)
 
     info = render_to_info(hass, tmpl_str)
-    assert_result_info(
-        info, "10happy", entities=["test.object", "sensor.temperature"], all_states=True
-    )
+    assert_result_info(info, "10happy", entities=[], all_states=True)
+
+
+def test_iterating_all_states_unavailable(hass):
+    """Test iterating all states unavailable."""
+    hass.states.async_set("test.object", "on")
+
+    tmpl_str = "{{ states | selectattr('state', 'in', ['unavailable', 'unknown', 'none']) | list | count }}"
+
+    info = render_to_info(hass, tmpl_str)
+
+    assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+
+    hass.states.async_set("test.object", "unknown")
+    hass.states.async_set("sensor.temperature", 10)
+
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(info, "1", entities=[], all_states=True)
 
 
 def test_iterating_domain_states(hass):
@@ -176,7 +192,7 @@ def test_iterating_domain_states(hass):
     assert_result_info(
         info,
         "open10",
-        entities=["sensor.back_door", "sensor.temperature"],
+        entities=[],
         domains=["sensor"],
     )
 
@@ -1426,9 +1442,7 @@ async def test_expand(hass):
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(
-        info, "test.object", {"test.object", "group.new_group"}, ["group"]
-    )
+    assert_result_info(info, "test.object", {"test.object"}, ["group"])
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     info = render_to_info(
@@ -1587,7 +1601,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     """Test tracking template with a wildcard."""
     template_complex_str = r"""
 
-{% for state in states %}
+{% for state in states.cover %}
   {% if state.entity_id | regex_match('.*\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
@@ -1599,13 +1613,9 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     hass.states.async_set("cover.office_skylight", "open")
     info = render_to_info(hass, template_complex_str)
 
-    assert not info.domains
-    assert info.entities == {
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
-    assert info.all_states is True
+    assert info.domains == {"cover"}
+    assert info.entities == set()
+    assert info.all_states is False
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
@@ -1629,13 +1639,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
-    assert info.entities == {
-        "cover.x_skylight",
-        "binary_sensor.door",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is True
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
@@ -1643,13 +1647,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
-    assert info.entities == {
-        "cover.x_skylight",
-        "binary_sensor.door",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is True
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
@@ -1666,12 +1664,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     info = render_to_info(hass, template_cover_str)
 
     assert info.domains == {"cover"}
-    assert info.entities == {
-        "cover.x_skylight",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is False
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
@@ -1965,9 +1958,7 @@ def test_generate_filter_iterators(hass):
         {% endfor %}
         """,
     )
-    assert_result_info(
-        info, "sensor.test_sensor=off,", ["sensor.test_sensor"], ["sensor"]
-    )
+    assert_result_info(info, "sensor.test_sensor=off,", [], ["sensor"])
 
     info = render_to_info(
         hass,
@@ -1977,9 +1968,7 @@ def test_generate_filter_iterators(hass):
         {% endfor %}
         """,
     )
-    assert_result_info(
-        info, "sensor.test_sensor=value,", ["sensor.test_sensor"], ["sensor"]
-    )
+    assert_result_info(info, "sensor.test_sensor=value,", [], ["sensor"])
 
 
 def test_generate_select(hass):
@@ -2001,7 +1990,7 @@ def test_generate_select(hass):
     assert_result_info(
         info,
         "sensor.test_sensor",
-        ["sensor.test_sensor", "sensor.test_sensor_on"],
+        [],
         ["sensor"],
     )
     assert info.domains_lifecycle == {"sensor"}
@@ -2542,7 +2531,9 @@ async def test_lights(hass):
 
     tmp = template.Template(tmpl, hass)
     info = tmp.async_render_to_info()
-    assert info.entities == set(states)
+    assert info.entities == set()
+    assert info.domains == {"light"}
+
     assert "lights are on" in info.result()
     for i in range(10):
         assert f"sensor{i}" in info.result()

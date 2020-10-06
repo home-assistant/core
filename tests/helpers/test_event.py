@@ -1284,7 +1284,7 @@ async def test_track_template_result_iterator(hass):
     assert info.listeners == {
         "all": False,
         "domains": {"sensor"},
-        "entities": {"sensor.test"},
+        "entities": set(),
     }
 
     hass.states.async_set("sensor.test", 6)
@@ -1486,6 +1486,80 @@ async def test_track_template_rate_limit_five(hass):
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
     assert refresh_runs == ["0", "1"]
+
+
+async def test_track_template_has_default_rate_limit(hass):
+    """Test template has a rate limit by default."""
+    hass.states.async_set("sensor.zero", "any")
+    template_refresh = Template("{{ states | list | count }}", hass)
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None)],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["1"]
+    hass.states.async_set("sensor.one", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1"]
+    info.async_refresh()
+    assert refresh_runs == ["1", "2"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1", "2"]
+    hass.states.async_set("sensor.three", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1", "2"]
+
+
+async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
+    """Test template watching for unavailable states has a rate limit by default."""
+    hass.states.async_set("sensor.zero", "unknown")
+    template_refresh = Template(
+        "{{ states | selectattr('state', 'in', ['unavailable', 'unknown', 'none']) | list | count }}",
+        hass,
+    )
+
+    refresh_runs = []
+
+    @ha.callback
+    def refresh_listener(event, updates):
+        refresh_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass,
+        [TrackTemplate(template_refresh, None)],
+        refresh_listener,
+    )
+    await hass.async_block_till_done()
+    info.async_refresh()
+    await hass.async_block_till_done()
+
+    assert refresh_runs == ["1"]
+    hass.states.async_set("sensor.one", "unknown")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1"]
+    info.async_refresh()
+    assert refresh_runs == ["1", "2"]
+    hass.states.async_set("sensor.two", "any")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1", "2"]
+    hass.states.async_set("sensor.three", "unknown")
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1", "2"]
+    info.async_refresh()
+    await hass.async_block_till_done()
+    assert refresh_runs == ["1", "2", "3"]
 
 
 async def test_specifically_referenced_entity_is_not_rate_limited(hass):
