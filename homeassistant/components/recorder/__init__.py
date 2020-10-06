@@ -396,14 +396,17 @@ class Recorder(threading.Thread):
                 try:
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
-                    if dbstate.entity_id in self._old_states:
-                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
+                    entity_id = dbstate.entity_id
+                    if entity_id in self._old_states:
+                        dbstate.old_state = States(
+                            state_id=self._old_states.pop(entity_id)
+                        )
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
                     self.event_session.add(dbstate)
                     if has_new_state:
-                        self._old_states[dbstate.entity_id] = dbstate
+                        self._old_states[entity_id] = dbstate.state_id
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -489,12 +492,6 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self):
         try:
-            # Write the database
-            self.event_session.flush()
-            # Detach the objects in the cache
-            # so they don't get expired and re-selected
-            self.event_session.expunge_all()
-            # Commit
             self.event_session.commit()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
