@@ -396,17 +396,17 @@ class Recorder(threading.Thread):
                 try:
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
-                    entity_id = dbstate.entity_id
-                    if entity_id in self._old_states:
-                        dbstate.old_state = States(
-                            state_id=self._old_states.pop(entity_id)
-                        )
+                    if dbstate.entity_id in self._old_states:
+                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
                     self.event_session.add(dbstate)
                     if has_new_state:
-                        self._old_states[entity_id] = dbstate.state_id
+                        self._old_states[dbstate.entity_id] = dbstate
+                        # Expunge the state so its not expired
+                        # until we use it later for dbstate.old_state
+                        self.event_session.expunge(dbstate)
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
