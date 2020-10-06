@@ -9,9 +9,15 @@ from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import async_get_mqtt
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
+from .const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_PAYLOAD,
+    ATTR_DISCOVERY_TOPIC,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +71,9 @@ async def async_start(
     hass: HomeAssistantType, discovery_topic, config_entry=None
 ) -> bool:
     """Start MQTT Discovery."""
+    mqtt_integrations = {}
 
-    async def async_device_message_received(msg):
+    async def async_entity_message_received(msg):
         """Process the received message."""
         hass.data[LAST_DISCOVERY] = time.time()
         payload = msg.payload
@@ -175,9 +182,25 @@ async def async_start(
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
-        hass, f"{discovery_topic}/#", async_device_message_received, 0
+        hass, f"{discovery_topic}/#", async_entity_message_received, 0
     )
     hass.data[LAST_DISCOVERY] = time.time()
+    mqtt_integrations = await async_get_mqtt(hass)
+
+    for (integration, topics) in mqtt_integrations.items():
+
+        async def async_integration_message_received(msg):
+            """Process the received message."""
+            hass.add_job(
+                hass.config_entries.flow.async_init(
+                    integration, context={"source": DOMAIN}, data=msg
+                )
+            )
+
+        for topic in topics:
+            await mqtt.async_subscribe(
+                hass, topic, async_integration_message_received, 0
+            )
 
     return True
 
