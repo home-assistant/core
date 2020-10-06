@@ -35,6 +35,7 @@ class HarmonyActivitySwitch(SwitchEntity):
         self._activity = activity
         self._device = device
         self._remove_signal_update = None
+        self._state = False
 
     @property
     def name(self):
@@ -46,11 +47,15 @@ class HarmonyActivitySwitch(SwitchEntity):
         """Return the unique id."""
         return f"{self._device.unique_id}-{self._activity}"
 
-    # TODO private variables
     @property
     def is_on(self):
         """Return if the current activity is the one for this switch."""
-        return self._device._current_activity == self._activity
+        return self._state
+
+    @property
+    def should_poll(self):
+        """Return that we shouldn't be polled."""
+        return False
 
     # @property
     # def available(self):
@@ -71,10 +76,18 @@ class HarmonyActivitySwitch(SwitchEntity):
             self.hass, SIGNAL_UPDATE_ACTIVITY, self._update_callback
         )
 
+        # TODO connection state
+
     async def async_will_remove_from_hass(self):
         """Call when entity is removed from hass."""
         self._remove_signal_update()
 
-    def _update_callback(self):
-        # TODO was it just us
-        self.async_write_ha_state()
+    def _update_callback(self, data):
+        old_state = self._state
+        if data["current_activity"] == self._activity:
+            self._state = True
+        else:
+            self._state = False
+
+        if self._state != old_state:
+            self.async_write_ha_state()

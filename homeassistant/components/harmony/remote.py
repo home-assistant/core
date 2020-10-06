@@ -315,7 +315,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._state = bool(activity_id != -1)
         self._available = True
         self.async_write_ha_state()
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_ACTIVITY)
+        async_dispatcher_send(
+            self.hass, SIGNAL_UPDATE_ACTIVITY, {"current_activity": activity_name}
+        )
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
