@@ -415,12 +415,12 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.state == STATE_ALARM_PENDING:
-            return {
-                ATTR_PRE_PENDING_STATE: self._previous_state,
-                ATTR_POST_PENDING_STATE: self._state,
-            }
-        return {}
+        if self.state != STATE_ALARM_PENDING:
+            return {}
+        return {
+            ATTR_PRE_PENDING_STATE: self._previous_state,
+            ATTR_POST_PENDING_STATE: self._state,
+        }
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
