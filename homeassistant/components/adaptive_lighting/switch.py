@@ -117,7 +117,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 # Consider it a significant change when attribute changes more than
 BRIGHTNESS_CHANGE = 25  # ≈10% of total range
-COLOR_TEMP_CHANGE = 250  # ≈5% of total range
+COLOR_TEMP_CHANGE = 20  # ≈5% of total range
 RGB_CHANGE = 30  # ≈12% of total range per component
 
 
