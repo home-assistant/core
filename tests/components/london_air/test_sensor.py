@@ -45,27 +45,27 @@ async def test_valid_state(hass):
 
         state = hass.states.get("sensor.merton")
         assert state is not None
-        assert "Low" == state.state
-        assert "mdi:cloud-outline" == state.attributes["icon"]
-        assert "2017-08-03 03:00:00" == state.attributes["updated"]
-        assert 2 == state.attributes["sites"]
-        assert "Merton" == state.attributes["friendly_name"]
+        assert state.state == "Low"
+        assert state.attributes["icon"] == "mdi:cloud-outline"
+        assert state.attributes["updated"] == "2017-08-03 03:00:00"
+        assert state.attributes["sites"] == 2
+        assert state.attributes["friendly_name"] == "Merton"
 
         sites = state.attributes["data"]
         assert sites is not None
-        assert 2 == len(sites)
-        assert "ME2" == sites[0]["site_code"]
-        assert "Roadside" == sites[0]["site_type"]
-        assert "Merton Road" == sites[0]["site_name"]
-        assert "Low" == sites[0]["pollutants_status"]
+        assert len(sites) == 2
+        assert sites[0]["site_code"] == "ME2"
+        assert sites[0]["site_type"] == "Roadside"
+        assert sites[0]["site_name"] == "Merton Road"
+        assert sites[0]["pollutants_status"] == "Low"
 
         pollutants = sites[0]["pollutants"]
         assert pollutants is not None
-        assert 1 == len(pollutants)
-        assert "PM10" == pollutants[0]["code"]
-        assert "Low" == pollutants[0]["quality"]
-        assert 2 == int(pollutants[0]["index"])
-        assert "PM10 is Low" == pollutants[0]["summary"]
+        assert len(pollutants) == 1
+        assert pollutants[0]["code"] == "PM10"
+        assert pollutants[0]["quality"] == "Low"
+        assert int(pollutants[0]["index"]) == 2
+        assert pollutants[0]["summary"] == "PM10 is Low"
 
 
 async def test_api_failure(hass):
@@ -76,5 +76,5 @@ async def test_api_failure(hass):
 
         state = hass.states.get("sensor.merton")
         assert state is not None
-        assert None is state.attributes["updated"]
-        assert 0 == state.attributes["sites"]
+        assert state.attributes["updated"] is None
+        assert state.attributes["sites"] == 0
