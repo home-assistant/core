@@ -13,7 +13,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ID): str})
 
 
