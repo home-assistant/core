@@ -40,7 +40,7 @@ from homeassistant.const import (
     ATTR_SERVICE_DATA,
     CONF_NAME,
     EVENT_CALL_SERVICE,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -286,7 +286,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         # Locks that prevent light adjusting when waiting for a light to 'turn_off'
         self._locks: Dict[str, asyncio.Lock] = {}
         # To identify that this integration made a change
-        self.__context = Context()  # self._context will be overwritten
+        self.__context = Context()  # self._context would be overwritten
         self.turn_on_off_listener.contexts.add(self.__context)
 
         # Set in self._update_attrs_and_maybe_adapt_lights
@@ -328,7 +328,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             await self._setup_listeners()
         else:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._setup_listeners
+                EVENT_HOMEASSISTANT_STARTED, self._setup_listeners
             )
         last_state = await self.async_get_last_state()
         is_new_entry = last_state is None  # newly added to HA
