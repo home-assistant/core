@@ -112,6 +112,6 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
         """Return the optional state attributes."""
         battery_level = self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
-        if battery_level:
-            return {ATTR_BATTERY_LEVEL: battery_level}
-        return {}
+        if not battery_level:
+            return {}
+        return {ATTR_BATTERY_LEVEL: battery_level}
