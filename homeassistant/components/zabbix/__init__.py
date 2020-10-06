@@ -100,7 +100,6 @@ def setup(hass, config):
 
         entity_id = state.entity_id
         if not entities_filter(entity_id):
-            _LOGGER.info("Filtered out %s", entity_id)
             return
 
         floats = {}
