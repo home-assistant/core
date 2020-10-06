@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def _log_objects(*_):
-        _LOGGER.debug("Leaking objects: %s", objgraph.get_leaking_objects())
+        #        _LOGGER.debug("Leaking objects: %s", objgraph.get_leaking_objects())
         _LOGGER.debug("Most common types: %s", objgraph.most_common_types())
         _LOGGER.debug("Growth: %s", objgraph.growth())
 
