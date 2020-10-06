@@ -9,7 +9,7 @@ from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import async_wait_recording_done
 
 from tests.async_mock import patch
 
@@ -82,7 +82,7 @@ async def test_purge_method(hass_recorder):
         assert recorder_runs.count() == 7
 
         hass.data[DATA_INSTANCE].block_till_done()
-        await wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
         # run purge method - no service data, use defaults
         await hass.services.async_call("recorder", "purge")
@@ -90,7 +90,7 @@ async def test_purge_method(hass_recorder):
 
         # Small wait for recorder thread
         hass.data[DATA_INSTANCE].block_till_done()
-        await wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
         # only purged old events
         assert states.count() == 4
@@ -102,7 +102,7 @@ async def test_purge_method(hass_recorder):
 
         # Small wait for recorder thread
         hass.data[DATA_INSTANCE].block_till_done()
-        await wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
         # we should only have 2 states left after purging
         assert states.count() == 2
@@ -123,7 +123,7 @@ async def test_purge_method(hass_recorder):
             )
             await hass.async_block_till_done()
             hass.data[DATA_INSTANCE].block_till_done()
-            await wait_recording_done(hass)
+            await async_wait_recording_done(hass)
             assert (
                 mock_logger.debug.mock_calls[5][1][0]
                 == "Vacuuming SQL DB to free space"
@@ -139,7 +139,7 @@ async def _add_test_states(hass):
 
     await hass.async_block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for event_id in range(6):
@@ -176,7 +176,7 @@ async def _add_test_events(hass):
 
     await hass.async_block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for event_id in range(6):
@@ -209,7 +209,7 @@ async def _add_test_recorder_runs(hass):
 
     await hass.async_block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
         for rec_id in range(6):

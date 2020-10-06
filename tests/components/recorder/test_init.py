@@ -18,7 +18,7 @@ from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import async_wait_recording_done
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed
@@ -35,7 +35,7 @@ async def test_saving_state(hass_recorder):
     hass.states.async_set(entity_id, state, attributes)
     await hass.async_block_till_done()
 
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
@@ -65,7 +65,7 @@ async def test_saving_event(hass_recorder):
 
     hass.bus.async_fire(event_type, event_data)
 
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     assert len(events) == 1
     event = events[0]
@@ -93,7 +93,7 @@ async def _add_entities(hass, entity_ids):
     for idx, entity_id in enumerate(entity_ids):
         hass.states.async_set(entity_id, f"state{idx}", attributes)
         await hass.async_block_till_done()
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [st.to_native() for st in session.query(States)]
@@ -104,7 +104,7 @@ async def _add_events(hass, events):
         session.query(Events).delete(synchronize_session=False)
     for event_type in events:
         hass.bus.async_fire(event_type)
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [ev.to_native() for ev in session.query(Events)]
@@ -255,7 +255,7 @@ async def test_saving_state_and_removing_entity(hass_recorder):
     hass.states.async_set(entity_id, STATE_UNLOCKED)
     hass.states.async_remove(entity_id)
 
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -341,10 +341,10 @@ async def test_saving_sets_old_state(hass_recorder):
 
     hass.states.async_set("test.one", "on", {})
     hass.states.async_set("test.two", "on", {})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("test.one", "off", {})
     hass.states.async_set("test.two", "off", {})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -366,11 +366,11 @@ async def test_saving_state_with_serializable_data(hass_recorder, caplog):
     hass = await hass_recorder()
 
     hass.states.async_set("test.one", "on", {"fail": CannotSerializeMe()})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("test.two", "on", {})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     hass.states.async_set("test.two", "off", {})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -402,7 +402,7 @@ async def test_run_information(hass_recorder):
     assert run_info.closed_incorrect is False
 
     hass.states.async_set("test.two", "on", {})
-    await wait_recording_done(hass)
+    await async_wait_recording_done(hass)
     run_info = run_information(hass)
     assert isinstance(run_info, RecorderRuns)
     assert run_info.closed_incorrect is False
