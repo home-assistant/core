@@ -55,7 +55,7 @@ SENSOR_TYPES = {
     "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "sum_rain_24": ["Rain last 24h", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
+    "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery Level", "", "mdi:battery", None],
     "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
