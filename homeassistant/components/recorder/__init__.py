@@ -575,7 +575,7 @@ class Recorder(threading.Thread):
 
         Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(
-            sessionmaker(bind=self.engine, expire_on_commit=False)
+            sessionmaker(bind=self.engine, expire_on_commit=True)
         )
 
     def _close_connection(self):
