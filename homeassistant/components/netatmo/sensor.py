@@ -337,15 +337,15 @@ class NetatmoSensor(NetatmoBase):
             elif self.type == "max_temp":
                 self._state = data["max_temp"]
             elif self.type == "windangle_value":
-                self._state = data["WindAngle"]
+                self._state = fix_angle(data["WindAngle"])
             elif self.type == "windangle":
-                self._state = process_angle(data["WindAngle"])
+                self._state = process_angle(fix_angle(data["WindAngle"]))
             elif self.type == "windstrength":
                 self._state = data["WindStrength"]
             elif self.type == "gustangle_value":
-                self._state = data["GustAngle"]
+                self._state = fix_angle(data["GustAngle"])
             elif self.type == "gustangle":
-                self._state = process_angle(data["GustAngle"])
+                self._state = process_angle(fix_angle(data["GustAngle"]))
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
             elif self.type == "reachable":
@@ -365,6 +365,13 @@ class NetatmoSensor(NetatmoBase):
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._state = None
             return
+
+
+def fix_angle(angle: int) -> int:
+    """Fix angle when value is negative."""
+    if angle < 0:
+        return 360 + angle
+    return angle
 
 
 def process_angle(angle: int) -> str:
