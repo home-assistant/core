@@ -227,14 +227,6 @@ def _supported_features(hass: HomeAssistant, light: str):
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
 
 
-def abs_rel_diff(val_a, val_b) -> float:
-    """Absolute relative difference in %."""
-    if val_b == 0:
-        # To avoid ZeroDivisionError
-        val_b = 1e-6
-    return abs((val_a - val_b) / val_b) * 100
-
-
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Adaptive Lighting switch."""
 
