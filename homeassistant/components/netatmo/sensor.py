@@ -49,8 +49,10 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "temp_trend": ["Temperature trend", None, "mdi:trending-up", None],
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
     "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
+    "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
     "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
@@ -138,6 +140,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
             ]
             for condition in conditions:
+                print(condition)
                 if f"{condition}_value" in SENSOR_TYPES:
                     conditions.append(f"{condition}_value")
                 elif f"{condition}_lvl" in SENSOR_TYPES:
@@ -312,6 +315,8 @@ class NetatmoSensor(NetatmoBase):
         try:
             if self.type == "temperature":
                 self._state = round(data["Temperature"], 1)
+            elif self.type == "temperature_trend":
+                self._state = data["temp_trend"]
             elif self.type == "humidity":
                 self._state = data["Humidity"]
             elif self.type == "rain":
@@ -326,6 +331,8 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["CO2"]
             elif self.type == "pressure":
                 self._state = round(data["Pressure"], 1)
+            elif self.type == "pressure_trend":
+                self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
             elif self.type == "battery_lvl":
