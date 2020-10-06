@@ -15,9 +15,8 @@
       }
     },
     "abort": {
-      "already_configured": "UPnP/IGD is already configured",
-      "no_devices_discovered": "No UPnP/IGDs discovered",
-      "no_devices_found": "No UPnP/IGD devices found on the network.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "incomplete_discovery": "Incomplete discovery"
     }
   }
