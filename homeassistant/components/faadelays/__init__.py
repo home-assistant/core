@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id] = faadata
     except ClientConnectionError as err:
         _LOGGER.error("Connection error during setup: %s", err)
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -73,11 +73,11 @@ class FAAData:
 
     def __init__(self, client):
         """Initialize."""
-        self._client = client
+        self.client = client
 
     async def async_update(self):
         """Update sensor data."""
         try:
-            await self._client.update()
+            await self.client.update()
         except ClientConnectionError as err:
             _LOGGER.error("Connection error during data update: %s", err)

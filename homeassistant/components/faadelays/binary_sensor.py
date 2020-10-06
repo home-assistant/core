@@ -36,7 +36,7 @@ class FAABinarySensor(BinarySensorEntity):
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
-        self._id = faadata._client.iata
+        self._id = faadata.client.iata
         self._available = True
         self._attrs = {}
 
@@ -81,27 +81,27 @@ class FAABinarySensor(BinarySensorEntity):
             return
 
         if self._sensor_type == "GROUND_DELAY":
-            self._state = self._data._client.ground_delay.status
-            self._attrs["average"] = self._data._client.ground_delay.average
-            self._attrs["reason"] = self._data._client.ground_delay.reason
+            self._state = self._data.client.ground_delay.status
+            self._attrs["average"] = self._data.client.ground_delay.average
+            self._attrs["reason"] = self._data.client.ground_delay.reason
         elif self._sensor_type == "GROUND_STOP":
-            self._state = self._data._client.ground_stop.status
-            self._attrs["endtime"] = self._data._client.ground_stop.endtime
-            self._attrs["reason"] = self._data._client.ground_stop.reason
+            self._state = self._data.client.ground_stop.status
+            self._attrs["endtime"] = self._data.client.ground_stop.endtime
+            self._attrs["reason"] = self._data.client.ground_stop.reason
         elif self._sensor_type == "DEPART_DELAY":
-            self._state = self._data._client.depart_delay.status
-            self._attrs["minimum"] = self._data._client.depart_delay.minimum
-            self._attrs["maximum"] = self._data._client.depart_delay.maximum
-            self._attrs["trend"] = self._data._client.depart_delay.trend
-            self._attrs["reason"] = self._data._client.depart_delay.reason
+            self._state = self._data.client.depart_delay.status
+            self._attrs["minimum"] = self._data.client.depart_delay.minimum
+            self._attrs["maximum"] = self._data.client.depart_delay.maximum
+            self._attrs["trend"] = self._data.client.depart_delay.trend
+            self._attrs["reason"] = self._data.client.depart_delay.reason
         elif self._sensor_type == "ARRIVE_DELAY":
-            self._state = self._data._client.arrive_delay.status
-            self._attrs["minimum"] = self._data._client.arrive_delay.minimum
-            self._attrs["maximum"] = self._data._client.arrive_delay.maximum
-            self._attrs["trend"] = self._data._client.arrive_delay.trend
-            self._attrs["reason"] = self._data._client.arrive_delay.reason
+            self._state = self._data.client.arrive_delay.status
+            self._attrs["minimum"] = self._data.client.arrive_delay.minimum
+            self._attrs["maximum"] = self._data.client.arrive_delay.maximum
+            self._attrs["trend"] = self._data.client.arrive_delay.trend
+            self._attrs["reason"] = self._data.client.arrive_delay.reason
         elif self._sensor_type == "CLOSURE":
-            self._state = self._data._client.closure.status
-            self._attrs["begin"] = self._data._client.closure.begin
-            self._attrs["end"] = self._data._client.closure.end
-            self._attrs["reason"] = self._data._client.closure.reason
+            self._state = self._data.client.closure.status
+            self._attrs["begin"] = self._data.client.closure.begin
+            self._attrs["end"] = self._data.client.closure.end
+            self._attrs["reason"] = self._data.client.closure.reason
