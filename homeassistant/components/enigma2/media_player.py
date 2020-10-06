@@ -253,13 +253,13 @@ class Enigma2Device(MediaPlayerEntity):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        if not self.e2_box.in_standby:
-            return {
-                ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
-                ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
-                    "currservice_fulldescription"
-                ],
-                ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
-                ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
-            }
-        return {}
+        if self.e2_box.in_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
+            ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
+                "currservice_fulldescription"
+            ],
+            ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
+            ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
+        }
