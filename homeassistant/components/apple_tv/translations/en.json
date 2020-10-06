@@ -1,6 +1,6 @@
 {
+  "title": "Apple TV",
   "config": {
-    "title": "Apple TV",
     "flow_title": "Apple TV: {name}",
     "step": {
       "user": {
@@ -32,9 +32,6 @@
       "confirm": {
         "title": "Confirm adding Apple TV",
         "description": "You are about to add the Apple TV named `{name}` to Home Assistant.\n\n**To complete the process, you may have to enter multiple PIN codes.**\n\nPlease note that you will *not* be able to power off your Apple TV with this integration. Only the media player in Home Assistant will turn off!"
-      },
-      "zeroconf": {
-        "lookup_id_failed": "Failed to look up device id for device."
       }
     },
     "error": {

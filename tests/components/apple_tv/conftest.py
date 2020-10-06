@@ -1,7 +1,8 @@
 """Fixtures for component."""
 
-from pyatv import conf, net
 import pytest
+
+from pyatv import conf, net
 
 from .common import MockPairingHandler, create_conf
 

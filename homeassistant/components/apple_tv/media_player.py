@@ -1,8 +1,6 @@
 """Support for Apple TV media player."""
 import logging
 
-from pyatv.const import DeviceState, MediaType
-
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -29,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
+from pyatv.const import DeviceState, MediaType
 
 from . import AppleTVEntity
 from .const import DOMAIN
@@ -66,13 +65,13 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         self._playing = None
 
     @callback
-    def device_connected(self, atv):
+    def async_device_connected(self, atv):
         """Handle when connection is made to device."""
         self.atv.push_updater.listener = self
         self.atv.push_updater.start()
 
     @callback
-    def device_disconnected(self):
+    def async_device_disconnected(self):
         """Handle when connection was lost to device."""
         self.atv.push_updater.stop()
         self.atv.push_updater.listener = None
@@ -93,6 +92,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return STATE_PAUSED
             return STATE_STANDBY  # Bad or unknown state?
+        return None
 
     @callback
     def playstatus_update(self, _, playing):
@@ -116,24 +116,28 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
                 MediaType.Music: MEDIA_TYPE_MUSIC,
                 MediaType.TV: MEDIA_TYPE_TVSHOW,
             }.get(self._playing.media_type)
+        return None
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self._playing:
             return self._playing.total_time
+        return None
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
         if self._playing:
             return self._playing.position
+        return None
 
     @property
     def media_position_updated_at(self):
         """Last valid time of media position."""
         if self.state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
+        return None
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
@@ -145,6 +149,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         state = self.state
         if self._playing and state not in [STATE_UNKNOWN, STATE_OFF, STATE_IDLE]:
             return self.atv.metadata.artwork_id
+        return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
@@ -161,6 +166,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Title of current playing media."""
         if self._playing:
             return self._playing.title
+        return None
 
     @property
     def supported_features(self):
@@ -184,6 +190,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
                 await self.atv.remote_control.play()
             elif state == STATE_PLAYING:
                 await self.atv.remote_control.pause()
+        return None
 
     async def async_media_play(self):
         """Play media."""

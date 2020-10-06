@@ -3,9 +3,6 @@ import asyncio
 import logging
 from random import randrange
 
-from pyatv import connect, exceptions, scan
-from pyatv.const import Protocol
-
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
@@ -14,12 +11,15 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from pyatv import connect, exceptions, scan
+from pyatv.const import Protocol
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
@@ -91,47 +91,48 @@ async def async_unload_entry(hass, entry):
 class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
-    def __init__(self, name, identifier, manager, **kwargs):
+    def __init__(self, name, identifier, manager):
         """Initialize device."""
         self.atv = None
         self.manager = manager
         self._name = name
         self._identifier = identifier
-        self._dispatchers = []
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
 
-        def _connected(atv):
+        @callback
+        def _async_connected(atv):
             """Handle that a connection was made to a device."""
             self.atv = atv
-            if hasattr(self, "device_connected"):
-                self.device_connected(atv)
+            self.async_device_connected(atv)
             self.async_write_ha_state()
 
-        def _disconnected():
+        @callback
+        def _async_disconnected():
             """Handle that a connection to a device was lost."""
-            if hasattr(self, "device_disconnected"):
-                self.device_disconnected()
+            self.async_device_disconnected()
             self.atv = None
             self.async_write_ha_state()
 
-        self._dispatchers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_CONNECTED}_{self._identifier}", _connected
+                self.hass, f"{SIGNAL_CONNECTED}_{self._identifier}", _async_connected
             )
         )
-        self._dispatchers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_DISCONNECTED}_{self._identifier}", _disconnected
+                self.hass,
+                f"{SIGNAL_DISCONNECTED}_{self._identifier}",
+                _async_disconnected,
             )
         )
 
-    async def async_will_remove_from_hass(self):
-        """Handle when an entity is about to be removed from Home Assistant."""
-        while self._dispatchers:
-            unsub = self._dispatchers.pop()
-            unsub()
+    def async_device_connected(self, atv):
+        """Handle when connection is made to device."""
+
+    def async_device_disconnected(self):
+        """Handle when connection was lost to device."""
 
     @property
     def device_info(self):

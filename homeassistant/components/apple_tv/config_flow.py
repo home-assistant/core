@@ -3,9 +3,6 @@ from ipaddress import ip_address
 import logging
 from random import randrange
 
-from pyatv import exceptions, pair, scan
-from pyatv.const import Protocol
-from pyatv.convert import protocol_str
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,6 +17,9 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from pyatv import exceptions, pair, scan
+from pyatv.const import Protocol
+from pyatv.convert import protocol_str
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF
 from .const import DOMAIN  # pylint: disable=unused-import
