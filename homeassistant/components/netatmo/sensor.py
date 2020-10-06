@@ -138,12 +138,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
             ]
             for condition in conditions:
+                if condition not in SENSOR_TYPES:
+                    _LOGGER.debug("Unsupported condition <%s>", condition)
+                    conditions.remove(condition)
                 if f"{condition}_value" in SENSOR_TYPES:
                     conditions.append(f"{condition}_value")
                 elif f"{condition}_lvl" in SENSOR_TYPES:
                     conditions.append(f"{condition}_lvl")
-                elif condition == "battery_vp":
-                    conditions.append("battery_lvl")
 
             for condition in conditions:
                 entities.append(
