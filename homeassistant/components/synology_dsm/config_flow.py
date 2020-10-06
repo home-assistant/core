@@ -126,7 +126,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(host, port, username, password, use_ssl)
+        api = SynologyDSM(host, port, username, password, use_ssl, timeout=30)
 
         try:
             serial = await self.hass.async_add_executor_job(
