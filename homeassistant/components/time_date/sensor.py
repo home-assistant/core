@@ -25,6 +25,9 @@ OPTION_TYPES = {
     "time_date": "Time & Date",
     "beat": "Internet Time",
     "time_utc": "Time (UTC)",
+    "time_12h": "Time (12hr)",
+    "date_dmy": "Date (dmy)",
+    "date_mdy": "Date (mdy)"
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -95,9 +98,9 @@ class TimeDateSensor(Entity):
         """Compute next time an update should occur."""
         if now is None:
             now = dt_util.utcnow()
-        if self.type == "date":
+        if self.type in ["date", "date_dmy", "date_mdy"]:
             now = dt_util.start_of_local_day(dt_util.as_local(now))
-            return now + timedelta(seconds=86400)
+            return now + timedelta(days=1)
         if self.type == "beat":
             interval = 86.4
         else:
@@ -107,9 +110,10 @@ class TimeDateSensor(Entity):
         return now + timedelta(seconds=delta)
 
     def _update_internal_state(self, time_date):
-        time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
+        lt = dt_util.as_local(time_date)
+        time = lt.strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
-        date = dt_util.as_local(time_date).date().isoformat()
+        date = lt.date().isoformat()
         date_utc = time_date.date().isoformat()
 
         # Calculate Swatch Internet Time.
@@ -124,8 +128,14 @@ class TimeDateSensor(Entity):
 
         if self.type == "time":
             self._state = time
+        elif self.type == "time_12h":
+            self._state = lt.strftime("%I:%M %p")
         elif self.type == "date":
             self._state = date
+        elif self.type == "date_dmy":
+            self._state = lt.strftime("%d-%m-%Y")
+        elif self.type == "date_mdy":
+            self._state = lt.strftime("%m-%d-%Y")
         elif self.type == "date_time":
             self._state = f"{date}, {time}"
         elif self.type == "date_time_utc":
