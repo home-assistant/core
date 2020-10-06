@@ -44,7 +44,7 @@ async def help_test_availability_when_connection_lost(
     assert state.state != STATE_UNAVAILABLE
 
     mqtt_mock.connected = False
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    hass.add_job(mqtt_client_mock.on_disconnect, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -52,7 +52,7 @@ async def help_test_availability_when_connection_lost(
     assert state.state == STATE_UNAVAILABLE
 
     mqtt_mock.connected = True
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    hass.add_job(mqtt_client_mock.on_connect, None, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()

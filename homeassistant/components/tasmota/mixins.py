@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.mqtt import (
+    async_subscribe_connection_status,
     is_connected as mqtt_connected,
-    subscribe_connection_status,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -41,7 +41,7 @@ class TasmotaAvailability(TasmotaEntity):
         await super().async_added_to_hass()
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
-            subscribe_connection_status(self.hass, self.async_mqtt_connected)
+            async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
 
     @callback

@@ -1467,7 +1467,8 @@ async def websocket_subscribe(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-def subscribe_connection_status(hass, connection_status_callback):
+@callback
+def async_subscribe_connection_status(hass, connection_status_callback):
     """Subscribe to MQTT connection changes."""
 
     @callback
