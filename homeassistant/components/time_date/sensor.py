@@ -27,7 +27,7 @@ OPTION_TYPES = {
     "time_utc": "Time (UTC)",
     "time_12h": "Time (12hr)",
     "date_dmy": "Date (dmy)",
-    "date_mdy": "Date (mdy)"
+    "date_mdy": "Date (mdy)",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
