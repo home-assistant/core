@@ -147,7 +147,7 @@ def setup(hass, config):
             )
             metrics.append(metric)
 
-        string_keys.update(strings.keys())
+        string_keys.update(strings)
         return metrics
 
     if publish_states_host:
