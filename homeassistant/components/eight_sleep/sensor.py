@@ -218,9 +218,11 @@ class EightUserSensor(EightSleepUserEntity):
             }
             return state_attr
 
-        state_attr = {ATTR_SESSION_START: self._attr["date"]}
-        state_attr[ATTR_TNT] = self._attr["tnt"]
-        state_attr[ATTR_PROCESSING] = self._attr["processing"]
+        state_attr = {
+            ATTR_SESSION_START: self._attr["date"],
+            ATTR_TNT: self._attr["tnt"],
+            ATTR_PROCESSING: self._attr["processing"],
+        }
 
         sleep_time = (
             sum(self._attr["breakdown"].values()) - self._attr["breakdown"]["awake"]
@@ -271,9 +273,13 @@ class EightUserSensor(EightSleepUserEntity):
                 state_attr[ATTR_HEART_RATE] = round(self._attr["heart_rate"], 2)
             except TypeError:
                 state_attr[ATTR_HEART_RATE] = None
-            state_attr[ATTR_SLEEP_STAGE] = self._attr["stage"]
-            state_attr[ATTR_ROOM_TEMP] = room_temp
-            state_attr[ATTR_BED_TEMP] = bed_temp
+            state_attr.update(
+                {
+                    ATTR_SLEEP_STAGE: self._attr["stage"],
+                    ATTR_ROOM_TEMP: room_temp,
+                    ATTR_BED_TEMP: bed_temp,
+                }
+            )
         elif "last" in self._sensor_root:
             try:
                 state_attr[ATTR_AVG_RESP_RATE] = round(self._attr["resp_rate"], 2)
@@ -283,8 +289,12 @@ class EightUserSensor(EightSleepUserEntity):
                 state_attr[ATTR_AVG_HEART_RATE] = round(self._attr["heart_rate"], 2)
             except TypeError:
                 state_attr[ATTR_AVG_HEART_RATE] = None
-            state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
-            state_attr[ATTR_AVG_BED_TEMP] = bed_temp
+            state_attr.update(
+                {
+                    ATTR_AVG_ROOM_TEMP: room_temp,
+                    ATTR_AVG_BED_TEMP: bed_temp,
+                }
+            )
 
         return state_attr
 

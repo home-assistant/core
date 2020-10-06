@@ -330,7 +330,11 @@ class AndroidIPCamEntity(Entity):
         if self._ipcam.status_data is None:
             return state_attr
 
-        state_attr[ATTR_VID_CONNS] = self._ipcam.status_data.get("video_connections")
-        state_attr[ATTR_AUD_CONNS] = self._ipcam.status_data.get("audio_connections")
+        state_attr.update(
+            {
+                ATTR_VID_CONNS: self._ipcam.status_data.get("video_connections"),
+                ATTR_AUD_CONNS: self._ipcam.status_data.get("audio_connections"),
+            }
+        )
 
         return state_attr

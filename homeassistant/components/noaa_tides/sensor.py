@@ -96,15 +96,23 @@ class NOAATidesAndCurrentsSensor(Entity):
         if self.data is None:
             return attr
         if self.data["hi_lo"][1] == "H":
-            attr["high_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
-            attr["high_tide_height"] = self.data["predicted_wl"][1]
-            attr["low_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
-            attr["low_tide_height"] = self.data["predicted_wl"][2]
+            attr.update(
+                {
+                    "high_tide_time": self.data.index[1].strftime("%Y-%m-%dT%H:%M"),
+                    "high_tide_height": self.data["predicted_wl"][1],
+                    "low_tide_time": self.data.index[2].strftime("%Y-%m-%dT%H:%M"),
+                    "low_tide_height": self.data["predicted_wl"][2],
+                }
+            )
         elif self.data["hi_lo"][1] == "L":
-            attr["low_tide_time"] = self.data.index[1].strftime("%Y-%m-%dT%H:%M")
-            attr["low_tide_height"] = self.data["predicted_wl"][1]
-            attr["high_tide_time"] = self.data.index[2].strftime("%Y-%m-%dT%H:%M")
-            attr["high_tide_height"] = self.data["predicted_wl"][2]
+            attr.update(
+                {
+                    "low_tide_time": self.data.index[1].strftime("%Y-%m-%dT%H:%M"),
+                    "low_tide_height": self.data["predicted_wl"][1],
+                    "high_tide_time": self.data.index[2].strftime("%Y-%m-%dT%H:%M"),
+                    "high_tide_height": self.data["predicted_wl"][2],
+                }
+            )
         return attr
 
     @property

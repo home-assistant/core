@@ -86,23 +86,32 @@ class KebaBinarySensor(BinarySensorEntity):
 
         elif self._key == "Plug":
             self._is_on = self._keba.get_value("Plug_plugged")
-            self._attributes["plugged_on_wallbox"] = self._keba.get_value(
-                "Plug_wallbox"
+            self._attributes.update(
+                {
+                    "plugged_on_wallbox": self._keba.get_value("Plug_wallbox"),
+                    "plug_locked": self._keba.get_value("Plug_locked"),
+                    "plugged_on_EV": self._keba.get_value("Plug_EV"),
+                }
             )
-            self._attributes["plug_locked"] = self._keba.get_value("Plug_locked")
-            self._attributes["plugged_on_EV"] = self._keba.get_value("Plug_EV")
 
         elif self._key == "State":
             self._is_on = self._keba.get_value("State_on")
-            self._attributes["status"] = self._keba.get_value("State_details")
-            self._attributes["max_charging_rate"] = str(
-                self._keba.get_value("Max curr")
+            self._attributes.update(
+                {
+                    "status": self._keba.get_value("State_details"),
+                    "max_charging_rate": str(self._keba.get_value("Max curr")),
+                }
             )
 
         elif self._key == "Tmo FS":
             self._is_on = not self._keba.get_value("FS_on")
-            self._attributes["failsafe_timeout"] = str(self._keba.get_value("Tmo FS"))
-            self._attributes["fallback_current"] = str(self._keba.get_value("Curr FS"))
+            self._attributes.update(
+                {
+                    "failsafe_timeout": str(self._keba.get_value("Tmo FS")),
+                    "fallback_current": str(self._keba.get_value("Curr FS")),
+                }
+            )
+
         elif self._key == "Authreq":
             self._is_on = self._keba.get_value(self._key) == 0
 

@@ -120,9 +120,13 @@ class TrackerEntity(BaseTrackerEntity):
         attr = {}
         attr.update(super().state_attributes)
         if self.latitude is not None:
-            attr[ATTR_LATITUDE] = self.latitude
-            attr[ATTR_LONGITUDE] = self.longitude
-            attr[ATTR_GPS_ACCURACY] = self.location_accuracy
+            attr.update(
+                {
+                    ATTR_LATITUDE: self.latitude,
+                    ATTR_LONGITUDE: self.longitude,
+                    ATTR_GPS_ACCURACY: self.location_accuracy,
+                }
+            )
 
         return attr
 

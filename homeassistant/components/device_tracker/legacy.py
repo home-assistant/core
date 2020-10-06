@@ -352,10 +352,13 @@ class Device(RestoreEntity):
         attr = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.gps:
-            attr[ATTR_LATITUDE] = self.gps[0]
-            attr[ATTR_LONGITUDE] = self.gps[1]
-            attr[ATTR_GPS_ACCURACY] = self.gps_accuracy
-
+            attr.update(
+                {
+                    ATTR_LATITUDE: self.gps[0],
+                    ATTR_LONGITUDE: self.gps[1],
+                    ATTR_GPS_ACCURACY: self.gps_accuracy,
+                }
+            )
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
 

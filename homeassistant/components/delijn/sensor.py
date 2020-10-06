@@ -89,13 +89,17 @@ class DeLijnPublicTransportSensor(Entity):
             else:
                 first_passage = first["due_at_schedule"]
             self._state = first_passage
-            self._attributes["line_number_public"] = first["line_number_public"]
-            self._attributes["line_transport_type"] = first["line_transport_type"]
-            self._attributes["final_destination"] = first["final_destination"]
-            self._attributes["due_at_schedule"] = first["due_at_schedule"]
-            self._attributes["due_at_realtime"] = first["due_at_realtime"]
-            self._attributes["is_realtime"] = first["is_realtime"]
-            self._attributes["next_passages"] = self.line.passages
+            self._attributes.update(
+                {
+                    "line_number_public": first["line_number_public"],
+                    "line_transport_type": first["line_transport_type"],
+                    "final_destination": first["final_destination"],
+                    "due_at_schedule": first["due_at_schedule"],
+                    "due_at_realtime": first["due_at_realtime"],
+                    "is_realtime": first["is_realtime"],
+                    "next_passages": self.line.passages,
+                }
+            )
             self._available = True
         except (KeyError, IndexError):
             _LOGGER.error("Invalid data received from De Lijn")

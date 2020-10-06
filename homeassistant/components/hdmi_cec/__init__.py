@@ -458,11 +458,16 @@ class CecEntity(Entity):
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:
-            state_attr[ATTR_VENDOR_ID] = self.vendor_id
-            state_attr[ATTR_VENDOR_NAME] = self.vendor_name
+            state_attr.update(
+                {ATTR_VENDOR_ID: self.vendor_id, ATTR_VENDOR_NAME: self.vendor_name}
+            )
         if self.type_id is not None:
-            state_attr[ATTR_TYPE_ID] = self.type_id
-            state_attr[ATTR_TYPE] = self.type
+            state_attr.update(
+                {
+                    ATTR_TYPE_ID: self.type_id,
+                    ATTR_TYPE: self.type,
+                }
+            )
         if self.physical_address is not None:
             state_attr[ATTR_PHYSICAL_ADDRESS] = self.physical_address
         return state_attr

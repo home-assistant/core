@@ -164,9 +164,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the access point."""
         state_attr = super().device_state_attributes
-
-        state_attr[ATTR_MODEL_TYPE] = "HmIP-HAP"
-        state_attr[ATTR_IS_GROUP] = False
+        state_attr.update({ATTR_MODEL_TYPE: "HmIP-HAP", ATTR_IS_GROUP: False})
 
         return state_attr
 
@@ -384,9 +382,12 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity):
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the delta counter."""
         state_attr = super().device_state_attributes
-
-        state_attr[ATTR_LEFT_COUNTER] = self._device.leftCounter
-        state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter
+        state_attr.update(
+            {
+                ATTR_LEFT_COUNTER: self._device.leftCounter,
+                ATTR_RIGHT_COUNTER: self._device.rightCounter,
+            }
+        )
 
         return state_attr
 

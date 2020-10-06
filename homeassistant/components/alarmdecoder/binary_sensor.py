@@ -122,14 +122,18 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         """Return the state attributes."""
         attr = {CONF_ZONE_NUMBER: self._zone_number}
         if self._rfid and self._rfstate is not None:
-            attr[ATTR_RF_BIT0] = bool(self._rfstate & 0x01)
-            attr[ATTR_RF_LOW_BAT] = bool(self._rfstate & 0x02)
-            attr[ATTR_RF_SUPERVISED] = bool(self._rfstate & 0x04)
-            attr[ATTR_RF_BIT3] = bool(self._rfstate & 0x08)
-            attr[ATTR_RF_LOOP3] = bool(self._rfstate & 0x10)
-            attr[ATTR_RF_LOOP2] = bool(self._rfstate & 0x20)
-            attr[ATTR_RF_LOOP4] = bool(self._rfstate & 0x40)
-            attr[ATTR_RF_LOOP1] = bool(self._rfstate & 0x80)
+            attr.update(
+                {
+                    ATTR_RF_BIT0: bool(self._rfstate & 0x01),
+                    ATTR_RF_LOW_BAT: bool(self._rfstate & 0x02),
+                    ATTR_RF_SUPERVISED: bool(self._rfstate & 0x04),
+                    ATTR_RF_BIT3: bool(self._rfstate & 0x08),
+                    ATTR_RF_LOOP3: bool(self._rfstate & 0x10),
+                    ATTR_RF_LOOP2: bool(self._rfstate & 0x20),
+                    ATTR_RF_LOOP4: bool(self._rfstate & 0x40),
+                    ATTR_RF_LOOP1: bool(self._rfstate & 0x80),
+                }
+            )
         return attr
 
     @property

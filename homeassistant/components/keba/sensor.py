@@ -127,13 +127,17 @@ class KebaSensor(Entity):
         self._state = self._keba.get_value(self._key)
 
         if self._key == "P":
-            self._attributes["power_factor"] = self._keba.get_value("PF")
-            self._attributes["voltage_u1"] = str(self._keba.get_value("U1"))
-            self._attributes["voltage_u2"] = str(self._keba.get_value("U2"))
-            self._attributes["voltage_u3"] = str(self._keba.get_value("U3"))
-            self._attributes["current_i1"] = str(self._keba.get_value("I1"))
-            self._attributes["current_i2"] = str(self._keba.get_value("I2"))
-            self._attributes["current_i3"] = str(self._keba.get_value("I3"))
+            self._attributes.update(
+                {
+                    "power_factor": self._keba.get_value("PF"),
+                    "voltage_u1": str(self._keba.get_value("U1")),
+                    "voltage_u2": str(self._keba.get_value("U2")),
+                    "voltage_u3": str(self._keba.get_value("U3")),
+                    "current_i1": str(self._keba.get_value("I1")),
+                    "current_i2": str(self._keba.get_value("I2")),
+                    "current_i3": str(self._keba.get_value("I3")),
+                }
+            )
         elif self._key == "Curr user":
             self._attributes["max_current_hardware"] = self._keba.get_value("Curr HW")
 

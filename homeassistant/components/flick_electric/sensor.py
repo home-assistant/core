@@ -73,8 +73,12 @@ class FlickPricingSensor(Entity):
         with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
 
-        self._attributes[ATTR_START_AT] = self._price.start_at
-        self._attributes[ATTR_END_AT] = self._price.end_at
+        self._attributes.update(
+            {
+                ATTR_START_AT: self._price.start_at,
+                ATTR_END_AT: self._price.end_at,
+            }
+        )
         for component in self._price.components:
             if component.charge_setter not in ATTR_COMPONENTS:
                 _LOGGER.warning("Found unknown component: %s", component.charge_setter)

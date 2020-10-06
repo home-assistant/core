@@ -142,9 +142,13 @@ class WinkHub(WinkBinarySensorEntity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         _attributes = super().device_state_attributes
-        _attributes["update_needed"] = self.wink.update_needed()
-        _attributes["firmware_version"] = self.wink.firmware_version()
-        _attributes["pairing_mode"] = self.wink.pairing_mode()
+        _attributes.update(
+            {
+                "update_needed": self.wink.update_needed(),
+                "firmware_version": self.wink.firmware_version(),
+                "pairing_mode": self.wink.pairing_mode(),
+            }
+        )
         _kidde_code = self.wink.kidde_radio_code()
         if _kidde_code is not None:
             # The service call to set the Kidde code
@@ -162,10 +166,14 @@ class WinkRemote(WinkBinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         _attributes = super().device_state_attributes
-        _attributes["button_on_pressed"] = self.wink.button_on_pressed()
-        _attributes["button_off_pressed"] = self.wink.button_off_pressed()
-        _attributes["button_up_pressed"] = self.wink.button_up_pressed()
-        _attributes["button_down_pressed"] = self.wink.button_down_pressed()
+        _attributes.update(
+            {
+                "button_on_pressed": self.wink.button_on_pressed(),
+                "button_off_pressed": self.wink.button_off_pressed(),
+                "button_up_pressed": self.wink.button_up_pressed(),
+                "button_down_pressed": self.wink.button_down_pressed(),
+            }
+        )
         return _attributes
 
     @property
@@ -181,8 +189,12 @@ class WinkButton(WinkBinarySensorEntity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         _attributes = super().device_state_attributes
-        _attributes["pressed"] = self.wink.pressed()
-        _attributes["long_pressed"] = self.wink.long_pressed()
+        _attributes.update(
+            {
+                "pressed": self.wink.pressed(),
+                "long_pressed": self.wink.long_pressed(),
+            }
+        )
         return _attributes
 
 

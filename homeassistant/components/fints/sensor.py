@@ -251,11 +251,16 @@ class FinTsHoldingsAccount(Entity):
             attributes[ATTR_BANK] = self._client.name
         for holding in self._holdings:
             total_name = f"{holding.name} total"
-            attributes[total_name] = holding.total_value
             pieces_name = f"{holding.name} pieces"
-            attributes[pieces_name] = holding.pieces
             price_name = f"{holding.name} price"
-            attributes[price_name] = holding.market_value
+
+            attributes.update(
+                {
+                    total_name: holding.total_value,
+                    pieces_name: holding.pieces,
+                    price_name: holding.market_value,
+                }
+            )
 
         return attributes
 

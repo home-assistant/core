@@ -108,8 +108,11 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
                 attr[ATTR_DARK] = self._device.dark
 
         elif self._device.type in Vibration.ZHATYPE:
-            attr[ATTR_ORIENTATION] = self._device.orientation
-            attr[ATTR_TILTANGLE] = self._device.tiltangle
-            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
-
+            attr.update(
+                {
+                    ATTR_ORIENTATION: self._device.orientation,
+                    ATTR_TILTANGLE: self._device.tiltangle,
+                    ATTR_VIBRATIONSTRENGTH: self._device.vibrationstrength,
+                }
+            )
         return attr

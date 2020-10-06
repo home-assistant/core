@@ -178,10 +178,14 @@ class SteamSensor(Entity):
         if self._game is not None:
             attr["game"] = self._game
         if self._game_id is not None:
-            attr["game_id"] = self._game_id
             game_url = f"{STEAM_API_URL}{self._game_id}/"
-            attr["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
-            attr["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
+            attr.update(
+                {
+                    "game_id": self._game_id,
+                    "game_image_header": f"{game_url}{STEAM_HEADER_IMAGE_FILE}",
+                    "game_image_main": f"{game_url}{STEAM_MAIN_IMAGE_FILE}",
+                }
+            )
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:

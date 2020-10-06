@@ -88,11 +88,9 @@ class ZestimateDataSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {}
+        attributes = {"address": self.address, ATTR_ATTRIBUTION: ATTRIBUTION}
         if self.data is not None:
-            attributes = self.data
-        attributes["address"] = self.address
-        attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
+            attributes.update(self.data)
         return attributes
 
     @property

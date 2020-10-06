@@ -83,8 +83,12 @@ class HMDevice(Entity):
                 attr[data[0]] = value
 
         # Static attributes
-        attr["id"] = self._hmdevice.ADDRESS
-        attr["interface"] = self._interface
+        attr.update(
+            {
+                "id": self._hmdevice.ADDRESS,
+                "interface": self._interface,
+            }
+        )
 
         return attr
 

@@ -124,11 +124,22 @@ class WemoSwitch(SwitchEntity):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
         if self.insight_params:
-            attr["on_latest_time"] = WemoSwitch.as_uptime(self.insight_params["onfor"])
-            attr["on_today_time"] = WemoSwitch.as_uptime(self.insight_params["ontoday"])
-            attr["on_total_time"] = WemoSwitch.as_uptime(self.insight_params["ontotal"])
-            attr["power_threshold_w"] = (
-                convert(self.insight_params["powerthreshold"], float, 0.0) / 1000.0
+            attr.update(
+                {
+                    "on_latest_time": WemoSwitch.as_uptime(
+                        self.insight_params["onfor"]
+                    ),
+                    "on_today_time": WemoSwitch.as_uptime(
+                        self.insight_params["ontoday"]
+                    ),
+                    "on_total_time": WemoSwitch.as_uptime(
+                        self.insight_params["ontotal"]
+                    ),
+                    "power_threshold_w": (
+                        convert(self.insight_params["powerthreshold"], float, 0.0)
+                        / 1000.0
+                    ),
+                }
             )
 
         if self.coffeemaker_mode is not None:

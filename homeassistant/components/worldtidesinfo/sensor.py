@@ -77,15 +77,23 @@ class WorldTidesInfoSensor(Entity):
         attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if "High" in str(self.data["extremes"][0]["type"]):
-            attr["high_tide_time_utc"] = self.data["extremes"][0]["date"]
-            attr["high_tide_height"] = self.data["extremes"][0]["height"]
-            attr["low_tide_time_utc"] = self.data["extremes"][1]["date"]
-            attr["low_tide_height"] = self.data["extremes"][1]["height"]
+            attr.update(
+                {
+                    "high_tide_time_utc": self.data["extremes"][0]["date"],
+                    "high_tide_height": self.data["extremes"][0]["height"],
+                    "low_tide_time_utc": self.data["extremes"][1]["date"],
+                    "low_tide_height": self.data["extremes"][1]["height"],
+                }
+            )
         elif "Low" in str(self.data["extremes"][0]["type"]):
-            attr["high_tide_time_utc"] = self.data["extremes"][1]["date"]
-            attr["high_tide_height"] = self.data["extremes"][1]["height"]
-            attr["low_tide_time_utc"] = self.data["extremes"][0]["date"]
-            attr["low_tide_height"] = self.data["extremes"][0]["height"]
+            attr.update(
+                {
+                    "high_tide_time_utc": self.data["extremes"][1]["date"],
+                    "high_tide_height": self.data["extremes"][1]["height"],
+                    "low_tide_time_utc": self.data["extremes"][0]["date"],
+                    "low_tide_height": self.data["extremes"][0]["height"],
+                }
+            )
         return attr
 
     @property

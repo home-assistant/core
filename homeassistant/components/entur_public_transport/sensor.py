@@ -177,8 +177,12 @@ class EnturPublicTransportSensor(Entity):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
-        self._attributes[ATTR_STOP_ID] = self._stop
+        self._attributes.update(
+            {
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+                ATTR_STOP_ID: self._stop,
+            }
+        )
         return self._attributes
 
     @property
@@ -203,8 +207,12 @@ class EnturPublicTransportSensor(Entity):
             return
 
         if self._show_on_map and data.latitude and data.longitude:
-            self._attributes[CONF_LATITUDE] = data.latitude
-            self._attributes[CONF_LONGITUDE] = data.longitude
+            self._attributes.update(
+                {
+                    CONF_LATITUDE: data.latitude,
+                    CONF_LONGITUDE: data.longitude,
+                }
+            )
 
         calls = data.estimated_calls
         if not calls:
@@ -214,28 +222,30 @@ class EnturPublicTransportSensor(Entity):
         self._state = due_in_minutes(calls[0].expected_departure_time)
         self._icon = ICONS.get(calls[0].transport_mode, ICONS[DEFAULT_ICON_KEY])
 
-        self._attributes[ATTR_ROUTE] = calls[0].front_display
-        self._attributes[ATTR_ROUTE_ID] = calls[0].line_id
-        self._attributes[ATTR_EXPECTED_AT] = calls[0].expected_departure_time.strftime(
-            "%H:%M"
+        self._attributes.update(
+            {
+                ATTR_ROUTE: calls[0].front_display,
+                ATTR_ROUTE_ID: calls[0].line_id,
+                ATTR_EXPECTED_AT: calls[0].expected_departure_time.strftime("%H:%M"),
+                ATTR_REALTIME: calls[0].is_realtime,
+                ATTR_DELAY: calls[0].delay_in_min,
+            }
         )
-        self._attributes[ATTR_REALTIME] = calls[0].is_realtime
-        self._attributes[ATTR_DELAY] = calls[0].delay_in_min
 
         number_of_calls = len(calls)
         if number_of_calls < 2:
             return
 
-        self._attributes[ATTR_NEXT_UP_ROUTE] = calls[1].front_display
-        self._attributes[ATTR_NEXT_UP_ROUTE_ID] = calls[1].line_id
-        self._attributes[ATTR_NEXT_UP_AT] = calls[1].expected_departure_time.strftime(
-            "%H:%M"
+        self._attributes.update(
+            {
+                ATTR_NEXT_UP_ROUTE: calls[1].front_display,
+                ATTR_NEXT_UP_ROUTE_ID: calls[1].line_id,
+                ATTR_NEXT_UP_AT: calls[1].expected_departure_time.strftime("%H:%M"),
+                ATTR_NEXT_UP_IN: f"{due_in_minutes(calls[1].expected_departure_time)} min",
+                ATTR_NEXT_UP_REALTIME: calls[1].is_realtime,
+                ATTR_NEXT_UP_DELAY: calls[1].delay_in_min,
+            }
         )
-        self._attributes[
-            ATTR_NEXT_UP_IN
-        ] = f"{due_in_minutes(calls[1].expected_departure_time)} min"
-        self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
-        self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
 
         if number_of_calls < 3:
             return

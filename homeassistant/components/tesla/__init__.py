@@ -284,8 +284,12 @@ class TeslaDevice(CoordinatorEntity):
         """Return the state attributes of the device."""
         attr = self._attributes.copy()
         if self.tesla_device.has_battery():
-            attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
-            attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
+            attr.update(
+                {
+                    ATTR_BATTERY_LEVEL: self.tesla_device.battery_level(),
+                    ATTR_BATTERY_CHARGING: self.tesla_device.battery_charging(),
+                }
+            )
         return attr
 
     @property

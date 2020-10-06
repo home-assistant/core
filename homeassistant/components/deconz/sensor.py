@@ -180,8 +180,12 @@ class DeconzSensor(DeconzDevice):
                 attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif self._device.type in Power.ZHATYPE:
-            attr[ATTR_CURRENT] = self._device.current
-            attr[ATTR_VOLTAGE] = self._device.voltage
+            attr.update(
+                {
+                    ATTR_CURRENT: self._device.current,
+                    ATTR_VOLTAGE: self._device.voltage,
+                }
+            )
 
         return attr
 

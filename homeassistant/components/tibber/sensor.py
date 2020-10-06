@@ -165,13 +165,15 @@ class TibberSensorElPrice(TibberSensor):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]
-        self._device_state_attributes["app_nickname"] = data["appNickname"]
-        self._device_state_attributes["grid_company"] = data["meteringPointData"][
-            "gridCompany"
-        ]
-        self._device_state_attributes["estimated_annual_consumption"] = data[
-            "meteringPointData"
-        ]["estimatedAnnualConsumption"]
+        self._device_state_attributes.update(
+            {
+                "app_nickname": data["appNickname"],
+                "grid_company": data["meteringPointData"]["gridCompany"],
+                "estimated_annual_consumption": data["meteringPointData"][
+                    "estimatedAnnualConsumption"
+                ],
+            }
+        )
 
 
 class TibberSensorRT(TibberSensor):

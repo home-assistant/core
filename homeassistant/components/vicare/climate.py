@@ -135,18 +135,17 @@ class ViCareClimate(ClimateEntity):
             self._current_mode = self._api.getActiveMode()
 
             # Update the generic device attributes
-            self._attributes = {}
-            self._attributes["room_temperature"] = _room_temperature
-            self._attributes["active_vicare_program"] = self._current_program
-            self._attributes["active_vicare_mode"] = self._current_mode
-            self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
-            self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
-            self._attributes[
-                "month_since_last_service"
-            ] = self._api.getMonthSinceLastService()
-            self._attributes["date_last_service"] = self._api.getLastServiceDate()
-            self._attributes["error_history"] = self._api.getErrorHistory()
-            self._attributes["active_error"] = self._api.getActiveError()
+            self._attributes = {
+                "room_temperature": _room_temperature,
+                "active_vicare_program": self._current_program,
+                "active_vicare_mode": self._current_mode,
+                "heating_curve_slope": self._api.getHeatingCurveSlope(),
+                "heating_curve_shift": self._api.getHeatingCurveShift(),
+                "month_since_last_service": self._api.getMonthSinceLastService(),
+                "date_last_service": self._api.getLastServiceDate(),
+                "error_history": self._api.getErrorHistory(),
+                "active_error": self._api.getActiveError(),
+            }
 
             # Update the specific device attributes
             if self._heating_type == HeatingType.gas:

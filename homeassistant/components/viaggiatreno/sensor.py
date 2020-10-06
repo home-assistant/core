@@ -121,8 +121,7 @@ class ViaggiaTrenoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
-        return self._attributes
+        return self._attributes.update({ATTR_ATTRIBUTION: ATTRIBUTION})
 
     @staticmethod
     def has_departed(data):
