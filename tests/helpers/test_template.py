@@ -174,7 +174,7 @@ def test_iterating_all_states_unavailable(hass):
     hass.states.async_set("sensor.temperature", 10)
 
     info = render_to_info(hass, tmpl_str)
-    assert_result_info(info, "1", entities=[], all_states=True)
+    assert_result_info(info, 1, entities=[], all_states=True)
 
 
 def test_iterating_domain_states(hass):

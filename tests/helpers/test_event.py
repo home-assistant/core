@@ -1508,18 +1508,18 @@ async def test_track_template_has_default_rate_limit(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     hass.states.async_set("sensor.one", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     info.async_refresh()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
 
 
 async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
@@ -1545,21 +1545,21 @@ async def test_track_template_unavailable_sates_has_default_rate_limit(hass):
     info.async_refresh()
     await hass.async_block_till_done()
 
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     hass.states.async_set("sensor.one", "unknown")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1"]
+    assert refresh_runs == [1]
     info.async_refresh()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     hass.states.async_set("sensor.three", "unknown")
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2"]
+    assert refresh_runs == [1, 2]
     info.async_refresh()
     await hass.async_block_till_done()
-    assert refresh_runs == ["1", "2", "3"]
+    assert refresh_runs == [1, 2, 3]
 
 
 async def test_specifically_referenced_entity_is_not_rate_limited(hass):
