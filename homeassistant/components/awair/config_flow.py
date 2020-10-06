@@ -98,7 +98,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             user = await awair.user()
             devices = await user.devices()
             if not devices:
-                return (None, "no_devices")
+                return (None, "no_devices_found")
 
             return (user, None)
 

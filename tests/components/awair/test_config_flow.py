@@ -78,7 +78,7 @@ async def test_no_devices_error(hass):
         )
 
         assert result["type"] == "abort"
-        assert result["reason"] == "no_devices"
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_import(hass):
