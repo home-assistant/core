@@ -245,7 +245,10 @@ class NetatmoSensor(NetatmoBase):
         if device["type"] in ("NHC", "NAMain"):
             self._device_name = module_info["station_name"]
         else:
-            self._device_name = f"{station['station_name']} {module_info.get('module_name', device['type'])}"
+            self._device_name = (
+                f"{station['station_name']} "
+                f"{module_info.get('module_name', device['type'])}"
+            )
 
         self._name = (
             f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[sensor_type][0]}"
