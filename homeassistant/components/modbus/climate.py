@@ -132,7 +132,6 @@ class ModbusThermostat(ClimateEntity):
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
-        self._hvac_mode = HVAC_MODE_AUTO
         self._available = True
 
     async def async_added_to_hass(self):
@@ -159,7 +158,7 @@ class ModbusThermostat(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current HVAC mode."""
-        return self._hvac_mode
+        return HVAC_MODE_AUTO
 
     @property
     def hvac_modes(self):
@@ -168,7 +167,9 @@ class ModbusThermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        self._hvac_mode = hvac_mode
+        # Home Assistant expects this method.
+        # We'll keep it here to avoid getting exceptions.
+        pass
 
     @property
     def name(self):
