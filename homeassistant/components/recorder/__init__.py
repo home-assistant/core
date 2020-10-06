@@ -580,9 +580,7 @@ class Recorder(threading.Thread):
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(
-            sessionmaker(bind=self.engine, expire_on_commit=True)
-        )
+        self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
         """Close the connection."""
