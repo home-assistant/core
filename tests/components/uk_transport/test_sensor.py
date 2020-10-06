@@ -52,8 +52,8 @@ async def test_bus(hass):
         await hass.async_block_till_done()
 
     bus_state = hass.states.get("sensor.next_bus_to_wantage")
-    assert bus_state is not None
-    assert bus_state.name == f"Next bus to {BUS_DIRECTION}"
+    assert None is not bus_state
+    assert f"Next bus to {BUS_DIRECTION}" == bus_state.name
     assert BUS_ATCOCODE == bus_state.attributes[ATTR_ATCOCODE]
     assert "Harwell Campus" == bus_state.attributes[ATTR_LOCALITY]
     assert "Bus Station" == bus_state.attributes[ATTR_STOP_NAME]
@@ -61,8 +61,8 @@ async def test_bus(hass):
 
     direction_re = re.compile(BUS_DIRECTION)
     for bus in bus_state.attributes.get(ATTR_NEXT_BUSES):
-        print(bus["direction"], direction_re.match(bus["direction"]))
-        assert direction_re.search(bus["direction"]) is not None
+        assert None is not bus
+        assert None is not direction_re.search(bus["direction"])
 
 
 async def test_train(hass):
@@ -76,14 +76,14 @@ async def test_train(hass):
         await hass.async_block_till_done()
 
     train_state = hass.states.get("sensor.next_train_to_WAT")
-    assert train_state is not None
+    assert None is not train_state
     assert f"Next train to {TRAIN_DESTINATION_NAME}" == train_state.name
     assert TRAIN_STATION_CODE == train_state.attributes[ATTR_STATION_CODE]
     assert TRAIN_DESTINATION_NAME == train_state.attributes[ATTR_CALLING_AT]
     assert 25 == len(train_state.attributes.get(ATTR_NEXT_TRAINS))
 
     assert (
-        train_state.attributes[ATTR_NEXT_TRAINS][0]["destination_name"]
-        == "London Waterloo"
+        "London Waterloo"
+        == train_state.attributes[ATTR_NEXT_TRAINS][0]["destination_name"]
     )
-    assert train_state.attributes[ATTR_NEXT_TRAINS][0]["estimated"] == "06:13"
+    assert "06:13" == train_state.attributes[ATTR_NEXT_TRAINS][0]["estimated"]
