@@ -30,14 +30,14 @@
       }
     },
     "error": {
-      "connection": "Connection error: please check your host, port & ssl",
-      "login": "Login error: please check your username & password",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "missing_data": "Missing data: please retry later or an other configuration",
       "otp_failed": "Two-step authentication failed, retry with a new pass code",
-      "unknown": "Unknown error: please check logs to get more details"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Host already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
