@@ -228,6 +228,6 @@ async def async_stop(hass: HomeAssistantType) -> bool:
         hass.data[DISCOVERY_UNSUBSCRIBE]()
         hass.data[DISCOVERY_UNSUBSCRIBE] = None
     if INTEGRATION_UNSUBSCRIBE in hass.data:
-        for key, unsub in hass.data[INTEGRATION_UNSUBSCRIBE].items():
+        for key, unsub in list(hass.data[INTEGRATION_UNSUBSCRIBE].items()):
             unsub()
             hass.data[INTEGRATION_UNSUBSCRIBE].pop(key)
