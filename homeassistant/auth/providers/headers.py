@@ -11,7 +11,7 @@ from homeassistant.core import callback
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, User, UserMeta
-from .trusted_networks import InvalidAuthError, InvalidUserError, IPAddress
+from .trusted_networks import InvalidAuthError, IPAddress
 
 CONF_USERNAME_HEADER = "username_header"
 
@@ -52,25 +52,6 @@ class HeaderAuthProvider(AuthProvider):
             available_users,
             cast(IPAddress, context.get("ip_address")),
         )
-
-    async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
-    ) -> Credentials:
-        """Get credentials based on the flow result."""
-        user_id = flow_result["user"]
-
-        users = await self.store.async_get_users()
-        for user in users:
-            if not user.system_generated and user.is_active and user.id == user_id:
-                for credential in await self.async_credentials():
-                    if credential.data["user_id"] == user_id:
-                        return credential
-                cred = self.async_create_credentials({"user_id": user_id})
-                await self.store.async_link_user(user, cred)
-                return cred
-
-        # We only allow login as exist user
-        raise InvalidUserError
 
     async def async_user_meta_for_credentials(
         self, credentials: Credentials

@@ -44,9 +44,62 @@ def provider(hass: HomeAssistant, store: AuthStore) -> headers.HeaderAuthProvide
 
 
 @pytest.fixture
+def provider_invalid(
+    hass: HomeAssistant, store: AuthStore
+) -> headers.HeaderAuthProvider:
+    """Mock provider with invalid config."""
+    # This HTTP Object is required because we check the trusted_proxies
+    hass.http = HomeAssistantHTTP(
+        hass,
+        "",
+        "",
+        "",
+        "localhost",
+        "8123",
+        "",
+        True,
+        [],
+        0,
+        False,
+        "",
+    )
+    return headers.HeaderAuthProvider(
+        hass,
+        store,
+        headers.CONFIG_SCHEMA({"type": "header"}),
+    )
+
+
+@pytest.fixture
 def manager(hass, store, provider):
     """Mock manager."""
     return auth.AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
+
+
+async def test_mfa_not_supported(
+    manager: AuthManager, provider: headers.HeaderAuthProvider
+):
+    """Test that MFA is not supported."""
+    assert not provider.support_mfa
+
+
+async def test_login_flow_invalid_configuration(
+    manager: AuthManager, provider_invalid: headers.HeaderAuthProvider
+):
+    """Test login flow with invalid trusted_proxies."""
+    user = await manager.async_create_user("test-user")
+
+    request = make_mocked_request(
+        "GET", "/", headers={"X-Forwarded-Preferred-Username": user.name}
+    )
+
+    # not from trusted network
+    flow = await provider_invalid.async_login_flow(
+        {"ip_address": ip_address("127.0.0.2"), "request": request}
+    )
+    step = await flow.async_step_init()
+    assert step["type"] == "abort"
+    assert step["reason"] == "not_allowed"
 
 
 async def test_login_flow_invalid_network(
@@ -68,10 +121,10 @@ async def test_login_flow_invalid_network(
     assert step["reason"] == "not_allowed"
 
 
-async def test_login_flow_invalid_header(
+async def test_login_flow_invalid_user(
     manager: AuthManager, provider: headers.HeaderAuthProvider
 ):
-    """Test login flow with an invalid header."""
+    """Test login flow with an invalid user."""
     await manager.async_create_user("test-user")
 
     request = make_mocked_request(
