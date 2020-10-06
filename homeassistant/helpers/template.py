@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
@@ -302,7 +303,7 @@ class Template:
 
         return extract_entities(self.hass, self.template, variables)
 
-    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template."""
         if self.is_static:
             return self.template.strip()
@@ -315,7 +316,7 @@ class Template:
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
@@ -329,9 +330,26 @@ class Template:
             kwargs.update(variables)
 
         try:
-            return compiled.render(kwargs).strip()
+            render_result = compiled.render(kwargs)
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
+
+        render_result = render_result.strip()
+
+        if not self.hass.config.legacy_templates:
+            try:
+                result = literal_eval(render_result)
+
+                # If the literal_eval result is a string, use the original
+                # render, by not returning right here. The evaluation of strings
+                # resulting in strings impacts quotes, to avoid unexpected
+                # output; use the original render instead of the evaluated one.
+                if not isinstance(result, str):
+                    return result
+            except (ValueError, SyntaxError, MemoryError):
+                pass
+
+        return render_result
 
     async def async_render_will_timeout(
         self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any

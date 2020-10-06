@@ -867,7 +867,7 @@ async def test_self_referencing_entity_picture_loop(hass, caplog):
 
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == "2"
+    assert state.attributes[ATTR_ENTITY_PICTURE] == 2
 
     await hass.async_block_till_done()
     assert int(state.state) == 1
