@@ -543,10 +543,13 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         hac.set_time_zone(config[CONF_TIME_ZONE])
 
     if CONF_MEDIA_DIRS not in config:
-        if is_docker_env():
-            hac.media_dirs = {"local": "/media"}
-        else:
-            hac.media_dirs = {"local": hass.config.path("media")}
+        # AIS dirs
+        hac.media_dirs = OrderedDict(
+            [
+                ("dyski", "/data/data/pl.sviete.dom/files/home/dom"),
+                ("galeria", "/data/data/pl.sviete.dom/files/home/AIS/www/img"),
+            ]
+        )
 
     # Init whitelist external dir
     hac.allowlist_external_dirs = {hass.config.path("www"), *hac.media_dirs.values()}
