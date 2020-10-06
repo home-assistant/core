@@ -74,14 +74,14 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        if hasattr(self.smartplug, "weekly_energy_total"):
-            return {
-                "voltage": self.smartplug.voltage,
-                "weekly_energy_total": self.smartplug.weekly_energy_total,
-                "monthly_energy_total": self.smartplug.monthly_energy_total,
-                "yearly_energy_total": self.smartplug.yearly_energy_total,
-            }
-        return {}
+        if not hasattr(self.smartplug, "weekly_energy_total"):
+            return {}
+        return {
+            "voltage": self.smartplug.voltage,
+            "weekly_energy_total": self.smartplug.weekly_energy_total,
+            "monthly_energy_total": self.smartplug.monthly_energy_total,
+            "yearly_energy_total": self.smartplug.yearly_energy_total,
+        }
 
     @property
     def current_power_w(self):
