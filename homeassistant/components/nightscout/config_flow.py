@@ -7,14 +7,20 @@ from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_UNIT_OF_MEASUREMENT, CONF_URL
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, MGDL, MMOL  # pylint:disable=unused-import
 from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): str,
+        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=MGDL): vol.In([MGDL, MMOL]),
+    }
+)
 
 
 async def _validate_input(data):

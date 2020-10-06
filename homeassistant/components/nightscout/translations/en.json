@@ -13,9 +13,10 @@
             "user": {
                 "data": {
                     "api_key": "API Key",
-                    "url": "URL"
+                    "url": "URL",
+                    "unit_of_measurement": "Unit of Measurement"
                 },
-                "description": "- URL: the address of your nightscout instance. I.e.: https://myhomeassistant.duckdns.org:5423\n- API Key (Optional): Only use if your instance is protected (auth_default_roles != readable).",
+                "description": "- URL: the address of your nightscout instance. e.g.: https://myhomeassistant.duckdns.org:5423\n- API Key (Optional): Only use if your instance is protected (auth_default_roles != readable).\n- Unit of Measurement: Choose between mg/dL or mmol/L.",
                 "title": "Enter your Nightscout server information."
             }
         }

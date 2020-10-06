@@ -8,10 +8,19 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import (
+    ATTR_DATE,
+    ATTR_DELTA,
+    ATTR_DEVICE,
+    ATTR_DIRECTION,
+    DOMAIN,
+    MGDL,
+    MMOL_TO_MGDL,
+)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -27,20 +36,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    uom = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
+    async_add_entities(
+        [NightscoutSensor(api, "Blood Sugar", entry.unique_id, uom)], True
+    )
 
 
 class NightscoutSensor(Entity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    def __init__(self, api: NightscoutAPI, name, unique_id, uom):
         """Initialize the Nightscout sensor."""
         self.api = api
         self._unique_id = unique_id
         self._name = name
         self._state = None
         self._attributes = None
-        self._unit_of_measurement = "mg/dL"
+        self._unit_of_measurement = uom
         self._icon = "mdi:cloud-question"
         self._available = False
 
@@ -94,7 +106,13 @@ class NightscoutSensor(Entity):
                 ATTR_DELTA: value.delta,
                 ATTR_DIRECTION: value.direction,
             }
-            self._state = value.sgv
+            if self._unit_of_measurement == MGDL:
+                self._state = value.sgv
+            else:
+                self._state = value.sgv / MMOL_TO_MGDL
+                self._attributes[ATTR_DELTA] = (
+                    self._attributes[ATTR_DELTA] / MMOL_TO_MGDL
+                )
             self._icon = self._parse_icon()
         else:
             self._available = False
