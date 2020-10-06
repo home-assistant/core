@@ -55,4 +55,4 @@ class AsyncConfigEntryAuth(my_pypi_package.AbstractAuth):
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token
+        return self._oauth_session.token["access_token"]
