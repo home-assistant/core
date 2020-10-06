@@ -240,6 +240,7 @@ class Recorder(threading.Thread):
         self._timechanges_seen = 0
         self._keepalive_count = 0
         self._old_states = {}
+        self._pending_expunge = []
         self.event_session = None
         self.get_session = None
         self._completed_database_setup = False
@@ -403,6 +404,7 @@ class Recorder(threading.Thread):
                     self.event_session.add(dbstate)
                     if has_new_state:
                         self._old_states[dbstate.entity_id] = dbstate
+                        self._pending_expunge.append(dbstate)
                 except (TypeError, ValueError):
                     _LOGGER.warning(
                         "State is not JSON serializable: %s",
@@ -488,6 +490,12 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self):
         try:
+            self.event_session.flush()
+            for dbstate in self._pending_expunge:
+                # Expunge the state so its not expired
+                # until we use it later for dbstate.old_state
+                self.event_session.expunge(dbstate)
+            self._pending_expunge = []
             self.event_session.commit()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
@@ -573,9 +581,7 @@ class Recorder(threading.Thread):
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(
-            sessionmaker(bind=self.engine, expire_on_commit=False)
-        )
+        self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
         """Close the connection."""
