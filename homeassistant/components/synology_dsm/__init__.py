@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -233,6 +234,7 @@ class SynoApi:
         self._with_security = True
         self._with_storage = True
         self._with_utilisation = True
+        self._with_information = True
         self._with_surveillance_station = True
 
         self._unsub_dispatcher = None
@@ -250,6 +252,7 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
+            timeout=self._entry.options.get(CONF_TIMEOUT),
             device_token=self._entry.data.get("device_token"),
         )
 
@@ -302,11 +305,14 @@ class SynoApi:
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
+        self._with_information = bool(
+            self._fetching_entities.get(SynoDSMInformation.API_KEY)
+        )
         self._with_surveillance_station = bool(
             self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
 
-        # Reset not used API
+        # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
             self.dsm.reset(self.security)
             self.security = None
@@ -349,7 +355,7 @@ class SynoApi:
     async def async_update(self, now=None):
         """Update function for updating API information."""
         self._async_setup_api_requests()
-        await self._hass.async_add_executor_job(self.dsm.update)
+        await self._hass.async_add_executor_job(self.dsm.update, self._with_information)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
 

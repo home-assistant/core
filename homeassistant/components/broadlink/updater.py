@@ -1,12 +1,15 @@
 """Support for fetching data from Broadlink devices."""
 from abc import ABC, abstractmethod
 from datetime import timedelta
+from functools import partial
 import logging
 
+import broadlink as blk
 from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
     CommandNotSupportedError,
+    NetworkTimeoutError,
     StorageError,
 )
 
@@ -18,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_update_manager(device):
     """Return an update manager for a given Broadlink device."""
+    if device.api.model.startswith("RM mini"):
+        return BroadlinkRMMini3UpdateManager(device)
+
     update_managers = {
         "A1": BroadlinkA1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
@@ -42,7 +48,7 @@ class BroadlinkUpdateManager(ABC):
         self.coordinator = DataUpdateCoordinator(
             device.hass,
             _LOGGER,
-            name="device",
+            name=f"{device.name} ({device.api.model} at {device.api.host[0]})",
             update_method=self.async_update,
             update_interval=timedelta(minutes=1),
         )
@@ -61,14 +67,20 @@ class BroadlinkUpdateManager(ABC):
             ):
                 self.available = False
                 _LOGGER.warning(
-                    "Disconnected from the device at %s", self.device.api.host[0]
+                    "Disconnected from %s (%s at %s)",
+                    self.device.name,
+                    self.device.api.model,
+                    self.device.api.host[0],
                 )
             raise UpdateFailed(err) from err
 
         else:
             if self.available is False:
                 _LOGGER.warning(
-                    "Connected to the device at %s", self.device.api.host[0]
+                    "Connected to %s (%s at %s)",
+                    self.device.name,
+                    self.device.api.model,
+                    self.device.api.host[0],
                 )
             self.available = True
             self.last_update = dt.utcnow()
@@ -93,6 +105,22 @@ class BroadlinkMP1UpdateManager(BroadlinkUpdateManager):
     async def async_fetch_data(self):
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.check_power)
+
+
+class BroadlinkRMMini3UpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink RM mini 3 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        hello = partial(
+            blk.discover,
+            discover_ip_address=self.device.api.host[0],
+            timeout=self.device.api.timeout,
+        )
+        devices = await self.device.hass.async_add_executor_job(hello)
+        if not devices:
+            raise NetworkTimeoutError("The device is offline")
+        return {}
 
 
 class BroadlinkRMUpdateManager(BroadlinkUpdateManager):

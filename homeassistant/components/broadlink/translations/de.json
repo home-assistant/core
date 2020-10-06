@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "finish": {
+                "data": {
+                    "name": "Name"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

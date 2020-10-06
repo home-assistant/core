@@ -5,7 +5,6 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    STATE_UNKNOWN,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
@@ -83,7 +82,7 @@ class EcobeeSensor(Entity):
                     _LOGGER.error(
                         "Model number for ecobee thermostat %s not recognized. "
                         "Please visit this link and provide the following information: "
-                        "https://github.com/home-assistant/home-assistant/issues/27172 "
+                        "https://github.com/home-assistant/core/issues/27172 "
                         "Unrecognized model number: %s",
                         thermostat["name"],
                         thermostat["modelNumber"],
@@ -112,7 +111,7 @@ class EcobeeSensor(Entity):
         if self._state in [
             ECOBEE_STATE_CALIBRATING,
             ECOBEE_STATE_UNKNOWN,
-            STATE_UNKNOWN,
+            "unknown",
         ]:
             return None
 

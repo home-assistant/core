@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "select_location": {
+                "data": {
+                    "location_id": "Asukoht"
+                }
+            }
+        }
+    }
+}

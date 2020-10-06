@@ -5,6 +5,7 @@ import logging
 import re
 
 import jsonrpc_base
+from pykodi import CannotConnectError
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -324,11 +325,15 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
-    @callback
-    def async_on_quit(self, sender, data):
+    async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
+        await self._clear_connection()
+
+    async def _clear_connection(self, close=True):
         self._reset_state()
-        self.hass.async_create_task(self._connection.close())
+        self.async_write_ha_state()
+        if close:
+            await self._connection.close()
 
     @property
     def unique_id(self):
@@ -386,14 +391,23 @@ class KodiEntity(MediaPlayerEntity):
         try:
             await self._connection.connect()
             self._on_ws_connected()
-        except jsonrpc_base.jsonrpc.TransportError:
-            _LOGGER.info("Unable to connect to Kodi via websocket")
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
+            await self._clear_connection(False)
+
+    async def _ping(self):
+        try:
+            await self._kodi.ping()
+        except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
+            _LOGGER.debug("Unable to ping Kodi via websocket", exc_info=True)
+            await self._clear_connection()
 
     async def _async_connect_websocket_if_disconnected(self, *_):
         """Reconnect the websocket if it fails."""
         if not self._connection.connected:
             await self._async_ws_connect()
+        else:
+            await self._ping()
 
     @callback
     def _register_ws_callbacks(self):
@@ -464,7 +478,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return (not self._connection.can_subscribe) or (not self._connection.connected)
+        return not self._connection.can_subscribe
 
     @property
     def volume_level(self):
@@ -663,17 +677,10 @@ class KodiEntity(MediaPlayerEntity):
         elif media_type_lower in [
             MEDIA_TYPE_ARTIST,
             MEDIA_TYPE_ALBUM,
+            MEDIA_TYPE_TRACK,
         ]:
             await self.async_clear_playlist()
-            params = {"playlistid": 0, "item": {f"{media_type}id": int(media_id)}}
-            # pylint: disable=protected-access
-            await self._kodi._server.Playlist.Add(params)
-            await self._kodi.play_playlist(0)
-        elif media_type_lower == MEDIA_TYPE_TRACK:
-            await self._kodi.clear_playlist()
-            params = {"playlistid": 0, "item": {"songid": int(media_id)}}
-            # pylint: disable=protected-access
-            await self._kodi._server.Playlist.Add(params)
+            await self.async_add_to_playlist(media_type_lower, media_id)
             await self._kodi.play_playlist(0)
         elif media_type_lower in [
             MEDIA_TYPE_MOVIE,
@@ -681,8 +688,7 @@ class KodiEntity(MediaPlayerEntity):
             MEDIA_TYPE_SEASON,
             MEDIA_TYPE_TVSHOW,
         ]:
-            # pylint: disable=protected-access
-            await self._kodi._play_item(
+            await self._kodi.play_item(
                 {MAP_KODI_MEDIA_TYPES[media_type_lower]: int(media_id)}
             )
         else:
@@ -700,7 +706,7 @@ class KodiEntity(MediaPlayerEntity):
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
-            result = self._kodi.call_method(method, **kwargs)
+            result = await self._kodi.call_method(method, **kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]["error"]
@@ -737,6 +743,15 @@ class KodiEntity(MediaPlayerEntity):
         """Clear default playlist (i.e. playlistid=0)."""
         await self._kodi.clear_playlist()
 
+    async def async_add_to_playlist(self, media_type, media_id):
+        """Add media item to default playlist (i.e. playlistid=0)."""
+        if media_type == MEDIA_TYPE_ARTIST:
+            await self._kodi.add_artist_to_playlist(int(media_id))
+        elif media_type == MEDIA_TYPE_ALBUM:
+            await self._kodi.add_album_to_playlist(int(media_id))
+        elif media_type == MEDIA_TYPE_TRACK:
+            await self._kodi.add_song_to_playlist(int(media_id))
+
     async def async_add_media_to_playlist(
         self, media_type, media_id=None, media_name="ALL", artist_name=""
     ):
@@ -752,7 +767,7 @@ class KodiEntity(MediaPlayerEntity):
             if media_id is None:
                 media_id = await self._async_find_song(media_name, artist_name)
             if media_id:
-                self._kodi.add_song_to_playlist(int(media_id))
+                await self._kodi.add_song_to_playlist(int(media_id))
 
         elif media_type == "ALBUM":
             if media_id is None:
@@ -762,7 +777,7 @@ class KodiEntity(MediaPlayerEntity):
 
                 media_id = await self._async_find_album(media_name, artist_name)
             if media_id:
-                self._kodi.add_album_to_playlist(int(media_id))
+                await self._kodi.add_album_to_playlist(int(media_id))
 
         else:
             raise RuntimeError("Unrecognized media type.")

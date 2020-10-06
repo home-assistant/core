@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -146,14 +145,14 @@ class SmartPlugData:
                 _LOGGER.warning("Waiting %s s to retry", retry_seconds)
                 return
 
-        _state = STATE_UNKNOWN
+        _state = "unknown"
 
         try:
             self._last_tried = dt_util.now()
             _state = self.smartplug.state
         except urllib.error.HTTPError:
             _LOGGER.error("D-Link connection problem")
-        if _state == STATE_UNKNOWN:
+        if _state == "unknown":
             self._n_tried += 1
             self.available = False
             _LOGGER.warning("Failed to connect to D-Link switch")

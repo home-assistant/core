@@ -75,9 +75,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires_availability_topic(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -107,9 +105,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,

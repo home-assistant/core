@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geograafiline asukoht"
+                }
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import deconz, ssdp
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.async_mock import Mock, patch
@@ -66,8 +67,7 @@ async def setup_deconz_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    bridgeid = get_state_response["config"]["bridgeid"]
-    return hass.data[deconz.DOMAIN].get(bridgeid)
+    return config_entry
 
 
 async def test_gateway_setup(hass):
@@ -76,23 +76,25 @@ async def test_gateway_setup(hass):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        gateway = await setup_deconz_integration(hass)
+        config_entry = await setup_deconz_integration(hass)
+        gateway = get_gateway_from_config_entry(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
         assert gateway.option_allow_clip_sensor is False
         assert gateway.option_allow_deconz_groups is True
+        assert gateway.option_allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
 
-        entry = gateway.config_entry
-        assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
-        assert forward_entry_setup.mock_calls[1][1] == (entry, "climate")
-        assert forward_entry_setup.mock_calls[2][1] == (entry, "cover")
-        assert forward_entry_setup.mock_calls[3][1] == (entry, "light")
-        assert forward_entry_setup.mock_calls[4][1] == (entry, "scene")
-        assert forward_entry_setup.mock_calls[5][1] == (entry, "sensor")
-        assert forward_entry_setup.mock_calls[6][1] == (entry, "switch")
+        assert forward_entry_setup.mock_calls[0][1] == (config_entry, "binary_sensor")
+        assert forward_entry_setup.mock_calls[1][1] == (config_entry, "climate")
+        assert forward_entry_setup.mock_calls[2][1] == (config_entry, "cover")
+        assert forward_entry_setup.mock_calls[3][1] == (config_entry, "light")
+        assert forward_entry_setup.mock_calls[4][1] == (config_entry, "lock")
+        assert forward_entry_setup.mock_calls[5][1] == (config_entry, "scene")
+        assert forward_entry_setup.mock_calls[6][1] == (config_entry, "sensor")
+        assert forward_entry_setup.mock_calls[7][1] == (config_entry, "switch")
 
 
 async def test_gateway_retry(hass):
@@ -110,13 +112,15 @@ async def test_gateway_setup_fails(hass):
     with patch(
         "homeassistant.components.deconz.gateway.get_gateway", side_effect=Exception
     ):
-        gateway = await setup_deconz_integration(hass)
+        config_entry = await setup_deconz_integration(hass)
+        gateway = get_gateway_from_config_entry(hass, config_entry)
         assert gateway is None
 
 
 async def test_connection_status_signalling(hass):
     """Make sure that connection status triggers a dispatcher send."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     event_call = Mock()
     unsub = async_dispatcher_connect(hass, gateway.signal_reachable, event_call)
@@ -132,7 +136,8 @@ async def test_connection_status_signalling(hass):
 
 async def test_update_address(hass):
     """Make sure that connection status triggers a dispatcher send."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     assert gateway.api.host == "1.2.3.4"
 
     with patch(
@@ -157,7 +162,8 @@ async def test_update_address(hass):
 
 async def test_reset_after_successful_setup(hass):
     """Make sure that connection status triggers a dispatcher send."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     result = await gateway.async_reset()
     await hass.async_block_till_done()

@@ -5,6 +5,7 @@
         },
         "error": {
             "auth": "La clau API no \u00e9s correcta.",
+            "invalid_api_key": "Clau API inv\u00e0lida",
             "wrong_location": "No hi ha estacions de mesura Airly en aquesta zona."
         },
         "step": {

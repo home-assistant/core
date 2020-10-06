@@ -4,8 +4,9 @@
             "already_configured": "These coordinates or Node/Pro ID are already registered."
         },
         "error": {
-            "general_error": "There was an unknown error.",
-            "invalid_api_key": "Invalid API key provided.",
+            "cannot_connect": "Failed to connect",
+            "general_error": "Unexpected error",
+            "invalid_api_key": "Invalid API key",
             "unable_to_connect": "Unable to connect to Node/Pro unit."
         },
         "step": {

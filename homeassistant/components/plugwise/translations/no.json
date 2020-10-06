@@ -13,9 +13,10 @@
             "user": {
                 "data": {
                     "host": "Smile IP-adresse",
-                    "password": ""
+                    "password": "",
+                    "port": "Smil portnummer"
                 },
-                "description": "Detaljer",
+                "description": "Vennligst skriv inn:",
                 "title": "Koble til Smile"
             }
         }

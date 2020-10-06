@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -812,10 +813,18 @@ async def test_master_state_with_template(hass):
     await hass.async_block_till_done()
     hass.states.get("media_player.tv").state == STATE_ON
 
-    hass.states.async_set("input_boolean.test", STATE_ON)
+    events = []
+
+    hass.helpers.event.async_track_state_change_event(
+        "media_player.tv", callback(lambda event: events.append(event))
+    )
+
+    context = Context()
+    hass.states.async_set("input_boolean.test", STATE_ON, context=context)
     await hass.async_block_till_done()
 
     hass.states.get("media_player.tv").state == STATE_OFF
+    assert events[0].context == context
 
 
 async def test_reload(hass):

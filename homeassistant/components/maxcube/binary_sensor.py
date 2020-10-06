@@ -1,7 +1,10 @@
 """Support for MAX! binary sensors via MAX! Cube."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    BinarySensorEntity,
+)
 
 from . import DATA_KEY
 
@@ -30,15 +33,10 @@ class MaxCubeShutter(BinarySensorEntity):
     def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube BinarySensorEntity."""
         self._name = name
-        self._sensor_type = "window"
+        self._sensor_type = DEVICE_CLASS_WINDOW
         self._rf_address = rf_address
         self._cubehandle = handler
         self._state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def name(self):
