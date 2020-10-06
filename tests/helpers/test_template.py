@@ -795,7 +795,7 @@ def test_is_state(hass):
         """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
 
 def test_is_state_attr(hass):
@@ -815,7 +815,7 @@ def test_is_state_attr(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
 
 def test_state_attr(hass):
@@ -835,7 +835,7 @@ def test_state_attr(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_states_function(hass):
@@ -988,7 +988,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -996,7 +996,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1004,7 +1004,7 @@ def test_regex_match(hass):
                     """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
     tpl = template.Template(
         """
@@ -1012,7 +1012,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_regex_search(hass):
@@ -1023,7 +1023,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1031,7 +1031,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1039,7 +1039,7 @@ def test_regex_search(hass):
                     """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1047,7 +1047,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_regex_replace(hass):
@@ -1066,7 +1066,7 @@ def test_regex_replace(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "['Home Assistant test']"
+    assert tpl.async_render() == ["Home Assistant test"]
 
 
 def test_regex_findall_index(hass):
@@ -1104,21 +1104,21 @@ def test_bitwise_and(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 & 8)
+    assert tpl.async_render() == 8 & 8
     tpl = template.Template(
         """
 {{ 10 | bitwise_and(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(10 & 2)
+    assert tpl.async_render() == 10 & 2
     tpl = template.Template(
         """
 {{ 8 | bitwise_and(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 & 2)
+    assert tpl.async_render() == 8 & 2
 
 
 def test_bitwise_or(hass):
@@ -1129,21 +1129,21 @@ def test_bitwise_or(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 | 8)
+    assert tpl.async_render() == 8 | 8
     tpl = template.Template(
         """
 {{ 10 | bitwise_or(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(10 | 2)
+    assert tpl.async_render() == 10 | 2
     tpl = template.Template(
         """
 {{ 8 | bitwise_or(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 | 2)
+    assert tpl.async_render() == 8 | 2
 
 
 def test_distance_function_with_1_state(hass):
@@ -1587,7 +1587,7 @@ def test_async_render_to_info_with_complex_branching(hass):
         {"otherdomain": "sensor"},
     )
 
-    assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+    assert_result_info(info, ["sensor.a"], {"light.a", "light.b"}, {"sensor"})
     assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
@@ -1998,7 +1998,7 @@ async def test_async_render_to_info_in_conditional(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "False", ["sensor.xyz"], [])
+    assert_result_info(info, False, ["sensor.xyz"], [])
 
     hass.states.async_set("sensor.xyz", "dog")
     hass.states.async_set("sensor.cow", "True")
@@ -2014,7 +2014,7 @@ async def test_async_render_to_info_in_conditional(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "True", ["sensor.xyz", "sensor.cow"], [])
+    assert_result_info(info, True, ["sensor.xyz", "sensor.cow"], [])
 
     hass.states.async_set("sensor.xyz", "sheep")
     hass.states.async_set("sensor.pig", "oink")
