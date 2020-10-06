@@ -5,7 +5,7 @@
         "title": "Pick HomematicIP Access point",
         "data": {
           "hapid": "Access point ID (SGTIN)",
-          "pin": "Pin Code (optional)",
+          "pin": "[%key:common::config_flow::data::pin%]",
           "name": "[%key:common::config_flow::data::name%] (optional, used as name prefix for all devices)"
         }
       },

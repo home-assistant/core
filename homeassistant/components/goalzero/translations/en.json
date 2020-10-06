@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_host": "Invalid host provided",
-            "unknown": "Unknown Error"
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {

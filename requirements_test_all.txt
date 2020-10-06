@@ -360,6 +360,9 @@ hangups==0.4.11
 # homeassistant.components.cloud
 hass-nabucasa==0.37.0
 
+# homeassistant.components.tasmota
+hatasmota==0.0.9
+
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
 

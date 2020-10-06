@@ -1,8 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave \u00e8 gi\u00e0 configurato",
-            "one_instance_only": "Il componente supporta solo un'istanza di Z-Wave"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "one_instance_only": "Il componente supporta solo un'istanza di Z-Wave",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
             "option_error": "Convalida Z-Wave fallita. Il percorso della chiavetta USB \u00e8 corretto?"

@@ -84,8 +84,10 @@ class DevoloDeviceEntity(Entity):
         self.schedule_update_ha_state()
 
     def _generic_message(self, message):
-        """Handle unexpected messages."""
-        if message[0].startswith("hdm"):
+        """Handle generic messages."""
+        if len(message) == 3 and message[2] == "battery_level":
+            self._value = message[1]
+        elif len(message) == 3 and message[2] == "status":
             # Maybe the API wants to tell us, that the device went on- or offline.
             self._available = self._device_instance.is_online()
         else:

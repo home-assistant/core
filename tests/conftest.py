@@ -357,10 +357,12 @@ def mqtt_client_mock(hass):
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
+            mid = get_mid()
             mock_client.on_subscribe(0, 0, mid)
             return (0, mid)
 
         def _unsubscribe(topic):
+            mid = get_mid()
             mock_client.on_unsubscribe(0, 0, mid)
             return (0, mid)
 
