@@ -7,7 +7,7 @@ from Plugwise_Smile.Smile import Smile
 import jsonpickle
 import pytest
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -79,6 +79,9 @@ def mock_smile_adam():
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
         )
+        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
+            return_value=True
+        )
         smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
             return_value=True
         )
@@ -117,6 +120,9 @@ def mock_smile_anna():
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
+            return_value=True
+        )
+        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=True
         )
         smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
@@ -158,6 +164,10 @@ def mock_smile_p1():
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
+        )
+
+        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
+            return_value=None
         )
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(

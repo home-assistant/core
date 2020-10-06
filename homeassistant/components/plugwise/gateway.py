@@ -121,6 +121,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     single_master_thermostat = api.single_master_thermostat()
 
+    print("HOI %s", single_master_thermostat)
     platforms = ALL_PLATFORMS
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
