@@ -24,17 +24,18 @@ from tests.async_mock import patch
 from tests.common import async_fire_time_changed, get_test_home_assistant
 
 
-def test_saving_state(hass, hass_recorder):
+async def test_saving_state(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
-    hass.states.set(entity_id, state, attributes)
+    hass.states.async_set(entity_id, state, attributes)
+    await hass.async_block_till_done()
 
-    wait_recording_done(hass)
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
@@ -45,9 +46,9 @@ def test_saving_state(hass, hass_recorder):
     assert state == _state_empty_context(hass, entity_id)
 
 
-def test_saving_event(hass, hass_recorder):
+async def test_saving_event(hass_recorder):
     """Test saving and restoring an event."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
@@ -55,16 +56,16 @@ def test_saving_event(hass, hass_recorder):
     events = []
 
     @callback
-    def event_listener(event):
+    def _event_listener(event):
         """Record events from eventbus."""
         if event.event_type == event_type:
             events.append(event)
 
-    hass.bus.listen(MATCH_ALL, event_listener)
+    hass.bus.async_listen(MATCH_ALL, _event_listener)
 
-    hass.bus.fire(event_type, event_data)
+    hass.bus.async_fire(event_type, event_data)
 
-    wait_recording_done(hass)
+    await wait_recording_done(hass)
 
     assert len(events) == 1
     event = events[0]
@@ -86,23 +87,24 @@ def test_saving_event(hass, hass_recorder):
     )
 
 
-def _add_entities(hass, entity_ids):
+async def _add_entities(hass, entity_ids):
     """Add entities."""
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
-        hass.states.set(entity_id, f"state{idx}", attributes)
-    wait_recording_done(hass)
+        hass.states.async_set(entity_id, f"state{idx}", attributes)
+        await hass.async_block_till_done()
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [st.to_native() for st in session.query(States)]
 
 
-def _add_events(hass, events):
+async def _add_events(hass, events):
     with session_scope(hass=hass) as session:
         session.query(Events).delete(synchronize_session=False)
     for event_type in events:
-        hass.bus.fire(event_type)
-    wait_recording_done(hass)
+        hass.bus.async_fire(event_type)
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [ev.to_native() for ev in session.query(Events)]
@@ -117,20 +119,20 @@ def _state_empty_context(hass, entity_id):
 
 
 # pylint: disable=redefined-outer-name,invalid-name
-def test_saving_state_include_domains(hass_recorder):
+async def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder({"include": {"domains": "test2"}})
-    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    hass = await hass_recorder({"include": {"domains": "test2"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
-def test_saving_state_include_domains_globs(hass_recorder):
+async def test_saving_state_include_domains_globs(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {"include": {"domains": "test2", "entity_globs": "*.included_*"}}
     )
-    states = _add_entities(
+    states = await _add_entities(
         hass, ["test.recorder", "test2.recorder", "test3.included_entity"]
     )
     assert len(states) == 2
@@ -138,17 +140,17 @@ def test_saving_state_include_domains_globs(hass_recorder):
     assert _state_empty_context(hass, "test3.included_entity") == states[1]
 
 
-def test_saving_state_incl_entities(hass_recorder):
+async def test_saving_state_incl_entities(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder({"include": {"entities": "test2.recorder"}})
-    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    hass = await hass_recorder({"include": {"entities": "test2.recorder"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
-def test_saving_event_exclude_event_type(hass_recorder):
+async def test_saving_event_exclude_event_type(hass_recorder):
     """Test saving and restoring an event."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {
             "exclude": {
                 "event_types": [
@@ -162,82 +164,82 @@ def test_saving_event_exclude_event_type(hass_recorder):
             }
         }
     )
-    events = _add_events(hass, ["test", "test2"])
+    events = await _add_events(hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"
 
 
-def test_saving_state_exclude_domains(hass_recorder):
+async def test_saving_state_exclude_domains(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder({"exclude": {"domains": "test"}})
-    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    hass = await hass_recorder({"exclude": {"domains": "test"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
-def test_saving_state_exclude_domains_globs(hass_recorder):
+async def test_saving_state_exclude_domains_globs(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {"exclude": {"domains": "test", "entity_globs": "*.excluded_*"}}
     )
-    states = _add_entities(
+    states = await _add_entities(
         hass, ["test.recorder", "test2.recorder", "test2.excluded_entity"]
     )
     assert len(states) == 1
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
-def test_saving_state_exclude_entities(hass_recorder):
+async def test_saving_state_exclude_entities(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
-    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    hass = await hass_recorder({"exclude": {"entities": "test.recorder"}})
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 1
     assert _state_empty_context(hass, "test2.recorder") == states[0]
 
 
-def test_saving_state_exclude_domain_include_entity(hass_recorder):
+async def test_saving_state_exclude_domain_include_entity(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {"include": {"entities": "test.recorder"}, "exclude": {"domains": "test"}}
     )
-    states = _add_entities(hass, ["test.recorder", "test2.recorder"])
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder"])
     assert len(states) == 2
 
 
-def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
+async def test_saving_state_exclude_domain_glob_include_entity(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {
             "include": {"entities": ["test.recorder", "test.excluded_entity"]},
             "exclude": {"domains": "test", "entity_globs": "*._excluded_*"},
         }
     )
-    states = _add_entities(
+    states = await _add_entities(
         hass, ["test.recorder", "test2.recorder", "test.excluded_entity"]
     )
     assert len(states) == 3
 
 
-def test_saving_state_include_domain_exclude_entity(hass_recorder):
+async def test_saving_state_include_domain_exclude_entity(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {"exclude": {"entities": "test.recorder"}, "include": {"domains": "test"}}
     )
-    states = _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
+    states = await _add_entities(hass, ["test.recorder", "test2.recorder", "test.ok"])
     assert len(states) == 1
     assert _state_empty_context(hass, "test.ok") == states[0]
     assert _state_empty_context(hass, "test.ok").state == "state2"
 
 
-def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
+async def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder(
+    hass = await hass_recorder(
         {
             "exclude": {"entities": ["test.recorder", "test2.included_entity"]},
             "include": {"domains": "test", "entity_globs": "*._included_*"},
         }
     )
-    states = _add_entities(
+    states = await _add_entities(
         hass, ["test.recorder", "test2.recorder", "test.ok", "test2.included_entity"]
     )
     assert len(states) == 1
@@ -245,15 +247,15 @@ def test_saving_state_include_domain_glob_exclude_entity(hass_recorder):
     assert _state_empty_context(hass, "test.ok").state == "state2"
 
 
-def test_saving_state_and_removing_entity(hass, hass_recorder):
+async def test_saving_state_and_removing_entity(hass_recorder):
     """Test saving the state of a removed entity."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
     entity_id = "lock.mine"
-    hass.states.set(entity_id, STATE_LOCKED)
-    hass.states.set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, STATE_LOCKED)
+    hass.states.async_set(entity_id, STATE_UNLOCKED)
     hass.states.async_remove(entity_id)
 
-    wait_recording_done(hass)
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -266,10 +268,8 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
         assert states[2].state is None
 
 
-def test_recorder_setup_failure():
+async def test_recorder_setup_failure(hass):
     """Test some exceptions."""
-    hass = get_test_home_assistant()
-
     with patch.object(Recorder, "_setup_connection") as setup, patch(
         "homeassistant.components.recorder.time.sleep"
     ):
@@ -288,8 +288,6 @@ def test_recorder_setup_failure():
         )
         rec.start()
         rec.join()
-
-    hass.stop()
 
 
 async def test_defaults_set(hass):
@@ -311,9 +309,9 @@ async def test_defaults_set(hass):
     assert recorder_config["purge_keep_days"] == 10
 
 
-def test_auto_purge(hass_recorder):
+async def test_auto_purge(hass_recorder):
     """Test saving and restoring a state."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -329,7 +327,7 @@ def test_auto_purge(hass_recorder):
     ) as purge_old_data:
         for delta in (-1, 0, 1):
             async_fire_time_changed(hass, test_time + timedelta(seconds=delta))
-            hass.block_till_done()
+            await hass.async_block_till_done()
             hass.data[DATA_INSTANCE].block_till_done()
 
         assert len(purge_old_data.mock_calls) == 1
@@ -337,16 +335,16 @@ def test_auto_purge(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
-def test_saving_sets_old_state(hass_recorder):
+async def test_saving_sets_old_state(hass_recorder):
     """Test saving sets old state."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
-    hass.states.set("test.one", "on", {})
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
-    hass.states.set("test.one", "off", {})
-    hass.states.set("test.two", "off", {})
-    wait_recording_done(hass)
+    hass.states.async_set("test.one", "on", {})
+    hass.states.async_set("test.two", "on", {})
+    await wait_recording_done(hass)
+    hass.states.async_set("test.one", "off", {})
+    hass.states.async_set("test.two", "off", {})
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -363,16 +361,16 @@ def test_saving_sets_old_state(hass_recorder):
         assert states[3].old_state_id == states[1].state_id
 
 
-def test_saving_state_with_serializable_data(hass_recorder, caplog):
+async def test_saving_state_with_serializable_data(hass_recorder, caplog):
     """Test saving data that cannot be serialized does not crash."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
-    hass.states.set("test.one", "on", {"fail": CannotSerializeMe()})
-    wait_recording_done(hass)
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
-    hass.states.set("test.two", "off", {})
-    wait_recording_done(hass)
+    hass.states.async_set("test.one", "on", {"fail": CannotSerializeMe()})
+    await wait_recording_done(hass)
+    hass.states.async_set("test.two", "on", {})
+    await wait_recording_done(hass)
+    hass.states.async_set("test.two", "off", {})
+    await wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         states = list(session.query(States))
@@ -386,10 +384,10 @@ def test_saving_state_with_serializable_data(hass_recorder, caplog):
     assert "State is not JSON serializable" in caplog.text
 
 
-def test_run_information(hass_recorder):
+async def test_run_information(hass_recorder):
     """Ensure run_information returns expected data."""
     before_start_recording = dt_util.utcnow()
-    hass = hass_recorder()
+    hass = await hass_recorder()
     run_info = run_information_from_instance(hass)
     assert isinstance(run_info, RecorderRuns)
     assert run_info.closed_incorrect is False
@@ -403,8 +401,8 @@ def test_run_information(hass_recorder):
     assert isinstance(run_info, RecorderRuns)
     assert run_info.closed_incorrect is False
 
-    hass.states.set("test.two", "on", {})
-    wait_recording_done(hass)
+    hass.states.async_set("test.two", "on", {})
+    await wait_recording_done(hass)
     run_info = run_information(hass)
     assert isinstance(run_info, RecorderRuns)
     assert run_info.closed_incorrect is False
