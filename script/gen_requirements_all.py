@@ -279,8 +279,15 @@ def requirements_test_all_output(reqs):
         if any(
             # Always install requirements that are not part of integrations
             not mdl.startswith("homeassistant.components.") or
-            # Install tests for integrations that have tests
-            has_tests(mdl)
+            # Install requirements for integrations that have tests
+            has_tests(mdl) or
+            # ...or whose dependencies have tests
+            any(
+                has_tests(dep)
+                for dep in gather_recursive_requirements(
+                    mdl[len("homeassistant.components.") :]
+                )
+            )
             for mdl in modules
         )
     }

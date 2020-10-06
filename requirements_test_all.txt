@@ -23,6 +23,9 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.2.9
 
+# homeassistant.components.telegram_bot
+PySocks==1.7.1
+
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
@@ -852,6 +855,9 @@ python-synology==0.9.0
 
 # homeassistant.components.tado
 python-tado==0.8.1
+
+# homeassistant.components.telegram_bot
+python-telegram-bot==11.1.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
