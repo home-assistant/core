@@ -2,6 +2,7 @@
 import asyncio
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
@@ -41,7 +42,7 @@ def zigpy_cover_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": 1026,
+            "device_type": zigpy.profiles.zha.DeviceType.IAS_ZONE,
             "in_clusters": [closures.WindowCovering.cluster_id],
             "out_clusters": [],
         }
@@ -55,7 +56,7 @@ def zigpy_cover_remote(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": 0x0203,
+            "device_type": zigpy.profiles.zha.DeviceType.WINDOW_COVERING_CONTROLLER,
             "in_clusters": [],
             "out_clusters": [closures.WindowCovering.cluster_id],
         }
@@ -69,7 +70,7 @@ def zigpy_shade_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": 512,
+            "device_type": zigpy.profiles.zha.DeviceType.SHADE,
             "in_clusters": [
                 closures.Shade.cluster_id,
                 general.LevelControl.cluster_id,
@@ -87,7 +88,7 @@ def zigpy_keen_vent(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": 3,
+            "device_type": zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT,
             "in_clusters": [general.LevelControl.cluster_id, general.OnOff.cluster_id],
             "out_clusters": [],
         }
@@ -314,7 +315,10 @@ async def test_shade(hass, zha_device_joined_restored, zigpy_shade_device):
     # test cover stop
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True,
+            DOMAIN,
+            SERVICE_STOP_COVER,
+            {"entity_id": entity_id},
+            blocking=True,
         )
         assert cluster_level.request.call_count == 1
         assert cluster_level.request.call_args[0][0] is False

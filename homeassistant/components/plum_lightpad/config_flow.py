@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import ConfigType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN  # pylint: disable=unused-import
 from .utils import load_plum
@@ -28,7 +28,9 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(schema), errors=errors or {},
+            step_id="user",
+            data_schema=vol.Schema(schema),
+            errors=errors or {},
         )
 
     async def async_step_user(

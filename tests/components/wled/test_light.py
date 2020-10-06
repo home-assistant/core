@@ -114,7 +114,9 @@ async def test_segment_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, segment_id=0, transition=50,
+            on=False,
+            segment_id=0,
+            transition=50,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -149,7 +151,9 @@ async def test_segment_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(255, 159, 70), on=True, segment_id=0,
+            color_primary=(255, 159, 70),
+            on=True,
+            segment_id=0,
         )
 
 
@@ -168,7 +172,8 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -184,7 +189,9 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            brightness=42, on=True, transition=50,
+            brightness=42,
+            on=True,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -196,7 +203,8 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     with patch("wled.WLED.master") as light_mock:
@@ -212,7 +220,9 @@ async def test_master_change_state(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            brightness=42, on=True, transition=50,
+            brightness=42,
+            on=True,
+            transition=50,
         )
 
 
@@ -231,7 +241,8 @@ async def test_dynamically_handle_segments(
 
     # Test removal if segment went missing, including the master entity
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -259,7 +270,8 @@ async def test_single_segment_behavior(
 
     # Test absent master
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -274,7 +286,8 @@ async def test_single_segment_behavior(
     device.state.brightness = 100
     device.state.segments[0].brightness = 255
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -286,7 +299,8 @@ async def test_single_segment_behavior(
     # Test segment is off when master is off
     device.state.on = False
     with patch(
-        "homeassistant.components.wled.WLED.update", return_value=device,
+        "homeassistant.components.wled.WLED.update",
+        return_value=device,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
@@ -304,7 +318,8 @@ async def test_single_segment_behavior(
         )
         await hass.async_block_till_done()
         master_mock.assert_called_once_with(
-            on=False, transition=50,
+            on=False,
+            transition=50,
         )
 
     # Test master is turned on when turning on a single segment, and segment
@@ -389,7 +404,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            on=True, segment_id=0, color_primary=(255, 159, 70, 139),
+            on=True,
+            segment_id=0,
+            color_primary=(255, 159, 70, 139),
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -401,7 +418,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(255, 0, 0, 100), on=True, segment_id=0,
+            color_primary=(255, 0, 0, 100),
+            on=True,
+            segment_id=0,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -417,7 +436,9 @@ async def test_rgbw_light(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            color_primary=(0, 0, 0, 100), on=True, segment_id=0,
+            color_primary=(0, 0, 0, 100),
+            on=True,
+            segment_id=0,
         )
 
 
@@ -442,7 +463,11 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, reverse=True, segment_id=0, speed=100,
+            effect="Rainbow",
+            intensity=200,
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -454,7 +479,8 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            segment_id=0, effect=9,
+            segment_id=0,
+            effect=9,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -471,7 +497,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            intensity=200, reverse=True, segment_id=0, speed=100,
+            intensity=200,
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -488,7 +517,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", reverse=True, segment_id=0, speed=100,
+            effect="Rainbow",
+            reverse=True,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -505,7 +537,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, segment_id=0, speed=100,
+            effect="Rainbow",
+            intensity=200,
+            segment_id=0,
+            speed=100,
         )
 
     with patch("wled.WLED.segment") as light_mock:
@@ -522,7 +557,10 @@ async def test_effect_service(
         )
         await hass.async_block_till_done()
         light_mock.assert_called_once_with(
-            effect="Rainbow", intensity=200, reverse=True, segment_id=0,
+            effect="Rainbow",
+            intensity=200,
+            reverse=True,
+            segment_id=0,
         )
 
 

@@ -4,8 +4,9 @@
             "already_configured": "Queste coordinate o Node/Pro ID sono gi\u00e0 registrate."
         },
         "error": {
-            "general_error": "Si \u00e8 verificato un errore sconosciuto.",
-            "invalid_api_key": "Chiave API non valida fornita.",
+            "cannot_connect": "Impossibile connettersi",
+            "general_error": "Errore imprevisto",
+            "invalid_api_key": "Chiave API non valida",
             "unable_to_connect": "Impossibile connettersi all'unit\u00e0 Node/Pro."
         },
         "step": {

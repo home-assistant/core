@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            }
+        }
+    }
+}

@@ -54,7 +54,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
             self.last_results = await self.connection.async_get_connected_devices()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.error("Reconnected to ASUS router for device update")
+                _LOGGER.info("Reconnected to ASUS router for device update")
 
         except OSError as err:
             if not self._connect_error:

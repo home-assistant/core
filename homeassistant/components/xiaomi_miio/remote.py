@@ -25,7 +25,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import utcnow
 
-from .const import SERVICE_LEARN, SERVICE_SET_LED_OFF, SERVICE_SET_LED_ON
+from .const import SERVICE_LEARN, SERVICE_SET_REMOTE_LED_OFF, SERVICE_SET_REMOTE_LED_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -158,10 +158,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_service_learn_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_ON, {}, async_service_led_on_handler,
+        SERVICE_SET_REMOTE_LED_ON,
+        {},
+        async_service_led_on_handler,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_LED_OFF, {}, async_service_led_off_handler,
+        SERVICE_SET_REMOTE_LED_OFF,
+        {},
+        async_service_led_off_handler,
     )
 
 
@@ -221,14 +225,14 @@ class XiaomiMiioRemote(RemoteEntity):
         """Turn the device on."""
         _LOGGER.error(
             "Device does not support turn_on, "
-            "please use 'remote.send_command' to send commands."
+            "please use 'remote.send_command' to send commands"
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.error(
             "Device does not support turn_off, "
-            "please use 'remote.send_command' to send commands."
+            "please use 'remote.send_command' to send commands"
         )
 
     def _send_command(self, payload):

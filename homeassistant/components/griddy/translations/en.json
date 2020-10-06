@@ -4,7 +4,7 @@
             "already_configured": "This Load Zone is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
         "step": {

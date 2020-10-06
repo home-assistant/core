@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Dispositiu"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "ip_address": "Adre\u00e7a IP"
+                },
+                "description": "Si deixes l'amfitri\u00f3 buit, s'utilitzar\u00e0 el descobriment per cercar dispositius."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (opcional)",
+                    "nightlight_switch": "Utilitza l'interruptor NightLight",
+                    "save_on_change": "Desa l'estat en canviar",
+                    "transition": "Temps de transici\u00f3 (ms)",
+                    "use_music_mode": "Activa el mode M\u00fasica"
+                },
+                "description": "Si deixes el model buit, es detectar\u00e0 autom\u00e0ticament."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

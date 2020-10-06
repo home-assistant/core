@@ -4,7 +4,8 @@
             "options_1": {
                 "data": {
                     "bool": "Valgfri boolean",
-                    "int": "Numerisk inndata"
+                    "constant": "Konstant",
+                    "int": "Numerisk innputt"
                 }
             },
             "options_2": {

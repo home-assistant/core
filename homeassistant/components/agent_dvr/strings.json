@@ -11,10 +11,10 @@
       }
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "already_in_progress": "Config flow for device is already in progress.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "device_unavailable": "Device is not available"
     }
   }

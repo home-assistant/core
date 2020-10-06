@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_url": "Invalid URL",
+            "syncthru_not_supported": "Device does not support SyncThru",
+            "unknown_state": "Printer state unknown, verify URL and network connectivity"
+        },
+        "flow_title": "Samsung SyncThru Printer: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "Name",
+                    "url": "Web interface URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "url": "Web interface URL"
+                }
+            }
+        }
+    }
+}

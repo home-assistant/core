@@ -1,4 +1,9 @@
 {
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        }
+    },
     "state": {
         "_": {
             "dead": "Surnud",
@@ -7,8 +12,8 @@
             "sleeping": "Ootel"
         },
         "query_stage": {
-            "dead": "Surnud ({query_stage})",
-            "initializing": "L\u00e4htestan ( {query_stage} )"
+            "dead": "Surnud",
+            "initializing": "L\u00e4htestan"
         }
     }
 }

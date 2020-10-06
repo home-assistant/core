@@ -47,6 +47,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -921,6 +922,24 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog):
+    """Test update of discovered light."""
+    data1 = (
+        '{ "name": "Beer",'
+        '  "schema": "template",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "test_topic",'
+        '  "command_on_template": "on",'
+        '  "command_off_template": "off"}'
+    )
+    with patch(
+        "homeassistant.components.mqtt.light.schema_template.MqttLightTemplate.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, light.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

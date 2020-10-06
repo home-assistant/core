@@ -233,9 +233,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the client state attributes."""
-        attributes = {}
-
-        attributes["is_wired"] = self.is_wired
+        attributes = {"is_wired": self.is_wired}
 
         if self.is_connected:
             for variable in CLIENT_CONNECTED_ATTRIBUTES:

@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import os
-from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
@@ -14,7 +13,6 @@ DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
-PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
@@ -124,20 +122,14 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            ret = await hass.async_add_executor_job(_install, hass, req, kwargs)
+            def _install(req: str, kwargs: Dict) -> bool:
+                """Install requirement."""
+                return pkg_util.install_package(req, **kwargs)
+
+            ret = await hass.async_add_executor_job(_install, req, kwargs)
 
             if not ret:
                 raise RequirementsNotFound(name, [req])
-
-
-def _install(hass: HomeAssistant, req: str, kwargs: Dict) -> bool:
-    """Install requirement."""
-    progress_path = Path(hass.config.path(PROGRESS_FILE))
-    progress_path.touch()
-    try:
-        return pkg_util.install_package(req, **kwargs)
-    finally:
-        progress_path.unlink()
 
 
 def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:

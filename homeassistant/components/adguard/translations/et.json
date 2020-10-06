@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendus eba\u00f5nnestus",
+            "connection_error": "\u00dchenduse loomine nurjus"
+        }
+    }
+}

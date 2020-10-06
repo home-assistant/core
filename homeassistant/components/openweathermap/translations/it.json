@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato per queste coordinate."
+        },
+        "error": {
+            "auth": "La chiave API non \u00e8 corretta.",
+            "cannot_connect": "Impossibile connettersi",
+            "connection": "Impossibile connettersi all'API OWM",
+            "invalid_api_key": "Chiave API non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "language": "Lingua",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine",
+                    "mode": "Modalit\u00e0",
+                    "name": "Nome dell'integrazione"
+                },
+                "description": "Configura l'integrazione di OpenWeatherMap. Per generare la chiave API, vai su https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Lingua",
+                    "mode": "Modalit\u00e0"
+                }
+            }
+        }
+    }
+}

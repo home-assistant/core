@@ -82,6 +82,7 @@ def setup(hass, config):
         for key, value in states.items():
             if isinstance(value, (float, int)):
                 attribute = f"{metric}.{key.replace(' ', '_')}"
+                value = int(value) if isinstance(value, bool) else value
                 statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
 
                 _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)

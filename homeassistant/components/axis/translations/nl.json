@@ -12,7 +12,7 @@
             "device_unavailable": "Apparaat is niet beschikbaar",
             "faulty_credentials": "Ongeldige gebruikersreferenties"
         },
-        "flow_title": "Axis apparaat: {naam} ({host})",
+        "flow_title": "Axis apparaat: {name} ({host})",
         "step": {
             "user": {
                 "data": {

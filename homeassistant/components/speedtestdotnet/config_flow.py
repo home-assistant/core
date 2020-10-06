@@ -36,7 +36,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")
@@ -85,7 +85,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
 
         self._servers = self.hass.data[DOMAIN].servers
 
-        server_name = DEFAULT_SERVER
+        server = []
         if self.config_entry.options.get(
             CONF_SERVER_ID
         ) and not self.config_entry.options.get(CONF_SERVER_NAME):
@@ -94,7 +94,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 for (key, value) in self._servers.items()
                 if value.get("id") == self.config_entry.options[CONF_SERVER_ID]
             ]
-            server_name = server[0] if server else ""
+        server_name = server[0] if server else DEFAULT_SERVER
 
         options = {
             vol.Optional(

@@ -1,6 +1,7 @@
 """The HVV integration."""
 import asyncio
 
+from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -10,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 from .hub import GTIHub
 
-PLATFORMS = [DOMAIN_SENSOR]
+PLATFORMS = [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

@@ -58,8 +58,10 @@ async def async_setup_entry(hass, entry):
 
 
 @bind_hass
-def get_coordinator_id(hass, entity_id):
-    """Obtain the unique_id of a device's coordinator.
+def get_coordinator_name(hass, entity_id):
+    """Obtain the room/name of a device's coordinator.
+
+    Used by the Plex integration.
 
     This function is safe to run inside the event loop.
     """
@@ -71,5 +73,5 @@ def get_coordinator_id(hass, entity_id):
     )
 
     if device.is_coordinator:
-        return device.unique_id
-    return device.coordinator.unique_id
+        return device.name
+    return device.coordinator.name

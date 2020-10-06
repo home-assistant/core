@@ -6,7 +6,7 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "The integration only supports one Z-Wave instance",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "mqtt_required": "The MQTT integration is not set up"
     }
   }

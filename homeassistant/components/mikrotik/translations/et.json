@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga"
+        }
+    }
+}

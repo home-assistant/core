@@ -8,7 +8,7 @@ import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     dev = [
         HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
-        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, UNIT_PERCENTAGE),
+        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, PERCENTAGE),
     ]
 
     async_add_entities(dev)

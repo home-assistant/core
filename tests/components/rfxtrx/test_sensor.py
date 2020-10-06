@@ -1,308 +1,369 @@
 """The tests for the Rfxtrx sensor platform."""
-from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
-from homeassistant.setup import async_setup_component
+import pytest
 
-from . import _signal_event
+from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx.const import ATTR_EVENT
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import State
+
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 async def test_default_config(hass, rfxtrx):
     """Test with 0 sensor."""
-    await async_setup_component(
-        hass, "sensor", {"sensor": {"platform": "rfxtrx", "devices": {}}}
-    )
+    entry_data = create_rfx_test_cfg(devices={})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_one_sensor(hass, rfxtrx):
     """Test with 1 sensor."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "rfxtrx",
-                "devices": {
-                    "0a52080705020095220269": {
-                        "name": "Test",
-                        "data_type": "Temperature",
-                    }
-                },
-            }
-        },
-    )
+    entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
-    assert "Test Temperature" == entity.name
-    assert TEMP_CELSIUS == entity.unit_of_measurement
-    assert entity.state is None
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
+    assert state
+    assert state.state == "unknown"
+    assert (
+        state.attributes.get("friendly_name")
+        == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
+    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+
+@pytest.mark.parametrize(
+    "state,event",
+    [["18.4", "0a520801070100b81b0279"], ["17.9", "0a52085e070100b31b0279"]],
+)
+async def test_state_restore(hass, rfxtrx, state, event):
+    """State restoration."""
+
+    entity_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01_temperature"
+
+    mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
+
+    entry_data = create_rfx_test_cfg(devices={"0a520801070100b81b0279": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == state
 
 
 async def test_one_sensor_no_datatype(hass, rfxtrx):
     """Test with 1 sensor."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "rfxtrx",
-                "devices": {"0a52080705020095220269": {"name": "Test"}},
-            }
-        },
-    )
+    entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
-    assert "Test Temperature" == entity.name
-    assert TEMP_CELSIUS == entity.unit_of_measurement
-    assert entity.state is None
+    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02"
+    base_name = "WT260,WT260H,WT440H,WT450,WT450H 05:02"
+
+    state = hass.states.get(f"{base_id}_temperature")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == f"{base_name} Temperature"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+    state = hass.states.get(f"{base_id}_humidity")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == f"{base_name} Humidity"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+    state = hass.states.get(f"{base_id}_humidity_status")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == f"{base_name} Humidity status"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    state = hass.states.get(f"{base_id}_rssi_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == f"{base_name} Rssi numeric"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
+
+    state = hass.states.get(f"{base_id}_battery_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == f"{base_name} Battery numeric"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
 async def test_several_sensors(hass, rfxtrx):
     """Test with 3 sensors."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "rfxtrx",
-                "devices": {
-                    "0a52080705020095220269": {
-                        "name": "Test",
-                        "data_type": "Temperature",
-                    },
-                    "0a520802060100ff0e0269": {
-                        "name": "Bath",
-                        "data_type": ["Temperature", "Humidity"],
-                    },
-                },
-            }
-        },
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0a52080705020095220269": {},
+            "0a520802060100ff0e0269": {},
+        }
     )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_start()
 
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-    device_num = 0
-    for id in rfxtrx_core.RFX_DEVICES:
-        if id == "sensor_06_01":
-            device_num = device_num + 1
-            assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
-            _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-            assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
-            assert "Bath" == _entity_hum.__str__()
-            assert _entity_hum.state is None
-            assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
-            assert "Bath" == _entity_temp.__str__()
-        elif id == "sensor_05_02":
-            device_num = device_num + 1
-            entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            assert entity.state is None
-            assert TEMP_CELSIUS == entity.unit_of_measurement
-            assert "Test" == entity.__str__()
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
+    assert state
+    assert state.state == "unknown"
+    assert (
+        state.attributes.get("friendly_name")
+        == "WT260,WT260H,WT440H,WT450,WT450H 05:02 Temperature"
+    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    assert 2 == device_num
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature")
+    assert state
+    assert state.state == "unknown"
+    assert (
+        state.attributes.get("friendly_name")
+        == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Temperature"
+    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
+    assert state
+    assert state.state == "unknown"
+    assert (
+        state.attributes.get("friendly_name")
+        == "WT260,WT260H,WT440H,WT450,WT450H 06:01 Humidity"
+    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
-async def test_discover_sensor(hass, rfxtrx):
+async def test_discover_sensor(hass, rfxtrx_automatic):
     """Test with discovery of sensor."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
+    rfxtrx = rfxtrx_automatic
+
+    # 1
+    await rfxtrx.signal("0a520801070100b81b0279")
+    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01"
+
+    state = hass.states.get(f"{base_id}_humidity")
+    assert state
+    assert state.state == "27"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+    state = hass.states.get(f"{base_id}_humidity_status")
+    assert state
+    assert state.state == "normal"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    state = hass.states.get(f"{base_id}_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
-    await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0a520801070100b81b0279")
-    event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
-    await _signal_event(hass, event)
+    state = hass.states.get(f"{base_id}_temperature")
+    assert state
+    assert state.state == "18.4"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
-    assert {
-        "Humidity status": "normal",
-        "Temperature": 18.4,
-        "Rssi numeric": 7,
-        "Humidity": 27,
-        "Battery numeric": 9,
-        "Humidity status numeric": 2,
-    } == entity.device_state_attributes
-    assert "0a520801070100b81b0279" == entity.__str__()
+    state = hass.states.get(f"{base_id}_battery_numeric")
+    assert state
+    assert state.state == "100"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    await _signal_event(hass, event)
-    assert 1 == len(rfxtrx_core.RFX_DEVICES)
+    # 2
+    await rfxtrx.signal("0a52080405020095240279")
+    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02"
+    state = hass.states.get(f"{base_id}_humidity")
 
-    event = rfxtrx_core.get_rfx_object("0a52080405020095240279")
-    event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
-    await _signal_event(hass, event)
-    entity = rfxtrx_core.RFX_DEVICES["sensor_05_02"]["Temperature"]
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-    assert {
-        "Humidity status": "normal",
-        "Temperature": 14.9,
-        "Rssi numeric": 7,
-        "Humidity": 36,
-        "Battery numeric": 9,
-        "Humidity status numeric": 2,
-    } == entity.device_state_attributes
-    assert "0a52080405020095240279" == entity.__str__()
+    assert state
+    assert state.state == "36"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    entity = rfxtrx_core.RFX_DEVICES["sensor_07_01"]["Temperature"]
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-    assert {
-        "Humidity status": "normal",
-        "Temperature": 17.9,
-        "Rssi numeric": 7,
-        "Humidity": 27,
-        "Battery numeric": 9,
-        "Humidity status numeric": 2,
-    } == entity.device_state_attributes
-    assert "0a520801070100b81b0279" == entity.__str__()
+    state = hass.states.get(f"{base_id}_humidity_status")
+    assert state
+    assert state.state == "normal"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    # trying to add a switch
-    event = rfxtrx_core.get_rfx_object("0b1100cd0213c7f210010f70")
-    await _signal_event(hass, event)
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-
-
-async def test_discover_sensor_noautoadd(hass, rfxtrx):
-    """Test with discover of sensor when auto add is False."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
+    state = hass.states.get(f"{base_id}_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
-    await hass.async_block_till_done()
 
-    event = rfxtrx_core.get_rfx_object("0a520801070100b81b0279")
-    event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
+    state = hass.states.get(f"{base_id}_temperature")
+    assert state
+    assert state.state == "14.9"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    state = hass.states.get(f"{base_id}_battery_numeric")
+    assert state
+    assert state.state == "100"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    # 1 Update
+    await rfxtrx.signal("0a52085e070100b31b0279")
+    base_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01"
 
-    event = rfxtrx_core.get_rfx_object("0a52080405020095240279")
-    event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    state = hass.states.get(f"{base_id}_humidity")
+    assert state
+    assert state.state == "27"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-    event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-    await _signal_event(hass, event)
-    assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    state = hass.states.get(f"{base_id}_humidity_status")
+    assert state
+    assert state.state == "normal"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    state = hass.states.get(f"{base_id}_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
+
+    state = hass.states.get(f"{base_id}_temperature")
+    assert state
+    assert state.state == "17.9"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+
+    state = hass.states.get(f"{base_id}_battery_numeric")
+    assert state
+    assert state.state == "100"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+    assert len(hass.states.async_all()) == 10
 
 
 async def test_update_of_sensors(hass, rfxtrx):
     """Test with 3 sensors."""
-    await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "rfxtrx",
-                "devices": {
-                    "0a52080705020095220269": {
-                        "name": "Test",
-                        "data_type": "Temperature",
-                    },
-                    "0a520802060100ff0e0269": {
-                        "name": "Bath",
-                        "data_type": ["Temperature", "Humidity"],
-                    },
-                },
-            }
-        },
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0a52080705020095220269": {},
+            "0a520802060100ff0e0269": {},
+        }
     )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_start()
 
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
-    device_num = 0
-    for id in rfxtrx_core.RFX_DEVICES:
-        if id == "sensor_06_01":
-            device_num = device_num + 1
-            assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
-            _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-            assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
-            assert "Bath" == _entity_hum.__str__()
-            assert _entity_temp.state is None
-            assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
-            assert "Bath" == _entity_temp.__str__()
-        elif id == "sensor_05_02":
-            device_num = device_num + 1
-            entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            assert entity.state is None
-            assert TEMP_CELSIUS == entity.unit_of_measurement
-            assert "Test" == entity.__str__()
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
+    assert state
+    assert state.state == "unknown"
 
-    assert 2 == device_num
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature")
+    assert state
+    assert state.state == "unknown"
 
-    event = rfxtrx_core.get_rfx_object("0a520802060101ff0f0269")
-    event.data = bytearray(b"\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y")
-    await _signal_event(hass, event)
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
+    assert state
+    assert state.state == "unknown"
 
-    await _signal_event(hass, event)
-    event = rfxtrx_core.get_rfx_object("0a52080705020085220269")
-    event.data = bytearray(b"\nR\x08\x04\x05\x02\x00\x95$\x02y")
-    await _signal_event(hass, event)
+    await rfxtrx.signal("0a520802060101ff0f0269")
+    await rfxtrx.signal("0a52080705020085220269")
 
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_05_02_temperature")
+    assert state
+    assert state.state == "13.3"
 
-    device_num = 0
-    for id in rfxtrx_core.RFX_DEVICES:
-        if id == "sensor_06_01":
-            device_num = device_num + 1
-            assert len(rfxtrx_core.RFX_DEVICES[id]) == 2
-            _entity_temp = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            _entity_hum = rfxtrx_core.RFX_DEVICES[id]["Humidity"]
-            assert UNIT_PERCENTAGE == _entity_hum.unit_of_measurement
-            assert 15 == _entity_hum.state
-            assert {
-                "Battery numeric": 9,
-                "Temperature": 51.1,
-                "Humidity": 15,
-                "Humidity status": "normal",
-                "Humidity status numeric": 2,
-                "Rssi numeric": 6,
-            } == _entity_hum.device_state_attributes
-            assert "Bath" == _entity_hum.__str__()
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_temperature")
+    assert state
+    assert state.state == "51.1"
 
-            assert TEMP_CELSIUS == _entity_temp.unit_of_measurement
-            assert 51.1 == _entity_temp.state
-            assert {
-                "Battery numeric": 9,
-                "Temperature": 51.1,
-                "Humidity": 15,
-                "Humidity status": "normal",
-                "Humidity status numeric": 2,
-                "Rssi numeric": 6,
-            } == _entity_temp.device_state_attributes
-            assert "Bath" == _entity_temp.__str__()
-        elif id == "sensor_05_02":
-            device_num = device_num + 1
-            entity = rfxtrx_core.RFX_DEVICES[id]["Temperature"]
-            assert TEMP_CELSIUS == entity.unit_of_measurement
-            assert 13.3 == entity.state
-            assert {
-                "Humidity status": "normal",
-                "Temperature": 13.3,
-                "Rssi numeric": 6,
-                "Humidity": 34,
-                "Battery numeric": 9,
-                "Humidity status numeric": 2,
-            } == entity.device_state_attributes
-            assert "Test" == entity.__str__()
+    state = hass.states.get("sensor.wt260_wt260h_wt440h_wt450_wt450h_06_01_humidity")
+    assert state
+    assert state.state == "15"
 
-    assert 2 == device_num
-    assert 2 == len(rfxtrx_core.RFX_DEVICES)
+
+async def test_rssi_sensor(hass, rfxtrx):
+    """Test with 1 sensor."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0913000022670e013b70": {
+                "data_bits": 4,
+                "command_on": 0xE,
+                "command_off": 0x7,
+            },
+            "0b1100cd0213c7f230010f71": {},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == "PT2262 22670e Rssi numeric"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48 Rssi numeric"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
+
+    await rfxtrx.signal("0913000022670e013b70")
+    await rfxtrx.signal("0b1100cd0213c7f230010f71")
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "-64"
+
+    await rfxtrx.signal("0913000022670e013b60")
+    await rfxtrx.signal("0b1100cd0213c7f230010f61")
+
+    state = hass.states.get("sensor.pt2262_22670e_rssi_numeric")
+    assert state
+    assert state.state == "-72"
+
+    state = hass.states.get("sensor.ac_213c7f2_48_rssi_numeric")
+    assert state
+    assert state.state == "-72"

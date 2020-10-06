@@ -30,14 +30,16 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             states = execute(query, to_native=True, validate_entity_ids=False)
             if states:
                 batch_purge_before = min(
-                    batch_purge_before, states[0].last_updated + timedelta(hours=1),
+                    batch_purge_before,
+                    states[0].last_updated + timedelta(hours=1),
                 )
 
             query = session.query(Events).order_by(Events.time_fired.asc()).limit(1)
             events = execute(query, to_native=True)
             if events:
                 batch_purge_before = min(
-                    batch_purge_before, events[0].time_fired + timedelta(hours=1),
+                    batch_purge_before,
+                    events[0].time_fired + timedelta(hours=1),
                 )
 
             _LOGGER.debug("Purging states and events before %s", batch_purge_before)
@@ -59,7 +61,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             # If states or events purging isn't processing the purge_before yet,
             # return false, as we are not done yet.
             if batch_purge_before != purge_before:
-                _LOGGER.debug("Purging hasn't fully completed yet.")
+                _LOGGER.debug("Purging hasn't fully completed yet")
                 return False
 
             # Recorder runs is small, no need to batch run it
@@ -94,7 +96,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             time.sleep(instance.db_retry_wait)
             return False
 
-        _LOGGER.warning("Error purging history: %s.", err)
+        _LOGGER.warning("Error purging history: %s", err)
     except SQLAlchemyError as err:
-        _LOGGER.warning("Error purging history: %s.", err)
+        _LOGGER.warning("Error purging history: %s", err)
     return True

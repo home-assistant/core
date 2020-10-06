@@ -6,6 +6,7 @@ from homeassistant.components.air_quality import (
     AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_ADVICE,
@@ -18,7 +19,9 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PM25_LIMIT,
     ATTR_API_PM25_PERCENT,
+    DEFAULT_NAME,
     DOMAIN,
+    MANUFACTURER,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -31,6 +34,8 @@ LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
 LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
 LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly air_quality entity based on a config entry."""
@@ -38,9 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [AirlyAirQuality(coordinator, name, config_entry.unique_id)], False
-    )
+    async_add_entities([AirlyAirQuality(coordinator, name)], False)
 
 
 def round_state(func):
@@ -55,25 +58,19 @@ def round_state(func):
     return _decorator
 
 
-class AirlyAirQuality(AirQualityEntity):
+class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Airly air quality."""
 
-    def __init__(self, coordinator, name, unique_id):
+    def __init__(self, coordinator, name):
         """Initialize."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._name = name
-        self._unique_id = unique_id
         self._icon = "mdi:blur"
 
     @property
     def name(self):
         """Return the name."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def icon(self):
@@ -106,12 +103,19 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return self._unique_id
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {
+                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)
+            },
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def device_state_attributes(self):
@@ -125,13 +129,3 @@ class AirlyAirQuality(AirQualityEntity):
             LABEL_PM_10_LIMIT: self.coordinator.data[ATTR_API_PM10_LIMIT],
             LABEL_PM_10_PERCENT: round(self.coordinator.data[ATTR_API_PM10_PERCENT]),
         }
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Airly entity."""
-        await self.coordinator.async_request_refresh()

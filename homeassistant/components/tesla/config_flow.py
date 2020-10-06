@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -61,7 +62,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={CONF_USERNAME: "identifier_exists"},
+                errors={CONF_USERNAME: "already_configured"},
                 description_placeholders={},
             )
 
@@ -71,14 +72,14 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={"base": "connection_error"},
+                errors={"base": "cannot_connect"},
                 description_placeholders={},
             )
         except InvalidAuth:
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
-                errors={"base": "invalid_credentials"},
+                errors={"base": "invalid_auth"},
                 description_placeholders={},
             )
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
@@ -140,11 +141,11 @@ async def validate_input(hass: core.HomeAssistant, data):
             test_login=True
         )
     except TeslaException as ex:
-        if ex.code == 401:
+        if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth()
+            raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
-        raise CannotConnect()
+        raise CannotConnect() from ex
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
 

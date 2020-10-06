@@ -78,15 +78,14 @@ ENTITY_DESCRIBING_ATTRIBUTES = {
 class RegistryEntry:
     """Entity Registry Entry."""
 
-    entity_id = attr.ib(type=str)
-    unique_id = attr.ib(type=str)
-    platform = attr.ib(type=str)
-    name = attr.ib(type=str, default=None)
-    icon = attr.ib(type=str, default=None)
+    entity_id: str = attr.ib()
+    unique_id: str = attr.ib()
+    platform: str = attr.ib()
+    name: Optional[str] = attr.ib(default=None)
+    icon: Optional[str] = attr.ib(default=None)
     device_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
-    disabled_by = attr.ib(
-        type=Optional[str],
+    disabled_by: Optional[str] = attr.ib(
         default=None,
         validator=attr.validators.in_(
             (
@@ -105,7 +104,7 @@ class RegistryEntry:
     # As set by integration
     original_name: Optional[str] = attr.ib(default=None)
     original_icon: Optional[str] = attr.ib(default=None)
-    domain = attr.ib(type=str, init=False, repr=False)
+    domain: str = attr.ib(init=False, repr=False)
 
     @domain.default
     def _domain_default(self) -> str:
@@ -125,6 +124,7 @@ class EntityRegistry:
         """Initialize the registry."""
         self.hass = hass
         self.entities: Dict[str, RegistryEntry]
+        self._index: Dict[Tuple[str, str, str], str] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_removed
@@ -161,14 +161,7 @@ class EntityRegistry:
         self, domain: str, platform: str, unique_id: str
     ) -> Optional[str]:
         """Check if an entity_id is currently registered."""
-        for entity in self.entities.values():
-            if (
-                entity.domain == domain
-                and entity.platform == platform
-                and entity.unique_id == unique_id
-            ):
-                return entity.entity_id
-        return None
+        return self._index.get((domain, platform, unique_id))
 
     @callback
     def async_generate_entity_id(
@@ -271,7 +264,7 @@ class EntityRegistry:
             original_name=original_name,
             original_icon=original_icon,
         )
-        self.entities[entity_id] = entity
+        self._register_entry(entity)
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
         self.async_schedule_save()
 
@@ -284,7 +277,7 @@ class EntityRegistry:
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self.entities.pop(entity_id)
+        self._unregister_entry(self.entities[entity_id])
         self.hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
         )
@@ -381,27 +374,22 @@ class EntityRegistry:
             entity_id = changes["entity_id"] = new_entity_id
 
         if new_unique_id is not _UNDEF:
-            conflict = next(
-                (
-                    entity
-                    for entity in self.entities.values()
-                    if entity.unique_id == new_unique_id
-                    and entity.domain == old.domain
-                    and entity.platform == old.platform
-                ),
-                None,
+            conflict_entity_id = self.async_get_entity_id(
+                old.domain, old.platform, new_unique_id
             )
-            if conflict:
+            if conflict_entity_id:
                 raise ValueError(
                     f"Unique id '{new_unique_id}' is already in use by "
-                    f"'{conflict.entity_id}'"
+                    f"'{conflict_entity_id}'"
                 )
             changes["unique_id"] = new_unique_id
 
         if not changes:
             return old
 
-        new = self.entities[entity_id] = attr.evolve(old, **changes)
+        self._remove_index(old)
+        new = attr.evolve(old, **changes)
+        self._register_entry(new)
 
         self.async_schedule_save()
 
@@ -452,6 +440,7 @@ class EntityRegistry:
                 )
 
         self.entities = entities
+        self._rebuild_index()
 
     @callback
     def async_schedule_save(self) -> None:
@@ -494,6 +483,25 @@ class EntityRegistry:
             if config_entry == entry.config_entry_id
         ]:
             self.async_remove(entity_id)
+
+    def _register_entry(self, entry: RegistryEntry) -> None:
+        self.entities[entry.entity_id] = entry
+        self._add_index(entry)
+
+    def _add_index(self, entry: RegistryEntry) -> None:
+        self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+
+    def _unregister_entry(self, entry: RegistryEntry) -> None:
+        self._remove_index(entry)
+        del self.entities[entry.entity_id]
+
+    def _remove_index(self, entry: RegistryEntry) -> None:
+        del self._index[(entry.domain, entry.platform, entry.unique_id)]
+
+    def _rebuild_index(self) -> None:
+        self._index = {}
+        for entry in self.entities.values():
+            self._add_index(entry)
 
 
 @singleton(DATA_REGISTRY)

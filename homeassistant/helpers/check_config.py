@@ -40,7 +40,7 @@ class CheckConfigError(NamedTuple):
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors: List[CheckConfigError] = attr.ib(default=attr.Factory(list))
+    errors: List[CheckConfigError] = attr.ib(factory=list)
 
     def add_error(
         self,

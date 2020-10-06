@@ -5,6 +5,7 @@
             "unsupported_model": "Ce mod\u00e8le d'imprimante n'est pas pris en charge."
         },
         "error": {
+            "cannot_connect": "\u00c9chec de connexion",
             "connection_error": "Erreur de connexion.",
             "snmp_error": "Serveur SNMP d\u00e9sactiv\u00e9 ou imprimante non prise en charge.",
             "wrong_host": "Nom d'h\u00f4te ou adresse IP invalide."
@@ -13,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP de l'imprimante",
+                    "host": "Nom d'h\u00f4te ou adresse IP",
                     "type": "Type d'imprimante"
                 },
                 "description": "Configurez l'int\u00e9gration de l'imprimante Brother. Si vous avez des probl\u00e8mes avec la configuration, allez \u00e0 : https://www.home-assistant.io/integrations/brother"

@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Reihenfolge",
                     "scan_interval": "Aktualisierungsfrequenz"
                 },
                 "title": "Konfiguriere die Optionen f\u00fcr die \u00dcbertragung"

@@ -5,15 +5,16 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PROBLEM,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
-    UNIT_PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 DOMAIN = "toon"
@@ -30,6 +31,8 @@ DEFAULT_MIN_TEMP = 6.0
 CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
 VOLUME_M3 = "M3"
+VOLUME_LHOUR = "L/H"
+VOLUME_LMIN = "L/MIN"
 
 ATTR_DEFAULT_ENABLED = "default_enabled"
 ATTR_INVERTED = "inverted"
@@ -112,6 +115,15 @@ BINARY_SENSOR_ENTITIES = {
 }
 
 SENSOR_ENTITIES = {
+    "current_display_temperature": {
+        ATTR_NAME: "Temperature",
+        ATTR_SECTION: "thermostat",
+        ATTR_MEASUREMENT: "current_display_temperature",
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_ICON: None,
+        ATTR_DEFAULT_ENABLED: False,
+    },
     "gas_average": {
         ATTR_NAME: "Average Gas Usage",
         ATTR_SECTION: "gas_usage",
@@ -214,7 +226,7 @@ SENSOR_ENTITIES = {
     "power_meter_reading_low": {
         ATTR_NAME: "Electricity Meter Feed IN Tariff 2",
         ATTR_SECTION: "power_usage",
-        ATTR_MEASUREMENT: "meter_high",
+        ATTR_MEASUREMENT: "meter_low",
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:power-plug",
@@ -314,7 +326,7 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Boiler Modulation Level",
         ATTR_SECTION: "thermostat",
         ATTR_MEASUREMENT: "current_modulation_level",
-        ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:percent",
         ATTR_DEFAULT_ENABLED: False,
@@ -323,10 +335,64 @@ SENSOR_ENTITIES = {
         ATTR_NAME: "Current Power Usage Covered By Solar",
         ATTR_SECTION: "power_usage",
         ATTR_MEASUREMENT: "current_covered_by_solar",
-        ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:solar-power",
         ATTR_DEFAULT_ENABLED: True,
+    },
+    "water_average": {
+        ATTR_NAME: "Average Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "average",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_average_daily": {
+        ATTR_NAME: "Average Daily Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_average",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_daily_usage": {
+        ATTR_NAME: "Water Usage Today",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_usage",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_meter_reading": {
+        ATTR_NAME: "Water Meter",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "meter",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_M3,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_value": {
+        ATTR_NAME: "Current Water Usage",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "current",
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_LMIN,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water-pump",
+        ATTR_DEFAULT_ENABLED: False,
+    },
+    "water_daily_cost": {
+        ATTR_NAME: "Water Cost Today",
+        ATTR_SECTION: "water_usage",
+        ATTR_MEASUREMENT: "day_cost",
+        ATTR_UNIT_OF_MEASUREMENT: CURRENCY_EUR,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:water-pump",
+        ATTR_DEFAULT_ENABLED: False,
     },
 }
 

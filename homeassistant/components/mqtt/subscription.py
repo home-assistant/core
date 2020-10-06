@@ -19,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
-    hass = attr.ib(type=HomeAssistantType)
-    topic = attr.ib(type=str)
-    message_callback = attr.ib(type=MessageCallbackType)
-    unsubscribe_callback = attr.ib(type=Optional[Callable[[], None]])
-    qos = attr.ib(type=int, default=0)
-    encoding = attr.ib(type=str, default="utf-8")
+    hass: HomeAssistantType = attr.ib()
+    topic: str = attr.ib()
+    message_callback: MessageCallbackType = attr.ib()
+    unsubscribe_callback: Optional[Callable[[], None]] = attr.ib()
+    qos: int = attr.ib(default=0)
+    encoding: str = attr.ib(default="utf-8")
 
     async def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""

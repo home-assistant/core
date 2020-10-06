@@ -81,6 +81,7 @@ async def test_gateway_setup(hass):
         assert gateway.master is True
         assert gateway.option_allow_clip_sensor is False
         assert gateway.option_allow_deconz_groups is True
+        assert gateway.option_allow_new_devices is True
 
         assert len(gateway.deconz_ids) == 0
         assert len(hass.states.async_all()) == 0
@@ -90,9 +91,10 @@ async def test_gateway_setup(hass):
         assert forward_entry_setup.mock_calls[1][1] == (entry, "climate")
         assert forward_entry_setup.mock_calls[2][1] == (entry, "cover")
         assert forward_entry_setup.mock_calls[3][1] == (entry, "light")
-        assert forward_entry_setup.mock_calls[4][1] == (entry, "scene")
-        assert forward_entry_setup.mock_calls[5][1] == (entry, "sensor")
-        assert forward_entry_setup.mock_calls[6][1] == (entry, "switch")
+        assert forward_entry_setup.mock_calls[4][1] == (entry, "lock")
+        assert forward_entry_setup.mock_calls[5][1] == (entry, "scene")
+        assert forward_entry_setup.mock_calls[6][1] == (entry, "sensor")
+        assert forward_entry_setup.mock_calls[7][1] == (entry, "switch")
 
 
 async def test_gateway_retry(hass):
@@ -135,19 +137,24 @@ async def test_update_address(hass):
     gateway = await setup_deconz_integration(hass)
     assert gateway.api.host == "1.2.3.4"
 
-    await hass.config_entries.flow.async_init(
-        deconz.config_flow.DOMAIN,
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: deconz.config_flow.DECONZ_MANUFACTURERURL,
-            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
-            ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
-        },
-        context={"source": "ssdp"},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.deconz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await hass.config_entries.flow.async_init(
+            deconz.config_flow.DOMAIN,
+            data={
+                ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: deconz.config_flow.DECONZ_MANUFACTURERURL,
+                ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
+                ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
+            },
+            context={"source": "ssdp"},
+        )
+        await hass.async_block_till_done()
 
     assert gateway.api.host == "2.3.4.5"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reset_after_successful_setup(hass):
@@ -169,7 +176,8 @@ async def test_get_gateway(hass):
 async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize", side_effect=pydeconz.errors.Unauthorized,
+        "pydeconz.DeconzSession.initialize",
+        side_effect=pydeconz.errors.Unauthorized,
     ), pytest.raises(deconz.errors.AuthenticationRequired):
         assert (
             await deconz.gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
@@ -180,7 +188,8 @@ async def test_get_gateway_fails_unauthorized(hass):
 async def test_get_gateway_fails_cannot_connect(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize", side_effect=pydeconz.errors.RequestError,
+        "pydeconz.DeconzSession.initialize",
+        side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(deconz.errors.CannotConnect):
         assert (
             await deconz.gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())

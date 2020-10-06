@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Nupp 1",
+            "button10": "Nupp 10",
+            "button2": "Nupp 2",
+            "button3": "Nupp 3",
+            "button4": "Nupp 4",
+            "button5": "Nupp 5",
+            "button6": "Nupp 6",
+            "button7": "Nupp 7",
+            "button8": "Nupp 8",
+            "button9": "Nupp 9",
+            "doorbell": "Uksekell"
+        },
+        "trigger_type": {
+            "double_press": "\" {subtype} \" tehtud topeltkl\u00f5ps",
+            "long_press": "\" {subtype} \" on pikalt alla vajutatud",
+            "single_press": "\" {subtype} \" on vajutatud"
+        }
+    }
+}

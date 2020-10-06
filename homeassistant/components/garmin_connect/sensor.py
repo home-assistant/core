@@ -34,7 +34,7 @@ async def async_setup_entry(
     ) as err:
         _LOGGER.error("Error occurred during Garmin Connect Client update: %s", err)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown error occurred during Garmin Connect Client update.")
+        _LOGGER.exception("Unknown error occurred during Garmin Connect Client update")
 
     entities = []
     for (
@@ -121,14 +121,13 @@ class GarminConnectSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return attributes for sensor."""
-        attributes = {}
         if self._data.data:
-            attributes = {
+            return {
                 "source": self._data.data["source"],
                 "last_synced": self._data.data["lastSyncTimestampGMT"],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
             }
-        return attributes
+        return {}
 
     @property
     def device_info(self) -> Dict[str, Any]:

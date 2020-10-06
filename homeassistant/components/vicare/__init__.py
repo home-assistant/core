@@ -81,7 +81,7 @@ def setup(hass, config):
             vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
     except AttributeError:
         _LOGGER.error(
-            "Failed to create PyViCare API client. Please check your credentials."
+            "Failed to create PyViCare API client. Please check your credentials"
         )
         return False
 

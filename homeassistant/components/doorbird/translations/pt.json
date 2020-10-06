@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "name": "Nome do dispositivo"
+                    "name": "Nome do dispositivo",
+                    "password": "Palavra-passe"
                 }
             }
         }

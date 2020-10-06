@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "Guardian seadmega \u00fchenduse loomine nurjus."
+        }
+    }
+}

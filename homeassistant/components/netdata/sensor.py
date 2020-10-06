@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_RESOURCES,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -79,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             resource_data = netdata.api.metrics[sensor]
             unit = (
-                UNIT_PERCENTAGE
+                PERCENTAGE
                 if resource_data["units"] == "percentage"
                 else resource_data["units"]
             )
@@ -195,6 +195,12 @@ class NetdataAlarms(Entity):
 
         for alarm in alarms:
             if alarms[alarm]["recipient"] == "silent":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "CLEAR":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "UNDEFINED":
+                number_of_relevant_alarms = number_of_relevant_alarms - 1
+            elif alarms[alarm]["status"] == "UNINITIALIZED":
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
                 self._state = "critical"

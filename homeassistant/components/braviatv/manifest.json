@@ -2,7 +2,7 @@
   "domain": "braviatv",
   "name": "Sony Bravia TV",
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
-  "requirements": ["bravia-tv==1.0.5"],
+  "requirements": ["bravia-tv==1.0.6"],
   "codeowners": ["@bieniu"],
   "config_flow": true
 }

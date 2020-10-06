@@ -4,14 +4,14 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "already_in_progress": "Konfigurasjonsflyt for enhet p\u00e5g\u00e5r allerede.",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "device_unavailable": "Enheten er ikke tilgjengelig"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Konfigurere Agent DVR"
             }

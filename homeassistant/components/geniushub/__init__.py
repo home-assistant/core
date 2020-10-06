@@ -87,7 +87,8 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4, max=28)
         ),
         vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+            cv.time_period,
+            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )
@@ -181,14 +182,14 @@ class GeniusBroker:
             await self.client.update()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.warning("Connection to geniushub re-established")
+                _LOGGER.info("Connection to geniushub re-established")
         except (
             aiohttp.ClientResponseError,
             aiohttp.client_exceptions.ClientConnectorError,
         ) as err:
             if not self._connect_error:
                 self._connect_error = True
-                _LOGGER.warning(
+                _LOGGER.error(
                     "Connection to geniushub failed (unable to update), message is: %s",
                     err,
                 )

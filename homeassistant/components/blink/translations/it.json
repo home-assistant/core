@@ -4,6 +4,8 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_access_token": "Token di accesso non valido",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
@@ -12,7 +14,7 @@
                 "data": {
                     "2fa": "Codice a due fattori"
                 },
-                "description": "Inserisci il PIN inviato alla tua e-mail. Se l'e-mail non contiene un PIN, lasciare vuoto",
+                "description": "Inserisci il pin inviato alla tua email",
                 "title": "Autenticazione a due fattori"
             },
             "user": {

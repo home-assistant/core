@@ -1,22 +1,19 @@
 """Schema migration helpers."""
 import logging
-import os
 
 from sqlalchemy import Table, text
 from sqlalchemy.engine import reflection
 from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
 
+from .const import DOMAIN
 from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
-PROGRESS_FILE = ".migration_progress"
 
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
-    progress_path = instance.hass.config.path(PROGRESS_FILE)
-
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -32,20 +29,13 @@ def migrate_schema(instance):
             )
 
         if current_version == SCHEMA_VERSION:
-            # Clean up if old migration left file
-            if os.path.isfile(progress_path):
-                _LOGGER.warning("Found existing migration file, cleaning up")
-                os.remove(instance.hass.config.path(PROGRESS_FILE))
             return
-
-        with open(progress_path, "w"):
-            pass
 
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
         )
 
-        try:
+        with instance.hass.timeout.freeze(DOMAIN):
             for version in range(current_version, SCHEMA_VERSION):
                 new_version = version + 1
                 _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
@@ -53,8 +43,6 @@ def migrate_schema(instance):
                 session.add(SchemaChanges(schema_version=new_version))
 
                 _LOGGER.info("Upgrade to version %s done", new_version)
-        finally:
-            os.remove(instance.hass.config.path(PROGRESS_FILE))
 
 
 def _create_index(engine, table_name, index_name):
@@ -165,7 +153,7 @@ def _drop_index(engine, table_name, index_name):
         _LOGGER.warning(
             "Failed to drop index %s from table %s. Schema "
             "Migration will continue; this is not a "
-            "critical operation.",
+            "critical operation",
             index_name,
             table_name,
         )
@@ -195,7 +183,7 @@ def _add_columns(engine, table_name, columns_def):
     except (InternalError, OperationalError):
         # Some engines support adding all columns at once,
         # this error is when they don't
-        _LOGGER.info("Unable to use quick column add. Adding 1 by 1.")
+        _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
 
     for column_def in columns_def:
         try:

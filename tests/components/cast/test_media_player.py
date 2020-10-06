@@ -6,15 +6,17 @@ from uuid import UUID
 import attr
 import pytest
 
+from homeassistant.components import tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, Mock, patch
-from tests.common import MockConfigEntry
+from tests.async_mock import AsyncMock, MagicMock, Mock, patch
+from tests.common import MockConfigEntry, assert_setup_component
 
 
 @pytest.fixture(autouse=True)
@@ -34,6 +36,9 @@ def cast_mock():
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager", MagicMock()
+    ), patch(
+        "homeassistant.components.cast.media_player.zeroconf.async_get_instance",
+        AsyncMock(),
     ):
         yield
 
@@ -74,21 +79,21 @@ def get_fake_zconf(host="192.168.178.42", port=8009):
     return zconf
 
 
-async def async_setup_cast(hass, config=None, discovery_info=None):
+async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    add_entities = Mock()
-
-    await cast.async_setup_platform(
-        hass, config, add_entities, discovery_info=discovery_info
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
+    ) as add_entities:
+        MockConfigEntry(domain="cast").add_to_hass(hass)
+        await async_setup_component(hass, "cast", {"cast": {"media_player": config}})
+        await hass.async_block_till_done()
 
     return add_entities
 
 
-async def async_setup_cast_internal_discovery(hass, config=None, discovery_info=None):
+async def async_setup_cast_internal_discovery(hass, config=None):
     """Set up the cast platform and the discovery."""
     listener = MagicMock(services={})
     browser = MagicMock(zc={})
@@ -100,7 +105,7 @@ async def async_setup_cast_internal_discovery(hass, config=None, discovery_info=
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",
         return_value=browser,
     ) as start_discovery:
-        add_entities = await async_setup_cast(hass, config, discovery_info)
+        add_entities = await async_setup_cast(hass, config)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -144,12 +149,11 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         return_value=zconf,
     ):
         await async_setup_component(
-            hass,
-            "media_player",
-            {"media_player": {"platform": "cast", "host": info.host}},
+            hass, "cast", {"cast": {"media_player": {"host": info.host}}}
         )
-
         await hass.async_block_till_done()
+
+        await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
         discovery_callback = cast_listener.call_args[0][0]
 
@@ -208,15 +212,6 @@ async def test_stop_discovery_called_on_stop(hass):
 
         stop_discovery.assert_called_once_with(browser)
 
-    with patch(
-        "homeassistant.components.cast.discovery.pychromecast.start_discovery",
-        return_value=browser,
-    ) as start_discovery:
-        # start_discovery should be called again on re-startup
-        await async_setup_cast(hass)
-
-        assert start_discovery.call_count == 1
-
 
 async def test_create_cast_device_without_uuid(hass):
     """Test create a cast device with no UUId does not create an entity."""
@@ -241,15 +236,15 @@ async def test_create_cast_device_with_uuid(hass):
 
 async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
-    cast_group1 = get_fake_chromecast_info(host="host1", port=42)
+    cast_group1 = get_fake_chromecast_info(host="host1", port=8009)
     cast_group2 = get_fake_chromecast_info(
-        host="host2", port=42, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
+        host="host2", port=8009, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
     )
-    zconf_1 = get_fake_zconf(host="host1", port=42)
-    zconf_2 = get_fake_zconf(host="host2", port=42)
+    zconf_1 = get_fake_zconf(host="host1", port=8009)
+    zconf_2 = get_fake_zconf(host="host2", port=8009)
 
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, discovery_info={"host": "host1", "port": 42}
+        hass, config={"host": "host1"}
     )
 
     with patch(
@@ -257,8 +252,9 @@ async def test_replay_past_chromecasts(hass):
         return_value=zconf_2,
     ):
         discover_cast("service2", cast_group2)
-        await hass.async_block_till_done()
-        assert add_dev1.call_count == 0
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 0
 
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
@@ -269,9 +265,8 @@ async def test_replay_past_chromecasts(hass):
     await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
 
-    add_dev2 = await async_setup_cast(
-        hass, discovery_info={"host": "host2", "port": 42}
-    )
+    add_dev2 = Mock()
+    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, None)
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
 
@@ -447,6 +442,45 @@ async def test_entity_media_states(hass: HomeAssistantType):
     assert state.state == "unknown"
 
 
+async def test_url_replace(hass: HomeAssistantType):
+    """Test functionality of replacing URL for HTTPS."""
+    info = get_fake_chromecast_info()
+    full_info = attr.evolve(
+        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
+    )
+
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    entity._available = True
+    entity.schedule_update_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.speaker")
+    assert state is not None
+    assert state.name == "Speaker"
+    assert state.state == "unknown"
+    assert entity.unique_id == full_info.uuid
+
+    class FakeHTTPImage:
+        url = "http://example.com/test.png"
+
+    class FakeHTTPSImage:
+        url = "https://example.com/test.png"
+
+    media_status = MagicMock(images=[FakeHTTPImage()])
+    media_status.player_is_playing = True
+    entity.new_media_status(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.speaker")
+    assert state.attributes.get("entity_picture") == "//example.com/test.png"
+
+    media_status.images = [FakeHTTPSImage()]
+    entity.new_media_status(media_status)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.speaker")
+    assert state.attributes.get("entity_picture") == "https://example.com/test.png"
+
+
 async def test_group_media_states(hass: HomeAssistantType):
     """Test media states are read from group if entity has no state."""
     info = get_fake_chromecast_info()
@@ -545,6 +579,128 @@ async def test_group_media_control(hass: HomeAssistantType):
     assert chromecast.media_controller.play_media.called
 
 
+async def test_failed_cast_on_idle(hass, caplog):
+    """Test no warning when unless player went idle with reason "ERROR"."""
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = False
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "Other"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media" not in caplog.text
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
+async def test_failed_cast_other_url(hass, caplog):
+    """Test warning when casting from internal_url fails."""
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert "Failed to cast media http://example.com:8123/tts.mp3." in caplog.text
+
+
+async def test_failed_cast_internal_url(hass, caplog):
+    """Test warning when casting from internal_url fails."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass, tts.DOMAIN, {tts.DOMAIN: {"platform": "demo"}}
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.local:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.local:8123/tts.mp3 from internal_url"
+        in caplog.text
+    )
+
+
+async def test_failed_cast_external_url(hass, caplog):
+    """Test warning when casting from external_url fails."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "http://example.com:8123"},
+    )
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.com:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.com:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.com:8123/tts.mp3 from external_url"
+        in caplog.text
+    )
+
+
+async def test_failed_cast_tts_base_url(hass, caplog):
+    """Test warning when casting from tts.base_url fails."""
+    with assert_setup_component(1, tts.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            tts.DOMAIN,
+            {tts.DOMAIN: {"platform": "demo", "base_url": "http://example.local:8123"}},
+        )
+
+    info = get_fake_chromecast_info()
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
+
+    media_status = MagicMock(images=None)
+    media_status.player_is_idle = True
+    media_status.idle_reason = "ERROR"
+    media_status.content_id = "http://example.local:8123/tts.mp3"
+    entity.new_media_status(media_status)
+    assert (
+        "Failed to cast media http://example.local:8123/tts.mp3 from tts.base_url"
+        in caplog.text
+    )
+
+
 async def test_disconnect_on_stop(hass: HomeAssistantType):
     """Test cast device disconnects socket on stop."""
     info = get_fake_chromecast_info()
@@ -559,6 +715,7 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
 async def test_entry_setup_no_config(hass: HomeAssistantType):
     """Test setting up entry with no config.."""
     await async_setup_component(hass, "cast", {})
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -574,6 +731,7 @@ async def test_entry_setup_single_config(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -589,6 +747,7 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": [{"host": "bla"}, {"host": "blu"}]}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
@@ -605,6 +764,7 @@ async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
     await async_setup_component(
         hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
     )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",

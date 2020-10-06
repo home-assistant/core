@@ -21,8 +21,8 @@
             "link": {
                 "data": {
                     "password": "Passord",
-                    "port": "Port",
-                    "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
+                    "port": "",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn"
                 },
                 "description": "Vil du konfigurere {name} ({host})?",
@@ -32,8 +32,8 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port",
-                    "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
+                    "port": "",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn"
                 },
                 "title": ""
@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutter mellom skanninger"
+                    "scan_interval": "Minutter mellom skanninger",
+                    "timeout": "Tidsavbrudd (sekunder)"
                 }
             }
         }
