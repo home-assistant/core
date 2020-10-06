@@ -286,12 +286,10 @@ class MaxCubeClimate(ClimateEntity):
         """Return the optional state attributes."""
         cube = self._cubehandle.cube
         device = cube.device_by_rf(self._rf_address)
-        attributes = {}
 
         if cube.is_thermostat(device):
-            attributes[ATTR_VALVE_POSITION] = device.valve_position
-
-        return attributes
+            return {ATTR_VALVE_POSITION: device.valve_position}
+        return {}
 
     def update(self):
         """Get latest data from MAX! Cube."""
