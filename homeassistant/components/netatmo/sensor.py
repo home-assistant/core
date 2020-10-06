@@ -315,7 +315,7 @@ class NetatmoSensor(NetatmoBase):
         try:
             if self.type == "temperature":
                 self._state = round(data["Temperature"], 1)
-            elif self.type == "temperature_trend":
+            elif self.type == "temp_trend":
                 self._state = data["temp_trend"]
             elif self.type == "humidity":
                 self._state = data["Humidity"]
