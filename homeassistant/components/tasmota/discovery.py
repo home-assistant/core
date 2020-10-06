@@ -46,6 +46,7 @@ async def async_start(
     """Start MQTT Discovery."""
 
     async def _load_platform(platform):
+        """Load a Tasmota platform if not already done."""
         async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
             config_entries_key = f"{platform}.tasmota"
             if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
@@ -55,6 +56,7 @@ async def async_start(
                 hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
     async def _discover_entity(tasmota_entity_config, discovery_hash, platform):
+        """Handle adding or updating a discovered entity."""
         if not tasmota_entity_config:
             # Entity disabled, clean up entity registry
             entity_registry = await hass.helpers.entity_registry.async_get_registry()
