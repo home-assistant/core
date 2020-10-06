@@ -199,14 +199,17 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     else:
         update_interval = DEFAULT_SCAN_INTERVAL
 
-    coordinator = upcloud_data.coordinators[
-        config_entry.data[CONF_USERNAME]
-    ] = UpCloudDataUpdateCoordinator(
+    coordinator = UpCloudDataUpdateCoordinator(
         hass,
         update_interval=update_interval,
         cloud_manager=manager,
         username=config_entry.data[CONF_USERNAME],
     )
+
+    # Call the UpCloud API to refresh data
+    await coordinator.async_request_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     # Listen to config entry updates
     coordinator.unsub_handlers.append(
@@ -220,10 +223,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         )
     )
 
-    # Call the UpCloud API to refresh data
-    await coordinator.async_request_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    upcloud_data.coordinators[config_entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
     for domain in CONFIG_ENTRY_DOMAINS:
