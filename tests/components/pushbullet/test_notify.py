@@ -2,6 +2,7 @@
 import json
 
 from pushbullet import PushBullet
+import pytest
 
 import homeassistant.components.notify as notify
 from homeassistant.setup import async_setup_component
@@ -10,12 +11,18 @@ from tests.async_mock import patch
 from tests.common import assert_setup_component, load_fixture
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_config(mock__get_data, hass):
+@pytest.fixture
+def mock_pushbullet():
+    """Mock pushbullet."""
+    with patch.object(
+        PushBullet,
+        "_get_data",
+        return_value=json.loads(load_fixture("pushbullet_devices.json")),
+    ):
+        yield
+
+
+async def test_pushbullet_config(hass, mock_pushbullet):
     """Test setup."""
     config = {
         notify.DOMAIN: {
@@ -39,12 +46,7 @@ async def test_pushbullet_config_bad(hass):
     assert not handle_config[notify.DOMAIN]
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_default(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_default(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
@@ -73,12 +75,7 @@ async def test_pushbullet_push_default(mock__get_data, hass, requests_mock):
     assert requests_mock.last_request.json() == expected_body
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_device(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_device(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
@@ -116,12 +113,7 @@ async def test_pushbullet_push_device(mock__get_data, hass, requests_mock):
     assert requests_mock.last_request.json() == expected_body
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_devices(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_devices(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
@@ -167,12 +159,7 @@ async def test_pushbullet_push_devices(mock__get_data, hass, requests_mock):
     assert requests_mock.request_history[1].json() == expected_body
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_email(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_email(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
@@ -211,12 +198,7 @@ async def test_pushbullet_push_email(mock__get_data, hass, requests_mock):
     assert requests_mock.request_history[0].json() == expected_body
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_mixed(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_mixed(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
@@ -262,12 +244,7 @@ async def test_pushbullet_push_mixed(mock__get_data, hass, requests_mock):
     assert requests_mock.request_history[1].json() == expected_body
 
 
-@patch.object(
-    PushBullet,
-    "_get_data",
-    return_value=json.loads(load_fixture("pushbullet_devices.json")),
-)
-async def test_pushbullet_push_no_file(mock__get_data, hass, requests_mock):
+async def test_pushbullet_push_no_file(hass, requests_mock, mock_pushbullet):
     """Test pushbullet push to default target."""
     config = {
         notify.DOMAIN: {
