@@ -2,34 +2,16 @@
 import copy
 import json
 
-from hatasmota.const import CONF_ONLINE
 import pytest
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
+from .conftest import setup_tasmota_helper
+from .test_common import DEFAULT_CONFIG
+
 from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
-from tests.components.tasmota.conftest import setup_tasmota_helper
-
-DEFAULT_CONFIG = {
-    "dn": "My Device",
-    "fn": ["Beer", "Milk", "Three", "Four", "Five"],
-    "hn": "tasmota_49A3BC",
-    "mac": "00000049A3BC",
-    "md": "Sonoff 123",
-    "ofl": "offline",
-    CONF_ONLINE: "online",
-    "state": ["OFF", "ON", "TOGGLE", "HOLD"],
-    "sw": "2.3.3.4",
-    "t": "tasmota_49A3BC",
-    "t_f": "%topic%/%prefix%/",
-    "t_p": ["cmnd", "stat", "tele"],
-    "li": [0, 0, 0, 0, 0, 0, 0, 0],
-    "rl": [0, 0, 0, 0, 0, 0, 0, 0],
-    "se": [],
-    "ver": 1,
-}
 
 
 async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
@@ -118,14 +100,14 @@ async def test_correct_config_discovery(
     # Verify device and registry entries are created
     device_entry = device_reg.async_get_device(set(), {("mac", mac)})
     assert device_entry is not None
-    entity_entry = entity_reg.async_get("switch.beer")
+    entity_entry = entity_reg.async_get("switch.test")
     assert entity_entry is not None
 
-    state = hass.states.get("switch.beer")
+    state = hass.states.get("switch.test")
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "Test"
 
-    assert (mac, "switch", 0) in hass.data[ALREADY_DISCOVERED]
+    assert (mac, "switch", "relay", 0) in hass.data[ALREADY_DISCOVERED]
 
 
 async def test_device_discover(
@@ -337,14 +319,14 @@ async def test_entity_duplicate_discovery(hass, mqtt_mock, caplog, setup_tasmota
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.beer")
+    state = hass.states.get("switch.test")
     state_duplicate = hass.states.get("binary_sensor.beer1")
 
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "Test"
     assert state_duplicate is None
     assert (
-        f"Entity already added, sending update: switch ('{mac}', 'switch', 0)"
+        f"Entity already added, sending update: switch ('{mac}', 'switch', 'relay', 0)"
         in caplog.text
     )
 
@@ -364,9 +346,9 @@ async def test_entity_duplicate_removal(hass, mqtt_mock, caplog, setup_tasmota):
     config["rl"][0] = 0
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    assert f"Removing entity: switch ('{mac}', 'switch', 0)" in caplog.text
+    assert f"Removing entity: switch ('{mac}', 'switch', 'relay', 0)" in caplog.text
 
     caplog.clear()
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
     await hass.async_block_till_done()
-    assert f"Removing entity: switch ('{mac}', 'switch', 0)" not in caplog.text
+    assert "Removing entity: switch" not in caplog.text
