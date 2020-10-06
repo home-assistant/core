@@ -88,7 +88,7 @@ async def test_reset_unloads_entry_if_setup(hass):
     ), patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
         assert await hue_bridge.async_setup() is True
 
-    assert len(hass.services.async_services()) == 1
+    assert len(hass.services.async_services()) == 0
     assert len(mock_forward.mock_calls) == 3
 
     with patch.object(
