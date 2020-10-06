@@ -320,10 +320,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
         if self._client.sound_output is not None and self.state != STATE_OFF:
-            attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
-        return attributes
+            return {ATTR_SOUND_OUTPUT: self._client.sound_output}
+        return {}
 
     @cmd
     async def async_turn_off(self):
