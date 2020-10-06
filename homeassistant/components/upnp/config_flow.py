@@ -127,7 +127,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         usn = discovery_info[DISCOVERY_USN]
         await self.async_set_unique_id(usn)
-        self._abort_if_unique_id_configured()
 
         return await self._async_create_entry_from_discovery(discovery_info)
 
