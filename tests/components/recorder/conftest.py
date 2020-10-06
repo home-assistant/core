@@ -4,13 +4,12 @@ import pytest
 
 from homeassistant.components.recorder.const import DATA_INSTANCE
 
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import init_recorder_component
 
 
 @pytest.fixture
-def hass_recorder():
+def hass_recorder(hass):
     """Home Assistant fixture with in-memory recorder."""
-    hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
         """Set up with params."""
@@ -21,4 +20,3 @@ def hass_recorder():
         return hass
 
     yield setup_recorder
-    hass.stop()
