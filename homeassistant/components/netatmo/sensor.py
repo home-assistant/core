@@ -58,8 +58,6 @@ SENSOR_TYPES = {
     "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "battery_vp": ["Battery", "", "mdi:battery", None],
-    "battery_lvl": ["Battery Level", "", "mdi:battery", None],
     "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
@@ -334,10 +332,6 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
-            elif self.type == "battery_lvl":
-                self._state = data["battery_vp"]
-            elif self.type == "battery_vp":
-                self._state = process_battery(data["battery_vp"], self._model)
             elif self.type == "min_temp":
                 self._state = data["min_temp"]
             elif self.type == "max_temp":
