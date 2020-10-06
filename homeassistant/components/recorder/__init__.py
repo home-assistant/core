@@ -489,6 +489,12 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self):
         try:
+            # Write the database
+            self.event_session.flush()
+            # Detach the objects in the cache
+            # so they don't get expired and re-selected
+            self.event_session.expunge()
+            # Commit
             self.event_session.commit()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
