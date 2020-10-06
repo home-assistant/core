@@ -18,7 +18,7 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%] {host}:{port}"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
