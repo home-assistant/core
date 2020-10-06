@@ -4404,8 +4404,10 @@ class AisGetWeather(intent.IntentHandler):
                 addressdetails=True,
                 zoom=10,
             )
-            address = location.address.split(",")[0]
-            command = "pogoda w " + address
+            address = (
+                location.address.split(",")[0] + " " + location.address.split(",")[1]
+            )
+            command = "pogoda w miejscowości " + address
             # ask AIS
             ws_resp = aisCloudWS.ask(command, "niestety nie wiem jaka jest pogoda")
             answer = ws_resp.text.split("---")[0]
@@ -4442,8 +4444,10 @@ class AisGetWeather48(intent.IntentHandler):
                 addressdetails=True,
                 zoom=10,
             )
-            address = location.address.split(",")[0]
-            command = "jaka będzie pogoda jutro w " + address
+            address = (
+                location.address.split(",")[0] + " " + location.address.split(",")[1]
+            )
+            command = "jaka będzie pogoda jutro w miejscowości " + address
             ws_resp = aisCloudWS.ask(command, answer)
             answer = ws_resp.text.split("---")[0]
         except Exception as e:
