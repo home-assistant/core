@@ -17,7 +17,7 @@ async def test_abort_already_setup(hass):
     result = await flow.async_step_user()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_invalid_login_error(hass):
@@ -29,7 +29,7 @@ async def test_invalid_login_error(hass):
         result = await flow.async_step_user(user_input=test_dict)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_login"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_config_flow_configuration_yaml(hass):
