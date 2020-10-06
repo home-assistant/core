@@ -1,4 +1,4 @@
-"""Generate mqtt file."""
+"""Generate MQTT file."""
 from collections import defaultdict
 import json
 from typing import Dict
@@ -18,7 +18,7 @@ MQTT = {}
 
 
 def generate_and_validate(integrations: Dict[str, Integration]):
-    """Validate and generate mqtt data."""
+    """Validate and generate MQTT data."""
 
     data = defaultdict(list)
 
@@ -40,7 +40,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
-    """Validate mqtt file."""
+    """Validate MQTT file."""
     mqtt_path = config.root / "homeassistant/generated/mqtt.py"
     config.cache["mqtt"] = content = generate_and_validate(integrations)
 
@@ -58,7 +58,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
 
 
 def generate(integrations: Dict[str, Integration], config: Config):
-    """Generate mqtt file."""
+    """Generate MQTT file."""
     mqtt_path = config.root / "homeassistant/generated/mqtt.py"
     with open(str(mqtt_path), "w") as fp:
         fp.write(f"{config.cache['mqtt']}\n")

@@ -204,7 +204,7 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
 
 
 async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
-    """Return cached list of mqtt mappings."""
+    """Return cached list of MQTT mappings."""
 
     mqtt: Dict[str, List] = MQTT.copy()
 

@@ -376,7 +376,7 @@ async def test_get_ssdp(hass):
 
 
 async def test_get_mqtt(hass):
-    """Verify that custom components with mqtt are found."""
+    """Verify that custom components with MQTT are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration(hass, "test_2", True)
 
