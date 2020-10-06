@@ -110,10 +110,10 @@ class TimeDateSensor(Entity):
         return now + timedelta(seconds=delta)
 
     def _update_internal_state(self, time_date):
-        lt = dt_util.as_local(time_date)
-        time = lt.strftime(TIME_STR_FORMAT)
+        local_time = dt_util.as_local(time_date)
+        time = local_time.strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
-        date = lt.date().isoformat()
+        date = local_time.date().isoformat()
         date_utc = time_date.date().isoformat()
 
         # Calculate Swatch Internet Time.
@@ -129,13 +129,13 @@ class TimeDateSensor(Entity):
         if self.type == "time":
             self._state = time
         elif self.type == "time_12h":
-            self._state = lt.strftime("%I:%M %p")
+            self._state = local_time.strftime("%I:%M %p")
         elif self.type == "date":
             self._state = date
         elif self.type == "date_dmy":
-            self._state = lt.strftime("%d-%m-%Y")
+            self._state = local_time.strftime("%d-%m-%Y")
         elif self.type == "date_mdy":
-            self._state = lt.strftime("%m-%d-%Y")
+            self._state = local_time.strftime("%m-%d-%Y")
         elif self.type == "date_time":
             self._state = f"{date}, {time}"
         elif self.type == "date_time_utc":
