@@ -179,7 +179,7 @@ class ZabbixThread(threading.Thread):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown)
         self.start()
-        _LOGGER.info("Started publishing state changes to Zabbix")
+        _LOGGER.debug("Started publishing state changes to Zabbix")
 
     def _shutdown(self, event):
         """Shut down the thread."""
