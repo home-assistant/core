@@ -258,7 +258,7 @@ async def test_lights_and_groups(hass):
             "put", "/lights/1/state", json={"alert": "lselect"}
         )
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 

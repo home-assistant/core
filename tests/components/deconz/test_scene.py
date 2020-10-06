@@ -61,6 +61,6 @@ async def test_scenes(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/groups/1/scenes/1/recall", json={})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0

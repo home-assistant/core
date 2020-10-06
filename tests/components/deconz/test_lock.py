@@ -96,6 +96,6 @@ async def test_locks(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0

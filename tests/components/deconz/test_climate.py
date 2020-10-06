@@ -166,7 +166,7 @@ async def test_climate_devices(hass):
             "put", "/sensors/1/config", json={"heatsetpoint": 2000.0}
         )
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 

@@ -112,7 +112,7 @@ async def test_deconz_events(hass):
         "xy": [0.5982, 0.3897],
     }
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
     assert len(gateway.events) == 0

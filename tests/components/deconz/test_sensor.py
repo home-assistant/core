@@ -157,7 +157,7 @@ async def test_sensors(hass):
 
     assert hass.states.get("sensor.switch_2_battery_level").state == "75"
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 

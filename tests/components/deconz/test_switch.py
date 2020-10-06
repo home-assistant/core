@@ -130,7 +130,7 @@ async def test_power_plugs(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -192,6 +192,6 @@ async def test_sirens(hass):
             "put", "/lights/1/state", json={"alert": "none"}
         )
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0

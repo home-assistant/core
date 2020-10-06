@@ -98,7 +98,7 @@ async def test_binary_sensors(hass):
 
     assert hass.states.get("binary_sensor.presence_sensor").state == "on"
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
