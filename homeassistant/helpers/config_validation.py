@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import slugify as util_slugify
+from homeassistant.util import sanitize_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -111,6 +111,17 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
 # typing typevar
 T = TypeVar("T")
+
+
+def path(value: Any) -> str:
+    """Validate it's a safe path."""
+    if not isinstance(value, str):
+        raise vol.Invalid("Expected a string")
+
+    if sanitize_path(value) != value:
+        raise vol.Invalid("Invalid path")
+
+    return value
 
 
 # Adapted from:

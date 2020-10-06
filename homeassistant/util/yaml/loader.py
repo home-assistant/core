@@ -1,5 +1,5 @@
 """Custom loader."""
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 import fnmatch
 import logging
 import os
@@ -310,6 +310,15 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     raise HomeAssistantError(f"Secret {node.value} not defined")
 
 
+class Placeholder(namedtuple("Placeholder", "name")):
+    """A placeholder that should be substituted."""
+
+    @classmethod
+    def from_node(cls, loader: SafeLineLoader, node: yaml.nodes.Node) -> "Placeholder":
+        """Create a new placeholder from a node."""
+        return cls(node.value)
+
+
 yaml.SafeLoader.add_constructor("!include", _include_yaml)
 yaml.SafeLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ordered_dict
@@ -325,3 +334,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
+yaml.SafeLoader.add_constructor("!placeholder", Placeholder.from_node)

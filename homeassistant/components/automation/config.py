@@ -14,7 +14,14 @@ from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import IntegrationNotFound
 
-from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
+from . import (
+    CONF_ACTION,
+    CONF_BLUEPRINT,
+    CONF_CONDITION,
+    CONF_TRIGGER,
+    DOMAIN,
+    PLATFORM_SCHEMA,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -23,6 +30,9 @@ from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
 async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
     config = PLATFORM_SCHEMA(config)
+
+    if CONF_BLUEPRINT in config:
+        return config
 
     config[CONF_TRIGGER] = await async_validate_trigger_config(
         hass, config[CONF_TRIGGER]
