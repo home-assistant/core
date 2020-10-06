@@ -29,7 +29,7 @@
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use.",
-      "reauth_successful": "SimpliSafe successfully reauthenticated."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {

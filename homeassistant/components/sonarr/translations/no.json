@@ -21,8 +21,8 @@
                     "base_path": "Bane til API",
                     "host": "Vert",
                     "port": "",
-                    "ssl": "Sonarr bruker et SSL-sertifikat",
-                    "verify_ssl": "Sonarr bruker et riktig sertifikat"
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Koble til Sonarr"
             }

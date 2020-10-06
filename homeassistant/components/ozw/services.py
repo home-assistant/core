@@ -43,6 +43,14 @@ class ZWaveServices:
                 {vol.Optional(const.ATTR_INSTANCE_ID, default=1): vol.Coerce(int)}
             ),
         )
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_CANCEL_COMMAND,
+            self.async_cancel_command,
+            schema=vol.Schema(
+                {vol.Optional(const.ATTR_INSTANCE_ID, default=1): vol.Coerce(int)}
+            ),
+        )
 
         self._hass.services.async_register(
             const.DOMAIN,
@@ -103,6 +111,8 @@ class ZWaveServices:
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         secure = service.data[const.ATTR_SECURE]
         instance = self._manager.get_instance(instance_id)
+        if instance is None:
+            raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
         instance.add_node(secure)
 
     @callback
@@ -110,4 +120,15 @@ class ZWaveServices:
         """Enter exclusion mode on the controller."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         instance = self._manager.get_instance(instance_id)
+        if instance is None:
+            raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
         instance.remove_node()
+
+    @callback
+    def async_cancel_command(self, service):
+        """Tell the controller to cancel an add or remove command."""
+        instance_id = service.data[const.ATTR_INSTANCE_ID]
+        instance = self._manager.get_instance(instance_id)
+        if instance is None:
+            raise ValueError(f"No OpenZWave Instance with ID {instance_id}")
+        instance.cancel_controller_command()
