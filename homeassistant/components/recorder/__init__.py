@@ -350,6 +350,7 @@ class Recorder(threading.Thread):
             )
 
         self.event_session = self.get_session()
+        self.event_session.expire_on_commit = False
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
@@ -490,6 +491,7 @@ class Recorder(threading.Thread):
 
         try:
             self.event_session = self.get_session()
+            self.event_session.expire_on_commit = False
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.exception("Error while creating new event session: %s", err)
@@ -593,9 +595,7 @@ class Recorder(threading.Thread):
         sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
-        self.get_session = scoped_session(
-            sessionmaker(bind=self.engine, expire_on_commit=False)
-        )
+        self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
         """Close the connection."""
