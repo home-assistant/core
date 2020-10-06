@@ -121,13 +121,13 @@ class GarminConnectSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return attributes for sensor."""
-        if self._data.data:
-            return {
-                "source": self._data.data["source"],
-                "last_synced": self._data.data["lastSyncTimestampGMT"],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
-        return {}
+        if not self._data.data:
+            return {}
+        return {
+            "source": self._data.data["source"],
+            "last_synced": self._data.data["lastSyncTimestampGMT"],
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     @property
     def device_info(self) -> Dict[str, Any]:

@@ -235,6 +235,6 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        if self._cmode is not None:
-            return {ATTR_CMODE: self._cmode}
-        return {}
+        if self._cmode is None:
+            return {}
+        return {ATTR_CMODE: self._cmode}
