@@ -48,7 +48,7 @@ class BroadlinkUpdateManager(ABC):
         self.coordinator = DataUpdateCoordinator(
             device.hass,
             _LOGGER,
-            name="device",
+            name=f"{device.name} ({device.api.model} at {device.api.host[0]})",
             update_method=self.async_update,
             update_interval=timedelta(minutes=1),
         )
@@ -67,14 +67,20 @@ class BroadlinkUpdateManager(ABC):
             ):
                 self.available = False
                 _LOGGER.warning(
-                    "Disconnected from the device at %s", self.device.api.host[0]
+                    "Disconnected from %s (%s at %s)",
+                    self.device.name,
+                    self.device.api.model,
+                    self.device.api.host[0],
                 )
             raise UpdateFailed(err) from err
 
         else:
             if self.available is False:
                 _LOGGER.warning(
-                    "Connected to the device at %s", self.device.api.host[0]
+                    "Connected to %s (%s at %s)",
+                    self.device.name,
+                    self.device.api.model,
+                    self.device.api.host[0],
                 )
             self.available = True
             self.last_update = dt.utcnow()
