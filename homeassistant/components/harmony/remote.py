@@ -37,6 +37,7 @@ from .const import (
     ATTR_CURRENT_ACTIVITY,
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
+    CONNECTION_UPDATE_ACTIVITY,
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
@@ -318,6 +319,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         async_dispatcher_send(
             self.hass, SIGNAL_UPDATE_ACTIVITY, {"current_activity": activity_name}
         )
+        async_dispatcher_send(
+            self.hass, CONNECTION_UPDATE_ACTIVITY, {"available": self._available}
+        )
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
@@ -343,6 +347,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         if not self._available:
             # Still disconnected. Let the state engine know.
             self.async_write_ha_state()
+            async_dispatcher_send(
+                self.hass, CONNECTION_UPDATE_ACTIVITY, {"available": self._available}
+            )
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
