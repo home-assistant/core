@@ -9,7 +9,8 @@
       }
     },
     "error": {
-      "invalid_airport": "Airport code is not valid"
+      "invalid_airport": "Airport code is not valid",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "This airport is already configured."

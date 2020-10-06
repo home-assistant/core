@@ -1,27 +1,48 @@
 """The FAA Delays integration."""
 import asyncio
+import logging
 
+from aiohttp import ClientConnectionError
+from faadelays import Airport
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the FAA Delays component."""
+    hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up FAA Delays from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    websession = aiohttp_client.async_get_clientsession(hass)
+
+    try:
+        faadata = FAAData(
+            Airport(
+                entry.data[CONF_ID],
+                websession,
+            )
+        )
+        await faadata.async_update()
+        hass.data[DOMAIN][entry.entry_id] = faadata
+    except ClientConnectionError as err:
+        _LOGGER.error("Connection error during setup: %s", err)
+        raise ConfigEntryNotReady from err
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -45,3 +66,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class FAAData:
+    """Define a data object to retrieve info from FAA API."""
+
+    def __init__(self, client):
+        """Initialize."""
+        self._client = client
+
+    async def async_update(self):
+        """Update sensor data."""
+        try:
+            await self._client.update()
+        except ClientConnectionError as err:
+            _LOGGER.error("Connection error during data update: %s", err)

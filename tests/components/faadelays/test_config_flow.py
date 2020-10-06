@@ -1,9 +1,11 @@
 """Test the FAA Delays config flow."""
+from aiohttp import ClientConnectionError
 import faadelays
+
 from homeassistant import config_entries, setup
 from homeassistant.components.faadelays.const import DOMAIN
 from homeassistant.const import CONF_ID
-
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.async_mock import patch
 
@@ -46,7 +48,7 @@ async def test_form(hass):
 
 
 async def test_form_invalid_airport(hass):
-    """Test we handle invalid auth."""
+    """Test we handle invalid airport."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -58,9 +60,45 @@ async def test_form_invalid_airport(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "id": "1.1.1.1",
+                "id": "test",
             },
         )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {CONF_ID: "invalid_airport"}
+
+
+async def test_form_cannot_connect(hass):
+    """Test we handle a connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("faadelays.Airport.update", side_effect=ClientConnectionError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "id": "test",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unexpected_exception(hass):
+    """Test we handle an unexpected exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("faadelays.Airport.update", side_effect=HomeAssistantError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "id": "test",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}

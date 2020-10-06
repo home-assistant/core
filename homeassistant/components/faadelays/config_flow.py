@@ -1,7 +1,8 @@
 """Config flow for FAA Delays integration."""
 import logging
-import faadelays
 
+from aiohttp import ClientConnectionError
+import faadelays
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,21 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ID): str})
-
-
-class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
-    def __init__(self, host):
-        """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username, password) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -51,11 +37,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
-            data = faadelays.Airport(user_input[CONF_ID])
-            await data.update(websession)
+            data = faadelays.Airport(user_input[CONF_ID], websession)
+            await data.update()
+            _LOGGER.debug(
+                "Creating entry with id: %s, name: %s", user_input[CONF_ID], data.name
+            )
         except faadelays.InvalidAirport:
             _LOGGER.error("Airport code %s is invalid", user_input[CONF_ID])
             errors[CONF_ID] = "invalid_airport"
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            )
+        except ClientConnectionError:
+            _LOGGER.error("Error connecting to FAA API")
+            errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
