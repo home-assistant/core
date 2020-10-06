@@ -266,8 +266,8 @@ async def async_setup(hass, config):
                     json.dump(manifest, jsonFile)
 
     def upgrade_package(call):
-        """ Ask AIS dom service if the package need to be upgraded,
-            if yes -> Install a package on PyPi
+        """Ask AIS dom service if the package need to be upgraded,
+        if yes -> Install a package on PyPi
         """
         if "package" not in call.data:
             _LOGGER.error("No package specified")
@@ -393,7 +393,7 @@ def get_current_zigbee2mqtt_version(hass):
     try:
         with open(ZIGBEE2MQTT_VERSION_PACKAGE_FILE) as json_file:
             z2m_settings = json.load(json_file)
-            return z2m_settings["version"]
+            return z2m_settings["version"].replace("-dev", "")
     except Exception as e:
         _LOGGER.info("Error get_current_zigbee2mqtt_version " + str(e))
     return "0"

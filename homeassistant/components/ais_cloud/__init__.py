@@ -642,7 +642,7 @@ class AisCloudWS:
                     json.dump(json_resp, outfile)
                 return json_resp
         except Exception as e:
-            _LOGGER.warning("Couldn't fetch data for: " + service + " " + str(e))
+            _LOGGER.warning("Couldn't fetch online data for: " + service)
             # try to get from local store
             try:
                 with open(self.cache_key_path + "." + service + ".json") as file:
@@ -781,7 +781,7 @@ class AisColudData:
             self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
         except Exception as e:
-            _LOGGER.error("RADIO WS resp " + str(ws_resp) + " " + str(e))
+            _LOGGER.warning("RADIO WS resp " + str(ws_resp) + " " + str(e))
 
         # ----------------
         # --- PODCASTS ---
@@ -792,7 +792,7 @@ class AisColudData:
             self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
         except Exception as e:
-            _LOGGER.error("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
+            _LOGGER.warning("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
 
         # ----------------
         # ----- NEWS -----
@@ -807,10 +807,15 @@ class AisColudData:
 
     def get_radio_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
-        json_ws_resp = ws_resp.json()
-        types = [ais_global.G_FAVORITE_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            types = [ais_global.G_FAVORITE_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+        except Exception as e:
+            _LOGGER.warning("get_radio_types from cache")
+            types = self.cache.audio_type(ais_global.G_AN_RADIO)["data"]
+
         # populate list with all stations from selected type
         self.hass.services.call(
             "input_select",
@@ -833,7 +838,12 @@ class AisColudData:
             return
 
         ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_radio_names error " + str(e))
+            return
+
         list_info = {}
         list_idx = 0
         for item in json_ws_resp["data"]:
@@ -864,10 +874,14 @@ class AisColudData:
 
     def get_podcast_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
-        json_ws_resp = ws_resp.json()
-        types = [ais_global.G_FAVORITE_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            types = [ais_global.G_FAVORITE_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+        except Exception as e:
+            _LOGGER.warning("get_podcast_types from cache")
+            types = self.cache.audio_type(ais_global.G_AN_PODCAST)["data"]
         # populate list with all podcast types
         self.hass.services.call(
             "input_select",
@@ -890,7 +904,12 @@ class AisColudData:
         ws_resp = self.cloud.audio_name(
             ais_global.G_AN_PODCAST, call.data["podcast_type"]
         )
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_podcast_names problem " + str(e))
+            return
+
         list_info = {}
         list_idx = 0
         for item in json_ws_resp["data"]:
@@ -1502,11 +1521,17 @@ class AisColudData:
 
     def get_rss_news_category(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
-        json_ws_resp = ws_resp.json()
-        self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
-        types = [ais_global.G_EMPTY_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+            types = [ais_global.G_EMPTY_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+
+        except Exception as e:
+            _LOGGER.warning("get_rss_news_category from cache")
+            types = self.cache.audio_type(ais_global.G_AN_NEWS)["data"]
+
         self.hass.services.call(
             "input_select",
             "set_options",
@@ -1531,7 +1556,12 @@ class AisColudData:
         ws_resp = self.cloud.audio_name(
             ais_global.G_AN_NEWS, call.data["rss_news_category"]
         )
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_rss_news_channels problem " + str(e))
+            return
+
         names = [ais_global.G_EMPTY_OPTION]
         self.news_channels = []
         for item in json_ws_resp["data"]:
