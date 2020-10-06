@@ -126,12 +126,6 @@ class MaxCubeClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        if (
-            device.actual_temperature is None
-            or device.actual_temperature < self.min_temp
-            or device.actual_temperature > self.max_temp
-        ):
-            return None
         return device.actual_temperature
 
     @property
