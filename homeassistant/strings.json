@@ -40,7 +40,8 @@
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
         "longitude": "Longitude",
-        "latitude": "Latitude"
+        "latitude": "Latitude",
+        "pin": "PIN Code"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
