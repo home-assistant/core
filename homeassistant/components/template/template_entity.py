@@ -234,9 +234,7 @@ class TemplateEntity(Entity):
         else:
             self._self_ref_update_count = 0
 
-        # If we need to make this less sensitive in the future,
-        # change the '>=' to a '>' here.
-        if self._self_ref_update_count >= len(self._template_attrs):
+        if self._self_ref_update_count > len(self._template_attrs):
             for update in updates:
                 _LOGGER.warning(
                     "Template loop detected while processing event: %s, skipping template render for Template[%s]",

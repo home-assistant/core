@@ -2,17 +2,17 @@
 import pytest
 
 from homeassistant.components import fan
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import async_setup_component
 
-from tests.components.fan import common
-
 FAN_ENTITY_ID = "fan.living_room_fan"
-
-
-def get_entity(hass):
-    """Get the fan entity."""
-    return hass.states.get(FAN_ENTITY_ID)
 
 
 @pytest.fixture(autouse=True)
@@ -24,68 +24,122 @@ async def setup_comp(hass):
 
 async def test_turn_on(hass):
     """Test turning on the device."""
-    assert STATE_OFF == get_entity(hass).state
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
-    await common.async_turn_on(hass, FAN_ENTITY_ID)
-    assert STATE_OFF != get_entity(hass).state
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_ON
 
-    await common.async_turn_on(hass, FAN_ENTITY_ID, fan.SPEED_HIGH)
-    assert STATE_ON == get_entity(hass).state
-    assert fan.SPEED_HIGH == get_entity(hass).attributes[fan.ATTR_SPEED]
+    await hass.services.async_call(
+        fan.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, fan.ATTR_SPEED: fan.SPEED_HIGH},
+        blocking=True,
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_HIGH
 
 
 async def test_turn_off(hass):
     """Test turning off the device."""
-    assert STATE_OFF == get_entity(hass).state
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
-    await common.async_turn_on(hass, FAN_ENTITY_ID)
-    assert STATE_OFF != get_entity(hass).state
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_ON
 
-    await common.async_turn_off(hass, FAN_ENTITY_ID)
-    assert STATE_OFF == get_entity(hass).state
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
 
 async def test_turn_off_without_entity_id(hass):
     """Test turning off all fans."""
-    assert STATE_OFF == get_entity(hass).state
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
-    await common.async_turn_on(hass, FAN_ENTITY_ID)
-    assert STATE_OFF != get_entity(hass).state
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_ON
 
-    await common.async_turn_off(hass)
-    assert STATE_OFF == get_entity(hass).state
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
 
 async def test_set_direction(hass):
     """Test setting the direction of the device."""
-    assert STATE_OFF == get_entity(hass).state
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
-    await common.async_set_direction(hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
-    assert fan.DIRECTION_REVERSE == get_entity(hass).attributes.get("direction")
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_SET_DIRECTION,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, fan.ATTR_DIRECTION: fan.DIRECTION_REVERSE},
+        blocking=True,
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.attributes[fan.ATTR_DIRECTION] == fan.DIRECTION_REVERSE
 
 
 async def test_set_speed(hass):
     """Test setting the speed of the device."""
-    assert STATE_OFF == get_entity(hass).state
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
-    await common.async_set_speed(hass, FAN_ENTITY_ID, fan.SPEED_LOW)
-    assert fan.SPEED_LOW == get_entity(hass).attributes.get("speed")
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_SET_SPEED,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, fan.ATTR_SPEED: fan.SPEED_LOW},
+        blocking=True,
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
 
 
 async def test_oscillate(hass):
     """Test oscillating the fan."""
-    assert not get_entity(hass).attributes.get("oscillating")
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert not state.attributes.get(fan.ATTR_OSCILLATING)
 
-    await common.async_oscillate(hass, FAN_ENTITY_ID, True)
-    assert get_entity(hass).attributes.get("oscillating")
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, fan.ATTR_OSCILLATING: True},
+        blocking=True,
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.attributes[fan.ATTR_OSCILLATING] is True
 
-    await common.async_oscillate(hass, FAN_ENTITY_ID, False)
-    assert not get_entity(hass).attributes.get("oscillating")
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_OSCILLATE,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID, fan.ATTR_OSCILLATING: False},
+        blocking=True,
+    )
+    state = hass.states.get(FAN_ENTITY_ID)
+    assert state.attributes[fan.ATTR_OSCILLATING] is False
 
 
 async def test_is_on(hass):
     """Test is on service call."""
     assert not fan.is_on(hass, FAN_ENTITY_ID)
 
-    await common.async_turn_on(hass, FAN_ENTITY_ID)
+    await hass.services.async_call(
+        fan.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_ENTITY_ID}, blocking=True
+    )
     assert fan.is_on(hass, FAN_ENTITY_ID)

@@ -72,8 +72,7 @@ class IotaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {CONF_WALLET_NAME: self._name}
-        return attr
+        return {CONF_WALLET_NAME: self._name}
 
     @property
     def api(self):

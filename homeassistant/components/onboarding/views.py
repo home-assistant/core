@@ -159,6 +159,14 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 "met", context={"source": "onboarding"}
             )
 
+            if (
+                hass.components.hassio.is_hassio()
+                and "raspberrypi" in hass.components.hassio.get_core_info()["machine"]
+            ):
+                await hass.config_entries.flow.async_init(
+                    "rpi_power", context={"source": "onboarding"}
+                )
+
             return self.json({})
 
 

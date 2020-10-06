@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "unsupported_firmware": "Enheten bruker en ikke-st\u00f8ttet firmwareversjon."
         },
         "error": {
             "auth_not_supported": "Shelly-enheter som krever godkjenning st\u00f8ttes for \u00f8yeblikket ikke.",
@@ -12,7 +13,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vil du konfigurere {model} p\u00e5 {host}?"
+                "description": "Vil du konfigurere {model} p\u00e5 {host} ?\n\n F\u00f8r du setter opp, m\u00e5 den batteridrevne enheten vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
             },
             "credentials": {
                 "data": {
@@ -23,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Vert"
-                }
+                },
+                "description": "F\u00f8r du setter opp, m\u00e5 den batteridrevne enheten vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
             }
         }
     },

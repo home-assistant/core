@@ -9,8 +9,13 @@
                 "data": {
                     "ip_address": "Adres IP",
                     "port": "Port"
-                }
+                },
+                "description": "Skonfiguruj lokalne urz\u0105dzenie Elexa Guardian."
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 to urz\u0105dzenie Guardian?"
             }
         }
-    }
+    },
+    "title": "Elexa Guardian"
 }

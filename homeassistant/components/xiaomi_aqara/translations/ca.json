@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "already_in_progress": "El flux de configuraci\u00f3 de la passarel\u00b7la ja est\u00e0 en curs.",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "not_xiaomi_aqara": "No \u00e9s una passarel\u00b7la Xiaomi Aqara, el dispositiu descobert no coincideix amb cap passarel\u00b7la coneguda"
         },
         "error": {

@@ -21,6 +21,7 @@ from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -85,7 +86,7 @@ SUPPORT_CAST = (
 
 
 ENTITY_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
+    cv.deprecated(CONF_HOST),
     vol.Schema(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
@@ -96,7 +97,7 @@ ENTITY_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
+    cv.deprecated(CONF_HOST),
     PLATFORM_SCHEMA.extend(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
@@ -171,7 +172,7 @@ async def _async_setup_platform(
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, dict())
+    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
     info = None
     if discovery_info is not None:
@@ -574,7 +575,9 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         else:
-            self._chromecast.media_controller.play_media(media_id, media_type)
+            self._chromecast.media_controller.play_media(
+                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
+            )
 
     # ========== Properties ==========
     @property

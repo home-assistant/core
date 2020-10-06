@@ -19,10 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_service(hass, config, discovery_info=None):
     """Get the notification service."""
     if discovery_info is None:
-        _LOGGER.warning(
-            "Loading as a platform is no longer supported, convert to use "
-            "config entries or the huawei_lte component"
-        )
         return None
 
     router = hass.data[DOMAIN].routers[discovery_info[CONF_URL]]

@@ -48,9 +48,7 @@ class LutronSwitch(LutronDevice, SwitchEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["lutron_integration_id"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}
 
     @property
     def is_on(self):
@@ -83,12 +81,11 @@ class LutronLed(LutronDevice, SwitchEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {
+        return {
             "keypad": self._keypad_name,
             "scene": self._scene_name,
             "led": self._lutron_device.name,
         }
-        return attr
 
     @property
     def is_on(self):

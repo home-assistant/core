@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            }
+        }
+    }
+}

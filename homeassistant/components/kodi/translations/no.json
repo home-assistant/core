@@ -36,7 +36,7 @@
                 "data": {
                     "host": "Vert",
                     "port": "Port",
-                    "ssl": "Koble til via SSL"
+                    "ssl": "Bruker et SSL-sertifikat"
                 },
                 "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
             },

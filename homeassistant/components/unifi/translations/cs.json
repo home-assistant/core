@@ -15,8 +15,7 @@
                     "password": "Heslo",
                     "port": "Port",
                     "site": "ID s\u00edt\u011b",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
-                    "verify_ssl": "Ovlada\u010d pou\u017e\u00edv\u00e1 spr\u00e1vn\u00fd certifik\u00e1t"
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
                 "title": "Nastaven\u00ed UniFi ovlada\u010de"
             }
@@ -49,7 +48,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty"
+                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty",
+                    "allow_uptime_sensors": "Vytvo\u0159it senzory doby provozuschopnosti pro s\u00ed\u0165ov\u00e9 klienty"
                 },
                 "description": "Konfigurovat statistick\u00e9 senzory",
                 "title": "Mo\u017enosti UniFi 3/3"

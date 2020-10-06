@@ -1,6 +1,17 @@
 {
     "config": {
-        "flow_title": "NZBGet: {name}"
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            }
+        }
     },
     "options": {
         "step": {

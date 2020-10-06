@@ -31,7 +31,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 

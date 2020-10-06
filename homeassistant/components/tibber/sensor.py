@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from random import randrange
 
 import aiohttp
 
@@ -59,6 +60,7 @@ class TibberSensor(Entity):
             self._name = tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", ""
             )
+        self._spread_load_constant = randrange(3600)
 
     @property
     def device_state_attributes(self):
@@ -110,7 +112,8 @@ class TibberSensorElPrice(TibberSensor):
 
         if (
             not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds() / 3600 < 12
+            or (self._tibber_home.last_data_timestamp - now).total_seconds()
+            < 12 * 3600 + self._spread_load_constant
             or not self._is_available
         ):
             _LOGGER.debug("Asking for new data")
@@ -156,9 +159,9 @@ class TibberSensorElPrice(TibberSensor):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
+        _LOGGER.debug("Fetching data")
         try:
-            await self._tibber_home.update_info()
-            await self._tibber_home.update_price_info()
+            await self._tibber_home.update_info_and_price_info()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]

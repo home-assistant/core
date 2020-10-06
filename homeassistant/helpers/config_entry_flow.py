@@ -136,7 +136,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
     ) -> Dict[str, Any]:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")

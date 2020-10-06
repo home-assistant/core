@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "device": {
+                "data": {
+                    "device_name": "Ger\u00e4t"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    }
+}

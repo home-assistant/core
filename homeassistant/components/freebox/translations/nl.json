@@ -4,7 +4,7 @@
             "already_configured": "Host is al geconfigureerd."
         },
         "error": {
-            "connection_failed": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
             "register_failed": "Registratie is mislukt, probeer het opnieuw",
             "unknown": "Onbekende fout: probeer het later nog eens"
         },

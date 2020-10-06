@@ -36,7 +36,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "Config flow for this gateway is already in progress",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
     }
   }

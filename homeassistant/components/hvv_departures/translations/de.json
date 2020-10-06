@@ -23,6 +23,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },

@@ -2,14 +2,18 @@
     "config": {
         "abort": {
             "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
-            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "create_entry": {
             "default": "ZoneMinder \u4f3a\u670d\u5668\u5df2\u65b0\u589e\u3002"
         },
         "error": {
             "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
-            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "flow_title": "ZoneMinder",
         "step": {
@@ -19,7 +23,7 @@
                     "password": "\u5bc6\u78bc",
                     "path": "ZM \u8def\u5f91",
                     "path_zms": "ZMS \u8def\u5f91",
-                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 ZoneMinder",
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },

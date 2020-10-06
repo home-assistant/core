@@ -224,11 +224,6 @@ class InfluxSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
