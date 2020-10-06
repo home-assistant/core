@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Access point is already configured",
-            "connection_aborted": "Could not connect to HMIP server",
-            "unknown": "Unknown error occurred."
+            "already_configured": "Device is already configured",
+            "connection_aborted": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "error": {
             "invalid_pin": "Invalid PIN, please try again.",
