@@ -334,16 +334,17 @@ class Template:
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
-        try:
-            result = literal_eval(render_result)
-        except (ValueError, SyntaxError, MemoryError):
-            return render_result.strip()
+        if not self.hass.config.legacy_templates:
+            try:
+                result = literal_eval(render_result)
 
-        # If the literal_eval result is a string, use the original render
-        if isinstance(result, str):
-            return render_result.strip()
+                # If the literal_eval result is a string, use the original render
+                if not isinstance(result, str):
+                    return result
+            except (ValueError, SyntaxError, MemoryError):
+                pass
 
-        return result
+        return render_result.strip()
 
     async def async_render_will_timeout(
         self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any

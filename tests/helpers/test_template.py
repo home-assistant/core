@@ -7,6 +7,7 @@ import pytest
 import pytz
 
 from homeassistant.components import group
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
@@ -2601,3 +2602,20 @@ async def test_unavailable_states(hass):
         hass,
     )
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+
+async def test_legacy_templates(hass):
+    """Test if old template behavior works when legacy templates are enabled."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
+        == 12
+    )
+
+    await async_process_ha_core_config(hass, {"legacy_templates": True})
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
+        == "12"
+    )

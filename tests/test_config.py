@@ -471,6 +471,7 @@ async def test_loading_configuration(hass):
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
         },
     )
 
@@ -487,6 +488,7 @@ async def test_loading_configuration(hass):
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source == config_util.SOURCE_YAML
+    assert hass.config.legacy_templates is True
 
 
 async def test_loading_configuration_temperature_unit(hass):
