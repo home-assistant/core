@@ -737,7 +737,7 @@ class MqttClimate(
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             self._publish(CONF_SWING_MODE_COMMAND_TOPIC, swing_mode)
 
-        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None or self._optimistic:
             self._current_swing_mode = swing_mode
             self.async_write_ha_state()
 
@@ -746,7 +746,7 @@ class MqttClimate(
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             self._publish(CONF_FAN_MODE_COMMAND_TOPIC, fan_mode)
 
-        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
+        if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None or self._optimistic:
             self._current_fan_mode = fan_mode
             self.async_write_ha_state()
 
@@ -831,7 +831,7 @@ class MqttClimate(
             self._config[CONF_PAYLOAD_ON] if state else self._config[CONF_PAYLOAD_OFF],
         )
 
-        if self._topic[CONF_AUX_STATE_TOPIC] is None:
+        if self._topic[CONF_AUX_STATE_TOPIC] is None or self._optimistic:
             self._aux = state
             self.async_write_ha_state()
 
