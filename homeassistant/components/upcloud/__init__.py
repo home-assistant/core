@@ -122,27 +122,29 @@ class UpCloudHassData:
 async def async_setup(hass: HomeAssistantType, config) -> bool:
     """Set up UpCloud component."""
     domain_config = config.get(DOMAIN)
-    if domain_config:
-        _LOGGER.warning(
-            "Loading upcloud via top level config is deprecated and no longer "
-            "necessary as of 0.117. Please remove it from your YAML configuration."
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: domain_config[CONF_USERNAME],
-                    CONF_PASSWORD: domain_config[CONF_PASSWORD],
-                },
-            )
-        )
+    if not domain_config:
+        return True
 
-        if domain_config[CONF_SCAN_INTERVAL]:
-            hass.data[DATA_UPCLOUD] = UpCloudHassData()
-            hass.data[DATA_UPCLOUD].scan_interval_migrations[
-                domain_config[CONF_USERNAME]
-            ] = domain_config[CONF_SCAN_INTERVAL]
+    _LOGGER.warning(
+        "Loading upcloud via top level config is deprecated and no longer "
+        "necessary as of 0.117. Please remove it from your YAML configuration."
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: domain_config[CONF_USERNAME],
+                CONF_PASSWORD: domain_config[CONF_PASSWORD],
+            },
+        )
+    )
+
+    if domain_config[CONF_SCAN_INTERVAL]:
+        hass.data[DATA_UPCLOUD] = UpCloudHassData()
+        hass.data[DATA_UPCLOUD].scan_interval_migrations[
+            domain_config[CONF_USERNAME]
+        ] = domain_config[CONF_SCAN_INTERVAL]
 
     return True
 
