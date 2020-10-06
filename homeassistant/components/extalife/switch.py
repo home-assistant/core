@@ -41,7 +41,7 @@ class ExtaLifeSwitch(ExtaLifeChannel, SwitchEntity):
         self.channel_data = channel_data.get("data")
 
         data = self.channel_data
-        self._attributes = dict()
+
         self._type = data.get("type")
 
         self._assumed_on = False
@@ -100,19 +100,21 @@ class ExtaLifeSwitch(ExtaLifeChannel, SwitchEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
+        attr = super().device_state_attributes
         data = self.channel_data
-        self._attributes = {}
 
         # ROG-21 measurement attributes
         if self.model == MODEL_ROG21:
-            self._attributes = {}
+            attr.update(
+                {
+                    "voltage": data.get("voltage") / 100,
+                    "current": data.get("current") / 1000,
+                    "active_power": data.get("active_power"),
+                    "energy_consumption": data.get("manual_energy") / 100000,
+                }
+            )
 
-            self._attributes["voltage"] = data.get("voltage") / 100
-            self._attributes["current"] = data.get("current") / 1000
-            self._attributes["active_power"] = data.get("active_power")
-            self._attributes["energy_consumption"] = data.get("manual_energy") / 100000
-
-        return self._attributes
+        return attr
 
     def on_state_notification(self, data):
         """ React on state notification from controller """

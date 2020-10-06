@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import logging
 
-import homeassistant.components.automation.event as ha_event
 from homeassistant.const import CONF_EVENT, CONF_ID
 from homeassistant.helpers.event import async_track_time_interval
 

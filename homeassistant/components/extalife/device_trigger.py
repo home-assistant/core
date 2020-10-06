@@ -4,7 +4,7 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType, state
+from homeassistant.components.automation import AutomationActionType
 import homeassistant.components.automation.event as event
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry

@@ -5,6 +5,13 @@ restart:
             description: Entity ID representing controller, which should be restarted
             example: extalife.efc_01
 
+refresh_state:
+    description: Get the newest staus for all devices / entities from controller.
+    fields:
+        entity_id:
+            description: Entity ID representing controller
+            example: extalife.efc_01
+
 test_button:
     description: Simulate Exta Life transmitter event like a button up, down, click etc
     fields:

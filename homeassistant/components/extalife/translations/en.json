@@ -12,8 +12,7 @@
         "data": {
           "user": "User",
           "password": "Password",
-          "controller_ip": "EFC-01 IP",
-          "poll_interval": "Status polling interval"
+          "controller_ip": "EFC-01 IP"
         }
       },
       "title": {
@@ -31,6 +30,13 @@
   },
   "options": {
     "step": {
+      "general": {
+        "description": "General settings",
+        "data": {
+          "poll_interval": "Status polling interval",
+          "disable_not_responding": "Disable entities when device is not responding (just as in the 'Exta Life' app)"
+        }
+      },
       "light": {
         "description": "Settings for lights",
         "data": {
