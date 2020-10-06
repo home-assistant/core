@@ -545,7 +545,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             lights,
             transition,
             force,
-            context,
+            context.id,
         )
         for light in lights:
             if not is_on(self.hass, light):
@@ -874,7 +874,7 @@ class TurnOnOffListener:
             _LOGGER.debug(
                 "Detected an 'light.turn_on('%s')' event with %s",
                 entity_ids,
-                event.context,
+                event.context.id,
             )
             for eid in entity_ids:
                 task = self.sleep_tasks.get(eid)
@@ -910,7 +910,8 @@ class TurnOnOffListener:
             if old_state is not None and old_state.context.id == new_state.context.id:
                 # state is already in 'self.last_state_change'
                 _LOGGER.debug(
-                    "State change event ('%s') was already in 'self.last_state_change'",
+                    "State change event of '%s' was already in 'self.last_state_change' (%s)",
+                    entity_id,
                     new_state.context.id,
                 )
                 return
