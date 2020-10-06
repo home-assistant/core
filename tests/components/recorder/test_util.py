@@ -12,29 +12,11 @@ from homeassistant.util import dt as dt_util
 from .common import wait_recording_done
 
 from tests.async_mock import MagicMock, patch
-from tests.common import get_test_home_assistant, init_recorder_component
 
 
-@pytest.fixture
-def hass_recorder():
-    """Home Assistant fixture with in-memory recorder."""
-    hass = get_test_home_assistant()
-
-    def setup_recorder(config=None):
-        """Set up with params."""
-        init_recorder_component(hass, config)
-        hass.start()
-        hass.block_till_done()
-        hass.data[DATA_INSTANCE].block_till_done()
-        return hass
-
-    yield setup_recorder
-    hass.stop()
-
-
-def test_recorder_bad_commit(hass_recorder):
+async def test_recorder_bad_commit(hass_recorder):
     """Bad _commit should retry 3 times."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     def work(session):
         """Bad work."""
@@ -48,11 +30,11 @@ def test_recorder_bad_commit(hass_recorder):
     assert e_mock.call_count == 3
 
 
-def test_recorder_bad_execute(hass_recorder):
+async def test_recorder_bad_execute(hass_recorder):
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
 
-    hass_recorder()
+    await hass_recorder()
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
@@ -142,16 +124,16 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
     assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
 
 
-def test_last_run_was_recently_clean(hass_recorder):
+async def test_last_run_was_recently_clean(hass_recorder):
     """Test we can check if the last recorder run was recently clean."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
     assert util.last_run_was_recently_clean(cursor) is False
 
     hass.data[DATA_INSTANCE]._close_run()
-    wait_recording_done(hass)
+    await wait_recording_done(hass)
 
     assert util.last_run_was_recently_clean(cursor) is True
 
@@ -164,9 +146,9 @@ def test_last_run_was_recently_clean(hass_recorder):
         assert util.last_run_was_recently_clean(cursor) is False
 
 
-def test_basic_sanity_check(hass_recorder):
+async def test_basic_sanity_check(hass_recorder):
     """Test the basic sanity checks with a missing table."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
@@ -178,9 +160,9 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder):
+async def test_combined_checks(hass_recorder):
     """Run Checks on the open database."""
-    hass = hass_recorder()
+    hass = await hass_recorder()
 
     db_integrity_check = False
 
