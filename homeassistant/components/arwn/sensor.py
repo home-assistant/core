@@ -96,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 store[sensor.name] = sensor
                 _LOGGER.debug(
                     "Registering new sensor %(name)s => %(event)s",
-                    dict(name=sensor.name, event=event),
+                    {"name": sensor.name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:

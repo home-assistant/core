@@ -158,26 +158,26 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(
-            filename=(
+        payload = {
+            "filename": (
                 "icon.png",
                 self._icon_file,
                 "application/octet-stream",
                 {"Expires": "0"},
             ),
-            type="0",
-            title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            msg=message,
-            duration="%i" % self._default_duration,
-            fontsize="%i" % FONTSIZES.get(self._default_fontsize),
-            position="%i" % POSITIONS.get(self._default_position),
-            bkgcolor="%s" % COLORS.get(self._default_color),
-            transparency="%i" % TRANSPARENCIES.get(self._default_transparency),
-            offset="0",
-            app=ATTR_TITLE_DEFAULT,
-            force="true",
-            interrupt="%i" % self._default_interrupt,
-        )
+            "type": "0",
+            "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            "msg": message,
+            "duration": "%i" % self._default_duration,
+            "fontsize": "%i" % FONTSIZES.get(self._default_fontsize),
+            "position": "%i" % POSITIONS.get(self._default_position),
+            "bkgcolor": "%s" % COLORS.get(self._default_color),
+            "transparency": "%i" % TRANSPARENCIES.get(self._default_transparency),
+            "offset": "0",
+            "app": ATTR_TITLE_DEFAULT,
+            "force": "true",
+            "interrupt": "%i" % self._default_interrupt,
+        }
 
         data = kwargs.get(ATTR_DATA)
         if data:
