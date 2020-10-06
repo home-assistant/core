@@ -4387,21 +4387,32 @@ class AisGetWeather(intent.IntentHandler):
     async def async_handle(self, intent_obj):
         """Handle the intent."""
         answer = "niestety nie wiem jaka jest pogoda"
+        address = ""
         try:
             # try to do reverse_geocode
-            import reverse_geocode
+            from geopy.geocoders import Nominatim
 
-            coordinates = (
-                (intent_obj.hass.config.latitude, intent_obj.hass.config.longitude),
+            geolocator = Nominatim(user_agent="AIS dom")
+            location = geolocator.reverse(
+                query=(
+                    intent_obj.hass.config.latitude,
+                    intent_obj.hass.config.longitude,
+                ),
+                exactly_one=True,
+                timeout=5,
+                language="pl",
+                addressdetails=True,
+                zoom=10,
             )
-            geo = reverse_geocode.search(coordinates)
-            command = "pogoda w " + geo[0]["city"]
+            address = location.address.split(",")[0]
+            command = "pogoda w " + address
             # ask AIS
             ws_resp = aisCloudWS.ask(command, "niestety nie wiem jaka jest pogoda")
             answer = ws_resp.text.split("---")[0]
         except Exception as e:
-            _LOGGER.warning("Handle the intent problem " + str(e))
-            return answer, False
+            _LOGGER.warning(
+                "Handle the intent problem for location " + address + " " + str(e)
+            )
 
         return answer, True
 
@@ -4414,20 +4425,31 @@ class AisGetWeather48(intent.IntentHandler):
     async def async_handle(self, intent_obj):
         """Handle the intent."""
         answer = "niestety nie wiem jaka będzie pogoda"
+        address = ""
         try:
             # try to do reverse_geocode
-            import reverse_geocode
+            from geopy.geocoders import Nominatim
 
-            coordinates = (
-                (intent_obj.hass.config.latitude, intent_obj.hass.config.longitude),
+            geolocator = Nominatim(user_agent="AIS dom")
+            location = geolocator.reverse(
+                query=(
+                    intent_obj.hass.config.latitude,
+                    intent_obj.hass.config.longitude,
+                ),
+                exactly_one=True,
+                timeout=5,
+                language="pl",
+                addressdetails=True,
+                zoom=10,
             )
-            geo = reverse_geocode.search(coordinates)
-            command = "jaka będzie pogoda jutro w " + geo[0]["city"]
+            address = location.address.split(",")[0]
+            command = "jaka będzie pogoda jutro w " + address
             ws_resp = aisCloudWS.ask(command, answer)
             answer = ws_resp.text.split("---")[0]
         except Exception as e:
-            _LOGGER.warning("Handle the intent problem " + str(e))
-            return answer, False
+            _LOGGER.warning(
+                "Handle the intent problem for location " + address + " " + str(e)
+            )
 
         return answer, True
 
