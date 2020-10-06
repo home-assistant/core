@@ -493,7 +493,7 @@ class Recorder(threading.Thread):
             self.event_session.flush()
             # Detach the objects in the cache
             # so they don't get expired and re-selected
-            self.event_session.expunge()
+            self.event_session.expunge_all()
             # Commit
             self.event_session.commit()
         except Exception as err:
