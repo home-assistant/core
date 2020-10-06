@@ -6,10 +6,11 @@ from govee_api_laggat import Govee
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 
-from .const import CONF_API_KEY, DOMAIN
+from .const import DOMAIN
 from .learning_storage import GoveeLearningStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Govee LED strips component."""
     hass.data[DOMAIN] = {}
     return True
+
+
+def is_online(online: bool):
+    """Log online/offline change."""
+    msg = "API is offline."
+    if online:
+        msg = "API is back online."
+    _LOGGER.warning(msg)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -39,6 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # keep reference for disposing
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["hub"] = hub
+
+    # inform when api is offline/online
+    hub.events.online += is_online
 
     # Verify that passed in configuration works
     _, err = await hub.get_devices()

@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from govee_api_laggat import Govee, GoveeDevice
+from govee_api_laggat import Govee, GoveeDevice, GoveeError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,10 +14,11 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.const import CONF_DELAY
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import color
 
-from .const import CONF_DELAY, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             GoveeLightEntity(hub, entry.title, coordinator, device)
-            for device in coordinator.data
+            for device in hub.devices
         ],
         update_before_add=False,
     )
@@ -70,27 +71,20 @@ class GoveeDataUpdateCoordinator(DataUpdateCoordinator):
         if "govee" not in self.hass.data:
             raise UpdateFailed("Govee instance not available")
         try:
-            govee = self.hass.data[DOMAIN]["hub"]
-            online = govee.online
-            try:
-                if online:
-                    device_states = await govee.get_states()
-                    for device in device_states:
-                        if device.error:
-                            self.logger.warning(
-                                "update failed for %s: %s", device.device, device.error
-                            )
-                    return device_states
-                # this will set govee.online
-                await govee.check_connection()
-            finally:
-                # print a single warning when going offline/online
-                if online != govee.online:
-                    if govee.online:
-                        _LOGGER.info("API is back online.")
-                    else:
-                        _LOGGER.warning("API is offline.")
-        except Exception as ex:
+            hub = self.hass.data[DOMAIN]["hub"]
+
+            if hub.online:
+                # govee will change this to a single request in 2021
+                device_states = await hub.get_states()
+                for device in device_states:
+                    if device.error:
+                        self.logger.warning(
+                            "update failed for %s: %s", device.device, device.error
+                        )
+                return device_states
+            # when offline, check connection, this will set govee.online
+            await hub.check_connection()
+        except GoveeError as ex:
             raise UpdateFailed(f"Exception on getting states: {ex}") from ex
 
 

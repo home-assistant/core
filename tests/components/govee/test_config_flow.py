@@ -1,6 +1,8 @@
 """Test the Govee LED strips config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.govee.const import CONF_API_KEY, CONF_DELAY, DOMAIN
+from homeassistant.components.govee.config_flow import CannotConnect
+from homeassistant.components.govee.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_DELAY
 
 from tests.async_mock import patch
 
@@ -44,8 +46,8 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.govee.config_flow.Govee.get_devices",
-        return_value=(None, "connection error")
-        # side_effect=CannotConnect,
+        side_effect=CannotConnect
+        # return_value=(None, "connection error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
