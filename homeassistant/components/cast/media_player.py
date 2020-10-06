@@ -172,7 +172,7 @@ async def _async_setup_platform(
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, dict())
+    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
     info = None
     if discovery_info is not None:

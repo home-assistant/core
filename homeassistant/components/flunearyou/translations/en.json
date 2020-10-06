@@ -4,7 +4,8 @@
             "already_configured": "These coordinates are already registered."
         },
         "error": {
-            "general_error": "There was an unknown error."
+            "general_error": "There was an unknown error.",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {

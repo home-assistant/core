@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'enlla\u00e7 de Cas\u00e9ta ja configurat.",
-            "cannot_connect": "S'ha cancel\u00b7lat la configuraci\u00f3 de l'enlla\u00e7 de Cas\u00e9ta per un error en la connexi\u00f3."
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar a l'enlla\u00e7 de Cas\u00e9ta; comprova la configuraci\u00f3 de l'amfitri\u00f3 i del certificat."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "import_failed": {

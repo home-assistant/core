@@ -20,7 +20,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "bad_config_file": "Bad data from configuration file",
       "link_local_address": "Link local addresses are not supported",
       "not_axis_device": "Discovered device not an Axis device"
     }

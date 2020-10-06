@@ -263,7 +263,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.8
+apprise==0.8.9
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -728,6 +728,9 @@ hass-nabucasa==0.37.0
 # homeassistant.components.splunk
 hass_splunk==0.1.1
 
+# homeassistant.components.tasmota
+hatasmota==0.0.9
+
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
 
@@ -753,7 +756,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.0
+home-assistant-frontend==20201001.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1588,6 +1591,9 @@ pypjlink2==1.2.1
 # homeassistant.components.point
 pypoint==1.1.2
 
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1
 
@@ -1653,7 +1659,7 @@ pysmappee==0.2.13
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.3
+pysmartthings==0.7.4
 
 # homeassistant.components.smarty
 pysmarty==0.8
@@ -1761,7 +1767,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.5
+python-openzwave-mqtt==1.2.0
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1

@@ -587,17 +587,18 @@ class DomainStates:
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state")
+    __slots__ = ("_hass", "_state", "_collect")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass, state):
+    def __init__(self, hass, state, collect=True):
         """Initialize template state."""
         self._hass = hass
         self._state = state
+        self._collect = collect
 
     def _collect_state(self):
-        if _RENDER_INFO in self._hass.data:
+        if self._collect and _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -606,7 +607,7 @@ class TemplateState(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if _RENDER_INFO in self._hass.data:
+            if self._collect and _RENDER_INFO in self._hass.data:
                 self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
@@ -697,7 +698,7 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
 def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state)
+        yield TemplateState(hass, state, collect=False)
 
 
 def _get_state_if_valid(
