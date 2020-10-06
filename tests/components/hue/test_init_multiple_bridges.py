@@ -21,14 +21,7 @@ async def setup_component(hass):
             await async_setup_component(
                 hass,
                 hue.DOMAIN,
-                {
-                    hue.DOMAIN: {
-                        hue.CONF_BRIDGES: [
-                            {hue.CONF_HOST: "0.0.0.0"},
-                            {hue.CONF_HOST: "1.1.1.1"},
-                        ]
-                    }
-                },
+                {},
             )
             is True
         )
