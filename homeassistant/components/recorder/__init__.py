@@ -58,6 +58,7 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
+DEFAULT_COMMIT_INTERVAL = 1
 KEEPALIVE_TIME = 30
 
 # Controls how often we clean up
@@ -95,9 +96,9 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Coerce(int), vol.Range(min=0)
                     ),
                     vol.Optional(CONF_DB_URL): cv.string,
-                    vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(
+                        CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
@@ -498,6 +499,7 @@ class Recorder(threading.Thread):
 
     def _commit_event_session(self):
         self._commits_without_expire += 1
+        # import pprint
 
         try:
             if self._pending_expunge:
@@ -508,17 +510,31 @@ class Recorder(threading.Thread):
                     self.event_session.expunge(dbstate)
                 self._pending_expunge = []
             self.event_session.commit()
+            # pprint.pprint(["new", self.event_session.new])
+            # pprint.pprint(["dirty", self.event_session.dirty])
+            # pprint.pprint(["deleted", self.event_session.deleted])
+            # pprint.pprint(["identity_map", self.event_session.identity_map])
+            self.event_session.expunge_all()
+            # pprint.pprint(["new", self.event_session.new])
+            # pprint.pprint(["dirty", self.event_session.dirty])
+            # pprint.pprint(["deleted", self.event_session.deleted])
+            # pprint.pprint(["identity_map", self.event_session.identity_map])
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
             raise
 
+        # import pprint
+        # pprint.pprint([self._commits_without_expire,EXPIRE_AFTER_COMMITS])
+
         # Expire is an expensive operation (frequently more expensive
         # than the flush and commit itself) so we only
         # do it after EXPIRE_AFTER_COMMITS commits
-        if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
-            self._commits_without_expire = 0
-            self.event_session.expire_all()
+        # if self._commits_without_expire == 1: #EXPIRE_AFTER_COMMITS:
+        #    self._commits_without_expire = 0
+        #    import pprint
+        #    pprint.pprint("expire all")
+        #    self.event_session.expire_all()
 
     @callback
     def event_listener(self, event):
