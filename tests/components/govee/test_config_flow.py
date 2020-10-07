@@ -46,8 +46,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.govee.config_flow.Govee.get_devices",
-        side_effect=CannotConnect
-        # return_value=(None, "connection error"),
+        return_value=(None, "connection error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
