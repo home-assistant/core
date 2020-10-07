@@ -68,10 +68,6 @@ UNIT_OF_MEASUREMENT = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
@@ -96,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor.battery is not None:
                 battery_handler.remove_tracker(sensor)
 
-                known_batteries = list(gateway.entities[DOMAIN])
+                known_batteries = set(gateway.entities[DOMAIN])
                 new_battery = DeconzBattery(sensor, gateway)
                 if new_battery.unique_id not in known_batteries:
                     entities.append(new_battery)
@@ -112,7 +108,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -131,14 +128,11 @@ class DeconzSensor(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
-        if ignore_update:
-            return
-
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def state(self):
@@ -198,14 +192,11 @@ class DeconzBattery(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        if ignore_update:
-            return
-
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def unique_id(self):

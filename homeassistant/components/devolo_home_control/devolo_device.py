@@ -17,7 +17,7 @@ class DevoloDeviceEntity(Entity):
         self._device_instance = device_instance
         self._unique_id = element_uid
         self._homecontrol = homecontrol
-        self._name = device_instance.item_name
+        self._name = device_instance.settings_property["general_device_settings"].name
         self._device_class = None
         self._value = None
         self._unit = None
@@ -34,9 +34,7 @@ class DevoloDeviceEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(
-            self._device_instance.item_name, callback=self.sync_callback
-        )
+        self.subscriber = Subscriber(self._name, callback=self.sync_callback)
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync_callback
         )
@@ -57,7 +55,7 @@ class DevoloDeviceEntity(Entity):
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self._device_instance.uid)},
-            "name": self._device_instance.item_name,
+            "name": self._name,
             "manufacturer": self._brand,
             "model": self._model,
         }
@@ -78,11 +76,19 @@ class DevoloDeviceEntity(Entity):
         return self._available
 
     def _sync(self, message):
-        """Update the binary sensor state."""
+        """Update the state."""
         if message[0] == self._unique_id:
             self._value = message[1]
-        elif message[0].startswith("hdm"):
+        else:
+            self._generic_message(message)
+        self.schedule_update_ha_state()
+
+    def _generic_message(self, message):
+        """Handle generic messages."""
+        if len(message) == 3 and message[2] == "battery_level":
+            self._value = message[1]
+        elif len(message) == 3 and message[2] == "status":
+            # Maybe the API wants to tell us, that the device went on- or offline.
             self._available = self._device_instance.is_online()
         else:
             _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()

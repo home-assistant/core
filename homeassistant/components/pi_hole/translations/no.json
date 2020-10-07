@@ -14,7 +14,7 @@
                     "location": "Beliggenhet",
                     "name": "Navn",
                     "port": "",
-                    "ssl": "Bruk SSL",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }

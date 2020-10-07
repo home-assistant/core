@@ -4,6 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "connection_error": "No s'ha pogut connectar amb el dispositiu BSB-Lan."
         },
         "flow_title": "BSB-Lan: {name}",

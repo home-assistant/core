@@ -7,6 +7,7 @@ import pytest
 import pytz
 
 from homeassistant.components import group
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
@@ -18,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
@@ -148,14 +150,31 @@ def test_iterating_all_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.temperature", 10)
 
     info = render_to_info(hass, tmpl_str)
-    assert_result_info(
-        info, "10happy", entities=["test.object", "sensor.temperature"], all_states=True
-    )
+    assert_result_info(info, "10happy", entities=[], all_states=True)
+
+
+def test_iterating_all_states_unavailable(hass):
+    """Test iterating all states unavailable."""
+    hass.states.async_set("test.object", "on")
+
+    tmpl_str = "{{ states | selectattr('state', 'in', ['unavailable', 'unknown', 'none']) | list | count }}"
+
+    info = render_to_info(hass, tmpl_str)
+
+    assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+
+    hass.states.async_set("test.object", "unknown")
+    hass.states.async_set("sensor.temperature", 10)
+
+    info = render_to_info(hass, tmpl_str)
+    assert_result_info(info, 1, entities=[], all_states=True)
 
 
 def test_iterating_domain_states(hass):
@@ -164,6 +183,7 @@ def test_iterating_domain_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.back_door", "open")
@@ -173,7 +193,7 @@ def test_iterating_domain_states(hass):
     assert_result_info(
         info,
         "open10",
-        entities=["sensor.back_door", "sensor.temperature"],
+        entities=[],
         domains=["sensor"],
     )
 
@@ -186,14 +206,14 @@ def test_float(hass):
         template.Template(
             "{{ float(states.sensor.temperature.state) }}", hass
         ).async_render()
-        == "12.0"
+        == 12.0
     )
 
     assert (
         template.Template(
             "{{ float(states.sensor.temperature.state) > 11 }}", hass
         ).async_render()
-        == "True"
+        is True
     )
 
     assert (
@@ -210,41 +230,41 @@ def test_rounding_value(hass):
         template.Template(
             "{{ states.sensor.temperature.state | round(1) }}", hass
         ).async_render()
-        == "12.8"
+        == 12.8
     )
 
     assert (
         template.Template(
             "{{ states.sensor.temperature.state | multiply(10) | round }}", hass
         ).async_render()
-        == "128"
+        == 128
     )
 
     assert (
         template.Template(
             '{{ states.sensor.temperature.state | round(1, "floor") }}', hass
         ).async_render()
-        == "12.7"
+        == 12.7
     )
 
     assert (
         template.Template(
             '{{ states.sensor.temperature.state | round(1, "ceil") }}', hass
         ).async_render()
-        == "12.8"
+        == 12.8
     )
 
     assert (
         template.Template(
             '{{ states.sensor.temperature.state | round(1, "half") }}', hass
         ).async_render()
-        == "13.0"
+        == 13.0
     )
 
 
 def test_rounding_value_get_original_value_on_error(hass):
     """Test rounding value get original value on error."""
-    assert template.Template("{{ None | round }}", hass).async_render() == "None"
+    assert template.Template("{{ None | round }}", hass).async_render() is None
 
     assert (
         template.Template('{{ "no_number" | round }}', hass).async_render()
@@ -254,7 +274,7 @@ def test_rounding_value_get_original_value_on_error(hass):
 
 def test_multiply(hass):
     """Test multiply."""
-    tests = {None: "None", 10: "100", '"abcd"': "abcd"}
+    tests = {None: None, 10: 100, '"abcd"': "abcd"}
 
     for inp, out in tests.items():
         assert (
@@ -268,11 +288,11 @@ def test_multiply(hass):
 def test_logarithm(hass):
     """Test logarithm."""
     tests = [
-        (4, 2, "2.0"),
-        (1000, 10, "3.0"),
-        (math.e, "", "1.0"),
+        (4, 2, 2.0),
+        (1000, 10, 3.0),
+        (math.e, "", 1.0),
         ('"invalid"', "_", "invalid"),
-        (10, '"invalid"', "10.0"),
+        (10, '"invalid"', 10.0),
     ]
 
     for value, base, expected in tests:
@@ -294,11 +314,11 @@ def test_logarithm(hass):
 def test_sine(hass):
     """Test sine."""
     tests = [
-        (0, "0.0"),
-        (math.pi / 2, "1.0"),
-        (math.pi, "0.0"),
-        (math.pi * 1.5, "-1.0"),
-        (math.pi / 10, "0.309"),
+        (0, 0.0),
+        (math.pi / 2, 1.0),
+        (math.pi, 0.0),
+        (math.pi * 1.5, -1.0),
+        (math.pi / 10, 0.309),
         ('"duck"', "duck"),
     ]
 
@@ -312,11 +332,11 @@ def test_sine(hass):
 def test_cos(hass):
     """Test cosine."""
     tests = [
-        (0, "1.0"),
-        (math.pi / 2, "0.0"),
-        (math.pi, "-1.0"),
-        (math.pi * 1.5, "-0.0"),
-        (math.pi / 10, "0.951"),
+        (0, 1.0),
+        (math.pi / 2, 0.0),
+        (math.pi, -1.0),
+        (math.pi * 1.5, -0.0),
+        (math.pi / 10, 0.951),
         ("'error'", "error"),
     ]
 
@@ -330,11 +350,11 @@ def test_cos(hass):
 def test_tan(hass):
     """Test tangent."""
     tests = [
-        (0, "0.0"),
-        (math.pi, "-0.0"),
-        (math.pi / 180 * 45, "1.0"),
-        (math.pi / 180 * 90, "1.633123935319537e+16"),
-        (math.pi / 180 * 135, "-1.0"),
+        (0, 0.0),
+        (math.pi, -0.0),
+        (math.pi / 180 * 45, 1.0),
+        (math.pi / 180 * 90, 1.633123935319537e16),
+        (math.pi / 180 * 135, -1.0),
         ("'error'", "error"),
     ]
 
@@ -348,11 +368,11 @@ def test_tan(hass):
 def test_sqrt(hass):
     """Test square root."""
     tests = [
-        (0, "0.0"),
-        (1, "1.0"),
-        (2, "1.414"),
-        (10, "3.162"),
-        (100, "10.0"),
+        (0, 0.0),
+        (1, 1.0),
+        (2, 1.414),
+        (10, 3.162),
+        (100, 10.0),
         ("'error'", "error"),
     ]
 
@@ -366,13 +386,13 @@ def test_sqrt(hass):
 def test_arc_sine(hass):
     """Test arcus sine."""
     tests = [
-        (-2.0, "-2.0"),  # value error
-        (-1.0, "-1.571"),
-        (-0.5, "-0.524"),
-        (0.0, "0.0"),
-        (0.5, "0.524"),
-        (1.0, "1.571"),
-        (2.0, "2.0"),  # value error
+        (-2.0, -2.0),  # value error
+        (-1.0, -1.571),
+        (-0.5, -0.524),
+        (0.0, 0.0),
+        (0.5, 0.524),
+        (1.0, 1.571),
+        (2.0, 2.0),  # value error
         ('"error"', "error"),
     ]
 
@@ -386,13 +406,13 @@ def test_arc_sine(hass):
 def test_arc_cos(hass):
     """Test arcus cosine."""
     tests = [
-        (-2.0, "-2.0"),  # value error
-        (-1.0, "3.142"),
-        (-0.5, "2.094"),
-        (0.0, "1.571"),
-        (0.5, "1.047"),
-        (1.0, "0.0"),
-        (2.0, "2.0"),  # value error
+        (-2.0, -2.0),  # value error
+        (-1.0, 3.142),
+        (-0.5, 2.094),
+        (0.0, 1.571),
+        (0.5, 1.047),
+        (1.0, 0.0),
+        (2.0, 2.0),  # value error
         ('"error"', "error"),
     ]
 
@@ -406,15 +426,15 @@ def test_arc_cos(hass):
 def test_arc_tan(hass):
     """Test arcus tangent."""
     tests = [
-        (-10.0, "-1.471"),
-        (-2.0, "-1.107"),
-        (-1.0, "-0.785"),
-        (-0.5, "-0.464"),
-        (0.0, "0.0"),
-        (0.5, "0.464"),
-        (1.0, "0.785"),
-        (2.0, "1.107"),
-        (10.0, "1.471"),
+        (-10.0, -1.471),
+        (-2.0, -1.107),
+        (-1.0, -0.785),
+        (-0.5, -0.464),
+        (0.0, 0.0),
+        (0.5, 0.464),
+        (1.0, 0.785),
+        (2.0, 1.107),
+        (10.0, 1.471),
         ('"error"', "error"),
     ]
 
@@ -428,19 +448,19 @@ def test_arc_tan(hass):
 def test_arc_tan2(hass):
     """Test two parameter version of arcus tangent."""
     tests = [
-        (-10.0, -10.0, "-2.356"),
-        (-10.0, 0.0, "-1.571"),
-        (-10.0, 10.0, "-0.785"),
-        (0.0, -10.0, "3.142"),
-        (0.0, 0.0, "0.0"),
-        (0.0, 10.0, "0.0"),
-        (10.0, -10.0, "2.356"),
-        (10.0, 0.0, "1.571"),
-        (10.0, 10.0, "0.785"),
-        (-4.0, 3.0, "-0.927"),
-        (-1.0, 2.0, "-0.464"),
-        (2.0, 1.0, "1.107"),
-        ('"duck"', '"goose"', "('duck', 'goose')"),
+        (-10.0, -10.0, -2.356),
+        (-10.0, 0.0, -1.571),
+        (-10.0, 10.0, -0.785),
+        (0.0, -10.0, 3.142),
+        (0.0, 0.0, 0.0),
+        (0.0, 10.0, 0.0),
+        (10.0, -10.0, 2.356),
+        (10.0, 0.0, 1.571),
+        (10.0, 10.0, 0.785),
+        (-4.0, 3.0, -0.927),
+        (-1.0, 2.0, -0.464),
+        (2.0, 1.0, 1.107),
+        ('"duck"', '"goose"', ("duck", "goose")),
     ]
 
     for y, x, expected in tests:
@@ -467,26 +487,26 @@ def test_strptime(hass):
         ("2016-10-19", "%Y-%m-%d", None),
         ("2016", "%Y", None),
         ("15:22:05", "%H:%M:%S", None),
-        ("1469119144", "%Y", "1469119144"),
+        ("1469119144", "%Y", 1469119144),
         ("invalid", "%Y", "invalid"),
     ]
 
     for inp, fmt, expected in tests:
         if expected is None:
-            expected = datetime.strptime(inp, fmt)
+            expected = str(datetime.strptime(inp, fmt))
 
         temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
-        assert template.Template(temp, hass).async_render() == str(expected)
+        assert template.Template(temp, hass).async_render() == expected
 
 
 def test_timestamp_custom(hass):
     """Test the timestamps to custom filter."""
     now = dt_util.utcnow()
     tests = [
-        (None, None, None, "None"),
+        (None, None, None, None),
         (1469119144, None, True, "2016-07-21 16:39:04"),
-        (1469119144, "%Y", True, "2016"),
+        (1469119144, "%Y", True, 2016),
         (1469119144, "invalid", True, "invalid"),
         (dt_util.as_timestamp(now), None, False, now.strftime("%Y-%m-%d %H:%M:%S")),
     ]
@@ -504,7 +524,7 @@ def test_timestamp_custom(hass):
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
-    tests = {None: "None", 1469119144: "2016-07-21 16:39:04"}
+    tests = {None: None, 1469119144: "2016-07-21 16:39:04"}
 
     for inp, out in tests.items():
         assert (
@@ -531,7 +551,7 @@ def test_to_json(hass):
 
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = '{"Foo": "Bar"}'
+    expected_result = {"Foo": "Bar"}
     actual_result = template.Template(
         "{{ {'Foo': 'Bar'} | to_json }}", hass
     ).async_render()
@@ -552,17 +572,17 @@ def test_from_json(hass):
 
 def test_min(hass):
     """Test the min filter."""
-    assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == "1"
+    assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
-    assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == "3"
+    assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
 
 
 def test_ord(hass):
     """Test the ord filter."""
-    assert template.Template('{{ "d" | ord }}', hass).async_render() == "100"
+    assert template.Template('{{ "d" | ord }}', hass).async_render() == 100
 
 
 def test_base64_encode(hass):
@@ -607,7 +627,7 @@ def test_timestamp_utc(hass):
     """Test the timestamps to local filter."""
     now = dt_util.utcnow()
     tests = {
-        None: "None",
+        None: None,
         1469119144: "2016-07-21 16:39:04",
         dt_util.as_timestamp(now): now.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -622,20 +642,19 @@ def test_timestamp_utc(hass):
 def test_as_timestamp(hass):
     """Test the as_timestamp function."""
     assert (
-        template.Template('{{ as_timestamp("invalid") }}', hass).async_render()
-        == "None"
+        template.Template('{{ as_timestamp("invalid") }}', hass).async_render() is None
     )
     hass.mock = None
     assert (
         template.Template("{{ as_timestamp(states.mock) }}", hass).async_render()
-        == "None"
+        is None
     )
 
     tpl = (
         '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", '
         '"%Y-%m-%dT%H:%M:%S%z")) }}'
     )
-    assert template.Template(tpl, hass).async_render() == "1706951424.0"
+    assert template.Template(tpl, hass).async_render() == 1706951424.0
 
 
 @patch.object(random, "choice")
@@ -650,22 +669,19 @@ def test_random_every_time(test_choice, hass):
 
 def test_passing_vars_as_keywords(hass):
     """Test passing variables as keywords."""
-    assert template.Template("{{ hello }}", hass).async_render(hello=127) == "127"
+    assert template.Template("{{ hello }}", hass).async_render(hello=127) == 127
 
 
 def test_passing_vars_as_vars(hass):
     """Test passing variables as variables."""
-    assert template.Template("{{ hello }}", hass).async_render({"hello": 127}) == "127"
+    assert template.Template("{{ hello }}", hass).async_render({"hello": 127}) == 127
 
 
 def test_passing_vars_as_list(hass):
     """Test passing variables as list."""
-    assert (
-        template.render_complex(
-            template.Template("{{ hello }}", hass), {"hello": ["foo", "bar"]}
-        )
-        == "['foo', 'bar']"
-    )
+    assert template.render_complex(
+        template.Template("{{ hello }}", hass), {"hello": ["foo", "bar"]}
+    ) == ["foo", "bar"]
 
 
 def test_passing_vars_as_list_element(hass):
@@ -690,12 +706,9 @@ def test_passing_vars_as_dict_element(hass):
 
 def test_passing_vars_as_dict(hass):
     """Test passing variables as list."""
-    assert (
-        template.render_complex(
-            template.Template("{{ hello }}", hass), {"hello": {"foo": "bar"}}
-        )
-        == "{'foo': 'bar'}"
-    )
+    assert template.render_complex(
+        template.Template("{{ hello }}", hass), {"hello": {"foo": "bar"}}
+    ) == {"foo": "bar"}
 
 
 def test_render_with_possible_json_value_with_valid_json(hass):
@@ -782,7 +795,7 @@ def test_is_state(hass):
         """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
 
 def test_is_state_attr(hass):
@@ -802,7 +815,7 @@ def test_is_state_attr(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
 
 def test_state_attr(hass):
@@ -822,7 +835,7 @@ def test_state_attr(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_states_function(hass):
@@ -975,7 +988,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -983,7 +996,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -991,7 +1004,7 @@ def test_regex_match(hass):
                     """,
         hass,
     )
-    assert tpl.async_render() == "False"
+    assert tpl.async_render() is False
 
     tpl = template.Template(
         """
@@ -999,7 +1012,7 @@ def test_regex_match(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_regex_search(hass):
@@ -1010,7 +1023,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1018,7 +1031,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1026,7 +1039,7 @@ def test_regex_search(hass):
                     """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
     tpl = template.Template(
         """
@@ -1034,7 +1047,7 @@ def test_regex_search(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "True"
+    assert tpl.async_render() is True
 
 
 def test_regex_replace(hass):
@@ -1053,7 +1066,7 @@ def test_regex_replace(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == "['Home Assistant test']"
+    assert tpl.async_render() == ["Home Assistant test"]
 
 
 def test_regex_findall_index(hass):
@@ -1091,21 +1104,21 @@ def test_bitwise_and(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 & 8)
+    assert tpl.async_render() == 8 & 8
     tpl = template.Template(
         """
 {{ 10 | bitwise_and(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(10 & 2)
+    assert tpl.async_render() == 10 & 2
     tpl = template.Template(
         """
 {{ 8 | bitwise_and(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 & 2)
+    assert tpl.async_render() == 8 & 2
 
 
 def test_bitwise_or(hass):
@@ -1116,21 +1129,21 @@ def test_bitwise_or(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 | 8)
+    assert tpl.async_render() == 8 | 8
     tpl = template.Template(
         """
 {{ 10 | bitwise_or(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(10 | 2)
+    assert tpl.async_render() == 10 | 2
     tpl = template.Template(
         """
 {{ 8 | bitwise_or(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == str(8 | 2)
+    assert tpl.async_render() == 8 | 2
 
 
 def test_distance_function_with_1_state(hass):
@@ -1140,7 +1153,7 @@ def test_distance_function_with_1_state(hass):
         "test.object", "happy", {"latitude": 32.87336, "longitude": -117.22943}
     )
     tpl = template.Template("{{ distance(states.test.object) | round }}", hass)
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
 
 def test_distance_function_with_2_states(hass):
@@ -1157,14 +1170,14 @@ def test_distance_function_with_2_states(hass):
     tpl = template.Template(
         "{{ distance(states.test.object, states.test.object_2) | round }}", hass
     )
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
 
 def test_distance_function_with_1_coord(hass):
     """Test distance function with 1 coord."""
     _set_up_units(hass)
     tpl = template.Template('{{ distance("32.87336", "-117.22943") | round }}', hass)
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
 
 def test_distance_function_with_2_coords(hass):
@@ -1176,7 +1189,7 @@ def test_distance_function_with_2_coords(hass):
             % (hass.config.latitude, hass.config.longitude),
             hass,
         ).async_render()
-        == "187"
+        == 187
     )
 
 
@@ -1192,29 +1205,29 @@ def test_distance_function_with_1_state_1_coord(hass):
         '{{ distance("32.87336", "-117.22943", states.test.object_2) ' "| round }}",
         hass,
     )
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
     tpl2 = template.Template(
         '{{ distance(states.test.object_2, "32.87336", "-117.22943") ' "| round }}",
         hass,
     )
-    assert tpl2.async_render() == "187"
+    assert tpl2.async_render() == 187
 
 
 def test_distance_function_return_none_if_invalid_state(hass):
     """Test distance function return None if invalid state."""
     hass.states.async_set("test.object_2", "happy", {"latitude": 10})
     tpl = template.Template("{{ distance(states.test.object_2) | round }}", hass)
-    assert tpl.async_render() == "None"
+    assert tpl.async_render() is None
 
 
 def test_distance_function_return_none_if_invalid_coord(hass):
     """Test distance function return None if invalid coord."""
     assert (
-        template.Template('{{ distance("123", "abc") }}', hass).async_render() == "None"
+        template.Template('{{ distance("123", "abc") }}', hass).async_render() is None
     )
 
-    assert template.Template('{{ distance("123") }}', hass).async_render() == "None"
+    assert template.Template('{{ distance("123") }}', hass).async_render() is None
 
     hass.states.async_set(
         "test.object_2",
@@ -1222,7 +1235,7 @@ def test_distance_function_return_none_if_invalid_coord(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
     tpl = template.Template('{{ distance("123", states.test_object_2) }}', hass)
-    assert tpl.async_render() == "None"
+    assert tpl.async_render() is None
 
 
 def test_distance_function_with_2_entity_ids(hass):
@@ -1239,7 +1252,7 @@ def test_distance_function_with_2_entity_ids(hass):
     tpl = template.Template(
         '{{ distance("test.object", "test.object_2") | round }}', hass
     )
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
 
 def test_distance_function_with_1_entity_1_coord(hass):
@@ -1253,7 +1266,7 @@ def test_distance_function_with_1_entity_1_coord(hass):
     tpl = template.Template(
         '{{ distance("test.object", "32.87336", "-117.22943") | round }}', hass
     )
-    assert tpl.async_render() == "187"
+    assert tpl.async_render() == 187
 
 
 def test_closest_function_home_vs_domain(hass):
@@ -1333,12 +1346,15 @@ async def test_closest_function_home_vs_group_entity_id(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
         info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
+    assert info.rate_limit is None
 
 
 async def test_closest_function_home_vs_group_state(hass):
@@ -1358,26 +1374,32 @@ async def test_closest_function_home_vs_group_state(hass):
         {"latitude": hass.config.latitude, "longitude": hass.config.longitude},
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "location group", ["test_domain.object"])
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
     assert_result_info(
         info, "test_domain.object", {"group.location_group", "test_domain.object"}
     )
+    assert info.rate_limit is None
 
     info = render_to_info(hass, "{{ closest(states.group.location_group).entity_id }}")
     assert_result_info(
         info, "test_domain.object", {"test_domain.object", "group.location_group"}
     )
+    assert info.rate_limit is None
 
 
 async def test_expand(hass):
     """Test expand function."""
     info = render_to_info(hass, "{{ expand('test.object') }}")
-    assert_result_info(info, "[]", ["test.object"])
+    assert_result_info(info, [], ["test.object"])
+    assert info.rate_limit is None
 
     info = render_to_info(hass, "{{ expand(56) }}")
-    assert_result_info(info, "[]")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
 
     hass.states.async_set("test.object", "happy")
 
@@ -1385,18 +1407,23 @@ async def test_expand(hass):
         hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", ["test.object"])
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass,
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "new group", ["test.object"])
 
     info = render_to_info(
@@ -1404,13 +1431,13 @@ async def test_expand(hass):
         "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"group.new_group", "test.object"})
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
-    assert_result_info(
-        info, "test.object", {"test.object", "group.new_group"}, ["group"]
-    )
+    assert_result_info(info, "test.object", {"test.object"}, ["group"])
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     info = render_to_info(
         hass,
@@ -1425,10 +1452,14 @@ async def test_expand(hass):
         " | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", {"test.object", "group.new_group"})
+    assert info.rate_limit is None
 
     hass.states.async_set("sensor.power_1", 0)
     hass.states.async_set("sensor.power_2", 200.2)
     hass.states.async_set("sensor.power_3", 400.4)
+
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(
         hass, "power sensors", ["sensor.power_1", "sensor.power_2", "sensor.power_3"]
     )
@@ -1439,9 +1470,10 @@ async def test_expand(hass):
     )
     assert_result_info(
         info,
-        str(200.2 + 400.4),
+        200.2 + 400.4,
         {"group.power_sensors", "sensor.power_1", "sensor.power_2", "sensor.power_3"},
     )
+    assert info.rate_limit is None
 
 
 def test_closest_function_to_coord(hass):
@@ -1507,6 +1539,7 @@ def test_async_render_to_info_with_branching(hass):
 """,
     )
     assert_result_info(info, "off", {"light.a", "light.c"})
+    assert info.rate_limit is None
 
     info = render_to_info(
         hass,
@@ -1518,6 +1551,7 @@ def test_async_render_to_info_with_branching(hass):
 """,
     )
     assert_result_info(info, "on", {"light.a", "light.b"})
+    assert info.rate_limit is None
 
 
 def test_async_render_to_info_with_complex_branching(hass):
@@ -1553,14 +1587,15 @@ def test_async_render_to_info_with_complex_branching(hass):
         {"otherdomain": "sensor"},
     )
 
-    assert_result_info(info, "['sensor.a']", {"light.a", "light.b"}, {"sensor"})
+    assert_result_info(info, ["sensor.a"], {"light.a", "light.b"}, {"sensor"})
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     """Test tracking template with a wildcard."""
     template_complex_str = r"""
 
-{% for state in states %}
+{% for state in states.cover %}
   {% if state.entity_id | regex_match('.*\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
@@ -1572,13 +1607,10 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     hass.states.async_set("cover.office_skylight", "open")
     info = render_to_info(hass, template_complex_str)
 
-    assert not info.domains
-    assert info.entities == {
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
-    assert info.all_states is True
+    assert info.domains == {"cover"}
+    assert info.entities == set()
+    assert info.all_states is False
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
@@ -1601,27 +1633,17 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
-    assert info.entities == {
-        "cover.x_skylight",
-        "binary_sensor.door",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     hass.states.async_set("binary_sensor.door", "closed")
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
-    assert info.entities == {
-        "cover.x_skylight",
-        "binary_sensor.door",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is True
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
     template_cover_str = """
 
@@ -1636,13 +1658,9 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     info = render_to_info(hass, template_cover_str)
 
     assert info.domains == {"cover"}
-    assert info.entities == {
-        "cover.x_skylight",
-        "cover.office_drapes",
-        "cover.office_window",
-        "cover.office_skylight",
-    }
+    assert info.entities == set()
     assert info.all_states is False
+    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
 
 
 def test_nested_async_render_to_info_case(hass):
@@ -1655,6 +1673,7 @@ def test_nested_async_render_to_info_case(hass):
         hass, "{{ states[states['input_select.picker'].state].state }}", {}
     )
     assert_result_info(info, "off", {"input_select.picker", "vacuum.a"})
+    assert info.rate_limit is None
 
 
 def test_result_as_boolean(hass):
@@ -1795,7 +1814,7 @@ def test_closest_function_invalid_state(hass):
     for state in ("states.zone.non_existing", '"zone.non_existing"'):
         assert (
             template.Template("{{ closest(%s, states) }}" % state, hass).async_render()
-            == "None"
+            is None
         )
 
 
@@ -1811,7 +1830,7 @@ def test_closest_function_state_with_invalid_location(hass):
         template.Template(
             "{{ closest(states.test_domain.closest_home, states) }}", hass
         ).async_render()
-        == "None"
+        is None
     )
 
 
@@ -1830,13 +1849,13 @@ def test_closest_function_invalid_coordinates(hass):
         template.Template(
             '{{ closest("invalid", "coord", states) }}', hass
         ).async_render()
-        == "None"
+        is None
     )
     assert (
         template.Template(
             '{{ states | closest("invalid", "coord") }}', hass
         ).async_render()
-        == "None"
+        is None
     )
 
 
@@ -1933,9 +1952,7 @@ def test_generate_filter_iterators(hass):
         {% endfor %}
         """,
     )
-    assert_result_info(
-        info, "sensor.test_sensor=off,", ["sensor.test_sensor"], ["sensor"]
-    )
+    assert_result_info(info, "sensor.test_sensor=off,", [], ["sensor"])
 
     info = render_to_info(
         hass,
@@ -1945,9 +1962,7 @@ def test_generate_filter_iterators(hass):
         {% endfor %}
         """,
     )
-    assert_result_info(
-        info, "sensor.test_sensor=value,", ["sensor.test_sensor"], ["sensor"]
-    )
+    assert_result_info(info, "sensor.test_sensor=value,", [], ["sensor"])
 
 
 def test_generate_select(hass):
@@ -1969,7 +1984,7 @@ def test_generate_select(hass):
     assert_result_info(
         info,
         "sensor.test_sensor",
-        ["sensor.test_sensor", "sensor.test_sensor_on"],
+        [],
         ["sensor"],
     )
     assert info.domains_lifecycle == {"sensor"}
@@ -1983,7 +1998,7 @@ async def test_async_render_to_info_in_conditional(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "False", ["sensor.xyz"], [])
+    assert_result_info(info, False, ["sensor.xyz"], [])
 
     hass.states.async_set("sensor.xyz", "dog")
     hass.states.async_set("sensor.cow", "True")
@@ -1999,7 +2014,7 @@ async def test_async_render_to_info_in_conditional(hass):
 
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
-    assert_result_info(info, "True", ["sensor.xyz", "sensor.cow"], [])
+    assert_result_info(info, True, ["sensor.xyz", "sensor.cow"], [])
 
     hass.states.async_set("sensor.xyz", "sheep")
     hass.states.async_set("sensor.pig", "oink")
@@ -2095,6 +2110,8 @@ states.sensor.pick_humidity.state ~ " %"
         )
     )
 
+    assert await async_setup_component(hass, "group", {})
+    await hass.async_block_till_done()
     await group.Group.async_create_group(hass, "empty group", [])
 
     assert ["group.empty_group"] == template.extract_entities(
@@ -2304,17 +2321,17 @@ def test_length_of_states(hass):
     hass.states.async_set("climate.test2", "cooling")
 
     tpl = template.Template("{{ states | length }}", hass)
-    assert tpl.async_render() == "3"
+    assert tpl.async_render() == 3
 
     tpl = template.Template("{{ states.sensor | length }}", hass)
-    assert tpl.async_render() == "2"
+    assert tpl.async_render() == 2
 
 
 def test_render_complex_handling_non_template_values(hass):
     """Test that we can render non-template fields."""
     assert template.render_complex(
         {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
-    ) == {True: 1, False: "2"}
+    ) == {True: 1, False: 2}
 
 
 def test_urlencode(hass):
@@ -2447,6 +2464,7 @@ async def test_lifecycle(hass):
     info = tmp.async_render_to_info()
     assert info.all_states is False
     assert info.all_states_lifecycle is True
+    assert info.rate_limit is None
     assert info.entities == set()
     assert info.domains == set()
     assert info.domains_lifecycle == set()
@@ -2455,3 +2473,149 @@ async def test_lifecycle(hass):
     assert info.filter("sensor.sensor1") is False
     assert info.filter_lifecycle("sensor.new") is True
     assert info.filter_lifecycle("sensor.removed") is True
+
+
+async def test_template_timeout(hass):
+    """Test to see if a template will timeout."""
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "on")
+
+    tmp = template.Template("{{ states | count }}", hass)
+    assert await tmp.async_render_will_timeout(3) is False
+
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    assert await tmp2.async_render_will_timeout(3) is False
+
+    tmp3 = template.Template("static", hass)
+    assert await tmp3.async_render_will_timeout(3) is False
+
+    tmp4 = template.Template("{{ var1 }}", hass)
+    assert await tmp4.async_render_will_timeout(3, {"var1": "ok"}) is False
+
+    slow_template_str = """
+{% for var in range(1000) -%}
+  {% for var in range(1000) -%}
+    {{ var }}
+  {%- endfor %}
+{%- endfor %}
+"""
+    tmp5 = template.Template(slow_template_str, hass)
+    assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_lights(hass):
+    """Test we can sort lights."""
+
+    tmpl = """
+          {% set lights_on = states.light|selectattr('state','eq','on')|map(attribute='name')|list %}
+          {% if lights_on|length == 0 %}
+            No lights on. Sleep well..
+          {% elif lights_on|length == 1 %}
+            The {{lights_on[0]}} light is on.
+          {% elif lights_on|length == 2 %}
+            The {{lights_on[0]}} and {{lights_on[1]}} lights are on.
+          {% else %}
+            The {{lights_on[:-1]|join(', ')}}, and {{lights_on[-1]}} lights are on.
+          {% endif %}
+    """
+    states = []
+    for i in range(10):
+        states.append(f"light.sensor{i}")
+        hass.states.async_set(f"light.sensor{i}", "on")
+
+    tmp = template.Template(tmpl, hass)
+    info = tmp.async_render_to_info()
+    assert info.entities == set()
+    assert info.domains == {"light"}
+
+    assert "lights are on" in info.result()
+    for i in range(10):
+        assert f"sensor{i}" in info.result()
+
+
+async def test_state_attributes(hass):
+    """Test state attributes."""
+    hass.states.async_set("sensor.test", "23")
+
+    tpl = template.Template(
+        "{{ states.sensor.test.last_changed }}",
+        hass,
+    )
+    assert tpl.async_render() == str(hass.states.get("sensor.test").last_changed)
+
+    tpl = template.Template(
+        "{{ states.sensor.test.object_id }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").object_id
+
+    tpl = template.Template(
+        "{{ states.sensor.test.domain }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").domain
+
+    tpl = template.Template(
+        "{{ states.sensor.test.context.id }}",
+        hass,
+    )
+    assert tpl.async_render() == hass.states.get("sensor.test").context.id
+
+    tpl = template.Template(
+        "{{ states.sensor.test.state_with_unit }}",
+        hass,
+    )
+    assert tpl.async_render() == 23
+
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop }}",
+        hass,
+    )
+    assert tpl.async_render() == ""
+
+    tpl = template.Template(
+        "{{ states.sensor.test.invalid_prop.xx }}",
+        hass,
+    )
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+async def test_unavailable_states(hass):
+    """Test watching unavailable states."""
+
+    for i in range(10):
+        hass.states.async_set(f"light.sensor{i}", "on")
+
+    hass.states.async_set("light.unavailable", "unavailable")
+    hass.states.async_set("light.unknown", "unknown")
+    hass.states.async_set("light.none", "none")
+
+    tpl = template.Template(
+        "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        hass,
+    )
+    assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+    tpl = template.Template(
+        "{{ states.light | selectattr('state', 'in', ['unavailable','unknown','none']) | map(attribute='entity_id') | list | join(', ') }}",
+        hass,
+    )
+    assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
+
+
+async def test_legacy_templates(hass):
+    """Test if old template behavior works when legacy templates are enabled."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
+        == 12
+    )
+
+    await async_process_ha_core_config(hass, {"legacy_templates": True})
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
+        == "12"
+    )

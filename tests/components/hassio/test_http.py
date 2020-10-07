@@ -155,6 +155,8 @@ def test_need_auth(hass):
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
     assert _need_auth(hass, "snapshots/new/upload")
+    assert _need_auth(hass, "supervisor/logs")
 
     hass.data["onboarding"] = False
     assert not _need_auth(hass, "snapshots/new/upload")
+    assert not _need_auth(hass, "supervisor/logs")

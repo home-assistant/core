@@ -83,8 +83,6 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             self._consumption = self._device_instance.consumption_property[
                 message[0]
             ].current
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received: %s", message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
-from . import SmileGateway
 from .const import (
     COOL_ICON,
     COORDINATOR,
@@ -32,6 +31,7 @@ from .const import (
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
+from .gateway import SmileGateway
 
 _LOGGER = logging.getLogger(__name__)
 

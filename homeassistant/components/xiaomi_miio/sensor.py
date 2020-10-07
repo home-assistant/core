@@ -175,11 +175,6 @@ class XiaomiAirQualityMonitor(Entity):
         }
 
     @property
-    def should_poll(self):
-        """Poll the miio device."""
-        return True
-
-    @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id

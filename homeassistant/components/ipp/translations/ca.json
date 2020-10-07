@@ -20,8 +20,8 @@
                     "base_path": "Ruta relativa a la impressora",
                     "host": "Amfitri\u00f3",
                     "port": "Port",
-                    "ssl": "La impressora \u00e9s compatible amb comunicaci\u00f3 SSL/TLS",
-                    "verify_ssl": "La impressora utilitza un certificat SSL adequat"
+                    "ssl": "Utilitza un certificat SSL",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "description": "Configura la impressora amb el protocol d'impressi\u00f3 per Internet (IPP) per integrar-la amb Home Assistant.",
                 "title": "Enlla\u00e7 d'impressora"

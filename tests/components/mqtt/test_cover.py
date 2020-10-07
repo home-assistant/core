@@ -702,9 +702,7 @@ async def test_set_position_templated(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with(
-        "set-position-topic", "38", 0, False
-    )
+    mqtt_mock.async_publish.assert_called_once_with("set-position-topic", 38, 0, False)
 
 
 async def test_set_position_untemplated(hass, mqtt_mock):

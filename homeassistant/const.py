@@ -1,13 +1,13 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 116
+MINOR_VERSION = 117
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = ""
+REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_ALLOWLIST_EXTERNAL_URLS = "allowlist_external_urls"
 CONF_API_KEY = "api_key"
+CONF_API_TOKEN = "api_token"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
@@ -112,6 +113,7 @@ CONF_INCLUDE = "include"
 CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
+CONF_LEGACY_TEMPLATES = "legacy_templates"
 CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
@@ -389,7 +391,7 @@ CURRENCY_CENT = "¢"
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
 TEMP_FAHRENHEIT = f"{DEGREE}F"
-TEMP_KELVIN = f"{DEGREE}K"
+TEMP_KELVIN = "K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -471,6 +473,10 @@ CONCENTRATION_PARTS_PER_BILLION = "ppb"
 SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
 SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
 SPEED_MILES_PER_HOUR = "mph"
+
+# Signal_strength units
+SIGNAL_STRENGTH_DECIBELS = "dB"
+SIGNAL_STRENGTH_DECIBELS_MILLIWATT = "dBm"
 
 # Data units
 DATA_BITS = "bit"
@@ -620,3 +626,10 @@ PRECISION_TENTHS = 0.1
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
+
+# The ID of the Home Assistant Cast App
+CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"
+
+# The tracker error allow when converting
+# loop time to human readable time
+MAX_TIME_TRACKING_ERROR = 0.001

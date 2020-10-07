@@ -30,7 +30,9 @@
             },
             "user": {
                 "data": {
-                    "interface": "\uc0ac\uc6a9\ud560 \ub124\ud2b8\uc6cc\ud06c \uc778\ud130\ud398\uc774\uc2a4"
+                    "host": "IP \uc8fc\uc18c (\uc120\ud0dd \uc0ac\ud56d)",
+                    "interface": "\uc0ac\uc6a9\ud560 \ub124\ud2b8\uc6cc\ud06c \uc778\ud130\ud398\uc774\uc2a4",
+                    "mac": "Mac \uc8fc\uc18c(\uc120\ud0dd \uc0ac\ud56d)"
                 },
                 "description": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud569\ub2c8\ub2e4. IP \ubc0f Mac \uc8fc\uc18c\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc740 \uacbd\uc6b0 \uc790\ub3d9 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4",
                 "title": "Xiaomi Aqara \uac8c\uc774\ud2b8\uc6e8\uc774"

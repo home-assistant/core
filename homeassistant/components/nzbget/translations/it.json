@@ -16,9 +16,9 @@
                     "name": "Nome",
                     "password": "Password",
                     "port": "Porta",
-                    "ssl": "NZBGet utilizza un certificato SSL",
+                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "NZBGet utilizza un certificato proprio"
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "title": "Connettiti a NZBGet"
             }

@@ -5,7 +5,9 @@
         },
         "error": {
             "auth": "La clave de API no es correcta.",
-            "connection": "No se puede conectar a la API de OWM"
+            "cannot_connect": "No se pudo conectar",
+            "connection": "No se puede conectar a la API de OWM",
+            "invalid_api_key": "Clave API no v\u00e1lida"
         },
         "step": {
             "user": {

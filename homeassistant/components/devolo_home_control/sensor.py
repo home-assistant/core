@@ -2,12 +2,14 @@
 import logging
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -16,6 +18,7 @@ from .devolo_device import DevoloDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_MAPPING = {
+    "battery": DEVICE_CLASS_BATTERY,
     "temperature": DEVICE_CLASS_TEMPERATURE,
     "light": DEVICE_CLASS_ILLUMINANCE,
     "humidity": DEVICE_CLASS_HUMIDITY,
@@ -51,6 +54,14 @@ async def async_setup_entry(
                             consumption=consumption_type,
                         )
                     )
+        if hasattr(device, "battery_level"):
+            entities.append(
+                DevoloBatteryEntity(
+                    homecontrol=hass.data[DOMAIN]["homecontrol"],
+                    device_instance=device,
+                    element_uid=f"devolo.BatterySensor:{device.uid}",
+                )
+            )
     async_add_entities(entities, False)
 
 
@@ -104,6 +115,24 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             self._name += f" {self._multi_level_sensor_property.sensor_type}"
 
 
+class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
+    """Representation of a battery entity within devolo Home Control."""
+
+    def __init__(self, homecontrol, device_instance, element_uid):
+        """Initialize a battery sensor."""
+
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+        )
+
+        self._device_class = DEVICE_CLASS_MAPPING.get("battery")
+
+        self._value = device_instance.battery_level
+        self._unit = PERCENTAGE
+
+
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a consumption entity within devolo Home Control."""
 
@@ -140,8 +169,6 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
                 self._device_instance.consumption_property[self._unique_id],
                 self._sensor_type,
             )
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received: %s", message)
+            self._generic_message(message)
         self.schedule_update_ha_state()

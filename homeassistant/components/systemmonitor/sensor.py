@@ -87,7 +87,7 @@ SENSOR_TYPES = {
         None,
         False,
     ],
-    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, True],
+    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False],
     "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False],
 }

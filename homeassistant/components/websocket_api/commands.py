@@ -239,21 +239,31 @@ def handle_ping(hass, connection, msg):
     connection.send_message(pong_message(msg["id"]))
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
         vol.Required("template"): str,
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
+        vol.Optional("timeout"): vol.Coerce(float),
     }
 )
-def handle_render_template(hass, connection, msg):
+@decorators.async_response
+async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]
     template = Template(template_str, hass)
     variables = msg.get("variables")
+    timeout = msg.get("timeout")
     info = None
+
+    if timeout and await template.async_render_will_timeout(timeout):
+        connection.send_error(
+            msg["id"],
+            const.ERR_TEMPLATE_ERROR,
+            f"Exceeded maximum execution time of {timeout}s",
+        )
+        return
 
     @callback
     def _template_listener(event, updates):

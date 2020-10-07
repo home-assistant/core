@@ -14,6 +14,7 @@ from homeassistant.components.deconz.config_flow import (
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
+    CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN,
 )
@@ -22,6 +23,8 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
 
 from tests.async_mock import patch
+
+BAD_BRIDGEID = "0000000000000000"
 
 
 async def test_flow_discovered_bridges(hass, aioclient_mock):
@@ -196,7 +199,7 @@ async def test_manual_configuration_after_discovery_ResponseError(hass, aioclien
 
 async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     """Test that manual configuration can update existing config entry."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -237,7 +240,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert gateway.config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry.data[CONF_HOST] == "2.3.4.5"
 
 
 async def test_manual_configuration_dont_update_configuration(hass, aioclient_mock):
@@ -390,6 +393,35 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     }
 
 
+async def test_flow_ssdp_discovery_bad_bridge_id_aborts(hass, aioclient_mock):
+    """Test that config flow aborts if deCONZ signals no radio hardware available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: BAD_BRIDGEID,
+        },
+        context={"source": "ssdp"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
+
+    aioclient_mock.post(
+        "http://1.2.3.4:80/api",
+        json=[{"success": {"username": API_KEY}}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_hardware_available"
+
+
 async def test_ssdp_discovery_not_deconz_bridge(hass):
     """Test a non deconz bridge being discovered over ssdp."""
     result = await hass.config_entries.flow.async_init(
@@ -404,7 +436,7 @@ async def test_ssdp_discovery_not_deconz_bridge(hass):
 
 async def test_ssdp_discovery_update_configuration(hass):
     """Test if a discovered bridge is configured but updates with new attributes."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
@@ -423,13 +455,13 @@ async def test_ssdp_discovery_update_configuration(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert gateway.config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry.data[CONF_HOST] == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery_dont_update_configuration(hass):
     """Test if a discovered bridge has already been configured."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -443,12 +475,12 @@ async def test_ssdp_discovery_dont_update_configuration(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert gateway.config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
 
 
 async def test_ssdp_discovery_dont_update_existing_hassio_configuration(hass):
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
-    gateway = await setup_deconz_integration(hass, source="hassio")
+    config_entry = await setup_deconz_integration(hass, source="hassio")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -462,7 +494,7 @@ async def test_ssdp_discovery_dont_update_existing_hassio_configuration(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert gateway.config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
 
 
 async def test_flow_hassio_discovery(hass):
@@ -505,7 +537,7 @@ async def test_flow_hassio_discovery(hass):
 
 async def test_hassio_discovery_update_configuration(hass):
     """Test we can update an existing config entry."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
@@ -525,9 +557,9 @@ async def test_hassio_discovery_update_configuration(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert gateway.config_entry.data[CONF_HOST] == "2.3.4.5"
-    assert gateway.config_entry.data[CONF_PORT] == 8080
-    assert gateway.config_entry.data[CONF_API_KEY] == "updated"
+    assert config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry.data[CONF_PORT] == 8080
+    assert config_entry.data[CONF_API_KEY] == "updated"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -552,21 +584,26 @@ async def test_hassio_discovery_dont_update_configuration(hass):
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
-    result = await hass.config_entries.options.async_init(gateway.config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "deconz_devices"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ALLOW_CLIP_SENSOR: False, CONF_ALLOW_DECONZ_GROUPS: False},
+        user_input={
+            CONF_ALLOW_CLIP_SENSOR: False,
+            CONF_ALLOW_DECONZ_GROUPS: False,
+            CONF_ALLOW_NEW_DEVICES: False,
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_ALLOW_CLIP_SENSOR: False,
         CONF_ALLOW_DECONZ_GROUPS: False,
+        CONF_ALLOW_NEW_DEVICES: False,
         CONF_MASTER_GATEWAY: True,
     }

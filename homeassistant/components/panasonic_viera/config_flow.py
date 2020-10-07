@@ -20,9 +20,6 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,10 +59,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except (TimeoutError, URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
-                errors["base"] = ERROR_NOT_CONNECTED
+                errors["base"] = "cannot_connect"
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("An unknown error occurred: %s", err)
-                return self.async_abort(reason=REASON_UNKNOWN)
+                return self.async_abort(reason="unknown")
 
             if "base" not in errors:
                 await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
@@ -120,10 +117,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = ERROR_INVALID_PIN_CODE
             except (TimeoutError, URLError, OSError) as err:
                 _LOGGER.error("The remote connection was lost: %s", err)
-                return self.async_abort(reason=REASON_NOT_CONNECTED)
+                return self.async_abort(reason="cannot_connect")
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception("Unknown error: %s", err)
-                return self.async_abort(reason=REASON_UNKNOWN)
+                return self.async_abort(reason="unknown")
 
             if "base" not in errors:
                 encryption_data = {
@@ -144,10 +141,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
-            return self.async_abort(reason=REASON_NOT_CONNECTED)
+            return self.async_abort(reason="cannot_connect")
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error: %s", err)
-            return self.async_abort(reason=REASON_UNKNOWN)
+            return self.async_abort(reason="unknown")
 
         return self.async_show_form(
             step_id="pairing",

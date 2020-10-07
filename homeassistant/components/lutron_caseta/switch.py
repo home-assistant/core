@@ -32,11 +32,11 @@ class LutronCasetaLight(LutronCasetaDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._smartbridge.turn_on(self.device_id)
+        await self._smartbridge.turn_on(self.device_id)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._smartbridge.turn_off(self.device_id)
+        await self._smartbridge.turn_off(self.device_id)
 
     @property
     def is_on(self):
