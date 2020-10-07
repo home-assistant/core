@@ -37,8 +37,7 @@
       "init": {
         "title": "Configure SimpliSafe",
         "data": {
-          "code": "Code (used in Home Assistant UI)",
-          "scan_interval": "Sensor refresh rate (seconds)"
+          "code": "Code (used in Home Assistant UI)"
         }
       }
     }
