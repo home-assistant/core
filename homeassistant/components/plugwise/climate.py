@@ -18,7 +18,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 
-from . import SmileGateway
 from .const import (
     COORDINATOR,
     DEFAULT_MAX_TEMP,
@@ -27,6 +26,7 @@ from .const import (
     SCHEDULE_OFF,
     SCHEDULE_ON,
 )
+from .gateway import SmileGateway
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
