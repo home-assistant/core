@@ -4,9 +4,10 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
+    SPEED_VERY_HIGH,
     SUPPORT_SET_SPEED,
 )
-from homeassistant.components.zwave import fan
+from homeassistant.components.zwave import const, fan
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
@@ -21,6 +22,26 @@ def test_get_device_detects_fan(mock_openzwave):
     assert isinstance(device, fan.ZwaveFan)
     assert device.supported_features == SUPPORT_SET_SPEED
     assert device.speed_list == [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+
+def test_get_device_detects_4speed_fan(mock_openzwave):
+    """Test get_device returns instance of ZwaveFan4 in case of 4-speed fan."""
+    # Leviton ZW4SF-1BZ
+    node = MockNode(manufacturer_id="001d", product_type="0038", product_id="0002")
+    value = MockValue(
+        data=0, node=node, command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL
+    )
+    values = MockEntityValues(primary=value)
+
+    device = fan.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, fan.ZwaveFan4)
+    assert device.speed_list == [
+        SPEED_OFF,
+        SPEED_LOW,
+        SPEED_MEDIUM,
+        SPEED_HIGH,
+        SPEED_VERY_HIGH,
+    ]
 
 
 def test_fan_turn_on(mock_openzwave):

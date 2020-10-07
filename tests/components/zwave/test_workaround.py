@@ -64,3 +64,21 @@ def test_get_device_mapping_mti_instance():
 
     value = MockValue(data=0, node=node, instance=2)
     assert workaround.get_device_mapping(value) is None
+
+
+def test_get_device_speeds():
+    """Test that device speeds is returned."""
+
+    # Leviton ZW4SF-1BZ
+    node = MockNode(manufacturer_id="001d", product_type="0038", product_id="0002")
+    value = MockValue(
+        data=0, node=node, command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL
+    )
+    assert workaround.get_device_speeds(value) == 4
+
+    # Other device
+    node = MockNode(manufacturer_id="013c", product_type="0001", product_id="0005")
+    value = MockValue(
+        data=0, node=node, command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL
+    )
+    assert workaround.get_device_speeds(value) == 3

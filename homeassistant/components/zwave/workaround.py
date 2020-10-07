@@ -121,6 +121,10 @@ DEVICE_COMPONENT_MAPPING_MTI = {
     LEVITON_FAN_CONTROLLER_ZW4SF_MULTILEVEL: "fan",
 }
 
+DEVICE_SPEEDS_MAPPING = {
+    LEVITON_FAN_CONTROLLER_ZW4SF_MULTILEVEL: 4,
+}
+
 
 def get_device_component_mapping(value):
     """Get mapping of value to another component."""
@@ -168,3 +172,23 @@ def get_device_mapping(value):
         return DEVICE_MAPPINGS_MT.get((manufacturer_id, product_type))
 
     return None
+
+
+def get_device_speeds(value):
+    """Get number of speeds."""
+    if (
+        value.node.manufacturer_id.strip()
+        and value.node.product_id.strip()
+        and value.node.product_type.strip()
+    ):
+        manufacturer_id = int(value.node.manufacturer_id, 16)
+        product_type = int(value.node.product_type, 16)
+        product_id = int(value.node.product_id, 16)
+        result = DEVICE_SPEEDS_MAPPING.get(
+            (manufacturer_id, product_type, product_id, value.command_class)
+        )
+        if result:
+            return result
+
+    # Default is 3 speeds
+    return 3
