@@ -54,4 +54,4 @@ async def test_unload_entry(hass, mock_smile_adam):
 
     mock_smile_adam.async_reset = AsyncMock(return_value=True)
     assert await async_unload_entry(hass, entry)
-    assert hass.data[DOMAIN] == {}
+    assert not hass.data[DOMAIN]
