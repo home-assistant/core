@@ -19,6 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_PLATFORMS = [
+    "binary_sensor",
     "switch",
 ]
 

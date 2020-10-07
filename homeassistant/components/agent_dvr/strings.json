@@ -15,7 +15,7 @@
     },
     "error": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "device_unavailable": "Device is not available"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

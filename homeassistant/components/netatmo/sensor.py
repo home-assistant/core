@@ -58,8 +58,6 @@ SENSOR_TYPES = {
     "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "battery_vp": ["Battery", "", "mdi:battery", None],
-    "battery_lvl": ["Battery Level", "", "mdi:battery", None],
     "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
@@ -138,14 +136,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
+                if c in SENSOR_TYPES
             ]
             for condition in conditions:
                 if f"{condition}_value" in SENSOR_TYPES:
                     conditions.append(f"{condition}_value")
                 elif f"{condition}_lvl" in SENSOR_TYPES:
                     conditions.append(f"{condition}_lvl")
-                elif condition == "battery_vp":
-                    conditions.append("battery_lvl")
 
             for condition in conditions:
                 entities.append(
@@ -248,7 +245,10 @@ class NetatmoSensor(NetatmoBase):
         if device["type"] in ("NHC", "NAMain"):
             self._device_name = module_info["station_name"]
         else:
-            self._device_name = f"{station['station_name']} {module_info.get('module_name', device['type'])}"
+            self._device_name = (
+                f"{station['station_name']} "
+                f"{module_info.get('module_name', device['type'])}"
+            )
 
         self._name = (
             f"{MANUFACTURER} {self._device_name} {SENSOR_TYPES[sensor_type][0]}"
@@ -334,10 +334,6 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
-            elif self.type == "battery_lvl":
-                self._state = data["battery_vp"]
-            elif self.type == "battery_vp":
-                self._state = process_battery(data["battery_vp"], self._model)
             elif self.type == "min_temp":
                 self._state = data["min_temp"]
             elif self.type == "max_temp":

@@ -301,7 +301,8 @@ async def help_test_entity_id_update_subscriptions(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
-    topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
+    if not topics:
+        topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
     assert len(topics) > 0
 
     state = hass.states.get(f"{domain}.test")

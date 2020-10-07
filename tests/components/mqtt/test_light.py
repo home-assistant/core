@@ -159,8 +159,7 @@ from os import path
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import light
 from homeassistant.const import ATTR_ASSUMED_STATE, SERVICE_RELOAD, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -1455,8 +1454,6 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )
