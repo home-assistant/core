@@ -25,6 +25,7 @@
     "input_datetime",
     "input_text",
     "input_number",
+    "input_schedule",
     "input_select"
   ],
   "codeowners": []
