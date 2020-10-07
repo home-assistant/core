@@ -460,7 +460,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             return {}
         return {
             ATTR_PREVIOUS_STATE: self._previous_state
-            ATTR_NEXT_STATE: = self._state
+            ATTR_NEXT_STATE: self._state
         }
 
     async def async_added_to_hass(self):
