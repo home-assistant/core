@@ -10,11 +10,12 @@
       }
     },
     "error": {
-      "invalid_path": "File path is not valid or allowed. Check directory whitelisting.",
+      "invalid_path": "Path is not valid or allowed. Check directory whitelisting.",
+      "not_a_file": "Path does not point to a file.",
       "unknown": "Unknown error"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

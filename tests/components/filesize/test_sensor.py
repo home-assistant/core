@@ -4,7 +4,7 @@ import unittest
 
 from homeassistant import config as hass_config
 from homeassistant.components.filesize import DOMAIN
-from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
+from homeassistant.components.filesize.sensor import CONF_FILE_PATH
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component, setup_component
 
@@ -37,14 +37,14 @@ class TestFileSensor(unittest.TestCase):
 
     def test_invalid_path(self):
         """Test that an invalid path is caught."""
-        config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: ["invalid_path"]}}
+        config = {"sensor": {"platform": "filesize", CONF_FILE_PATH: ["invalid_path"]}}
         assert setup_component(self.hass, "sensor", config)
         assert len(self.hass.states.entity_ids()) == 0
 
     def test_valid_path(self):
         """Test for a valid path."""
         create_file(TEST_FILE)
-        config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: [TEST_FILE]}}
+        config = {"sensor": {"platform": "filesize", CONF_FILE_PATH: [TEST_FILE]}}
         assert setup_component(self.hass, "sensor", config)
         self.hass.block_till_done()
         assert len(self.hass.states.entity_ids()) == 1

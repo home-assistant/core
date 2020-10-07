@@ -4,16 +4,59 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_FILE_PATH, CONF_UNIT_OF_MEASUREMENT, DATA_MEGABYTES
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_UNIT_OF_MEASUREMENT,
+    DATA_BYTES,
+    DATA_EXABYTES,
+    DATA_EXBIBYTES,
+    DATA_GIBIBYTES,
+    DATA_GIGABYTES,
+    DATA_KIBIBYTES,
+    DATA_KILOBYTES,
+    DATA_MEBIBYTES,
+    DATA_MEGABYTES,
+    DATA_PEBIBYTES,
+    DATA_PETABYTES,
+    DATA_TEBIBYTES,
+    DATA_TERABYTES,
+    DATA_YOBIBYTES,
+    DATA_YOTTABYTES,
+    DATA_ZEBIBYTES,
+    DATA_ZETTABYTES,
+)
+from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+UNIT_OF_MEASUREMENTS = {
+    DATA_BYTES,
+    DATA_KILOBYTES,
+    DATA_MEGABYTES,
+    DATA_GIGABYTES,
+    DATA_TERABYTES,
+    DATA_PETABYTES,
+    DATA_EXABYTES,
+    DATA_ZETTABYTES,
+    DATA_YOTTABYTES,
+    DATA_KIBIBYTES,
+    DATA_MEBIBYTES,
+    DATA_GIBIBYTES,
+    DATA_TEBIBYTES,
+    DATA_PEBIBYTES,
+    DATA_EXBIBYTES,
+    DATA_ZEBIBYTES,
+    DATA_YOBIBYTES,
+}
+
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_FILE_PATH): str,  # vol.IsFile,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=DATA_MEGABYTES): str,
+        vol.Required(CONF_FILE_PATH): str,
+        vol.Required(CONF_UNIT_OF_MEASUREMENT, default=DATA_MEGABYTES): vol.In(
+            UNIT_OF_MEASUREMENTS
+        ),
     }
 )
 
@@ -21,13 +64,13 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input."""
 
-    _LOGGER.info("Validating file path: %s", data[CONF_FILE_PATH])
     if not hass.config.is_allowed_path(data[CONF_FILE_PATH]):
-        _LOGGER.error(
-            "File path %s is not valid or allowed. Check directory whitelisting.",
-            data[CONF_FILE_PATH],
-        )
         raise InvalidPath
+
+    try:
+        cv.isfile(data[CONF_FILE_PATH])
+    except vol.Invalid:
+        raise NotAFile
 
     # Return info that you want to store in the config entry.
     return {"title": f"{data[CONF_FILE_PATH]} ({data[CONF_UNIT_OF_MEASUREMENT]})"}
@@ -53,7 +96,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(title=info["title"], data=user_input)
             except InvalidPath:  # pylint: disable=broad-except
-                errors["base"] = "invalid_path"
+                errors[CONF_FILE_PATH] = "invalid_path"
+            except NotAFile:  # pylint: disable=broad-except
+                errors[CONF_FILE_PATH] = "not_a_file"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -64,5 +109,5 @@ class InvalidPath(exceptions.HomeAssistantError):
     """Error if invalid path provided."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+class NotAFile(exceptions.HomeAssistantError):
+    """Error if provided path does not point to a file."""
