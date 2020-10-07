@@ -3,6 +3,9 @@ import asyncio
 import logging
 from random import randrange
 
+from pyatv import connect, exceptions, scan
+from pyatv.const import Protocol
+
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
@@ -18,8 +21,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from pyatv import connect, exceptions, scan
-from pyatv.const import Protocol
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, entry):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     async def setup_platforms():
-        """Setup platforms and initiate connection."""
+        """Set up platforms and initiate connection."""
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(entry, component)
@@ -269,7 +270,7 @@ class AppleTVManager:
         self._task = None
 
     def _auth_problem(self):
-        """Authentication problem occurred that needs intervention."""
+        """Problem to authenticate occurred that needs intervention."""
         _LOGGER.debug("Authentication error, reconfigure integration")
 
         name = self.config_entry.data.get(CONF_NAME)
@@ -277,7 +278,7 @@ class AppleTVManager:
 
         self.hass.components.persistent_notification.create(
             "An irrecoverable connection problem occurred when connecting to "
-            "`f{name}`. Please go to the Integrations page and reconfigure it",
+            f"`f{name}`. Please go to the Integrations page and reconfigure it",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

@@ -1,16 +1,15 @@
 """Fixtures for component."""
 
-import pytest
-
 from pyatv import conf, net
+import pytest
 
 from .common import MockPairingHandler, create_conf
 
 from tests.async_mock import patch
 
 
-@pytest.fixture(autouse=True)
-def mock_scan():
+@pytest.fixture(autouse=True, name="mock_scan")
+def mock_scan_fixture():
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
 
@@ -25,8 +24,8 @@ def mock_scan():
         yield mock_scan
 
 
-@pytest.fixture
-def dmap_pin():
+@pytest.fixture(name="dmap_pin")
+def dmap_pin_fixture():
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.randrange") as mock_pin:
         mock_pin.side_effect = lambda start, stop: 1111

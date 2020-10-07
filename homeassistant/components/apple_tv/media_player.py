@@ -1,6 +1,8 @@
 """Support for Apple TV media player."""
 import logging
 
+from pyatv.const import DeviceState, MediaType
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -27,7 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
-from pyatv.const import DeviceState, MediaType
 
 from . import AppleTVEntity
 from .const import DOMAIN
@@ -60,7 +61,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     """Representation of an Apple TV media player."""
 
     def __init__(self, name, identifier, manager, **kwargs):
-        """Initialize the Apple TV media player"""
+        """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager, **kwargs)
         self._playing = None
 

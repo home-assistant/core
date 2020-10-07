@@ -23,10 +23,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
-    def __init__(self, name, identifier, manager, **kwargs):
-        """Initialize device."""
-        super().__init__(name, identifier, manager, **kwargs)
-
     @property
     def is_on(self):
         """Return true if device is on."""

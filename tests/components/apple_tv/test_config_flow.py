@@ -1,11 +1,11 @@
 """Test config flow."""
 
+from pyatv import exceptions
+from pyatv.const import Protocol
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
-from pyatv import exceptions
-from pyatv.const import Protocol
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -19,6 +19,7 @@ DMAP_SERVICE = {
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry():
+    """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.apple_tv.async_setup_entry", return_value=True
     ):

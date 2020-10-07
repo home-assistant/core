@@ -10,6 +10,8 @@ class MockPairingHandler(interface.PairingHandler):
     def __init__(self, *args):
         """Initialize a new MockPairingHandler."""
         super().__init__(*args)
+        self.pin_code = None
+        self.paired = False
         self.always_fail = False
 
     def pin(self, pin):
