@@ -213,6 +213,12 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(functools.partial(start_websocket_session, platform))
 
+    try:
+        # Cache Plex account during startup
+        await hass.async_add_executor_job(getattr, plex_server, "account")
+    except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+        pass
+
     return True
 
 
