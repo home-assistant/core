@@ -136,6 +136,7 @@ DISCOVERY_SCHEMAS = (
         const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_THERMOSTAT,),
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+            const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {

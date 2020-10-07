@@ -8,6 +8,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -19,7 +20,6 @@ from tests.common import (
     async_mock_service,
     mock_component,
 )
-from tests.components.automation import common
 
 
 @pytest.fixture
@@ -59,8 +59,13 @@ async def test_if_fires_on_entity_change_below(hass, calls):
 
     # Set above 12 so the automation will fire again
     hass.states.async_set("test.entity", 12)
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -863,9 +868,12 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     hass.states.async_set("test.entity_1", 9)
     hass.states.async_set("test.entity_2", 9)
     await hass.async_block_till_done()
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert len(calls) == 1

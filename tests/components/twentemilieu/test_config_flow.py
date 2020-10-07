@@ -9,7 +9,7 @@ from homeassistant.components.twentemilieu.const import (
     CONF_POST_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONTENT_TYPE_JSON
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +51,7 @@ async def test_invalid_address(hass, aioclient_mock):
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": []},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -72,7 +72,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()
@@ -88,7 +88,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
         json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.TwenteMilieuFlowHandler()

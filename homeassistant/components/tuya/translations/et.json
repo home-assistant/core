@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Viga tuvastamisel",
+            "conn_error": "\u00dchendamine eba\u00f5nnestus",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
+        },
+        "error": {
+            "auth_failed": "Vigane tuvastamine"
+        },
+        "flow_title": "Tuya seaded",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Teie konto riigikood (nt 1 USA v\u00f5i 372 Eesti)",
+                    "password": "Salas\u00f5na",
+                    "platform": "\u00c4pp kus teie konto registreeriti",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisestage oma Tuya konto andmed."
+            }
+        }
+    }
+}

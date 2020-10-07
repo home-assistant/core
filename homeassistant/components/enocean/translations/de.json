@@ -4,5 +4,6 @@
             "single_instance_allowed": "Schon konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "flow_title": "ENOcean-Einrichtung"
-    }
+    },
+    "title": "EnOcean"
 }

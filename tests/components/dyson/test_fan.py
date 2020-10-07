@@ -38,6 +38,10 @@ class MockDysonState(DysonPureCoolState):
         """Create new Mock Dyson State."""
         pass
 
+    def __repr__(self):
+        """Mock repr because original one fails since constructor not called."""
+        return "<MockDysonState>"
+
 
 def _get_dyson_purecool_device():
     """Return a valid device as provided by the Dyson web services."""

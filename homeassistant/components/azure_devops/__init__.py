@@ -126,4 +126,5 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
             },
             "manufacturer": self.organization,
             "name": self.project,
+            "entry_type": "service",
         }
