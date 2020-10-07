@@ -1,5 +1,4 @@
 """Define tests for the OpenWeatherMap config flow."""
-from asynctest import MagicMock, patch
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
