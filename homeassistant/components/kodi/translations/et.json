@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} paluti v\u00e4lja l\u00fclitada",
+            "turn_on": "{entity_name} paluti sisse l\u00fclitada"
+        }
+    }
+}

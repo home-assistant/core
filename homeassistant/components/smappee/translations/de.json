@@ -1,0 +1,12 @@
+{
+    "config": {
+        "flow_title": "Smappee: {name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "Umgebung"
+                }
+            }
+        }
+    }
+}

@@ -630,6 +630,7 @@ class Subscription:
     """Class to hold data about an active subscription."""
 
     topic: str = attr.ib()
+    matcher: Any = attr.ib()
     callback: MessageCallbackType = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
@@ -838,7 +839,9 @@ class MQTT:
         if not isinstance(topic, str):
             raise HomeAssistantError("Topic needs to be a string!")
 
-        subscription = Subscription(topic, msg_callback, qos, encoding)
+        subscription = Subscription(
+            topic, _matcher_for_topic(topic), msg_callback, qos, encoding
+        )
         self.subscriptions.append(subscription)
 
         # Only subscribe if currently connected.
@@ -953,7 +956,7 @@ class MQTT:
         timestamp = dt_util.utcnow()
 
         for subscription in self.subscriptions:
-            if not _match_topic(subscription.topic, msg.topic):
+            if not subscription.matcher(msg.topic):
                 continue
 
             payload: SubscribePayloadType = msg.payload
@@ -1050,18 +1053,14 @@ def _raise_on_error(result_code: int) -> None:
         )
 
 
-def _match_topic(subscription: str, topic: str) -> bool:
-    """Test if topic matches subscription."""
+def _matcher_for_topic(subscription: str) -> Any:
     # pylint: disable=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
     matcher[subscription] = True
-    try:
-        next(matcher.iter_match(topic))
-        return True
-    except StopIteration:
-        return False
+
+    return lambda topic: next(matcher.iter_match(topic), False)
 
 
 class MqttAttributes(Entity):
@@ -1229,7 +1228,7 @@ async def cleanup_device_registry(hass, device_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
     # pylint: disable=import-outside-toplevel
-    from . import device_trigger
+    from . import device_trigger, tag
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -1239,6 +1238,7 @@ async def cleanup_device_registry(hass, device_id):
             entity_registry, device_id
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
+        and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
 

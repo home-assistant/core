@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_host": "\u4e26\u4e0d\u662f\u6240\u8981\u641c\u5c0b\u7684 Yeti",
+            "unknown": "\u672a\u77e5\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u60a8\u9996\u5148\u5fc5\u9808\u5148\u4e0b\u8f09 Goal Zero app\uff1ahttps://www.goalzero.com/product-features/yeti-app/\n\n\u8ddf\u96a8\u6307\u793a\u5c07 Yeti \u9023\u7dda\u81f3\u7121\u7dda\u7db2\u8def\u3002\u63a5\u8005\u7531\u8def\u7531\u5668\u53d6\u5f97\u4e3b\u6a5f\u7aef IP\uff0c \u5fc5\u9808\u65bc\u8def\u7531\u5668\u5167\u8a2d\u5b9a\u8a2d\u5099\u7684 DHCP \u4ee5\u78ba\u4fdd\u4e3b\u6a5f\u7aef IP \u4e0d\u81f3\u65bc\u6539\u8b8a\u3002\u8acb\u53c3\u8003\u60a8\u7684\u8def\u7531\u5668\u624b\u518a\u4e86\u89e3\u5982\u4f55\u64cd\u4f5c\u3002",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

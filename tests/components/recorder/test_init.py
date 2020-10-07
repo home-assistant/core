@@ -181,7 +181,20 @@ def test_saving_state_incl_entities(hass_recorder):
 
 def test_saving_event_exclude_event_type(hass_recorder):
     """Test saving and restoring an event."""
-    hass = hass_recorder({"exclude": {"event_types": "test"}})
+    hass = hass_recorder(
+        {
+            "exclude": {
+                "event_types": [
+                    "service_registered",
+                    "homeassistant_start",
+                    "component_loaded",
+                    "core_config_updated",
+                    "homeassistant_started",
+                    "test",
+                ]
+            }
+        }
+    )
     events = _add_events(hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"

@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Ja hi ha una connexi\u00f3 amb un m\u00f2dem Insteon configurada",
-            "cannot_connect": "No es pot connectar amb el m\u00f2dem Insteon",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar al m\u00f2dem Insteon, torna-ho a provar.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "select_single": "Selecciona una opci\u00f3."
         },
         "step": {
@@ -57,7 +57,7 @@
             },
             "plm": {
                 "data": {
-                    "device": "Dispositiu PLM (ex: /dev/ttyUSB0 o COM3)"
+                    "device": "Ruta del port USB del dispositiu"
                 },
                 "description": "Configura el m\u00f2dem Insteon PowerLink (PLM).",
                 "title": "Insteon PLM"
@@ -77,7 +77,7 @@
             "cannot_connect": "No es pot connectar amb el m\u00f2dem Insteon"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar al m\u00f2dem Insteon, torna-ho a provar.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "input_error": "Entrades inv\u00e0lides, revisa els valors.",
             "select_single": "Selecciona una opci\u00f3."
         },
@@ -103,10 +103,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "Nou nom d'amfitri\u00f3 o adre\u00e7a IP",
-                    "password": "Nova contrasenya",
-                    "port": "Nou n\u00famero de port",
-                    "username": "Nou nom d'usuari"
+                    "host": "Adre\u00e7a IP",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
                 },
                 "description": "Canvia la informaci\u00f3 de connexi\u00f3 de l'Insteon Hub. Has de reiniciar Home Assistant si fas canvis. Aix\u00f2 no canvia la configuraci\u00f3 del Hub en si. Per canviar la configuraci\u00f3 del Hub, utilitza la seva aplicaci\u00f3.",
                 "title": "Insteon"

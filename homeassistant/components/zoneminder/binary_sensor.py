@@ -1,5 +1,8 @@
 """Support for ZoneMinder binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -35,7 +38,7 @@ class ZMAvailabilitySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     def update(self):
         """Update the state of this sensor (availability of ZoneMinder)."""

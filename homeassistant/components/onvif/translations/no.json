@@ -34,7 +34,8 @@
             "manual_input": {
                 "data": {
                     "host": "Vert",
-                    "name": "Navn"
+                    "name": "Navn",
+                    "port": ""
                 },
                 "title": "Konfigurere ONVIF-enhet"
             },

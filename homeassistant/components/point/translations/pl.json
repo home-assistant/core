@@ -12,7 +12,7 @@
         },
         "error": {
             "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku \"Zatwierd\u017a\"",
-            "no_token": "Niepoprawny token dost\u0119pu."
+            "no_token": "Niepoprawny token dost\u0119pu"
         },
         "step": {
             "auth": {
