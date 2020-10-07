@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     rachio = Rachio(data[CONF_API_KEY])
     username = None
     try:
-        data = await hass.async_add_executor_job(rachio.person.getInfo)
+        data = await hass.async_add_executor_job(rachio.person.info)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
         if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
