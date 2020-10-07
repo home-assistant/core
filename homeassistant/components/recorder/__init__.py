@@ -500,18 +500,22 @@ class Recorder(threading.Thread):
         self._commits_without_expire += 1
 
         try:
-            self.event_session.flush()
-            for dbstate in self._pending_expunge:
-                # Expunge the state so its not expired
-                # until we use it later for dbstate.old_state
-                self.event_session.expunge(dbstate)
-            self._pending_expunge = []
+            if self._pending_expunge:
+                self.event_session.flush()
+                for dbstate in self._pending_expunge:
+                    # Expunge the state so its not expired
+                    # until we use it later for dbstate.old_state
+                    self.event_session.expunge(dbstate)
+                self._pending_expunge = []
             self.event_session.commit()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
             raise
 
+        # Expire is an expensive operation (frequently more expensive
+        # than the flush and commit itself) so we only
+        # do it after EXPIRE_AFTER_COMMITS commits
         if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
             self._commits_without_expire = 0
             self.event_session.expire_all()
