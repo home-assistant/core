@@ -237,7 +237,7 @@ def _create_rfx(config):
 
 def _get_device_lookup(devices):
     """Get a lookup structure for devices."""
-    lookup = dict()
+    lookup = {}
     for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
         if event is None:

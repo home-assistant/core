@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "ESP er allerede konfigurert",
-            "already_in_progress": "ESP-konfigurasjon p\u00e5g\u00e5r allerede"
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
         },
         "error": {
             "connection_error": "Kan ikke koble til ESP. Kontroller at YAML filen din inneholder en \"api:\" linje.",

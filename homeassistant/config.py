@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_INTERNAL_URL,
     CONF_LATITUDE,
+    CONF_LEGACY_TEMPLATES,
     CONF_LONGITUDE,
     CONF_MEDIA_DIRS,
     CONF_NAME,
@@ -224,6 +225,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         ),
         # pylint: disable=no-value-for-parameter
         vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
     }
 )
 
@@ -488,7 +490,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-            CONF_MEDIA_DIRS,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -501,6 +502,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_INTERNAL_URL, "internal_url"),
         (CONF_EXTERNAL_URL, "external_url"),
         (CONF_MEDIA_DIRS, "media_dirs"),
+        (CONF_LEGACY_TEMPLATES, "legacy_templates"),
     ):
         if key in config:
             setattr(hac, attr, config[key])

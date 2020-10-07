@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_account": "Kontoen er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes.",
-            "reauth_successful": "Tilgangstoken oppdatert vellykket",
+            "reauth_successful": "Reautentisering var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {

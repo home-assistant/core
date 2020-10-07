@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import deconz
 from homeassistant.components.deconz.const import CONF_BRIDGE_ID
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
@@ -123,7 +124,8 @@ async def test_configure_service_with_field(hass):
 
 async def test_configure_service_with_entity(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -143,7 +145,8 @@ async def test_configure_service_with_entity(hass):
 
 async def test_configure_service_with_entity_and_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -194,7 +197,8 @@ async def test_configure_service_with_faulty_entity(hass):
 
 async def test_service_refresh_devices(hass):
     """Test that service can refresh devices."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     data = {CONF_BRIDGE_ID: BRIDGEID}
 
@@ -220,13 +224,13 @@ async def test_remove_orphaned_entries_service(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(LIGHT)
     data["sensors"] = deepcopy(SWITCH)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
 
     data = {CONF_BRIDGE_ID: BRIDGEID}
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get_or_create(
-        config_entry_id=gateway.config_entry.entry_id, identifiers={("mac", "123")}
+        config_entry_id=config_entry.entry_id, identifiers={("mac", "123")}
     )
 
     assert (
@@ -234,7 +238,7 @@ async def test_remove_orphaned_entries_service(hass):
             [
                 entry
                 for entry in device_registry.devices.values()
-                if gateway.config_entry.entry_id in entry.config_entries
+                if config_entry.entry_id in entry.config_entries
             ]
         )
         == 4  # Gateway, light, switch and orphan
@@ -246,16 +250,12 @@ async def test_remove_orphaned_entries_service(hass):
         deconz.DOMAIN,
         "12345",
         suggested_object_id="Orphaned sensor",
-        config_entry=gateway.config_entry,
+        config_entry=config_entry,
         device_id=device.id,
     )
 
     assert (
-        len(
-            async_entries_for_config_entry(
-                entity_registry, gateway.config_entry.entry_id
-            )
-        )
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 3  # Light, switch battery and orphan
     )
 
@@ -271,17 +271,13 @@ async def test_remove_orphaned_entries_service(hass):
             [
                 entry
                 for entry in device_registry.devices.values()
-                if gateway.config_entry.entry_id in entry.config_entries
+                if config_entry.entry_id in entry.config_entries
             ]
         )
         == 3  # Gateway, light and switch
     )
 
     assert (
-        len(
-            async_entries_for_config_entry(
-                entity_registry, gateway.config_entry.entry_id
-            )
-        )
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
         == 2  # Light and switch battery
     )

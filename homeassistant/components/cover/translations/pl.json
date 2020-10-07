@@ -6,7 +6,8 @@
             "open": "otw\u00f3rz {entity_name}",
             "open_tilt": "otw\u00f3rz {entity_name} do pochylenia",
             "set_position": "ustaw pozycj\u0119 {entity_name}",
-            "set_tilt_position": "ustaw pochylenie {entity_name}"
+            "set_tilt_position": "ustaw pochylenie {entity_name}",
+            "stop": "zatrzymaj {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} jest zamkni\u0119ta",

@@ -184,8 +184,7 @@ class MiFloraSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
-        return attr
+        return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
 
     @property
     def unit_of_measurement(self):

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is already configured",
             "no_devices": "No devices found on the network",
-            "reauth_successful": "Access Token updated successfully"
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "auth": "Invalid access token",

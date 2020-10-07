@@ -10,7 +10,7 @@
       }
     },
     "error": {
-      "invalid_host": "Invalid hostname or IP address.",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },

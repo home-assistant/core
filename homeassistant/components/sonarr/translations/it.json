@@ -21,8 +21,8 @@
                     "base_path": "Percorso dell'API",
                     "host": "Host",
                     "port": "Porta",
-                    "ssl": "Sonarr utilizza un certificato SSL",
-                    "verify_ssl": "Sonarr utilizza un certificato adeguato"
+                    "ssl": "Utilizza un certificato SSL",
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "title": "Connettiti a Sonarr"
             }

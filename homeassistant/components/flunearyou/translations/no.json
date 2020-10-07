@@ -4,7 +4,8 @@
             "already_configured": "Disse koordinatene er allerede registrert."
         },
         "error": {
-            "general_error": "Det oppstod en ukjent feil."
+            "general_error": "Det oppstod en ukjent feil.",
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

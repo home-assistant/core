@@ -291,7 +291,7 @@ def test_event_repr():
 
 
 def test_event_as_dict():
-    """Test as Event as dictionary."""
+    """Test an Event as dictionary."""
     event_type = "some_type"
     now = dt_util.utcnow()
     data = {"some": "attr"}
@@ -301,7 +301,7 @@ def test_event_as_dict():
         "event_type": event_type,
         "data": data,
         "origin": "LOCAL",
-        "time_fired": now,
+        "time_fired": now.isoformat(),
         "context": {
             "id": event.context.id,
             "parent_id": None,
@@ -309,6 +309,36 @@ def test_event_as_dict():
         },
     }
     assert event.as_dict() == expected
+    # 2nd time to verify cache
+    assert event.as_dict() == expected
+
+
+def test_state_as_dict():
+    """Test a State as dictionary."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "context": {
+            "id": state.context.id,
+            "parent_id": None,
+            "user_id": state.context.user_id,
+        },
+        "entity_id": "happy.happy",
+        "attributes": {"pig": "dog"},
+        "last_changed": last_time.isoformat(),
+        "last_updated": last_time.isoformat(),
+        "state": "on",
+    }
+    assert state.as_dict() == expected
+    # 2nd time to verify cache
+    assert state.as_dict() == expected
+    assert state.as_dict() is state.as_dict()
 
 
 class TestEventBus(unittest.TestCase):

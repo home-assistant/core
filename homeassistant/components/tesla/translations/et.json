@@ -1,0 +1,10 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "already_configured_account": "Kasutaja on juba lisatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        }
+    }
+}

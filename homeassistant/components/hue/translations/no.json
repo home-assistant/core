@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue Bridger er allerede konfigurert",
-            "already_configured": "Bridge er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyt for bro p\u00e5g\u00e5r allerede.",
-            "cannot_connect": "Kan ikke koble til Bridge",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes.",
             "discover_timeout": "Kunne ikke oppdage Hue Bridger",
             "no_bridges": "Ingen Philips Hue Bridger oppdaget",
             "not_hue_bridge": "Ikke en Hue bro",
-            "unknown": "Ukjent feil oppstod"
+            "unknown": "Uventet feil"
         },
         "error": {
-            "linking": "Ukjent koblingsfeil oppstod.",
+            "linking": "Uventet feil",
             "register_failed": "Registrering feilet, vennligst pr\u00f8v igjen"
         },
         "step": {

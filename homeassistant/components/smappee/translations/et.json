@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Smappee seadmega \u00fchenduse loomine nurjus."
+        }
+    }
+}

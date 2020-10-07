@@ -55,11 +55,6 @@ class BlinkStickLight(LightEntity):
         self._brightness = None
 
     @property
-    def should_poll(self):
-        """Set up polling."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the light."""
         return self._name
