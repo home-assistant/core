@@ -109,8 +109,8 @@ class NightscoutSensor(Entity):
             if self._unit_of_measurement == MGDL:
                 self._state = value.sgv
             else:
-                self._state = value.sgv / MMOL_TO_MGDL
-                self._attributes[ATTR_DELTA] = (
+                self._state = "%.1f" % (value.sgv / MMOL_TO_MGDL)
+                self._attributes[ATTR_DELTA] = "%.1f" % (
                     self._attributes[ATTR_DELTA] / MMOL_TO_MGDL
                 )
             self._icon = self._parse_icon()
