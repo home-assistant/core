@@ -4,7 +4,7 @@
             "already_configured": "Ten klucz aplikacji jest ju\u017c w u\u017cyciu."
         },
         "error": {
-            "invalid_key": "Nieprawid\u0142owy klucz API i/lub klucz aplikacji",
+            "invalid_key": "[%key::common::config_flow::error::invalid_api_key%]",
             "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
         },
         "step": {

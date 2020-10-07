@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "reauth_successful": "\u5b58\u53d6\u5bc6\u9470\u5df2\u6210\u529f\u66f4\u65b0"
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "authorization_error": "\u8a8d\u8b49\u932f\u8aa4\u3002\u8acb\u78ba\u8a8d\u64c1\u6709\u5c08\u6848\u5b58\u53d6\u6b0a\u8207\u6b63\u78ba\u7684\u8b49\u66f8\u3002",
