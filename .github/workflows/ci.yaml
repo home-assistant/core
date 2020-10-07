@@ -610,8 +610,8 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           # Temporary addition of cmake, needed to build some Python 3.9 packages
-          sudo apt-get update
-          sudo apt-get -y install cmake
+          apt-get update
+          apt-get -y install cmake
 
           python -m venv venv
           . venv/bin/activate
