@@ -3,11 +3,10 @@ import asyncio
 import logging
 from typing import Any, List, Optional
 
-import zigpy.exceptions
-import zigpy.zcl.clusters.general as general
-
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
+import zigpy.exceptions
+import zigpy.zcl.clusters.general as general
 
 from .. import registries, typing as zha_typing
 from ..const import (
@@ -294,10 +293,10 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        await super().async_initialize(from_cache)
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=True)
         if state is not None:
             self._state = bool(state)
-        await super().async_initialize(from_cache)
 
     async def async_update(self):
         """Initialize channel."""
