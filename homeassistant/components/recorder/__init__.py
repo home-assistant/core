@@ -58,6 +58,7 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
+DEFAULT_COMMIT_INTERVAL = 1
 KEEPALIVE_TIME = 30
 
 # Controls how often we clean up
@@ -95,9 +96,9 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Coerce(int), vol.Range(min=0)
                     ),
                     vol.Optional(CONF_DB_URL): cv.string,
-                    vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(
+                        CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
