@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN Code"
                 },
                 "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
                 "title": "Complete Pairing Process"

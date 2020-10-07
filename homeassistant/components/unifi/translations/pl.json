@@ -16,7 +16,7 @@
                     "port": "Port",
                     "site": "Identyfikator witryny",
                     "username": "Nazwa u\u017cytkownika",
-                    "verify_ssl": "Kontroler u\u017cywa prawid\u0142owego certyfikatu"
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "title": "Konfiguracja kontrolera UniFi"
             }
