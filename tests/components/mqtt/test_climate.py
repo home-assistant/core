@@ -340,9 +340,17 @@ async def test_set_target_temperature(hass, mqtt_mock):
 
 async def test_set_target_temperature_with_state_and_optimistic_flag(hass, mqtt_mock):
     """Test setting the target temperature."""
-    """Set the temperature state topic so that by default it would operate in pessimistic mode"""
+    """Set all the state topics so that by default they would operate in pessimistic mode"""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["temperature_state_topic"] = "temperature-state"
+    '''config["climate"]["temperature_state_topic"] = "temperature-state"'''
+    config["climate"]["mode_state_topic"] = "mode-state"
+    '''config["climate"]["swing_mode_state_topic"] = "swing-mode-state"
+    config["climate"]["fan_mode_state_topic"] = "fan-mode-state"
+    config["climate"]["aux_state_topic"] = "aux-state"
+    config["climate"]["temperature_low_state_topic"] = "temperature-low-state"
+    config["climate"]["temperature_high_state_topic"] = "temperature-high-state"'''
+    """..but also set the optimistic flag"""
+    '''config["climate"]["optimistic"] = True'''
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()
