@@ -91,7 +91,7 @@ class FlowHandler(config_entries.ConfigFlow):
                         KEY_SESSION: session,
                     },
                 )
-            errors["base"] = "auth_error"
+            errors["base"] = "invalid_auth"
 
         try:
             with async_timeout.timeout(10):
