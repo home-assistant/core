@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "El compte ja ha estat configurat",
             "no_devices": "No s'han trobat dispositius a la xarxa",
-            "reauth_successful": "Token d'acc\u00e9s actualitzat correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "auth": "Token d'acc\u00e9s no v\u00e0lid",

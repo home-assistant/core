@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu.",
-            "reauth_successful": "SimpliSafe zosta\u0142 ponownie uwierzytelniony."
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "identifier_exists": "Konto jest ju\u017c zarejestrowane.",

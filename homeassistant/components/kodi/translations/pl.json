@@ -35,7 +35,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Certyfikat SSL"
                 },
                 "description": "Informacje o po\u0142\u0105czeniu Kodi. Upewnij si\u0119, \u017ce w\u0142\u0105czy\u0142e\u015b \"Zezwalaj na zdalne sterowanie przez HTTP\" w System/Ustawienia/Sieci/Us\u0142ugi."
             },
