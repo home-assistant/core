@@ -1,6 +1,5 @@
 """Test the Govee LED strips config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.govee.config_flow import CannotConnect
 from homeassistant.components.govee.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_DELAY
 
