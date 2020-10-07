@@ -30,6 +30,23 @@ def mock_storage(hass_storage):
     """Autouse hass_storage for the TestCase tests."""
 
 
+@pytest.fixture
+def zwave_setup(hass):
+    """Zwave setup."""
+
+    async def _zwave():
+        mock_receivers = []
+
+        def mock_connect(receiver, signal, *args, **kwargs):
+            if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+                mock_receivers.append(receiver)
+
+        with patch("pydispatch.dispatcher.connect", new=mock_connect):
+            return await async_setup_component(hass, "zwave", {"zwave": {}})
+
+    return _zwave
+
+
 async def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
     device_config = {"light.kitchen": {"ignored": "true"}}
@@ -1354,19 +1371,10 @@ async def test_device_config_glob_is_ordered():
     assert isinstance(conf["zwave"][CONF_DEVICE_CONFIG_GLOB], OrderedDict)
 
 
-async def test_add_node(hass, mock_openzwave):
+async def test_add_node(hass, mock_openzwave, zwave_setup):
     """Test zwave add_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1381,19 +1389,10 @@ async def test_add_node(hass, mock_openzwave):
     assert len(zwave_network.controller.add_node.mock_calls[0][1]) == 0
 
 
-async def test_add_node_secure(hass, mock_openzwave):
+async def test_add_node_secure(hass, mock_openzwave, zwave_setup):
     """Test zwave add_node_secure service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1408,19 +1407,10 @@ async def test_add_node_secure(hass, mock_openzwave):
     assert zwave_network.controller.add_node.mock_calls[0][1][0] is True
 
 
-async def test_remove_node(hass, mock_openzwave):
+async def test_remove_node(hass, mock_openzwave, zwave_setup):
     """Test zwave remove_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1434,19 +1424,10 @@ async def test_remove_node(hass, mock_openzwave):
     assert len(zwave_network.controller.remove_node.mock_calls) == 1
 
 
-async def test_cancel_command(hass, mock_openzwave):
+async def test_cancel_command(hass, mock_openzwave, zwave_setup):
     """Test zwave cancel_command service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1460,19 +1441,10 @@ async def test_cancel_command(hass, mock_openzwave):
     assert len(zwave_network.controller.cancel_command.mock_calls) == 1
 
 
-async def test_heal_network(hass, mock_openzwave):
+async def test_heal_network(hass, mock_openzwave, zwave_setup):
     """Test zwave heal_network service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1486,19 +1458,10 @@ async def test_heal_network(hass, mock_openzwave):
     assert len(zwave_network.heal.mock_calls) == 1
 
 
-async def test_soft_reset(hass, mock_openzwave):
+async def test_soft_reset(hass, mock_openzwave, zwave_setup):
     """Test zwave soft_reset service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1512,19 +1475,10 @@ async def test_soft_reset(hass, mock_openzwave):
     assert len(zwave_network.controller.soft_reset.mock_calls) == 1
 
 
-async def test_test_network(hass, mock_openzwave):
+async def test_test_network(hass, mock_openzwave, zwave_setup):
     """Test zwave test_network service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1538,19 +1492,10 @@ async def test_test_network(hass, mock_openzwave):
     assert len(zwave_network.test.mock_calls) == 1
 
 
-async def test_stop_network(hass, mock_openzwave):
+async def test_stop_network(hass, mock_openzwave, zwave_setup):
     """Test zwave stop_network service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1568,19 +1513,10 @@ async def test_stop_network(hass, mock_openzwave):
         assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
 
 
-async def test_rename_node(hass, mock_openzwave):
+async def test_rename_node(hass, mock_openzwave, zwave_setup):
     """Test zwave rename_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1598,19 +1534,10 @@ async def test_rename_node(hass, mock_openzwave):
     assert zwave_network.nodes[11].name == "test_name"
 
 
-async def test_rename_value(hass, mock_openzwave):
+async def test_rename_value(hass, mock_openzwave, zwave_setup):
     """Test zwave rename_value service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1637,19 +1564,10 @@ async def test_rename_value(hass, mock_openzwave):
     assert value.label == "New Label"
 
 
-async def test_set_poll_intensity_enable(hass, mock_openzwave):
+async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, successful set."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1679,19 +1597,10 @@ async def test_set_poll_intensity_enable(hass, mock_openzwave):
     assert enable_poll.mock_calls[0][1][0] == 4
 
 
-async def test_set_poll_intensity_enable_failed(hass, mock_openzwave):
+async def test_set_poll_intensity_enable_failed(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, failed set."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1721,19 +1630,10 @@ async def test_set_poll_intensity_enable_failed(hass, mock_openzwave):
     assert len(enable_poll.mock_calls) == 1
 
 
-async def test_set_poll_intensity_disable(hass, mock_openzwave):
+async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, successful disable."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1762,19 +1662,10 @@ async def test_set_poll_intensity_disable(hass, mock_openzwave):
     assert len(disable_poll.mock_calls) == 2
 
 
-async def test_set_poll_intensity_disable_failed(hass, mock_openzwave):
+async def test_set_poll_intensity_disable_failed(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, failed disable."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1804,19 +1695,10 @@ async def test_set_poll_intensity_disable_failed(hass, mock_openzwave):
     assert len(disable_poll.mock_calls) == 1
 
 
-async def test_remove_failed_node(hass, mock_openzwave):
+async def test_remove_failed_node(hass, mock_openzwave, zwave_setup):
     """Test zwave remove_failed_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1834,19 +1716,10 @@ async def test_remove_failed_node(hass, mock_openzwave):
     assert remove_failed_node.mock_calls[0][1][0] == 12
 
 
-async def test_replace_failed_node(hass, mock_openzwave):
+async def test_replace_failed_node(hass, mock_openzwave, zwave_setup):
     """Test zwave replace_failed_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1864,19 +1737,10 @@ async def test_replace_failed_node(hass, mock_openzwave):
     assert replace_failed_node.mock_calls[0][1][0] == 13
 
 
-async def test_set_config_parameter(hass, mock_openzwave):
+async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
     """Test zwave set_config_parameter service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2026,19 +1890,10 @@ async def test_set_config_parameter(hass, mock_openzwave):
     node.set_config_param.reset_mock()
 
 
-async def test_print_config_parameter(hass, mock_openzwave):
+async def test_print_config_parameter(hass, mock_openzwave, zwave_setup):
     """Test zwave print_config_parameter service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2070,19 +1925,10 @@ async def test_print_config_parameter(hass, mock_openzwave):
         assert mock_logger.info.mock_calls[0][1][3] == 2345
 
 
-async def test_print_node(hass, mock_openzwave):
+async def test_print_node(hass, mock_openzwave, zwave_setup):
     """Test zwave print_node_parameter service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2100,19 +1946,10 @@ async def test_print_node(hass, mock_openzwave):
         assert "FOUND NODE " in mock_logger.info.mock_calls[0][1][0]
 
 
-async def test_set_wakeup(hass, mock_openzwave):
+async def test_set_wakeup(hass, mock_openzwave, zwave_setup):
     """Test zwave set_wakeup service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2141,19 +1978,10 @@ async def test_set_wakeup(hass, mock_openzwave):
     assert value.data == 15
 
 
-async def test_reset_node_meters(hass, mock_openzwave):
+async def test_reset_node_meters(hass, mock_openzwave, zwave_setup):
     """Test zwave reset_node_meters service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2194,19 +2022,10 @@ async def test_reset_node_meters(hass, mock_openzwave):
     assert value_id == reset_value.value_id
 
 
-async def test_add_association(hass, mock_openzwave):
+async def test_add_association(hass, mock_openzwave, zwave_setup):
     """Test zwave change_association service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2246,19 +2065,10 @@ async def test_add_association(hass, mock_openzwave):
     assert group.add_association.mock_calls[0][1][1] == 5
 
 
-async def test_remove_association(hass, mock_openzwave):
+async def test_remove_association(hass, mock_openzwave, zwave_setup):
     """Test zwave change_association service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2298,19 +2108,10 @@ async def test_remove_association(hass, mock_openzwave):
     assert group.remove_association.mock_calls[0][1][1] == 5
 
 
-async def test_refresh_entity(hass, mock_openzwave):
+async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_entity service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2347,19 +2148,10 @@ async def test_refresh_entity(hass, mock_openzwave):
     )
 
 
-async def test_refresh_node(hass, mock_openzwave):
+async def test_refresh_node(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2375,19 +2167,10 @@ async def test_refresh_node(hass, mock_openzwave):
     assert len(node.refresh_info.mock_calls) == 1
 
 
-async def test_set_node_value(hass, mock_openzwave):
+async def test_set_node_value(hass, mock_openzwave, zwave_setup):
     """Test zwave set_node_value service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2414,19 +2197,12 @@ async def test_set_node_value(hass, mock_openzwave):
     assert zwave_network.nodes[14].values[12].data == 2
 
 
-async def test_set_node_value_with_long_id_and_text_value(hass, mock_openzwave):
+async def test_set_node_value_with_long_id_and_text_value(
+    hass, mock_openzwave, zwave_setup
+):
     """Test zwave set_node_value service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2457,19 +2233,10 @@ async def test_set_node_value_with_long_id_and_text_value(hass, mock_openzwave):
     assert zwave_network.nodes[14].values[87512398541236578].data == "#00ff00"
 
 
-async def test_refresh_node_value(hass, mock_openzwave):
+async def test_refresh_node_value(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_node_value service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2500,19 +2267,10 @@ async def test_refresh_node_value(hass, mock_openzwave):
     assert value.refresh.called
 
 
-async def test_heal_node(hass, mock_openzwave):
+async def test_heal_node(hass, mock_openzwave, zwave_setup):
     """Test zwave heal_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -2528,19 +2286,10 @@ async def test_heal_node(hass, mock_openzwave):
     assert len(node.heal.mock_calls) == 1
 
 
-async def test_test_node(hass, mock_openzwave):
+async def test_test_node(hass, mock_openzwave, zwave_setup):
     """Test the zwave test_node service."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
+    assert await zwave_setup()
+    await hass.async_block_till_done()
 
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
