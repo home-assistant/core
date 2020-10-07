@@ -270,7 +270,8 @@ class InputSchedule(RestoreEntity):
         for period in self._on_periods:
             if _is_in_period(start, period):
                 self._on_periods.remove(period)
-                on_periods.append(Period(period.start, start))
+                if start > period.start:
+                    on_periods.append(Period(period.start, start))
                 if _is_in_period(end, period):
                     on_periods.append(Period(end, period.end))
                 break
