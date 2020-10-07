@@ -169,7 +169,6 @@ class ModbusThermostat(ClimateEntity):
         """Set new target hvac mode."""
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.
-        pass
 
     @property
     def name(self):
