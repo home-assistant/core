@@ -201,10 +201,7 @@ async def test_get_states(hass, websocket_client):
 
     states = []
     for state in hass.states.async_all():
-        state = state.as_dict()
-        state["last_changed"] = state["last_changed"].isoformat()
-        state["last_updated"] = state["last_updated"].isoformat()
-        states.append(state)
+        states.append(state.as_dict())
 
     assert msg["result"] == states
 

@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Ajal\u00f5pp (sekundites)"
+                }
+            }
+        }
+    }
+}

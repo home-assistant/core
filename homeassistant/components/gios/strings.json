@@ -5,7 +5,7 @@
         "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)",
         "description": "Set up GIO\u015a (Polish Chief Inspectorate Of Environmental Protection) air quality integration. If you need help with the configuration have a look here: https://www.home-assistant.io/integrations/gios",
         "data": {
-          "name": "Name of the integration",
+          "name": "[%key:common::config_flow::data::name%]",
           "station_id": "ID of the measuring station"
         }
       }
@@ -16,7 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

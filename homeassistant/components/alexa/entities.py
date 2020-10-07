@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    __version__,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import network
@@ -286,6 +287,12 @@ class AlexaEntity:
             "friendlyName": self.friendly_name(),
             "description": self.description(),
             "manufacturerName": "Home Assistant",
+            "additionalAttributes": {
+                "manufacturer": "Home Assistant",
+                "model": self.entity.domain,
+                "softwareVersion": __version__,
+                "customIdentifier": self.entity_id,
+            },
         }
 
         locale = self.config.locale

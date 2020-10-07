@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
@@ -72,7 +73,7 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-DEFAULT_RATE_LIMIT = timedelta(seconds=1)
+DEFAULT_RATE_LIMIT = timedelta(minutes=1)
 
 
 @bind_hass
@@ -302,7 +303,7 @@ class Template:
 
         return extract_entities(self.hass, self.template, variables)
 
-    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template."""
         if self.is_static:
             return self.template.strip()
@@ -315,7 +316,7 @@ class Template:
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
@@ -329,9 +330,26 @@ class Template:
             kwargs.update(variables)
 
         try:
-            return compiled.render(kwargs).strip()
+            render_result = compiled.render(kwargs)
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
+
+        render_result = render_result.strip()
+
+        if not self.hass.config.legacy_templates:
+            try:
+                result = literal_eval(render_result)
+
+                # If the literal_eval result is a string, use the original
+                # render, by not returning right here. The evaluation of strings
+                # resulting in strings impacts quotes, to avoid unexpected
+                # output; use the original render instead of the evaluated one.
+                if not isinstance(result, str):
+                    return result
+            except (ValueError, SyntaxError, MemoryError):
+                pass
+
+        return render_result
 
     async def async_render_will_timeout(
         self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any
@@ -489,26 +507,6 @@ class Template:
         return 'Template("' + self.template + '")'
 
 
-class RateLimit:
-    """Class to control update rate limits."""
-
-    def __init__(self, hass: HomeAssistantType):
-        """Initialize rate limit."""
-        self._hass = hass
-
-    def __call__(self, *args: Any, **kwargs: Any) -> str:
-        """Handle a call to the class."""
-        render_info = self._hass.data.get(_RENDER_INFO)
-        if render_info is not None:
-            render_info.rate_limit = timedelta(*args, **kwargs)
-
-        return ""
-
-    def __repr__(self) -> str:
-        """Representation of a RateLimit."""
-        return "<template RateLimit>"
-
-
 class AllStates:
     """Class to expose all HA states as attributes."""
 
@@ -607,17 +605,18 @@ class DomainStates:
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state")
+    __slots__ = ("_hass", "_state", "_collect")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass, state):
+    def __init__(self, hass, state, collect=True):
         """Initialize template state."""
         self._hass = hass
         self._state = state
+        self._collect = collect
 
     def _collect_state(self):
-        if _RENDER_INFO in self._hass.data:
+        if self._collect and _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -626,7 +625,7 @@ class TemplateState(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if _RENDER_INFO in self._hass.data:
+            if self._collect and _RENDER_INFO in self._hass.data:
                 self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
@@ -717,7 +716,7 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
 def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state)
+        yield TemplateState(hass, state, collect=False)
 
 
 def _get_state_if_valid(
@@ -1310,11 +1309,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
-        self.globals["rate_limit"] = RateLimit(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, (AllStates, RateLimit)) or super().is_safe_callable(obj)
+        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""

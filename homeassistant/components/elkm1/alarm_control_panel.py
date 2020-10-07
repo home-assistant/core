@@ -155,18 +155,16 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self.async_write_ha_state()
 
     def _watch_area(self, area, changeset):
-        if not changeset.get("log_event"):
+        last_log = changeset.get("last_log")
+        if not last_log:
+            return
+        # user_number only set for arm/disarm logs
+        if not last_log.get("user_number"):
             return
         self._changed_by_keypad = None
-        self._changed_by_id = area.log_number
-        self._changed_by = username(self._elk, area.log_number - 1)
-        self._changed_by_time = "%04d-%02d-%02dT%02d:%02d" % (
-            area.log_year,
-            area.log_month,
-            area.log_day,
-            area.log_hour,
-            area.log_minute,
-        )
+        self._changed_by_id = last_log["user_number"]
+        self._changed_by = username(self._elk, self._changed_by_id - 1)
+        self._changed_by_time = last_log["timestamp"]
         self.async_write_ha_state()
 
     @property

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This DoorBird is already configured",
+            "already_configured": "Device is already configured",
             "link_local_address": "Link local addresses are not supported",
             "not_doorbird_device": "This device is not a DoorBird"
         },
