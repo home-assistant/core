@@ -61,7 +61,7 @@ async def test_user_auth_failed(hass: HomeAssistantType, fritz: Mock):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "auth_failed"
+    assert result["errors"]["base"] == "invalid_auth"
 
 
 async def test_user_not_successful(hass: HomeAssistantType, fritz: Mock):
@@ -162,7 +162,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistantType, fritz: Mock):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
-    assert result["errors"]["base"] == "auth_failed"
+    assert result["errors"]["base"] == "invalid_auth"
 
 
 async def test_ssdp_not_successful(hass: HomeAssistantType, fritz: Mock):
