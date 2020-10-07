@@ -81,6 +81,7 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
         db_states = list(session.query(States))
         assert len(db_states) >= 1
 
+    assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
 
 
