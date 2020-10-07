@@ -233,8 +233,7 @@ class HMHub(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attr = self._variables.copy()
-        return attr
+        return self._variables.copy()
 
     @property
     def icon(self):

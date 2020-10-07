@@ -105,8 +105,8 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
         try:
             Account(username, password, this_vendor)
         except NeatoLoginException:
-            return "invalid_credentials"
+            return "invalid_auth"
         except NeatoRobotException:
-            return "unexpected_error"
+            return "unknown"
 
         return None

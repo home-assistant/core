@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgus ei tuvastatud \u00fchtegi seadet"
+        }
+    }
+}

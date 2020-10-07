@@ -1465,3 +1465,33 @@ async def websocket_subscribe(hass, connection, msg):
     )
 
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@callback
+def async_subscribe_connection_status(hass, connection_status_callback):
+    """Subscribe to MQTT connection changes."""
+
+    @callback
+    def connected():
+        hass.async_add_job(connection_status_callback, True)
+
+    @callback
+    def disconnected():
+        _LOGGER.error("Calling connection_status_callback, False")
+        hass.async_add_job(connection_status_callback, False)
+
+    subscriptions = {
+        "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),
+        "disconnect": async_dispatcher_connect(hass, MQTT_DISCONNECTED, disconnected),
+    }
+
+    def unsubscribe():
+        subscriptions["connect"]()
+        subscriptions["disconnect"]()
+
+    return unsubscribe
+
+
+def is_connected(hass):
+    """Return if MQTT client is connected."""
+    return hass.data[DATA_MQTT].connected

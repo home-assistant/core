@@ -258,7 +258,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        state = result.lower()
+        state = str(result).lower()
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
                 self._position = 100

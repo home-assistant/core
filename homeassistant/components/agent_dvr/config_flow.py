@@ -62,7 +62,7 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return await self._create_entry(agent_client.name)
 
-            errors["base"] = "device_unavailable"
+            errors["base"] = "cannot_connect"
 
         data = {
             vol.Required(CONF_HOST): str,

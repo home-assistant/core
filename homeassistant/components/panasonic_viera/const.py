@@ -12,8 +12,4 @@ DEFAULT_PORT = 55000
 
 ATTR_REMOTE = "remote"
 
-ERROR_NOT_CONNECTED = "not_connected"
 ERROR_INVALID_PIN_CODE = "invalid_pin_code"
-
-REASON_NOT_CONNECTED = "not_connected"
-REASON_UNKNOWN = "unknown"

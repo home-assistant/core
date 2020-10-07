@@ -59,9 +59,11 @@ class Gateway:
                     if inner_entry["Buffer"] is not None:
                         text = text + inner_entry["Buffer"]
 
-            event_data = dict(
-                phone=message["Number"], date=str(message["DateTime"]), message=text
-            )
+            event_data = {
+                "phone": message["Number"],
+                "date": str(message["DateTime"]),
+                "message": text,
+            }
 
             _LOGGER.debug("Append event data:%s", event_data)
             data.append(event_data)

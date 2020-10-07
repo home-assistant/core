@@ -15,8 +15,7 @@
                     "password": "Heslo",
                     "port": "Port",
                     "site": "ID s\u00edt\u011b",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
-                    "verify_ssl": "Ovlada\u010d pou\u017e\u00edv\u00e1 spr\u00e1vn\u00fd certifik\u00e1t"
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
                 "title": "Nastaven\u00ed UniFi ovlada\u010de"
             }

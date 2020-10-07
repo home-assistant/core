@@ -87,3 +87,22 @@ remove_from_queue:
     queue_position:
       description: Position in the queue to remove.
       example: "0"
+
+update_alarm:
+  description: Updates an alarm with new time and volume settings.
+  fields:
+    alarm_id:
+      description: ID for the alarm to be updated.
+      example: "1"
+    time:
+      description: Set time for the alarm.
+      example: "07:00"
+    volume:
+      description: Set alarm volume level.
+      example: "0.75"
+    enabled:
+      description: Enable or disable the alarm.
+      example: "true"
+    include_linked_zones:
+      description: Enable or disable including grouped rooms.
+      example: "true"
