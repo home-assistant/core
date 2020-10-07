@@ -52,7 +52,10 @@
         "step": {
             "broker": {
                 "data": {
-                    "password": "Passwort"
+                    "broker": "Broker",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
                 }
             }
         }

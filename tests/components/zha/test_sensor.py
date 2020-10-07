@@ -2,6 +2,7 @@
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
@@ -14,8 +15,10 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -48,16 +51,16 @@ async def async_test_temperature(hass, cluster, entity_id):
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
-    assert_state(hass, entity_id, "1.0", "lx")
+    assert_state(hass, entity_id, "1.0", LIGHT_LUX)
 
 
 async def async_test_metering(hass, cluster, entity_id):
@@ -120,7 +123,7 @@ async def test_sensor(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -240,7 +243,7 @@ async def test_temp_uom(
                     general.Basic.cluster_id,
                 ],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -280,7 +283,7 @@ async def test_electrical_measurement_init(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

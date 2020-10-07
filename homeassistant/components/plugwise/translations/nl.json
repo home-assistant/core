@@ -18,5 +18,14 @@
                 "title": "Maak verbinding met de Smile"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scaninterval (seconden)"
+                }
+            }
+        }
     }
 }

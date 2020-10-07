@@ -28,7 +28,7 @@ def zigpy_dev_basic(zigpy_device_mock):
             1: {
                 "in_clusters": [general.Basic.cluster_id],
                 "out_clusters": [],
-                "device_type": 0,
+                "device_type": zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

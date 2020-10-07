@@ -5,8 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
     PERCENTAGE,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -31,8 +34,8 @@ SENSOR_TYPES = [
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
     "Humidity": PERCENTAGE,
-    "Pressure": "inHg",
-    "Luminance": "cd/m²",
+    "Pressure": PRESSURE_INHG,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 
@@ -40,8 +43,8 @@ SENSOR_UNITS_IMPERIAL = {
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
     "Humidity": PERCENTAGE,
-    "Pressure": "mbar",
-    "Luminance": "cd/m²",
+    "Pressure": PRESSURE_MBAR,
+    "Luminance": f"cd/{AREA_SQUARE_METERS}",
     "Voltage": "mV",
 }
 
