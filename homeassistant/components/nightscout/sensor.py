@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
-    uom = entry.data.get(CONF_UNIT_OF_MEASUREMENT)
+    uom = entry.data.get(CONF_UNIT_OF_MEASUREMENT, MGDL)
     async_add_entities(
         [NightscoutSensor(api, "Blood Sugar", entry.unique_id, uom)], True
     )
