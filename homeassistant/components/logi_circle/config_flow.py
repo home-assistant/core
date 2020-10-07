@@ -170,7 +170,9 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"
             return self.async_abort(reason="external_error")
         except asyncio.TimeoutError:
-            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "oauth2_authorize_url_timeout"
+            (
+                self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
+            ) = "oauth2_authorize_url_timeout"
             return self.async_abort(reason="external_error")
 
         account_id = (await logi_session.account)["accountId"]
