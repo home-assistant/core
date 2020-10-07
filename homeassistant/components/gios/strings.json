@@ -16,7 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%] for this measuring station"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }
