@@ -12,6 +12,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
+                "description": "Surveillez les rapports des utilisateurs et du CDC pour des coordonn\u00e9es.",
                 "title": "Configurer Flu Near You"
             }
         }

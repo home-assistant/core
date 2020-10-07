@@ -99,6 +99,7 @@
             "on": "Lavt"
         },
         "cold": {
+            "off": "",
             "on": "Kald"
         },
         "connectivity": {
@@ -118,6 +119,7 @@
             "on": "Oppdaget"
         },
         "heat": {
+            "off": "",
             "on": "Varm"
         },
         "lock": {
@@ -143,6 +145,10 @@
         "presence": {
             "off": "Borte",
             "on": "Hjemme"
+        },
+        "problem": {
+            "off": "",
+            "on": ""
         },
         "safety": {
             "off": "Sikker",

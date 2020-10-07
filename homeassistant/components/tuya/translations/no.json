@@ -17,7 +17,8 @@
                     "platform": "Appen der kontoen din registreres",
                     "username": "Brukernavn"
                 },
-                "description": "Skriv inn din Tuya-legitimasjon."
+                "description": "Skriv inn din Tuya-legitimasjon.",
+                "title": ""
             }
         }
     }

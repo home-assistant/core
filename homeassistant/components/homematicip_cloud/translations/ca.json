@@ -7,7 +7,7 @@
         },
         "error": {
             "invalid_pin": "Codi PIN inv\u00e0lid, torna-ho a provar.",
-            "invalid_sgtin_or_pin": "Codi PIN inv\u00e0lid, torna-ho a provar.",
+            "invalid_sgtin_or_pin": "Codi PIN o SGTIN inv\u00e0lid, torna-ho a provar.",
             "press_the_button": "Si us plau, prem el bot\u00f3 blau.",
             "register_failed": "Error al registrar, torna-ho a provar.",
             "timeout_button": "El temps d'espera m\u00e0xim per pr\u00e9mer el bot\u00f3 blau s'ha esgotat, torna-ho a provar."

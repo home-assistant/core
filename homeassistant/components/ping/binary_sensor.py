@@ -10,7 +10,11 @@ from typing import Any, Dict
 from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
@@ -30,7 +34,6 @@ CONF_PING_COUNT = "count"
 
 DEFAULT_NAME = "Ping"
 DEFAULT_PING_COUNT = 5
-DEFAULT_DEVICE_CLASS = "connectivity"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -94,7 +97,7 @@ class PingBinarySensor(BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def is_on(self) -> bool:

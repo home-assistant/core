@@ -5,12 +5,16 @@ from Plugwise_Smile.Smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +31,7 @@ def _base_schema(discovery_info):
 
     if not discovery_info:
         base_schema[vol.Required(CONF_HOST)] = str
+        base_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
 
     base_schema[vol.Required(CONF_PASSWORD)] = str
 
@@ -40,9 +45,11 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from _base_schema() with values provided by the user.
     """
     websession = async_get_clientsession(hass, verify_ssl=False)
+
     api = Smile(
         host=data[CONF_HOST],
         password=data[CONF_PASSWORD],
+        port=data[CONF_PORT],
         timeout=30,
         websession=websession,
     )
@@ -83,6 +90,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: discovery_info[CONF_HOST],
+            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
             "name": _name,
         }
         return await self.async_step_user()
@@ -95,6 +103,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self.discovery_info:
                 user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
+                user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT, DEFAULT_PORT)
 
             for entry in self._async_current_entries():
                 if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:

@@ -34,6 +34,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_DAYS,
     TIME_HOURS,
+    VOLUME_CUBIC_METERS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -159,14 +160,14 @@ SENSOR_TYPES = {
     ATTR_AIR_FLOW_SUPPLY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply airflow",
-        ATTR_UNIT: f"m³/{TIME_HOURS}",
+        ATTR_UNIT: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
     },
     ATTR_AIR_FLOW_EXHAUST: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust airflow",
-        ATTR_UNIT: f"m³/{TIME_HOURS}",
+        ATTR_UNIT: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
     },

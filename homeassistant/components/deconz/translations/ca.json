@@ -93,7 +93,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Permet sensors deCONZ CLIP",
-                    "allow_deconz_groups": "Permet grups de llums deCONZ"
+                    "allow_deconz_groups": "Permet grups de llums deCONZ",
+                    "allow_new_devices": "Permet l'addici\u00f3 autom\u00e0tica de nous dispositius"
                 },
                 "description": "Configura la visibilitat dels tipus dels dispositius deCONZ",
                 "title": "Opcions de deCONZ"

@@ -268,49 +268,47 @@ async def test_add_job_with_none(hass):
         hass.async_add_job(None, "test_arg")
 
 
-class TestEvent(unittest.TestCase):
-    """A Test Event class."""
+def test_event_eq():
+    """Test events."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = [
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    ]
 
-    def test_eq(self):
-        """Test events."""
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
-        context = ha.Context()
-        event1, event2 = [
-            ha.Event("some_type", data, time_fired=now, context=context)
-            for _ in range(2)
-        ]
+    assert event1 == event2
 
-        assert event1 == event2
 
-    def test_repr(self):
-        """Test that repr method works."""
-        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+def test_event_repr():
+    """Test that Event repr method works."""
+    assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
-        assert (
-            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
-            == "<Event TestEvent[R]: beer=nice>"
-        )
+    assert (
+        str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+        == "<Event TestEvent[R]: beer=nice>"
+    )
 
-    def test_as_dict(self):
-        """Test as dictionary."""
-        event_type = "some_type"
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
 
-        event = ha.Event(event_type, data, ha.EventOrigin.local, now)
-        expected = {
-            "event_type": event_type,
-            "data": data,
-            "origin": "LOCAL",
-            "time_fired": now,
-            "context": {
-                "id": event.context.id,
-                "parent_id": None,
-                "user_id": event.context.user_id,
-            },
-        }
-        assert expected == event.as_dict()
+def test_event_as_dict():
+    """Test as Event as dictionary."""
+    event_type = "some_type"
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    expected = {
+        "event_type": event_type,
+        "data": data,
+        "origin": "LOCAL",
+        "time_fired": now,
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
+    }
+    assert event.as_dict() == expected
 
 
 class TestEventBus(unittest.TestCase):
@@ -1477,3 +1475,20 @@ async def test_async_all(hass):
     assert {
         state.entity_id for state in hass.states.async_all(["light", "switch"])
     } == {"light.bowl", "light.frog", "switch.link"}
+
+
+async def test_async_entity_ids_count(hass):
+    """Test async_entity_ids_count."""
+
+    hass.states.async_set("switch.link", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.frog", "on")
+    hass.states.async_set("vacuum.floor", "on")
+
+    assert hass.states.async_entity_ids_count() == 4
+    assert hass.states.async_entity_ids_count("light") == 2
+
+    hass.states.async_set("light.cow", "on")
+
+    assert hass.states.async_entity_ids_count() == 5
+    assert hass.states.async_entity_ids_count("light") == 3
