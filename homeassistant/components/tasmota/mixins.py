@@ -104,11 +104,10 @@ class TasmotaAvailability(TasmotaEntity):
     @callback
     def async_mqtt_connected(self, _):
         """Update state on connection/disconnection to MQTT broker."""
-        if self.hass.is_stopping:
-            return
-        if not mqtt_connected(self.hass):
-            self._available = False
-        self.async_write_ha_state()
+        if not self.hass.is_stopping:
+            if not mqtt_connected(self.hass):
+                self._available = False
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
