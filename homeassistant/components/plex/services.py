@@ -1,21 +1,47 @@
 """Services for the Plex integration."""
+import json
 import logging
 
-from plexapi.exceptions import NotFound
+from plexapi.exceptions import BadRequest, NotFound
 import voluptuous as vol
 
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+)
+from homeassistant.components.sonos import DOMAIN as SONOS_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DOMAIN
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import entity_sources
 
 from .const import (
     DOMAIN,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
+    SERVICE_PLAY_ON_OTHER,
+    SERVICE_PLAY_ON_SONOS,
     SERVICE_REFRESH_LIBRARY,
     SERVICE_SCAN_CLIENTS,
 )
 
 REFRESH_LIBRARY_SCHEMA = vol.Schema(
     {vol.Optional("server_name"): str, vol.Required("library_name"): str}
+)
+PLAY_ON_OTHER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+        vol.Optional(ATTR_MEDIA_CONTENT_TYPE): str,
+    }
+)
+PLAY_ON_SONOS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_MEDIA_CONTENT_ID): str,
+        vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
+    }
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -32,6 +58,9 @@ async def async_setup_services(hass):
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
+    async def async_play_on_other_service(service_call):
+        await hass.async_add_executor_job(play_media_on_other, hass, service_call)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
@@ -40,6 +69,25 @@ async def async_setup_services(hass):
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN_CLIENTS, async_scan_clients_service
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PLAY_ON_OTHER,
+        async_play_on_other_service,
+        schema=PLAY_ON_OTHER_SCHEMA,
+    )
+
+    async def async_play_on_sonos_service(service_call):
+        _LOGGER.warn(
+            "Service `plex.play_on_sonos` is deprecated, please use `plex.play_media`"
+        )
+        await hass.async_add_executor_job(play_media_on_other, hass, service_call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PLAY_ON_SONOS,
+        async_play_on_sonos_service,
+        schema=PLAY_ON_SONOS_SCHEMA,
     )
 
     return True
@@ -89,3 +137,83 @@ def get_plex_server(hass, plex_server_name=None):
         [x.friendly_name for x in plex_servers],
     )
     return None
+
+
+def play_media_on_other(hass, service_call):
+    """Play Plex media on a capable non-Plex media_player."""
+    entity_id = service_call.data[ATTR_ENTITY_ID]
+    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
+    content = json.loads(content_id)
+
+    entity_source = entity_sources(hass).get(entity_id)
+    if not entity_source:
+        _LOGGER.warn("Entity not found: %s", entity_id)
+        return
+
+    plex_server_name = content.get("plex_server")
+
+    plex_servers = hass.data[DOMAIN][SERVERS].values()
+    if plex_server_name:
+        plex_server = next(
+            (x for x in plex_servers if x.friendly_name == plex_server_name), None
+        )
+        if not plex_server:
+            _LOGGER.error(
+                "Requested Plex server '%s' not found in %s",
+                plex_server_name,
+                [x.friendly_name for x in plex_servers],
+            )
+            return
+    else:
+        plex_server = next(iter(plex_servers))
+        _LOGGER.debug(
+            "Multiple Plex servers available, using '%s'", plex_server.friendly_name
+        )
+
+    domain = entity_source[CONF_DOMAIN]
+
+    if domain == SONOS_DOMAIN:
+        play_media_on_sonos(hass, entity_id, content, plex_server)
+    else:
+        _LOGGER.warn("%s is not a supported integration [%s]", domain, entity_id)
+
+
+def play_media_on_sonos(hass, entity_id, content, plex_server):
+    """Play Plex media on a linked Sonos device."""
+    sonos = hass.components.sonos
+    try:
+        sonos_name = sonos.get_coordinator_name(entity_id)
+    except HomeAssistantError as err:
+        _LOGGER.error("Cannot get Sonos device: %s", err)
+        return
+
+    if isinstance(content, int):
+        content = {"plex_key": content}
+        content_type = DOMAIN
+    else:
+        content_type = "music"
+
+    try:
+        sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
+    except BadRequest:
+        _LOGGER.error(
+            "Plex server '%s' does not have an active Plex Pass",
+            plex_server.friendly_name,
+        )
+        return
+
+    if sonos_speaker is None:
+        _LOGGER.error(
+            "Sonos speaker '%s' could not be found on this Plex account", sonos_name
+        )
+        return
+
+    shuffle = content.pop("shuffle", 0)
+    media = plex_server.lookup_media(content_type, **content)
+    if media is None:
+        _LOGGER.error("Media could not be found: %s", content)
+        return
+
+    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    sonos_speaker.playMedia(playqueue)
