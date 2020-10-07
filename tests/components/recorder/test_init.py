@@ -2,8 +2,6 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 
-from sqlalchemy import inspect
-
 from homeassistant.components.recorder import (
     CONFIG_SCHEMA,
     DOMAIN,
@@ -35,7 +33,6 @@ def test_saving_state(hass, hass_recorder):
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
     hass.states.set(entity_id, state, attributes)
-    hass.block_till_done()
 
     wait_recording_done(hass)
 
@@ -46,26 +43,6 @@ def test_saving_state(hass, hass_recorder):
         state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
-
-    import pprint
-
-    for obj in hass.data[DATA_INSTANCE].event_session:
-        pprint.pprint(["native", obj.to_native().as_dict()])
-        insp = inspect(obj)
-        pprint.pprint(
-            [
-                "transient",
-                insp.transient,
-                "pending",
-                insp.pending,
-                "persistent",
-                insp.persistent,
-                "deleted",
-                insp.deleted,
-                "detached",
-                insp.detached,
-            ]
-        )
 
     assert len([obj for obj in hass.data[DATA_INSTANCE].event_session]) == 0
 
@@ -88,7 +65,6 @@ def test_saving_event(hass, hass_recorder):
     hass.bus.listen(MATCH_ALL, event_listener)
 
     hass.bus.fire(event_type, event_data)
-    hass.block_till_done()
 
     wait_recording_done(hass)
 
@@ -110,26 +86,6 @@ def test_saving_event(hass, hass_recorder):
     assert event.time_fired.replace(microsecond=0) == db_event.time_fired.replace(
         microsecond=0
     )
-
-    import pprint
-
-    for obj in hass.data[DATA_INSTANCE].event_session:
-        pprint.pprint(obj.to_native().as_dict())
-        insp = inspect(obj)
-        pprint.pprint(
-            [
-                "transient",
-                insp.transient,
-                "pending",
-                insp.pending,
-                "persistent",
-                insp.persistent,
-                "deleted",
-                insp.deleted,
-                "detached",
-                insp.detached,
-            ]
-        )
 
     assert len([obj for obj in hass.data[DATA_INSTANCE].event_session]) == 0
 
