@@ -24,5 +24,15 @@
                 "title": "Tuya"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "discovery_interval": "Discovery device method polling interval (in seconds, 10-3600)",
+                    "query_interval": "Query device method polling interval (in seconds, 10-3600)"
+                }
+            }
+        }
     }
 }

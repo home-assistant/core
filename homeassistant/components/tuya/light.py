@@ -1,4 +1,6 @@
 """Support for the Tuya lights."""
+from datetime import timedelta
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -15,9 +17,27 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import color as colorutil
 
 from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from .const import (
+    CONF_BRIGHTNESS_RANGE_MODE,
+    CONF_MAX_KELVIN,
+    CONF_MAX_TUYA_TEMP,
+    CONF_MIN_KELVIN,
+    CONF_SUPPORT_COLOR,
+    DOMAIN,
+    TUYA_DATA,
+    TUYA_DISCOVERY_NEW,
+)
 
-PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
+
+TUYA_BRIGHTNESS_RANGE0 = (1, 255)
+TUYA_BRIGHTNESS_RANGE1 = (10, 1000)
+TUYA_DEF_MAX_COL_TEMP = 10000
+
+BRIGHTNESS_MODES = {
+    0: TUYA_BRIGHTNESS_RANGE0,
+    1: TUYA_BRIGHTNESS_RANGE1,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -64,6 +84,40 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Init Tuya light device."""
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self._min_kelvin = tuya.max_color_temp()
+        self._max_kelvin = tuya.min_color_temp()
+
+    async def async_added_to_hass(self):
+        """set config parameter when add to hass."""
+        await super().async_added_to_hass()
+
+        if self._dev_conf:
+            # support color config
+            supp_color = self._dev_conf.get(CONF_SUPPORT_COLOR, False)
+            if supp_color:
+                self._tuya.force_support_color()
+            # brightness range config
+            self._tuya.brightness_white_range = BRIGHTNESS_MODES.get(
+                self._dev_conf.get(CONF_BRIGHTNESS_RANGE_MODE, 0),
+                TUYA_BRIGHTNESS_RANGE0,
+            )
+
+            # color set temp range
+            min_tuya = self._tuya.max_color_temp()
+            min_kelvin = self._dev_conf.get(CONF_MIN_KELVIN, min_tuya)
+            max_tuya = self._tuya.min_color_temp()
+            max_kelvin = self._dev_conf.get(CONF_MAX_KELVIN, max_tuya)
+            self._min_kelvin = min(max(min_kelvin, min_tuya), max_tuya)
+            self._max_kelvin = min(max(max_kelvin, self._min_kelvin), max_tuya)
+
+            # color shown temp range
+            max_color_temp = max(
+                self._dev_conf.get(CONF_MAX_TUYA_TEMP, TUYA_DEF_MAX_COL_TEMP),
+                TUYA_DEF_MAX_COL_TEMP,
+            )
+            self._tuya.color_temp_range = (1000, max_color_temp)
+
+        return
 
     @property
     def brightness(self):
@@ -93,12 +147,12 @@ class TuyaLight(TuyaDevice, LightEntity):
     @property
     def min_mireds(self):
         """Return color temperature min mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self._tuya.min_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self._max_kelvin)
 
     @property
     def max_mireds(self):
         """Return color temperature max mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self._tuya.max_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(self._min_kelvin)
 
     def turn_on(self, **kwargs):
         """Turn on or control the light."""
