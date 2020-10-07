@@ -46,6 +46,7 @@ SUPPORTED_COMPONENTS = [
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
+DATA_CONFIG_FLOW_LOCK = "mqtt_discovery_config_flow_lock"
 DISCOVERY_UNSUBSCRIBE = "mqtt_discovery_unsubscribe"
 INTEGRATION_UNSUBSCRIBE = "mqtt_integration_discovery_unsubscribe"
 MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
@@ -181,6 +182,7 @@ async def async_start(
             )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
@@ -195,20 +197,28 @@ async def async_start(
 
         async def async_integration_message_received(integration, msg):
             """Process the received message."""
-            result = await hass.config_entries.flow.async_init(
-                integration, context={"source": DOMAIN}, data=msg
-            )
-            if (
-                result
-                and result["type"] == "abort"
-                and result["reason"]
-                in ["already_configured", "single_instance_allowed"]
-            ):
-                key = f"{integration}_{msg.subscribed_topic}"
-                unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
-                if unsub is None:
+            key = f"{integration}_{msg.subscribed_topic}"
+
+            # Lock to prevent initiating many parallel config flows.
+            # Note: The lock is not intended to prevent a race, only for performance
+            async with hass.data[DATA_CONFIG_FLOW_LOCK]:
+                # Already unsubscribed
+                if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
-                unsub()
+
+                result = await hass.config_entries.flow.async_init(
+                    integration, context={"source": DOMAIN}, data=msg
+                )
+                if (
+                    result
+                    and result["type"] == "abort"
+                    and result["reason"]
+                    in ["already_configured", "single_instance_allowed"]
+                ):
+                    unsub = hass.data[INTEGRATION_UNSUBSCRIBE].pop(key, None)
+                    if unsub is None:
+                        return
+                    unsub()
 
         for topic in topics:
             key = f"{integration}_{topic}"
