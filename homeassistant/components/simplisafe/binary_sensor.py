@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import callback
 
-from . import SimpliSafeEntity, SimpliSafeSensorBattery
+from . import SENSOR_MODELS, SimpliSafeEntity, SimpliSafeSensorBattery
 from .const import DATA_CLIENT, DOMAIN
 
 SUPPORTED_SENSOR_TYPES = [
@@ -25,13 +25,6 @@ HA_SENSOR_TYPES = {
     EntityTypes.carbon_monoxide: DEVICE_CLASS_GAS,
     EntityTypes.smoke: DEVICE_CLASS_SMOKE,
     EntityTypes.leak: DEVICE_CLASS_MOISTURE,
-}
-
-SENSOR_MODELS = {
-    EntityTypes.entry: "Entry Sensor",
-    EntityTypes.carbon_monoxide: "Carbon Monoxide Detector",
-    EntityTypes.smoke: "Smoke Detector",
-    EntityTypes.leak: "Water Sensor",
 }
 
 
