@@ -496,6 +496,7 @@ class Recorder(threading.Thread):
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
                 if dbstate in self.event_session:
+                    _LOGGER.warning("its there!")
                     self.event_session.expunge(dbstate)
             self._pending_expunge = []
             self.event_session.commit()
