@@ -849,7 +849,9 @@ async def test_entity_discovery(
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
 
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
@@ -891,7 +893,9 @@ async def test_entity_discovery(
     )
 
     mock_discovery.async_load_platform.reset_mock()
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         values.check_value(value_class.optional)
         values.check_value(value_class.duplicate_secondary)
         values.check_value(value_class.no_match_value)
@@ -929,6 +933,8 @@ async def test_entity_existing_values(
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -976,7 +982,9 @@ async def test_entity_existing_values(
     )
 
 
-async def test_node_schema_mismatch(hass, mock_discovery, mock_values, mock_openzwave):
+async def test_node_schema_mismatch(
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+):
     """Test node schema mismatch."""
     (node, value_class, mock_schema) = mock_values
 
@@ -992,6 +1000,8 @@ async def test_node_schema_mismatch(hass, mock_discovery, mock_values, mock_open
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
 
+    assert len(mock_receivers) == 1
+
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
@@ -1003,7 +1013,9 @@ async def test_node_schema_mismatch(hass, mock_discovery, mock_values, mock_open
     }
     mock_schema[const.DISC_GENERIC_DEVICE_CLASS] = ["generic_match"]
 
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
@@ -1035,6 +1047,8 @@ async def test_entity_workaround_component(
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
 
     node.manufacturer_id = "010f"
     node.product_type = "0b00"
@@ -1079,7 +1093,7 @@ async def test_entity_workaround_component(
 
 
 async def test_entity_workaround_ignore(
-    hass, mock_discovery, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
 ):
     """Test ignore workaround."""
     (node, value_class, mock_schema) = mock_values
@@ -1095,6 +1109,8 @@ async def test_entity_workaround_ignore(
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1113,7 +1129,9 @@ async def test_entity_workaround_ignore(
         },
     }
 
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
@@ -1128,7 +1146,9 @@ async def test_entity_workaround_ignore(
         assert not mock_discovery.async_load_platform.called
 
 
-async def test_entity_config_ignore(hass, mock_discovery, mock_values, mock_openzwave):
+async def test_entity_config_ignore(
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+):
     """Test ignore config."""
     (node, value_class, mock_schema) = mock_values
 
@@ -1144,6 +1164,8 @@ async def test_entity_config_ignore(hass, mock_discovery, mock_values, mock_open
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
 
+    assert len(mock_receivers) == 1
+
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
@@ -1154,7 +1176,9 @@ async def test_entity_config_ignore(hass, mock_discovery, mock_values, mock_open
     }
     device_config = {entity_id: {zwave.CONF_IGNORED: True}}
 
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         values = zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
@@ -1170,7 +1194,7 @@ async def test_entity_config_ignore(hass, mock_discovery, mock_values, mock_open
 
 
 async def test_entity_config_ignore_with_registry(
-    hass, mock_discovery, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
 ):
     """Test ignore config.
 
@@ -1190,6 +1214,8 @@ async def test_entity_config_ignore_with_registry(
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
 
+    assert len(mock_receivers) == 1
+
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
     device_config = {entity_id: {}}
@@ -1207,7 +1233,9 @@ async def test_entity_config_ignore_with_registry(
             suggested_object_id="registry_id",
         )
 
-    with patch.object(zwave, "discovery", mock_discovery):
+    with patch.object(zwave, "discovery", mock_discovery), patch.object(
+        zwave, "import_module", mock_import_module
+    ):
         zwave.ZWaveDeviceEntityValues(
             hass=hass,
             schema=mock_schema,
@@ -1222,7 +1250,7 @@ async def test_entity_config_ignore_with_registry(
 
 
 async def test_entity_platform_ignore(
-    hass, mock_discovery, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
 ):
     """Test platform ignore device."""
     (node, value_class, mock_schema) = mock_values
@@ -1238,6 +1266,8 @@ async def test_entity_platform_ignore(
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1286,6 +1316,8 @@ async def test_config_polling_intensity(
     with patch("pydispatch.dispatcher.connect", new=mock_connect):
         await async_setup_component(hass, "zwave", {"zwave": {}})
         await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
