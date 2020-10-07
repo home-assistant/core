@@ -12,6 +12,7 @@ from homeassistant.components.calendar import (
     PLATFORM_SCHEMA,
     CalendarEventDevice,
     calculate_offset,
+    convert_date,
     get_date,
     is_offset_reached,
 )
@@ -181,6 +182,8 @@ class WebDavCalendarData:
                 "summary": vevent.summary.value,
                 "start": self.get_hass_date(vevent.dtstart.value),
                 "end": self.get_hass_date(self.get_end_date(vevent)),
+                "created": self.get_hass_date(vevent.dtcreated.value),
+                "updated": self.get_hass_date(vevent.dtupdated.value),
                 "location": self.get_attr_value(vevent, "location"),
                 "description": self.get_attr_value(vevent, "description"),
             }
@@ -259,6 +262,8 @@ class WebDavCalendarData:
             "summary": vevent.summary.value,
             "start": self.get_hass_date(vevent.dtstart.value),
             "end": self.get_hass_date(self.get_end_date(vevent)),
+            "created": convert_date(vevent.dtcreated.value),
+            "updated": convert_date(vevent.dtupdated.value),
             "location": self.get_attr_value(vevent, "location"),
             "description": self.get_attr_value(vevent, "description"),
         }

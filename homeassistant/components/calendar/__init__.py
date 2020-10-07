@@ -55,7 +55,7 @@ def get_date(date):
 def convert_date(date):
     """Convert Z date/time."""
     date = re.sub(
-        r"T", " ", re.findall(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", date)[0]
+        r"T", " ", re.findall(r"\d{4}-\d{2}-\d{2}\D\d{2}:\d{2}:\d{2}", date)[0]
     )
     return date
 

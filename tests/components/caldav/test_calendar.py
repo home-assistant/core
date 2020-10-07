@@ -23,8 +23,8 @@ UID:1
 DTSTAMP:20171125T000000Z
 DTSTART:20171127T170000Z
 DTEND:20171127T180000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a normal event
 LOCATION:Hamburg
 DESCRIPTION:Surprisingly rainy
@@ -39,8 +39,8 @@ UID:2
 DTSTAMP:20171125T000000Z
 DTSTART:20171127T100000Z
 DTEND:20171127T110000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is an offset event !!-02:00
 LOCATION:Hamburg
 DESCRIPTION:Surprisingly shiny
@@ -55,8 +55,8 @@ UID:3
 DTSTAMP:20171125T000000Z
 DTSTART:20171127
 DTEND:20171128
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is an all day event
 LOCATION:Hamburg
 DESCRIPTION:What a beautiful day
@@ -70,8 +70,8 @@ BEGIN:VEVENT
 UID:4
 DTSTAMP:20171125T000000Z
 DTSTART:20171127
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is an event without dtend or duration
 LOCATION:Hamburg
 DESCRIPTION:What an endless day
@@ -85,8 +85,8 @@ BEGIN:VEVENT
 UID:5
 DTSTAMP:20171125T000000Z
 DTSTART:20171127
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 DURATION:PT1H
 SUMMARY:This is an event with duration
 LOCATION:Hamburg
@@ -101,8 +101,8 @@ BEGIN:VEVENT
 UID:6
 DTSTAMP:20171125T000000Z
 DTSTART:20171127T100000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 DURATION:PT1H
 SUMMARY:This is an event with duration
 LOCATION:Hamburg
@@ -118,8 +118,8 @@ UID:7
 DTSTART;TZID=America/Los_Angeles:20171127T083000
 DTSTAMP:20180301T020053Z
 DTEND;TZID=America/Los_Angeles:20171127T093000
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:Enjoy the sun
 LOCATION:San Francisco
 DESCRIPTION:Sunny day
@@ -133,8 +133,8 @@ BEGIN:VEVENT
 UID:8
 DTSTART:20171127T190000
 DTEND:20171127T200000
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a floating Event
 LOCATION:Hamburg
 DESCRIPTION:What a day
@@ -149,8 +149,8 @@ UID:9
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T220000Z
 DTEND:20171027T223000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a recurring event
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
@@ -165,8 +165,8 @@ BEGIN:VEVENT
 UID:10
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T230000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 DURATION:PT30M
 SUMMARY:This is a recurring event with a duration
 LOCATION:Hamburg
@@ -183,8 +183,8 @@ UID:11
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T233000Z
 DTEND:20171027T235959Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a recurring event that has ended
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
@@ -200,8 +200,8 @@ UID:12
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T234500Z
 DTEND:20171027T235959Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a recurring event that never ends
 LOCATION:Hamburg
 DESCRIPTION:Every day forever
@@ -217,8 +217,8 @@ UID:13
 DTSTAMP:20161125T000000Z
 DTSTART:20161127
 DTEND:20161128
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is a recurring all day event
 LOCATION:Hamburg
 DESCRIPTION:Groundhog Day
@@ -234,8 +234,8 @@ UID:14
 DTSTAMP:20151125T000000Z
 DTSTART:20151127T000000Z
 DTEND:20151127T003000Z
-DTCREATED:20171126T120000Z
-DTUPDATED:20171126T130000Z
+DTCREATED:2017-11-26T12:00:00.000Z
+DTUPDATED:2017-11-26T13:00:00.000Z
 SUMMARY:This is an hourly recurring event
 LOCATION:Hamburg
 DESCRIPTION:The bell tolls for thee
@@ -377,8 +377,8 @@ async def test_ongoing_event(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
         "transparency": "opaque",
@@ -403,8 +403,8 @@ async def test_just_ended_event(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
         "transparency": "opaque",
@@ -430,8 +430,8 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
         "start_time": "2017-11-27 16:30:00",
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "San Francisco",
         "transparency": "opaque",
         "visibility": "default",
@@ -457,8 +457,8 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 19:00:00",
         "end_time": "2017-11-27 20:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "What a day",
         "transparency": "opaque",
@@ -483,8 +483,8 @@ async def test_ongoing_event_with_offset(mock_now, hass, calendar):
         "offset_reached": True,
         "start_time": "2017-11-27 10:00:00",
         "end_time": "2017-11-27 11:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Surprisingly shiny",
         "transparency": "opaque",
@@ -514,8 +514,8 @@ async def test_matching_filter(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
         "transparency": "opaque",
@@ -545,8 +545,8 @@ async def test_matching_filter_real_regexp(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 17:00:00",
         "end_time": "2017-11-27 18:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
         "transparency": "opaque",
@@ -612,8 +612,8 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 00:00:00",
         "end_time": "2017-11-28 00:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
         "transparency": "opaque",
@@ -638,8 +638,8 @@ async def test_event_rrule(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Every day for a while",
         "transparency": "opaque",
@@ -664,8 +664,8 @@ async def test_event_rrule_ongoing(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 22:00:00",
         "end_time": "2017-11-27 22:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Every day for a while",
         "transparency": "opaque",
@@ -690,8 +690,8 @@ async def test_event_rrule_duration(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
         "transparency": "opaque",
@@ -716,8 +716,8 @@ async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 23:00:00",
         "end_time": "2017-11-27 23:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
         "transparency": "opaque",
@@ -742,8 +742,8 @@ async def test_event_rrule_endless(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2017-11-27 23:45:00",
         "end_time": "2017-11-27 23:59:59",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Every day forever",
         "transparency": "opaque",
@@ -776,8 +776,8 @@ async def test_event_rrule_all_day(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2016-12-01 00:00:00",
         "end_time": "2016-12-02 00:00:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
         "transparency": "opaque",
@@ -805,8 +805,8 @@ async def test_event_rrule_hourly_on_first(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2015-11-27 00:00:00",
         "end_time": "2015-11-27 00:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
         "transparency": "opaque",
@@ -834,8 +834,8 @@ async def test_event_rrule_hourly_on_last(mock_now, hass, calendar):
         "offset_reached": False,
         "start_time": "2015-11-27 11:00:00",
         "end_time": "2015-11-27 11:30:00",
-        "created": None,
-        "updated": None,
+        "created": "2017-11-26 12:00:00",
+        "updated": "2017-11-26 13:00:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
         "transparency": "opaque",
