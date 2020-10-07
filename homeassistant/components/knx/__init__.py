@@ -191,20 +191,17 @@ class KNXModule:
         """Initialize of KNX object."""
         self.xknx = XKNX(
             config=self.config_file(),
-            loop=self.hass.loop,
             own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
             multicast_port=self.config[DOMAIN][CONF_KNX_MCAST_PORT],
+            connection_config=self.connection_config(),
+            state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
         )
 
     async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
-        connection_config = self.connection_config()
-        await self.xknx.start(
-            state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
-            connection_config=connection_config,
-        )
+        await self.xknx.start()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
@@ -227,9 +224,8 @@ class KNXModule:
             return self.connection_config_tunneling()
         if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
-        # return None to let xknx use config from xknx.yaml connection block if given
-        #   otherwise it will use default ConnectionConfig (Automatic)
-        return None
+        # config from xknx.yaml always has priority later on
+        return ConnectionConfig()
 
     def connection_config_routing(self):
         """Return the connection_config if routing is configured."""

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "step": {
+            "user": {
+                "description": "Er du sikker p\u00e5 at du vil konfigurere Profiler?"
+            }
+        }
+    }
+}

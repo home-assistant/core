@@ -38,7 +38,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={CONF_USERNAME: username, CONF_PASSWORD: password},
                 )
             # authentication failed / invalid
-            errors["base"] = "login"
+            errors["base"] = "invalid_auth"
 
         data_schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}

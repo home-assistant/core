@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "ESP is already configured",
-      "already_in_progress": "ESP configuration is already in progress"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
       "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips",

@@ -117,15 +117,12 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        attributes = {}
-
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            attributes["obstruction-detected"] = obstruction_detected
-
-        return attributes
+        if not obstruction_detected:
+            return {}
+        return {"obstruction-detected": obstruction_detected}
 
 
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
@@ -249,12 +246,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        attributes = {}
-
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            attributes["obstruction-detected"] = obstruction_detected
-
-        return attributes
+        if not obstruction_detected:
+            return {}
+        return {"obstruction-detected": obstruction_detected}

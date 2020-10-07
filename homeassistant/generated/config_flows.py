@@ -145,11 +145,13 @@ FLOWS = [
     "point",
     "poolsense",
     "powerwall",
+    "profiler",
     "progettihwsw",
     "ps4",
     "pvpc_hourly_pricing",
     "rachio",
     "rainmachine",
+    "rfxtrx",
     "ring",
     "risco",
     "roku",
@@ -184,6 +186,7 @@ FLOWS = [
     "syncthru",
     "synology_dsm",
     "tado",
+    "tasmota",
     "tellduslive",
     "tesla",
     "tibber",
@@ -217,6 +220,5 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
-    "zoneminder",
     "zwave"
 ]

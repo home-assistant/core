@@ -171,7 +171,7 @@ class NumatoAPI:
 
     def __init__(self):
         """Initialize API state."""
-        self.ports_registered = dict()
+        self.ports_registered = {}
 
     def check_port_free(self, device_id, port, direction):
         """Check whether a port is still free set up.

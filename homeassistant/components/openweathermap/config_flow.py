@@ -69,11 +69,11 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input[CONF_API_KEY]
                 )
                 if not api_online:
-                    errors["base"] = "auth"
+                    errors["base"] = "invalid_api_key"
             except UnauthorizedError:
-                errors["base"] = "auth"
+                errors["base"] = "invalid_api_key"
             except APICallError:
-                errors["base"] = "connection"
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(

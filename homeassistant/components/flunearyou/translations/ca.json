@@ -4,7 +4,8 @@
             "already_configured": "Les coordenades ja estan registrades"
         },
         "error": {
-            "general_error": "S'ha produ\u00eft un error desconegut."
+            "general_error": "S'ha produ\u00eft un error desconegut.",
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {

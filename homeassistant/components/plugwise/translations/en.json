@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Smile is already configured"
+            "already_configured": "Service is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
-            "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Smile IP address",
+                    "host": "IP Address",
                     "password": "Smile ID",
-                    "port": "Smile port number"
+                    "port": "Port"
                 },
                 "description": "Please enter:",
                 "title": "Connect to the Smile"

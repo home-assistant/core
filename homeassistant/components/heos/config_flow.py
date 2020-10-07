@@ -32,7 +32,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
         # Abort if other flows in progress or an entry already exists
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
         await self.async_set_unique_id(DOMAIN)
         # Show selection form
         return self.async_show_form(step_id="user")
@@ -50,7 +50,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         # Only a single entry is needed for all devices
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
         # Try connecting to host if provided
         errors = {}
         host = None
@@ -64,7 +64,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
                 return await self.async_step_import({CONF_HOST: host})
             except HeosError:
-                errors[CONF_HOST] = "connection_failure"
+                errors[CONF_HOST] = "cannot_connect"
             finally:
                 await heos.disconnect()
 

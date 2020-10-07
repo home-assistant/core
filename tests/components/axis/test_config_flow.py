@@ -139,11 +139,11 @@ async def test_flow_fails_faulty_credentials(hass):
             },
         )
 
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_device_unavailable(hass):
-    """Test that config flow fails on device unavailable."""
+async def test_flow_fails_cannot_connect(hass):
+    """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": "user"}
     )
@@ -165,7 +165,7 @@ async def test_flow_fails_device_unavailable(hass):
             },
         )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):

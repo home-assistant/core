@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u6b64 SimpliSafe \u5e33\u865f\u5df2\u88ab\u4f7f\u7528\u3002",
-            "reauth_successful": "SimpliSafe \u5df2\u6210\u529f\u8a8d\u8b49\u3002"
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "identifier_exists": "\u5e33\u865f\u5df2\u8a3b\u518a",
