@@ -21,11 +21,11 @@ services:
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyUSB1:/dev/ttyUSB1"
-        #  vouch-proxy:
-        #    container_name: vouch
-        #    image: voucher/vouch-proxy
-        #    restart: always
-        #    volumes:
-        #      - /etc/vouch-proxy:/config
-        #    ports: 
-        #      - "9090:9090"
+  vouch-proxy:
+    container_name: vouch
+    image: voucher/vouch-proxy
+    restart: always
+    volumes:
+      - /etc/vouch-proxy:/config
+    ports: 
+      - "9090:9090"
