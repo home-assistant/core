@@ -1,1 +1,1 @@
-"""Tests for the input_schedule component."""
+"""Tests for the input_timetable component."""

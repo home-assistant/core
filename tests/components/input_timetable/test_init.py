@@ -1,4 +1,4 @@
-"""The tests for the Input timetable component."""
+"""The tests for the input timetable component."""
 import datetime
 
 import pytest
