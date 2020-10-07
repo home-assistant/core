@@ -1,20 +1,25 @@
 """The FAA Delays integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
 from aiohttp import ClientConnectionError
-from faadelays import Airport
+from async_timeout import timeout
+from faadelays import Airport, get_airport_delays
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -30,19 +35,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up FAA Delays from a config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
+    id = entry.data[CONF_ID]
 
-    try:
-        faadata = FAAData(
-            Airport(
-                entry.data[CONF_ID],
-                websession,
-            )
-        )
-        await faadata.async_update()
-        hass.data[DOMAIN][entry.entry_id] = faadata
-    except ClientConnectionError as err:
-        _LOGGER.error("Connection error during setup: %s", err)
-        raise PlatformNotReady from err
+    coordinator = FAADataUpdateCoordinator(hass, websession, id)
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -68,16 +70,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class FAAData:
-    """Define a data object to retrieve info from FAA API."""
+class FAADataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching FAA API data from a single endpoint."""
 
-    def __init__(self, client):
-        """Initialize."""
-        self.client = client
+    def __init__(self, hass, session, id):
+        """Initialize the coordinator."""
+        self.data = Airport(id, session)
+        self.session = session
+        self.id = id
 
-    async def async_update(self):
-        """Update sensor data."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+
+    async def _async_update_data(self):
         try:
-            await self.client.update()
+            with timeout(10):
+                self.data = await get_airport_delays(self.id, self.session)
         except ClientConnectionError as err:
-            _LOGGER.error("Connection error during data update: %s", err)
+            raise UpdateFailed(err) from err
+        return self.data

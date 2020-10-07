@@ -3,7 +3,7 @@
   "name": "FAA Delays",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/faadelays",
-  "requirements": ["faadelays==0.0.5"],
+  "requirements": ["faadelays==0.0.6"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
