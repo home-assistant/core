@@ -88,7 +88,7 @@ class TuyaLight(TuyaDevice, LightEntity):
         self._max_kelvin = tuya.min_color_temp()
 
     async def async_added_to_hass(self):
-        """set config parameter when add to hass."""
+        """Set config parameter when add to hass."""
         await super().async_added_to_hass()
 
         if self._dev_conf:
