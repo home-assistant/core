@@ -86,7 +86,9 @@ ZEROCONF = {
         }
     ],
     "_mediaremotetv._tcp.local.": [
-        "apple_tv"
+        {
+            "domain": "apple_tv"
+        }
     ],
     "_miio._udp.local.": [
         {
@@ -128,7 +130,9 @@ ZEROCONF = {
         }
     ],
     "_touch-able._tcp.local.": [
-        "apple_tv"
+        {
+            "domain": "apple_tv"
+        }
     ],
     "_viziocast._tcp.local.": [
         {
