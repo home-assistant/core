@@ -502,9 +502,11 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ):
             return
         _LOGGER.debug(
-            "%s: Scheduling 'light.turn_on' with the following 'service_data': %s",
+            "%s: Scheduling 'light.turn_on' with the following 'service_data': %s"
+            " with context.id='%s'",
             self._name,
             service_data,
+            context.id,
         )
         await self.hass.services.async_call(
             LIGHT_DOMAIN,
@@ -587,7 +589,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             and new_state.state == STATE_ON
         ):
             _LOGGER.debug(
-                "%s: Detected an 'off' → 'on' event for '%s'", self._name, entity_id
+                "%s: Detected an 'off' → 'on' event for '%s' with context.id='%s'",
+                self._name,
+                entity_id,
+                event.context.id,
             )
             self.turn_on_off_listener.reset(entity_id)
             # Tracks 'off' → 'on' state changes
@@ -872,7 +877,7 @@ class TurnOnOffListener:
 
         elif service == SERVICE_TURN_ON:
             _LOGGER.debug(
-                "Detected an 'light.turn_on('%s')' event with %s",
+                "Detected an 'light.turn_on('%s')' event with context.id='%s'",
                 entity_ids,
                 event.context.id,
             )
@@ -885,7 +890,7 @@ class TurnOnOffListener:
     async def state_changed_event_listener(self, event: Event):
         """Track 'state_changed' events."""
         entity_id = event.data.get(ATTR_ENTITY_ID, "")
-        if entity_id not in self.lights and entity_id.split(".")[0] != LIGHT_DOMAIN:
+        if entity_id not in self.lights or entity_id.split(".")[0] != LIGHT_DOMAIN:
             return
 
         new_state = event.data.get("new_state")
@@ -895,10 +900,10 @@ class TurnOnOffListener:
             and is_our_context(new_state.context)
         ):
             _LOGGER.debug(
-                "Detected a '%s' 'state_changed' event: '%s' with '%s'",
+                "Detected a '%s' 'state_changed' event: '%s' with context.id='%s'",
                 entity_id,
                 new_state.attributes,
-                new_state.context,
+                new_state.context.id,
             )
             # If there is already a state change event from this event (with this
             # context) then ignore. This is because a
@@ -983,10 +988,12 @@ class TurnOnOffListener:
             current_brightness = attributes[ATTR_BRIGHTNESS]
             if abs(current_brightness - last_brightness) > BRIGHTNESS_CHANGE:
                 _LOGGER.debug(
-                    "Brightness of '%s' significantly changed from %s to %s",
+                    "Brightness of '%s' significantly changed from %s to %s with"
+                    " context.id='%s'",
                     light,
                     last_brightness,
                     current_brightness,
+                    context.id,
                 )
                 changed = True
 
@@ -999,10 +1006,12 @@ class TurnOnOffListener:
             current_color_temp = attributes[ATTR_COLOR_TEMP]
             if abs(current_color_temp - last_color_temp) > COLOR_TEMP_CHANGE:
                 _LOGGER.debug(
-                    "Color temperature of '%s' significantly changed from %s to %s",
+                    "Color temperature of '%s' significantly changed from %s to %s with"
+                    " context.id='%s'",
                     light,
                     last_color_temp,
                     current_color_temp,
+                    context.id,
                 )
                 changed = True
 
@@ -1016,10 +1025,12 @@ class TurnOnOffListener:
             for last_col, current_col in zip(last_rgb_color, current_rgb_color):
                 if abs(last_col - current_col) > RGB_CHANGE:
                     _LOGGER.debug(
-                        "color RGB of '%s' significantly changed from %s to %s",
+                        "color RGB of '%s' significantly changed from %s to %s with"
+                        " context.id='%s'",
                         light,
                         last_rgb_color,
                         current_rgb_color,
+                        context.id,
                     )
                     changed = True
                     break
