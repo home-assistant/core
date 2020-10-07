@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tasmota",
   "requirements": ["hatasmota==0.0.10"],
   "dependencies": ["mqtt"],
+  "mqtt": ["tasmota/discovery/#"],
   "codeowners": ["@emontnemery"]
 }

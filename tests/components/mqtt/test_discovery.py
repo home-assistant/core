@@ -4,6 +4,7 @@ import re
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
@@ -13,7 +14,12 @@ from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_st
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.async_mock import AsyncMock, patch
-from tests.common import async_fire_mqtt_message, mock_device_registry, mock_registry
+from tests.common import (
+    async_fire_mqtt_message,
+    mock_device_registry,
+    mock_entity_platform,
+    mock_registry,
+)
 
 
 @pytest.fixture
@@ -436,3 +442,75 @@ async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "Beer"
     assert ("binary_sensor", "node1 object1") in hass.data[ALREADY_DISCOVERED]
+
+
+async def test_mqtt_integration_discovery_subscribe_unsubscribe(
+    hass, mqtt_client_mock, mqtt_mock
+):
+    """Check MQTT integration discovery subscribe and unsubscribe."""
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    entry = hass.config_entries.async_entries("mqtt")[0]
+    mqtt_mock().connected = True
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        return_value={"comp": ["comp/discovery/#"]},
+    ):
+        await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
+
+    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert not mqtt_client_mock.unsubscribe.called
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_mqtt(self, discovery_info):
+            """Test mqtt step."""
+            return self.async_abort(reason="already_configured")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+        assert not mqtt_client_mock.unsubscribe.called
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+        mqtt_client_mock.unsubscribe.reset_mock()
+
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        assert not mqtt_client_mock.unsubscribe.called
+
+
+async def test_mqtt_discovery_unsubscribe_once(hass, mqtt_client_mock, mqtt_mock):
+    """Check MQTT integration discovery unsubscribe once."""
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    entry = hass.config_entries.async_entries("mqtt")[0]
+    mqtt_mock().connected = True
+
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_get_mqtt",
+        return_value={"comp": ["comp/discovery/#"]},
+    ):
+        await async_start(hass, "homeassistant", entry)
+        await hass.async_block_till_done()
+
+    mqtt_client_mock.subscribe.assert_any_call("comp/discovery/#", 0)
+    assert not mqtt_client_mock.unsubscribe.called
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_mqtt(self, discovery_info):
+            """Test mqtt step."""
+            return self.async_abort(reason="already_configured")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
