@@ -44,8 +44,6 @@ def test_saving_state(hass, hass_recorder):
 
     assert state == _state_empty_context(hass, entity_id)
 
-    assert len([obj for obj in hass.data[DATA_INSTANCE].event_session]) == 0
-
 
 def test_saving_event(hass, hass_recorder):
     """Test saving and restoring an event."""
@@ -86,8 +84,6 @@ def test_saving_event(hass, hass_recorder):
     assert event.time_fired.replace(microsecond=0) == db_event.time_fired.replace(
         microsecond=0
     )
-
-    assert len([obj for obj in hass.data[DATA_INSTANCE].event_session]) == 0
 
 
 def _add_entities(hass, entity_ids):
