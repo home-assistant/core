@@ -287,9 +287,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
 
                 self._temp_entity_error = False
                 return temp
-            else:
-                _log_error("entity not found")
 
+            _log_error("entity not found")
             return None
         except (TypeError, ValueError):
             return None

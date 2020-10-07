@@ -174,8 +174,12 @@ async def async_setup_entry(hass, entry):
         await hass.async_add_executor_job(
             tuya.init, username, password, country_code, platform
         )
-    except (TuyaNetException, TuyaServerException, TuyaFrequentlyInvokeException):
-        raise ConfigEntryNotReady()
+    except (
+        TuyaNetException,
+        TuyaServerException,
+        TuyaFrequentlyInvokeException,
+    ) as exc:
+        raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:
         _LOGGER.error(
@@ -324,14 +328,13 @@ async def cleanup_device_registry(hass, device_id):
 class TuyaDevice(Entity):
     """Tuya base device."""
 
+    _device_count = 0
+
     def __init__(self, tuya, platform):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
         self._dev_conf = None
-
-    """Static attribute"""
-    _device_count = 0
 
     def _inc_device_count(self):
         dev_type = self._tuya.device_type()
