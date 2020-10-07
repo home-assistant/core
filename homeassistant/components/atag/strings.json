@@ -12,7 +12,7 @@
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unauthorized": "Pairing denied, check device for auth request",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
