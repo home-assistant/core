@@ -17,7 +17,6 @@ services:
       - WHEELS_LINKS=https://wheels.hass.io/alpine-3.12/amd64/
     restart: always
     network_mode: host
-    dns: 127.0.0.53
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyUSB1:/dev/ttyUSB1"
