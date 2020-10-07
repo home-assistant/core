@@ -41,6 +41,8 @@ DEFAULT_WILL = {
     ATTR_RETAIN: DEFAULT_RETAIN,
 }
 
+DOMAIN = "mqtt"
+
 MQTT_CONNECTED = "mqtt_connected"
 MQTT_DISCONNECTED = "mqtt_disconnected"
 
