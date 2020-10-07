@@ -121,7 +121,7 @@ BRIGHTNESS_CHANGE = 25  # ≈10% of total range
 COLOR_TEMP_CHANGE = 20  # ≈5% of total range
 RGB_CHANGE = 30  # ≈12% of total range per component
 
-# Keep a short domain version for the context instances
+# Keep a short domain version for the context instances (which can only be 36 chars)
 _DOMAIN_SHORT = "adapt_lgt"
 
 
@@ -243,6 +243,87 @@ def _supported_features(hass: HomeAssistant, light: str):
     state = hass.states.get(light)
     supported_features = state.attributes["supported_features"]
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
+
+
+def _attributes_have_changed(
+    light,
+    old_attributes,
+    new_attributes,
+    adapt_brightness,
+    adapt_color_temp,
+    adapt_rgb_color,
+    context,
+):
+    changed = False
+    if (
+        adapt_brightness
+        and ATTR_BRIGHTNESS in old_attributes
+        and ATTR_BRIGHTNESS in new_attributes
+    ):
+        last_brightness = old_attributes[ATTR_BRIGHTNESS]
+        current_brightness = new_attributes[ATTR_BRIGHTNESS]
+        if abs(current_brightness - last_brightness) > BRIGHTNESS_CHANGE:
+            _LOGGER.debug(
+                "Brightness of '%s' significantly changed from %s to %s with"
+                " context.id='%s'",
+                light,
+                last_brightness,
+                current_brightness,
+                context.id,
+            )
+            changed = True
+
+    if (
+        adapt_color_temp
+        and ATTR_COLOR_TEMP in old_attributes
+        and ATTR_COLOR_TEMP in new_attributes
+    ):
+        last_color_temp = old_attributes[ATTR_COLOR_TEMP]
+        current_color_temp = new_attributes[ATTR_COLOR_TEMP]
+        if abs(current_color_temp - last_color_temp) > COLOR_TEMP_CHANGE:
+            _LOGGER.debug(
+                "Color temperature of '%s' significantly changed from %s to %s with"
+                " context.id='%s'",
+                light,
+                last_color_temp,
+                current_color_temp,
+                context.id,
+            )
+            changed = True
+
+    if (
+        adapt_rgb_color
+        and ATTR_RGB_COLOR in old_attributes
+        and ATTR_RGB_COLOR in new_attributes
+    ):
+        last_rgb_color = old_attributes[ATTR_RGB_COLOR]
+        current_rgb_color = new_attributes[ATTR_RGB_COLOR]
+        for last_col, current_col in zip(last_rgb_color, current_rgb_color):
+            if abs(last_col - current_col) > RGB_CHANGE:
+                _LOGGER.debug(
+                    "color RGB of '%s' significantly changed from %s to %s with"
+                    " context.id='%s'",
+                    light,
+                    last_rgb_color,
+                    current_rgb_color,
+                    context.id,
+                )
+                changed = True
+                break
+    switched_color_temp = (
+        ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in new_attributes
+    )
+    switched_to_rgb_color = (
+        ATTR_COLOR_TEMP in old_attributes and ATTR_COLOR_TEMP not in new_attributes
+    )
+    if switched_color_temp or switched_to_rgb_color:
+        # Light switched from RGB mode to color_temp or visa versa
+        _LOGGER.debug(
+            "'%s' switched from RGB mode to color_temp or visa versa",
+            light,
+        )
+        changed = True
+    return changed
 
 
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
@@ -409,6 +490,15 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ]
         return dict(self._settings, manually_controlled=manually_controlled)
 
+    def create_context(self, which="default") -> Context:
+        """Create a context that identifies this Adaptive Lighting instance."""
+        # Use a hash for the name because otherwise the context might become
+        # too long (max len == 36) to fit in the database.
+        name_hash = hashlib.sha1(self._name.encode("UTF-8")).hexdigest()
+        context = create_context(name_hash[:4], which, self._context_cnt)
+        self._context_cnt += 1
+        return context
+
     async def async_turn_on(  # pylint: disable=arguments-differ
         self, adapt_lights: bool = True
     ) -> None:
@@ -440,15 +530,6 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         await self._update_attrs_and_maybe_adapt_lights(
             force=False, context=self.create_context("interval")
         )
-
-    def create_context(self, which="default") -> Context:
-        """Create a context that identifies this Adaptive Lighting instance."""
-        # Use a hash for the name because otherwise the context might become
-        # too long (max len == 36) to fit in the database.
-        name_hash = hashlib.sha1(self._name.encode("UTF-8")).hexdigest()
-        context = create_context(name_hash[:4], which, self._context_cnt)
-        self._context_cnt += 1
-        return context
 
     async def _adapt_light(
         self,
@@ -977,8 +1058,7 @@ class TurnOnOffListener:
         if light not in self.last_state_change:
             return False
         old_state = self.last_state_change[light]
-        old_attributes = old_state.attributes
-        changed = False
+        old_state_before_update = self.hass.states.get(light)
         await self.hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
@@ -987,76 +1067,46 @@ class TurnOnOffListener:
             context=context,
         )
         new_state = self.hass.states.get(light)
-        new_attributes = new_state.attributes
-        if (
-            adapt_brightness
-            and ATTR_BRIGHTNESS in old_attributes
-            and ATTR_BRIGHTNESS in new_attributes
-        ):
-            last_brightness = old_attributes[ATTR_BRIGHTNESS]
-            current_brightness = new_attributes[ATTR_BRIGHTNESS]
-            if abs(current_brightness - last_brightness) > BRIGHTNESS_CHANGE:
-                _LOGGER.debug(
-                    "Brightness of '%s' significantly changed from %s to %s with"
-                    " context.id='%s'",
-                    light,
-                    last_brightness,
-                    current_brightness,
-                    context.id,
-                )
-                changed = True
-
-        if (
-            adapt_color_temp
-            and ATTR_COLOR_TEMP in old_attributes
-            and ATTR_COLOR_TEMP in new_attributes
-        ):
-            last_color_temp = old_attributes[ATTR_COLOR_TEMP]
-            current_color_temp = new_attributes[ATTR_COLOR_TEMP]
-            if abs(current_color_temp - last_color_temp) > COLOR_TEMP_CHANGE:
-                _LOGGER.debug(
-                    "Color temperature of '%s' significantly changed from %s to %s with"
-                    " context.id='%s'",
-                    light,
-                    last_color_temp,
-                    current_color_temp,
-                    context.id,
-                )
-                changed = True
-
-        if (
-            adapt_rgb_color
-            and ATTR_RGB_COLOR in old_attributes
-            and ATTR_RGB_COLOR in new_attributes
-        ):
-            last_rgb_color = old_attributes[ATTR_RGB_COLOR]
-            current_rgb_color = new_attributes[ATTR_RGB_COLOR]
-            for last_col, current_col in zip(last_rgb_color, current_rgb_color):
-                if abs(last_col - current_col) > RGB_CHANGE:
-                    _LOGGER.debug(
-                        "color RGB of '%s' significantly changed from %s to %s with"
-                        " context.id='%s'",
-                        light,
-                        last_rgb_color,
-                        current_rgb_color,
-                        context.id,
-                    )
-                    changed = True
-                    break
-
-        switched_color_temp = (
-            ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in new_attributes
+        changed = _attributes_have_changed(
+            light,
+            old_state.attributes,
+            new_state.attributes,
+            adapt_brightness,
+            adapt_color_temp,
+            adapt_rgb_color,
+            context,
         )
-        switched_to_rgb_color = (
-            ATTR_COLOR_TEMP in old_attributes and ATTR_COLOR_TEMP not in new_attributes
-        )
-        if switched_color_temp or switched_to_rgb_color:
-            # Light switched from RGB mode to color_temp or visa versa
+
+        # If changed, do a second check.
+        if (
+            changed
+            and is_our_context(old_state.context)
+            and is_our_context(old_state_before_update.context)
+            and old_state.context.id != old_state_before_update.context.id
+        ):
+            # This means there were two consecutive state change events with the
+            # same context after Adaptive Lighting called 'light.turn_on' last time.
+            # We are only saving that first one (for reasons explained in
+            # 'self.state_changed_event_listener'). It can happen that the second
+            # state change event was actually the final state. That happens for
+            # example when a light was called with a color_temp outside of its
+            # range (and HA reports the incorrect 'min_mireds' and 'max_mireds', which
+            # happens e.g., for Philips Hue White GU10 Bluetooth lights).
             _LOGGER.debug(
-                "'%s' switched from RGB mode to color_temp or visa versa",
+                "Last 'light.turn_on' of '%s' never actually changed the light"
+                " (or the rgb_color/color_temp was out of range)",
                 light,
             )
-            changed = True
+            if not _attributes_have_changed(
+                light,
+                old_state_before_update.attributes,
+                new_state.attributes,
+                adapt_brightness,
+                adapt_color_temp,
+                adapt_rgb_color,
+                context,
+            ):
+                changed = False
 
         self.manually_controlled[light] = changed
         return changed
