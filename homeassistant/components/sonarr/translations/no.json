@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
-            "reauth_successful": "Godkjent p\u00e5 nytt",
+            "reauth_successful": "Reautentisering var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {

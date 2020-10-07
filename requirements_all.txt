@@ -538,7 +538,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.19
+elkm1-lib==0.8.0
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -1674,7 +1674,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.34
+pysonos==0.0.35
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1767,7 +1767,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.2.0
+python-openzwave-mqtt==1.2.2
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
@@ -2186,7 +2186,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.7
+tuyaha==0.0.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2338,7 +2338,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.2.1
 
 # homeassistant.components.zha
-zigpy==0.25.0
+zigpy==0.26.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0

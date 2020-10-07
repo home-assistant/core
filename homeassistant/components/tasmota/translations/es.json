@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "invalid_discovery_topic": "Prefijo del tema para descubrimiento no v\u00e1lido."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Prefijo del tema para descubrimiento"
+                },
+                "description": "Introduce la configuraci\u00f3n de Tasmota.",
+                "title": "Tasmota"
+            }
+        }
+    }
+}

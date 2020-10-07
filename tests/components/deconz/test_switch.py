@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.switch as switch
 from homeassistant.setup import async_setup_component
 
@@ -79,7 +80,8 @@ async def test_power_plugs(hass):
     """Test that all supported switch entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(POWER_PLUGS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 4
     assert hass.states.get("switch.on_off_switch").state == "on"
@@ -130,7 +132,7 @@ async def test_power_plugs(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -139,7 +141,8 @@ async def test_sirens(hass):
     """Test that siren entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(SIRENS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("switch.warning_device").state == "on"
@@ -192,6 +195,6 @@ async def test_sirens(hass):
             "put", "/lights/1/state", json={"alert": "none"}
         )
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
