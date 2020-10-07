@@ -7,6 +7,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 import datetime
 from datetime import timedelta
+import hashlib
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -120,17 +121,20 @@ BRIGHTNESS_CHANGE = 25  # ≈10% of total range
 COLOR_TEMP_CHANGE = 20  # ≈5% of total range
 RGB_CHANGE = 30  # ≈12% of total range per component
 
+# Keep a short domain version for the context instances
+_DOMAIN_SHORT = "adapt_lgt"
 
-def create_context(which: str, index: int) -> Context:
+
+def create_context(name: str, which: str, index: int) -> Context:
     """Create a context that can identify this integration."""
-    return Context(id=f"{DOMAIN}_{which}_{index}")
+    return Context(id=f"{_DOMAIN_SHORT}_{name}_{which}_{index}")
 
 
 def is_our_context(context: Optional[Context]) -> bool:
     """Check whether this integration created 'context'."""
     if context is None:
         return False
-    return context.id.startswith(DOMAIN)
+    return context.id.startswith(_DOMAIN_SHORT)
 
 
 async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
@@ -439,7 +443,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
 
     def create_context(self, which="default") -> Context:
         """Create a context that identifies this Adaptive Lighting instance."""
-        context = create_context(which, self._context_cnt)
+        # Use a hash for the name because otherwise the context might become
+        # too long (max len == 36) to fit in the database.
+        name_hash = hashlib.sha1(self._name.encode("UTF-8")).hexdigest()
+        context = create_context(name_hash[:4], which, self._context_cnt)
         self._context_cnt += 1
         return context
 
@@ -542,7 +549,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         context: Optional[Context],
     ):
         _LOGGER.debug(
-            "%s: '_adapt_lights(%s, %s, force=%s, context=%s)' called",
+            "%s: '_adapt_lights(%s, %s, force=%s, context.id=%s)' called",
             self.name,
             lights,
             transition,
