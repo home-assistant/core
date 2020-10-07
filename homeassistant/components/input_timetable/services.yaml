@@ -2,8 +2,8 @@ set_on:
   description: Adds a time range when state will be on.
   fields:
     entity_id:
-      description: Entity id of the input schedule that should be set.
-      example: input_schedule.lights
+      description: Entity id of the input timetable that should be set.
+      example: input_timetable.lights
     start:
       description: The start time of the time range.
       example: '"05:04:20"'
@@ -14,8 +14,8 @@ set_off:
   description: Adds a time range when state will be off.
   fields:
     entity_id:
-      description: Entity id of the input schedule that should be set.
-      example: input_schedule.lights
+      description: Entity id of the input timetable that should be set.
+      example: input_timetable.lights
     start:
       description: The start time of the time range.
       example: '"05:04:20"'
@@ -26,7 +26,7 @@ reset:
   description: Resets the time causing it to be always off.
   fields:
     entity_id:
-      description: Entity id of the input schedule that should be set.
-      example: input_schedule.lights
+      description: Entity id of the input timetable that should be reset.
+      example: input_timetable.lights
 reload:
-  description: Reload the input_schedule configuration.
+  description: Reload the input_timetable configuration.

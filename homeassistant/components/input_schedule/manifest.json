@@ -1,7 +1,0 @@
-{
-  "domain": "input_schedule",
-  "name": "Input Schedule",
-  "documentation": "https://www.home-assistant.io/integrations/input_schedule",
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
-}

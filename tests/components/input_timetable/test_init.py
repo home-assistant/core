@@ -1,9 +1,9 @@
-"""The tests for the Input schedule component."""
+"""The tests for the Input timetable component."""
 import datetime
 
 import pytest
 
-from homeassistant.components.input_schedule import (
+from homeassistant.components.input_timetable import (
     ATTR_END,
     ATTR_ON_PERIODS,
     ATTR_START,
@@ -116,7 +116,7 @@ async def test_editable_state_attribute(hass, storage_setup):
 async def test_set_on(hass, caplog):
     """Test set_on method."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
-    entity_id = "input_schedule.test"
+    entity_id = "input_timetable.test"
 
     test_cases = [
         (
@@ -218,7 +218,7 @@ async def test_set_on(hass, caplog):
 async def test_set_off(hass, caplog):
     """Test set_off method."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
-    entity_id = "input_schedule.test"
+    entity_id = "input_timetable.test"
 
     test_cases = [
         (
@@ -295,7 +295,7 @@ async def test_set_off(hass, caplog):
 async def test_state(hass, caplog):
     """Test state attribute."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
-    entity_id = "input_schedule.test"
+    entity_id = "input_timetable.test"
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -372,8 +372,8 @@ async def test_restore_state(hass):
     mock_restore_cache(
         hass,
         (
-            State("input_schedule.a", "", {ATTR_ON_PERIODS: a_on_periods}),
-            State("input_schedule.b", "", {ATTR_ON_PERIODS: b_on_periods}),
+            State("input_timetable.a", "", {ATTR_ON_PERIODS: a_on_periods}),
+            State("input_timetable.b", "", {ATTR_ON_PERIODS: b_on_periods}),
         ),
     )
 
@@ -385,17 +385,17 @@ async def test_restore_state(hass):
         {DOMAIN: {"a": {}, "b": {}}},
     )
 
-    state = hass.states.get("input_schedule.a")
+    state = hass.states.get("input_timetable.a")
     assert state
     assert state.attributes[ATTR_ON_PERIODS] == a_on_periods
 
-    state = hass.states.get("input_schedule.b")
+    state = hass.states.get("input_timetable.b")
     assert state
     assert state.attributes[ATTR_ON_PERIODS] == b_on_periods
 
 
 async def test_input_scheudle_context(hass, hass_admin_user):
-    """Test that input_schedule context works."""
+    """Test that input_timetable context works."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"x": {}}})
 
     state = hass.states.get(f"{DOMAIN}.x")

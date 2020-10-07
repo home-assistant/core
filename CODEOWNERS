@@ -206,9 +206,9 @@ homeassistant/components/influxdb/* @fabaff @mdegat01
 homeassistant/components/input_boolean/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
-homeassistant/components/input_schedule/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
+homeassistant/components/input_timetable/* @home-assistant/core
 homeassistant/components/insteon/* @teharris1
 homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core

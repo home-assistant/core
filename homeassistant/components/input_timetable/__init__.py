@@ -1,4 +1,4 @@
-"""Support to set a daily schedule (on and off times during the day)."""
+"""Support to set a timetable (on and off times during the day)."""
 import datetime
 import logging
 import typing
@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_schedule"
+DOMAIN = "input_timetable"
 
 ATTR_START = "start"
 ATTR_END = "end"
@@ -75,7 +75,7 @@ UPDATE_FIELDS = {
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up an input schedule."""
+    """Set up an input timetable."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
@@ -83,16 +83,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.attach_entity_component_collection(
-        component, yaml_collection, InputSchedule.from_yaml
+        component, yaml_collection, InputTimeTable.from_yaml
     )
 
-    storage_collection = ScheduleStorageCollection(
+    storage_collection = TimeTableStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.attach_entity_component_collection(
-        component, storage_collection, InputSchedule
+        component, storage_collection, InputTimeTable
     )
 
     await yaml_collection.async_load(
@@ -135,7 +135,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-class ScheduleStorageCollection(collection.StorageCollection):
+class TimeTableStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -156,23 +156,23 @@ class ScheduleStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-class InputSchedule(RestoreEntity):
-    """Representation of a schedule."""
+class InputTimeTable(RestoreEntity):
+    """Representation of a timetable."""
 
     def __init__(self, config: typing.Dict):
-        """Initialize an input schedule."""
+        """Initialize an input timetable."""
         self._config = config
         self._on_periods = []
         self.editable = True
         self._event_unsub = None
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputSchedule":
+    def from_yaml(cls, config: typing.Dict) -> "InputTimeTable":
         """Return entity instance initialized from yaml storage."""
-        input_schedule = cls(config)
-        input_schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        input_schedule.editable = False
-        return input_schedule
+        input_timetable = cls(config)
+        input_timetable.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
+        input_timetable.editable = False
+        return input_timetable
 
     @property
     def should_poll(self):
@@ -181,7 +181,7 @@ class InputSchedule(RestoreEntity):
 
     @property
     def name(self):
-        """Return the name of the input schedule."""
+        """Return the name of the input timetable."""
         return self._config.get(CONF_NAME)
 
     @property
