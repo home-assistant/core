@@ -459,8 +459,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if self.state != STATE_ALARM_PENDING and self.state != STATE_ALARM_ARMING:
             return {}
         return {
-            ATTR_PREVIOUS_STATE: self._previous_state
-            ATTR_NEXT_STATE: self._state
+            ATTR_PREVIOUS_STATE: self._previous_state,
+            ATTR_NEXT_STATE: self._state,
         }
 
     async def async_added_to_hass(self):
