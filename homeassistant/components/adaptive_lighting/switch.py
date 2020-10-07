@@ -924,7 +924,7 @@ class TurnOnOffListener:
         # Tracks which lights are manually controlled
         self.manually_controlled: Dict[str, bool] = {}
         # Track 'state_changed' events of self.lights resulting from this integration
-        self.last_state_change: Dict[str, State] = {}
+        self.last_state_change: Dict[str, List[State]] = {}
 
         self.remove_listener = self.hass.bus.async_listen(
             EVENT_CALL_SERVICE, self.turn_on_off_event_listener
@@ -993,23 +993,33 @@ class TurnOnOffListener:
                 new_state.attributes,
                 new_state.context.id,
             )
-            # If there is already a state change event from this event (with this
-            # context) then ignore. This is because a
-            # `turn_on.light(brightness_pct=100, transition=30)` event leads to an
-            # instant state change of `new_state=dict(brightness=100, ...)`. However,
-            # after polling the light could still only be
-            # `new_state=dict(brightness=50, ...)`.
-            old_state = self.last_state_change.get(entity_id)
-            if old_state is not None and old_state.context.id == new_state.context.id:
-                # state is already in 'self.last_state_change'
+            # It is possible to have multiple state change events with the same context.
+            # This can happen because a `turn_on.light(brightness_pct=100, transition=30)`
+            # event leads to an instant state change of
+            # `new_state=dict(brightness=100, ...)`. However, after polling the light
+            # could still only be `new_state=dict(brightness=50, ...)`.
+            # We save both events because the first event change might indicate at what
+            # settings the light will be later *or* the second event might indicate a
+            # final state. The latter case happens for example when a light was
+            # called with a color_temp outside of its range (and HA reports the
+            # incorrect 'min_mireds' and 'max_mireds', which happens e.g., for
+            # Philips Hue White GU10 Bluetooth lights).
+            old_state: Optional[List[State]] = self.last_state_change.get(entity_id)
+            if (
+                old_state is not None
+                and old_state[0].context.id == new_state.context.id
+            ):
+                # If there is already a state change event from this event (with this
+                # context) then append it to the already existing list.
                 _LOGGER.debug(
-                    "State change event of '%s' was already in 'self.last_state_change' (%s)",
+                    "State change event of '%s' is already in 'self.last_state_change' (%s)"
+                    " adding this state also",
                     entity_id,
                     new_state.context.id,
                 )
-                return
-
-            self.last_state_change[entity_id] = new_state
+                self.last_state_change[entity_id].append(new_state)
+            else:
+                self.last_state_change[entity_id] = [new_state]
 
     def is_manually_controlled(
         self,
@@ -1057,8 +1067,7 @@ class TurnOnOffListener:
         """
         if light not in self.last_state_change:
             return False
-        old_state = self.last_state_change[light]
-        old_state_before_update = self.hass.states.get(light)
+        old_states: List[State] = self.last_state_change[light]
         await self.hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
@@ -1067,46 +1076,21 @@ class TurnOnOffListener:
             context=context,
         )
         new_state = self.hass.states.get(light)
-        changed = _attributes_have_changed(
-            light,
-            old_state.attributes,
-            new_state.attributes,
-            adapt_brightness,
-            adapt_color_temp,
-            adapt_rgb_color,
-            context,
-        )
-
-        # If changed, do a second check.
-        if (
-            changed
-            and is_our_context(old_state.context)
-            and is_our_context(old_state_before_update.context)
-            and old_state.context.id != old_state_before_update.context.id
-        ):
-            # This means there were two consecutive state change events with the
-            # same context after Adaptive Lighting called 'light.turn_on' last time.
-            # We are only saving that first one (for reasons explained in
-            # 'self.state_changed_event_listener'). It can happen that the second
-            # state change event was actually the final state. That happens for
-            # example when a light was called with a color_temp outside of its
-            # range (and HA reports the incorrect 'min_mireds' and 'max_mireds', which
-            # happens e.g., for Philips Hue White GU10 Bluetooth lights).
-            _LOGGER.debug(
-                "Last 'light.turn_on' of '%s' never actually changed the light"
-                " (or the rgb_color/color_temp was out of range)",
+        for index, old_state in enumerate(old_states):
+            changed = _attributes_have_changed(
                 light,
-            )
-            if not _attributes_have_changed(
-                light,
-                old_state_before_update.attributes,
+                old_state.attributes,
                 new_state.attributes,
                 adapt_brightness,
                 adapt_color_temp,
                 adapt_rgb_color,
                 context,
-            ):
-                changed = False
+            )
+            if not changed:
+                _LOGGER.debug(
+                    "States of '%s' didn't change wrt change event nr. %s", light, index
+                )
+                break
 
         self.manually_controlled[light] = changed
         return changed
