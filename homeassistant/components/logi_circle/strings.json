@@ -13,7 +13,7 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "auth_timeout": "Authorization timed out when requesting access token.",
+      "oauth2_authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "follow_link": "Please follow the link and authenticate before pressing Submit."
     },
     "abort": {
