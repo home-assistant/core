@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.scene as scene
 from homeassistant.setup import async_setup_component
 
@@ -43,7 +44,8 @@ async def test_scenes(hass):
     """Test that scenes works."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("scene.light_group_scene")
@@ -61,6 +63,6 @@ async def test_scenes(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/groups/1/scenes/1/recall", json={})
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0

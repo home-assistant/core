@@ -1,18 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Panasonic Viera TV-en er allerede konfigurert.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes.",
             "not_connected": "Fjerntilkoblingen med din Panasonic Viera TV gikk tapt. Sjekk loggene for mer informasjon.",
-            "unknown": "Det skjedde en ukjent feil. Sjekk loggene for mer informasjon."
+            "unknown": "Uventet feil"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "invalid_pin_code": "PIN-koden du oppga var ugyldig",
             "not_connected": "Kunne ikke opprette en ekstern tilkobling med Panasonic Viera TV"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": ""
+                    "pin": "PIN-kode"
                 },
                 "description": "Angi PIN-koden som vises p\u00e5 TV-en",
                 "title": "Sammenkobling"

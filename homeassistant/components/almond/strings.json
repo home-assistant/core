@@ -12,7 +12,7 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "missing_configuration": "Please check the documentation on how to set up Almond.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     }
   }

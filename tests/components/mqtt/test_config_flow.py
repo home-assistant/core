@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -45,7 +44,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": False,
+        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -154,7 +153,6 @@ async def test_option_flow(hass, mqtt_mock, mock_try_connection):
     """Test config flow options."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -227,7 +225,6 @@ async def test_disable_birth_will(hass, mqtt_mock, mock_try_connection):
     """Test disabling birth and will."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,
@@ -310,7 +307,6 @@ async def test_option_flow_default_suggested_values(
     """Test config flow options has default/suggested values."""
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", config_entry)
     config_entry.data = {
         mqtt.CONF_BROKER: "test-broker",
         mqtt.CONF_PORT: 1234,

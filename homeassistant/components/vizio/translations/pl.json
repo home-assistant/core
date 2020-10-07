@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "Kod PIN"
                 },
                 "description": "Tw\u00f3j telewizor powinien wy\u015bwietla\u0107 kod. Wprowad\u017a ten kod do formularza, a nast\u0119pnie przejd\u017a do nast\u0119pnego kroku, aby zako\u0144czy\u0107 parowanie.",
                 "title": "Ko\u0144czenie procesu parowania"
