@@ -5,7 +5,6 @@ from datetime import timedelta
 from homeassistant.components import recorder
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import fire_time_changed
 
 
@@ -15,12 +14,6 @@ def wait_recording_done(hass):
     hass.block_till_done()
     hass.data[recorder.DATA_INSTANCE].block_till_done()
     hass.block_till_done()
-
-
-def wait_recording_done_and_expired(hass):
-    """Block till recording is done."""
-    with patch.object(recorder, "EXPIRE_AFTER_COMMITS", 1):
-        wait_recording_done(hass)
 
 
 def trigger_db_commit(hass):
