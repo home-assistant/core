@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
+from simplipy.entity import EntityTypes
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
@@ -16,6 +17,10 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_CODE,
@@ -69,6 +74,13 @@ EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
+
+SUPPORTED_PLATFORMS = (
+    "alarm_control_panel",
+    "binary_sensor",
+    "lock",
+    "sensor",
+)
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
@@ -150,6 +162,13 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+SENSOR_MODELS = {
+    EntityTypes.entry: "Entry Sensor",
+    EntityTypes.carbon_monoxide: "Carbon Monoxide Detector",
+    EntityTypes.smoke: "Smoke Detector",
+    EntityTypes.leak: "Water Sensor",
+}
 
 
 @callback
@@ -246,12 +265,7 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for platform in (
-        "alarm_control_panel",
-        "binary_sensor",
-        "lock",
-        "sensor",
-    ):
+    for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
@@ -745,3 +759,45 @@ class SimpliSafeEntity(Entity):
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
         raise NotImplementedError()
+
+
+class SimpliSafeSensorBattery(SimpliSafeEntity, BinarySensorEntity):
+    """Define a SimpliSafe battery binary sensor entity."""
+
+    def __init__(self, simplisafe, system, sensor):
+        """Initialize."""
+        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
+        self._system = system
+        self._sensor = sensor
+        self._is_low = False
+
+    @property
+    def device_class(self):
+        """Return type of sensor."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def unique_id(self):
+        """Return unique ID of sensor."""
+        return f"{self._sensor.serial}-battery"
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._sensor.serial)},
+            "manufacturer": "SimpliSafe",
+            "model": SENSOR_MODELS[self._sensor.type],
+            "name": self._sensor.name,
+            "via_device": (DOMAIN, self._system.serial),
+        }
+
+    @property
+    def is_on(self):
+        """Return true if the battery is low."""
+        return self._is_low
+
+    @callback
+    def async_update_from_rest_api(self):
+        """Update the entity with the provided REST API data."""
+        self._is_low = self._sensor.low_battery
