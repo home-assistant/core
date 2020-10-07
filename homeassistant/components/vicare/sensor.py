@@ -9,10 +9,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_BAR,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
@@ -54,6 +56,15 @@ SENSOR_GAS_CONSUMPTION_THIS_YEAR = "gas_consumption_heating_this_year"
 # heatpump sensors
 SENSOR_COMPRESSOR_STARTS = "compressor_starts"
 SENSOR_COMPRESSOR_HOURS = "compressor_hours"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS1 = "compressor_hours_loadclass1"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS2 = "compressor_hours_loadclass2"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS3 = "compressor_hours_loadclass3"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS4 = "compressor_hours_loadclass4"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS5 = "compressor_hours_loadclass5"
+SENSOR_COMPRESSOR_POWER = "compressor_power"
+SENSOR_EXPANSION_VALVE = "expansion_valve"
+SENSOR_SUCTIONGAS_PRESSURE = "suctiongas_pressure"
+SENSOR_HOTGAS_PRESSURE = "hotgas_pressure"
 
 SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
@@ -177,12 +188,75 @@ SENSOR_TYPES = {
         CONF_GETTER: lambda api: api.getCompressorHours(),
         CONF_DEVICE_CLASS: None,
     },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS1: {
+        CONF_NAME: "Compressor Hours Load Class 1",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass1(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS2: {
+        CONF_NAME: "Compressor Hours Load Class 2",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass2(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS3: {
+        CONF_NAME: "Compressor Hours Load Class 3",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass3(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS4: {
+        CONF_NAME: "Compressor Hours Load Class 4",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass4(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS5: {
+        CONF_NAME: "Compressor Hours Load Class 5",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass5(),
+        CONF_DEVICE_CLASS: None,
+    },
     SENSOR_RETURN_TEMPERATURE: {
         CONF_NAME: "Return Temperature",
         CONF_ICON: None,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getReturnTemperature(),
         CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    },
+    SENSOR_COMPRESSOR_POWER: {
+        CONF_NAME: "Compressor Power",
+        CONF_ICON: "mdi:percent",
+        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
+        CONF_GETTER: lambda api: api.getCompressorPower(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_EXPANSION_VALVE: {
+        CONF_NAME: "Expansion Valve",
+        CONF_ICON: "mdi:percent",
+        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
+        CONF_GETTER: lambda api: api.getExpansionValve(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_SUCTIONGAS_PRESSURE: {
+        CONF_NAME: "Suction gas pressure",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: PRESSURE_BAR,
+        CONF_GETTER: lambda api: api.getSuctionGasPressure(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+    },
+    SENSOR_HOTGAS_PRESSURE: {
+        CONF_NAME: "Hot gas pressure",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: PRESSURE_BAR,
+        CONF_GETTER: lambda api: api.getHotGasPressure(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
     },
 }
 
@@ -205,9 +279,18 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_GAS_CONSUMPTION_THIS_YEAR,
     ],
     HeatingType.heatpump: [
-        SENSOR_COMPRESSOR_HOURS,
         SENSOR_COMPRESSOR_STARTS,
+        SENSOR_COMPRESSOR_HOURS,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS1,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS2,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS3,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS4,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
         SENSOR_RETURN_TEMPERATURE,
+        SENSOR_COMPRESSOR_POWER,
+        SENSOR_EXPANSION_VALVE,
+        SENSOR_SUCTIONGAS_PRESSURE,
+        SENSOR_HOTGAS_PRESSURE,
     ],
 }
 
