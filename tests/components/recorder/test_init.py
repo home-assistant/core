@@ -47,7 +47,7 @@ def test_saving_state(hass, hass_recorder):
     assert state == _state_empty_context(hass, entity_id)
 
 
-def test_saving_state_with_exception(hass, hass_recorder):
+def test_saving_state_with_exception(hass, hass_recorder, caplog):
     """Test saving and restoring a state."""
     hass = hass_recorder()
 
@@ -68,12 +68,17 @@ def test_saving_state_with_exception(hass, hass_recorder):
         hass.states.set(entity_id, "fail", attributes)
         wait_recording_done(hass)
 
+    assert "Error saving events" in caplog.text
+    caplog.clear()
+
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
         assert len(db_states) >= 1
+
+    assert "Error saving events" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):
