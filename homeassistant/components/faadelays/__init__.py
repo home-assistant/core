@@ -35,9 +35,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up FAA Delays from a config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
-    id = entry.data[CONF_ID]
+    code = entry.data[CONF_ID]
 
-    coordinator = FAADataUpdateCoordinator(hass, websession, id)
+    coordinator = FAADataUpdateCoordinator(hass, websession, code)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -73,18 +73,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class FAADataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching FAA API data from a single endpoint."""
 
-    def __init__(self, hass, session, id):
+    def __init__(self, hass, session, code):
         """Initialize the coordinator."""
-        self.data = Airport(id, session)
+        self.data = Airport(code, session)
         self.session = session
-        self.id = id
+        self.code = code
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self):
         try:
             with timeout(10):
-                self.data = await get_airport_delays(self.id, self.session)
+                self.data = await get_airport_delays(self.code, self.session)
         except ClientConnectionError as err:
             raise UpdateFailed(err) from err
         return self.data
