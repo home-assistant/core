@@ -254,7 +254,6 @@ def _attributes_have_changed(
     adapt_rgb_color,
     context,
 ):
-    changed = False
     if (
         adapt_brightness
         and ATTR_BRIGHTNESS in old_attributes
@@ -271,7 +270,7 @@ def _attributes_have_changed(
                 current_brightness,
                 context.id,
             )
-            changed = True
+            return True
 
     if (
         adapt_color_temp
@@ -289,7 +288,7 @@ def _attributes_have_changed(
                 current_color_temp,
                 context.id,
             )
-            changed = True
+            return True
 
     if (
         adapt_rgb_color
@@ -308,8 +307,8 @@ def _attributes_have_changed(
                     current_rgb_color,
                     context.id,
                 )
-                changed = True
-                break
+                return True
+
     switched_color_temp = (
         ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in new_attributes
     )
@@ -322,8 +321,8 @@ def _attributes_have_changed(
             "'%s' switched from RGB mode to color_temp or visa versa",
             light,
         )
-        changed = True
-    return changed
+        return True
+    return False
 
 
 class AdaptiveSwitch(SwitchEntity, RestoreEntity):
