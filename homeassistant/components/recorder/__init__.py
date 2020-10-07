@@ -460,10 +460,7 @@ class Recorder(threading.Thread):
             return
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
-            _LOGGER.error(
-                "Error in database connectivity during keepalive: %s",
-                err,
-            )
+            _LOGGER.error("Error in database connectivity during keepalive: %s", err)
             self._reopen_event_session()
 
     def _commit_event_session_or_retry(self):
