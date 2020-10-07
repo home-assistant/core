@@ -2070,35 +2070,34 @@ async def test_print_config_parameter(hass, mock_openzwave):
         assert mock_logger.info.mock_calls[0][1][3] == 2345
 
 
-# @patch("homeassistant.components.zwave._LOGGER")
-# async def test_print_node(hass, mock_openzwave):
-#     """Test zwave print_node_parameter service."""
-#     mock_receivers = []
+async def test_print_node(hass, mock_openzwave):
+    """Test zwave print_node_parameter service."""
+    mock_receivers = []
 
-#     def mock_connect(receiver, signal, *args, **kwargs):
-#         if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-#             mock_receivers.append(receiver)
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
 
-#     with patch("pydispatch.dispatcher.connect", new=mock_connect):
-#         await async_setup_component(hass, "zwave", {"zwave": {}})
-#         await hass.async_block_till_done()
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        await async_setup_component(hass, "zwave", {"zwave": {}})
+        await hass.async_block_till_done()
 
-#     assert len(mock_receivers) == 1
+    assert len(mock_receivers) == 1
 
-#     zwave_network = hass.data[DATA_NETWORK]
-#     zwave_network.state = MockNetwork.STATE_READY
-#     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-#     await hass.async_block_till_done()
+    zwave_network = hass.data[DATA_NETWORK]
+    zwave_network.state = MockNetwork.STATE_READY
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
-#     node = MockNode(node_id=14)
+    node = MockNode(node_id=14)
 
-#     zwave_network.nodes = {14: node}
+    zwave_network.nodes = {14: node}
 
-#     with assertLogs(level="DEBUG") as mock_logger:
-#         await hass.services.async_call("zwave", "print_node", {const.ATTR_NODE_ID: 14})
-#         await hass.async_block_till_done()
+    with patch.object(zwave, "_LOGGER") as mock_logger:
+        await hass.services.async_call("zwave", "print_node", {const.ATTR_NODE_ID: 14})
+        await hass.async_block_till_done()
 
-#         assert "FOUND NODE " in mock_logger.output[1]
+        assert "FOUND NODE " in mock_logger.info.mock_calls[0][1][0]
 
 
 async def test_set_wakeup(hass, mock_openzwave):
