@@ -969,8 +969,9 @@ class TurnOnOffListener:
         """
         if light not in self.last_state_change:
             return False
+        old_state = self.last_state_change[light]
+        old_attributes = old_state.attributes
         changed = False
-        old_attributes = self.last_state_change[light].attributes
         await self.hass.services.async_call(
             HA_DOMAIN,
             SERVICE_UPDATE_ENTITY,
@@ -978,14 +979,15 @@ class TurnOnOffListener:
             blocking=True,
             context=context,
         )
-        attributes = self.hass.states.get(light).attributes
+        new_state = self.hass.states.get(light)
+        new_attributes = new_state.attributes
         if (
             adapt_brightness
             and ATTR_BRIGHTNESS in old_attributes
-            and ATTR_BRIGHTNESS in attributes
+            and ATTR_BRIGHTNESS in new_attributes
         ):
             last_brightness = old_attributes[ATTR_BRIGHTNESS]
-            current_brightness = attributes[ATTR_BRIGHTNESS]
+            current_brightness = new_attributes[ATTR_BRIGHTNESS]
             if abs(current_brightness - last_brightness) > BRIGHTNESS_CHANGE:
                 _LOGGER.debug(
                     "Brightness of '%s' significantly changed from %s to %s with"
@@ -1000,10 +1002,10 @@ class TurnOnOffListener:
         if (
             adapt_color_temp
             and ATTR_COLOR_TEMP in old_attributes
-            and ATTR_COLOR_TEMP in attributes
+            and ATTR_COLOR_TEMP in new_attributes
         ):
             last_color_temp = old_attributes[ATTR_COLOR_TEMP]
-            current_color_temp = attributes[ATTR_COLOR_TEMP]
+            current_color_temp = new_attributes[ATTR_COLOR_TEMP]
             if abs(current_color_temp - last_color_temp) > COLOR_TEMP_CHANGE:
                 _LOGGER.debug(
                     "Color temperature of '%s' significantly changed from %s to %s with"
@@ -1018,10 +1020,10 @@ class TurnOnOffListener:
         if (
             adapt_rgb_color
             and ATTR_RGB_COLOR in old_attributes
-            and ATTR_RGB_COLOR in attributes
+            and ATTR_RGB_COLOR in new_attributes
         ):
             last_rgb_color = old_attributes[ATTR_RGB_COLOR]
-            current_rgb_color = attributes[ATTR_RGB_COLOR]
+            current_rgb_color = new_attributes[ATTR_RGB_COLOR]
             for last_col, current_col in zip(last_rgb_color, current_rgb_color):
                 if abs(last_col - current_col) > RGB_CHANGE:
                     _LOGGER.debug(
@@ -1035,15 +1037,20 @@ class TurnOnOffListener:
                     changed = True
                     break
 
-        if (ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in attributes) or (
-            ATTR_COLOR_TEMP in old_attributes and ATTR_COLOR_TEMP not in attributes
-        ):
+        switched_color_temp = (
+            ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in new_attributes
+        )
+        switched_to_rgb_color = (
+            ATTR_COLOR_TEMP in old_attributes and ATTR_COLOR_TEMP not in new_attributes
+        )
+        if switched_color_temp or switched_to_rgb_color:
             # Light switched from RGB mode to color_temp or visa versa
             _LOGGER.debug(
                 "'%s' switched from RGB mode to color_temp or visa versa",
                 light,
             )
             changed = True
+
         self.manually_controlled[light] = changed
         return changed
 
