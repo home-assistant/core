@@ -53,8 +53,8 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except LoginError:
-                errors[CONF_USERNAME] = "wrong_credentials"
-                errors[CONF_PASSWORD] = "wrong_credentials"
+                errors[CONF_USERNAME] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
                 return self.async_create_entry(

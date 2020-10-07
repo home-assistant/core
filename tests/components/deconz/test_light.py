@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.light as light
 from homeassistant.setup import async_setup_component
 
@@ -101,7 +102,8 @@ async def test_lights_and_groups(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 6
 
@@ -258,7 +260,7 @@ async def test_lights_and_groups(hass):
             "put", "/lights/1/state", json={"alert": "lselect"}
         )
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -268,7 +270,7 @@ async def test_disable_light_groups(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
-    gateway = await setup_deconz_integration(
+    config_entry = await setup_deconz_integration(
         hass,
         options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False},
         get_state_response=data,
@@ -281,7 +283,7 @@ async def test_disable_light_groups(hass):
     assert hass.states.get("light.empty_group") is None
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: True}
+        config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: True}
     )
     await hass.async_block_till_done()
 
@@ -289,7 +291,7 @@ async def test_disable_light_groups(hass):
     assert hass.states.get("light.light_group")
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
+        config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
     )
     await hass.async_block_till_done()
 

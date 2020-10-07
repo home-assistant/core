@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Kasutaja on juba lisatud",
+            "oauth2_missing_configuration": "Osis pole h\u00e4\u00e4lestatud. Lisainfot saad dokumentatsioonist."
+        }
+    }
+}

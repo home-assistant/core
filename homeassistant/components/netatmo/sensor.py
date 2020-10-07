@@ -49,13 +49,15 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "temp_trend": ["Temperature trend", None, "mdi:trending-up", None],
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
     "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
+    "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
     "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "sum_rain_24": ["Rain last 24h", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
+    "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery Level", "", "mdi:battery", None],
     "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
@@ -312,6 +314,8 @@ class NetatmoSensor(NetatmoBase):
         try:
             if self.type == "temperature":
                 self._state = round(data["Temperature"], 1)
+            elif self.type == "temp_trend":
+                self._state = data["temp_trend"]
             elif self.type == "humidity":
                 self._state = data["Humidity"]
             elif self.type == "rain":
@@ -326,6 +330,8 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["CO2"]
             elif self.type == "pressure":
                 self._state = round(data["Pressure"], 1)
+            elif self.type == "pressure_trend":
+                self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
             elif self.type == "battery_lvl":
@@ -337,15 +343,15 @@ class NetatmoSensor(NetatmoBase):
             elif self.type == "max_temp":
                 self._state = data["max_temp"]
             elif self.type == "windangle_value":
-                self._state = data["WindAngle"]
+                self._state = fix_angle(data["WindAngle"])
             elif self.type == "windangle":
-                self._state = process_angle(data["WindAngle"])
+                self._state = process_angle(fix_angle(data["WindAngle"]))
             elif self.type == "windstrength":
                 self._state = data["WindStrength"]
             elif self.type == "gustangle_value":
-                self._state = data["GustAngle"]
+                self._state = fix_angle(data["GustAngle"])
             elif self.type == "gustangle":
-                self._state = process_angle(data["GustAngle"])
+                self._state = process_angle(fix_angle(data["GustAngle"]))
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
             elif self.type == "reachable":
@@ -365,6 +371,13 @@ class NetatmoSensor(NetatmoBase):
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._state = None
             return
+
+
+def fix_angle(angle: int) -> int:
+    """Fix angle when value is negative."""
+    if angle < 0:
+        return 360 + angle
+    return angle
 
 
 def process_angle(angle: int) -> str:

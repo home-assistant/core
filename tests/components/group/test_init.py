@@ -763,7 +763,6 @@ async def test_group_climate_all_cool(hass):
     hass.states.async_set("climate.two", "cool")
     hass.states.async_set("climate.three", "cool")
 
-    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -773,6 +772,7 @@ async def test_group_climate_all_cool(hass):
             }
         },
     )
+    assert await async_setup_component(hass, "climate", {})
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == STATE_ON
@@ -804,8 +804,8 @@ async def test_group_alarm(hass):
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
+    hass.state = CoreState.stopped
 
-    assert await async_setup_component(hass, "alarm_control_panel", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -817,8 +817,10 @@ async def test_group_alarm(hass):
             }
         },
     )
+    assert await async_setup_component(hass, "alarm_control_panel", {})
     await hass.async_block_till_done()
-
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
@@ -850,8 +852,8 @@ async def test_group_vacuum_off(hass):
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
+    hass.state = CoreState.stopped
 
-    assert await async_setup_component(hass, "vacuum", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -861,8 +863,11 @@ async def test_group_vacuum_off(hass):
             }
         },
     )
+    assert await async_setup_component(hass, "vacuum", {})
     await hass.async_block_till_done()
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     assert hass.states.get("group.group_zero").state == STATE_OFF
 
 
@@ -893,7 +898,6 @@ async def test_device_tracker_not_home(hass):
     hass.states.async_set("device_tracker.two", "not_home")
     hass.states.async_set("device_tracker.three", "not_home")
 
-    assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -916,7 +920,6 @@ async def test_light_removed(hass):
     hass.states.async_set("light.two", "off")
     hass.states.async_set("light.three", "on")
 
-    assert await async_setup_component(hass, "light", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -943,7 +946,6 @@ async def test_switch_removed(hass):
     hass.states.async_set("switch.three", "on")
 
     hass.state = CoreState.stopped
-    assert await async_setup_component(hass, "switch", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -956,6 +958,8 @@ async def test_switch_removed(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == "unknown"
+    assert await async_setup_component(hass, "switch", {})
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -965,3 +969,247 @@ async def test_switch_removed(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == "off"
+
+
+async def test_lights_added_after_group(hass):
+    """Test lights added after group."""
+
+    entity_ids = [
+        "light.living_front_ri",
+        "light.living_back_lef",
+        "light.living_back_cen",
+        "light.living_front_le",
+        "light.living_front_ce",
+        "light.living_back_rig",
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downlights": {"entities": entity_ids},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downlights").state == "unknown"
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downlights").state == "off"
+
+
+async def test_lights_added_before_group(hass):
+    """Test lights added before group."""
+
+    entity_ids = [
+        "light.living_front_ri",
+        "light.living_back_lef",
+        "light.living_back_cen",
+        "light.living_front_le",
+        "light.living_front_ce",
+        "light.living_back_rig",
+    ]
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downlights": {"entities": entity_ids},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downlights").state == "off"
+
+
+async def test_cover_added_after_group(hass):
+    """Test cover added after group."""
+
+    entity_ids = [
+        "cover.upstairs",
+        "cover.downstairs",
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "shades": {"entities": entity_ids},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "open")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.shades").state == "open"
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "closed")
+
+    await hass.async_block_till_done()
+    assert hass.states.get("group.shades").state == "closed"
+
+
+async def test_group_that_references_a_group_of_lights(hass):
+    """Group that references a group of lights."""
+
+    entity_ids = [
+        "light.living_front_ri",
+        "light.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "off")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downlights": {"entities": entity_ids},
+                "grouped_group": {
+                    "entities": ["group.living_room_downlights", *entity_ids]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downlights").state == "off"
+    assert hass.states.get("group.grouped_group").state == "off"
+
+
+async def test_group_that_references_a_group_of_covers(hass):
+    """Group that references a group of covers."""
+
+    entity_ids = [
+        "cover.living_front_ri",
+        "cover.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "closed")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downcover": {"entities": entity_ids},
+                "grouped_group": {
+                    "entities": ["group.living_room_downlights", *entity_ids]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downcover").state == "closed"
+    assert hass.states.get("group.grouped_group").state == "closed"
+
+
+async def test_group_that_references_two_groups_of_covers(hass):
+    """Group that references a group of covers."""
+
+    entity_ids = [
+        "cover.living_front_ri",
+        "cover.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "closed")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "living_room_downcover": {"entities": entity_ids},
+                "living_room_upcover": {"entities": entity_ids},
+                "grouped_group": {
+                    "entities": [
+                        "group.living_room_downlights",
+                        "group.living_room_upcover",
+                    ]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.living_room_downcover").state == "closed"
+    assert hass.states.get("group.living_room_upcover").state == "closed"
+    assert hass.states.get("group.grouped_group").state == "closed"
+
+
+async def test_group_that_references_two_types_of_groups(hass):
+    """Group that references a group of covers and device_trackers."""
+
+    group_1_entity_ids = [
+        "cover.living_front_ri",
+        "cover.living_back_lef",
+    ]
+    group_2_entity_ids = [
+        "device_tracker.living_front_ri",
+        "device_tracker.living_back_lef",
+    ]
+    hass.state = CoreState.stopped
+
+    for entity_id in group_1_entity_ids:
+        hass.states.async_set(entity_id, "closed")
+    for entity_id in group_2_entity_ids:
+        hass.states.async_set(entity_id, "home")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "covers": {"entities": group_1_entity_ids},
+                "device_trackers": {"entities": group_2_entity_ids},
+                "grouped_group": {
+                    "entities": ["group.covers", "group.device_trackers"]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.covers").state == "closed"
+    assert hass.states.get("group.device_trackers").state == "home"
+    assert hass.states.get("group.grouped_group").state == "on"

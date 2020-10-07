@@ -94,8 +94,8 @@ class ClientAvailabilityResult(Enum):
     """Client availability test result."""
 
     AVAILABLE = "available"
-    ERROR_AUTH_FAIL = "auth_fail"
-    ERROR_CONNECTION_ERROR = "connection_error"
+    ERROR_AUTH_FAIL = "invalid_auth"
+    ERROR_CONNECTION_ERROR = "cannot_connect"
 
 
 async def async_test_client_availability(

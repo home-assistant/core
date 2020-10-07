@@ -3,6 +3,7 @@ import asyncio
 from copy import deepcopy
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -47,7 +48,8 @@ async def test_setup_entry_no_available_bridge(hass):
 
 async def test_setup_entry_successful(hass):
     """Test setup entry is successful."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert hass.data[deconz.DOMAIN]
     assert gateway.bridgeid in hass.data[deconz.DOMAIN]
@@ -56,13 +58,15 @@ async def test_setup_entry_successful(hass):
 
 async def test_setup_entry_multiple_gateways(hass):
     """Test setup entry is successful with multiple gateways."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["config"]["bridgeid"] = "01234E56789B"
-    gateway2 = await setup_deconz_integration(
+    config_entry2 = await setup_deconz_integration(
         hass, get_state_response=data, entry_id="2"
     )
+    gateway2 = get_gateway_from_config_entry(hass, config_entry2)
 
     assert len(hass.data[deconz.DOMAIN]) == 2
     assert hass.data[deconz.DOMAIN][gateway.bridgeid].master
@@ -71,26 +75,27 @@ async def test_setup_entry_multiple_gateways(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
     assert hass.data[deconz.DOMAIN]
 
-    assert await deconz.async_unload_entry(hass, gateway.config_entry)
+    assert await deconz.async_unload_entry(hass, config_entry)
     assert not hass.data[deconz.DOMAIN]
 
 
 async def test_unload_entry_multiple_gateways(hass):
     """Test being able to unload an entry and master gateway gets moved."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
 
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["config"]["bridgeid"] = "01234E56789B"
-    gateway2 = await setup_deconz_integration(
+    config_entry2 = await setup_deconz_integration(
         hass, get_state_response=data, entry_id="2"
     )
+    gateway2 = get_gateway_from_config_entry(hass, config_entry2)
 
     assert len(hass.data[deconz.DOMAIN]) == 2
 
-    assert await deconz.async_unload_entry(hass, gateway.config_entry)
+    assert await deconz.async_unload_entry(hass, config_entry)
 
     assert len(hass.data[deconz.DOMAIN]) == 1
     assert hass.data[deconz.DOMAIN][gateway2.bridgeid].master

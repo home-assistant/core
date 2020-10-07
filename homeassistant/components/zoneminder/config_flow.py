@@ -60,10 +60,10 @@ class ZoneminderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
                     vol.Optional(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
                     vol.Optional(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
                     vol.Optional(
                         CONF_PATH, default=user_input.get(CONF_PATH, DEFAULT_PATH)

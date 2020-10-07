@@ -94,14 +94,13 @@ class Folder(Entity):
     @property
     def device_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "path": self._folder_path,
             "filter": self._filter_term,
             "number_of_files": self._number_of_files,
             "bytes": self._size,
             "file_list": self._file_list,
         }
-        return attr
 
     @property
     def unit_of_measurement(self):

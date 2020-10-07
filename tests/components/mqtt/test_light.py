@@ -837,7 +837,7 @@ async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_color_temp/set", "on", 0, False),
-            call("test_light_color_temp/color_temp/set", "10", 0, False),
+            call("test_light_color_temp/color_temp/set", 10, 0, False),
         ],
         any_order=True,
     )

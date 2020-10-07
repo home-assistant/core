@@ -31,8 +31,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {ATTR_MODEL: self._device.device_info.model_number}
-        return attr
+        return {ATTR_MODEL: self._device.device_info.model_number}
 
     @property
     def current_cover_position(self):

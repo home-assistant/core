@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba seadistatud",
             "connection_error": "\u00dchendumine eba\u00f5nnestus",
-            "connection_upgrade": "Printeriga \u00fchenduse loomine eba\u00f5nnestus kuna \u00fchenduse uuendamine on vajalik.",
+            "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus kuna vajalik on \u00fchenduse uuendamine.",
             "ipp_error": "Ilmnes IPP viga.",
             "ipp_version_error": "Printer ei toeta seda IPP versiooni.",
             "parse_error": "Printeri vastuse s\u00f5elumine nurjus.",

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+        },
+        "step": {
+            "user": {
+                "description": "Czy na pewno chcesz skonfigurowa\u0107 Profiler?"
+            }
+        }
+    }
+}

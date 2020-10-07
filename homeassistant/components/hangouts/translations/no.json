@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts er allerede konfigurert",
-            "unknown": "Ukjent feil oppstod."
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "unknown": "Uventet feil"
         },
         "error": {
             "invalid_2fa": "Ugyldig totrinnsbekreftelse, vennligst pr\u00f8v igjen.",

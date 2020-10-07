@@ -263,7 +263,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.8
+apprise==0.8.9
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -315,7 +315,7 @@ axis==37
 azure-eventhub==5.1.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.1
+azure-servicebus==0.50.3
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -538,7 +538,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.19
+elkm1-lib==0.8.0
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -728,6 +728,9 @@ hass-nabucasa==0.37.0
 # homeassistant.components.splunk
 hass_splunk==0.1.1
 
+# homeassistant.components.tasmota
+hatasmota==0.0.10
+
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
 
@@ -753,7 +756,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.0
+home-assistant-frontend==20201001.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1404,7 +1407,7 @@ pyhik==0.2.7
 pyhiveapi==0.2.20.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.69
+pyhomematic==0.1.70
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1446,7 +1449,7 @@ pyitachip2ir==0.0.7
 pykira==0.1.1
 
 # homeassistant.components.kodi
-pykodi==0.2.0
+pykodi==0.2.1
 
 # homeassistant.components.kwb
 pykwb==0.0.8
@@ -1473,7 +1476,7 @@ pylitejet==0.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.6.1
+pylutron-caseta==0.7.0
 
 # homeassistant.components.lutron
 pylutron==0.2.5
@@ -1588,6 +1591,9 @@ pypjlink2==1.2.1
 # homeassistant.components.point
 pypoint==1.1.2
 
+# homeassistant.components.profiler
+pyprof2calltree==1.4.5
+
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.1.1
 
@@ -1653,7 +1659,7 @@ pysmappee==0.2.13
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.3
+pysmartthings==0.7.4
 
 # homeassistant.components.smarty
 pysmarty==0.8
@@ -1668,7 +1674,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.34
+pysonos==0.0.35
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1761,7 +1767,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.0.5
+python-openzwave-mqtt==1.2.2
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
@@ -2180,7 +2186,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.7
+tuyaha==0.0.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -2329,10 +2335,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.0
+zigpy-znp==0.2.1
 
 # homeassistant.components.zha
-zigpy==0.25.0
+zigpy==0.26.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
