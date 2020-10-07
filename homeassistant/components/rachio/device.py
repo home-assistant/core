@@ -49,7 +49,9 @@ class RachioPerson:
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
-            webhooks = self.rachio.notification.get_device_webhook(controller[KEY_ID])[1]
+            webhooks = self.rachio.notification.get_device_webhook(controller[KEY_ID])[
+                1
+            ]
             # The API does not provide a way to tell if a controller is shared
             # or if they are the owner. To work around this problem we fetch the webooks
             # before we setup the device so we can skip it instead of failing.
