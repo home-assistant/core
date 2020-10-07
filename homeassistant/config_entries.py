@@ -1006,6 +1006,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     async_step_hassio = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
 
