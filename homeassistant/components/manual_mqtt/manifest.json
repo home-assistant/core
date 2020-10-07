@@ -3,5 +3,5 @@
   "name": "Manual MQTT Alarm",
   "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",
   "dependencies": ["mqtt"],
-  "codeowners": []
+  "codeowners": ["@derekatkins"]
 }
