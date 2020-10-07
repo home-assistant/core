@@ -146,7 +146,7 @@ async def test_abort_if_already_setup(hass):
 
 @pytest.mark.parametrize(
     "side_effect,error",
-    [(asyncio.TimeoutError, "auth_timeout"), (AuthorizationFailed, "auth_error")],
+    [(asyncio.TimeoutError, "auth_timeout"), (AuthorizationFailed, "invalid_auth")],
 )
 async def test_abort_if_authorize_fails(
     hass, mock_logi_circle, side_effect, error

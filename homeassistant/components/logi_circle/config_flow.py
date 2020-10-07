@@ -167,7 +167,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             with async_timeout.timeout(_TIMEOUT):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
-            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "auth_error"
+            (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"
             return self.async_abort(reason="external_error")
         except asyncio.TimeoutError:
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "auth_timeout"

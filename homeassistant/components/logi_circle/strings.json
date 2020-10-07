@@ -15,7 +15,7 @@
       "default": "Successfully authenticated with Logi Circle."
     },
     "error": {
-      "auth_error": "API authorization failed.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "auth_timeout": "Authorization timed out when requesting access token.",
       "follow_link": "Please follow the link and authenticate before pressing Submit."
     },
