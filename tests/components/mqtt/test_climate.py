@@ -338,6 +338,41 @@ async def test_set_target_temperature(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
 
+async def test_set_target_temperature_with_state_and_optimistic_flag(hass, mqtt_mock):
+    """Test setting the target temperature."""
+    """Set the temperature state topic so that by default it would operate in pessimistic mode"""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["temperature_state_topic"] = "temperature-state"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") == 21
+    await common.async_set_hvac_mode(hass, "heat", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "heat"
+    mqtt_mock.async_publish.assert_called_once_with("mode-topic", "heat", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") == 47
+    mqtt_mock.async_publish.assert_called_once_with("temperature-topic", 47, 0, False)
+
+    # also test directly supplying the operation mode to set_temperature
+    mqtt_mock.async_publish.reset_mock()
+    await common.async_set_temperature(
+        hass, temperature=21, hvac_mode="cool", entity_id=ENTITY_CLIMATE
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "cool"
+    assert state.attributes.get("temperature") == 21
+    mqtt_mock.async_publish.assert_has_calls(
+        [call("mode-topic", "cool", 0, False), call("temperature-topic", 21, 0, False)]
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+
 async def test_set_target_temperature_pessimistic(hass, mqtt_mock):
     """Test setting the target temperature."""
     config = copy.deepcopy(DEFAULT_CONFIG)
