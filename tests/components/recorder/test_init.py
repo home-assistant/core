@@ -58,7 +58,9 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
     def _throw_if_state_in_session(*args, **kwargs):
         for obj in hass.data[DATA_INSTANCE].event_session:
             if isinstance(obj, States):
-                raise OperationalError(None, None, None)
+                raise OperationalError(
+                    "insert the state", "fake params", "forced to fail"
+                )
 
     with patch("time.sleep"), patch.object(
         hass.data[DATA_INSTANCE].event_session,
@@ -68,9 +70,10 @@ def test_saving_state_with_exception(hass, hass_recorder, caplog):
         hass.states.set(entity_id, "fail", attributes)
         wait_recording_done(hass)
 
-    assert "Error saving events" in caplog.text
-    caplog.clear()
+    assert "Error executing query" in caplog.text
+    assert "Error saving events" not in caplog.text
 
+    caplog.clear()
     hass.states.set(entity_id, state, attributes)
     wait_recording_done(hass)
 
