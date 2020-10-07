@@ -15,7 +15,7 @@ from tests.async_mock import Mock, patch
 
 
 async def setup_component(hass):
-    """Hue component with two bridges configured."""
+    """Hue component."""
     with patch.object(hue, "async_setup_entry", return_value=True):
         assert (
             await async_setup_component(

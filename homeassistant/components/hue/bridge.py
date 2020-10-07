@@ -234,7 +234,7 @@ class HueBridge:
 
         if scene is None:
             LOGGER.warning("Unable to find scene %s", scene_name)
-            return
+            return False
 
         return await self.async_request_call(partial(group.set_action, scene=scene.id))
 
