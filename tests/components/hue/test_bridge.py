@@ -1,8 +1,8 @@
 """Test Hue bridge."""
-from components import hue
-import config_entries
 import pytest
 
+from homeassistant import config_entries
+from homeassistant.components import hue
 from homeassistant.components.hue import bridge, errors
 from homeassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
