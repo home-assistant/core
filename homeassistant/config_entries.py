@@ -139,7 +139,7 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid_util.uuid_v1mc_hex()
+        self.entry_id = entry_id or uuid_util.random_uuid_hex()
 
         # Version of the configuration.
         self.version = version
