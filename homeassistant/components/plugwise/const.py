@@ -1,6 +1,9 @@
 """Constant for Plugwise component."""
 DOMAIN = "plugwise"
 
+SENSOR_PLATFORMS = ["sensor"]
+ALL_PLATFORMS = ["binary_sensor", "climate", "sensor", "switch"]
+
 # Sensor mapping
 SENSOR_MAP_MODEL = 0
 SENSOR_MAP_UOM = 1
@@ -42,3 +45,9 @@ FLOW_ON_ICON = "mdi:water-pump"
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 COORDINATOR = "coordinator"
+
+ZEROCONF_MAP = {
+    "smile": "P1",
+    "smile_thermo": "Anna",
+    "smile_open_therm": "Adam",
+}
