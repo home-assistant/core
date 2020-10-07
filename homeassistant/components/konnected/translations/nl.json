@@ -2,7 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom voor het apparaat wordt al uitgevoerd.",
+            "not_konn_panel": "Geen herkend Konnected.io apparaat",
             "unknown": "Onbekende fout opgetreden"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken met een Konnected Panel op {host} : {port}"
         },
         "step": {
             "confirm": {

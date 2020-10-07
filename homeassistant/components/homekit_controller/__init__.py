@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
+from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,6 +200,7 @@ async def async_setup(hass, config):
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     hass.data[CONTROLLER] = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
     hass.data[KNOWN_DEVICES] = {}
+    hass.data[TRIGGERS] = {}
 
     return True
 

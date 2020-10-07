@@ -9,6 +9,7 @@
             "on": "Lavt"
         },
         "cold": {
+            "off": "",
             "on": "Kald"
         },
         "connectivity": {
@@ -54,6 +55,10 @@
         "presence": {
             "off": "Borte",
             "on": "Hjemme"
+        },
+        "problem": {
+            "off": "",
+            "on": ""
         },
         "safety": {
             "off": "Sikker",

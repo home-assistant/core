@@ -13,8 +13,12 @@
             "invalid_mac": "Ugyldig Mac-adresse",
             "not_found_error": "Zeroconf oppdaget Gateway kunne ikke v\u00e6re plassert for \u00e5 f\u00e5 den n\u00f8dvendige informasjonen, kan du pr\u00f8ve \u00e5 bruke IP-adressen til enheten som kj\u00f8rer HomeAssistant som grensesnitt"
         },
+        "flow_title": "",
         "step": {
             "select": {
+                "data": {
+                    "select_ip": ""
+                },
                 "description": "Kj\u00f8r oppsettet igjen hvis du vil koble til tilleggsportaler",
                 "title": "Velg Xiaomi Aqara Gateway som du \u00f8nsker \u00e5 koble til"
             },
@@ -32,7 +36,8 @@
                     "interface": "Nettverksgrensesnittet som skal brukes",
                     "mac": "Mac-adresse (valgfritt)"
                 },
-                "description": "Koble til Xiaomi Aqara Gateway, hvis IP- og mac-adressene er tomme, brukes automatisk oppdagelse"
+                "description": "Koble til Xiaomi Aqara Gateway, hvis IP- og mac-adressene er tomme, brukes automatisk oppdagelse",
+                "title": ""
             }
         }
     }

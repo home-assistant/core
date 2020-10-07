@@ -3,32 +3,12 @@ from plexapi.exceptions import NotFound
 
 from homeassistant.components.plex.const import DOMAIN, SERVERS
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .mock_classes import MockPlexAccount, MockPlexServer
-
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
-async def test_plex_tv_clients(hass):
+async def test_plex_tv_clients(hass, entry, mock_plex_account, setup_plex_server):
     """Test getting Plex clients from plex.tv."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-    mock_plex_account = MockPlexAccount()
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
+    mock_plex_server = await setup_plex_server()
     server_id = mock_plex_server.machineIdentifier
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
@@ -46,12 +26,7 @@ async def test_plex_tv_clients(hass):
     # Ensure one more client is discovered
     await hass.config_entries.async_unload(entry.entry_id)
 
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
+    mock_plex_server = await setup_plex_server(config_entry=entry)
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
     await plex_server._async_update_platforms()
@@ -63,14 +38,9 @@ async def test_plex_tv_clients(hass):
     # Ensure only plex.tv resource client is found
     await hass.config_entries.async_unload(entry.entry_id)
 
+    mock_plex_server = await setup_plex_server(config_entry=entry)
     mock_plex_server.clear_clients()
     mock_plex_server.clear_sessions()
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=mock_plex_account
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 

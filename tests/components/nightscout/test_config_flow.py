@@ -1,5 +1,5 @@
 """Test the Nightscout config flow."""
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nightscout.const import DOMAIN
@@ -8,7 +8,11 @@ from homeassistant.const import CONF_URL
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-from tests.components.nightscout import GLUCOSE_READINGS, SERVER_STATUS
+from tests.components.nightscout import (
+    GLUCOSE_READINGS,
+    SERVER_STATUS,
+    SERVER_STATUS_STATUS_ONLY,
+)
 
 CONFIG = {CONF_URL: "https://some.url:1234"}
 
@@ -53,6 +57,28 @@ async def test_user_form_cannot_connect(hass):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_form_api_key_required(hass):
+    """Test we handle an unauthorized error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        return_value=SERVER_STATUS_STATUS_ONLY,
+    ), patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+        side_effect=ClientResponseError(None, None, status=401),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_form_unexpected_exception(hass):

@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "step": {
+            "relay_modes": {
+                "title": "Stel relais in"
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                }
+            },
+            "host": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                }
+            }
+        }
+    }
+}

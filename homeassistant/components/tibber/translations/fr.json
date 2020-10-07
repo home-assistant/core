@@ -5,6 +5,7 @@
         },
         "error": {
             "connection_error": "Erreur de connexion \u00e0 Tibber",
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide",
             "timeout": "D\u00e9lai de connexion \u00e0 Tibber"
         },
         "step": {
