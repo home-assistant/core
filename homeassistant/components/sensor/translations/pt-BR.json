@@ -1,4 +1,12 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_humidity": "Humidade atual do(a) {entity_name}",
+            "is_pressure": "Press\u00e3o atual do(a) {entity_name}",
+            "is_signal_strength": "For\u00e7a do sinal atual do(a) {entity_name}",
+            "is_temperature": "Temperatura atual do(a) {entity_name}"
+        }
+    },
     "state": {
         "_": {
             "off": "Desligado",

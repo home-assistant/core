@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Det p\u00e5g\u00e5r allerede en konfigurasjonsflyt for denne enheten",
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} ( {model} hos {host} )",
+        "step": {
+            "auth": {
+                "title": "Autentiser til enheten"
+            },
+            "finish": {
+                "data": {
+                    "name": "Navn"
+                },
+                "title": "Velg et navn p\u00e5 enheten"
+            },
+            "reset": {
+                "description": "Enheten er l\u00e5st for godkjenning. F\u00f8lg instruksjonene for \u00e5 l\u00e5se den opp:\n1. Tilbakestill enheten til fabrikkstandard.\n2. Bruk den offisielle appen til \u00e5 legge til enheten i ditt lokale nettverk.\n3. Stopp. Ikke fullf\u00f8r oppsettet. Lukk appen.\n4. Klikk p\u00e5 Send.",
+                "title": "L\u00e5s opp enheten"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ja, gj\u00f8r det."
+                },
+                "description": "Enheten er l\u00e5st. Dette kan f\u00f8re til godkjenningsproblemer i Home Assistant. Vil du l\u00e5se den opp?",
+                "title": "L\u00e5s opp enheten (valgfritt)"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "timeout": "Tidsavbrudd"
+                },
+                "title": "Koble til enheten"
+            }
+        }
+    }
+}

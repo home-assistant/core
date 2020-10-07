@@ -30,11 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 
 DB_TIMEZONE = "+00:00"
 
+TABLE_EVENTS = "events"
+TABLE_STATES = "states"
+TABLE_RECORDER_RUNS = "recorder_runs"
+TABLE_SCHEMA_CHANGES = "schema_changes"
+
+ALL_TABLES = [TABLE_EVENTS, TABLE_STATES, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
 
-    __tablename__ = "events"
+    __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
     event_type = Column(String(32))
     event_data = Column(Text)
@@ -88,7 +95,7 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
-    __tablename__ = "states"
+    __tablename__ = TABLE_STATES
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
     entity_id = Column(String(255))
@@ -153,7 +160,7 @@ class States(Base):  # type: ignore
 class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
-    __tablename__ = "recorder_runs"
+    __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, primary_key=True)
     start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
@@ -191,7 +198,7 @@ class RecorderRuns(Base):  # type: ignore
 class SchemaChanges(Base):  # type: ignore
     """Representation of schema version changes."""
 
-    __tablename__ = "schema_changes"
+    __tablename__ = TABLE_SCHEMA_CHANGES
     change_id = Column(Integer, primary_key=True)
     schema_version = Column(Integer)
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)

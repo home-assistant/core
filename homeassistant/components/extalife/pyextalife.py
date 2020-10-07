@@ -1,11 +1,14 @@
 """ ExtaLife JSON API wrapper library. Enables device control, discovery and status fetching from EFC-01 controller """
 
+import asyncio
+from asyncio.events import AbstractEventLoop
 import json
 import logging
 import socket
-import threading
 
-log = logging.getLogger(__name__)
+import attr
+
+_LOGGER = logging.getLogger(__name__)
 
 # controller info
 PRODUCT_MANUFACTURER = "ZAMEL"
@@ -41,11 +44,13 @@ MODEL_SRM22 = "SRM-22"
 MODEL_SLR21 = "SLR-21"
 MODEL_SLR22 = "SLR-22"
 MODEL_RCM21 = "RCM-21"
+MODEL_MEM21 = "MEM-21"
 MODEL_RCR21 = "RCR-21"
 MODEL_RCZ21 = "RCZ-21"
 MODEL_SLM21 = "SLM-21"
 MODEL_SLM22 = "SLM-22"
 MODEL_RCK21 = "RCK-21"
+MODEL_ROB21 = "ROB-21"
 MODEL_P501 = "P-501"
 MODEL_P520 = "P-520"
 MODEL_P521L = "P-521L"
@@ -97,11 +102,13 @@ DEVICE_MAP_TYPE_TO_MODEL = {
     26: MODEL_SLR21,
     27: MODEL_SLR22,
     28: MODEL_RCM21,
+    35: MODEL_MEM21,
     41: MODEL_RCR21,
     42: MODEL_RCZ21,
     45: MODEL_SLM21,
     46: MODEL_SLM22,
     47: MODEL_RCK21,
+    48: MODEL_ROB21,
     51: MODEL_P501,
     52: MODEL_P520,
     53: MODEL_P521L,
@@ -135,6 +142,8 @@ DEVICE_ARR_SENS_MULTI = [28]
 DEVICE_ARR_SENS_WATER = [42]
 DEVICE_ARR_SENS_MOTION = [41]
 DEVICE_ARR_SENS_OPENCLOSE = [47]
+DEVICE_ARR_SENS_ENERGY_METER = [35]
+DEVICE_ARR_SENS_GATE_CONTROLLER = [48]
 DEVICE_ARR_SWITCH = [10, 11, 22, 23, 24]
 DEVICE_ARR_COVER = [12, 25]
 DEVICE_ARR_LIGHT = [13, 26, 45, 27, 46]
@@ -166,7 +175,11 @@ DEVICE_ARR_ALL_LIGHT = [
     *DEVICE_ARR_LIGHT_RGBW,
     *DEVICE_ARR_ALL_EXFREE_LIGHT,
 ]
-DEVICE_ARR_ALL_COVER = [*DEVICE_ARR_COVER, *DEVICE_ARR_ALL_EXFREE_COVER]
+DEVICE_ARR_ALL_COVER = [
+    *DEVICE_ARR_COVER,
+    *DEVICE_ARR_SENS_GATE_CONTROLLER,
+    *DEVICE_ARR_ALL_EXFREE_COVER,
+]
 DEVICE_ARR_ALL_CLIMATE = [*DEVICE_ARR_CLIMATE]
 DEVICE_ARR_ALL_TRANSMITTER = [
     *DEVICE_ARR_TRANS_REMOTE,
@@ -177,7 +190,11 @@ DEVICE_ARR_ALL_IGNORE = [*DEVICE_ARR_REPEATER]
 
 
 # measurable magnitude/quantity:
-DEVICE_ARR_ALL_SENSOR_MEAS = [*DEVICE_ARR_SENS_TEMP, *DEVICE_ARR_SENS_HUMID]
+DEVICE_ARR_ALL_SENSOR_MEAS = [
+    *DEVICE_ARR_SENS_TEMP,
+    *DEVICE_ARR_SENS_HUMID,
+    *DEVICE_ARR_SENS_ENERGY_METER,
+]
 # binary sensors:
 DEVICE_ARR_ALL_SENSOR_BINARY = [
     *DEVICE_ARR_SENS_WATER,
@@ -251,75 +268,114 @@ class ExtaLifeAPI:
     CHN_TYP_TRANSMITTERS = "transmitters"
     CHN_TYP_EXFREE_RECEIVERS = "exta_free_receivers"
 
-    def __init__(self, on_connect=None, on_disconnect=None, **kwargs):
-        """ API Object constructor
+    def __init__(
+        self,
+        loop: AbstractEventLoop,
+        on_notification_callback=None,
+        on_connect_callback=None,
+        on_disconnect_callback=None,
+    ):
+        """API Object constructor
 
         on_connect - optional callback for notifications when API connects to the controller and performs successfull login
 
-        on_disconnect - optional callback for notifications when API loses connection to the controller """
+        on_disconnect - optional callback for notifications when API loses connection to the controller"""
 
-        self.host: str = None
-        self.user: str = None
-        self.password: str = None
-        self.tcp = None
+        self.tcp: TCPAdapter = None
         self._mac = None
         self._sw_version: str = None
         self._name: str = None
 
         # set on_connect callback to notify caller
-        self._on_connect_callback = on_connect
-        self._on_disconnect_callback = on_disconnect
+        self._on_connect_callback = on_connect_callback
+        self._on_disconnect_callback = on_disconnect_callback
+        self._on_notification_callback = on_notification_callback
 
         self._is_connected = False
 
-    def connect(self, user, password, **kwargs):
-        self.host = kwargs.get("host")
-        self.user = user
-        self.password = password
+        self._loop: AbstractEventLoop = loop
+
+    async def async_connect(self, user, password, host=None):
+        self._host = host
+        self._user = user
+        self._password = password
 
         # perform controller autodiscovery if no IP specified
-        if self.host is None:
-            self.host = TCPAdapter.discover_controller()
+        if self._host is None or self._host == "":
+            self._host = await self._loop.run_in_executor(
+                None, TCPAdapter.discover_controller
+            )
 
         # check if still None after autodiscovery
-        if not self.host:
+        if not self._host:
             raise TCPConnError("Could not find controller IP via autodiscovery")
 
+        ConnectionParams.host = self._host
+        ConnectionParams.user = self._user
+        ConnectionParams.password = self._password
+        ConnectionParams.eventloop = self._loop
+        ConnectionParams.keepalive = 8  # ping period; in seconds
+        ConnectionParams.on_notification_callback = self._async_on_notification_callback
+        ConnectionParams.on_connect_callback = (
+            self._async_on_tcp_connect_callback
+        )  # self._on_connect_callback
+        ConnectionParams.on_disconnect_callback = self._async_on_tcp_disconnect_callback
+
         # init TCP adapter and try to connect
-        self.tcp = TCPAdapter(
-            user,
-            password,
-            on_connect_callback=self._on_tcp_connect_callback,
-            on_disconnect_callback=self._on_tcp_disconnect_callback,
-        )
+        self._connection = TCPAdapter(ConnectionParams)
 
         # connect and login - may raise TCPConnErr
-        log.debug("Connecting to controller using IP: %s", self.host)
-        resp = self.tcp.connect(self.host)
+        _LOGGER.debug("Connecting to controller using IP: %s", self._host)
+        await self._connection.async_connect()
+
+        resp = await self._connection.async_login()
 
         # check response if login succeeded
         if resp[0]["status"] != "success":
             raise TCPConnError(resp)
 
         # determine controller MAC as its unique identifier
-        self._mac = self.get_mac()
+        self._mac = await self.async_get_mac()
 
-    def _on_tcp_connect_callback(self):
+        return True
+
+    async def async_reconnect(self):
+        """ Reconnect with existing connection parameters """
+        return await self.async_connect(self._user, self._password, self._host)
+
+    @property
+    def host(self):
+        return self._host
+
+    async def _async_on_tcp_connect_callback(self):
         """ Called when connectivity is (re)established and logged on successfully """
         self._is_connected = True
         # refresh software version info
-        self.get_version_info()
-        self.get_name()
+        await self.async_get_version_info()
+        await self.async_get_name()
 
         if self._on_connect_callback is not None:
-            self._on_connect_callback()
+            await self._loop.run_in_executor(None, self._on_connect_callback)
 
-    def _on_tcp_disconnect_callback(self):
+    async def _async_on_tcp_disconnect_callback(self):
         """ Called when connectivity is lost """
         self._is_connected = False
 
         if self._on_disconnect_callback is not None:
-            self._on_disconnect_callback()
+            await self._loop.run_in_executor(None, self._on_disconnect_callback)
+
+    async def _async_on_notification_callback(self, data):
+        """ Called when notification from the controller is received """
+        if (
+            self._on_notification_callback(data) is not None
+            and data.get("command") == self.CMD_CONTROL_DEVICE
+        ):
+            # forward only device status changes to the listener
+            self._on_notification_callback(data)
+
+    def set_notification_callback(self, callback):
+        """ update Notification callback assignment """
+        self._on_notification_callback = callback
 
     @property
     def is_connected(self) -> bool:
@@ -335,42 +391,44 @@ class ExtaLifeAPI:
     def sw_version(self) -> str:
         return self._sw_version
 
-    def get_version_info(self):
+    async def async_get_version_info(self):
         """ Get controller software version """
         cmd_data = {"data": None}
         try:
-            resp = self.tcp.exec_command(self.CMD_VERSION, cmd_data)
+            resp = await self._connection.async_execute_command(
+                self.CMD_VERSION, cmd_data
+            )
             self._sw_version = resp[0]["data"]["new_version"]
             return self._sw_version
 
         except TCPCmdError:
-            log.error("Command %s could not be executed", self.CMD_VERSION)
+            _LOGGER.error("Command %s could not be executed", self.CMD_VERSION)
             return
 
-    def get_mac(self):
+    async def async_get_mac(self):
         from getmac import get_mac_address
 
         # get EFC-01 controller MAC address
-        return get_mac_address(ip=self.host)
+        return await self._loop.run_in_executor(None, get_mac_address, None, self._host)
 
     @property
     def mac(self):
         return self._mac
 
-    def get_network_settings(self):
+    async def async_get_network_settings(self):
         """ Executes command 102 to get network settings and controller name """
         try:
             cmd = self.CMD_FETCH_NETW_SETTINGS
-            resp = self.tcp.exec_command(cmd, None, 1)
+            resp = await self._connection.async_execute_command(cmd, None)
             return resp[0].get("data")
 
         except TCPCmdError:
-            log.error("Command %s could not be executed", cmd)
+            _LOGGER.error("Command %s could not be executed", cmd)
             return None
 
-    def get_name(self):
+    async def async_get_name(self):
         """ Get controller name """
-        data = self.get_network_settings()
+        data = await self.async_get_network_settings()
         self._name = data.get("name") if data else None
         return self._name
 
@@ -379,7 +437,7 @@ class ExtaLifeAPI:
         """ Get controller name from buffer """
         return self._name
 
-    def get_channels(
+    async def async_get_channels(
         self,
         include=(
             CHN_TYP_RECEIVERS,
@@ -397,29 +455,29 @@ class ExtaLifeAPI:
             channels = list()
             if self.CHN_TYP_RECEIVERS in include:
                 cmd = self.CMD_FETCH_RECEIVERS
-                resp = self.tcp.exec_command(cmd, None, 1.5)
+                resp = await self._connection.async_execute_command(cmd, None)
                 # here is where the magic happens - transform TCP JSON data into API channel representation
                 channels.extend(self._get_channels_int(resp))
 
             if self.CHN_TYP_SENSORS in include:
                 cmd = self.CMD_FETCH_SENSORS
-                resp = self.tcp.exec_command(cmd, None, 1)
+                resp = await self._connection.async_execute_command(cmd, None)
                 channels.extend(self._get_channels_int(resp))
 
             if self.CHN_TYP_TRANSMITTERS in include:
                 cmd = self.CMD_FETCH_TRANSMITTERS
-                resp = self.tcp.exec_command(cmd, None, 1)
+                resp = await self._connection.async_execute_command(cmd, None)
                 channels.extend(self._get_channels_int(resp, dummy_ch=True))
 
             if self.CHN_TYP_EXFREE_RECEIVERS in include:
                 cmd = self.CMD_FETCH_EXTAFREE
-                resp = self.tcp.exec_command(cmd, None, 1)
+                resp = await self._connection.async_execute_command(cmd, None)
                 channels.extend(self._get_channels_int(resp))
 
             return channels
 
         except TCPCmdError:
-            log.error("Command %s could not be executed", cmd)
+            _LOGGER.error("Command %s could not be executed", cmd)
             return None
 
     @classmethod
@@ -433,25 +491,25 @@ class ExtaLifeAPI:
         of the "state" section (channel) + attributes of the "device" section
         eg.:
         "devices": [{
-				"id": 11,
-				"is_powered": false,
-				"is_paired": false,
-				"set_remove_sensor": false,
-				"device": 1,
-				"type": 11,
-				"serial": 725149,
-				"state": [{
-						"alias": "Kuchnia 1-1",
-						"channel": 1,
-						"icon": 13,
-						"is_timeout": false,
-						"fav": null,
-						"power": 0,
-						"last_dir": null,
-						"value": null
-					}
-				]
-			}
+                                "id": 11,
+                                "is_powered": false,
+                                "is_paired": false,
+                                "set_remove_sensor": false,
+                                "device": 1,
+                                "type": 11,
+                                "serial": 725149,
+                                "state": [{
+                                                "alias": "Kuchnia 1-1",
+                                                "channel": 1,
+                                                "icon": 13,
+                                                "is_timeout": false,
+                                                "fav": null,
+                                                "power": 0,
+                                                "last_dir": null,
+                                                "value": null
+                                        }
+                                ]
+                        }
         will become:
             [{
                 "id": "11-1",
@@ -506,11 +564,13 @@ class ExtaLifeAPI:
                     channels.append(channel)
         return channels
 
-    def execute_action(self, action, channel_id, **fields):
+    async def async_execute_action(self, action, channel_id, **fields):
         """Execute action/command in controller
         action - action to be performed. See ACTN_* constants
         channel_id - concatenation of device id and channel number e.g. '1-1'
         **fields - fields of the native JSON command e.g. value, mode, mode_val etc
+
+        Returns array of dicts converted from JSON or None if error occured
         """
         MAP_ACION_STATE = {
             # Exta Life:
@@ -551,41 +611,37 @@ class ExtaLifeAPI:
 
         try:
             cmd = self.CMD_CONTROL_DEVICE
-            resp = self.tcp.exec_command(cmd, cmd_data, 0.2)
+            resp = await self._connection.async_execute_command(cmd, cmd_data)
 
-            log.debug("JSON response for command %s: %s", cmd, resp)
+            _LOGGER.debug("JSON response for command %s: %s", cmd, resp)
 
             return resp
-        except TCPCmdError:
-            log.error("Command %s could not be executed", cmd)
+        except TCPCmdError as err:
+            # _LOGGER.error("Command %s could not be executed", cmd)
+            _LOGGER.exception(err)
             return None
 
-    def restart(self):
+    async def async_restart(self):
         """ Restart EFC-01 """
         try:
             cmd = self.CMD_RESTART
             cmd_data = dict()
 
-            resp = self.tcp.exec_command(cmd, cmd_data, 0.2)
+            resp = await self._connection.async_execute_command(cmd, cmd_data)
 
-            log.debug("JSON response for command %s: %s", cmd, resp)
+            _LOGGER.debug("JSON response for command %s: %s", cmd, resp)
 
             return resp
         except TCPCmdError:
-            log.error("Command %s could not be executed", cmd)
+            _LOGGER.error("Command %s could not be executed", cmd)
             return None
 
-    def disconnect(self):
-        self.tcp.disconnect()
+    async def disconnect(self):
+        """ Disconnect from the controller and stop message tasks """
+        await self._connection.async_stop(True)
 
     def get_tcp_adapter(self):
-        return self.tcp
-
-    def get_notif_listener(self, on_notify):
-        """
-        Return Notification listener object wrapping 2nd TCP connection for notifications exclusively
-        """
-        return NotifThreadListener(self.host, self.user, self.password, on_notify)
+        return self._connection
 
 
 class TCPConnError(Exception):
@@ -609,6 +665,60 @@ class TCPCmdError(Exception):
             self.error_code = None if not data else data.get("code")
 
 
+@attr.s
+class ConnectionParams:
+    eventloop = attr.ib(type=asyncio.events.AbstractEventLoop)
+    host = attr.ib(type=str)
+    user = attr.ib(type=str)
+    password = attr.ib(type=str)
+    on_connect_callback = None
+    on_disconnect_callback = None
+    on_notification_callback = None
+    keepalive = attr.ib(type=float)
+
+
+class APIMessage:
+    def __init__(self):
+        self.command = ""
+        self.data = dict()
+
+
+class APIRequest(APIMessage):
+    def __init__(self, command: str, data: dict):
+        super().__init__()
+        self.command = command
+        self.data = data
+
+    # def from_dict(self, request: dict):
+    #     self.command = request.get("command")
+    #     self.data = request.get("data")
+
+    def as_dict(self):
+        return {"command": self.command, "data": self.data}
+
+    def as_json(self):
+        return json.dumps(self.as_dict())
+
+
+class APIResponse(APIMessage):
+    def __init__(self, json: dict):
+        super().__init__()
+        self._as_dict = json
+        self.command = json.get("command")
+        self.data = json.get("data")
+        self.status = json.get("status")
+
+    @classmethod
+    def from_json(cls, json_str: str):
+        # print(json_str[:-1])
+        json_dict = json.loads(json_str[:-1])
+
+        return APIResponse(json_dict)
+
+    def as_dict(self):
+        return self._as_dict
+
+
 class TCPAdapter:
 
     TCP_BUFF_SIZE = 8192
@@ -616,79 +726,333 @@ class TCPAdapter:
 
     _cmd_in_execution = False
 
-    def __init__(
-        self,
-        user,
-        password,
-        host=None,
-        on_connect_callback=None,
-        on_disconnect_callback=None,
-    ):
-        self.user = user
-        self.password = password
+    def __init__(self, params: ConnectionParams):
+
+        from datetime import datetime
+
+        self._params = params
+        self.user = None
+        self.password = None
         self.host = None
 
-        self._on_connect_callback = on_connect_callback
-        self._on_disconnect_callback = on_disconnect_callback
+        self._on_connect_callback = params.on_connect_callback
+        self._on_disconnect_callback = params.on_disconnect_callback
 
         self.tcp = None
 
-    def connect(self, host):
+        self._connected = False
+        self._stopped = False
+        self._authenticated = False
+        self._tcp_reader: asyncio.StreamReader = (
+            None
+        )  # type: Optional[asyncio.StreamReader]
+        self._tcp_writer: asyncio.StreamWriter = (
+            None
+        )  # type: Optional[asyncio.StreamWriter]
+        self._write_lock = asyncio.Lock()
+        self._cmd_exec_lock = asyncio.Lock()
+        self._running_task = None
+        self._socket = None
+        self._socket_connected = False
+        self._ping_task = None
+
+        self._tcp_last_write = datetime.now()
+
+        self._message_handlers = []
+
+    def _start_ping(self) -> None:
+        """ Perform "smart" ping task. Send ping if nothing was send to socket in the last keepalive-time period """
+
+        self._ping_task = self._params.eventloop.create_task(self._ping_())
+
+    async def _ping_(self) -> None:
+        from datetime import datetime, timedelta
+
+        while self._connected:
+            last_write = (datetime.now() - self._tcp_last_write).seconds
+
+            if last_write < self._params.keepalive:
+                period = self._params.keepalive - last_write
+                await asyncio.sleep(period)
+                continue
+
+            if not self._connected:
+                break
+
+            try:
+                await self.async_ping()
+            except TCPConnError:
+                _LOGGER.error("%s: Ping Failed!", self._params.address)
+                await self._async_on_error()
+                break
+
+        _LOGGER.debug("_ping_() - task ends")
+
+    async def async_ping(self) -> None:
+        self._check_connected()
+        msg = " " + chr(3)
+        await self.async_send_message(msg.encode())
+
+    async def _async_write(self, data: bytes) -> None:
+        from datetime import datetime
+
+        if not self._socket_connected:
+            raise TCPConnError("Socket is not connected")
+        try:
+            async with self._write_lock:
+                self._tcp_writer.write(data)
+                self._tcp_last_write = datetime.now()
+                await self._tcp_writer.drain()
+        except OSError as err:
+            await self._async_on_error()
+            raise TCPConnError(f"Error while writing data: {err}")
+
+    async def async_send_message(self, msg) -> None:
+
+        _LOGGER.debug("Sending:  %s", str(msg))
+        await self._async_write(bytes(msg))
+
+    async def async_send_message_await_response(
+        self, send_msg, command: str, timeout: float = 30.0
+    ):  # -> Any:
+        """ Send message to controller and await response """
+        # prevent controller overloading and command loss - wait until finished (lock released)
+        async with self._cmd_exec_lock:
+            fut = self._params.eventloop.create_future()
+            responses = []
+
+            def on_message(resp: APIResponse):
+                _LOGGER.debug("on_message(), resp: %s", resp.as_dict())
+                if fut.done():
+                    return
+
+                if resp.command != command:
+                    return
+
+                if resp.status == "searching":
+                    responses.append(resp.as_dict())
+                elif resp.status in ("success", "failure", "partial"):
+                    responses.append(resp.as_dict())
+                    fut.set_result(responses)
+
+            self._message_handlers.append(on_message)
+            await self.async_send_message(send_msg)
+
+            try:
+                await asyncio.wait_for(fut, timeout)
+
+            except asyncio.TimeoutError:
+                if self._stopped:
+                    raise TCPConnError("Disconnected while waiting for API response!")
+                await self._async_on_error()
+                raise TCPConnError("Timeout while waiting for API response!")
+
+            try:
+                self._message_handlers.remove(on_message)
+            except ValueError:
+                pass
+
+            return responses
+            # return
+
+    async def async_execute_command(self, command: str, data) -> list:
+
+        # request = {"command": command, "data": data}
+        # req = self._json_to_tcp(request)
+        req = APIRequest(command, data)
+        msg = str(req.as_json() + chr(3)).encode()
+        response = await self.async_send_message_await_response(msg, command)
+
+        if len(response) == 0:
+            raise TCPConnError("No response received from Controller!")
+
+        return response
+
+    async def _async_recv(self) -> bytes:
+
+        try:
+            ret = await self._tcp_reader.readuntil(chr(3).encode())
+        except (asyncio.IncompleteReadError, OSError, TimeoutError) as err:
+            raise TCPConnError(f"Error while receiving data: {err}")
+
+        return ret
+
+    def _check_connected(self) -> None:
+        if not self._connected:
+            raise TCPConnError("Not connected!")
+
+    async def _close_socket(self) -> None:
+        _LOGGER.debug("entering _close_socket()")
+        from datetime import datetime
+
+        if not self._socket_connected:
+            return
+        async with self._write_lock:
+            self._tcp_writer.close()
+            self._tcp_writer = None
+            self._tcp_reader = None
+        if self._socket is not None:
+            self._socket.close()
+
+        self._socket_connected = False
+        self._connected = False
+        self._authenticated = False
+        _LOGGER.debug("%s: Closed socket", self._params.host)
+
+    async def async_connect(self):
         """
-        Connect to EFC-01 via TCP socket + try to log on via command: 1
+        Connect to EFC-01 via TCP socket
+        """
+        if self._stopped:
+            raise TCPConnError("Connection is closed!")
+        if self._connected:
+            raise TCPConnError("Already connected!")
+
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.setblocking(False)
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        _LOGGER.debug(
+            "Connecting to %s:%s",
+            self._params.host,
+            self.EFC01_PORT,
+        )
+        try:
+            coro = self._params.eventloop.sock_connect(
+                self._socket, (self._params.host, self.EFC01_PORT)
+            )
+            await asyncio.wait_for(coro, 30.0)
+        except OSError as err:
+            await self._async_on_error()
+            raise TCPConnError(
+                f"Error connecting to {self._params.host}: {err}", previous=err
+            )
+        except asyncio.TimeoutError:
+            await self._async_on_error()
+            raise TCPConnError(f"Timeout while connecting to {self._params.host}")
+
+        _LOGGER.debug("%s: Opened socket for", self._params.host)
+        self._tcp_reader, self._tcp_writer = await asyncio.open_connection(
+            sock=self._socket
+        )
+        self._socket_connected = True
+        self._params.eventloop.create_task(self.async_run_forever())
+
+        _LOGGER.debug("Successfully connected ")
+
+        self._connected = True
+
+        self._start_ping()
+
+    async def async_login(self) -> None:
+        """
+        Try to log on via command: 1
         return json dictionary with result or exception in case of connection or logon
         problem
         """
-        self.tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.host = host
-        try:
-            self.tcp.connect((self.host, self.EFC01_PORT))
+        self._check_connected()
+        if self._authenticated == True:
+            raise TCPConnError("Already logged in!")
 
-            cmd_data = {"password": self.password, "login": self.user}
-            resp_js = self.exec_command(ExtaLifeAPI.CMD_LOGIN, cmd_data)
+        _LOGGER.debug(
+            "Logging in...user: %s, password: %s",
+            self._params.user,
+            self._params.password,
+        )
+        resp_js = await self.async_execute_command(
+            ExtaLifeAPI.CMD_LOGIN,
+            {"password": self._params.password, "login": self._params.user},
+        )
 
-            # notify on (re)connection
-            self._event_connect()
+        if (
+            resp_js[0].get("status") == "failure"
+            and resp_js[0].get("data").get("code") == -2
+        ):
+            # pass
+            raise TCPConnError("Invalid password!")
 
-            return resp_js
+        self._authenticated = True
 
-            # ################ IMPLEMENT CHECKING OF THE RESPONSE!!!!!!!
-        except (Exception) as e:
-            # something wrong happend with the socket
-            log.debug("Exception while connecting:", exc_info=e)
+        _LOGGER.debug("Authenticated")
 
-            # cast to TCPConnError, but keep the original info
-            raise TCPConnError(previous=e)
+        await self._async_event_connect()
 
-    def disconnect(self):
-        self._tcp_shutdown()
-        self.tcp.close()
+        return resp_js
 
-        # inform of disconnection
-        self._event_disconnect()
+    async def async_run_forever(self) -> None:
+        while True:
+            try:
+                await self._async_run_once()
+            except TCPConnError as err:
+                _LOGGER.info("Error while reading incoming messages: %s", err.data)
+                await self._async_on_error()
+                break
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.info(
+                    "Unexpected error while reading incoming messages: %s", err
+                )
+                await self._async_on_error()
+                break
 
-    def _event_connect(self):
+        _LOGGER.debug("async_run_forever() - task ends")
+
+    async def _async_run_once(self) -> None:
+
+        raw_msg = await self._async_recv()
+
+        msg = raw_msg.decode()
+
+        resp = APIResponse.from_json(msg)
+        _LOGGER.debug("_async_run_once, msg: %s", msg)
+
+        for msg_handler in self._message_handlers[:]:
+            msg_handler(resp)
+
+        await self._handle_notification(resp)
+
+    async def _handle_notification(self, resp: APIResponse):
+        _LOGGER.debug("_handle_notification(), resp: %s", resp.as_dict())
+
+        # pass only status change notifications to registered listeners
+        if (
+            resp.status == "notification"
+            and self._params.on_notification_callback is not None
+        ):
+            await self._params.on_notification_callback(resp.as_dict())
+
+    async def _async_on_error(self) -> None:
+        await self.async_stop(force=True)
+
+    async def async_stop(self, force: bool = False) -> None:
+        _LOGGER.debug("async_stop() self._stopped: %s", self._stopped)
+        if self._stopped:
+            return
+
+        self._stopped = True
+        if self._running_task is not None:
+            self._running_task.cancel()
+
+        if self._ping_task is not None:
+            self._ping_task.cancel()
+            try:
+                await self._ping_task
+            except asyncio.CancelledError:
+                pass
+
+        await self._close_socket()
+
+        await self._async_event_disconnect()
+
+    async def _async_event_connect(self):
         """ Notify of (re)connection by calling provided callback """
         if self._on_connect_callback is not None:
-            self._on_connect_callback()
+            await self._on_connect_callback()
 
-    def _event_disconnect(self):
+    async def _async_event_disconnect(self):
         """ Notify of lost connection by calling provided callback """
         if self._on_disconnect_callback is not None:
-            self._on_disconnect_callback()
-
-    def _tcp_shutdown(self):
-        """ Closes a socket instance cleanly """
-        try:
-            self.tcp.shutdown(socket.SHUT_RDWR)
-        except OSError as e:
-            pass
-            # On OSX, socket shutdowns both sides if any side closes it
-            # causing an error 57 'Socket is not connected' on shutdown
-            # of the other side (or something), see
-            # http://bugs.python.org/issue4397
-            # note: stdlib fixed test, not behavior
+            await self._on_disconnect_callback()
 
     @staticmethod
     def discover_controller():
@@ -712,7 +1076,7 @@ class TCPAdapter:
         except OSError as e:
             sock.close()
             sock = None
-            log.error(
+            _LOGGER.error(
                 "Could not connect to receive UDP multicast from EFC-01 on port %s",
                 MCAST_PORT,
             )
@@ -728,286 +1092,9 @@ class TCPAdapter:
             data, address = sock.recvfrom(1024)
         except Exception:
             sock.close()
-            return False
+            return
         sock.close()
-        log.debug("Got multicast response from EFC-01: %s", str(data.decode()))
+        _LOGGER.debug("Got multicast response from EFC-01: %s", str(data.decode()))
         if data == b'{"status":"broadcast","command":0,"data":null}\x03':
             return address[0]  # return IP - array[0]; array[1] is sender's port
-        return False
-
-    def _json_to_tcp(self, json_dict):
-        stream = json.dumps(json_dict) + chr(3)
-        return stream.encode()
-
-    def _tcp_to_json(self, tcp_data, command=None):
-        data = tcp_data.decode()
-        # print(data)
-        if data is not None:
-            # log.debug("TCP data received for command %s: %s", command, data)
-            if data[-1] == chr(3):
-                data = data[:-1]
-        return self.parse_tcp_response(data, command)
-
-    def ping(self):
-        """ Keep connection alive - ping"""
-        cmd_ping = " " + chr(3)
-        try:
-            self.tcp.send(cmd_ping.encode())
-        except Exception:
-            log.error("Connectivity error during executing EFC-01 ping")
-            try:
-                self._tcp_shutdown()
-
-                # inform of disconnection
-                self._event_disconnect()
-
-            except Exception:
-                log.exception("Exception while closing Socket after failed socket.send")
-                return
-            log.info("Reconnecting to EFC-01 on IP: %s", self.host)
-
-            self.connect(self.host)
-            self.tcp.send(cmd_ping.encode())
-
-    def exec_command(self, command, data, timeout=0.2):
-        """
-        Internal method - execute TCP request with semaphore. Allow only 1 request to controller at a time
-        command - command to be executed; see CMD_* constants
-        data - json: EFC-01 native TCP
-        convert python JSON dict into TCP stream
-        and send to socket
-        """
-        import time
-
-        # wait for the previous TCP commands to finish before executing action
-        # otherwise the controller may loose this command
-        # wait max 3 seconds and let it go anyway
-        for cnt in range(30):
-            if not TCPAdapter._cmd_in_execution:
-                break
-            time.sleep(0.1)
-
-        TCPAdapter._cmd_in_execution = True
-
-        resp = self._exec_command(command, data, timeout)
-
-        TCPAdapter._cmd_in_execution = False
-        return resp
-
-    def _exec_command(self, command, data, timeout=0.2):
-        """
-        Internal method - execute TCP request
-        request - json: EFC-01 native TCP
-        convert python JSON dict into TCP stream
-        and send to socket
-        """
-        from datetime import datetime
-
-        SOCK_TIMEOUT = 15  # let it run maximum for 15 seconds
-
-        request = {"command": command, "data": data}
-        cmd = self._json_to_tcp(request)
-
-        log.debug("TCP command to execute: %s", cmd)
-
-        self.tcp.setblocking(0)
-        try:
-            # first receive some potential data waiting for us from other connections broadcasted to all connected sessions
-            self.tcp.recv(self.TCP_BUFF_SIZE)
-        except OSError:
-            pass
-        try:
-            # and then send the command
-            self.tcp.send(cmd)
-        except Exception:
-            # inform of disconnection
-            self._event_disconnect()
-            log.exception(
-                "Socket exception occured while executing controller command %s",
-                command,
-            )
-            raise TCPCmdError
-
-        resp = b""
-        time = datetime.now()
-        # optimize performance in socket non-blocking mode to avoid waiting for timeouts, which may be very long (seconds)
-        # Exta Life controller sends data in chunks. Need to wait for complete set and check status=success or failure
-        # after every attempt to read the data from socket.
-        resp_js = list()
-        while True:
-            try:
-                resp = resp + self.tcp.recv(self.TCP_BUFF_SIZE)
-                # sometimes JSON data received from TCP are not complete yet (invalid JSON syntax)
-                # and so JSN decoder fails. Need to try full JSON decoding after every TCP call
-                try:
-                    resp_js = self._tcp_to_json(resp, command)
-                except json.decoder.JSONDecodeError:
-                    # check for overall timeout
-                    if (datetime.now() - time).seconds > SOCK_TIMEOUT:
-                        break
-                    continue
-
-                log.debug("resp_js: %s", resp_js)
-                if resp_js and resp_js[-1].get("status") in (
-                    "success",
-                    "failure",
-                ):  # non-empty lists are rendered as True in Python - pylint warning
-                    break
-            except OSError:
-                # expected error due to nonblocking mode and no data found
-                # check if this is not running too long; otherwise it'll hang the whole integration
-                if (datetime.now() - time).seconds > SOCK_TIMEOUT:
-                    break
-
-        return resp_js
-
-    def listen(self, timeout, toutcback):
-        """
-        Read data from socket until 1 single, full notification is received
-        This is a blocking function (infinite loop), thus the timeout callback called every [timeout] seconds
-        """
-        from datetime import datetime
-
-        time = datetime.now()
-        self.tcp.setblocking(1)
-        self.tcp.settimeout(
-            1.5
-        )  # work in blocking mode as otherwise we'll have high CPU load by the loop
-
-        resp = b""
-        resp_js = list()
-        while True:
-            try:
-                if (datetime.now() - time).seconds >= timeout:
-                    # call the callback to perform other things while waiting for the notification
-                    toutcback()
-                    time = datetime.now()
-
-                resp_1 = self.tcp.recv(self.TCP_BUFF_SIZE)
-                # print(f"listen_once receiving: {resp_1}")
-                if not resp_1:
-                    continue
-                resp = resp + resp_1
-                # sometimes JSON data received from TCP are not complete yet (invalid JSON syntax)
-                # and so JSON decoder fails. Need to try full JSON decoding after every TCP call
-                try:
-                    resp_js = self._tcp_to_json(resp)
-                except json.decoder.JSONDecodeError:
-                    continue
-
-                log.debug("resp_js (intermediary): %s", resp_js)
-
-                if resp_js and resp_js[-1].get("status") == "notification":
-                    break
-                pass
-            except OSError:
-                pass
-
-        return resp_js[0]
-
-    @classmethod
-    def filter_tcp_response(cls, tcp_js, command):
-        """
-        command - string constant
-        stream  - TCP stream (String)
-
-        Filter out unexpected TCP response data
-        e.g. commands from other users/connections
-        """
-        # TODO: apply filter based on command type. eg command 20 (control) returns "notification" message and then "success" message
-        data = []
-        for elem in tcp_js:
-            if elem["command"] == command:
-                data.append(elem)
-        return data
-
-    @classmethod
-    def parse_tcp_response(cls, tcp_data, command=None):
-        """
-        1. reformat TCP JSON into valid JSON (concatenate the "searching" parts)
-        2. return TCP reformatted JSON
-        """
-
-        # array
-        data_split = tcp_data.split("\3")
-        if data_split[-1][-1] == "\n":
-            data_split.pop()  # delete empty array element
-
-        # need to enclose TCP JSON within []
-        reform = "["
-        c = 0
-        for elem in data_split:
-            c += 1
-            sep = "," if c < len(data_split) else ""
-            reform += elem + sep
-        reform += "]"
-
-        # once the TCP was reformatted - create pythonic JSON dict
-        tcp_js = json.loads(reform)
-
-        # filter rubbish data coming from other users and connections
-        if command:
-            tcp_js = cls.filter_tcp_response(tcp_js, command)
-
-        # now, combine all "device" parts of the JSON dict into one list and return it to the caller
-        return tcp_js
-
-
-class NotifThreadListener(threading.Thread):
-    """ Threaded TCP status update notifications listener """
-
-    def __init__(self, host, user, password, on_notify):
-        threading.Thread.__init__(self)
-        self._user = user
-        self._password = password
-        self._host = host
-        self._on_notify = on_notify
-        self._execute = True
-
-        self.connection = TCPAdapter(self._user, self._password)
-        self.connection.connect(self._host)
-
-    def run(self):
-        import time
-
-        while self._execute:
-            try:
-                resp = self.connection.listen(9, self._interrupt_callback)
-            except StopNotifThread:
-                return
-            if resp:
-                self._on_notify(resp)
-
-    def _interrupt_callback(self):
-        """ callback to perform tasks while in infinite loop """
-        if not self._execute:
-            raise StopNotifThread
-        self.ping()
-
-    def stop(self):
-        import time
-
-        self._execute = False
-
-        # wait 2 seconds
-        for cnt in range(20):
-            if not self.connection:
-                break
-            time.sleep(0.1)
-        self.cleanup()
-
-    def cleanup(self):
-        """ Do cleanup on Thread termination """
-        try:
-            self.connection.disconnect()
-        except:
-            pass
-        del self.connection
-
-    def ping(self):
-        """ Keep connection alive """
-        self.connection.ping()
-
-
-class StopNotifThread(Exception):
-    pass
+        return

@@ -1,43 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L\u2019acord seleccionat ja est\u00e0 configurat.",
+            "already_configured": "L'acord seleccionat ja est\u00e0 configurat.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
             "authorize_url_timeout": "Temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3 esgotat.",
-            "client_id": "L'identificador de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
-            "client_secret": "El codi secret de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
-            "no_agreements": "Aquest compte no t\u00e9 pantalles Toon.",
-            "no_app": "Has de configurar Toon abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "S'ha produ\u00eft un error inesperat durant l'autenticaci\u00f3."
-        },
-        "error": {
-            "credentials": "Les credencials proporcionades no s\u00f3n v\u00e0lides.",
-            "display_exists": "La pantalla seleccionada ja est\u00e0 configurada."
+            "no_agreements": "Aquest compte no t\u00e9 pantalles Toon."
         },
         "step": {
             "agreement": {
                 "data": {
                     "agreement": "Acord"
                 },
-                "description": "Seleccioneu l'adre\u00e7a de l'acord a afegir.",
+                "description": "Selecciona l'adre\u00e7a de l'acord a afegir.",
                 "title": "Selecciona acord"
-            },
-            "authenticate": {
-                "data": {
-                    "password": "Contrasenya",
-                    "tenant": "Tenant",
-                    "username": "Nom d'usuari"
-                },
-                "description": "Autentica't amb el teu compte d'Eneco Toon (no el compte de desenvolupador).",
-                "title": "Enlla\u00e7ar compte de Toon"
-            },
-            "display": {
-                "data": {
-                    "display": "Tria la visualitzaci\u00f3"
-                },
-                "description": "Selecciona la pantalla Toon amb la qual vols connectar-te.",
-                "title": "Selecci\u00f3 de pantalla"
             },
             "pick_implementation": {
                 "title": "Tria amb quin vols autenticar-te"

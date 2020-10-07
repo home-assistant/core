@@ -257,7 +257,8 @@ class TestComponentHistory(unittest.TestCase):
         # will happen with encoding a native state
         input_state = states["media_player.test"][1]
         orig_last_changed = json.dumps(
-            process_timestamp(input_state.last_changed), cls=JSONEncoder,
+            process_timestamp(input_state.last_changed),
+            cls=JSONEncoder,
         ).replace('"', "")
         orig_state = input_state.state
         states["media_player.test"][1] = {

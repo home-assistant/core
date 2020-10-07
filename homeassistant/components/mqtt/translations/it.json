@@ -66,11 +66,13 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Abilita messaggio di nascita",
                     "birth_payload": "Payload del messaggio birth",
                     "birth_qos": "QoS del messaggio birth",
                     "birth_retain": "Persistenza del messaggio birth",
                     "birth_topic": "Argomento del messaggio birth",
                     "discovery": "Attiva l'individuazione",
+                    "will_enable": "Abilita messaggio di nascita",
                     "will_payload": "Payload del messaggio will",
                     "will_qos": "QoS del messaggio will",
                     "will_retain": "Persistenza del messaggio will",

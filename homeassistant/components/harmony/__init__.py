@@ -45,8 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             name, entry.unique_id, address, activity, harmony_conf_file, delay_secs
         )
         connected_ok = await device.connect()
-    except (asyncio.TimeoutError, ValueError, AttributeError):
-        raise ConfigEntryNotReady
+    except (asyncio.TimeoutError, ValueError, AttributeError) as err:
+        raise ConfigEntryNotReady from err
 
     if not connected_ok:
         raise ConfigEntryNotReady

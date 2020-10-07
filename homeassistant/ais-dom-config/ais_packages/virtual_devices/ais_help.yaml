@@ -10,12 +10,12 @@ input_text:
     name: "Podaj hasło do Wifi (jeśli pierwszy raz łączysz się z tego urządzenia z wybraną siecią):"
     mode: password
     initial: ""
-    icon: mdi:textbox-password
+    icon: mdi:form-textbox-password
   ais_iot_device_wifi_password:
     name: "Hasło do Wifi:"
     mode: password
     initial: ""
-    icon: mdi:textbox-password
+    icon: mdi:form-textbox-password
   ais_iot_device_name:
     name: "Twoja nazwa urządzenia:"
     initial: ""

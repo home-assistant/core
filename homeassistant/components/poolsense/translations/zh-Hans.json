@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "unknown": "\u672a\u77e5\u9519\u8bef"
-        },
         "step": {
             "user": {
                 "data": {

@@ -19,9 +19,9 @@
             "closed": "{entity_name} ferm\u00e9",
             "closing": "{entity_name} fermeture",
             "opened": "{entity_name} ouvert",
-            "opening": "{entity_name} ouverture",
-            "position": "{entity_name} changement de position",
-            "tilt_position": "{entity_name} changement d'inclinaison"
+            "opening": "Ouverture de {entity_name}",
+            "position": "Changement de position de {entity_name}",
+            "tilt_position": "Changement d'inclinaison de {entity_name}"
         }
     },
     "state": {

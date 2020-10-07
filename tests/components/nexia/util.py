@@ -13,7 +13,8 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 async def async_init_integration(
-    hass: HomeAssistant, skip_setup: bool = False,
+    hass: HomeAssistant,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 

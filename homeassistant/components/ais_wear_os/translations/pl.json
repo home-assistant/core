@@ -1,0 +1,26 @@
+{   "title": "AIS Wear OS",
+    "config": {
+        "step": {
+            "generate_pin": {
+                "title": "AIS Wear OS",
+                "description": "Generuje tajny kod PIN...\n\n ###### ![AIS Wear OS PIN](https://ai-speaker.com/images/brands/ais_wear_os/pin_3.png)"
+            },
+            "enter_pin": {
+                "title": "AIS Wear OS",
+                "description": "Wpisz kod PIN na zegarku. Uwaga ten kod jest ważny tylko przez 2 minuty.\n # {pin_code} \n ###### ![AIS Wear OS PIN](https://ai-speaker.com/images/brands/ais_wear_os/pin_2.png)"
+            },
+            "init": {
+                "title": "AIS Wear OS",
+                "description": "Zainstaluj aplikację AIS dom, na zegarku z systemem Wear OS.\nNastępnie w aplikacji na zegarku, wybierz opcję parowania za pomocą kodu PIN, [szczegóły w dokumentacji](https://www.ai-speaker.com).\n###### ![AIS Wear OS PIN](https://ai-speaker.com/images/brands/ais_wear_os/pin_1.png)\nPrzejdź dalej aby wygenerować kod parowania."
+            },
+            "confirm": {
+                "description": "![AIS logo](https://ai-speaker.com/images/brands/ais_wear_os/logo.png)\n\nCzy chcesz dodać dostęp do AIS z aplikacji na zegarku?",
+                "title": "AIS Wear OS"
+            }
+        },
+        "abort": {
+            "go_to_device": "OK, Gratulacje! Jeśli poprawnie wpisałeś PIN na urządzeniu, to za chwilę Twoje nowe urządzenie Wear OS powinno pojawić się na bramce.\n###### ![AIS Wear OS PIN](https://ai-speaker.com/images/brands/ais_wear_os/thumb-up.png)",
+            "pin_error": "Coś poszło nie tak. Spróbuj ponownie później."
+        }
+    }
+}

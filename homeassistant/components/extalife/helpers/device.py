@@ -4,8 +4,6 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType, state
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -80,7 +78,7 @@ class DeviceEvent:
 
 class Device:
     def __init__(self, device: DeviceEntry, type):
-        """ dev_info - device info - the same passed to Device Registry
+        """dev_info - device info - the same passed to Device Registry
         type  - Exta Life module type e.g 10 = ROP-21"""
         self._type = type
         self._device = device

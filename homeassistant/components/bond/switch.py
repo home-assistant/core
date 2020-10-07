@@ -1,13 +1,13 @@
 """Support for Bond generic devices."""
 from typing import Any, Callable, List, Optional
 
-from bond import DeviceTypes
+from bond_api import Action, DeviceType
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from ..switch import SwitchEntity
 from .const import DOMAIN
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
@@ -21,12 +21,10 @@ async def async_setup_entry(
     """Set up Bond generic devices."""
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    devices = await hass.async_add_executor_job(hub.get_bond_devices)
-
     switches = [
         BondSwitch(hub, device)
-        for device in devices
-        if device.type == DeviceTypes.GENERIC_DEVICE
+        for device in hub.devices
+        if DeviceType.is_generic(device.type)
     ]
 
     async_add_entities(switches, True)
@@ -41,20 +39,18 @@ class BondSwitch(BondEntity, SwitchEntity):
 
         self._power: Optional[bool] = None
 
+    def _apply_state(self, state: dict):
+        self._power = state.get("power")
+
     @property
     def is_on(self) -> bool:
         """Return True if power is on."""
         return self._power == 1
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self._hub.bond.turnOn(self._device.device_id)
+        await self._hub.bond.action(self._device.device_id, Action.turn_on())
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._hub.bond.turnOff(self._device.device_id)
-
-    def update(self):
-        """Fetch assumed state of the device from the hub using API."""
-        state: dict = self._hub.bond.getDeviceState(self._device.device_id)
-        self._power = state.get("power")
+        await self._hub.bond.action(self._device.device_id, Action.turn_off())

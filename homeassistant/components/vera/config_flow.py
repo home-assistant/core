@@ -42,10 +42,12 @@ def options_schema(options: dict = None) -> dict:
     options = options or {}
     return {
         vol.Optional(
-            CONF_LIGHTS, default=list_to_str(options.get(CONF_LIGHTS, [])),
+            CONF_LIGHTS,
+            default=list_to_str(options.get(CONF_LIGHTS, [])),
         ): str,
         vol.Optional(
-            CONF_EXCLUDE, default=list_to_str(options.get(CONF_EXCLUDE, [])),
+            CONF_EXCLUDE,
+            default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
     }
 
@@ -68,7 +70,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=options_data(user_input),)
+            return self.async_create_entry(
+                title="",
+                data=options_data(user_input),
+            )
 
         return self.async_show_form(
             step_id="init",

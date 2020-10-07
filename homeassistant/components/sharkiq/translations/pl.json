@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
+            "reauth_successful": "Token dost\u0119pu zosta\u0142 pomy\u015blnie zaktualizowany",
+            "unknown": "Nieoczekiwany b\u0142\u0105d."
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    }
+}

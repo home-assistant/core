@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "title": "Ajouter un compte OVO Energy"
+            }
+        }
+    }
+}

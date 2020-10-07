@@ -70,7 +70,8 @@ async def test_state_changed_event_sends_message(hass, mqtt_mock):
     e_id = "fake.entity"
     pub_topic = "bar"
     with patch(
-        ("homeassistant.core.dt_util.utcnow"), return_value=now,
+        ("homeassistant.core.dt_util.utcnow"),
+        return_value=now,
     ):
         # Add the eventstream component for publishing events
         assert await add_eventstream(hass, pub_topic=pub_topic)

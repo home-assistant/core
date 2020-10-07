@@ -67,7 +67,6 @@ class ExtaLifeBinarySensor(ExtaLifeChannel, BinarySensorEntity):
             self._dev_class = "opening"
 
         self._dev_type = dev_type
-        self._attributes = dict()
 
     @property
     def is_on(self):
@@ -101,21 +100,22 @@ class ExtaLifeBinarySensor(ExtaLifeChannel, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        data = self.channel_data.get("data")
+        attr = super().device_state_attributes
+        data = self.channel_data
         # general sensor attributes
         if data.get("sync_time") is not None:
-            self._attributes.update({"sync_time": data.get("sync_time")})
+            attr.update({"sync_time": data.get("sync_time")})
         if data.get("last_sync") is not None:
-            self._attributes.update({"last_sync": data.get("last_sync")})
+            attr.update({"last_sync": data.get("last_sync")})
         if data.get("battery_status") is not None:
-            self._attributes.update({"battery_status": data.get("battery_status")})
+            attr.update({"battery_status": data.get("battery_status")})
 
         # motion sensor attributes
         if self._dev_class == "motion":
-            self._attributes.update({"tamper": data.get("tamper")})
-            self._attributes.update({"tamper_sync_time": data.get("tamper_sync_time")})
+            attr.update({"tamper": data.get("tamper")})
+            attr.update({"tamper_sync_time": data.get("tamper_sync_time")})
 
-        return self._attributes
+        return attr
 
     def on_state_notification(self, data):
         """ React on state notification from controller """

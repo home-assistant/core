@@ -102,7 +102,7 @@ class AugustGateway:
             self._authentication = await self.authenticator.async_authenticate()
         except ClientError as ex:
             _LOGGER.error("Unable to connect to August service: %s", str(ex))
-            raise CannotConnect
+            raise CannotConnect from ex
 
         if self._authentication.state == AuthenticationState.BAD_PASSWORD:
             raise InvalidAuth
@@ -122,8 +122,8 @@ class AugustGateway:
         """Refresh the august access token if needed."""
         if self.authenticator.should_refresh():
             async with self._token_refresh_lock:
-                refreshed_authentication = await self.authenticator.async_refresh_access_token(
-                    force=False
+                refreshed_authentication = (
+                    await self.authenticator.async_refresh_access_token(force=False)
                 )
                 _LOGGER.info(
                     "Refreshed august access token. The old token expired at %s, and the new token expires at %s",

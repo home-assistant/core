@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Kan geen verbinding maken, probeer het opnieuw, het kan helpen om de netvoeding en ethernetkabels los te koppelen en opnieuw aan te sluiten"
+        }
+    }
+}

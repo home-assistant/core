@@ -33,11 +33,11 @@ ais_orange_dark:
   # Labels
   label-badge-background-color: "#202124"
   label-badge-text-color: "#BDC1C6"
-  label-badge-red: "#D06568"
-  label-badge-green: "#80C884"
-  label-badge-blue: "#5F9BEA"
-  label-badge-yellow: "#DFC271"
-  label-badge-gray: "#5F6267"
+  label-badge-red: "#df4c1e"
+  label-badge-green: "#0da035"
+  label-badge-blue: "#039be5"
+  label-badge-yellow: "#f4b400"
+  label-badge-gray: "#5f6267"
 
   # Cards
   ha-card-border-radius: "15px"

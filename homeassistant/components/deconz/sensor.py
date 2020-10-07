@@ -22,10 +22,10 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -59,7 +59,7 @@ ICON = {
 
 UNIT_OF_MEASUREMENT = {
     Consumption: ENERGY_KILO_WATT_HOUR,
-    Humidity: UNIT_PERCENTAGE,
+    Humidity: PERCENTAGE,
     LightLevel: "lx",
     Power: POWER_WATT,
     Pressure: PRESSURE_HPA,
@@ -234,7 +234,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def device_state_attributes(self):

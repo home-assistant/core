@@ -1,13 +1,33 @@
 {
     "config": {
         "abort": {
+            "already_configured_device": "Device is already configured",
+            "already_configured_local_device": "Local device(s) is already configured. Please remove those first before configuring a cloud device.",
             "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "connection_error": "Failed to connect to Smappee device.",
+            "invalid_mdns": "Unsupported device for the Smappee integration.",
+            "missing_configuration": "The component is not configured. Please follow the documentation."
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "Environment"
+                },
+                "description": "Set up your Smappee to integrate with Home Assistant."
+            },
+            "local": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter the host to initiate the Smappee local integration"
+            },
             "pick_implementation": {
                 "title": "Pick Authentication Method"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to add the Smappee device with serialnumber `{serialnumber}` to Home Assistant?",
+                "title": "Discovered Smappee device"
             }
         }
     }

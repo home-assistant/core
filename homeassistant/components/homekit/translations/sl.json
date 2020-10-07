@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "Samodejni zagon (onemogo\u010dite, \u010de uporabljate Z-wave ali kakteri drug sistem z zakasnjenim zagonom)",
-                    "safe_mode": "Varni na\u010din (omogo\u010dite samo, \u010de seznanjanje ne uspe)",
-                    "zeroconf_default_interface": "Uporabite privzeti zeroconf vmesnik (omogo\u010dite, \u010de mostu ni mogo\u010de najti v Home Assistant-u)"
+                    "safe_mode": "Varni na\u010din (omogo\u010dite samo, \u010de seznanjanje ne uspe)"
                 },
                 "description": "Te nastavitve je treba prilagoditi le, \u010de most HomeKit ni funkcionalen.",
                 "title": "Napredna konfiguracija"

@@ -172,7 +172,8 @@ async def test_setup_after_deps_in_stage_1_ignored(hass):
     mock_integration(
         hass,
         MockModule(
-            domain="an_after_dep", async_setup=gen_domain_setup("an_after_dep"),
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
         ),
     )
     mock_integration(

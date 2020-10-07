@@ -8,9 +8,9 @@ import requests
 
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
+from homeassistant.components.emulated_hue import upnp
 from homeassistant.const import HTTP_OK
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
@@ -18,6 +18,18 @@ BRIDGE_SERVER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
+
+
+class MockTransport:
+    """Mock asyncio transport."""
+
+    def __init__(self):
+        """Create a place to store the sends."""
+        self.sends = []
+
+    def sendto(self, response, addr):
+        """Mock sendto."""
+        self.sends.append((response, addr))
 
 
 class TestEmulatedHue(unittest.TestCase):
@@ -30,16 +42,11 @@ class TestEmulatedHue(unittest.TestCase):
         """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
-        with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
-            setup.setup_component(
-                hass,
-                emulated_hue.DOMAIN,
-                {
-                    emulated_hue.DOMAIN: {
-                        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT
-                    }
-                },
-            )
+        setup.setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: {emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT}},
+        )
 
         cls.hass.start()
 
@@ -50,23 +57,24 @@ class TestEmulatedHue(unittest.TestCase):
 
     def test_upnp_discovery_basic(self):
         """Tests the UPnP basic discovery response."""
-        with patch("threading.Thread.__init__"):
-            upnp_responder_thread = emulated_hue.UPNPResponderThread(
-                "0.0.0.0", 80, True, "192.0.2.42", 8080
-            )
+        upnp_responder_protocol = upnp.UPNPResponderProtocol(
+            None, None, "192.0.2.42", 8080
+        )
+        mock_transport = MockTransport()
+        upnp_responder_protocol.transport = mock_transport
 
-            """Original request emitted by the Hue Bridge v1 app."""
-            request = """M-SEARCH * HTTP/1.1
+        """Original request emitted by the Hue Bridge v1 app."""
+        request = """M-SEARCH * HTTP/1.1
 HOST:239.255.255.250:1900
 ST:ssdp:all
 Man:"ssdp:discover"
 MX:3
 
 """
-            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
+        encoded_request = request.replace("\n", "\r\n").encode("utf-8")
 
-            response = upnp_responder_thread._handle_request(encoded_request)
-            expected_response = """HTTP/1.1 200 OK
+        upnp_responder_protocol.datagram_received(encoded_request, 1234)
+        expected_response = """HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
 LOCATION: http://192.0.2.42:8080/description.xml
@@ -76,27 +84,30 @@ ST: urn:schemas-upnp-org:device:basic:1
 USN: uuid:2f402f80-da50-11e1-9b23-001788255acc
 
 """
-            assert expected_response.replace("\n", "\r\n").encode("utf-8") == response
+        expected_send = expected_response.replace("\n", "\r\n").encode("utf-8")
+
+        assert mock_transport.sends == [(expected_send, 1234)]
 
     def test_upnp_discovery_rootdevice(self):
         """Tests the UPnP rootdevice discovery response."""
-        with patch("threading.Thread.__init__"):
-            upnp_responder_thread = emulated_hue.UPNPResponderThread(
-                "0.0.0.0", 80, True, "192.0.2.42", 8080
-            )
+        upnp_responder_protocol = upnp.UPNPResponderProtocol(
+            None, None, "192.0.2.42", 8080
+        )
+        mock_transport = MockTransport()
+        upnp_responder_protocol.transport = mock_transport
 
-            """Original request emitted by Busch-Jaeger free@home SysAP."""
-            request = """M-SEARCH * HTTP/1.1
+        """Original request emitted by Busch-Jaeger free@home SysAP."""
+        request = """M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"
 MX: 40
 ST: upnp:rootdevice
 
 """
-            encoded_request = request.replace("\n", "\r\n").encode("utf-8")
+        encoded_request = request.replace("\n", "\r\n").encode("utf-8")
 
-            response = upnp_responder_thread._handle_request(encoded_request)
-            expected_response = """HTTP/1.1 200 OK
+        upnp_responder_protocol.datagram_received(encoded_request, 1234)
+        expected_response = """HTTP/1.1 200 OK
 CACHE-CONTROL: max-age=60
 EXT:
 LOCATION: http://192.0.2.42:8080/description.xml
@@ -106,7 +117,31 @@ ST: upnp:rootdevice
 USN: uuid:2f402f80-da50-11e1-9b23-001788255acc::upnp:rootdevice
 
 """
-            assert expected_response.replace("\n", "\r\n").encode("utf-8") == response
+        expected_send = expected_response.replace("\n", "\r\n").encode("utf-8")
+
+        assert mock_transport.sends == [(expected_send, 1234)]
+
+    def test_upnp_no_response(self):
+        """Tests the UPnP does not response on an invalid request."""
+        upnp_responder_protocol = upnp.UPNPResponderProtocol(
+            None, None, "192.0.2.42", 8080
+        )
+        mock_transport = MockTransport()
+        upnp_responder_protocol.transport = mock_transport
+
+        """Original request emitted by the Hue Bridge v1 app."""
+        request = """INVALID * HTTP/1.1
+HOST:239.255.255.250:1900
+ST:ssdp:all
+Man:"ssdp:discover"
+MX:3
+
+"""
+        encoded_request = request.replace("\n", "\r\n").encode("utf-8")
+
+        upnp_responder_protocol.datagram_received(encoded_request, 1234)
+
+        assert mock_transport.sends == []
 
     def test_description_xml(self):
         """Test the description."""

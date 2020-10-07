@@ -6,6 +6,7 @@
             "not_doorbird_device": "Denne enheten er ikke en DoorBird"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

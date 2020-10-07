@@ -4,6 +4,7 @@ from typing import Dict
 
 import pytest
 
+from homeassistant import config as hass_config
 from homeassistant.components import zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
@@ -49,8 +50,9 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
+    SERVICE_RELOAD,
     STATE_ON,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
@@ -805,6 +807,91 @@ async def test_homekit_finds_linked_batteries(
     )
 
 
+async def test_homekit_async_get_integration_fails(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test that we continue if async_get_integration fails."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"light.demo": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = hk_driver
+    # pylint: disable=protected-access
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.0",
+        model="Powerwall 2",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    binary_charging_sensor = entity_reg.async_get_or_create(
+        "binary_sensor",
+        "invalid_integration_does_not_exist",
+        "battery_charging",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    )
+    battery_sensor = entity_reg.async_get_or_create(
+        "sensor",
+        "invalid_integration_does_not_exist",
+        "battery",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY,
+    )
+    light = entity_reg.async_get_or_create(
+        "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        binary_charging_sensor.entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING},
+    )
+    hass.states.async_set(
+        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+    )
+    hass.states.async_set(light.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "model": "Powerwall 2",
+            "sw_version": "0.16.0",
+            "platform": "invalid_integration_does_not_exist",
+            "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
+            "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
+        },
+    )
+
+
 async def test_setup_imported(hass):
     """Test async_setup with imported config options."""
     legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
@@ -917,7 +1004,8 @@ async def test_raise_config_entry_not_ready(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homekit.port_is_available", return_value=False,
+        "homeassistant.components.homekit.port_is_available",
+        return_value=False,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -1152,7 +1240,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         "42",
         {
             ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
     hass.states.async_set(humidifier.entity_id, STATE_ON)
@@ -1180,3 +1268,75 @@ async def test_homekit_finds_linked_humidity_sensors(
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
     )
+
+
+async def test_reload(hass):
+    """Test we can reload from yaml."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={CONF_NAME: "reloadable", CONF_PORT: 12345},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit.assert_any_call(
+        hass,
+        "reloadable",
+        12345,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit().setup.called is True
+    yaml_path = os.path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "homekit/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
+        f"{PATH_HOMEKIT}.HomeKit"
+    ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(
+        f"{PATH_HOMEKIT}.get_accessory"
+    ), patch(
+        "pyhap.accessory_driver.AccessoryDriver.start_service"
+    ):
+        mock_homekit2.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        await hass.services.async_call(
+            "homekit",
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit2.assert_any_call(
+        hass,
+        "reloadable",
+        45678,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit2().setup.called is True
+
+
+def _get_fixtures_base_path():
+    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

@@ -260,7 +260,7 @@
   initial_state: True
   trigger:
     platform: time_pattern
-    minutes: '/30'
+    minutes: '/59'
   action:
     - service: mqtt.publish
       data:

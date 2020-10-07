@@ -135,6 +135,7 @@ CURR_ENTITIE_ENTERED = False
 CURR_ENTITIE_SELECTED_ACTION = None
 CURR_BUTTON_CODE = None
 CURR_BUTTON_LONG_PRESS = False
+CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = False
 CURR_ENTITIE_POSITION = None
 PREV_CURR_GROUP = None
 PREV_CURR_ENTITIE = None
@@ -664,8 +665,9 @@ def reset_virtual_keyboard(hass):
 
 
 def get_hour_to_say(h, m):
-    import babel.dates
     from datetime import time
+
+    import babel.dates
 
     t = time(h, m)
     message = "godzina: " + babel.dates.format_time(t, format="short", locale="pl")
@@ -2037,6 +2039,8 @@ def type_to_input_text_from_virtual_keyboard(hass):
 
 
 def go_to_player(hass, say):
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
+    CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = True
     # remember the previous context
     global PREV_CURR_GROUP, PREV_CURR_ENTITIE
     # selecting the player to control via remote
@@ -2060,6 +2064,8 @@ def go_to_player(hass, say):
 
 
 def go_home(hass):
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
+    CURR_REMOTE_MODE_IS_IN_AUDIO_MODE = False
     if len(GROUP_ENTITIES) == 0:
         get_groups(hass)
     global CURR_GROUP_VIEW
@@ -2276,6 +2282,34 @@ async def async_process_json_from_frame(hass, json_req):
                 {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
             )
         )
+    elif topic == "ais/register_wear_os":
+        # 1. check pin
+        pin = payload["ais_dom_pin"]
+        if pin != ais_global.G_AIS_DOM_PIN:
+            return json_response({"ais": "nok"})
+
+        # 2. register device and return webhook
+        import secrets
+
+        from homeassistant.const import CONF_WEBHOOK_ID
+
+        webhook_id = secrets.token_hex()
+        payload[CONF_WEBHOOK_ID] = webhook_id
+        payload["user_id"] = ""
+
+        await hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "mobile_app", data=payload, context={"source": "registration"}
+            )
+        )
+
+        res = {
+            CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID],
+        }
+
+    elif topic == "ais/event":
+        # tag_scanned event
+        hass.bus.async_fire(payload["event_type"], payload["event_data"])
 
     # add player satus for some topics
     if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
@@ -2594,6 +2628,10 @@ async def async_setup(hass, config):
             data["data"] = service.data["data"]
         else:
             data["data"] = {}
+        if "click_action" in service.data:
+            data["click_action"] = service.data["click_action"]
+        else:
+            data["click_action"] = ""
 
         # entry = hass.data["mobile_app"]["config_entries"]
         # entry = hass.config_entries.async_entries("mobile_app")[device_id]
@@ -2647,7 +2685,16 @@ async def async_setup(hass, config):
         timer = False
         if "timer" in service.data:
             timer = service.data["timer"]
-        quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        # TODO - check this fix for 'NoneType' object has no attribute 'state'
+        quiet_mode = ""
+        if hass is not None:
+            if hass.states.get("input_boolean.ais_quiet_mode") is not None:
+                quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
+        if quiet_mode == "":
+            hass.async_add_job(
+                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
+            )
+            return
 
         def apply_night_mode():
             _LOGGER.info("Start Night ")
@@ -2688,7 +2735,7 @@ async def async_setup(hass, config):
                     )
                 )
             hass.async_add_job(
-                hass.services.async_call("frontend", "set_theme", {"name": "default"})
+                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
             )
 
         if not timer:
@@ -3595,6 +3642,7 @@ def _process_code(hass, data):
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
     global CURR_ENTITIE_ENTERED
+    global CURR_REMOTE_MODE_IS_IN_AUDIO_MODE
     if "Action" not in data or "KeyCode" not in data:
         return
     action = data["Action"]
@@ -3692,12 +3740,18 @@ def _process_code(hass, data):
     elif code == 24:
         # Volume up -> KEYCODE_VOLUME_UP
         pass
-    elif code == 190:
+    # button to switch from dom to audio, 190 - legacy button_3, new 170 - tv
+    elif code == 190 or code == 170:
         # go home -> KEYCODE_HOME
         if CURR_BUTTON_LONG_PRESS:
             go_to_player(hass, True)
         else:
-            go_home(hass)
+            # toggle mode
+            if CURR_REMOTE_MODE_IS_IN_AUDIO_MODE:
+                go_home(hass)
+            else:
+                go_to_player(hass, True)
+
     # other code on text field
     else:
         type_to_input_text(hass, code)
@@ -4240,7 +4294,7 @@ class AskQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = await ais_knowledge_service.process_ask_async(hass, question)
+            message = await ais_knowledge_service.async_process_ask(hass, question)
         return "DO_NOT_SAY " + message, True
 
 
@@ -4262,7 +4316,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = await ais_knowledge_service.process_ask_wiki_async(hass, question)
+            message = await ais_knowledge_service.async_process_ask_wiki(hass, question)
 
         return "DO_NOT_SAY " + message, True
 
@@ -4332,28 +4386,37 @@ class AisGetWeather(intent.IntentHandler):
 
     async def async_handle(self, intent_obj):
         """Handle the intent."""
-        hass = intent_obj.hass
-        # weather = hass.states.get('sensor.pogoda_info').state
-        weather = "Pogoda "
-        attr = hass.states.get("group.ais_pogoda").attributes
-        for a in attr["entity_id"]:
-            w = hass.states.get(a)
-            if a == "sensor.dark_sky_hourly_summary":
-                weather += " " + w.state + " "
-            elif a == "sensor.dark_sky_daily_summary":
-                weather += " " + w.state + " "
-            else:
-                weather += w.attributes["friendly_name"] + " " + w.state + " "
-                if "unit_of_measurement" in w.attributes:
-                    if w.attributes["unit_of_measurement"] == "hPa":
-                        weather += "hektopascala; "
-                    elif w.attributes["unit_of_measurement"] == "km/h":
-                        weather += "kilometrów na godzinę; "
-                    elif w.attributes["unit_of_measurement"] == "km":
-                        weather += "kilometra; "
-                    else:
-                        weather += w.attributes["unit_of_measurement"] + "; "
-        return weather, True
+        answer = "niestety nie wiem jaka jest pogoda"
+        address = ""
+        try:
+            # try to do reverse_geocode
+            from geopy.geocoders import Nominatim
+
+            geolocator = Nominatim(user_agent="AIS dom")
+            location = geolocator.reverse(
+                query=(
+                    intent_obj.hass.config.latitude,
+                    intent_obj.hass.config.longitude,
+                ),
+                exactly_one=True,
+                timeout=5,
+                language="pl",
+                addressdetails=True,
+                zoom=10,
+            )
+            address = (
+                location.address.split(",")[0] + " " + location.address.split(",")[1]
+            )
+            command = "pogoda w miejscowości " + address
+            # ask AIS
+            ws_resp = aisCloudWS.ask(command, "niestety nie wiem jaka jest pogoda")
+            answer = ws_resp.text.split("---")[0]
+        except Exception as e:
+            _LOGGER.warning(
+                "Handle the intent problem for location " + address + " " + str(e)
+            )
+
+        return answer, True
 
 
 class AisGetWeather48(intent.IntentHandler):
@@ -4363,9 +4426,36 @@ class AisGetWeather48(intent.IntentHandler):
 
     async def async_handle(self, intent_obj):
         """Handle the intent."""
-        hass = intent_obj.hass
-        weather = hass.states.get("sensor.dark_sky_daily_summary").state
-        return weather, True
+        answer = "niestety nie wiem jaka będzie pogoda"
+        address = ""
+        try:
+            # try to do reverse_geocode
+            from geopy.geocoders import Nominatim
+
+            geolocator = Nominatim(user_agent="AIS dom")
+            location = geolocator.reverse(
+                query=(
+                    intent_obj.hass.config.latitude,
+                    intent_obj.hass.config.longitude,
+                ),
+                exactly_one=True,
+                timeout=5,
+                language="pl",
+                addressdetails=True,
+                zoom=10,
+            )
+            address = (
+                location.address.split(",")[0] + " " + location.address.split(",")[1]
+            )
+            command = "jaka będzie pogoda jutro w miejscowości " + address
+            ws_resp = aisCloudWS.ask(command, answer)
+            answer = ws_resp.text.split("---")[0]
+        except Exception as e:
+            _LOGGER.warning(
+                "Handle the intent problem for location " + address + " " + str(e)
+            )
+
+        return answer, True
 
 
 class AisLampsOn(intent.IntentHandler):
@@ -4844,12 +4934,26 @@ class PersonStatusIntent(intent.IntentHandler):
             message = "Nie znajduję lokalizacji: " + name
             success = False
         else:
+            # try to get address
+            address = ""
+            if "source" in entity.attributes:
+                try:
+                    device_tracker = entity.attributes.get("source", "")
+                    semsor = (
+                        device_tracker.replace("device_tracker", "sensor")
+                        + "_geocoded_location"
+                    )
+                    address = hass.states.get(semsor).state
+                    if address != STATE_UNKNOWN:
+                        address = ", ostatni przesłany adres to " + address
+                except Exception:
+                    address = ""
             if entity.state == STATE_UNKNOWN:
                 location = "lokalizacja nieznana"
             elif entity.state == STATE_HOME:
                 location = "jest w domu"
             elif entity.state == STATE_NOT_HOME:
-                location = "jest poza domem"
+                location = "jest poza domem" + address
             else:
                 location = "lokalizacja " + entity.state
             message = format(entity.name) + ": " + location

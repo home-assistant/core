@@ -8,6 +8,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rpi_gpio"
+PLATFORMS = ["binary_sensor", "cover", "switch"]
 
 
 def setup(hass, config):

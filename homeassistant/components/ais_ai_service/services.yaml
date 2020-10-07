@@ -23,6 +23,9 @@ mob_notify:
      notification_id:
        description: 'Unikalny numer powiadomienia, jeśli wyślesz powiadomienie z tym samym numerem, to powiadomienie będzie nadpisywane.'
        example: '0'
+     click_action:
+       description: 'Nawigacja do widoku który mamy zdefiniowany w aplikacji np.: /lovelace/camera lub otwarcie strony internetowej o dowolnym adresie URL, np.: https://ai-speaker.com'
+       example: '/lovelace/0'
 
 mob_request:
    description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej. Ta usługa wymaga aplikacji AIS dom w wersji 1.3.0 lub nowszej.'

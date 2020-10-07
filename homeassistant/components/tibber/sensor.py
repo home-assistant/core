@@ -32,10 +32,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             await home.update_info()
         except asyncio.TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
-            raise PlatformNotReady()
+            raise PlatformNotReady() from err
         except aiohttp.ClientError as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
-            raise PlatformNotReady()
+            raise PlatformNotReady() from err
         if home.has_active_subscription:
             dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:

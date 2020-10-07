@@ -12,7 +12,7 @@
                 }
             },
            "confirm": {
-                "description": "![Tauron logo](/static/icons/tauron_elicznik_logo.png)\n\nTa integracja używa nieoficjalnego API do pobierania danych o zużyciu energii z TAURON eLicznik. Czy chcesz kontynuować?\n\n",
+                "description": "###### ![Tauron logo](/static/icons/tauron_elicznik_logo.png)\n\nTa integracja używa nieoficjalnego API do pobierania danych o zużyciu energii z TAURON eLicznik. Czy chcesz kontynuować?\n\n",
                 "title": "Tauron AMIplus sensors"
            }
         },

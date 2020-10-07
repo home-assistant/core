@@ -16,6 +16,18 @@
         "data": {
           "pairing_code": "Pairing Code"
         }
+      },
+      "protocol_error": {
+        "title": "Error communicating with the accessory",
+        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing."
+      },
+      "busy_error": {
+        "title": "The device is already pairing with another controller",
+        "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing."
+      },
+      "max_tries_error": {
+        "title": "Maximum authentication attempts exceeded",
+        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then continue to resume pairing."
       }
     },
     "error": {
@@ -23,8 +35,6 @@
       "unknown_error": "Device reported an unknown error. Pairing failed.",
       "authentication_error": "Incorrect HomeKit code. Please check it and try again.",
       "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
-      "busy_error": "Device refused to add pairing as it is already pairing with another controller.",
-      "max_tries_error": "Device refused to add pairing as it has received more than 100 unsuccessful authentication attempts.",
       "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently."
     },
     "abort": {
@@ -34,6 +44,7 @@
       "already_configured": "Accessory is already configured with this controller.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
+      "invalid_properties": "Invalid properties announced by device.",
       "already_in_progress": "Config flow for device is already in progress."
     }
   }

@@ -20,7 +20,6 @@
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "url": "URL",
                     "username": "Benutzername"
                 },
                 "description": "Gib die Zugangsdaten zum Ger\u00e4t ein. Die Angabe von Benutzername und Passwort ist optional, erm\u00f6glicht aber die Unterst\u00fctzung weiterer Integrationsfunktionen. Andererseits kann die Verwendung einer autorisierten Verbindung zu Problemen beim Zugriff auf die Web-Schnittstelle des Ger\u00e4ts von au\u00dferhalb des Home Assistant f\u00fchren, w\u00e4hrend die Integration aktiv ist, und umgekehrt.",

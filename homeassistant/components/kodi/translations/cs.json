@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "host": {
+                "data": {
+                    "ssl": "P\u0159ipojen\u00ed p\u0159es SSL"
+                }
+            },
+            "user": {
+                "data": {
+                    "ssl": "P\u0159ipojen\u00ed p\u0159es SSL"
+                }
+            }
+        }
+    }
+}

@@ -75,7 +75,6 @@ def convert_include_exclude_filter(
             "ais_drives_service",
             "ais_exo_player",
             "ais_files",
-            "ais_gm_service",
             "ais_google_home",
             "ais_help",
             "ais_host",
@@ -94,8 +93,6 @@ def convert_include_exclude_filter(
         ],
         "entities": [
             "sun.sun",
-            "sensor.nextsunrise",
-            "sensor.nextsunset",
             "sensor.date",
             "sensor.time",
             "automation.ais_ask_the_question",
@@ -238,25 +235,10 @@ def convert_include_exclude_filter(
             "sensor.zigbee2mqtt_networkmap",
             "input_text.zigbee2mqtt_remove",
             "input_select.media_player_sound_mode",
-            "weather.openweathermap",
             "binary_sensor.updater",
             "weather.dom",
             "camera.remote_access",
             "binary_sensor.selected_entity",
-            # "sensor.dark_sky_daily_summary",
-            # "sensor.dark_sky_hourly_summary",
-            # "sensor.dark_sky_visibility",
-            # "sensor.dark_sky_visibility_0d",
-            # "sensor.dark_sky_apparent_temperature",
-            # "sensor.dark_sky_cloud_coverage",
-            # "sensor.dark_sky_cloud_coverage_0d",
-            # "sensor.dark_sky_humidity",
-            # "sensor.dark_sky_humidity_0d",
-            # "sensor.dark_sky_pressure",
-            # "sensor.dark_sky_pressure_0d",
-            # "sensor.dark_sky_temperature",
-            # "sensor.dark_sky_wind_speed",
-            # "sensor.dark_sky_wind_speed_0d",
         ],
         "entity_globs": [],
     }
@@ -300,12 +282,12 @@ INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
 )
 
 
-def _glob_to_re(glob: str) -> Pattern:
+def _glob_to_re(glob: str) -> Pattern[str]:
     """Translate and compile glob string into pattern."""
     return re.compile(fnmatch.translate(glob))
 
 
-def _test_against_patterns(patterns: List[Pattern], entity_id: str) -> bool:
+def _test_against_patterns(patterns: List[Pattern[str]], entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
     for pattern in patterns:
         if pattern.match(entity_id):

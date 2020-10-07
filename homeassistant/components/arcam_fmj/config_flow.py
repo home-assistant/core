@@ -42,7 +42,8 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
             await client.stop()
 
         return self.async_create_entry(
-            title=f"{DEFAULT_NAME} ({host})", data={CONF_HOST: host, CONF_PORT: port},
+            title=f"{DEFAULT_NAME} ({host})",
+            data={CONF_HOST: host, CONF_PORT: port},
         )
 
     async def async_step_user(self, user_input=None):

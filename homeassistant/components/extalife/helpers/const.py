@@ -11,10 +11,13 @@ CONF_PASSWORD = "password"
 CONF_POLL_INTERVAL = "poll_interval"  # in minutes
 DEFAULT_POLL_INTERVAL = 5
 
+OPTIONS_GENERAL_POLL_INTERVAL = "poll_interval"
+OPTIONS_GENERAL_DISABLE_NOT_RESPONDING = "disable_not_responding"
 OPTIONS_LIGHT_ICONS_LIST = "icons_list"
 OPTIONS_COVER_INVERTED_CONTROL = "inverted_control"
 
 CONF_OPTIONS = "options"  # additional per-platform configuration
+OPTIONS_GENERAL = "general"  # general settings
 OPTIONS_SWITCH = "switch"  # additional switch configuration
 OPTIONS_LIGHT = "light"  # additional light configuration
 OPTIONS_LIGHT_ICONS_LIST = (

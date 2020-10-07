@@ -6,7 +6,7 @@
             "unknown": "Si \u00e8 verificato un errore sconosciuto."
         },
         "error": {
-            "invalid_pin": "PIN non valido, riprova.",
+            "invalid_sgtin_or_pin": "PIN non valido, riprova.",
             "press_the_button": "Si prega di premere il pulsante blu.",
             "register_failed": "Registrazione fallita, si prega di riprovare.",
             "timeout_button": "Timeout della pressione del pulsante blu, riprovare."

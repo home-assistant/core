@@ -22,8 +22,8 @@ def coerce_ip(value):
         raise vol.Invalid("Must define an IP address")
     try:
         ipaddress.IPv4Network(value)
-    except ValueError:
-        raise vol.Invalid("Not a valid IP address")
+    except ValueError as err:
+        raise vol.Invalid("Not a valid IP address") from err
     return value
 
 
@@ -60,7 +60,8 @@ async def async_setup(hass, config):
             hass.data[DOMAIN] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
                 )
             )
 

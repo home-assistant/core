@@ -40,10 +40,10 @@ async def validate_input(hass: core.HomeAssistant, data):
         info = await hass.async_add_executor_job(device.info)
     except urllib.error.HTTPError as err:
         if err.code == 401:
-            raise InvalidAuth
-        raise CannotConnect
-    except OSError:
-        raise CannotConnect
+            raise InvalidAuth from err
+        raise CannotConnect from err
+    except OSError as err:
+        raise CannotConnect from err
 
     if not status[0]:
         raise CannotConnect

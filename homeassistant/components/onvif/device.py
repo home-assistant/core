@@ -217,7 +217,7 @@ class ONVIFDevice:
                 raise fault
 
             LOGGER.debug(
-                "Couldn't get network interfaces from ONVIF deivice '%s'. Error: %s",
+                "Couldn't get network interfaces from ONVIF device '%s'. Error: %s",
                 self.name,
                 fault,
             )

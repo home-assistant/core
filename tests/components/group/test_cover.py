@@ -78,6 +78,8 @@ async def setup_comp(hass, config_count):
     with assert_setup_component(count, DOMAIN):
         await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])

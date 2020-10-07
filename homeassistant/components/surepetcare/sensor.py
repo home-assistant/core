@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_TYPE,
     DEVICE_CLASS_BATTERY,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -181,4 +181,4 @@ class SureBattery(SurePetcareSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE

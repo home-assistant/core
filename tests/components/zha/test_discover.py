@@ -61,7 +61,10 @@ def channels_mock(zha_device_mock):
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
-    device, hass_disable_services, zigpy_device_mock, zha_device_joined_restored,
+    device,
+    hass_disable_services,
+    zigpy_device_mock,
+    zha_device_joined_restored,
 ):
     """Test device discovery."""
     entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(

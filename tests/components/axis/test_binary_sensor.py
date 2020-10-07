@@ -63,7 +63,7 @@ async def test_binary_sensors(hass):
     assert pir.name == f"{NAME} PIR 0"
     assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
 
-    vmd4 = hass.states.get(f"binary_sensor.{NAME}_vmd4_camera1profile1")
+    vmd4 = hass.states.get(f"binary_sensor.{NAME}_vmd4_profile_1")
     assert vmd4.state == "on"
-    assert vmd4.name == f"{NAME} VMD4 Camera1Profile1"
+    assert vmd4.name == f"{NAME} VMD4 Profile 1"
     assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION

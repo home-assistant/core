@@ -41,6 +41,9 @@ from .helpers.const import (
     OPTIONS_COVER,
     OPTIONS_COVER_INV_CONTROL,
     OPTIONS_COVER_INVERTED_CONTROL,
+    OPTIONS_GENERAL,
+    OPTIONS_GENERAL_DISABLE_NOT_RESPONDING,
+    OPTIONS_GENERAL_POLL_INTERVAL,
     OPTIONS_LIGHT,
     OPTIONS_LIGHT_ICONS_LIST,
     OPTIONS_SWITCH,
@@ -77,6 +80,12 @@ OPTIONS_DEFAULTS = get_default_options()
 
 # schema validations
 OPTIONS_CONF_SCHEMA = {
+    vol.Optional(OPTIONS_GENERAL, default=OPTIONS_DEFAULTS[OPTIONS_GENERAL]): {
+        vol.Optional(
+            OPTIONS_GENERAL_POLL_INTERVAL,
+            default=OPTIONS_DEFAULTS[OPTIONS_GENERAL][OPTIONS_GENERAL_POLL_INTERVAL],
+        ): cv.positive_int,
+    },
     vol.Optional(OPTIONS_LIGHT, default=OPTIONS_DEFAULTS[OPTIONS_LIGHT]): {
         vol.Optional(
             OPTIONS_LIGHT_ICONS_LIST,
@@ -110,6 +119,41 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    #  Flatten configuration but keep old data if user rollbacks HASS
+    if config_entry.version == 1:
+
+        options = {**config_entry.options}
+        options.setdefault(
+            OPTIONS_GENERAL,
+            {
+                OPTIONS_GENERAL_POLL_INTERVAL: config_entry.data.get(
+                    CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
+                )
+            },
+        )
+        config_entry.options = {**options}
+
+        new = {**config_entry.data}
+        try:
+            new.pop(CONF_POLL_INTERVAL)
+            new.pop(
+                CONF_OPTIONS
+            )  # get rid of errorneously migrated options from integration 1.0
+        except:
+            pass
+        config_entry.data = {**new}
+
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
 
 
 async def async_setup(hass: HomeAssistantType, hass_config: ConfigType):
@@ -158,21 +202,31 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
 
     def init_options(hass: HomeAssistantType, config_entry: ConfigEntry):
         """Populate default options for Exta Life."""
+        default = get_default_options()
+        options = {**config_entry.options}
         # migrate options after creation of ConfigEntry
-        if not config_entry.options:
+        if not options:
             yaml_conf = hass.data.get(DOMAIN)
             yaml_options = None
             if yaml_conf is not None:
                 yaml_options = yaml_conf.get(CONF_OPTIONS)
 
             _LOGGER.debug("init_options, yaml_options %s", yaml_options)
-            options = get_default_options() if yaml_options is None else yaml_options
 
-            hass.config_entries.async_update_entry(config_entry, options=options)
+            options = default if yaml_options is None else yaml_options
 
-    def api_connect(user, password, host):
+        # set default values if something is missing
+        options_def = options.copy()
+        for k, v in default.items():
+            options_def.setdefault(k, v)
+
+        # check for changes and if options should be peristed
+        if options_def != options or not config_entry.options:
+            hass.config_entries.async_update_entry(config_entry, options=options_def)
+
+    async def api_connect(user, password, host):
         controller = Core.get(config_entry.entry_id).api
-        controller.connect(user, password, host=host)
+        await controller.async_connect(user, password, host=host)
         return controller
 
     init_options(hass, config_entry)
@@ -195,8 +249,8 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
 
         # get instance: this will already try to connect and logon
         try:
-            controller = await hass.async_add_executor_job(
-                api_connect, el_conf[CONF_USER], el_conf[CONF_PASSWORD], controller_ip
+            controller = await api_connect(
+                el_conf[CONF_USER], el_conf[CONF_PASSWORD], controller_ip
             )
         except TCPConnError as e:
             _LOGGER.debug(
@@ -204,9 +258,13 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
             )
             # invalid IP / IP changed? - try autodetection
             if isinstance(e.previous, OSError) and e.previous.errno == 113:
-                _LOGGER.debug("Trying autodiscovery....")
-                controller = await hass.async_add_executor_job(
-                    api_connect, el_conf[CONF_USER], el_conf[CONF_PASSWORD], None
+                _LOGGER.warning(
+                    "Could not connect to EFC-01 on IP stored in configuration: %s. Trying to discover controller IP in the network",
+                    controller_ip,
+                )
+                # controller = await hass.async_add_executor_job(api_connect, el_conf[CONF_USER], el_conf[CONF_PASSWORD], None)
+                controller = await api_connect(
+                    el_conf[CONF_USER], el_conf[CONF_PASSWORD], None
                 )
 
                 # update ConfigEntry with new IP
@@ -233,6 +291,8 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
     except TCPConnError as e:
         host = controller.host if (controller and controller.host) else "unknown"
         _LOGGER.error("Could not connect to EFC-01 on IP: %s", host)
+
+        await core.unload_entry_from_hass()
         raise ConfigEntryNotReady
 
     await core.register_controller()
@@ -240,9 +300,6 @@ async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
     core = Core.get(config_entry.entry_id)
 
     await data.async_start_polling(poll_now=True)
-
-    # start notification listener for immediate entity status updates from controller
-    await data.async_start_listener()
 
     # publish services to HA service registry
     await core.async_register_services()
@@ -264,7 +321,7 @@ class ChannelDataManager:
         self.channels_indx = {}
         self.initial_channels = {}
 
-        self._notif_listener: NotifThreadListener = None
+        # self._notif_listener: NotifThreadListener = None
 
         self._poller_callback_remove = None
         self._ping_callback_remove = None
@@ -279,7 +336,7 @@ class ChannelDataManager:
 
     # callback
     def on_notify(self, msg):
-        _LOGGER.debug("Received msg from Notification Listener thread: %s", msg)
+        _LOGGER.debug("Received status change notification from controller: %s", msg)
         data = msg.get("data")
         channel = data.get("channel", "#")
         chan_id = str(data.get("id")) + "-" + str(channel)
@@ -292,48 +349,35 @@ class ChannelDataManager:
             self.core.async_signal_send_sync(signal, data)
 
     def update_channel(self, id: str, data: dict):
-        """ Update data of a channel e.g. after notification data received and processed
+        """Update data of a channel e.g. after notification data received and processed
         by an entity"""
         self.channels_indx.update({id: data})
 
-    async def async_start_listener(self):
-        """ Start listener thread """
-        _LOGGER.debug("Getting and starting listener thread")
-        self._notif_listener = self.controller.get_notif_listener(self.on_notify)
-        await self._hass.async_add_executor_job(self._notif_listener.start)
-
-    async def async_stop_listener(self):
-        """ Stop notification listener thread """
-        await self._hass.async_add_executor_job(self._notif_listener.stop)
-
     async def async_start_polling(self, poll_now: bool):
-        """ Start cyclic status polling
+        """Start cyclic status polling
 
-        poll_now - fetch devices' status immediately and don't wait for the nearest poll """
+        poll_now - fetch devices' status immediately and don't wait for the nearest poll"""
 
         if poll_now:
-            await self.async_update()
+            await self.async_execute_status_polling()
 
-        # register callback for periodic status update polling + device discovery
-        self._poller_callback_remove = self.core.async_track_time_interval(
-            self.async_update,
-            timedelta(minutes=self._config_entry.data.get(CONF_POLL_INTERVAL)),
-        )
+    async def async_execute_status_polling(self):
+        """ Executes status polling triggered externally, not via periodic callback + resets next poll time """
+        if self._poller_callback_remove is not None:
+            self._poller_callback_remove()
 
-        # register callback for periodic controller ping to keep connection alive
-        self._ping_callback_remove = self.core.async_track_time_interval(
-            self.do_ping, timedelta(seconds=10)
-        )
+        await self._async_update_callback()
+
+        self.setup_periodic_callback()
 
     async def async_stop_polling(self):
         """ Turn off periodic callbacks for status update """
 
-        self._poller_callback_remove()
-        self._poller_callback_remove = None
-        self._ping_callback_remove()
-        self._ping_callback_remove = None
+        if self._poller_callback_remove is not None:
+            self._poller_callback_remove()
+            self._poller_callback_remove = None
 
-    async def async_update(self, now=None):
+    async def _async_update_callback(self, now=None):
         """Get the latest device&channel status data from EFC-01.
         This method is called from HA task scheduler via async_track_time_interval"""
 
@@ -342,7 +386,7 @@ class ChannelDataManager:
 
         # if connection error or other - will receive None
         # otherwise it contains a list of channels
-        channels = await self._hass.async_add_executor_job(self.controller.get_channels)
+        channels = await self.controller.async_get_channels()
 
         if channels is None:
             _LOGGER.warning("No Channels could be obtained from the controller")
@@ -354,9 +398,7 @@ class ChannelDataManager:
             chan = {elem["id"]: elem["data"]}
             self.channels_indx.update(chan)
 
-        # propagate event only if called by HA time tracker
-        if now is not None:
-            self.core.async_signal_send(SIGNAL_DATA_UPDATED)
+        self.core.async_signal_send(SIGNAL_DATA_UPDATED)
 
         _LOGGER.debug(
             "Exta Life: status for %s devices updated", len(self.channels_indx)
@@ -369,11 +411,19 @@ class ChannelDataManager:
             # store only for the 1st call (by setup code, not by HA)
             self.initial_channels = self.channels_indx.copy()
 
-    async def do_ping(self, now=None):
-        """ Perform periodical ping to keep connection alive.
-        Additionally perform reconnection if connection lost."""
-        tcp = self.controller.get_tcp_adapter()
-        await self._hass.async_add_executor_job(tcp.ping)
+    def setup_periodic_callback(self):
+        """ (Re)set periodic callback period based on options """
+
+        # register callback for periodic status update polling + device discovery
+        interval = self._config_entry.options.get(OPTIONS_GENERAL).get(
+            OPTIONS_GENERAL_POLL_INTERVAL
+        )
+
+        _LOGGER.debug("setup_periodic_callback(). Setting interval: %s", interval)
+
+        self._poller_callback_remove = self.core.async_track_time_interval(
+            self._async_update_callback, timedelta(minutes=interval)
+        )
 
     def discover_devices(self):
         """
@@ -488,6 +538,7 @@ class ExtaLifeChannel(Entity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
 
+        _LOGGER.debug("async_added_to_hass() for entity: %s", self.entity_id)
         Core.get(self.config_entry.entry_id).async_signal_register(
             SIGNAL_DATA_UPDATED, self.async_update_callback
         )
@@ -600,31 +651,30 @@ class ExtaLifeChannel(Entity):
             add_pars,
         )
 
-        class Action:
-            @staticmethod
-            def execute():
-                return self.controller.execute_action(
-                    Action.action, Action.channel_id, **Action.params
-                )
-
-        Action.action = action
-        Action.channel_id = self.channel_id
-        Action.params = add_pars
-
-        resp = await self.hass.async_add_executor_job(Action.execute)
+        try:
+            resp = await self.controller.async_execute_action(
+                action, self.channel_id, **add_pars
+            )
+        except TCPConnError as err:
+            _LOGGER.error(err.data)
 
         return resp
 
     @property
     def available(self):
-        return (
-            self.data_available == True and self.channel_data.get("is_timeout") == False
+        is_timeout = (
+            self.channel_data.get("is_timeout")
+            if self.config_entry.options.get(OPTIONS_GENERAL_DISABLE_NOT_RESPONDING)
+            else False
+        )
+        _LOGGER.debug(
+            "available() for entity: %s. self.data_available: %s; 'is_timeout': %s",
+            self.entity_id,
+            self.data_available,
+            is_timeout,
         )
 
-    @property
-    def device_state_attributes(self):
-        """" Return state atributes """
-        return {"not_responding": self.channel_data.get("is_timeout")}
+        return self.data_available == True and is_timeout == False
 
     async def async_update(self):
         """Call to update state."""
@@ -641,24 +691,28 @@ class ExtaLifeChannel(Entity):
         )
 
         if data is None:
-
             self.data_available = False
             return
 
         self.data_available = True
-
-        # update only if data found
-        if data is not None:
-            self.channel_data = data
+        self.channel_data = data
 
     def sync_data_update_ha(self):
-        """ Performs update of Data Manager data with Entity data and calls HA state update.
+        """Performs update of Data Manager data with Entity data and calls HA state update.
         This is useful e.g. when Entity receives notification update, processes it and
         then must update its state. For consistency reasons - Data Manager is updated and then
         HA status update is scheduled"""
 
         self.data_poller.update_channel(self.channel_id, self.channel_data)
         self.async_schedule_update_ha_state(True)
+
+    @property
+    def device_state_attributes(self):
+        """" Return state atributes """
+        return {
+            "channel_id": self.channel_id,
+            "not_responding": self.channel_data.get("is_timeout"),
+        }
 
 
 class ExtaLifeController(Entity):
@@ -670,7 +724,7 @@ class ExtaLifeController(Entity):
 
     @staticmethod
     async def register_controller(entry_id):
-        """ Create Controller entity and create device for it in Dev. Registry
+        """Create Controller entity and create device for it in Dev. Registry
 
         entry_id - Config Entry entry_id"""
 

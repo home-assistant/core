@@ -15,17 +15,34 @@
             "max_peers_error": "Il dispositivo ha rifiutato di aggiungere l'abbinamento in quanto non dispone di una memoria libera per esso.",
             "max_tries_error": "Il dispositivo ha rifiutato di aggiungere l'abbinamento poich\u00e9 ha ricevuto pi\u00f9 di 100 tentativi di autenticazione non riusciti.",
             "pairing_failed": "Si \u00e8 verificato un errore non gestito durante il tentativo di abbinamento con questo dispositivo. Potrebbe trattarsi di un errore temporaneo o il dispositivo potrebbe non essere attualmente supportato.",
+            "protocol_error": "Errore di comunicazione con l'accessorio. Il dispositivo potrebbe non essere in modalit\u00e0 di associazione e potrebbe richiedere la pressione di un pulsante fisico o virtuale.",
             "unable_to_pair": "Impossibile abbinare, per favore riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
         "flow_title": "Accessorio HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "description": "Interrompere l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continuare a riprendere l'associazione.",
+                "title": "Il dispositivo \u00e8 gi\u00e0 associato a un altro controller"
+            },
+            "max_tries_error": {
+                "description": "Il dispositivo ha ricevuto pi\u00f9 di 100 tentativi di autenticazione non riusciti. Prova a riavviare il dispositivo, quindi continua a riprendere l'associazione.",
+                "title": "Numero massimo di tentativi di autenticazione superato"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "Codice di abbinamento"
                 },
                 "description": "Immettere il codice di abbinamento HomeKit (nel formato XXX-XX-XXX) per utilizzare questo accessorio",
                 "title": "Abbina con accessorio HomeKit"
+            },
+            "protocol_error": {
+                "description": "Il dispositivo potrebbe non essere in modalit\u00e0 di associazione e potrebbe richiedere una pressione di un pulsante fisico o virtuale. Assicurati che il dispositivo sia in modalit\u00e0 di associazione o prova a riavviarlo, quindi continua a riprendere l'associazione.",
+                "title": "Errore di comunicazione con l'accessorio"
+            },
+            "try_pair_later": {
+                "description": "Verificare che il dispositivo sia in modalit\u00e0 di associazione o provare a riavviarlo, quindi continuare ad avviare nuovamente l'associazione.",
+                "title": "Associazione non disponibile"
             },
             "user": {
                 "data": {

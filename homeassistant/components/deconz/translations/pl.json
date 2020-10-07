@@ -41,12 +41,12 @@
             "button_1": "pierwszy przycisk",
             "button_2": "drugi przycisk",
             "button_3": "trzeci przycisk",
-            "button_4": "czwarty przycisk",
-            "close": "nast\u0105pi zamkni\u0119cie",
-            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
-            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
+            "button_4": "czwarty",
+            "close": "zamknij",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
             "left": "w lewo",
-            "open": "otwarcie",
+            "open": "otw\u00f3rz",
             "right": "w prawo",
             "side_1": "strona 1",
             "side_2": "strona 2",
@@ -55,8 +55,8 @@
             "side_5": "strona 5",
             "side_6": "strona 6",
             "top_buttons": "g\u00f3rne przyciski",
-            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+            "turn_off": "wy\u0142\u0105cz",
+            "turn_on": "w\u0142\u0105cz"
         },
         "trigger_type": {
             "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",

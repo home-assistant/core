@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-async_register = bind_hass(async_register)  # pylint: disable=invalid-name
+async_register = bind_hass(async_register)
 
 
 @core.callback

@@ -14,8 +14,8 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 API_CO2 = "carbon_dioxide"
@@ -49,14 +49,14 @@ SENSOR_TYPES = {
     API_SCORE: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
         ATTR_LABEL: "Awair score",
         ATTR_UNIQUE_ID: "score",  # matches legacy format
     },
     API_HUMID: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
         ATTR_LABEL: "Humidity",
         ATTR_UNIQUE_ID: "HUMID",  # matches legacy format
     },

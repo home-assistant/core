@@ -166,10 +166,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             remove_entry = True
         else:
             _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     if remove_entry:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -315,7 +315,8 @@ class DeviceBroker:
         async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
             await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID], self._entry.data[CONF_CLIENT_SECRET],
+                self._entry.data[CONF_CLIENT_ID],
+                self._entry.data[CONF_CLIENT_SECRET],
             )
             self._hass.config_entries.async_update_entry(
                 self._entry,

@@ -17,7 +17,7 @@ GLOBAL_X = 0
 _LOGGER = logging.getLogger(__name__)
 G_LT_PATH = "/data/data/pl.sviete.dom/files/usr/bin/lt"
 if platform.machine() == "x86_64":
-    G_LT_PATH = "~/.nvm/versions/node/v12.1.0/bin/lt"
+    G_LT_PATH = "/usr/local/bin/lt"
 
 
 async def async_setup(hass, config):
@@ -158,13 +158,26 @@ async def _change_host_name(hass, call):
 async def _change_remote_access(hass, call):
     text = " zdalny dostęp do bramki z Internetu"
     access = hass.states.get("input_boolean.ais_remote_access").state
-    gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
+    # not allow to off on demo
+    gate_id = ais_global.get_sercure_android_id_dom()
+    if (
+        ais_global.get_sercure_android_id_dom() in ("dom-demo", "dom-dev")
+        and access != "on"
+    ):
+        await hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {"text": "Nie można zatrzymać zdalnego dostępu na instancji demo."},
+        )
+        hass.states.async_set("input_boolean.ais_remote_access", "on")
+        return
     if access == "on":
         text = "Aktywuje " + text
     else:
         text = "Zatrzymuje " + text
 
     await hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+    _LOGGER.info(text)
 
     if access == "on":
         await _run(
@@ -475,8 +488,10 @@ async def _scan_device(hass, call):
     url_a = None
     if "url_a" in call.data:
         url_a = call.data["url_a"]
-    from requests_futures.sessions import FuturesSession
     from urllib.parse import urlparse
+
+    from requests_futures.sessions import FuturesSession
+
     import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     session = FuturesSession()
@@ -541,8 +556,9 @@ async def _scan_device(hass, call):
 
 async def _scan_ais_player(hass, call):
     url = call.data["url"]
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
     from requests_futures.sessions import FuturesSession
+
+    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     session = FuturesSession()
 

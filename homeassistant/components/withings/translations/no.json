@@ -18,7 +18,7 @@
             },
             "profile": {
                 "data": {
-                    "profile": "Profil"
+                    "profile": "Profil navn"
                 },
                 "description": "Oppgi et unikt profilnavn for disse dataene. Dette er vanligvis navnet p\u00e5 profilen du valgte i forrige trinn.",
                 "title": "Brukerprofil."

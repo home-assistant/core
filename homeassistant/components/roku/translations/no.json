@@ -10,8 +10,7 @@
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
-                "description": "Vil du sette opp {name} ?",
-                "title": ""
+                "description": "Vil du sette opp {name} ?"
             },
             "user": {
                 "data": {

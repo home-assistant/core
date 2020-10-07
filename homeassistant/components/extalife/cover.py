@@ -18,7 +18,14 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import ExtaLifeChannel
 from .helpers.const import DOMAIN, OPTIONS_COVER_INVERTED_CONTROL
 from .helpers.core import Core
-from .pyextalife import DEVICE_MAP_TYPE_TO_MODEL, MODEL_ROB01, ExtaLifeAPI
+from .pyextalife import (
+    DEVICE_ARR_COVER,
+    DEVICE_ARR_SENS_GATE_CONTROLLER,
+    DEVICE_MAP_TYPE_TO_MODEL,
+    MODEL_ROB01,
+    MODEL_ROB21,
+    ExtaLifeAPI,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,11 +62,16 @@ class ExtaLifeCover(ExtaLifeChannel, CoverEntity):
 
     @property
     def supported_features(self):
+        dev_type = self.channel_data.get("type")
         if not self.is_exta_free:
-            features = (
-                SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
-            )
-            return features
+            if dev_type in DEVICE_ARR_COVER:
+                features = (
+                    SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+                )
+                return features
+            elif dev_type in DEVICE_ARR_SENS_GATE_CONTROLLER:
+                features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+                return features
         else:
             return SUPPORT_OPEN | SUPPORT_CLOSE
 

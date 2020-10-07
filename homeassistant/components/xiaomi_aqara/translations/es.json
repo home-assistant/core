@@ -7,8 +7,10 @@
         },
         "error": {
             "discovery_error": "No se pudo descubrir un Xiaomi Aqara Gateway, intenta utilizar la IP del dispositivo que ejecuta HomeAssistant como interfaz",
+            "invalid_host": "Direcci\u00f3n IP no v\u00e1lida",
             "invalid_interface": "Interfaz de red inv\u00e1lida",
             "invalid_key": "Clave del gateway inv\u00e1lida",
+            "invalid_mac": "Direcci\u00f3n Mac no v\u00e1lida",
             "not_found_error": "El Gateway descubierto por Zeroconf no puede localizarse para obtener toda la informaci\u00f3n necesaria, intenta usar la IP del dispositivo que ejecuta HomeAssistant como interfaz"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
@@ -30,7 +32,9 @@
             },
             "user": {
                 "data": {
-                    "interface": "La interfaz de la red a usar"
+                    "host": "Direcci\u00f3n IP (opcional)",
+                    "interface": "La interfaz de la red a usar",
+                    "mac": "Direcci\u00f3n Mac (opcional)"
                 },
                 "description": "Conectar con tu Xiaomi Aqara Gateway",
                 "title": "Xiaomi Aqara Gateway"

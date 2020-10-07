@@ -55,6 +55,10 @@ night:
   label-badge-border-color: 'var(--label-badge-red)'
   label-badge-background-color: 'var(--paper-card-background-color)'
   label-badge-text-color: 'var(--primary-text-color)'
+  label-badge-green: "#0da035"
+  label-badge-blue: "#ff9800"
+  label-badge-yellow: "hsl(190deg 78% 33%)"
+  label-badge-gray: "#5f6267"
   # Shadows
   shadow-elevation-2dp_-_box-shadow: '0px 0px 0px 0px hsl(var(--huesat) 10%)'
   shadow-elevation-16dp_-_box-shadow: '0px 0px 0px 0px hsl(var(--huesat) 25%)'
@@ -103,3 +107,4 @@ night:
   #Removes Gradient in Calendar/Date-Picker and Drop-down lists
   lumo-tint-5pct: 'var(--darker-grey-color)'
   card-background-color: "#202020"
+

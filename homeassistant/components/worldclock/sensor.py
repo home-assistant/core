@@ -32,7 +32,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
     async_add_entities(
-        [WorldClockSensor(time_zone, name, config.get(CONF_TIME_FORMAT),)], True,
+        [
+            WorldClockSensor(
+                time_zone,
+                name,
+                config.get(CONF_TIME_FORMAT),
+            )
+        ],
+        True,
     )
 
 

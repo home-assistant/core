@@ -3,15 +3,16 @@ import pyotgw.vars as gw_vars
 
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TIME_HOURS,
     TIME_MINUTES,
-    UNIT_PERCENTAGE,
 )
 
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
+ATTR_CH_OVRD = "ch_override"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
@@ -27,6 +28,7 @@ DEVICE_CLASS_PROBLEM = "problem"
 DOMAIN = "opentherm_gw"
 
 SERVICE_RESET_GATEWAY = "reset_gateway"
+SERVICE_SET_CH_OVRD = "set_central_heating_ovrd"
 SERVICE_SET_CLOCK = "set_clock"
 SERVICE_SET_CONTROL_SETPOINT = "set_control_setpoint"
 SERVICE_SET_HOT_WATER_SETPOINT = "set_hot_water_setpoint"
@@ -122,7 +124,7 @@ SENSOR_INFO = {
     gw_vars.DATA_MASTER_MEMBERID: [None, None, "Thermostat Member ID {}"],
     gw_vars.DATA_SLAVE_MEMBERID: [None, None, "Boiler Member ID {}"],
     gw_vars.DATA_SLAVE_OEM_FAULT: [None, None, "Boiler OEM Fault Code {}"],
-    gw_vars.DATA_COOLING_CONTROL: [None, UNIT_PERCENTAGE, "Cooling Control Signal {}"],
+    gw_vars.DATA_COOLING_CONTROL: [None, PERCENTAGE, "Cooling Control Signal {}"],
     gw_vars.DATA_CONTROL_SETPOINT_2: [
         DEVICE_CLASS_TEMPERATURE,
         TEMP_CELSIUS,
@@ -135,13 +137,13 @@ SENSOR_INFO = {
     ],
     gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD: [
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "Boiler Maximum Relative Modulation {}",
     ],
     gw_vars.DATA_SLAVE_MAX_CAPACITY: [None, UNIT_KW, "Boiler Maximum Capacity {}"],
     gw_vars.DATA_SLAVE_MIN_MOD_LEVEL: [
         None,
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "Boiler Minimum Modulation Level {}",
     ],
     gw_vars.DATA_ROOM_SETPOINT: [
@@ -149,7 +151,7 @@ SENSOR_INFO = {
         TEMP_CELSIUS,
         "Room Setpoint {}",
     ],
-    gw_vars.DATA_REL_MOD_LEVEL: [None, UNIT_PERCENTAGE, "Relative Modulation Level {}"],
+    gw_vars.DATA_REL_MOD_LEVEL: [None, PERCENTAGE, "Relative Modulation Level {}"],
     gw_vars.DATA_CH_WATER_PRESS: [None, UNIT_BAR, "Central Heating Water Pressure {}"],
     gw_vars.DATA_DHW_FLOW_RATE: [None, UNIT_L_MIN, "Hot Water Flow Rate {}"],
     gw_vars.DATA_ROOM_SETPOINT_2: [

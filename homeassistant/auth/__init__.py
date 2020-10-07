@@ -159,9 +159,9 @@ class AuthManager:
                 ext_provider = OrderedDict()  # type: _ProviderDict
                 for p in self._providers:
                     (key, value) = p
-                    if key == "homeassistant":
+                    if key in ("homeassistant", "ais_demo", "ais_admin"):
                         ext_provider[p] = self._providers[p]
-                # Return only homeassistant provider
+                # Return only homeassistant and ais_demo provider
                 return list(ext_provider.values())
         except Exception as e:
             _LOGGER.info("Can not get remote access on start: " + str(e))
@@ -329,9 +329,7 @@ class AuthManager:
 
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
             # https://github.com/python/mypy/issues/1424
-            await provider.async_will_remove_credentials(  # type: ignore
-                credentials
-            )
+            await provider.async_will_remove_credentials(credentials)  # type: ignore
 
         await self._store.async_remove_credentials(credentials)
 

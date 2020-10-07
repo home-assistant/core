@@ -42,7 +42,9 @@ async def test_august_is_offline(hass):
     """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=_mock_get_config()[DOMAIN], title="August august",
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        title="August august",
     )
     config_entry.add_to_hass(hass)
 
@@ -146,7 +148,8 @@ async def test_set_up_from_yaml(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.august.async_setup_august", return_value=True,
+        "homeassistant.components.august.async_setup_august",
+        return_value=True,
     ) as mock_setup_august, patch(
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,

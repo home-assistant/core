@@ -1,7 +1,6 @@
 import logging
 from pprint import pformat
 
-# from homeassistant.components.extalife import ExtaLifeChannel
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -10,6 +9,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
 )
+
+# from homeassistant.components.extalife import ExtaLifeChannel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -149,21 +150,25 @@ class ExtaLifeClimate(ExtaLifeChannel, ClimateEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        data = self.channel_data
-        attrs = {
-            "waiting_to_synchronize": data.get("waiting_to_synchronize"),
-            "battery_status": data.get("battery_status"),
-            "temperature_old": data.get("temperature_old"),
-        }
+        attr = super().device_state_attributes
 
-        return attrs
+        data = self.channel_data
+        attr.update(
+            {
+                "waiting_to_synchronize": data.get("waiting_to_synchronize"),
+                "battery_status": data.get("battery_status"),
+                "temperature_old": data.get("temperature_old"),
+            }
+        )
+
+        return attr
 
     def on_state_notification(self, data):
         """ React on state notification from controller """
         state = data.get("state")
 
         ch_data = self.channel_data.copy()
-        ch_data["work_mode"] = EXTA_STATE_HVAC_MODE.get(state)
+        ch_data["work_mode"] = True if state == 1 else False
         ch_data["value"] = data.get("value")  # update set (target) temperature
 
         # update only if notification data contains new status; prevent HA event bus overloading

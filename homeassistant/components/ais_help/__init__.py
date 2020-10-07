@@ -18,13 +18,9 @@ async def async_setup(hass, config):
         sidebar_icon="mdi:book-open",
     )
 
-    """Register the built-in galery panel."""
+    """Register the built-in Audio panel."""
     hass.components.frontend.async_register_built_in_panel(
-        "aisgalery", "Galeria", "mdi:image-search"
-    )
-    """Register the built-in galery panel."""
-    hass.components.frontend.async_register_built_in_panel(
-        "aisaudio", "Audio", "mdi:music-box-multiple"
+        "aisaudio", "Audio", "mdi:play-box"
     )
 
     # TEST

@@ -5,7 +5,9 @@ import os
 
 import async_timeout
 import requests
+import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
@@ -155,6 +157,15 @@ async def async_setup(hass, config):
         DOMAIN, "enable_gate_pairing_by_pin", enable_gate_pairing_by_pin
     )
 
+    # register ws
+    hass.components.websocket_api.async_register_command(
+        websocket_check_ais_media_source
+    )
+    hass.components.websocket_api.async_register_command(
+        websocket_confirm_ais_media_source
+    )
+    hass.components.websocket_api.async_register_command(websocket_report_ais_problem)
+
     def device_discovered(service):
         """ Called when a device has been discovered. """
         if ais_global.G_AIS_START_IS_DONE:
@@ -272,12 +283,194 @@ async def async_setup(hass, config):
     return True
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/report_ais_problem",
+        vol.Required("problem_type"): str,
+        vol.Optional("problem_desc"): str,
+        vol.Optional("problem_data"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_report_ais_problem(hass, connection, msg):
+    """
+    Report a problem to AIS
+    """
+    ws = AisCloudWS(hass)
+    ais_answer = await ws.async_report_ais_problem(
+        problem_type=msg["problem_type"],
+        problem_desc=msg["problem_desc"],
+        problem_data=msg["problem_data"],
+    )
+    connection.send_result(msg["id"], ais_answer)
+    if "error" in ais_answer:
+        payload = {
+            "error": True,
+            "info": "AIS Error: " + ais_answer["message"],
+        }
+        connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+        )
+        return
+
+    # info to user that all is OK
+    payload = {
+        "info": ais_answer["message"],
+        "report_id": ais_answer["report_id"],
+        "email": ais_answer["email"],
+    }
+    connection.send_result(msg["id"], payload)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/confirm_ais_media_source",
+    }
+)
+@websocket_api.async_response
+async def websocket_confirm_ais_media_source(hass, connection, msg):
+    """
+    Report a confirmation to AIS
+    """
+    ws = AisCloudWS(hass)
+    player_state = hass.states.get("media_player.wbudowany_glosnik")
+    curr_stream_url = player_state.attributes.get("media_content_id")
+    media_source = player_state.attributes.get("source")
+    media_name = player_state.attributes.get("media_title")
+    ais_answer = await ws.async_confirm_ais_media(
+        source=media_source, name=media_name, current_url=curr_stream_url
+    )
+    if "error" in ais_answer:
+        payload = {
+            "error": True,
+            "info": "AIS Error: " + ais_answer["message"],
+        }
+        connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+        )
+        return
+
+    # info to user that all is OK
+    payload = {"info": ais_answer["message"]}
+    connection.send_result(msg["id"], payload)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/check_ais_media_source",
+    }
+)
+@websocket_api.async_response
+async def websocket_check_ais_media_source(hass, connection, msg):
+    """
+    Check the media source in AIS
+    """
+    # 0. get current stream url
+    player_state = hass.states.get("media_player.wbudowany_glosnik")
+    curr_stream_url = player_state.attributes.get("media_content_id")
+    media_source = player_state.attributes.get("source")
+    media_name = player_state.attributes.get("media_title")
+    if curr_stream_url is not None:
+        pass
+    else:
+        # no stream url - info to the user
+        info = "Obecnie na wbudowanym odtwarzaczu nie odtwarzasz żadnych mediów, dlatego sprawdzanie nie jest dostępne."
+        payload = {
+            "error": True,
+            "info": info,
+        }
+        connection.send_result(msg["id"], payload)
+        await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
+        return
+
+    # 1. get ORIGIN_URL from AIS
+    ws = AisCloudWS(hass)
+    ais_answer = await ws.async_check_ais_media(
+        source=media_source, name=media_name, current_url=curr_stream_url
+    )
+    if "error" in ais_answer:
+        info = ais_answer["message"]
+        payload = {
+            "error": True,
+            "info": "AIS Error: " + info,
+        }
+        connection.send_result(msg["id"], payload)
+        await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
+        return
+
+    if "do_on_client_check" in ais_answer:
+        # TODO check from client
+        # 2. ask ORIGIN_URL for new STREAM_URL
+        new_stream_url = ""
+        pass
+    else:
+        new_stream_url = ais_answer["new_stream_url"]
+
+    # 3. check if the new STREAM_URL != current STREAM_URL
+    if curr_stream_url != new_stream_url:
+        # play media
+        _audio_info = json.dumps(
+            {
+                "IMAGE_URL": ais_answer["thumbnail"],
+                "NAME": media_name,
+                "MEDIA_SOURCE": media_source,
+                "media_content_id": ais_answer["new_stream_url"],
+            }
+        )
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                "media_content_type": "ais_content_info",
+                "media_content_id": _audio_info,
+            },
+        )
+
+        # info to user to confirm that new stream is OK
+        payload = {
+            "found": True,
+            "info": "Udało się automatycznie ustalić, nowy adres URL: "
+            + new_stream_url
+            + " Czy odtwarzanie działa OK?",
+        }
+        connection.send_result(msg["id"], payload)
+        await hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {
+                "text": "Udało się automatycznie ustalić, nowy adres URL."
+                " Czy odtwarzanie działa OK?"
+            },
+        )
+        return
+
+    info = "Nie udało się automatycznie ustalić lepszego źródła dla mediów. Czy chcesz zgłosić problem do AIS?"
+    payload = {
+        "found": False,
+        "info": info,
+    }
+    connection.send_result(msg["id"], payload)
+    await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
+
+
 class AisCloudWS:
     def __init__(self, hass):
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
         self.url_gh = "https://powiedz.co/ords/dom/gh/"
         self.hass = hass
+        ais_global.set_ais_android_id_dom_file_path(
+            hass.config.config_dir + "/.dom/.ais_secure_android_id_dom"
+        )
         self.cloud_ws_token = ais_global.get_sercure_android_id_dom()
         self.cloud_ws_header = {"Authorization": f"{self.cloud_ws_token}"}
         self.cache_key_path = "/data/data/pl.sviete.dom/files/home/AIS/.dom/"
@@ -383,6 +576,57 @@ class AisCloudWS:
                     + str(e)
                 )
 
+    async def async_check_ais_media(self, name, source, current_url):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "check_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {"name": name, "source": source, "current_url": current_url}
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: " + source + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    async def async_confirm_ais_media(self, name, source, current_url):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "confirm_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {"name": name, "source": source, "current_url": current_url}
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: " + source + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    async def async_report_ais_problem(self, problem_type, problem_desc, problem_data):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "report_ais_problem"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "problem_type": problem_type,
+                    "problem_desc": problem_desc,
+                    "problem_data": problem_data,
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning(
+                "Couldn't report problem to AIS, for: " + problem_type + " " + str(e)
+            )
+            return {"error": True, "message": str(e)}
+
     async def async_key(self, service):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "key?service=" + service
@@ -398,7 +642,7 @@ class AisCloudWS:
                     json.dump(json_resp, outfile)
                 return json_resp
         except Exception as e:
-            _LOGGER.warning("Couldn't fetch data for: " + service + " " + str(e))
+            _LOGGER.warning("Couldn't fetch online data for: " + service)
             # try to get from local store
             try:
                 with open(self.cache_key_path + "." + service + ".json") as file:
@@ -468,9 +712,12 @@ class AisCloudWS:
                 f.write(chunk)
         return ws_resp
 
-    def get_gate_parring_pin(self):
+    def get_gate_parring_pin(self, user_id):
         rest_url = self.url + "gate_id_from_pin"
-        ws_resp = requests.post(rest_url, headers=self.cloud_ws_header, timeout=5)
+        payload = {"user_id": user_id}
+        ws_resp = requests.post(
+            rest_url, headers=self.cloud_ws_header, json=payload, timeout=5
+        )
         return ws_resp
 
 
@@ -534,7 +781,7 @@ class AisColudData:
             self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
         except Exception as e:
-            _LOGGER.error("RADIO WS resp " + str(ws_resp) + " " + str(e))
+            _LOGGER.warning("RADIO WS resp " + str(ws_resp) + " " + str(e))
 
         # ----------------
         # --- PODCASTS ---
@@ -545,7 +792,7 @@ class AisColudData:
             self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
         except Exception as e:
-            _LOGGER.error("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
+            _LOGGER.warning("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
 
         # ----------------
         # ----- NEWS -----
@@ -560,10 +807,15 @@ class AisColudData:
 
     def get_radio_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
-        json_ws_resp = ws_resp.json()
-        types = [ais_global.G_FAVORITE_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            types = [ais_global.G_FAVORITE_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+        except Exception as e:
+            _LOGGER.warning("get_radio_types from cache")
+            types = self.cache.audio_type(ais_global.G_AN_RADIO)["data"]
+
         # populate list with all stations from selected type
         self.hass.services.call(
             "input_select",
@@ -586,7 +838,12 @@ class AisColudData:
             return
 
         ws_resp = self.cloud.audio_name(ais_global.G_AN_RADIO, call.data["radio_type"])
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_radio_names error " + str(e))
+            return
+
         list_info = {}
         list_idx = 0
         for item in json_ws_resp["data"]:
@@ -617,10 +874,14 @@ class AisColudData:
 
     def get_podcast_types(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
-        json_ws_resp = ws_resp.json()
-        types = [ais_global.G_FAVORITE_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            types = [ais_global.G_FAVORITE_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+        except Exception as e:
+            _LOGGER.warning("get_podcast_types from cache")
+            types = self.cache.audio_type(ais_global.G_AN_PODCAST)["data"]
         # populate list with all podcast types
         self.hass.services.call(
             "input_select",
@@ -643,7 +904,12 @@ class AisColudData:
         ws_resp = self.cloud.audio_name(
             ais_global.G_AN_PODCAST, call.data["podcast_type"]
         )
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_podcast_names problem " + str(e))
+            return
+
         list_info = {}
         list_idx = 0
         for item in json_ws_resp["data"]:
@@ -673,8 +939,10 @@ class AisColudData:
             )
 
     def get_podcast_tracks(self, call):
-        import feedparser
         import io
+
+        import feedparser
+
         import homeassistant.components.ais_ai_service as ais_ai
 
         selected_by_remote = False
@@ -1253,11 +1521,17 @@ class AisColudData:
 
     def get_rss_news_category(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
-        json_ws_resp = ws_resp.json()
-        self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
-        types = [ais_global.G_EMPTY_OPTION]
-        for item in json_ws_resp["data"]:
-            types.append(item)
+        try:
+            json_ws_resp = ws_resp.json()
+            self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+            types = [ais_global.G_EMPTY_OPTION]
+            for item in json_ws_resp["data"]:
+                types.append(item)
+
+        except Exception as e:
+            _LOGGER.warning("get_rss_news_category from cache")
+            types = self.cache.audio_type(ais_global.G_AN_NEWS)["data"]
+
         self.hass.services.call(
             "input_select",
             "set_options",
@@ -1282,7 +1556,12 @@ class AisColudData:
         ws_resp = self.cloud.audio_name(
             ais_global.G_AN_NEWS, call.data["rss_news_category"]
         )
-        json_ws_resp = ws_resp.json()
+        try:
+            json_ws_resp = ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("get_rss_news_channels problem " + str(e))
+            return
+
         names = [ais_global.G_EMPTY_OPTION]
         self.news_channels = []
         for item in json_ws_resp["data"]:
@@ -1306,8 +1585,9 @@ class AisColudData:
             )
 
     def get_rss_news_items(self, call):
-        import feedparser
         import io
+
+        import feedparser
 
         if "rss_news_channel" not in call.data:
             return
@@ -1446,8 +1726,8 @@ class AisColudData:
 
         if track["uri"] is not None:
             try:
-                import requests
                 from readability import Document
+                import requests
 
                 response = requests.get(check_url(track["uri"]), timeout=5)
                 response.encoding = "utf-8"
@@ -1489,8 +1769,8 @@ class AisColudData:
             + rss_help_topic.replace(" ", "-")
             + ".md"
         )
-        import requests
         from readability.readability import Document
+        import requests
 
         response = requests.get(_url, timeout=5)
         doc = Document(response.text)
@@ -1905,9 +2185,14 @@ class AisColudData:
         )
 
     def enable_gate_pairing_by_pin(self, call):
-        ws_resp = self.cloud.get_gate_parring_pin()
+        # create token
+        user_id = call.context.user_id
+        # send token to cloud and get the pin
+        ws_resp = self.cloud.get_gate_parring_pin(user_id)
         json_ws_resp = ws_resp.json()
         pin = json_ws_resp["pin"]
+        # remember pin in session to compare
+        ais_global.G_AIS_DOM_PIN = pin
         # set gate_parring_pin
         self.hass.states.set("sensor.gate_pairing_pin", pin)
         # run timer

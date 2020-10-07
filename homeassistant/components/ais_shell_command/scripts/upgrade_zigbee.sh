@@ -25,12 +25,13 @@ echo "Restore configuration..."
 cp ~/configuration.yaml ~/zigbee2mqtt/data/configuration.yaml
 rm ~/configuration.yaml
 
-echo "Starting zigbee2mqtt..."
-pm2 start zigbee
-
 echo "zip"
 cd ~
 7za a -mmt=2 ~/zigbee.zip ~/zigbee2mqtt/.
+
+echo "Starting zigbee2mqtt..."
+pm2 start zigbee
+
 
 echo "Done!"
 

@@ -45,7 +45,8 @@ from tests.common import MockConfigEntry
 async def test_bad_credentials(hass):
     """Test when provided credentials are rejected."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -79,7 +80,8 @@ async def test_bad_hostname(hass):
     mock_plex_account = MockPlexAccount()
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -115,7 +117,8 @@ async def test_bad_hostname(hass):
 async def test_unknown_exception(hass):
     """Test when an unknown exception is encountered."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -144,7 +147,8 @@ async def test_no_servers_found(hass):
     """Test when no servers are on an account."""
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -178,7 +182,8 @@ async def test_single_available_server(hass):
     mock_plex_server = MockPlexServer()
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -217,7 +222,8 @@ async def test_multiple_servers_with_selection(hass):
     mock_plex_server = MockPlexServer()
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -246,7 +252,8 @@ async def test_multiple_servers_with_selection(hass):
         assert result["step_id"] == "select_server"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_SERVER: MOCK_SERVERS[0][CONF_SERVER]},
+            result["flow_id"],
+            user_input={CONF_SERVER: MOCK_SERVERS[0][CONF_SERVER]},
         )
         assert result["type"] == "create_entry"
         assert result["title"] == mock_plex_server.friendlyName
@@ -264,7 +271,8 @@ async def test_adding_last_unconfigured_server(hass):
     mock_plex_server = MockPlexServer()
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     MockConfigEntry(
@@ -311,7 +319,8 @@ async def test_all_available_servers_configured(hass):
     """Test when all available servers are already configured."""
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     MockConfigEntry(
@@ -503,7 +512,8 @@ async def test_external_timed_out(hass):
     """Test when external flow times out."""
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -532,7 +542,8 @@ async def test_callback_view(hass, aiohttp_client):
     """Test callback view."""
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -559,7 +570,8 @@ async def test_callback_view(hass, aiohttp_client):
 async def test_manual_config(hass):
     """Test creating via manual configuration."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
 
     class WrongCertValidaitionException(requests.exceptions.SSLError):
@@ -638,7 +650,8 @@ async def test_manual_config(hass):
     assert result["errors"]["base"] == "host_or_token"
 
     with patch(
-        "plexapi.server.PlexServer", side_effect=requests.exceptions.SSLError,
+        "plexapi.server.PlexServer",
+        side_effect=requests.exceptions.SSLError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
@@ -649,7 +662,8 @@ async def test_manual_config(hass):
     assert result["errors"]["base"] == "ssl_error"
 
     with patch(
-        "plexapi.server.PlexServer", side_effect=WrongCertValidaitionException,
+        "plexapi.server.PlexServer",
+        side_effect=WrongCertValidaitionException,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER

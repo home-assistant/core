@@ -2,9 +2,13 @@
 import os
 import unittest
 
+from homeassistant import config as hass_config
+from homeassistant.components.filesize import DOMAIN
 from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
-from homeassistant.setup import setup_component
+from homeassistant.const import SERVICE_RELOAD
+from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 TEST_DIR = os.path.join(os.path.dirname(__file__))
@@ -47,3 +51,47 @@ class TestFileSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.mock_file_test_filesize_txt")
         assert state.state == "0.0"
         assert state.attributes.get("bytes") == 4
+
+
+async def test_reload(hass, tmpdir):
+    """Verify we can reload filter sensors."""
+    testfile = f"{tmpdir}/file"
+    await hass.async_add_executor_job(create_file, testfile)
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "filesize",
+                    "file_paths": [testfile],
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("sensor.file")
+
+    yaml_path = os.path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "filesize/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch.object(
+        hass.config, "is_allowed_path", return_value=True
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.file") is None
+
+
+def _get_fixtures_base_path():
+    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -36,6 +37,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.util.dt as dt_util
+
+from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +56,7 @@ SUPPORT_EXO = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_BROWSE_MEDIA
 )
 
 DEFAULT_NAME = "AIS Dom Odtwarzacz"
@@ -479,12 +483,12 @@ class ExoPlayerDevice(MediaPlayerEntity):
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
-        self._volume_level = min(self._volume_level + 0.1, 1)
+        self._volume_level = min(self._volume_level + 0.0667, 1)
         _publish_command_to_frame(self.hass, self._device_ip, "upVolume", True)
 
     def volume_down(self):
         """Service to send the exo the command for volume down."""
-        self._volume_level = max(self._volume_level - 0.1, 0)
+        self._volume_level = max(self._volume_level - 0.0667, 0)
         _publish_command_to_frame(self.hass, self._device_ip, "downVolume", True)
 
     def mute_volume(self, mute):
@@ -832,11 +836,46 @@ class ExoPlayerDevice(MediaPlayerEntity):
                         )
                     )
         else:
-            # TODO remove this - it is only used in one case - for local media_extractor
-            # play only
+            # do not call async from threads - this will it can lead to a deadlock!!!
+            # if media_content_id.startswith("ais_"):
+            #     from homeassistant.components.ais_exo_player import media_browser
+            #
+            #     media_content_id = media_browser.get_media_content_id_form_ais(
+            #         self.hass, media_content_id
+            #     )
+            # this is currently used when the media are taken from gallery
+            if media_content_id.startswith("ais_"):
+                import requests
+
+                if media_content_id.startswith("ais_tunein"):
+                    url_to_call = media_content_id.split("/", 3)[3]
+                    try:
+                        response_text = requests.get(url_to_call, timeout=2).text
+                        response_text = response_text.split("\n")[0]
+                        if response_text.endswith(".pls"):
+                            response_text = requests.get(response_text, timeout=2).text
+                            media_content_id = response_text.split("\n")[1].replace(
+                                "File1=", ""
+                            )
+                        if response_text.startswith("mms:"):
+                            response_text = requests.get(
+                                response_text.replace("mms:", "http:"), timeout=2
+                            ).text
+                            media_content_id = response_text.split("\n")[1].replace(
+                                "Ref1=", ""
+                            )
+                    except Exception as e:
+                        pass
+                elif media_content_id.startswith("ais_spotify"):
+                    media_content_id = media_content_id.replace("ais_spotify/", "")
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
             _publish_command_to_frame(
                 self.hass, self._device_ip, "playAudio", media_content_id
             )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        result = await browse_media(self.hass, media_content_type, media_content_id)
+        return result

@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "confirm": {
-        "description": "![Supla logo](/static/icons/supla_zamel_logo.png)\n\nDo you want to set up integration with Exta Life controller (EFC-01) and discover your devices?",
+        "description": "###### ![AIS logo](https://brands.home-assistant.io/_/extalife/icon.png)\n\nDo you want to set up integration with Exta Life controller (EFC-01) and discover your devices?",
         "title": "Connection to EFC-01 controller "
       },
       "init": {
@@ -12,8 +12,7 @@
         "data": {
           "user": "User",
           "password": "Password",
-          "controller_ip": "EFC-01 IP",
-          "poll_interval": "Status polling interval"
+          "controller_ip": "EFC-01 IP"
         }
       },
       "title": {
@@ -31,6 +30,13 @@
   },
   "options": {
     "step": {
+      "general": {
+        "description": "General settings",
+        "data": {
+          "poll_interval": "Status polling interval",
+          "disable_not_responding": "Disable entities when device is not responding (just as in the 'Exta Life' app)"
+        }
+      },
       "light": {
         "description": "Settings for lights",
         "data": {

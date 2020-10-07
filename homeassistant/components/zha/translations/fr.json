@@ -65,6 +65,7 @@
             "device_dropped": "Appareil tomb\u00e9",
             "device_flipped": "Appareil retourn\u00e9 \"{subtype}\"",
             "device_knocked": "Appareil frapp\u00e9 \"{subtype}\"",
+            "device_offline": "Appareil hors ligne",
             "device_rotated": "Appareil tourn\u00e9 \"{subtype}\"",
             "device_shaken": "Appareil secou\u00e9",
             "device_slid": "Appareil gliss\u00e9 \"{subtype}\"",
