@@ -3,10 +3,11 @@ import asyncio
 import logging
 from typing import Any, List, Optional
 
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_call_later
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
+
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 
 from .. import registries, typing as zha_typing
 from ..const import (
@@ -88,11 +89,12 @@ class BasicChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        power_source = await self.get_attribute_value(
-            "power_source", from_cache=from_cache
-        )
-        if power_source is not None:
-            self._power_source = power_source
+        if not self._ch_pool.skip_configuration:
+            power_source = await self.get_attribute_value(
+                "power_source", from_cache=from_cache
+            )
+            if power_source is not None:
+                self._power_source = power_source
         await super().async_initialize(from_cache)
 
     def get_power_source(self):
