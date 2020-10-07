@@ -19,6 +19,7 @@ from .const import (
     ATTR_DIRECTION,
     DOMAIN,
     MGDL,
+    MMOL,
     MMOL_TO_MGDL,
 )
 
