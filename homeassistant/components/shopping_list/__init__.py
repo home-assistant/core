@@ -31,6 +31,8 @@ WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
 WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = "shopping_list/items/update"
 WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = "shopping_list/items/clear"
+WS_TYPE_SHOPPING_LIST_MOVE_UP_ITEM = "shopping_list/items/move_up"
+WS_TYPE_SHOPPING_LIST_MOVE_DOWN_ITEM = "shopping_list/items/move_down"
 
 SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_ITEMS}
@@ -51,6 +53,20 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS}
+)
+
+SCHEMA_WEBSOCKET_MOVE_UP_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        vol.Required("type"): WS_TYPE_SHOPPING_LIST_MOVE_UP_ITEM,
+        vol.Required("item_id"): str,
+    }
+)
+
+SCHEMA_WEBSOCKET_MOVE_DOWN_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        vol.Required("type"): WS_TYPE_SHOPPING_LIST_MOVE_DOWN_ITEM,
+        vol.Required("item_id"): str,
+    }
 )
 
 
@@ -130,6 +146,18 @@ async def async_setup_entry(hass, config_entry):
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
     )
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SHOPPING_LIST_MOVE_UP_ITEM,
+        websocket_handle_move_up,
+        SCHEMA_WEBSOCKET_MOVE_UP_ITEM,
+    )
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SHOPPING_LIST_MOVE_DOWN_ITEM,
+        websocket_handle_move_down,
+        SCHEMA_WEBSOCKET_MOVE_DOWN_ITEM,
+    )
+
     return True
 
 
@@ -174,12 +202,15 @@ class ShoppingData:
             (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
         )
 
+        item = self.items[index]
+
         if index is None:
             raise KeyError
 
         item = self.items.pop(index)
         self.items.insert(index - 1, item)
         self.hass.async_add_job(self.save)
+        return item
 
     @callback
     def async_move_down(self, item_id):
@@ -333,3 +364,35 @@ def websocket_handle_clear(hass, connection, msg):
     hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@callback
+def websocket_handle_move_up(hass, connection, msg):
+    """todo"""
+    msg_id = msg.pop("id")
+    item_id = msg.pop("item_id")
+
+    try:
+        item = hass.data[DOMAIN].async_move_up(item_id)
+        hass.bus.async_fire(EVENT, {"action": "move_up", "item": item})
+        connection.send_message(websocket_api.result_message(msg_id, item))
+    except KeyError:
+        connection.send_message(
+            websocket_api.error_message(msg_id, "item_not_found", "Item not found")
+        )
+
+
+@callback
+def websocket_handle_move_down(hass, connection, msg):
+    """todo"""
+    msg_id = msg.pop("id")
+    item_id = msg.pop("item_id")
+
+    try:
+        item = hass.data[DOMAIN].async_move_down(item_id)
+        hass.bus.async_fire(EVENT, {"action": "move_down", "item": item})
+        connection.send_message(websocket_api.result_message(msg_id, item))
+    except KeyError:
+        connection.send_message(
+            websocket_api.error_message(msg_id, "item_not_found", "Item not found")
+        )
