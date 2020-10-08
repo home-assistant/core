@@ -1,7 +1,7 @@
 """Config flow for Tesla Powerwall integration."""
 import logging
 
-from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import MissingAttributeError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -27,7 +27,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         site_info = await hass.async_add_executor_job(power_wall.get_site_info)
     except PowerwallUnreachableError as err:
         raise CannotConnect from err
-    except APIChangedError as err:
+    except MissingAttributeError as err:
         # Only log the exception without the traceback
         _LOGGER.error(str(err))
         raise WrongVersion from err
