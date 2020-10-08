@@ -238,16 +238,18 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet.time_base * MAX_TIMESTAMP_GAP
             ):
                 _LOGGER.warning(
-                    "Timestamp overflow detected: dts = %s, resetting stream",
+                    "Timestamp overflow detected: last dts %s, dts = %s, resetting stream",
+                    last_dts[packet.stream],
                     packet.dts,
                 )
                 finalize_stream()
                 break
-            _LOGGER.warning(
-                "Dropping out of order packet: %s <= %s",
-                packet.dts,
-                last_dts[packet.stream],
-            )
+            if packet.dts < last_dts[packet.stream]:
+                _LOGGER.warning(
+                    "Dropping out of order packet: %s < %s",
+                    packet.dts,
+                    last_dts[packet.stream],
+                )
             continue
 
         # Check for end of segment
