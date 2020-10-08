@@ -3,10 +3,7 @@ from typing import List
 
 from pycfdns import CFRecord
 
-from homeassistant.components.cloudflare.const import (
-    CONF_RECORDS,
-    DOMAIN,
-)
+from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 
 from tests.async_mock import AsyncMock, patch
