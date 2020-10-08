@@ -72,17 +72,16 @@ async def prepare_usb_device(hass, device_info):
     # add info in app
     if device_info["id"] == G_ZIGBEE_ID:
         # Register the built-in zigbee panel
-        hass.components.frontend.async_register_built_in_panel(
-            "aiszigbee",
-            require_admin=True,
-            sidebar_title="Zigbee",
-            sidebar_icon="mdi:zigbee",
-            update=True,
-        )
+        # hass.components.frontend.async_register_built_in_panel(
+        #     "aiszigbee",
+        #     require_admin=True,
+        #     sidebar_title="Zigbee",
+        #     sidebar_icon="mdi:zigbee",
+        #     update=True,
+        # )
 
         # check if zigbee already exists
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
-            # TODO download
             await hass.services.async_call(
                 "ais_ai_service",
                 "say_it",
@@ -102,10 +101,10 @@ async def prepare_usb_device(hass, device_info):
         if ais_global.has_root():
             await _run("su -c 'chmod 777 /dev/ttyACM0'")
 
-        # restart-delay 150000 milisecond == 2.5 minutes
+        # restart-delay 120000 milisecond == 2 minutes
         cmd_to_run = (
             "pm2 restart zigbee || pm2 start /data/data/pl.sviete.dom/files/home/zigbee2mqtt/index.js "
-            "--name zigbee --output /dev/null --error /dev/null --restart-delay=150000"
+            "--name zigbee --output /dev/null --error /dev/null --restart-delay=120000"
         )
         await _run(cmd_to_run)
 
@@ -122,7 +121,7 @@ async def remove_usb_device(hass, device_info):
 
     if device_info["id"] == G_ZIGBEE_ID:
         # Unregister the built-in zigbee panel
-        hass.components.frontend.async_remove_panel("aiszigbee")
+        # hass.components.frontend.async_remove_panel("aiszigbee")
         # stop pm2 zigbee service
         await _run("pm2 delete zigbee")
         await hass.services.async_call(
