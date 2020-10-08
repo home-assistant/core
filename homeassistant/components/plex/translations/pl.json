@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane.",
-            "already_configured": "Ten serwer Plex jest ju\u017c skonfigurowany.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Plex jest konfigurowany",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",

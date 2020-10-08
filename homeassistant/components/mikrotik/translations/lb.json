@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung net erfollegr\u00e4ich",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "name_exists": "Numm g\u00ebtt et schonn",
             "wrong_credentials": "Falsch Login Informatiounen"
         },

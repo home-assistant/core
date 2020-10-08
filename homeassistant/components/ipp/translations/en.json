@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect",
             "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
             "ipp_error": "Encountered IPP error.",
@@ -10,6 +11,7 @@
             "unique_id_required": "Device missing unique identification required for discovery."
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect",
             "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
         },

@@ -7,7 +7,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 SpeedTest?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 SpeedTest?",
                 "title": "Konfiguracja SpeedTest"
             }
         }

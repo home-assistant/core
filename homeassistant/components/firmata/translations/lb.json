@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Feeler beim verbannen"
+        }
+    }
+}
