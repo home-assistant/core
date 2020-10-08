@@ -101,7 +101,6 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
 
         return state
 
-
 class OmniLogicRelayControl(OmniLogicSwitch):
     """Define the OmniLogic Relay entity."""
 

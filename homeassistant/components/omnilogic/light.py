@@ -4,6 +4,7 @@ import time
 
 from omnilogic import LightEffect
 
+from homeassistant import core
 from homeassistant.components.light import ATTR_EFFECT, SUPPORT_EFFECT, LightEntity
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
@@ -78,6 +79,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         )
 
         self._state_key = state_key
+        self._wait_for_state_change = False
 
     @property
     def is_on(self):
@@ -126,7 +128,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
 
         if success:
             time.sleep(30)
-            self.async_schedule_update_ha_state()
+            self.async_schedule_update_ha_state(True)
 
     async def async_turn_off(self):
         """Turn off the light."""
@@ -139,7 +141,8 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
 
         if success:
             time.sleep(60)
-            self.async_schedule_update_ha_state()
+            self.async_schedule_update_ha_state(True)
+
 
 
 LIGHT_TYPES = {
