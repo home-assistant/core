@@ -6,6 +6,7 @@ import logging
 import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,7 +19,6 @@ from .const import (
     DOMAIN,
     POLLING_TIMEOUT,
 )
-from .helpers import create_config_flow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,14 @@ class SmartTubController:
             await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
         except LoginFailed:
             # credentials were changed or invalidated, we need new ones
-            create_config_flow(self._hass)
+            self._hass.async_create_task(
+                self._hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={},
+                )
+            )
+
             return False
 
         self._account = await self._api.get_account()

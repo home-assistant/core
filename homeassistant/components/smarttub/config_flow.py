@@ -30,10 +30,6 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_info):
-        """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}

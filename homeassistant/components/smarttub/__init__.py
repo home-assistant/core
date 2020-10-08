@@ -6,21 +6,16 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
-from .helpers import create_config_flow
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["climate"]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, _config):
     """Set up smarttub component."""
 
-    cfg = config.get(DOMAIN)
-    if cfg is None:
-        return True
-
-    create_config_flow(hass, cfg)
+    hass.data.setdefault(DOMAIN, {})
 
     return True
 
@@ -29,7 +24,6 @@ async def async_setup_entry(hass, entry):
     """Set up a smarttub config entry."""
 
     controller = SmartTubController(hass)
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
         SMARTTUB_CONTROLLER: controller,
     }
