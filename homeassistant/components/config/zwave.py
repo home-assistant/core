@@ -54,7 +54,7 @@ class ZWaveLogView(HomeAssistantView):
             return Response(text="Invalid datetime", status=HTTP_BAD_REQUEST)
 
         hass = request.app["hass"]
-        response = await hass.async_add_job(self._get_log, hass, lines)
+        response = await hass.async_add_executor_job(self._get_log, hass, lines)
 
         return Response(text="\n".join(response))
 
