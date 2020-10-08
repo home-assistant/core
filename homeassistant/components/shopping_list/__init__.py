@@ -170,14 +170,26 @@ class ShoppingData:
 
     @callback
     def async_move_up(self, item_id):
-        index = [i for i, itm in enumerate(self.items) if itm["id"] == item_id]
+        index = next(
+            (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
+        )
+
+        if index is None:
+            raise KeyError
+
         item = self.items.pop(index)
         self.items.insert(index - 1, item)
         self.hass.async_add_job(self.save)
 
     @callback
     def async_move_down(self, item_id):
-        index = [i for i, itm in enumerate(self.items) if itm["id"] == item_id]
+        index = next(
+            (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
+        )
+
+        if index is None:
+            raise KeyError
+
         item = self.items.pop(index)
         self.items.insert(index + 1, item)
         self.hass.async_add_job(self.save)
