@@ -41,7 +41,7 @@ class Debouncer:
 
     @function.setter
     def function(self, function: Callable[..., Awaitable[Any]]) -> None:
-        """Return the function being wrapped by the Debouncer."""
+        """Update the function being wrapped by the Debouncer."""
         self._function = function
         if self._job is None or function != self._job.target:
             self._job = HassJob(function)
