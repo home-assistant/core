@@ -89,7 +89,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     # Keep track of consecutive packets without a dts to detect end of stream.
     last_packet_was_without_dts = False
     # Keep track of consecutive packets with a large dts gap to detect an overflow.
-    last_packet_had_large_dts_gap = False
+    last_packet_had_large_negative_dts_gap = False
     # Holds the buffers for each stream provider
     outputs = None
     # Keep track of the number of segments we've processed
@@ -239,7 +239,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             if (last_dts[packet.stream] - packet.dts) > (
                 packet.time_base * MAX_TIMESTAMP_GAP
             ):
-                if last_packet_had_large_dts_gap:
+                if last_packet_had_large_negative_dts_gap:
                     _LOGGER.warning(
                         "Timestamp overflow detected: last dts %s, dts = %s, resetting stream",
                         last_dts[packet.stream],
@@ -247,7 +247,7 @@ def _stream_worker_internal(hass, stream, quit_event):
                     )
                     finalize_stream()
                     break
-                last_packet_had_large_dts_gap = True
+                last_packet_had_large_negative_dts_gap = True
             if packet.dts < last_dts[packet.stream]:
                 _LOGGER.warning(
                     "Dropping out of order packet: %s < %s",
@@ -255,7 +255,7 @@ def _stream_worker_internal(hass, stream, quit_event):
                     last_dts[packet.stream],
                 )
             continue
-        last_packet_had_large_dts_gap = False
+        last_packet_had_large_negative_dts_gap = False
 
         # Check for end of segment
         if packet.stream == video_stream and packet.is_keyframe:
