@@ -26,6 +26,7 @@ from .const import (
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     SENSOR_PLATFORMS,
     UNDO_UPDATE_LISTENER,
@@ -56,15 +57,15 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryNotReady
 
     except Smile.InvalidAuthentication:
-        _LOGGER.error("Invalid Smile ID")
+        _LOGGER.error("Invalid username or Smile ID")
         return False
 
     except Smile.PlugwiseError as err:
-        _LOGGER.error("Error while communicating to device")
+        _LOGGER.error("Error while communicating to device %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
     except asyncio.TimeoutError as err:
-        _LOGGER.error("Timeout while connecting to Smile")
+        _LOGGER.error("Timeout while connecting to Smile %s", api.smile_name)
         raise ConfigEntryNotReady from err
 
     update_interval = timedelta(
@@ -76,7 +77,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Update data via API endpoint."""
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 await api.full_update_device()
                 return True
         except Smile.XMLDataMissingError as err:
@@ -85,7 +86,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="Smile",
+        name=f"Smile {api.smile_name}",
         update_method=async_update_data,
         update_interval=update_interval,
     )

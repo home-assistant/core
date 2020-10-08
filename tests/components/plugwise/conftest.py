@@ -184,7 +184,7 @@ def mock_smile_p1():
 def mock_stretch():
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
-    with patch("homeassistant.components.plugwise.Smile") as smile_mock:
+    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
         smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
         smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
         smile_mock.XMLDataMissingError = Smile.XMLDataMissingError

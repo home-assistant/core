@@ -50,7 +50,7 @@ def _base_gw_schema(discovery_info):
 
 async def validate_gw_input(hass: core.HomeAssistant, data):
     """
-    Validate the user input allows us to connect to the gateray.
+    Validate whether the user input allows us to connect to the gateray.
 
     Data has the keys from _base_gw_schema() with values provided by the user.
     """

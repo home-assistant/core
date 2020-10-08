@@ -44,11 +44,10 @@ IDLE_ICON = "mdi:circle-off-outline"
 SWITCH_ICON = "mdi:electric-switch"
 
 COORDINATOR = "coordinator"
-
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 ZEROCONF_MAP = {
     "smile": "P1",
     "smile_thermo": "Anna",
     "smile_open_therm": "Adam",
     "stretch": "Stretch",
 }
-UNDO_UPDATE_LISTENER = "undo_update_listener"
