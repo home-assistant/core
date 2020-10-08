@@ -53,14 +53,13 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
             return next(
                 (
                     multi_level_sensor.value
-                    for element_uid, multi_level_sensor in self._device_instance.multi_level_sensor_property.items()
+                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
                     if multi_level_sensor.sensor_type == "temperature"
                 ),
-                self.target_temperature,
+                None,
             )
 
-        # For devices, that don't report their current temperature, return target temperature.
-        return self.target_temperature
+        return None
 
     @property
     def target_temperature(self) -> Optional[float]:
