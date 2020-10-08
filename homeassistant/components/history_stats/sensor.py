@@ -272,7 +272,7 @@ class HistoryStatsSensor(Entity):
                 HistoryStatsHelper.handle_template_exception(ex, "start")
                 return
             if isinstance(start_rendered, str):
-                start = dt_util.parse_datetime(str(start_rendered))
+                start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
                     start = dt_util.as_local(
