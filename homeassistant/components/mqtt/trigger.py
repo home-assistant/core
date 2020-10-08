@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 import homeassistant.helpers.config_validation as cv
 
 # mypy: allow-untyped-defs
@@ -35,6 +35,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     payload = config.get(CONF_PAYLOAD)
     encoding = config[CONF_ENCODING] or None
     qos = config[CONF_QOS]
+    job = HassJob(action)
 
     @callback
     def mqtt_automation_listener(mqttmsg):
@@ -53,7 +54,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             except ValueError:
                 pass
 
-            hass.async_run_job(action, {"trigger": data})
+            hass.async_run_hass_job(job, {"trigger": data})
 
     remove = await mqtt.async_subscribe(
         hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos
