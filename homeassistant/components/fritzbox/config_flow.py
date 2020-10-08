@@ -32,7 +32,7 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
 )
 
 RESULT_INVALID_AUTH = "invalid_auth"
-RESULT_NOT_FOUND = "not_found"
+RESULT_NO_DEVICES_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
