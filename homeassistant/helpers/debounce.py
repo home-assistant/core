@@ -26,13 +26,25 @@ class Debouncer:
         """
         self.hass = hass
         self.logger = logger
-        self.function = function
+        self._function = function
         self.cooldown = cooldown
         self.immediate = immediate
         self._timer_task: Optional[asyncio.TimerHandle] = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
-        self._job: Optional[HassJob] = None
+        self._job: Optional[HassJob] = None if function is None else HassJob(function)
+
+    @property
+    def function(self) -> Optional[Callable[..., Awaitable[Any]]]:
+        """Return the function being wrapped by the Debouncer."""
+        return self._function
+
+    @function.setter
+    def function(self, function: Callable[..., Awaitable[Any]]) -> None:
+        """Return the function being wrapped by the Debouncer."""
+        self._function = function
+        if self._job is None or function != self._job.target:
+            self._job = HassJob(function)
 
     async def async_call(self) -> None:
         """Call the function."""
@@ -52,8 +64,6 @@ class Debouncer:
             self._execute_at_end_of_timer = True
             self._schedule_timer()
             return
-
-        self._sync_job()
 
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
@@ -78,8 +88,6 @@ class Debouncer:
         # Locked means a call is in progress. Any call is good, so abort.
         if self._execute_lock.locked():
             return
-
-        self._sync_job()
 
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
@@ -109,10 +117,3 @@ class Debouncer:
             self.cooldown,
             lambda: self.hass.async_create_task(self._handle_timer_finish()),
         )
-
-    @callback
-    def _sync_job(self) -> None:
-        """Ensure job is in sync with function."""
-        assert self.function is not None
-        if self._job is None or self.function != self._job.target:
-            self._job = HassJob(self.function)
