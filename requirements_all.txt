@@ -1061,6 +1061,8 @@ orvibo==1.1.1
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
+paho-mqtt==1.5.0
+
 # homeassistant.components.shiftr
 paho-mqtt==1.5.1
 
