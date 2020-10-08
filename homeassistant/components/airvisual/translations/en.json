@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "These coordinates or Node/Pro ID are already registered."
+            "already_configured": "Location is already configured or Node/Pro ID is already registered."
         },
         "error": {
             "cannot_connect": "Failed to connect",

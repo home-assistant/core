@@ -14,7 +14,7 @@
                     "api_key": "API-n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
-                    "name": "Navn p\u00e5 integrasjon"
+                    "name": "Navn"
                 },
                 "description": "Hvis du trenger hjelp med konfigurasjonen, kan du se her: https://www.home-assistant.io/integrations/accuweather/ \n\n Noen sensorer er ikke aktivert som standard. Du kan aktivere dem i enhetsregisteret etter integrasjonskonfigurasjonen. \n V\u00e6rmelding er ikke aktivert som standard. Du kan aktivere det i integrasjonsalternativene.",
                 "title": ""

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
-            "reauth_successful": "Ri-autenticato con successo",
+            "reauth_successful": "La riautenticazione ha avuto successo",
             "unknown": "Errore imprevisto"
         },
         "error": {

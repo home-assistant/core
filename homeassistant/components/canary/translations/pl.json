@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "Argumenty przekazane do ffmpeg dla kamer",
                     "timeout": "Limit czasu \u017c\u0105dania (w sekundach)"
                 }
             }

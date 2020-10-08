@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "To urz\u0105dzenie zosta\u0142o ju\u017c dodane do Home Assistant"
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "connection_error": "[%key::common::config_flow::error::cannot_connect%]",

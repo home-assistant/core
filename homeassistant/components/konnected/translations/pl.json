@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model} \nHost: {host} \nPort: {port} \n\nMo\u017cesz skonfigurowa\u0107 IO i zachowanie  panelu w ustawieniach Konnected Alarm Panel.",
+                "description": "Model: {model} \nIdentyfikator: {id}\nHost: {host} \nPort: {port} \n\nMo\u017cesz skonfigurowa\u0107 IO i zachowanie panelu w ustawieniach Konnected Alarm Panel.",
                 "title": "Urz\u0105dzenie Konnected gotowe"
             },
             "import_confirm": {
@@ -89,6 +89,7 @@
                 "data": {
                     "api_host": "Zast\u0119powanie adresu URL hosta API (opcjonalnie)",
                     "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
+                    "discovery": "Odpowiadaj na \u017c\u0105dania wykrywania w Twojej sieci",
                     "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistanta"
                 },
                 "description": "Wybierz po\u017c\u0105dane zachowanie dla swojego panelu",

@@ -17,7 +17,7 @@
                 "data": {
                     "hapid": "ID del punto di accesso (SGTIN)",
                     "name": "Nome (opzionale, usato come prefisso del nome per tutti i dispositivi)",
-                    "pin": "Codice Pin (opzionale)"
+                    "pin": "Codice PIN"
                 },
                 "title": "Scegli punto di accesso HomematicIP"
             },
