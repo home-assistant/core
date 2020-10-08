@@ -94,8 +94,6 @@ class PwSwitch(SmileGateway, SwitchEntity):
     @callback
     def _async_process_data(self):
         """Update the data from the Plugs."""
-        _LOGGER.debug("Update switch called")
-
         data = self._api.get_device_data(self._dev_id)
 
         if not data:
