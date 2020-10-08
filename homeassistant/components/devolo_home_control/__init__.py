@@ -19,9 +19,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    conf = config_entry.data
+    conf = entry.data
     hass.data.setdefault(DOMAIN, {})
     try:
         mydevolo = Mydevolo.get_instance()
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
-        hass.data[DOMAIN][config_entry.entry_id] = await hass.async_add_executor_job(
+        hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
             partial(
                 HomeControl,
                 gateway_id=gateway_id,
@@ -58,11 +58,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def shutdown(event):
-        hass.data[DOMAIN][config_entry.entry_id].websocket_disconnect(
+        hass.data[DOMAIN][entry.entry_id].websocket_disconnect(
             f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
         )
 
@@ -72,21 +72,19 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                hass.config_entries.async_forward_entry_unload(entry, platform)
                 for platform in PLATFORMS
             ]
         )
     )
 
     await hass.async_add_executor_job(
-        hass.data[DOMAIN][config_entry.entry_id].websocket_disconnect
+        hass.data[DOMAIN][entry.entry_id].websocket_disconnect
     )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    hass.data[DOMAIN].pop(entry.entry_id)
     return unload
