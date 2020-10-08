@@ -58,7 +58,7 @@ async def test_connection_error(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_unauthorized(hass):
