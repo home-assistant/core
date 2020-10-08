@@ -83,8 +83,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         )
     )
 
-    await hass.async_add_executor_job(
-        hass.data[DOMAIN][entry.entry_id].websocket_disconnect
+    await asyncio.gather(
+        *[
+            hass.async_add_executor_job(gateway.websocket_disconnect)
+            for gateway in hass.data[DOMAIN][entry.entry_id]
+        ]
     )
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload
