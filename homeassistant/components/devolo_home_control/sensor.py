@@ -33,22 +33,22 @@ async def async_setup_entry(
     """Get all sensor devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_sensor_devices:
+    for device in hass.data[DOMAIN][entry.entry_id].multi_level_sensor_devices:
         for multi_level_sensor in device.multi_level_sensor_property:
             entities.append(
                 DevoloGenericMultiLevelDeviceEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
+                    homecontrol=hass.data[DOMAIN][entry.entry_id],
                     device_instance=device,
                     element_uid=multi_level_sensor,
                 )
             )
-    for device in hass.data[DOMAIN]["homecontrol"].devices.values():
+    for device in hass.data[DOMAIN][entry.entry_id].devices.values():
         if hasattr(device, "consumption_property"):
             for consumption in device.consumption_property:
                 for consumption_type in ["current", "total"]:
                     entities.append(
                         DevoloConsumptionEntity(
-                            homecontrol=hass.data[DOMAIN]["homecontrol"],
+                            homecontrol=hass.data[DOMAIN][entry.entry_id],
                             device_instance=device,
                             element_uid=consumption,
                             consumption=consumption_type,
@@ -57,7 +57,7 @@ async def async_setup_entry(
         if hasattr(device, "battery_level"):
             entities.append(
                 DevoloBatteryEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
+                    homecontrol=hass.data[DOMAIN][entry.entry_id],
                     device_instance=device,
                     element_uid=f"devolo.BatterySensor:{device.uid}",
                 )

@@ -15,7 +15,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
-    devices = hass.data[DOMAIN]["homecontrol"].binary_switch_devices
+    devices = hass.data[DOMAIN][entry.entry_id].binary_switch_devices
 
     entities = []
     for device in devices:
@@ -25,7 +25,7 @@ async def async_setup_entry(
             if not hasattr(device, "multi_level_switch_property"):
                 entities.append(
                     DevoloSwitch(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
+                        homecontrol=hass.data[DOMAIN][entry.entry_id],
                         device_instance=device,
                         element_uid=binary_switch,
                     )

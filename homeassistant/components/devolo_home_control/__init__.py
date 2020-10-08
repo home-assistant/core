@@ -19,9 +19,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    conf = entry.data
+    conf = config_entry.data
     hass.data.setdefault(DOMAIN, {})
     try:
         mydevolo = Mydevolo.get_instance()
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
-        hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
+        hass.data[DOMAIN][config_entry.entry_id] = await hass.async_add_executor_job(
             partial(
                 HomeControl,
                 gateway_id=gateway_id,
@@ -58,11 +58,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     def shutdown(event):
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect(
+        hass.data[DOMAIN][config_entry.entry_id].websocket_disconnect(
             f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
         )
 
@@ -72,7 +72,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload = all(
         await asyncio.gather(
@@ -84,7 +86,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     await hass.async_add_executor_job(
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect
+        hass.data[DOMAIN][config_entry.entry_id].websocket_disconnect
     )
-    del hass.data[DOMAIN]["homecontrol"]
+    hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload
