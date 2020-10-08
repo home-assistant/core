@@ -65,6 +65,7 @@ class HassIOView(HomeAssistantView):
 
         return await self._command_proxy(path, request)
 
+    delete = _handle
     get = _handle
     post = _handle
 
