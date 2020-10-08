@@ -4,7 +4,7 @@ from simplipy.entity import EntityTypes
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 
-from . import SimpliSafeEntity, SimpliSafeSensorBattery
+from . import SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN
 
 
@@ -12,22 +12,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe freeze sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
-    sensors = [
-        SimplisafeFreezeSensor(simplisafe, system, sensor)
-        for system in simplisafe.systems.values()
-        for sensor in system.sensors.values()
-        if sensor.type == EntityTypes.temperature
-    ]
-
-    # Add low battery status entity for every sensor
-    battery_sensors = [
-        SimpliSafeSensorBattery(simplisafe, system, sensor)
-        for system in simplisafe.systems.values()
-        for sensor in system.sensors.values()
-        if sensor.type == EntityTypes.temperature
-    ]
-
-    async_add_entities(sensors + battery_sensors)
+    async_add_entities(
+        [
+            SimplisafeFreezeSensor(simplisafe, system, sensor)
+            for system in simplisafe.systems.values()
+            for sensor in system.sensors.values()
+            if sensor.type == EntityTypes.temperature
+        ]
+    )
 
 
 class SimplisafeFreezeSensor(SimpliSafeEntity):
