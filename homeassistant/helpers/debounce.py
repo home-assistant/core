@@ -3,7 +3,7 @@ import asyncio
 from logging import Logger
 from typing import Any, Awaitable, Callable, Optional
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 
 
 class Debouncer:
@@ -32,6 +32,7 @@ class Debouncer:
         self._timer_task: Optional[asyncio.TimerHandle] = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
+        self._job: Optional[HassJob] = None
 
     async def async_call(self) -> None:
         """Call the function."""
@@ -52,12 +53,14 @@ class Debouncer:
             self._schedule_timer()
             return
 
+        self._sync_job()
+
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
 
-            await self.hass.async_add_job(self.function)  # type: ignore
+            await self.hass.async_add_hass_job(self._job)  # type: ignore
 
             self._schedule_timer()
 
@@ -76,13 +79,15 @@ class Debouncer:
         if self._execute_lock.locked():
             return
 
+        self._sync_job()
+
         async with self._execute_lock:
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return  # type: ignore
 
             try:
-                await self.hass.async_add_job(self.function)  # type: ignore
+                await self.hass.async_add_hass_job(self._job)  # type: ignore
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 
@@ -104,3 +109,10 @@ class Debouncer:
             self.cooldown,
             lambda: self.hass.async_create_task(self._handle_timer_finish()),
         )
+
+    @callback
+    def _sync_job(self) -> None:
+        """Ensure job is in sync with function."""
+        assert self.function is not None
+        if self._job is None or self.function != self._job.target:
+            self._job = HassJob(self.function)
