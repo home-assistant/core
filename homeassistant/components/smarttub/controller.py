@@ -6,19 +6,14 @@ import logging
 import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    POLLING_TIMEOUT,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, POLLING_TIMEOUT
+from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +26,10 @@ class SmartTubController:
         self._hass = hass
         self._api = SmartTub(async_get_clientsession(hass))
         self._account = None
-        self._spas = {}
+        self.spas = set()
         self._spa_devices = {}
-        self._stop_polling = None
 
-        self._coordinator = None
-        self.spa_ids = set()
+        self.coordinator = None
 
     async def async_setup_entry(self, entry):
         """Perform initial setup.
@@ -52,8 +45,8 @@ class SmartTubController:
             self._hass.async_create_task(
                 self._hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={},
+                    context={"source": SOURCE_REAUTH},
+                    data=None,
                 )
             )
 
@@ -61,10 +54,9 @@ class SmartTubController:
 
         self._account = await self._api.get_account()
 
-        self._spas = {spa.id: spa for spa in await self._account.get_spas()}
-        self.spa_ids = set(self._spas)
+        self.spas = await self._account.get_spas()
 
-        self._coordinator = DataUpdateCoordinator(
+        self.coordinator = DataUpdateCoordinator(
             self._hass,
             _LOGGER,
             name=DOMAIN,
@@ -74,7 +66,7 @@ class SmartTubController:
             ),
         )
 
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
         await self.async_register_devices(entry)
 
@@ -91,36 +83,23 @@ class SmartTubController:
         data = {}
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT):
-                for spa_id, spa in self._spas.items():
-                    data[spa_id] = {"status": await spa.get_status()}
+                for spa in self.spas:
+                    data[spa.id] = {"status": await spa.get_status()}
         except APIError as err:
             raise UpdateFailed(err) from err
 
         return data
 
-    async def async_register_entity(self, entity):
-        """Register a new entity to receive updates."""
-        entity.async_on_remove(
-            self._coordinator.async_add_listener(entity.async_write_ha_state)
-        )
-
-    async def async_update_entity(self, entity):
-        """Request a state update on behalf of entity.
-
-        All entities derive their state from the coordinator.
-        """
-        await self._coordinator.async_request_refresh()
-
     async def async_register_devices(self, entry):
         """Register devices with the device registry for all spas."""
         device_registry = await dr.async_get_registry(self._hass)
-        for spa in self._spas.values():
+        for spa in self.spas:
             device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 connections={(DOMAIN, self._account.id)},
                 identifiers={(DOMAIN, spa.id)},
                 manufacturer=spa.brand,
-                name=self.get_spa_name(spa.id),
+                name=get_spa_name(spa),
                 model=spa.model,
                 # sw_version=config.swversion,
             )
@@ -132,13 +111,6 @@ class SmartTubController:
         for device in self._spa_devices.values():
             device_registry.async_remove_device(device.id)
         self._spa_devices = {}
-
-    def entity_is_available(self, entity):
-        """Indicate whether the entity has state available."""
-        return (
-            self._coordinator.last_update_success
-            and entity.spa_id in self._coordinator.data
-        )
 
     async def get_account_id(self, email, password):
         """Retrieve the account ID corresponding to the specified email and password.
@@ -153,50 +125,3 @@ class SmartTubController:
             return None
         account = await api.get_account()
         return account.id
-
-    def get_spa_name(self, spa_id):
-        """Retrieve the name of the specified spa."""
-        spa = self._spas[spa_id]
-        return f"{spa.brand} {spa.model}"
-
-    def _get_status_value(self, spa_id, path):
-        """Retrieve a value from the data returned by Spa.get_status().
-
-        Nested keys can be specified by a dotted path, e.g.
-        status['foo']['bar'] is 'foo.bar'.
-        """
-
-        status = self._coordinator.data[spa_id].get("status")
-        if status is None:
-            return None
-
-        for key in path.split("."):
-            status = status[key]
-
-        return status
-
-    def get_target_water_temperature(self, spa_id) -> float:
-        """Return the target water temperature."""
-        return self._get_status_value(spa_id, "setTemperature")
-
-    async def set_target_water_temperature(self, spa_id, temperature: float):
-        """Set the target water temperature."""
-        await self._spas[spa_id].set_temperature(temperature)
-
-    def get_current_water_temperature(self, spa_id) -> float:
-        """Return the current water temperature."""
-        return self._get_status_value(spa_id, "water.temperature")
-
-    def get_heater_status(self, spa_id) -> str:
-        """Return the status of the heater (e.g. 'OFF', 'ON')."""
-        return self._get_status_value(spa_id, "heater")
-
-    @staticmethod
-    def get_maximum_target_water_temperature(spa_id) -> float:
-        """Return the maximum target water temperature in Celsius."""
-        return DEFAULT_MAX_TEMP
-
-    @staticmethod
-    def get_minimum_target_water_temperature(spa_id) -> float:
-        """Return the minimum target water temperature in Celsius."""
-        return DEFAULT_MIN_TEMP

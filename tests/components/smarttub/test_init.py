@@ -19,14 +19,11 @@ def mock_controller():
 
 
 async def test_setup_with_no_config(hass, mock_controller):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything."""
     assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
 
     # No flows started
     assert len(hass.config_entries.flow.async_progress()) == 0
-
-    # No configs stored
-    assert smarttub.DOMAIN not in hass.data
 
     mock_controller.async_setup_entry.assert_not_called()
 

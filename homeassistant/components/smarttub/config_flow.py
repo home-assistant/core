@@ -31,7 +31,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        """Handle a flow initiated by the user."""
         errors = {}
 
         if user_input is not None:
@@ -52,6 +52,10 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Handle a flow initiated by failed auth."""
+        return await self.async_step_user(user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

@@ -12,8 +12,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util.temperature import convert as convert_temperature
 
-from . import SmartTubEntity
-from .const import DOMAIN, SMARTTUB_CONTROLLER
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
+from .entity import SmartTubEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     controller = hass.data[DOMAIN][entry.unique_id][SMARTTUB_CONTROLLER]
 
-    entities = [SmartTubThermostat(controller, spa_id) for spa_id in controller.spa_ids]
+    entities = [
+        SmartTubThermostat(controller.coordinator, spa) for spa in controller.spas
+    ]
     if not any(entity.available for entity in entities):
         raise PlatformNotReady
 
@@ -37,9 +39,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
-    def __init__(self, controller, spa_id):
+    def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(controller, spa_id, "thermostat")
+        super().__init__(coordinator, spa, "thermostat")
 
     @property
     def temperature_unit(self):
@@ -49,7 +51,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        heater_status = self.controller.get_heater_status(self.spa_id)
+        heater_status = self.get_spa_status("heater")
         if heater_status == "ON":
             return CURRENT_HVAC_HEAT
         if heater_status == "OFF":
@@ -82,13 +84,13 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        min_temp = self.controller.get_minimum_target_water_temperature(self.spa_id)
+        min_temp = DEFAULT_MIN_TEMP
         return convert_temperature(min_temp, TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        max_temp = self.controller.get_maximum_target_water_temperature(self.spa_id)
+        max_temp = DEFAULT_MAX_TEMP
         return convert_temperature(max_temp, TEMP_CELSIUS, self.temperature_unit)
 
     @property
@@ -102,15 +104,15 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current water temperature."""
-        return self.controller.get_current_water_temperature(self.spa_id)
+        return self.get_spa_status("water.temperature")
 
     @property
     def target_temperature(self):
         """Return the target water temperature."""
-        return self.controller.get_target_water_temperature(self.spa_id)
+        return self.get_spa_status("setTemperature")
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
-        await self.controller.set_target_water_temperature(self.spa_id, temperature)
+        await self.spa.set_temperature(temperature)
         self.async_schedule_update_ha_state(True)
