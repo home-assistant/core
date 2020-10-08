@@ -98,7 +98,7 @@ ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
 DATA_BLUEPRINTS = "automation_blueprints"
-PATH_BLUEPRINTS = "blueprints"
+PATH_BLUEPRINTS = f"blueprints/{DOMAIN}"
 
 _LOGGER = logging.getLogger(__name__)
 
