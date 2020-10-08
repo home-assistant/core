@@ -6,7 +6,7 @@ from aiohttp import hdrs
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 import homeassistant.helpers.config_validation as cv
 
 # mypy: allow-untyped-defs
@@ -20,7 +20,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def _handle_webhook(action, hass, webhook_id, request):
+async def _handle_webhook(job, hass, webhook_id, request):
     """Handle incoming webhook."""
     result = {"platform": "webhook", "webhook_id": webhook_id}
 
@@ -31,17 +31,18 @@ async def _handle_webhook(action, hass, webhook_id, request):
 
     result["query"] = request.query
     result["description"] = "webhook"
-    hass.async_run_job(action, {"trigger": result})
+    hass.async_run_hass_job(job, {"trigger": result})
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
     webhook_id = config.get(CONF_WEBHOOK_ID)
+    job = HassJob(action)
     hass.components.webhook.async_register(
         automation_info["domain"],
         automation_info["name"],
         webhook_id,
-        partial(_handle_webhook, action),
+        partial(_handle_webhook, job),
     )
 
     @callback

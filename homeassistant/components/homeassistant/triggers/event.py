@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv
 
 # mypy: allow-untyped-defs
@@ -58,6 +58,8 @@ async def async_attach_trigger(
             extra=vol.ALLOW_EXTRA,
         )
 
+    job = HassJob(action)
+
     @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
@@ -72,8 +74,8 @@ async def async_attach_trigger(
             # If event doesn't match, skip event
             return
 
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {
                 "trigger": {
                     "platform": platform_type,
