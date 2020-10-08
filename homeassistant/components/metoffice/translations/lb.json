@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Service ass scho konfigur\u00e9iert"
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Met Office DataPoint API Schl\u00ebssel",
+                    "api_key": "API Schl\u00ebssel",
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad"
                 },

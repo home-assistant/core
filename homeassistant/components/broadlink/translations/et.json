@@ -2,6 +2,9 @@
     "config": {
         "abort": {
             "not_supported": "Seadet ei toetata"
+        },
+        "error": {
+            "invalid_host": "Sobimatu hostinimi v\u00f5i IP-aadress"
         }
     }
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Airly integrasjonen for disse koordinatene er allerede konfigurert."
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
             "auth": "API-n\u00f8kkelen er ikke korrekt.",

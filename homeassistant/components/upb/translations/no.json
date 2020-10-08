@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "En UPB PIM med denne adressen er allerede konfigurert."
+            "address_already_configured": "En UPB PIM med denne adressen er allerede konfigurert.",
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Kunne ikke koble til UPB PIM, pr\u00f8v igjen.",
+            "cannot_connect": "Tilkobling mislyktes.",
             "invalid_upb_file": "Manglende eller ugyldig UPB UPStart eksportfil, sjekk navnet og banen til filen.",
-            "unknown": "Uventet feil."
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
-            "invalid_host": "D\u00ebst ass net de gesichte Yeti",
-            "unknown": "Onbekannte Feeler"
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

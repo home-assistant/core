@@ -19,7 +19,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host i port (np. 10.10.0.4:8010)",
+                    "host": "Nazwa hosta/adres IP i port (np. 10.10.0.4:8010)",
                     "password": "Has\u0142o",
                     "path": "\u015acie\u017cka do ZM",
                     "path_zms": "\u015acie\u017cka do ZMS",

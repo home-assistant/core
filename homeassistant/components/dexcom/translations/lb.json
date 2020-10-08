@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "Ong\u00eblteg Authentifikatioun",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "session_error": "Feeler beim verbannen",
             "unknown": "Onerwaarte"
         },
