@@ -4,7 +4,7 @@ import asyncio
 from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,6 +17,25 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import CONF_STREAM, DOMAIN, LOGGER
+
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated("ip"),
+    cv.deprecated(CONF_PASSWORD),
+    cv.deprecated(CONF_USERNAME),
+    cv.deprecated(CONF_NAME),
+    cv.deprecated(CONF_PORT),
+    cv.deprecated("rtsp_port"),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required("ip"): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
+            vol.Optional(CONF_PORT, default=88): cv.port,
+            vol.Optional("rtsp_port"): cv.port,
+        }
+    ),
+)
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -95,7 +114,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_PTZ, SERVICE_PTZ_SCHEMA, "async_perform_ptz"
     )
 
-    config = hass.data[DOMAIN][config_entry.unique_id]
+    config = {CONF_NAME: config_entry.title, **config_entry.data}
 
     camera = FoscamCamera(
         config[CONF_HOST],
