@@ -166,9 +166,10 @@ def play_media_on_other(hass, service_call):
             return
     else:
         plex_server = next(iter(plex_servers))
-        _LOGGER.debug(
-            "Multiple Plex servers available, using '%s'", plex_server.friendly_name
-        )
+        if len(plex_servers) > 1:
+            _LOGGER.debug(
+                "Multiple Plex servers available, using '%s'", plex_server.friendly_name
+            )
 
     domain = entity_source[CONF_DOMAIN]
 
