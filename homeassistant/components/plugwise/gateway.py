@@ -137,12 +137,10 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_delete_notification():
         """Service: delete the Plugwise Notification."""
-        _LOGGER.debug("Service delete PW Notification called for %s", api.smile_name)
         try:
-            deleted = await api.delete_notification()
-            _LOGGER.debug("PW Notification deleted: %s", deleted)
+            await api.delete_notification()
         except Smile.PlugwiseError:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Failed to delete the Plugwise Notification for %s", api.smile_name
             )
 
