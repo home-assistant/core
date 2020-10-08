@@ -140,8 +140,7 @@ class LutronCasetaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {"device_id": self.device_id, "zone_id": self._device["zone"]}
-        return attr
+        return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 
     @property
     def should_poll(self):
