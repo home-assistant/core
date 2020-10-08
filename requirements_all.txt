@@ -1255,7 +1255,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.0.0
+pyatmo==4.1.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
