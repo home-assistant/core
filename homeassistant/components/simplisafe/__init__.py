@@ -3,7 +3,6 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.entity import EntityTypes
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
@@ -17,10 +16,6 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    BinarySensorEntity,
-)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_CODE,
@@ -162,13 +157,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-SENSOR_MODELS = {
-    EntityTypes.entry: "Entry Sensor",
-    EntityTypes.carbon_monoxide: "Carbon Monoxide Detector",
-    EntityTypes.smoke: "Smoke Detector",
-    EntityTypes.leak: "Water Sensor",
-}
 
 
 @callback
@@ -759,45 +747,3 @@ class SimpliSafeEntity(Entity):
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
         raise NotImplementedError()
-
-
-class SimpliSafeSensorBattery(SimpliSafeEntity, BinarySensorEntity):
-    """Define a SimpliSafe battery binary sensor entity."""
-
-    def __init__(self, simplisafe, system, sensor):
-        """Initialize."""
-        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._system = system
-        self._sensor = sensor
-        self._is_low = False
-
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unique_id(self):
-        """Return unique ID of sensor."""
-        return f"{self._sensor.serial}-battery"
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._sensor.serial)},
-            "manufacturer": "SimpliSafe",
-            "model": SENSOR_MODELS[self._sensor.type],
-            "name": self._sensor.name,
-            "via_device": (DOMAIN, self._system.serial),
-        }
-
-    @property
-    def is_on(self):
-        """Return true if the battery is low."""
-        return self._is_low
-
-    @callback
-    def async_update_from_rest_api(self):
-        """Update the entity with the provided REST API data."""
-        self._is_low = self._sensor.low_battery
