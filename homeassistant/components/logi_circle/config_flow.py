@@ -81,7 +81,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="already_configured")
 
         if not flows:
-            return self.async_abort(reason="no_flows")
+            return self.async_abort(reason="oauth2_missing_configuration")
 
         if len(flows) == 1:
             self.flow_impl = list(flows)[0]

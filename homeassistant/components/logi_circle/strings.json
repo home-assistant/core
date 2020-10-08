@@ -20,7 +20,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "external_error": "Exception occurred from another flow.",
       "external_setup": "Logi Circle successfully configured from another flow.",
-      "no_flows": "You need to configure Logi Circle before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/logi_circle/)."
+      "oauth2_missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     }
   }
 }
