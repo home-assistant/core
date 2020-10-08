@@ -376,7 +376,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.1
+home-assistant-frontend==20201001.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -499,8 +499,7 @@ openerz-api==0.1.0
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
-# homeassistant.components.shiftr
-paho-mqtt==1.5.1
+paho-mqtt==1.5.0
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
@@ -616,7 +615,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.0.0
+pyatmo==4.1.0
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
