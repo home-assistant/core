@@ -125,9 +125,17 @@ RGB_CHANGE = 30  # ≈12% of total range per component
 _DOMAIN_SHORT = "adapt_lgt"
 
 
+def _short_hash(string: str, length: int = 4) -> str:
+    """Create a hash of 'string' with length 'length'."""
+    return hashlib.sha1(string.encode("UTF-8")).hexdigest()[:length]
+
+
 def create_context(name: str, which: str, index: int) -> Context:
     """Create a context that can identify this integration."""
-    return Context(id=f"{_DOMAIN_SHORT}_{name}_{which}_{index}")
+    # Use a hash for the name because otherwise the context might become
+    # too long (max len == 36) to fit in the database.
+    name_hash = _short_hash(name)
+    return Context(id=f"{_DOMAIN_SHORT}_{name_hash}_{which}_{index}")
 
 
 def is_our_context(context: Optional[Context]) -> bool:
@@ -489,12 +497,16 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         ]
         return dict(self._settings, manually_controlled=manually_controlled)
 
-    def create_context(self, which="default") -> Context:
+    def create_context(self, which: str = "default") -> Context:
         """Create a context that identifies this Adaptive Lighting instance."""
-        # Use a hash for the name because otherwise the context might become
-        # too long (max len == 36) to fit in the database.
-        name_hash = hashlib.sha1(self._name.encode("UTF-8")).hexdigest()
-        context = create_context(name_hash[:4], which, self._context_cnt)
+        # Right now the highest number of each context_id it can create is
+        # 'adapt_lgt_XXXX_turn_on_9999999999999'
+        # 'adapt_lgt_XXXX_interval_999999999999'
+        # 'adapt_lgt_XXXX_adapt_lights_99999999'
+        # 'adapt_lgt_XXXX_sleep_999999999999999'
+        # 'adapt_lgt_XXXX_light_event_999999999'
+        # So 100 million calls before we run into the 36 chars limit.
+        context = create_context(self._name, which, self._context_cnt)
         self._context_cnt += 1
         return context
 
@@ -608,8 +620,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         transition: Optional[int] = None,
         force: bool = False,
         context: Optional[Context] = None,
-    ):
-        _LOGGER.debug("%s: '_update_attrs_and_maybe_adapt_lights' called", self._name)
+    ) -> None:
+        _LOGGER.debug(
+            "%s: '_update_attrs_and_maybe_adapt_lights' called with context.id='%s'",
+            self._name,
+            context,
+        )
         assert self.is_on
         self._settings = self._sun_light_settings.get_settings(
             self.sleep_mode_switch.is_on
@@ -627,7 +643,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         transition: Optional[int],
         force: bool,
         context: Optional[Context],
-    ):
+    ) -> None:
         _LOGGER.debug(
             "%s: '_adapt_lights(%s, %s, force=%s, context.id=%s)' called",
             self.name,
@@ -654,7 +670,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 continue
             await self._adapt_light(light, transition, force=force, context=context)
 
-    async def _sleep_state_event(self, event: Event):
+    async def _sleep_state_event(self, event: Event) -> None:
         if not match_state_event(event, (STATE_ON, STATE_OFF)):
             return
         _LOGGER.debug("%s: _sleep_state_event, event: '%s'", self._name, event)
@@ -665,7 +681,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             context=self.create_context("sleep"),
         )
 
-    async def _light_event(self, event: Event):
+    async def _light_event(self, event: Event) -> None:
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
         entity_id = event.data.get("entity_id")
@@ -1024,7 +1040,7 @@ class TurnOnOffListener:
         self,
         light: str,
         force: bool,
-    ):
+    ) -> bool:
         """Check if the light has been 'on' and is now manually being adjusted."""
         manually_controlled = self.manually_controlled.setdefault(light, False)
         if manually_controlled:
@@ -1034,7 +1050,7 @@ class TurnOnOffListener:
         turn_on_event = self.turn_on_event.get(light)
         if (
             turn_on_event is not None
-            and is_our_context(turn_on_event.context.id)
+            and not is_our_context(turn_on_event.context)
             and not force
         ):
             # Light was already on and 'light.turn_on' was not called by
@@ -1051,12 +1067,12 @@ class TurnOnOffListener:
 
     async def significant_change(
         self,
-        light,
-        adapt_brightness,
-        adapt_color_temp,
-        adapt_rgb_color,
-        context,
-    ):
+        light: str,
+        adapt_brightness: bool,
+        adapt_color_temp: bool,
+        adapt_rgb_color: bool,
+        context: Context,
+    ) -> bool:
         """Has the light made a significant change since last update.
 
         This method will detect changes that were made to the light without
@@ -1087,7 +1103,10 @@ class TurnOnOffListener:
             )
             if not changed:
                 _LOGGER.debug(
-                    "States of '%s' didn't change wrt change event nr. %s", light, index
+                    "States of '%s' didn't change wrt change event nr. %s (context.id=%s)",
+                    light,
+                    index,
+                    context.id,
                 )
                 break
 
