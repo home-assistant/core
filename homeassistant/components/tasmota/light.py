@@ -55,8 +55,6 @@ CONF_HS = "hs"
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
-MIN_MIREDS = 153
-MAX_MIREDS = 500
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -164,12 +162,12 @@ class TasmotaLight(
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return MIN_MIREDS
+        return self._tasmota_entity.min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return MAX_MIREDS
+        return self._tasmota_entity.max_mireds
 
     @property
     def effect(self):

@@ -169,6 +169,20 @@ async def test_discovery_removal_switch(hass, mqtt_mock, caplog, setup_tasmota):
     )
 
 
+async def test_discovery_removal_relay_as_light(hass, mqtt_mock, caplog, setup_tasmota):
+    """Test removal of discovered relay as light."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG)
+    config1["rl"][0] = 1
+    config1["so"]["30"] = 0  # Disable Home Assistant auto-discovery as light
+    config2 = copy.deepcopy(DEFAULT_CONFIG)
+    config2["rl"][0] = 1
+    config2["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
+
+    await help_test_discovery_removal(
+        hass, mqtt_mock, caplog, switch.DOMAIN, config1, config2
+    )
+
+
 async def test_discovery_update_unchanged_switch(
     hass, mqtt_mock, caplog, setup_tasmota
 ):
