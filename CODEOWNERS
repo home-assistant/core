@@ -75,7 +75,7 @@ homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/cloud
-homeassistant/components/cloudflare/* @ludeeus
+homeassistant/components/cloudflare/* @ludeeus @ctalkington
 homeassistant/components/comfoconnect/* @michaelarnauts
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
