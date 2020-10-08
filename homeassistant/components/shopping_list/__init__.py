@@ -106,6 +106,8 @@ async def async_setup_entry(hass, config_entry):
     hass.http.register_view(CreateShoppingListItemView)
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
+    hass.http.register_view(MoveUpShoppingListItemView)
+    hass.http.register_view(MoveDownShoppingListItemView)
 
     hass.components.frontend.async_register_built_in_panel(
         "shopping-list", "shopping_list", "mdi:cart"
@@ -164,6 +166,20 @@ class ShoppingData:
     def async_clear_completed(self):
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
+        self.hass.async_add_job(self.save)
+
+    @callback
+    def async_move_up(self, item_id):
+        index = [i for i, itm in enumerate(self.items) if itm["id"] == item_id]
+        item = self.items.pop(index)
+        self.items.insert(index - 1, item)
+        self.hass.async_add_job(self.save)
+
+    @callback
+    def async_move_down(self, item_id):
+        index = [i for i, itm in enumerate(self.items) if itm["id"] == item_id]
+        item = self.items.pop(index)
+        self.items.insert(index + 1, item)
         self.hass.async_add_job(self.save)
 
     async def async_load(self):
@@ -239,6 +255,30 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
         return self.json_message("Cleared completed items.")
+
+
+class MoveUpShoppingListItemView(http.HomeAssistantView):
+
+    url = "/api/shopping_list/item/{item_id}/move_up"
+    name = "api:shopping_list:item:id:move_up"
+
+    async def post(self, request, item_id):
+        hass = request.app["hass"]
+        hass.data[DOMAIN].async_move_up(item_id)
+        hass.bus.async_fire(EVENT)
+        return self.json_message("Moved up the item successfully.")
+
+
+class MoveDownShoppingListItemView(http.HomeAssistantView):
+
+    url = "/api/shopping_list/item/{item_id}/move_down"
+    name = "api:shopping_list:item:id:move_down"
+
+    async def post(self, request, item_id):
+        hass = request.app["hass"]
+        hass.data[DOMAIN].async_move_down(item_id)
+        hass.bus.async_fire(EVENT)
+        return self.json_message("Moved down the item successfully.")
 
 
 @callback
