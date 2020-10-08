@@ -31,7 +31,7 @@ def get_arguments() -> argparse.Namespace:
 
 
 def flatten_translations(translations):
-    """Flatten all translations"""
+    """Flatten all translations."""
     stack = [iter(translations.items())]
     key_stack = []
     flattened_translations = {}
@@ -54,7 +54,7 @@ def flatten_translations(translations):
 
 
 def substitute_translation_references(integration_strings, flattened_translations):
-    """Recursively processes all translation strings for the integration"""
+    """Recursively processes all translation strings for the integration."""
     result = {}
     for key, value in integration_strings.items():
         if isinstance(value, dict):
@@ -67,7 +67,7 @@ def substitute_translation_references(integration_strings, flattened_translation
 
 
 def substitute_reference(value, flattened_translations):
-    """Substitute localization key references in a translation string"""
+    """Substitute localization key references in a translation string."""
     matches = re.findall(r"\[\%key:((?:[\w]+|[:]{2})*)\%\]", value)
     if not matches:
         return value
