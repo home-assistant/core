@@ -23,12 +23,12 @@ async def async_setup_entry(
     """Get all cover devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_switch_devices:
+    for device in hass.data[DOMAIN][entry.entry_id].multi_level_switch_devices:
         for multi_level_switch in device.multi_level_switch_property:
             if multi_level_switch.startswith("devolo.Blinds"):
                 entities.append(
                     DevoloCoverDeviceEntity(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
+                        homecontrol=hass.data[DOMAIN][entry.entry_id],
                         device_instance=device,
                         element_uid=multi_level_switch,
                     )
