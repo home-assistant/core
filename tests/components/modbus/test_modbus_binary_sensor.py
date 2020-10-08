@@ -33,7 +33,28 @@ _LOGGER = logging.getLogger(__name__)
             {
                 CONF_INPUT_TYPE: CALL_TYPE_COIL,
             },
+            [0x01],
+            STATE_ON,
+        ),
+        (
+            {
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            },
             [0x00],
+            STATE_OFF,
+        ),
+        (
+            {
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            },
+            [0x80],
+            STATE_OFF,
+        ),
+        (
+            {
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            },
+            [0xFE],
             STATE_OFF,
         ),
         (
