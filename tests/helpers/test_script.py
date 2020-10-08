@@ -39,6 +39,7 @@ def async_watch_for_action(script_obj, message):
             flag.set()
 
     script_obj.change_listener = check_action
+    assert script_obj.change_listener is check_action
     return flag
 
 
