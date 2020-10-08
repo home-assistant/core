@@ -198,6 +198,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
+        self._delay_override_by_trigger = None
 
         self._delay_time_by_state = {
             state: config[state][CONF_DELAY_TIME]
@@ -336,7 +337,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code=None, delay=None):
         """
         Send alarm trigger command.
 
@@ -345,6 +346,8 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
+        self._delay_override_by_trigger = delay
+
         self._update_state(STATE_ALARM_TRIGGERED)
 
     def _update_state(self, state):
@@ -358,7 +361,11 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self.schedule_update_ha_state()
 
         if state == STATE_ALARM_TRIGGERED:
-            pending_time = self._pending_time(state)
+            pending_time = None
+            if (self._delay_override_by_trigger is None):
+                pending_time = self._pending_time(state)
+            else:
+                pending_time = self._delay_override_by_trigger
             track_point_in_time(
                 self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )

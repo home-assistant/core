@@ -155,9 +155,9 @@ class AlarmControlPanelEntity(Entity):
         """Send alarm trigger command."""
         raise NotImplementedError()
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code=None, delay=None):
         """Send alarm trigger command."""
-        await self.hass.async_add_executor_job(self.alarm_trigger, code)
+        await self.hass.async_add_executor_job(self.alarm_trigger, code, delay)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
