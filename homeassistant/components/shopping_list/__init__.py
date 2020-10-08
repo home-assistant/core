@@ -201,13 +201,19 @@ class ShoppingData:
         index = next(
             (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
         )
-
-        item = self.items[index]
-
         if index is None:
             raise KeyError
-
-        item = self.items.pop(index)
+        item = self.items[index]
+        if item["complete"]:
+            raise vol.Invalid("Can't move completed item.")
+        firstIncompleteIndex = next(
+            (i for i, itm in enumerate(self.items) if not itm["complete"]), None
+        )
+        if index <= firstIncompleteIndex:
+            raise vol.Invalid(
+                "Can't move up this item becuase it's already at the top."
+            )
+        self.items.pop(index)
         self.items.insert(index - 1, item)
         self.hass.async_add_job(self.save)
         return item
@@ -217,13 +223,31 @@ class ShoppingData:
         index = next(
             (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
         )
-
         if index is None:
             raise KeyError
-
-        item = self.items.pop(index)
+        item = self.items[index]
+        if item["complete"]:
+            raise vol.Invalid("Can't move completed item.")
+        lastIncompleteIndex = (
+            len(self.items)
+            - 1
+            - next(
+                (
+                    i
+                    for i in range(len(self.items))
+                    if not self.items[len(self.items) - i - 1]["complete"]
+                ),
+                None,
+            )
+        )
+        if index >= lastIncompleteIndex:
+            raise vol.Invalid(
+                "Can't move down this item becuase it's already at the bottom."
+            )
+        self.items.pop(index)
         self.items.insert(index + 1, item)
         self.hass.async_add_job(self.save)
+        return item
 
     async def async_load(self):
         """Load items."""
@@ -306,10 +330,15 @@ class MoveUpShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item:id:move_up"
 
     async def post(self, request, item_id):
-        hass = request.app["hass"]
-        hass.data[DOMAIN].async_move_up(item_id)
-        hass.bus.async_fire(EVENT)
-        return self.json_message("Moved up the item successfully.")
+        try:
+            hass = request.app["hass"]
+            hass.data[DOMAIN].async_move_up(item_id)
+            hass.bus.async_fire(EVENT)
+            return self.json_message("Moved up the item successfully.")
+        except KeyError:
+            return self.json_message("Item not found", HTTP_NOT_FOUND)
+        except vol.Invalid as err:
+            return self.json_message(f"{err}", HTTP_BAD_REQUEST)
 
 
 class MoveDownShoppingListItemView(http.HomeAssistantView):
@@ -318,10 +347,15 @@ class MoveDownShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item:id:move_down"
 
     async def post(self, request, item_id):
-        hass = request.app["hass"]
-        hass.data[DOMAIN].async_move_down(item_id)
-        hass.bus.async_fire(EVENT)
-        return self.json_message("Moved down the item successfully.")
+        try:
+            hass = request.app["hass"]
+            hass.data[DOMAIN].async_move_down(item_id)
+            hass.bus.async_fire(EVENT)
+            return self.json_message("Moved down the item successfully.")
+        except KeyError:
+            return self.json_message("Item not found", HTTP_NOT_FOUND)
+        except vol.Invalid as err:
+            return self.json_message(f"{err}", HTTP_BAD_REQUEST)
 
 
 @callback
@@ -380,6 +414,10 @@ def websocket_handle_move_up(hass, connection, msg):
         connection.send_message(
             websocket_api.error_message(msg_id, "item_not_found", "Item not found")
         )
+    except vol.Invalid as err:
+        connection.send_message(
+            websocket_api.error_message(msg_id, "bad_request", f"{err}")
+        )
 
 
 @callback
@@ -395,4 +433,8 @@ def websocket_handle_move_down(hass, connection, msg):
     except KeyError:
         connection.send_message(
             websocket_api.error_message(msg_id, "item_not_found", "Item not found")
+        )
+    except vol.Invalid as err:
+        connection.send_message(
+            websocket_api.error_message(msg_id, "bad_request", f"{err}")
         )
