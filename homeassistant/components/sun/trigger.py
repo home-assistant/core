@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     SUN_EVENT_SUNRISE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 
@@ -34,12 +34,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     description = event
     if offset:
         description = f"{description} with offset"
+    job = HassJob(action)
 
     @callback
     def call_action():
         """Call action with right context."""
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {
                 "trigger": {
                     "platform": "sun",
