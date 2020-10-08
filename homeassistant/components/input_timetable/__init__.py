@@ -113,7 +113,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if conf is None:
             conf = {DOMAIN: {}}
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **conf} for id_, conf in conf.get(DOMAIN, {}).items()]
+            [
+                {CONF_ID: id_, **(conf or {})}
+                for id_, conf in conf.get(DOMAIN, {}).items()
+            ]
         )
 
     component.async_register_entity_service(
