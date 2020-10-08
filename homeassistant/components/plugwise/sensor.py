@@ -279,7 +279,7 @@ class SmileSensor(SmileGateway):
 
 
 class PwThermostatSensor(SmileSensor, Entity):
-    """Auxiliary Device sensors."""
+    """Thermostat (or generic) sensor devices."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
