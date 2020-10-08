@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wsp\u00f3\u0142rz\u0119dne s\u0105 ju\u017c zarejestrowane."
+            "already_configured": "[%key::common::config_flow::abort::already_configured_location%]"
         },
         "error": {
             "identifier_exists": "Wsp\u00f3\u0142rz\u0119dne s\u0105 ju\u017c zarejestrowane.",

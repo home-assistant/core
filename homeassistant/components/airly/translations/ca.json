@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja est\u00e0 configurada un integraci\u00f3 Airly amb aquestes coordenades."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
             "auth": "La clau API no \u00e9s correcta.",

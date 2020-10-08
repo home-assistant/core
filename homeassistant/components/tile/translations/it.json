@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo account Tile \u00e8 gi\u00e0 registrato."
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
+            "invalid_auth": "Autenticazione non valida",
             "invalid_credentials": "Fornite credenziali di Tile non valide."
         },
         "step": {
