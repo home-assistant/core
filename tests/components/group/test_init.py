@@ -763,6 +763,7 @@ async def test_group_climate_all_cool(hass):
     hass.states.async_set("climate.two", "cool")
     hass.states.async_set("climate.three", "cool")
 
+    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -772,7 +773,6 @@ async def test_group_climate_all_cool(hass):
             }
         },
     )
-    assert await async_setup_component(hass, "climate", {})
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == STATE_ON
@@ -1041,6 +1041,7 @@ async def test_cover_added_after_group(hass):
         "cover.downstairs",
     ]
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1125,6 +1126,8 @@ async def test_group_that_references_a_group_of_covers(hass):
             }
         },
     )
+
+    assert await async_setup_component(hass, "cover", {})
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1147,6 +1150,7 @@ async def test_group_that_references_two_groups_of_covers(hass):
         hass.states.async_set(entity_id, "closed")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1192,6 +1196,7 @@ async def test_group_that_references_two_types_of_groups(hass):
         hass.states.async_set(entity_id, "home")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1205,6 +1210,7 @@ async def test_group_that_references_two_types_of_groups(hass):
             }
         },
     )
+    assert await async_setup_component(hass, "cover", {})
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
