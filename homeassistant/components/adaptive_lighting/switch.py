@@ -624,7 +624,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         _LOGGER.debug(
             "%s: '_update_attrs_and_maybe_adapt_lights' called with context.id='%s'",
             self._name,
-            context,
+            context.id,
         )
         assert self.is_on
         self._settings = self._sun_light_settings.get_settings(
