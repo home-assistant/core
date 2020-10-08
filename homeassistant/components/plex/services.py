@@ -78,7 +78,7 @@ async def async_setup_services(hass):
     )
 
     async def async_play_on_sonos_service(service_call):
-        _LOGGER.warn(
+        _LOGGER.warning(
             "Service `plex.play_on_sonos` is deprecated, please use `plex.play_media`"
         )
         await hass.async_add_executor_job(play_media_on_other, hass, service_call)
@@ -147,7 +147,7 @@ def play_media_on_other(hass, service_call):
 
     entity_source = entity_sources(hass).get(entity_id)
     if not entity_source:
-        _LOGGER.warn("Entity not found: %s", entity_id)
+        _LOGGER.warning("Entity not found: %s", entity_id)
         return
 
     plex_server_name = content.get("plex_server")
@@ -176,7 +176,7 @@ def play_media_on_other(hass, service_call):
     if domain == SONOS_DOMAIN:
         play_media_on_sonos(hass, entity_id, content, plex_server)
     else:
-        _LOGGER.warn("%s is not a supported integration [%s]", domain, entity_id)
+        _LOGGER.warning("%s is not a supported integration [%s]", domain, entity_id)
 
 
 def play_media_on_sonos(hass, entity_id, content, plex_server):
