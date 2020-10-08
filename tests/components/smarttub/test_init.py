@@ -3,18 +3,20 @@
 import pytest
 
 from homeassistant.components import smarttub
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 
 
 @pytest.fixture
-def mock_controller():
+def mock_controller(coordinator):
     """Mock the controller."""
     with patch.object(
         smarttub, "SmartTubController", autospec=True
     ) as controller_class_mock:
         controller_mock = controller_class_mock.return_value
+        controller_mock.coordinator = coordinator
         yield controller_mock
 
 
@@ -26,6 +28,15 @@ async def test_setup_with_no_config(hass, mock_controller):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
     mock_controller.async_setup_entry.assert_not_called()
+
+
+async def test_setup_entry_not_ready(hass, mock_controller, config_entry):
+    """Test setup when the entry is not ready."""
+    mock_controller.coordinator.last_update_success = False
+    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
+
+    with pytest.raises(ConfigEntryNotReady):
+        await smarttub.async_setup_entry(hass, config_entry)
 
 
 async def test_config_passed_to_config_entry(
