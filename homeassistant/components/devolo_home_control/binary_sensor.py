@@ -28,16 +28,16 @@ async def async_setup_entry(
     """Get all binary sensor and multi level sensor devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].binary_sensor_devices:
+    for device in hass.data[DOMAIN][entry.entry_id].binary_sensor_devices:
         for binary_sensor in device.binary_sensor_property:
             entities.append(
                 DevoloBinaryDeviceEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
+                    homecontrol=hass.data[DOMAIN][entry.entry_id],
                     device_instance=device,
                     element_uid=binary_sensor,
                 )
             )
-    for device in hass.data[DOMAIN]["homecontrol"].devices.values():
+    for device in hass.data[DOMAIN][entry.entry_id].devices.values():
         if hasattr(device, "remote_control_property"):
             for remote in device.remote_control_property:
                 for index in range(
@@ -45,7 +45,7 @@ async def async_setup_entry(
                 ):
                     entities.append(
                         DevoloRemoteControl(
-                            homecontrol=hass.data[DOMAIN]["homecontrol"],
+                            homecontrol=hass.data[DOMAIN][entry.entry_id],
                             device_instance=device,
                             element_uid=remote,
                             key=index,
