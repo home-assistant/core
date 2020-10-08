@@ -98,6 +98,26 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_OFF
 
 
+async def test_relay_as_light(hass, mqtt_mock, setup_tasmota):
+    """Test relay does not show up as switch in light mode."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    config["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test")
+    assert state is None
+    state = hass.states.get("light.test")
+    assert state is not None
+
+
 async def test_availability_when_connection_lost(
     hass, mqtt_client_mock, mqtt_mock, setup_tasmota
 ):
