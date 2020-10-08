@@ -1006,7 +1006,7 @@ surepy==0.2.6
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.2
+tesla-powerwall==0.3.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.10.4
