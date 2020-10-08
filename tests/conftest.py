@@ -384,9 +384,13 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     assert result
     await hass.async_block_till_done()
 
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
+        spec_set=spec,
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock

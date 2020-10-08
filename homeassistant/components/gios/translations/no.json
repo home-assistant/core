@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tjenesten er allerede konfigurert"
+            "already_configured": "Tjenesten er allerede konfigurert for denne m\u00e5lestasjonen"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Navn p\u00e5 integrasjon",
+                    "name": "Navn",
                     "station_id": "ID til m\u00e5lestasjon"
                 },
                 "description": "Sett opp GIO\u015a (Polish Chief Inspectorate Of Environmental Protection) luftkvalitet integrasjon. Hvis du trenger hjelp med konfigurasjonen ta en titt her: https://www.home-assistant.io/integrations/gios",

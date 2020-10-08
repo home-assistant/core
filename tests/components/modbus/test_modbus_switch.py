@@ -2,9 +2,11 @@
 from datetime import timedelta
 import logging
 
+import pytest
+
 from homeassistant.components.modbus.const import CALL_TYPE_COIL, CONF_COILS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_SLAVE
+from homeassistant.const import CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
 
 from .conftest import run_base_read_test, setup_base_test
 
@@ -39,21 +41,28 @@ async def run_sensor_test(hass, use_mock_hub, value, expected):
     )
 
 
-async def test_read_coil_false(hass, mock_hub):
+@pytest.mark.parametrize(
+    "regs,expected",
+    [
+        (
+            [0x00],
+            STATE_OFF,
+        ),
+        (
+            [0xFF],
+            STATE_ON,
+        ),
+        (
+            [0x01],
+            STATE_ON,
+        ),
+    ],
+)
+async def test_coil_switch(hass, mock_hub, regs, expected):
     """Test reading of switch coil."""
     await run_sensor_test(
         hass,
         mock_hub,
-        [0x00],
-        expected="off",
-    )
-
-
-async def test_read_coil_true(hass, mock_hub):
-    """Test reading of switch coil."""
-    await run_sensor_test(
-        hass,
-        mock_hub,
-        [0xFF],
-        expected="on",
+        regs,
+        expected,
     )

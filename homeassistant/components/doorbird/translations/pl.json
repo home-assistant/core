@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "BoorBird jest ju\u017c skonfigurowany.",
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
             "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane.",
             "not_doorbird_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem DoorBird."
         },

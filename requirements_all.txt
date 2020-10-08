@@ -275,7 +275,7 @@ aqualogic==1.0
 arcam-fmj==0.5.3
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.0.0
+arris-tg2492lg==1.1.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -756,7 +756,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.1
+home-assistant-frontend==20201001.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1061,6 +1061,8 @@ orvibo==1.1.1
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
+paho-mqtt==1.5.0
+
 # homeassistant.components.shiftr
 paho-mqtt==1.5.1
 
@@ -1253,7 +1255,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.0.0
+pyatmo==4.1.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1985,7 +1987,7 @@ sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.8.0
+sense_energy==0.8.1
 
 # homeassistant.components.sentry
 sentry-sdk==0.18.0
@@ -2150,7 +2152,7 @@ temperusb==1.5.3
 # tensorflow==2.3.0
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.12
+tesla-powerwall==0.3.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.10.4

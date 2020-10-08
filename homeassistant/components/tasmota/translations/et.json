@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "config": {
+                "description": "Sisesta Tasmota konfiguratsioon.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Kas soovid seadistada Tasmota sidumist?"
+            }
+        }
+    }
+}

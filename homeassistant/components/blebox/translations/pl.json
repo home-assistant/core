@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Urz\u0105dzenie BleBox jest ju\u017c skonfigurowane pod adresem {address}.",
-            "already_configured": "To urz\u0105dzenie BleBox jest ju\u017c skonfigurowane."
+            "address_already_configured": "[%key::common::config_flow::abort::already_configured_device%] pod adresem {address}",
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
         },
         "error": {
             "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",

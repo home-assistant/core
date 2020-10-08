@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Miasto jest ju\u017c skonfigurowane.",
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana",
             "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "error": {

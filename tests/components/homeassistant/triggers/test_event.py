@@ -235,3 +235,59 @@ async def test_if_not_fires_if_event_context_not_matches(
     hass.bus.async_fire("test_event", {}, context=context_with_user)
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_if_fires_on_multiple_user_ids(hass, calls, context_with_user):
+    """Test the firing of event when the trigger has multiple user ids."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {},
+                    "context": {"user_id": [context_with_user.user_id, "another id"]},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {}, context=context_with_user)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_event_data_with_list(hass, calls):
+    """Test the (non)firing of event when the data schema has lists."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {"some_attr": [1, 2]},
+                    "context": {},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {"some_attr": [1, 2]})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # don't match a single value
+    hass.bus.async_fire("test_event", {"some_attr": 1})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # don't match a containing list
+    hass.bus.async_fire("test_event", {"some_attr": [1, 2, 3]})
+    await hass.async_block_till_done()
+    assert len(calls) == 1

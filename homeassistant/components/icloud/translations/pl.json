@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
             "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"."
         },
         "error": {

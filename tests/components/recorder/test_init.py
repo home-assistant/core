@@ -2,6 +2,8 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 
+from sqlalchemy.exc import OperationalError
+
 from homeassistant.components.recorder import (
     CONFIG_SCHEMA,
     DOMAIN,
@@ -43,6 +45,44 @@ def test_saving_state(hass, hass_recorder):
         state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
+
+
+def test_saving_state_with_exception(hass, hass_recorder, caplog):
+    """Test saving and restoring a state."""
+    hass = hass_recorder()
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    def _throw_if_state_in_session(*args, **kwargs):
+        for obj in hass.data[DATA_INSTANCE].event_session:
+            if isinstance(obj, States):
+                raise OperationalError(
+                    "insert the state", "fake params", "forced to fail"
+                )
+
+    with patch("time.sleep"), patch.object(
+        hass.data[DATA_INSTANCE].event_session,
+        "flush",
+        side_effect=_throw_if_state_in_session,
+    ):
+        hass.states.set(entity_id, "fail", attributes)
+        wait_recording_done(hass)
+
+    assert "Error executing query" in caplog.text
+    assert "Error saving events" not in caplog.text
+
+    caplog.clear()
+    hass.states.set(entity_id, state, attributes)
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) >= 1
+
+    assert "Error executing query" not in caplog.text
+    assert "Error saving events" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "TenSmile jest ju\u017c skonfigurowany."
+            "already_configured": "Ten Smile jest ju\u017c skonfigurowany"
         },
         "error": {
             "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
@@ -12,11 +12,21 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "Typ po\u0142\u0105czenia",
                     "host": "Adres IP",
-                    "password": "Smile ID",
+                    "password": "Identyfikator Smile",
                     "port": "Port"
                 },
                 "description": "Szczeg\u00f3\u0142y",
+                "title": "Po\u0142\u0105cz si\u0119 ze Smile"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Adres IP",
+                    "password": "Identyfikator Smile",
+                    "port": "Port"
+                },
+                "description": "Wpisz:",
                 "title": "Po\u0142\u0105cz si\u0119 ze Smile"
             }
         }

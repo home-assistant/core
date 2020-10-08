@@ -1,4 +1,10 @@
 {
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        }
+    },
     "options": {
         "step": {
             "init": {
