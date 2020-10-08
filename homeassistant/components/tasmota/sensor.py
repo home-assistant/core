@@ -57,7 +57,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as TASMOTA_DOMAIN
-from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW, clear_discovery_hash
+from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,17 +113,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover_sensor(tasmota_entity, discovery_hash):
         """Discover and add a Tasmota sensor."""
-        try:
-            async_add_entities(
-                [
-                    TasmotaSensor(
-                        tasmota_entity=tasmota_entity, discovery_hash=discovery_hash
-                    )
-                ]
-            )
-        except Exception:
-            clear_discovery_hash(hass, discovery_hash)
-            raise
+        async_add_entities(
+            [
+                TasmotaSensor(
+                    tasmota_entity=tasmota_entity, discovery_hash=discovery_hash
+                )
+            ]
+        )
 
     async_dispatcher_connect(
         hass,
