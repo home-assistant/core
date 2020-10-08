@@ -36,7 +36,7 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except pyatag.errors.Unauthorized:
             return await self._show_form({"base": "unauthorized"})
         except pyatag.errors.AtagException:
-            return await self._show_form({"base": "connection_error"})
+            return await self._show_form({"base": "cannot_connect"})
 
         await self.async_set_unique_id(atag.id)
         self._abort_if_unique_id_configured(updates=user_input)
