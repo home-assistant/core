@@ -730,11 +730,6 @@ class MediaPlayerEntity(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
-    @property
-    def support_repeat_set(self):
-        """Boolean if repeat is supported."""
-        return bool(self.supported_features & SUPPORT_REPEAT_SET)
-
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
