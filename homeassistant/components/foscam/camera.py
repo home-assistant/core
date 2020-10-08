@@ -195,7 +195,10 @@ class HassFoscamCamera(Camera):
 
             self._motion_status = True
         except TypeError:
-            LOGGER.debug("Communication problem")
+            LOGGER.debug(
+                "Failed enabling motion detection on '%s'. Is it supported by the device?",
+                self._name,
+            )
 
     def disable_motion_detection(self):
         """Disable motion detection."""
@@ -207,7 +210,10 @@ class HassFoscamCamera(Camera):
 
             self._motion_status = False
         except TypeError:
-            LOGGER.debug("Communication problem")
+            LOGGER.debug(
+                "Failed disabling motion detection on '%s'. Is it supported by the device?",
+                self._name,
+            )
 
     async def async_perform_ptz(self, movement, travel_time):
         """Perform a PTZ action on the camera."""
