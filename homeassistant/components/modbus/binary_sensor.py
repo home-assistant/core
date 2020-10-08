@@ -122,5 +122,5 @@ class ModbusBinarySensor(BinarySensorEntity):
             self._available = False
             return
 
-        self._value = result.bits[0]
+        self._value = result.bits[0] & 1
         self._available = True

@@ -228,7 +228,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
             self._available = False
             return
 
-        value = bool(result.bits[0])
+        value = bool(result.bits[0] & 1)
         self._available = True
 
         return value
