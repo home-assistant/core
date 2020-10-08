@@ -77,7 +77,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except HTTPError:
             return RESULT_NOT_SUPPORTED
         except OSError:
-            return RESULT_NOT_FOUND
+            return RESULT_NO_DEVICES_FOUND
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
