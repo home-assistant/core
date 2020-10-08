@@ -1,4 +1,4 @@
-"""Config flow for the Atag component."""
+"""Config flow for the Atag component"""
 import pyatag
 import voluptuous as vol
 
