@@ -663,9 +663,10 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 )
             ):
                 _LOGGER.debug(
-                    "%s: '%s' is being manually controlled, stop adapting.",
+                    "%s: '%s' is being manually controlled, stop adapting, context.id=%s.",
                     self._name,
                     light,
+                    context.id,
                 )
                 continue
             await self._adapt_light(light, transition, force=force, context=context)
@@ -1058,10 +1059,11 @@ class TurnOnOffListener:
             manually_controlled = self.manually_controlled[light] = True
             _LOGGER.debug(
                 "'%s' was already on and 'light.turn_on' was not called by the"
-                " adaptive_lighting integration, the Adaptive Lighting will stop"
-                " adapting the light until the switch or the light turns off and"
-                " then on again.",
+                " adaptive_lighting integration (context.id='%s'), the Adaptive"
+                " Lighting will stop adapting the light until the switch or the"
+                " light turns off and then on again.",
                 light,
+                turn_on_event.context.id,
             )
         return manually_controlled
 
