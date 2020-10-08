@@ -72,7 +72,7 @@ async def test_user_not_successful(hass: HomeAssistantType, fritz: Mock):
         DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "not_found"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_user_already_configured(hass: HomeAssistantType, fritz: Mock):
@@ -180,7 +180,7 @@ async def test_ssdp_not_successful(hass: HomeAssistantType, fritz: Mock):
         user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "not_found"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_ssdp_not_supported(hass: HomeAssistantType, fritz: Mock):
