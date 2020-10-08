@@ -152,18 +152,6 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         """Return the class of this sensor."""
         return DEVICE_CLASS_TIMESTAMP
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {}
-
-        if self._state is None:
-            return attrs
-
-        attrs["timestamp"] = self._state.timestamp()
-
-        return attrs
-
     def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         if self._type == "upcoming_shabbat_candle_lighting":
