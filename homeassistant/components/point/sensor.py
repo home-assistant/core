@@ -59,9 +59,7 @@ class MinutPointSensor(MinutPointEntity):
         """Update the value of the sensor."""
         if self.is_updated:
             _LOGGER.debug("Update sensor value for %s", self)
-            self._value = await self.hass.async_add_executor_job(
-                self.device.sensor, self.device_class
-            )
+            self._value = await self.device.sensor(self.device_class)
             self._updated = parse_datetime(self.device.last_update)
             self.async_write_ha_state()
 
