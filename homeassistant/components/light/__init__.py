@@ -343,7 +343,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = await hass.async_add_job(load_profile_data, hass)
+        cls._all = await hass.async_add_executor_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod
