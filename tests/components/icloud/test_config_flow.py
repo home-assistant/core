@@ -430,7 +430,7 @@ async def test_password_update(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "updated_password"
+    assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PASSWORD] == PASSWORD_2
 
 

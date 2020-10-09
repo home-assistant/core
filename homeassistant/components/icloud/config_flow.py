@@ -154,11 +154,8 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id == self.unique_id:
                 self.hass.config_entries.async_update_entry(entry, data=data)
-                self.hass.components.persistent_notification.async_dismiss(
-                    f"{entry.entry_id}_{config_entries.SOURCE_REAUTH}"
-                )
                 await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="updated_password")
+                return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""

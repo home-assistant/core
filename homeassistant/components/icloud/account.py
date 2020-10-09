@@ -1,5 +1,4 @@
 """iCloud account."""
-import asyncio
 from datetime import timedelta
 import logging
 import operator
@@ -21,7 +20,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -118,21 +116,13 @@ class IcloudAccount:
         except PyiCloudFailedLoginException:
             self.api = None
             # Login failed which means credentials need to be updated.
-            username = self._config_entry.data[CONF_USERNAME]
-            message = (
-                f"Your password for '{username}' is no longer working. Go to the "
-                "Integrations menu and click on Configure on the discovered Apple "
-                "iCloud card to login again."
-            )
-            _LOGGER.error(message)
-            self.hass.components.persistent_notification.async_create(
-                message,
-                asyncio.run_coroutine_threadsafe(
-                    async_get_integration(self.hass, DOMAIN), self.hass.loop
-                )
-                .result()
-                .manifest["name"],
-                f"{self._config_entry.entry_id}_{SOURCE_REAUTH}",
+            _LOGGER.error(
+                (
+                    "Your password for '%s' is no longer working. Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again."
+                ),
+                self._config_entry.data[CONF_USERNAME],
             )
 
             self.hass.async_create_task(
