@@ -6,6 +6,7 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.sensor import DEVICE_CLASS_POWER
 from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
@@ -235,3 +236,8 @@ class TibberSensorRT(TibberSensor):
     def unique_id(self):
         """Return a unique ID."""
         return f"{self.device_id}_rt_consumption"
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_POWER
