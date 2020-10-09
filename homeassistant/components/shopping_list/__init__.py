@@ -330,11 +330,13 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 class MoveUpShoppingListItemView(http.HomeAssistantView):
+    """View to move up a shopping list item."""
 
     url = "/api/shopping_list/item/{item_id}/move_up"
     name = "api:shopping_list:item:id:move_up"
 
     async def post(self, request, item_id):
+        """Move up a shopping list item."""
         try:
             hass = request.app["hass"]
             hass.data[DOMAIN].async_move_up(item_id)
@@ -347,11 +349,13 @@ class MoveUpShoppingListItemView(http.HomeAssistantView):
 
 
 class MoveDownShoppingListItemView(http.HomeAssistantView):
+    """View to move down a shopping list item."""
 
     url = "/api/shopping_list/item/{item_id}/move_down"
     name = "api:shopping_list:item:id:move_down"
 
     async def post(self, request, item_id):
+        """Move down a shopping list item."""
         try:
             hass = request.app["hass"]
             hass.data[DOMAIN].async_move_down(item_id)
@@ -407,7 +411,7 @@ def websocket_handle_clear(hass, connection, msg):
 
 @callback
 def websocket_handle_move_up(hass, connection, msg):
-    """todo"""
+    """Handle moving up a shopping_list item."""
     msg_id = msg.pop("id")
     item_id = msg.pop("item_id")
 
@@ -427,7 +431,7 @@ def websocket_handle_move_up(hass, connection, msg):
 
 @callback
 def websocket_handle_move_down(hass, connection, msg):
-    """todo"""
+    """Handle moving down a shopping_list item."""
     msg_id = msg.pop("id")
     item_id = msg.pop("item_id")
 
