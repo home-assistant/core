@@ -208,10 +208,14 @@ class ShoppingData:
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
         indexToInsert = None
+        # Traverse the items above the target item (backwards) and find the first in-complete item,
+        # that would be the position to move the target item to.
         for i in reversed(range(0, index)):
             if not self.items[i]["complete"]:
                 indexToInsert = i
                 break
+        # If there isn't any in-complete item above the target item,
+        # it means that the target item is already at the top.
         if indexToInsert is None:
             raise vol.Invalid(
                 "Can't move up this item becuase it's already at the top."
@@ -233,10 +237,14 @@ class ShoppingData:
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
         indexToInsert = None
+        # Traverse the items below the target item and find the first in-complete item,
+        # that would be the position to move the target item to.
         for i in range(index + 1, len(self.items)):
             if not self.items[i]["complete"]:
                 indexToInsert = i
                 break
+        # If there isn't any in-complete item below the target item,
+        # it means that the target item is already at the bottom.
         if indexToInsert is None:
             raise vol.Invalid(
                 "Can't move down this item becuase it's already at the bottom."
