@@ -9,7 +9,6 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
 
-
 # @pytest.fixture(name="mock_setup")
 # def mock_setup():
 #     """Mock entry setup."""
