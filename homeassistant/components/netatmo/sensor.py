@@ -136,7 +136,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
-                if c in SENSOR_TYPES
+                if c.lower() in SENSOR_TYPES
             ]
             for condition in conditions:
                 if f"{condition}_value" in SENSOR_TYPES:
