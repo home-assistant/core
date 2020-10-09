@@ -1,4 +1,4 @@
-"""Local Nest authentication."""
+"""Local Nest authentication for the legacy api."""
 import asyncio
 from functools import partial
 
