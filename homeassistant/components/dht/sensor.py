@@ -78,14 +78,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     pin = config[CONF_PIN]
     temperature_offset = config[CONF_TEMPERATURE_OFFSET]
     humidity_offset = config[CONF_HUMIDITY_OFFSET]
+    name = config[CONF_NAME]
 
     if not sensor:
         _LOGGER.error("DHT sensor type is not supported")
         return False
 
-    data = DHTClient(sensor, pin)
+    data = DHTClient(sensor, pin, name)
     dev = []
-    name = config[CONF_NAME]
 
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
@@ -171,11 +171,12 @@ class DHTSensor(Entity):
 class DHTClient:
     """Get the latest data from the DHT sensor."""
 
-    def __init__(self, sensor, pin):
+    def __init__(self, sensor, pin, name):
         """Initialize the sensor."""
         self.sensor = sensor
         self.pin = getattr(board, pin)
         self.data = {}
+        self.name = name
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
