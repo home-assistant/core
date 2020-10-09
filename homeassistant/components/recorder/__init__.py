@@ -265,6 +265,11 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
+        start_time_fs = int(time.time() * 1000000)
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
         tries = 1
         connected = False
 
@@ -355,6 +360,7 @@ class Recorder(threading.Thread):
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
+        runs = 1
         while True:
             event = self.queue.get()
             if event is None:
@@ -370,6 +376,14 @@ class Recorder(threading.Thread):
                 self._queue_watch.set()
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
+                runs += 1
+                if runs == 100:
+                    pr.disable()
+                    pr.create_stats()
+                    from pyprof2calltree import convert
+
+                    pr.dump_stats(f"recorder.{start_time_fs}.cprof")
+                    convert(pr.getstats(), f"callgrind.out.{start_time_fs}")
                 self._keepalive_count += 1
                 if self._keepalive_count >= KEEPALIVE_TIME:
                     self._keepalive_count = 0
