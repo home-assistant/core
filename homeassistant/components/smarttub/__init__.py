@@ -27,10 +27,8 @@ async def async_setup_entry(hass, entry):
         SMARTTUB_CONTROLLER: controller,
     }
 
-    if not controller.coordinator.last_update_success:
+    if not await controller.async_setup_entry(entry):
         raise ConfigEntryNotReady
-
-    await controller.async_setup_entry(entry)
 
     for platform in PLATFORMS:
         hass.async_create_task(
