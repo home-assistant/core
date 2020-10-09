@@ -80,49 +80,6 @@ def mock_smile_adam():
             return_value=True
         )
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=True
-        )
-        smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_preset.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.set_temperature.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
-            return_value=True
-        )
-
-        smile_mock.return_value.get_all_devices.return_value = _read_json(
-            chosen_env, "get_all_devices"
-        )
-        smile_mock.return_value.get_device_data.side_effect = partial(
-            _get_device_data, chosen_env
-        )
-
-        yield smile_mock.return_value
-
-
-@pytest.fixture(name="mock_smile_adam_non_smt")
-def mock_smile_adam_non_smt():
-    """Create a Mock Adam environment for testing exceptions."""
-    chosen_env = "adam_multiple_devices_per_zone"
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
-        smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
-        smile_mock.XMLDataMissingError = Smile.XMLDataMissingError
-
-        smile_mock.return_value.gateway_id = "fe799307f1624099878210aa0b9f1475"
-        smile_mock.return_value.heater_id = "90986d591dcd426cae3ec3e8111ff730"
-        smile_mock.return_value.smile_version = "3.0.15"
-        smile_mock.return_value.smile_type = "thermostat"
-        smile_mock.return_value.smile_hostname = "smile98765"
-
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
             return_value=False
         )
         smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
