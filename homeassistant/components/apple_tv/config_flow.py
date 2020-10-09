@@ -89,6 +89,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize a new AppleTVConfigFlow."""
+        self.target_device = None
         self.scan_result = None
         self.atv = None
         self.protocol = None
@@ -98,6 +99,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, info):
         """Handle initial step when updating invalid credentials."""
         await self.async_set_unique_id(info[CONF_IDENTIFIER])
+        self.target_device = info[CONF_IDENTIFIER]
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": info[CONF_NAME]}
@@ -124,7 +126,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         default_suggestion = self._prefill_identifier()
         if user_input is not None:
-            await self.async_set_unique_id(user_input[DEVICE_INPUT])
+            self.target_device = user_input[DEVICE_INPUT]
             try:
                 await self.async_find_device()
             except DeviceNotFound:
@@ -137,6 +139,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(
+                    self.atv.identifier, raise_on_progress=False
+                )
                 return await self.async_step_confirm()
 
             # Use whatever the user entered as default value
@@ -153,7 +158,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle device found via zeroconf."""
-
         service_type = discovery_info[CONF_TYPE]
         properties = discovery_info["properties"]
 
@@ -172,6 +176,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
+        self.target_device = identifier
         return await self.async_find_device_wrapper(self.async_step_confirm)
 
     async def async_find_device_wrapper(self, next_func, allow_exist=False):
@@ -185,7 +190,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except DeviceNotFound:
             return self.async_abort(reason="device_not_found")
         except DeviceAlreadyConfigured:
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured_device")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unrecoverable_error")
@@ -195,7 +200,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
         self.scan_result, self.atv = await device_scan(
-            self.unique_id, self.hass.loop, cache=self.scan_result
+            self.target_device, self.hass.loop, cache=self.scan_result
         )
         if not self.atv:
             raise DeviceNotFound()
@@ -253,7 +258,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             abort_reason = "backoff"
         except exceptions.PairingError:
             _LOGGER.exception("Authentication problem")
-            abort_reason = "auth"
+            abort_reason = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             abort_reason = "unrecoverable_error"
@@ -280,7 +285,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_begin_pairing()
             except exceptions.PairingError:
                 _LOGGER.exception("Authentication problem")
-                errors["base"] = "auth"
+                errors["base"] = "invalid_auth"
             except AbortFlow:
                 raise
             except Exception:  # pylint: disable=broad-except

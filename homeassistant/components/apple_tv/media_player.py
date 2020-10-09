@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
@@ -148,7 +147,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
     def media_image_hash(self):
         """Hash value for media image."""
         state = self.state
-        if self._playing and state not in [STATE_UNKNOWN, STATE_OFF, STATE_IDLE]:
+        if self._playing and state not in [None, STATE_OFF, STATE_IDLE]:
             return self.atv.metadata.artwork_id
         return None
 

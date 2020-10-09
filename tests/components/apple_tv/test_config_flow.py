@@ -293,7 +293,7 @@ async def test_user_start_pair_error_failed(hass, mrp_device, pairing_mock):
         {},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result2["reason"] == "auth"
+    assert result2["reason"] == "invalid_auth"
 
 
 async def test_user_pair_invalid_pin(hass, mrp_device, pairing_mock):
@@ -319,7 +319,7 @@ async def test_user_pair_invalid_pin(hass, mrp_device, pairing_mock):
         {"pin": 1111},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "auth"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_pair_unexpected_error(hass, mrp_device, pairing_mock):
