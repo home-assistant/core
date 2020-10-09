@@ -206,7 +206,16 @@ def get_entities(config):
     elif conf_type == CONF_TYPE_SYSBUS:
         _LOGGER.debug("Initializing using SysBus")
         for p1sensor in Pi1Wire().find_all_sensors():
-            sensor_id = "%s-%s" % (p1sensor.mac_address[:2], p1sensor.mac_address[2:])
+            family = p1sensor.mac_address[:2]
+            sensor_id = "{}-{}".format(family, p1sensor.mac_address[2:])
+            if family not in DEVICE_SUPPORT_SYSBUS:
+                _LOGGER.warning(
+                    "Ignoring unknown family (%s) of sensor found for device: %s",
+                    family,
+                    sensor_id,
+                )
+                continue
+
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
             devs.append(
                 OneWireDirect(
