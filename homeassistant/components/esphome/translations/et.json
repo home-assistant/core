@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_password": "Vale salas\u00f5na!"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

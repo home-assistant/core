@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "cannot_connect": "\u00dchendus nurjus"
         },
         "error": {

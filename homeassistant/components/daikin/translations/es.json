@@ -16,7 +16,7 @@
                     "key": "Clave API",
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Introduce la IP de tu aire acondicionado Daikin",
+                "description": "Introduce la direcci\u00f3n IP de tu aire acondicionado Daikin.\n\nTen en cuenta que la Clave API y la Contrase\u00f1a son usadas por los dispositivos BRP072Cxx y SKYFi respectivamente.",
                 "title": "Configurar aire acondicionado Daikin"
             }
         }

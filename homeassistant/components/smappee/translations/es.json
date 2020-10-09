@@ -7,7 +7,7 @@
             "cannot_connect": "No se pudo conectar",
             "connection_error": "No se pudo conectar al dispositivo Smappee.",
             "invalid_mdns": "Dispositivo no compatible para la integraci\u00f3n de Smappee.",
-            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, siga la documentaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"
         },
         "flow_title": "Smappee: {name}",
@@ -25,7 +25,7 @@
                 "description": "Ingrese el host para iniciar la integraci\u00f3n local de Smappee"
             },
             "pick_implementation": {
-                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
             },
             "zeroconf_confirm": {
                 "description": "\u00bfDesea agregar el dispositivo Smappee con el n\u00famero de serie `{serialnumber}` a Home Assistant?",

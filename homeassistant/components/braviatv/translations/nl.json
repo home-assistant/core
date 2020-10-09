@@ -11,6 +11,9 @@
         },
         "step": {
             "authorize": {
+                "data": {
+                    "pin": "PIN-code"
+                },
                 "description": "Voer de pincode in die wordt weergegeven op de Sony Bravia tv. \n\nAls de pincode niet wordt weergegeven, moet u de Home Assistant op uw tv afmelden, ga naar: Instellingen -> Netwerk -> Instellingen extern apparaat -> Afmelden extern apparaat.",
                 "title": "Autoriseer Sony Bravia tv"
             },
