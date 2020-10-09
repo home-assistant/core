@@ -2,44 +2,41 @@
 import logging
 
 from srpenergy.client import SrpEnergyClient
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+# import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry
+
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DOMAIN
+# import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ID): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+# CONFIG_SCHEMA = vol.Schema(
+#     {
+#         DOMAIN: vol.Schema(
+#             {
+#                 vol.Required(CONF_ID): cv.string,
+#                 vol.Required(CONF_USERNAME): cv.string,
+#                 vol.Required(CONF_PASSWORD): cv.string,
+#                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+#             }
+#         )
+#     },
+#     extra=vol.ALLOW_EXTRA,
+# )
 
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up SRP Energy from a config entry."""
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
+async def async_setup(hass, config):
+    """Import integration from config."""
     return True
 
 
