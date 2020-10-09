@@ -125,7 +125,7 @@ class IcloudAccount:
                 self._config_entry.data[CONF_USERNAME],
             )
 
-            self.hass.async_create_task(
+            self.hass.add_job(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": SOURCE_REAUTH},
