@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "port": "Poort"
+                }
+            }
+        }
+    }
+}

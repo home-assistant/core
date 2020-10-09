@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "invalid_2fa": "Vale 2-teguriline autentimine, proovige uuesti.",
             "invalid_2fa_method": "Kehtetu 2FA meetod (kontrollige telefoni teel).",
