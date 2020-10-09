@@ -176,7 +176,7 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_CODE,
                         default=self.config_entry.options.get(CONF_CODE),
-                    ): str,
+                    ): str
                 }
             ),
         )

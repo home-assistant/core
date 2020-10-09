@@ -356,18 +356,20 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in ("alarm_control_panel", "binary_sensor", "lock", "sensor")
-    ]
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SUPPORTED_PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
+        remove_listener()
 
-    await asyncio.gather(*tasks)
-
-    hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-    remove_listener()
-
-    return True
+    return unload_ok
 
 
 async def async_update_options(hass, config_entry):

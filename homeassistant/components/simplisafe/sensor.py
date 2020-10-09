@@ -40,7 +40,7 @@ class SimplisafeFreezeSensor(SimpliSafeEntity):
     @property
     def unique_id(self):
         """Return unique ID of sensor."""
-        return f"{self._sensor.serial}-sensor"
+        return self._sensor.serial
 
     @property
     def device_info(self):
