@@ -340,6 +340,7 @@ class OneWireDirect(OneWire):
             self._value_raw = self._owsensor.get_temperature()
             value = round(float(self._value_raw), 1)
         except (
+            FileNotFoundError,
             InvalidCRCException,
             NotFoundSensorException,
             UnsupportResponseException,
