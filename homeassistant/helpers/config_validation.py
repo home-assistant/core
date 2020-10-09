@@ -832,6 +832,12 @@ def custom_serializer(schema: Any) -> Any:
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
+    if schema is string:
+        return {"type": "string"}
+
+    if schema is boolean:
+        return {"type": "boolean"}
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
 

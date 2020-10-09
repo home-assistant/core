@@ -1199,6 +1199,9 @@ py-schluter==0.1.7
 # homeassistant.components.synology
 py-synology==0.2.0
 
+# homeassistant.components.zabbix
+py-zabbix==1.1.7
+
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
@@ -1877,9 +1880,6 @@ pywilight==0.0.65
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
 
-# homeassistant.components.zabbix
-pyzabbix==0.7.4
-
 # homeassistant.components.qrcode
 pyzbar==0.1.7
 
@@ -2301,7 +2301,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.5.3
+yeelight==0.5.4
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
