@@ -41,6 +41,22 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     assert attrs["preset_mode"] == "asleep"
 
 
+async def test_adam_non_smt_climate_entity_attributes(hass, mock_smile_adam_non_smt):
+    """Test creation of adam climate device environment."""
+    entry = await async_init_integration(hass, mock_smile_adam_non_smt)
+    assert entry.state == ENTRY_STATE_LOADED
+
+    state = hass.states.get("climate.zone_lisa_wk")
+    attrs = state.attributes
+
+    assert attrs["hvac_modes"] == ["heat", "auto"]
+
+    state = hass.states.get("climate.zone_thermostat_jessie")
+    attrs = state.attributes
+
+    assert attrs["hvac_modes"] == ["heat", "auto"]
+
+
 async def test_adam_climate_entity_climate_changes(hass, mock_smile_adam):
     """Test handling of user requests in adam climate device environment."""
     entry = await async_init_integration(hass, mock_smile_adam)
