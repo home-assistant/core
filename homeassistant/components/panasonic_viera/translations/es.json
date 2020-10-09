@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este televisor Panasonic Viera ya est\u00e1 configurado.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
             "not_connected": "La conexi\u00f3n remota con su televisor Panasonic Viera se perdi\u00f3. Compruebe los registros para obtener m\u00e1s informaci\u00f3n.",
-            "unknown": "Se ha producido un error desconocido. Compruebe los registros para obtener m\u00e1s informaci\u00f3n."
+            "unknown": "Error inesperado"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -14,7 +14,7 @@
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "C\u00f3digo PIN"
                 },
                 "description": "Introduzca el PIN que aparece en su Televisor",
                 "title": "Emparejamiento"

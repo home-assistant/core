@@ -10,6 +10,11 @@
                     "longitude": "Pikkuskraad"
                 }
             },
+            "node_pro": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
             "user": {
                 "data": {
                     "cloud_api": "Geograafiline asukoht"

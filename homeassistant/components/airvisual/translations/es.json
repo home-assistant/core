@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Estas coordenadas o Nodo/Pro ID ya est\u00e1n registradas."
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada o el Nodo/Pro ID ya est\u00e1 registrado."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",

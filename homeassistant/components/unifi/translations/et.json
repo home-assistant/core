@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "service_unavailable": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}
