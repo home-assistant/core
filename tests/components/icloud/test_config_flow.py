@@ -284,7 +284,7 @@ async def test_login_failed(hass: HomeAssistantType):
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_no_device(
