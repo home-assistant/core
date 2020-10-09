@@ -1,5 +1,6 @@
 """The tests for the filesize sensor."""
 import os
+
 import pytest
 
 from homeassistant import config as hass_config
