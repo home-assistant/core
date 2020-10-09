@@ -207,14 +207,12 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        firstIncompleteItemIndex = index
-        indexToInsert = 0
-        for i in range(0, index):
+        indexToInsert = None
+        for i in reversed(range(0, index)):
             if not self.items[i]["complete"]:
                 indexToInsert = i
-                if i < firstIncompleteItemIndex:
-                    firstIncompleteItemIndex = i
-        if index <= firstIncompleteItemIndex:
+                break
+        if indexToInsert is None:
             raise vol.Invalid(
                 "Can't move up this item becuase it's already at the top."
             )
@@ -234,14 +232,12 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        lastIncompleteIndex = index
-        indexToInsert = 0
-        for i in reversed(range(index + 1, len(self.items))):
+        indexToInsert = None
+        for i in range(index + 1, len(self.items)):
             if not self.items[i]["complete"]:
                 indexToInsert = i
-                if i > lastIncompleteIndex:
-                    lastIncompleteIndex = i
-        if index >= lastIncompleteIndex:
+                break
+        if indexToInsert is None:
             raise vol.Invalid(
                 "Can't move down this item becuase it's already at the bottom."
             )
