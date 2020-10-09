@@ -282,7 +282,7 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            self.hass.async_add_executor_job(self._load_history_from_db)
+            await self.hass.async_add_executor_job(self._load_history_from_db)
             self.async_write_ha_state()
 
         async_track_state_change_event(
