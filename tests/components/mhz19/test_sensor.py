@@ -1,4 +1,7 @@
 """Tests for MH-Z19 sensor."""
+from pmsensor import co2sensor
+from pmsensor.co2sensor import read_mh_z19_with_temperature
+
 import homeassistant.components.mhz19.sensor as mhz19
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
@@ -37,8 +40,6 @@ async def test_setup_connected(hass):
         read_mh_z19=DEFAULT,
         read_mh_z19_with_temperature=DEFAULT,
     ):
-        from pmsensor.co2sensor import read_mh_z19_with_temperature
-
         read_mh_z19_with_temperature.return_value = None
         mock_add = Mock()
         assert mhz19.setup_platform(
@@ -59,8 +60,6 @@ async def test_setup_connected(hass):
 )
 async def aiohttp_client_update_oserror(mock_function):
     """Test MHZClient when library throws OSError."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     client.update()
     assert {} == client.data
@@ -69,8 +68,6 @@ async def aiohttp_client_update_oserror(mock_function):
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(5001, 24))
 async def aiohttp_client_update_ppm_overflow(mock_function):
     """Test MHZClient when ppm is too high."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     client.update()
     assert client.data.get("co2") is None
@@ -79,8 +76,6 @@ async def aiohttp_client_update_ppm_overflow(mock_function):
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
 async def aiohttp_client_update_good_read(mock_function):
     """Test MHZClient when ppm is too high."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     client.update()
     assert {"temperature": 24, "co2": 1000} == client.data
@@ -89,8 +84,6 @@ async def aiohttp_client_update_good_read(mock_function):
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
 async def test_co2_sensor(mock_function):
     """Test CO2 sensor."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, "name")
     sensor.update()
@@ -105,8 +98,6 @@ async def test_co2_sensor(mock_function):
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
 async def test_temperature_sensor(mock_function):
     """Test temperature sensor."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_TEMPERATURE, None, "name")
     sensor.update()
@@ -121,8 +112,6 @@ async def test_temperature_sensor(mock_function):
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
 async def test_temperature_sensor_f(mock_function):
     """Test temperature sensor."""
-    from pmsensor import co2sensor
-
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(
         client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, "name"
