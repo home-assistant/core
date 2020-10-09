@@ -2,9 +2,10 @@
 from datetime import timedelta
 import logging
 
-import Adafruit_DHT  # pylint: disable=import-error
 import voluptuous as vol
 
+import adafruit_dht
+import board
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
@@ -59,9 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
-        "AM2302": Adafruit_DHT.AM2302,
-        "DHT11": Adafruit_DHT.DHT11,
-        "DHT22": Adafruit_DHT.DHT22,
+        "AM2302": adafruit_dht.DHT22,
+        "DHT11": adafruit_dht.DHT11,
+        "DHT22": adafruit_dht.DHT22,
     }
     sensor = available_sensors.get(config[CONF_SENSOR])
     pin = config[CONF_PIN]
@@ -72,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("DHT sensor type is not supported")
         return False
 
-    data = DHTClient(Adafruit_DHT, sensor, pin)
+    data = DHTClient(sensor, pin)
     dev = []
     name = config[CONF_NAME]
 
@@ -160,18 +161,27 @@ class DHTSensor(Entity):
 class DHTClient:
     """Get the latest data from the DHT sensor."""
 
-    def __init__(self, adafruit_dht, sensor, pin):
+    def __init__(self, sensor, pin):
         """Initialize the sensor."""
-        self.adafruit_dht = adafruit_dht
         self.sensor = sensor
-        self.pin = pin
+        self.pin = getattr(board, pin)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
-        humidity, temperature = self.adafruit_dht.read_retry(self.sensor, self.pin)
-        if temperature:
-            self.data[SENSOR_TEMPERATURE] = temperature
-        if humidity:
-            self.data[SENSOR_HUMIDITY] = humidity
+        dht = self.sensor(self.pin)
+
+        try:
+            humidity = dht.humidity
+            temperature = dht.temperature
+            if temperature:
+                self.data[SENSOR_TEMPERATURE] = temperature
+            if humidity:
+                self.data[SENSOR_HUMIDITY] = humidity
+        except RuntimeError as error:
+            pass
+        except Exception as ex:
+            _LOGGER.debug("Error returned from DHT sensor: %s", ex)
+        finally:
+            dht.exit()
