@@ -2,10 +2,10 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
 import adafruit_dht
 import board
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
@@ -179,8 +179,6 @@ class DHTClient:
                 self.data[SENSOR_TEMPERATURE] = temperature
             if humidity:
                 self.data[SENSOR_HUMIDITY] = humidity
-        except RuntimeError as error:
-            pass
         except Exception as ex:
             _LOGGER.debug("Error returned from DHT sensor: %s", ex)
         finally:
