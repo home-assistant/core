@@ -121,11 +121,8 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
-            if CONF_USERNAME in user_input:
-                errors = {CONF_USERNAME: "login"}
-            else:
-                errors = {CONF_PASSWORD: "invalid_auth"}
             self.api = None
+            errors = {CONF_PASSWORD: "invalid_auth"}
             return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2sa:

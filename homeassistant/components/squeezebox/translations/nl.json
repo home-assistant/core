@@ -1,0 +1,15 @@
+{
+    "config": {
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    },
+    "title": "Logitech Squeezebox"
+}

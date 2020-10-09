@@ -70,7 +70,7 @@ class WithingsFlowHandler(
                 self._current_data = {}
                 return await self.async_step_finish(new_data)
 
-            errors["base"] = "profile_exists"
+            errors["base"] = "already_configured_account"
 
         return self.async_show_form(
             step_id="profile",

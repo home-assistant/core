@@ -80,6 +80,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery
 
     async def async_step_import(self, _: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -136,7 +137,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
     ) -> Dict[str, Any]:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")

@@ -31,7 +31,7 @@ from .const import (
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
-    RESULT_NOT_SUCCESSFUL,
+    RESULT_CANNOT_CONNECT,
     RESULT_SUCCESS,
 )
 
@@ -87,10 +87,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for method in SUPPORTED_METHODS:
             self._bridge = SamsungTVBridge.get_bridge(method, self._host)
             result = self._bridge.try_connect()
-            if result != RESULT_NOT_SUCCESSFUL:
+            if result != RESULT_CANNOT_CONNECT:
                 return result
         LOGGER.debug("No working config found")
-        return RESULT_NOT_SUCCESSFUL
+        return RESULT_CANNOT_CONNECT
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""

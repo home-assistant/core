@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         temperature_unit,
     )
     try:
-        async with async_timeout.timeout(5):
+        async with async_timeout.timeout(10):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 options,

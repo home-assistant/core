@@ -174,7 +174,7 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         # bits[0] select the lowest bit in result,
         # is_on for a binary_sensor is true if the bit are 1
         # The other bits are not considered.
-        return bool(result.bits[0])
+        return bool(result.bits[0] & 1)
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""

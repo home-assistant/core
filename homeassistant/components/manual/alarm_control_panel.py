@@ -394,13 +394,12 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state_attr = {}
-
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
-            state_attr[ATTR_PREVIOUS_STATE] = self._previous_state
-            state_attr[ATTR_NEXT_STATE] = self._state
-
-        return state_attr
+            return {
+                ATTR_PREVIOUS_STATE: self._previous_state,
+                ATTR_NEXT_STATE: self._state,
+            }
+        return {}
 
     @callback
     def async_scheduled_update(self, now):

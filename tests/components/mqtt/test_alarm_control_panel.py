@@ -65,7 +65,7 @@ DEFAULT_CONFIG_CODE = {
         "name": "test",
         "state_topic": "alarm/state",
         "command_topic": "alarm/command",
-        "code": "1234",
+        "code": "0123",
         "code_arm_required": True,
     }
 }
@@ -396,7 +396,7 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
     When command_template set to output json
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
-    config[alarm_control_panel.DOMAIN]["code"] = "1234"
+    config[alarm_control_panel.DOMAIN]["code"] = "0123"
     config[alarm_control_panel.DOMAIN]["command_template"] = (
         '{"action":"{{ action }}",' '"code":"{{ code }}"}'
     )
@@ -407,9 +407,9 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
     )
     await hass.async_block_till_done()
 
-    await common.async_alarm_disarm(hass, 1234)
+    await common.async_alarm_disarm(hass, "0123")
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/command", '{"action":"DISARM","code":"1234"}', 0, False
+        "alarm/command", {"action": "DISARM", "code": "0123"}, 0, False
     )
 
 

@@ -60,7 +60,7 @@ def get_deprecated(
         else:
             # If Python is unable to access the sources files, the call stack frame
             # will be missing information, so let's guard.
-            # https://github.com/home-assistant/home-assistant/issues/24982
+            # https://github.com/home-assistant/core/issues/24982
             module_name = __name__
 
         logger = logging.getLogger(module_name)

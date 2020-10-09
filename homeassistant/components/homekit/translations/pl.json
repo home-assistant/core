@@ -5,6 +5,7 @@
         },
         "step": {
             "pairing": {
+                "description": "Gdy tylko mostek {name} b\u0119dzie gotowy, opcja parowania b\u0119dzie dost\u0119pne w \u201ePowiadomieniach\u201d jako \u201eKonfiguracja mostka HomeKit\u201d.",
                 "title": "Sparuj z mostkiem HomeKit"
             },
             "user": {
@@ -12,6 +13,7 @@
                     "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli u\u017cywasz Z-Wave lub innej integracji op\u00f3\u017aniaj\u0105cej start systemu)",
                     "include_domains": "Domeny do uwzgl\u0119dnienia"
                 },
+                "description": "Mostek HomeKit pozwala na dost\u0119p do Twoich encji Home Assistant w HomeKit. Mostek HomeKit jest ograniczony do 150 urz\u0105dze\u0144, w\u0142\u0105czaj\u0105c w to sam mostek. Je\u015bli chcesz wi\u0119cej ni\u017c dozwolona maksymalna liczba urz\u0105dze\u0144, zaleca si\u0119 u\u017cywanie wielu most\u00f3w HomeKit dla r\u00f3\u017cnych domen. Szczeg\u00f3\u0142owa konfiguracja encji jest dost\u0119pna tylko w trybie YAML dla g\u0142\u00f3wnego mostka.",
                 "title": "Aktywowanie mostka HomeKit"
             }
         }
@@ -23,6 +25,7 @@
                     "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli u\u017cywasz Z-Wave lub innej integracji op\u00f3\u017aniaj\u0105cej start systemu)",
                     "safe_mode": "Tryb awaryjny (w\u0142\u0105cz tylko wtedy, gdy parowanie nie powiedzie si\u0119)"
                 },
+                "description": "Te ustawienia nale\u017cy dostosowa\u0107 tylko wtedy, gdy mostek HomeKit nie dzia\u0142a.",
                 "title": "Konfiguracja zaawansowana"
             },
             "cameras": {
@@ -36,6 +39,7 @@
                 "data": {
                     "exclude_entities": "Wykluczone encje"
                 },
+                "description": "Wybierz encje, kt\u00f3rych NIE chcesz zmostkowa\u0107.",
                 "title": "Wykluczenie encji z wybranych domen"
             },
             "init": {

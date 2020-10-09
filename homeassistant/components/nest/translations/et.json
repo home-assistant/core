@@ -1,7 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "Saate konfigureerida ainult \u00fche Nest-i konto.",
+            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
+            "authorize_url_timeout": "Tuvastamise URL- i loomise ajal\u00f5pp.",
+            "no_flows": "Enne tuvastamist pead Nesti konfigureerima. [Palun lugege juhiseid] (https://www.home-assistant.io/components/nest/)."
+        },
         "error": {
-            "invalid_code": "Kehtetu kood"
+            "internal_error": "Sisemine viga tuvastuskoodi kinnitamisel",
+            "invalid_code": "Kehtetu kood",
+            "timeout": "Tuvastuskoodi ajal\u00f5pp",
+            "unknown": "Tundmatu viga tuvastuskoodi kinnitamisel"
         },
         "step": {
             "link": {

@@ -86,9 +86,7 @@ class ECCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
-
-        return attr
+        return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

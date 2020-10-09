@@ -21,8 +21,8 @@ DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
 }
 
-SPEED_AUTO = "auto"
-FAN_SPEEDS = [SPEED_AUTO, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_MODE_AUTO = "auto"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -36,7 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     _async_setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
-    return True
 
 
 @callback
@@ -71,8 +70,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        if self.smartfan.mode == SPEED_AUTO:
-            return SPEED_AUTO
+        if self.smartfan.mode == FAN_MODE_AUTO:
+            return None
         if self.smartfan.mode == "manual":
             current_level = self.smartfan.fan_level
             if current_level is not None:
@@ -105,11 +104,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if not self.smartfan.is_on:
             self.smartfan.turn_on()
 
-        if speed is None or speed == SPEED_AUTO:
-            self.smartfan.auto_mode()
-        else:
-            self.smartfan.manual_mode()
-            self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
+        self.smartfan.manual_mode()
+        self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the device on."""

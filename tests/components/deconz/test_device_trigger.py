@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -34,7 +35,8 @@ async def test_get_triggers(hass):
     """Test triggers work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     device_id = gateway.events[0].device_id
     triggers = await async_get_device_automations(hass, "trigger", device_id)
 
@@ -97,7 +99,8 @@ async def test_helper_successful(hass):
     """Verify trigger helper."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     device_id = gateway.events[0].device_id
     deconz_event = device_trigger._get_deconz_event_from_device_id(hass, device_id)
     assert deconz_event == gateway.events[0]

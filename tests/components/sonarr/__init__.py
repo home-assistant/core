@@ -35,6 +35,8 @@ MOCK_SENSOR_CONFIG = {
     "days": 3,
 }
 
+MOCK_REAUTH_INPUT = {CONF_API_KEY: "test-api-key-reauth"}
+
 MOCK_USER_INPUT = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,

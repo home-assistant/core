@@ -1,13 +1,13 @@
 """Offer state listening automation rules."""
 from datetime import timedelta
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     Event,
@@ -25,17 +25,42 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-TRIGGER_SCHEMA = vol.Schema(
+BASE_SCHEMA = {
+    vol.Required(CONF_PLATFORM): "state",
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+    vol.Optional(CONF_FOR): cv.positive_time_period_template,
+    vol.Optional(CONF_ATTRIBUTE): cv.match_all,
+}
+
+TRIGGER_STATE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): "state",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        **BASE_SCHEMA,
         # These are str on purpose. Want to catch YAML conversions
         vol.Optional(CONF_FROM): vol.Any(str, [str]),
         vol.Optional(CONF_TO): vol.Any(str, [str]),
-        vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
     }
 )
+
+TRIGGER_ATTRIBUTE_SCHEMA = vol.Schema(
+    {
+        **BASE_SCHEMA,
+        vol.Optional(CONF_FROM): cv.match_all,
+        vol.Optional(CONF_TO): cv.match_all,
+    }
+)
+
+
+def TRIGGER_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+    """Validate trigger."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Expected a dictionary")
+
+    # We use this approach instead of vol.Any because
+    # this gives better error messages.
+    if CONF_ATTRIBUTE in value:
+        return TRIGGER_ATTRIBUTE_SCHEMA(value)
+
+    return TRIGGER_STATE_SCHEMA(value)
 
 
 async def async_attach_trigger(
@@ -58,6 +83,7 @@ async def async_attach_trigger(
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
     attribute = config.get(CONF_ATTRIBUTE)
+    job = HassJob(action)
 
     @callback
     def state_automation_listener(event: Event):
@@ -97,8 +123,8 @@ async def async_attach_trigger(
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": platform_type,
@@ -145,7 +171,7 @@ async def async_attach_trigger(
             else:
                 cur_value = new_st.attributes.get(attribute)
 
-            if CONF_TO not in config:
+            if CONF_FROM in config and CONF_TO not in config:
                 return cur_value != old_value
 
             return cur_value == new_value

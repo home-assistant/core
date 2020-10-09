@@ -236,11 +236,6 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
         self._skip_update = False
 
     @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
-
-    @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id

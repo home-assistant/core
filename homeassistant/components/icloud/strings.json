@@ -34,12 +34,11 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "login": "Login error: please check your email & password",
       "send_verification_code": "Failed to send verification code",
       "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
     },
     "abort": {
-      "already_configured": "Account already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_device": "None of your devices have \"Find my iPhone\" activated",
       "updated_password": "Your password was successfully updated"
     }

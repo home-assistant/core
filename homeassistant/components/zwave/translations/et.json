@@ -1,4 +1,10 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        }
+    },
     "state": {
         "_": {
             "dead": "Surnud",

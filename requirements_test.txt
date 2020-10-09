@@ -25,4 +25,4 @@ pytest==6.0.2
 requests_mock==1.8.0
 responses==0.12.0
 stdlib-list==0.7.0
-tqdm==4.48.2
+tqdm==4.49.0

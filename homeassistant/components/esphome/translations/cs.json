@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tento ESP uzel je ji\u017e nakonfigurov\u00e1n",
-            "already_in_progress": "Konfigurace uzlu ESP ji\u017e prob\u00edh\u00e1"
+            "already_configured": "Tento ESP uzel je ji\u017e nakonfigurov\u00e1n"
         },
         "error": {
             "connection_error": "Nelze se p\u0159ipojit k ESP. Zkontrolujte, zda va\u0161e YAML konfigurace obsahuje \u0159\u00e1dek 'api:'.",

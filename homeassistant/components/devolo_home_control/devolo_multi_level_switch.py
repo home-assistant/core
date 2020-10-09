@@ -15,21 +15,9 @@ class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):
             homecontrol=homecontrol,
             device_instance=device_instance,
             element_uid=element_uid,
-            name=device_instance.item_name,
-            sync=self._sync,
         )
         self._multi_level_switch_property = device_instance.multi_level_switch_property[
             element_uid
         ]
 
         self._value = self._multi_level_switch_property.value
-
-    def _sync(self, message):
-        """Update the multi level switch state."""
-        if message[0] == self._multi_level_switch_property.element_uid:
-            self._value = message[1]
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("No valid message received: %s", message)
-        self.schedule_update_ha_state()

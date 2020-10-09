@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_webhook_url": "Home Assistant nie jest poprawnie skonfigurowany do otrzymywania danych od SmartThings. Adres URL  webhook jest nieprawid\u0142owy: \n > {webhook_url} \n\n Zaktualizuj konfiguracj\u0119 zgodnie z [instrukcj\u0105]({component_url}), uruchom ponownie Home Assistant i spr\u00f3buj ponownie.",
+            "invalid_webhook_url": "Home Assistant nie jest poprawnie skonfigurowany do otrzymywania danych od SmartThings. Adres URL webhook jest nieprawid\u0142owy: \n > {webhook_url} \n\n Zaktualizuj konfiguracj\u0119 zgodnie z [instrukcj\u0105]({component_url}), uruchom ponownie Home Assistant i spr\u00f3buj ponownie.",
             "no_available_locations": "Nie ma dost\u0119pnych lokalizacji SmartThings do skonfigurowania w Home Assistant."
         },
         "error": {

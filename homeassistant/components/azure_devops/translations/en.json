@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
-            "reauth_successful": "Access Token updated successfully"
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "authorization_error": "Authorization error. Check you have access to the project and have the correct credentials.",

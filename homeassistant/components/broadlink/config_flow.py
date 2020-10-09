@@ -7,7 +7,7 @@ import broadlink as blk
 from broadlink.exceptions import (
     AuthenticationError,
     BroadlinkException,
-    DeviceOfflineError,
+    NetworkTimeoutError,
 )
 import voluptuous as vol
 
@@ -139,7 +139,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device.mac.hex())
             return await self.async_step_reset(errors=errors)
 
-        except DeviceOfflineError as err:
+        except NetworkTimeoutError as err:
             errors["base"] = "cannot_connect"
             err_msg = str(err)
 
@@ -207,7 +207,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(device.set_lock, False)
 
-            except DeviceOfflineError as err:
+            except NetworkTimeoutError as err:
                 errors["base"] = "cannot_connect"
                 err_msg = str(err)
 

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Punkt dost\u0119pu jest ju\u017c skonfigurowany.",
-            "connection_aborted": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem HMIP",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "connection_aborted": "[%key::common::config_flow::error::cannot_connect%]",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
@@ -17,7 +17,7 @@
                 "data": {
                     "hapid": "ID punktu dost\u0119pu (SGTIN)",
                     "name": "Nazwa (opcjonalnie, u\u017cywana jako prefiks nazwy dla wszystkich urz\u0105dze\u0144)",
-                    "pin": "Kod PIN (opcjonalnie)"
+                    "pin": "Kod PIN"
                 },
                 "title": "Wybierz punkt dost\u0119pu HomematicIP"
             },

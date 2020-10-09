@@ -39,11 +39,6 @@ class MaxCubeShutter(BinarySensorEntity):
         self._state = None
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the BinarySensorEntity."""
         return self._name

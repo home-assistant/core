@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "reauth_successful": "Taastuvastamine oli edukas"
+        },
+        "step": {
+            "reauth_confirm": {
+                "title": "Autentige uuesti Sonarriga"
+            }
+        }
+    }
+}

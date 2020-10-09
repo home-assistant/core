@@ -189,7 +189,7 @@ class BaseEditConfigView(HomeAssistantView):
 
     async def read_config(self, hass):
         """Read the config."""
-        current = await hass.async_add_job(_read, hass.config.path(self.path))
+        current = await hass.async_add_executor_job(_read, hass.config.path(self.path))
         if not current:
             current = self._empty_config()
         return current

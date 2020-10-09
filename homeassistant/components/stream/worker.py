@@ -6,7 +6,7 @@ import time
 
 import av
 
-from .const import MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
+from .const import MAX_TIMESTAMP_GAP, MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +76,9 @@ def _stream_worker_internal(hass, stream, quit_event):
     # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
     # compatible with empty_moov and manual bitstream filters not in PyAV
     if container.format.name in {"hls", "mpegts"}:
+        audio_stream = None
+    # Some audio streams do not have a profile and throw errors when remuxing
+    if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
     # The presentation timestamps of the first packet in each stream we receive
@@ -197,6 +200,12 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
+    def finalize_stream():
+        if not stream.keepalive:
+            # End of stream, clear listeners and stop thread
+            for fmt, _ in outputs.items():
+                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+
     if not peek_first_pts():
         container.close()
         return
@@ -219,15 +228,26 @@ def _stream_worker_internal(hass, stream, quit_event):
                 continue
             last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
-            if not stream.keepalive:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error("Error demuxing stream: %s", str(ex))
+            finalize_stream()
             break
 
         # Discard packet if dts is not monotonic
         if packet.dts <= last_dts[packet.stream]:
+            if (last_dts[packet.stream] - packet.dts) > (
+                packet.time_base * MAX_TIMESTAMP_GAP
+            ):
+                _LOGGER.warning(
+                    "Timestamp overflow detected: dts = %s, resetting stream",
+                    packet.dts,
+                )
+                finalize_stream()
+                break
+            _LOGGER.warning(
+                "Dropping out of order packet: %s <= %s",
+                packet.dts,
+                last_dts[packet.stream],
+            )
             continue
 
         # Check for end of segment
