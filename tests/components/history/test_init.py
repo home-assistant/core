@@ -763,7 +763,7 @@ async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
@@ -775,7 +775,7 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
     await async_setup_component(
         hass, "history", {history.DOMAIN: {history.CONF_ORDER: True}}
     )
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
@@ -785,7 +785,7 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     """Test the fetch period view for history with minimal_response."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
@@ -797,7 +797,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
     """Test the fetch period view for history with no timestamp."""
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get("/api/history/period")
     assert response.status == 200
@@ -816,7 +816,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
             }
         },
     )
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
