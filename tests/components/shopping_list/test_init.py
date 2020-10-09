@@ -311,3 +311,386 @@ async def test_ws_add_item_fail(hass, hass_ws_client, sl_setup):
     msg = await client.receive_json()
     assert msg["success"] is False
     assert len(hass.data["shopping_list"].items) == 0
+
+
+async def test_api_move_up_down_item_basic(hass, hass_client, sl_setup):
+    """Test moving up and down shopping_list item API."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+
+    client = await hass_client()
+
+    resp = await client.post(f"/api/shopping_list/item/{wine_id}/move_up")
+    assert resp.status == 200
+    assert hass.data["shopping_list"].items[0] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+
+    resp = await client.post(f"/api/shopping_list/item/{wine_id}/move_down")
+    assert resp.status == 200
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+
+async def test_api_move_up_item_complex_case(hass, hass_client, sl_setup):
+    """Test moving up shopping_list item API."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "apple"}}
+    )
+
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+    apple_id = hass.data["shopping_list"].items[2]["id"]
+
+    client = await hass_client()
+
+    # Mark wine as completed.
+    resp = await client.post(
+        f"/api/shopping_list/item/{wine_id}", json={"complete": True}
+    )
+
+    # The item apple should be moved from index 2 all the way up to index 0.
+    resp = await client.post(f"/api/shopping_list/item/{apple_id}/move_up")
+    assert resp.status == 200
+    assert hass.data["shopping_list"].items[0] == {
+        "id": apple_id,
+        "name": "apple",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[2] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": True,
+    }
+
+
+async def test_api_move_down_item_complex_case(hass, hass_client, sl_setup):
+    """Test moving down shopping_list item API."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "apple"}}
+    )
+
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+    apple_id = hass.data["shopping_list"].items[2]["id"]
+
+    client = await hass_client()
+
+    # Mark wine as completed.
+    resp = await client.post(
+        f"/api/shopping_list/item/{wine_id}", json={"complete": True}
+    )
+
+    # The item beer should be moved from index 0 all the way down to index 2.
+    resp = await client.post(f"/api/shopping_list/item/{beer_id}/move_down")
+    assert resp.status == 200
+    assert hass.data["shopping_list"].items[0] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": True,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": apple_id,
+        "name": "apple",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[2] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+
+
+async def test_api_move_up_down_item_fail(hass, hass_client, sl_setup):
+    """Test moving up and down shopping_list item API."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+
+    client = await hass_client()
+
+    resp = await client.post("/api/shopping_list/item/BAD_ID/move_up")
+    assert resp.status == 404
+
+    resp = await client.post(f"/api/shopping_list/item/{beer_id}/move_up")
+    # The item 'beer' is already at the top, api should return 400 and the list order shouldn't change.
+    assert resp.status == 400
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+    resp = await client.post(f"/api/shopping_list/item/{wine_id}/move_down")
+    # The item 'wine' is already at the top, api should return 400 and the list order shouldn't change.
+    assert resp.status == 400
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+
+async def test_ws_move_up_down_item_basic(hass, hass_ws_client, sl_setup):
+    """Test moving up and down shopping_list item websocket command."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 7, "type": "shopping_list/items/move_up", "item_id": wine_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert hass.data["shopping_list"].items[0] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+
+    await client.send_json(
+        {"id": 8, "type": "shopping_list/items/move_down", "item_id": wine_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+
+async def test_ws_move_up_item_complex_case(hass, hass_ws_client, sl_setup):
+    """Test moving up and down shopping_list item websocket command."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "apple"}}
+    )
+
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+    apple_id = hass.data["shopping_list"].items[2]["id"]
+
+    client = await hass_ws_client(hass)
+
+    # Mark wine as completed.
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "shopping_list/items/update",
+            "item_id": wine_id,
+            "complete": True,
+        }
+    )
+    _ = await client.receive_json()
+
+    # The item apple should be moved from index 2 all the way up to index 0.
+    await client.send_json(
+        {"id": 10, "type": "shopping_list/items/move_up", "item_id": apple_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert hass.data["shopping_list"].items[0] == {
+        "id": apple_id,
+        "name": "apple",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[2] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": True,
+    }
+
+
+async def test_ws_move_down_item_complex_case(hass, hass_ws_client, sl_setup):
+    """Test the API."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "apple"}}
+    )
+
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+    apple_id = hass.data["shopping_list"].items[2]["id"]
+
+    client = await hass_ws_client(hass)
+
+    # Mark wine as completed.
+    await client.send_json(
+        {
+            "id": 11,
+            "type": "shopping_list/items/update",
+            "item_id": wine_id,
+            "complete": True,
+        }
+    )
+    _ = await client.receive_json()
+
+    # The item beer should be moved from index 0 all the way down to index 2.
+    await client.send_json(
+        {"id": 12, "type": "shopping_list/items/move_down", "item_id": beer_id}
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert hass.data["shopping_list"].items[0] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": True,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": apple_id,
+        "name": "apple",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[2] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+
+
+async def test_ws_move_up_down_item_fail(hass, hass_ws_client, sl_setup):
+    """Test moving up and down shopping_list item websocket command."""
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
+    )
+    beer_id = hass.data["shopping_list"].items[0]["id"]
+    wine_id = hass.data["shopping_list"].items[1]["id"]
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 13, "type": "shopping_list/items/move_up", "item_id": "BAD_ID"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is False
+
+    await client.send_json(
+        {"id": 14, "type": "shopping_list/items/move_up", "item_id": beer_id}
+    )
+    msg = await client.receive_json()
+    # The item 'beer' is already at the top, the ws message should be failure and the list order should be the same.
+    assert msg["success"] is False
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
+
+    await client.send_json(
+        {"id": 15, "type": "shopping_list/items/move_down", "item_id": wine_id}
+    )
+    msg = await client.receive_json()
+    # The item 'beer' is already at the top, the ws message should be failure and the list order should be the same.
+    assert msg["success"] is False
+    assert hass.data["shopping_list"].items[0] == {
+        "id": beer_id,
+        "name": "beer",
+        "complete": False,
+    }
+    assert hass.data["shopping_list"].items[1] == {
+        "id": wine_id,
+        "name": "wine",
+        "complete": False,
+    }
