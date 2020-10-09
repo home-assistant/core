@@ -136,13 +136,13 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     session = hass.data[DOMAIN].pop(entry.entry_id)
-    await hass.async_add_executor_job(session.remove_webhook)
-
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    await session.remove_webhook()
 
     for component in ("binary_sensor", "sensor"):
         await hass.config_entries.async_forward_entry_unload(entry, component)
+
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
 
     return True
 
