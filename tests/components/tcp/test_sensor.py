@@ -148,11 +148,10 @@ async def test_config_uses_defaults(hass, mock_update):
     for key in KEYS_AND_DEFAULTS:
         del config[key]
 
+    config["platform"] = "tcp"
     with assert_setup_component(1) as result_config:
-        print("config", result_config)
         assert await async_setup_component(hass, "sensor", {"sensor": config})
 
-    print(result_config)
     sensor = tcp.TcpSensor(hass, result_config["sensor"][0])
 
     for key, default in KEYS_AND_DEFAULTS.items():
