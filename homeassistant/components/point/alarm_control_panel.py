@@ -107,7 +107,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        status = self._client.alarm_arm(self._home_id)
+        status = await self._client.alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"
 
