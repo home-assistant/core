@@ -5,7 +5,7 @@
 --only-binary=all nuimo==0.1.0
 
 # homeassistant.components.dht
-# Adafruit-DHT==1.4.0
+adafruit-circuitpython-dht==3.5.1
 
 # homeassistant.components.sht31
 Adafruit-GPIO==1.0.3
