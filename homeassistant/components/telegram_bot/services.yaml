@@ -13,7 +13,7 @@ send_message:
       description: An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -56,7 +56,7 @@ send_photo:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -136,7 +136,7 @@ send_animation:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -176,7 +176,7 @@ send_video:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -259,7 +259,7 @@ send_document:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -324,7 +324,7 @@ edit_message:
       description: Optional title for your notification. Will be composed as '%title\n%message'
       example: "Your Garage Door Friend"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_web_page_preview:
       description: Disables link previews for links in the message.
