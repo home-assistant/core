@@ -198,6 +198,7 @@ class ShoppingData:
 
     @callback
     def async_move_up(self, item_id):
+        """Move up an item."""
         index = next(
             (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
         )
@@ -206,20 +207,25 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        firstIncompleteIndex = next(
-            (i for i, itm in enumerate(self.items) if not itm["complete"]), None
-        )
-        if index <= firstIncompleteIndex:
+        firstIncompleteItemIndex = index
+        indexToInsert = 0
+        for i in range(0, index):
+            if not self.items[i]["complete"]:
+                indexToInsert = i
+                if i < firstIncompleteItemIndex:
+                    firstIncompleteItemIndex = i
+        if index <= firstIncompleteItemIndex:
             raise vol.Invalid(
                 "Can't move up this item becuase it's already at the top."
             )
         self.items.pop(index)
-        self.items.insert(index - 1, item)
+        self.items.insert(indexToInsert, item)
         self.hass.async_add_job(self.save)
         return item
 
     @callback
     def async_move_down(self, item_id):
+        """Move down an item."""
         index = next(
             (i for i, itm in enumerate(self.items) if itm["id"] == item_id), None
         )
@@ -228,24 +234,19 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        lastIncompleteIndex = (
-            len(self.items)
-            - 1
-            - next(
-                (
-                    i
-                    for i in range(len(self.items))
-                    if not self.items[len(self.items) - i - 1]["complete"]
-                ),
-                None,
-            )
-        )
+        lastIncompleteIndex = index
+        indexToInsert = 0
+        for i in reversed(range(index + 1, len(self.items))):
+            if not self.items[i]["complete"]:
+                indexToInsert = i
+                if i > lastIncompleteIndex:
+                    lastIncompleteIndex = i
         if index >= lastIncompleteIndex:
             raise vol.Invalid(
                 "Can't move down this item becuase it's already at the bottom."
             )
         self.items.pop(index)
-        self.items.insert(index + 1, item)
+        self.items.insert(indexToInsert, item)
         self.hass.async_add_job(self.save)
         return item
 
