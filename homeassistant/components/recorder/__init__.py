@@ -265,11 +265,7 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
-        start_time_fs = int(time.time() * 1000000)
-        import cProfile
 
-        pr = cProfile.Profile()
-        pr.enable()
         tries = 1
         connected = False
 
@@ -361,6 +357,11 @@ class Recorder(threading.Thread):
         # with a commit every time the event time
         # has changed. This reduces the disk io.
         runs = 1
+        start_time_fs = int(time.time() * 1000000)
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
         while True:
             event = self.queue.get()
             if event is None:
