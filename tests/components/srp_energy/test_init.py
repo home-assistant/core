@@ -1,11 +1,10 @@
 """Tests for Srp Energy component Init."""
 from homeassistant.components import srp_energy
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
-from homeassistant.const import CONF_NAME, CONF_ID, CONF_USERNAME, CONF_PASSWORD
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_coro
-
+from tests.common import MockConfigEntry
 
 MOCK_ENTRY = MockConfigEntry(
     domain=srp_energy.DOMAIN,

@@ -3,57 +3,39 @@ import logging
 
 from srpenergy.client import SrpEnergyClient
 
-# import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
+
+# import voluptuous as vol
+
+
 # import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-# CONFIG_SCHEMA = vol.Schema(
-#     {
-#         DOMAIN: vol.Schema(
-#             {
-#                 vol.Required(CONF_ID): cv.string,
-#                 vol.Required(CONF_USERNAME): cv.string,
-#                 vol.Required(CONF_PASSWORD): cv.string,
-#                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-#             }
-#         )
-#     },
-#     extra=vol.ALLOW_EXTRA,
-# )
 
 PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass, config):
-    """Import integration from config."""
+    """Set up the srp_energy component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up the SRP Energy component.
-
-    Called after setup.
-    """
+    """Set up the SRP Energy component from a config entry."""
+    # Store an SrpEnergyClient object for your srp_energy to access
     account_id = entry.data.get(CONF_ID)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
 
     try:
-
-        srp_energy_client = await hass.async_add_executor_job(
-            SrpEnergyClient, account_id, username, password
-        )
+        srp_energy_client = SrpEnergyClient(account_id, username, password)
         hass.data[DOMAIN] = srp_energy_client
     except (Exception) as ex:
         _LOGGER.error("Unable to connect to Srp Energy: %s", str(ex))
@@ -68,16 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-
-    # unload_ok = all(
-    #     await asyncio.gather(
-    #         *[
-    #             hass.config_entries.async_forward_entry_unload(entry, component)
-    #             for component in PLATFORMS
-    #         ]
-    #     )
-    # )
-
     # unload srp client
     hass.data[DOMAIN] = None
 
