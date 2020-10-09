@@ -1,4 +1,4 @@
-"""Support for MQTT JSON lights."""
+"""Support for Tasmota lights."""
 import logging
 
 from hatasmota.light import (
@@ -34,24 +34,6 @@ from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_BRIGHTNESS = False
-DEFAULT_COLOR_TEMP = False
-DEFAULT_EFFECT = False
-DEFAULT_FLASH_TIME_LONG = 10
-DEFAULT_FLASH_TIME_SHORT = 2
-DEFAULT_NAME = "MQTT JSON Light"
-DEFAULT_OPTIMISTIC = False
-DEFAULT_RGB = False
-DEFAULT_WHITE_VALUE = False
-DEFAULT_XY = False
-DEFAULT_HS = False
-
-CONF_EFFECT_LIST = "effect_list"
-
-CONF_FLASH_TIME_LONG = "flash_time_long"
-CONF_FLASH_TIME_SHORT = "flash_time_short"
-CONF_HS = "hs"
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
@@ -128,7 +110,7 @@ class TasmotaLight(
 
     @callback
     def state_updated(self, state, **kwargs):
-        """Handle new MQTT state messages."""
+        """Handle state updates."""
         self._state = state
         attributes = kwargs.get("attributes")
         if attributes:

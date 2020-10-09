@@ -16,8 +16,6 @@ from .discovery import (
     set_discovery_hash,
 )
 
-DATA_MQTT = "mqtt"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -52,7 +50,7 @@ class TasmotaEntity(Entity):
 
     @callback
     def state_updated(self, state, **kwargs):
-        """Handle new MQTT state messages."""
+        """Handle state updates."""
         self._state = state
         self.async_write_ha_state()
 
