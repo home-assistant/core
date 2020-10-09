@@ -37,10 +37,20 @@ SENSOR_TYPES = {
     SENSOR_HUMIDITY: ["Humidity", PERCENTAGE],
 }
 
+
+def validate_pin_input(value):
+    """Validate that the GPIO PIN is prefixed with a D."""
+    try:
+        int(value)
+        return f"D{value}"
+    except ValueError:
+        return value.upper()
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENSOR): cv.string,
-        vol.Required(CONF_PIN): cv.string,
+        vol.Required(CONF_PIN): vol.All(cv.string, validate_pin_input),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
@@ -179,7 +189,7 @@ class DHTClient:
                 self.data[SENSOR_TEMPERATURE] = temperature
             if humidity:
                 self.data[SENSOR_HUMIDITY] = humidity
-        except Exception as ex:
-            _LOGGER.debug("Error returned from DHT sensor: %s", ex)
+        except Exception:
+            _LOGGER.exception("Error updating DHT sensor: %s", self.name)
         finally:
             dht.exit()
