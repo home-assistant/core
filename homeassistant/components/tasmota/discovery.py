@@ -133,13 +133,13 @@ async def async_start(
             return
 
         orphaned_entities = {
-            entry.unique_id: ""
+            entry.unique_id
             for entry in async_entries_for_device(entity_registry, device.id)
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
         for (tasmota_sensor_config, discovery_hash) in sensors:
             if tasmota_sensor_config:
-                orphaned_entities.pop(tasmota_sensor_config.unique_id, None)
+                orphaned_entities.discard(tasmota_sensor_config.unique_id)
             await _discover_entity(tasmota_sensor_config, discovery_hash, platform)
         for unique_id in orphaned_entities:
             entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
