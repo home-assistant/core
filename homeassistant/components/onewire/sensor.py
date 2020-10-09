@@ -16,7 +16,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    CONF_TYPE,
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -131,27 +130,25 @@ def hb_info_from_type(dev_type="std"):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up 1-Wire platform."""
-    devs = get_entities(config)
-    add_entities(devs, True)
+    entities = get_entities(config)
+    add_entities(entities, True)
 
 
 def get_entities(config):
     """Get a list of entities."""
-    conf_type = config.get(CONF_TYPE)
-    base_dir = config.get(CONF_MOUNT_DIR, DEFAULT_SYSBUS_MOUNT_DIR)
+    base_dir = config.get(CONF_MOUNT_DIR)
     owhost = config.get(CONF_HOST)
-    owport = config.get(CONF_PORT, DEFAULT_OWSERVER_PORT)
+    owport = config.get(CONF_PORT)
 
     # Ensure type is configured
-    if conf_type is None:
-        if owhost:
-            conf_type = CONF_TYPE_OWSERVER
-        elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
-            conf_type = CONF_TYPE_SYSBUS
-        else:
-            conf_type = CONF_TYPE_OWFS
+    if owhost:
+        conf_type = CONF_TYPE_OWSERVER
+    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
+        conf_type = CONF_TYPE_SYSBUS
+    else:
+        conf_type = CONF_TYPE_OWFS
 
-    devs = []
+    entities = []
     device_names = {}
     if CONF_NAMES in config:
         if isinstance(config[CONF_NAMES], dict):
@@ -193,7 +190,7 @@ def get_entities(config):
                         sensor_key = f"wetness_{s_id}"
                 sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
-                devs.append(
+                entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
                         device_file,
@@ -217,7 +214,7 @@ def get_entities(config):
                 continue
 
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
-            devs.append(
+            entities.append(
                 OneWireDirect(
                     device_names.get(sensor_id, sensor_id),
                     device_file,
@@ -225,7 +222,7 @@ def get_entities(config):
                     p1sensor,
                 )
             )
-        if devs == []:
+        if not entities:
             _LOGGER.error(
                 "No onewire sensor found. Check if dtoverlay=w1-gpio "
                 "is in your /boot/config.txt. "
@@ -246,7 +243,7 @@ def get_entities(config):
                     device_file = os.path.join(
                         os.path.split(family_file_path)[0], sensor_value
                     )
-                    devs.append(
+                    entities.append(
                         OneWireOWFS(
                             device_names.get(sensor_id, sensor_id),
                             device_file,
@@ -254,7 +251,7 @@ def get_entities(config):
                         )
                     )
 
-    return devs
+    return entities
 
 
 class OneWire(Entity):
@@ -345,7 +342,7 @@ class OneWireDirect(OneWire):
             NotFoundSensorException,
             UnsupportResponseException,
         ) as ex:
-            _LOGGER.error("Cannot read from sensor %s: %s", self._device_file, ex)
+            _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
         self._state = value
 
 
