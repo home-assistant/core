@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hvv_departures",
   "requirements": [
-    "pygti==0.6.0"
+    "pygti==0.9.1"
   ],
   "codeowners": [
     "@vigonotion"
