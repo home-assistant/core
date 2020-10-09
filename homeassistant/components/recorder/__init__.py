@@ -532,7 +532,8 @@ class Recorder(threading.Thread):
             for dbstate in self._pending_expunge:
                 # Expunge the state so its not expired
                 # until we use it later for dbstate.old_state
-                self.event_session.expunge(dbstate)
+                if dbstate in self.event_session:
+                    self.event_session.expunge(dbstate)
             self._pending_expunge = []
             self.event_session.commit()
         except Exception as err:
