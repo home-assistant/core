@@ -314,7 +314,7 @@ async def test_ws_add_item_fail(hass, hass_ws_client, sl_setup):
 
 
 async def test_api_move_up_down_item_basic(hass, hass_client, sl_setup):
-    """Test the API."""
+    """Test moving up and down shopping_list item API."""
 
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -343,7 +343,7 @@ async def test_api_move_up_down_item_basic(hass, hass_client, sl_setup):
 
 
 async def test_api_move_up_item_complex_case(hass, hass_client, sl_setup):
-    """Test the API."""
+    """Test moving up shopping_list item API."""
 
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -378,7 +378,7 @@ async def test_api_move_up_item_complex_case(hass, hass_client, sl_setup):
 
 
 async def test_api_move_down_item_complex_case(hass, hass_client, sl_setup):
-    """Test the API."""
+    """Test moving down shopping_list item API."""
 
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
@@ -413,7 +413,7 @@ async def test_api_move_down_item_complex_case(hass, hass_client, sl_setup):
 
 
 async def test_api_move_up_down_item_fail(hass, hass_client, sl_setup):
-    """Test the API."""
+    """Test moving up and down shopping_list item API."""
 
     await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
