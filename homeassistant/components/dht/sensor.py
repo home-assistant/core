@@ -190,7 +190,7 @@ class DHTClient:
                 self.data[SENSOR_TEMPERATURE] = temperature
             if humidity:
                 self.data[SENSOR_HUMIDITY] = humidity
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error updating DHT sensor: %s", self.name)
         finally:
             dht.exit()
