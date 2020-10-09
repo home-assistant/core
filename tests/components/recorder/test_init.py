@@ -56,14 +56,16 @@ async def test_saving_event(hass_recorder):
     events = []
 
     @callback
-    def _event_listener(event):
+    def _event_listener(bus_event):
         """Record events from eventbus."""
-        if event.event_type == event_type:
-            events.append(event)
+        if bus_event.event_type == event_type:
+            events.append(bus_event)
 
     hass.bus.async_listen(MATCH_ALL, _event_listener)
+    await hass.async_block_till_done()
 
     hass.bus.async_fire(event_type, event_data)
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 
@@ -104,6 +106,7 @@ async def _add_events(hass, events):
         session.query(Events).delete(synchronize_session=False)
     for event_type in events:
         hass.bus.async_fire(event_type)
+        await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
@@ -254,6 +257,7 @@ async def test_saving_state_and_removing_entity(hass_recorder):
     hass.states.async_set(entity_id, STATE_LOCKED)
     hass.states.async_set(entity_id, STATE_UNLOCKED)
     hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
 
@@ -302,6 +306,7 @@ async def test_defaults_set(hass):
 
     with patch("homeassistant.components.recorder.async_setup", side_effect=mock_setup):
         assert await async_setup_component(hass, "history", {})
+        await hass.async_block_till_done()
 
     assert recorder_config is not None
     # pylint: disable=unsubscriptable-object
