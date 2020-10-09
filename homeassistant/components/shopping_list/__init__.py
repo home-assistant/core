@@ -218,7 +218,7 @@ class ShoppingData:
         # it means that the target item is already at the top.
         if indexToInsert is None:
             raise vol.Invalid(
-                "Can't move up this item becuase it's already at the top."
+                "Can't move up this item because it's already at the top."
             )
         self.items.pop(index)
         self.items.insert(indexToInsert, item)
@@ -247,7 +247,7 @@ class ShoppingData:
         # it means that the target item is already at the bottom.
         if indexToInsert is None:
             raise vol.Invalid(
-                "Can't move down this item becuase it's already at the bottom."
+                "Can't move down this item because it's already at the bottom."
             )
         self.items.pop(index)
         self.items.insert(indexToInsert, item)
