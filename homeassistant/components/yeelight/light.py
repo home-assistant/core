@@ -137,7 +137,7 @@ EFFECTS_MAP = {
     EFFECT_POLICE2: yee_transitions.police2,
     EFFECT_CHRISTMAS: yee_transitions.christmas,
     EFFECT_RGB: yee_transitions.rgb,
-    EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
+    EFFECT_RANDOM_LOOP: yee_transitions.random_loop,
     EFFECT_LSD: yee_transitions.lsd,
     EFFECT_SLOWDOWN: yee_transitions.slowdown,
 }
@@ -661,7 +661,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         elif effect in EFFECTS_MAP:
             flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
         elif effect == EFFECT_FAST_RANDOM_LOOP:
-            flow = Flow(count=0, transitions=yee_transitions.randomloop(duration=250))
+            flow = Flow(count=0, transitions=yee_transitions.random_loop(duration=250))
         elif effect == EFFECT_WHATSAPP:
             flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
         elif effect == EFFECT_FACEBOOK:
