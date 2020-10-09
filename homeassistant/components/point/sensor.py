@@ -56,12 +56,12 @@ class MinutPointSensor(MinutPointEntity):
         self._device_prop = SENSOR_TYPES[device_class]
 
     async def _update_callback(self):
+        _LOGGER.debug("Update sensor value for %s", self)
         """Update the value of the sensor."""
         if self.is_updated:
-            _LOGGER.debug("Update sensor value for %s", self)
             self._value = await self.device.sensor(self.device_class)
             self._updated = parse_datetime(self.device.last_update)
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     def icon(self):

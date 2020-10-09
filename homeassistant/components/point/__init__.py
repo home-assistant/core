@@ -183,6 +183,7 @@ class MinutPointClient:
         if not await self._client.update() and self._is_available:
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
+            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
             return
 
         async def new_device(device_id, component):
@@ -217,6 +218,8 @@ class MinutPointClient:
 
     def is_available(self, device_id):
         """Return device availability."""
+        if not self._is_available:
+            return False
         return device_id in self._client.device_ids
 
     async def remove_webhook(self):
