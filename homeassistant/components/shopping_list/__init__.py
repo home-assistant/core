@@ -207,21 +207,21 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        indexToInsert = None
+        insert_to_index = None
         # Traverse the items above the target item (backwards) and find the first in-complete item,
         # that would be the position to move the target item to.
         for i in reversed(range(0, index)):
             if not self.items[i]["complete"]:
-                indexToInsert = i
+                insert_to_index = i
                 break
         # If there isn't any in-complete item above the target item,
         # it means that the target item is already at the top.
-        if indexToInsert is None:
+        if insert_to_index is None:
             raise vol.Invalid(
                 "Can't move up this item because it's already at the top."
             )
         self.items.pop(index)
-        self.items.insert(indexToInsert, item)
+        self.items.insert(insert_to_index, item)
         self.hass.async_add_job(self.save)
         return item
 
@@ -236,21 +236,21 @@ class ShoppingData:
         item = self.items[index]
         if item["complete"]:
             raise vol.Invalid("Can't move completed item.")
-        indexToInsert = None
+        insert_to_index = None
         # Traverse the items below the target item and find the first in-complete item,
         # that would be the position to move the target item to.
         for i in range(index + 1, len(self.items)):
             if not self.items[i]["complete"]:
-                indexToInsert = i
+                insert_to_index = i
                 break
         # If there isn't any in-complete item below the target item,
         # it means that the target item is already at the bottom.
-        if indexToInsert is None:
+        if insert_to_index is None:
             raise vol.Invalid(
                 "Can't move down this item because it's already at the bottom."
             )
         self.items.pop(index)
-        self.items.insert(indexToInsert, item)
+        self.items.insert(insert_to_index, item)
         self.hass.async_add_job(self.save)
         return item
 
