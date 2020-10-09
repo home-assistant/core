@@ -180,6 +180,19 @@ async def async_stop_addon(hass: HomeAssistantType, slug: str) -> None:
     await hassio.send_command(command)
 
 
+@bind_hass
+async def async_set_addon_options(
+    hass: HomeAssistantType, slug: str, options: dict
+) -> None:
+    """Set add-on options.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/options"
+    await hassio.send_command(command, payload=options)
+
+
 @callback
 @bind_hass
 def get_info(hass):
