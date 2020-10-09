@@ -28,8 +28,11 @@ class AsyncConfigEntryAuth(AbstractAuth):
             await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
+<<<<<<< HEAD
 
     async def async_get_creds(self):
         """Return a minimal OAuth credential."""
         token = await self.async_get_access_token()
         return Credentials(token=token)
+=======
+>>>>>>> Update nest integration with new API auth flow

@@ -1,4 +1,5 @@
 """Support for Nest devices."""
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -76,6 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
                 # Required to use the new API (optional for compatibility)
