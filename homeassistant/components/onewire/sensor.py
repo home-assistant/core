@@ -136,9 +136,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_entities(config):
     """Get a list of entities."""
-    base_dir = config.get(CONF_MOUNT_DIR)
+    base_dir = config[CONF_MOUNT_DIR]
     owhost = config.get(CONF_HOST)
-    owport = config.get(CONF_PORT)
+    owport = config[CONF_PORT]
 
     # Ensure type is configured
     if owhost:
@@ -204,7 +204,7 @@ def get_entities(config):
         _LOGGER.debug("Initializing using SysBus")
         for p1sensor in Pi1Wire().find_all_sensors():
             family = p1sensor.mac_address[:2]
-            sensor_id = "{}-{}".format(family, p1sensor.mac_address[2:])
+            sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
