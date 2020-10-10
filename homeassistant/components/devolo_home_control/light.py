@@ -17,16 +17,17 @@ async def async_setup_entry(
     """Get all light devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN][entry.entry_id].multi_level_switch_devices:
-        for multi_level_switch in device.multi_level_switch_property.values():
-            if multi_level_switch.switch_type == "dimmer":
-                entities.append(
-                    DevoloLightDeviceEntity(
-                        homecontrol=hass.data[DOMAIN][entry.entry_id],
-                        device_instance=device,
-                        element_uid=multi_level_switch.element_uid,
+    for gateway in hass.data[DOMAIN][entry.entry_id]:
+        for device in gateway.multi_level_switch_devices:
+            for multi_level_switch in device.multi_level_switch_property.values():
+                if multi_level_switch.switch_type == "dimmer":
+                    entities.append(
+                        DevoloLightDeviceEntity(
+                            homecontrol=gateway,
+                            device_instance=device,
+                            element_uid=multi_level_switch.element_uid,
+                        )
                     )
-                )
 
     async_add_entities(entities, False)
 
