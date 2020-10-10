@@ -111,16 +111,19 @@ def get_static_devices(config_data) -> SmartDevices:
     for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
         for entry in config_data[type_]:
             host = entry["host"]
-
-            if type_ == CONF_LIGHT:
-                lights.append(SmartBulb(host))
-            elif type_ == CONF_SWITCH:
-                switches.append(SmartPlug(host))
-            elif type_ == CONF_STRIP:
-                for plug in SmartStrip(host).plugs.values():
-                    switches.append(plug)
-            # Dimmers need to be defined as smart plugs to work correctly.
-            elif type_ == CONF_DIMMER:
-                lights.append(SmartPlug(host))
-
+            try:
+                if type_ == CONF_LIGHT:
+                    lights.append(SmartBulb(host))
+                elif type_ == CONF_SWITCH:
+                    switches.append(SmartPlug(host))
+                elif type_ == CONF_STRIP:
+                    for plug in SmartStrip(host).plugs.values():
+                        switches.append(plug)
+                # Dimmers need to be defined as smart plugs to work correctly.
+                elif type_ == CONF_DIMMER:
+                    lights.append(SmartPlug(host))
+            except SmartDeviceException as sde:
+                _LOGGER.error(
+                    "Failed to setup device %s due to %s; not retrying", host, sde
+                )
     return SmartDevices(lights, switches)

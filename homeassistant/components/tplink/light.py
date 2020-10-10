@@ -59,7 +59,7 @@ SLEEP_TIME = 2
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
-    """Set up switches."""
+    """Set up lights."""
     devices = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
     entities = []
 
@@ -242,13 +242,12 @@ class TPLinkSmartBulb(LightEntity):
         return self._light_state.state
 
     def attempt_update(self, update_attempt):
-        """Update the TP-Link Bulb's state."""
+        """Attempt to get details the TP-Link bulb."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
             return
 
         try:
-            # Update light features only once.
             if not self._light_features:
                 self._light_features = self._get_light_features()
                 self._alias = self._light_features.alias
@@ -277,7 +276,7 @@ class TPLinkSmartBulb(LightEntity):
         sysinfo = self.smartbulb.sys_info
         supported_features = 0
         # Calling api here as it reformats
-        mac = sysinfo[LIGHT_SYSINFO_MAC]
+        mac = self.smartbulb.mac
         alias = sysinfo[LIGHT_SYSINFO_ALIAS]
         model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None
