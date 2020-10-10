@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Anda hanya dapat mengonfigurasi satu akun Nest.",
+            "already_setup": "Anda hanya dapat mengonfigurasi satu akun Nest.",
             "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
             "authorize_url_timeout": "Waktu tunggu menghasilkan otorisasi url telah habis.",
-            "missing_configuration": "Anda harus mengonfigurasi Nest sebelum dapat mengautentikasi dengan Nest. [Silakan baca instruksi] (https://www.home-assistant.io/components/nest/)."
+            "no_flows": "Anda harus mengonfigurasi Nest sebelum dapat mengautentikasi dengan Nest. [Silakan baca instruksi] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Kesalahan Internal memvalidasi kode",

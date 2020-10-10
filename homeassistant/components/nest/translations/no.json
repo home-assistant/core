@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Du kan bare konfigurere en Nest konto.",
+            "already_setup": "Du kan bare konfigurere en Nest konto.",
             "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
-            "missing_configuration": "Du m\u00e5 konfigurere Nest f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/)."
+            "no_flows": "Du m\u00e5 konfigurere Nest f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Intern feil ved validering av kode",

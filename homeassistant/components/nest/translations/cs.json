@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "M\u016f\u017eete nastavit pouze jeden Nest \u00fa\u010det.",
+            "already_setup": "M\u016f\u017eete nastavit pouze jeden Nest \u00fa\u010det.",
             "authorize_url_fail": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00ed URL vypr\u0161el",
-            "missing_configuration": "Pot\u0159ebujete nakonfigurovat Nest, abyste se s n\u00edm mohli autentizovat. [P\u0159e\u010dt\u011bte si pros\u00edm pokyny] (https://www.home-assistant.io/components/nest/)."
+            "no_flows": "Pot\u0159ebujete nakonfigurovat Nest, abyste se s n\u00edm mohli autentizovat. [P\u0159e\u010dt\u011bte si pros\u00edm pokyny] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Intern\u00ed chyba ov\u011b\u0159en\u00ed k\u00f3du",

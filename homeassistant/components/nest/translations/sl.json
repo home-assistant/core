@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nastavite lahko samo en ra\u010dun Nest.",
+            "already_setup": "Nastavite lahko samo en ra\u010dun Nest.",
             "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
-            "missing_configuration": "Preden lahko preverite pristnost, morate konfigurirati Nest. [Preberite navodila](https://www.home-assistant.io/components/nest/)."
+            "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Nest. [Preberite navodila](https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Notranja napaka pri preverjanju kode",
