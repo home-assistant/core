@@ -1,5 +1,4 @@
 """The tests for the uptime sensor platform."""
-import asyncio
 from datetime import timedelta
 
 from homeassistant.components.uptime.sensor import UptimeSensor
@@ -50,15 +49,11 @@ async def test_uptime_sensor_days_output(hass):
     assert sensor.unit_of_measurement == "days"
     new_time = sensor.initial + timedelta(days=1)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 1.00
     new_time = sensor.initial + timedelta(days=111.499)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 111.50
 
 
@@ -68,15 +63,11 @@ async def test_uptime_sensor_hours_output(hass):
     assert sensor.unit_of_measurement == "hours"
     new_time = sensor.initial + timedelta(hours=16)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 16.00
     new_time = sensor.initial + timedelta(hours=72.499)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 72.50
 
 
@@ -86,13 +77,9 @@ async def test_uptime_sensor_minutes_output(hass):
     assert sensor.unit_of_measurement == "minutes"
     new_time = sensor.initial + timedelta(minutes=16)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 16.00
     new_time = sensor.initial + timedelta(minutes=12.499)
     with patch("homeassistant.util.dt.now", return_value=new_time):
-        await asyncio.run_coroutine_threadsafe(
-            sensor.async_update(), hass.loop
-        ).result()
+        await sensor.async_update()
         assert sensor.state == 12.50
