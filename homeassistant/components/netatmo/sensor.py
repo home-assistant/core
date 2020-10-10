@@ -159,7 +159,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    @callback
     async def add_public_entities(update=True):
         """Retrieve Netatmo public weather entities."""
         entities = {
