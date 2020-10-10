@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SRP Energy Usage sensor."""
+    # API object stored here by __init__.py
     api = hass.data[DOMAIN]
 
     async def async_update_data():
@@ -37,6 +38,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
 
+            # Fetch srp_energy data
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
             with async_timeout.timeout(10):

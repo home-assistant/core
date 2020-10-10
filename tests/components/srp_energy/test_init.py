@@ -42,21 +42,3 @@ async def test_setup_with_config(hass):
 
     with patch("homeassistant.components.srp_energy.SrpEnergyClient"):
         assert await async_setup_component(hass, srp_energy.DOMAIN, config)
-
-    # with patch("speedtest.Speedtest"):
-    #     assert await async_setup_component(hass, srp_energy.DOMAIN, config)
-
-
-# async def test_unload_entry(hass, api):
-#     """Test removing transmission client."""
-#     entry = MOCK_ENTRY
-#     entry.add_to_hass(hass)
-
-#     # with patch.object(
-#     #     hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
-#     # ) as unload_entry:
-#     #     assert await srp_energy.async_setup_entry(hass, entry)
-
-#     assert await srp_energy.async_unload_entry(hass, entry)
-#     # assert unload_entry.call_count == 2
-#     # assert entry.entry_id not in hass.data[srp_energy.DOMAIN]

@@ -1,35 +1,48 @@
 """Tests for the srp_energy sensor platform."""
-# from homeassistant.bootstrap import async_setup_component
-# from homeassistant.components import srp_energy
-# from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.srp_energy.const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    ENERGY_KWH,
+    ICON,
+    SENSOR_NAME,
+    SENSOR_TYPE,
+)
+from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
+from homeassistant.const import ATTR_ATTRIBUTION
 
-# from tests.async_mock import patch
+from tests.async_mock import MagicMock
 
-# async def test_setup_entry(hass):
-#     """Test the default setup."""
-#     config = {
-#         srp_energy.DOMAIN: {
-#             CONF_NAME: "Test",
-#             CONF_ID: "1",
-#             CONF_USERNAME: "abba",
-#             CONF_PASSWORD: "ana",
-#         }
-#     }
-#     mock_form = {
-#         CONF_NAME: "Test",
-#         CONF_ID: "1",
-#         CONF_USERNAME: "abba",
-#         CONF_PASSWORD: "ana",
-#     }
 
-#     # Setup config first
-#     with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
-#         await hass.config_entries.flow.async_init(
-#             srp_energy.DOMAIN, context={"source": "user"}, data=mock_form
-#         )
+async def test_async_setup_entry(hass):
+    """Test the sensor."""
+    fake_async_add_entities = MagicMock()
+    fake_srp_engery_client = MagicMock()
+    config = {}
+    hass.data[DOMAIN] = fake_srp_engery_client
 
-#     await async_setup_component(hass, "sensor", {"sensor": config})
-#     await hass.async_block_till_done()
+    await async_setup_entry(hass, config, fake_async_add_entities)
+    assert fake_async_add_entities.called
+    assert fake_srp_engery_client.usage.called
 
-#     state = hass.states.get("sensor.srp_energy")
-#     assert state is not None
+
+async def test_srp_entity(hass):
+    """Test the SrpEntity."""
+    fake_coordinator = MagicMock()
+    srp_entity = SrpEntity(fake_coordinator)
+
+    assert srp_entity is not None
+    assert srp_entity.name == f"{DEFAULT_NAME} {SENSOR_NAME}"
+    assert srp_entity.unique_id == SENSOR_TYPE
+    assert srp_entity.state is None
+    assert srp_entity.unit_of_measurement == ENERGY_KWH
+    assert srp_entity.icon == ICON
+    assert srp_entity.usage is not None
+    assert srp_entity.should_poll is False
+    assert srp_entity.device_state_attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
+    assert srp_entity.available is not None
+
+    await srp_entity.async_added_to_hass()
+    assert srp_entity.state is not None
+    assert fake_coordinator.async_add_listener.called
+    assert not fake_coordinator.async_add_listener.data.called
