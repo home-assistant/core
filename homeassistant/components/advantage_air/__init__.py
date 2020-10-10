@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             return await api.async_get()
         except ApiError as err:
-            raise UpdateFailed(err)  # pylint:disable=raise-missing-from
+            raise UpdateFailed(err) from advantage_air
 
     coordinator = DataUpdateCoordinator(
         hass,
