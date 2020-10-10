@@ -17,7 +17,6 @@ from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:currency-usd"
-ICON_RT = "mdi:power-plug"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
@@ -221,11 +220,6 @@ class TibberSensorRT(TibberSensor):
     def should_poll(self):
         """Return the polling state."""
         return False
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON_RT
 
     @property
     def unit_of_measurement(self):
