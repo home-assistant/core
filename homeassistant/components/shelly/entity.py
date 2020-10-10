@@ -23,7 +23,12 @@ def temperature_unit(block_info: dict) -> str:
 def shelly_naming(self, block, entity_type: str):
     """Naming for switch and sensors."""
 
+    entity_name = self.wrapper.name
+    if not block:
+        return f"{entity_name} {self.description.name}"
+
     channels = 0
+    mode = "relays"
     if "num_outputs" in self.wrapper.device.shelly:
         channels = self.wrapper.device.shelly["num_outputs"]
         if (
@@ -31,12 +36,21 @@ def shelly_naming(self, block, entity_type: str):
             and self.wrapper.device.settings["mode"] == "roller"
         ):
             channels = 1
-
-    entity_name = self.wrapper.name
+        if block.type == "emeter" and "num_emeters" in self.wrapper.device.shelly:
+            channels = self.wrapper.device.shelly["num_emeters"]
+            mode = "emeters"
     if channels > 1 and block.type != "device":
-        entity_name = self.wrapper.device.settings["relays"][int(block.channel)]["name"]
+        # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
+        if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
+            entity_name = self.wrapper.device.settings[mode][int(block.channel)]["name"]
+        else:
+            entity_name = None
         if not entity_name:
-            entity_name = f"{self.wrapper.name} channel {int(block.channel)+1}"
+            if self.wrapper.model == "SHEM-3":
+                base = ord("A")
+            else:
+                base = ord("1")
+            entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
 
     if entity_type == "switch":
         return entity_name

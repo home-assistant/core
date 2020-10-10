@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "no_devices_found": "V\u00f5rgust ei leitud Awair seadmeid"
+        },
+        "error": {
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+        }
+    }
+}

@@ -76,7 +76,7 @@ async def test_connection_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_snmp_error(hass):
@@ -125,7 +125,7 @@ async def test_zeroconf_no_data(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_not_brother_printer_error(hass):
@@ -156,7 +156,7 @@ async def test_zeroconf_snmp_error(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_device_exists_abort(hass):

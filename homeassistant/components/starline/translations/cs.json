@@ -1,6 +1,22 @@
 {
     "config": {
         "step": {
+            "auth_app": {
+                "description": "ID aplikace a tajn\u00fd k\u00f3d z [\u00fa\u010dtu v\u00fdvoj\u00e1\u0159e StarLine] (https://my.starline.ru/developer)"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "K\u00f3d z obr\u00e1zku"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS k\u00f3d"
+                },
+                "title": "Dvoufaktorov\u00e9 ov\u011b\u0159en\u00ed"
+            },
             "auth_user": {
                 "data": {
                     "password": "Heslo",

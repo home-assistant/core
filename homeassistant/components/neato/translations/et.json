@@ -1,7 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_auth": "Tuvastamise viga"
+        },
         "error": {
-            "unexpected_error": "Ootamatu t\u00f5rge"
+            "invalid_auth": "Tuvastamise viga",
+            "unexpected_error": "Ootamatu t\u00f5rge",
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {

@@ -1152,7 +1152,10 @@ class SonosEntity(MediaPlayerEntity):
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    self.soco.add_uri_to_queue(media_id)
+                    if self.soco.is_spotify_uri(media_id):
+                        self.soco.add_spotify_uri_to_queue(media_id)
+                    else:
+                        self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
                     _LOGGER.error(
                         'Error parsing media uri "%s", '
@@ -1161,7 +1164,12 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                self.soco.play_uri(media_id)
+                if self.soco.is_spotify_uri(media_id):
+                    self.soco.clear_queue()
+                    self.soco.add_spotify_uri_to_queue(media_id)
+                    self.soco.play_from_queue(0)
+                else:
+                    self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self._media_library, media_id, media_type)

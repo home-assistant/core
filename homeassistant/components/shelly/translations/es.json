@@ -13,7 +13,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "\u00bfQuieres configurar el {model} en {host}?"
+                "description": "\u00bfQuieres configurar el {model} en {host}?\n\nAntes de configurarlo, el dispositivo que funciona con pilas debe ser despertado pulsando el bot\u00f3n situado en el dispositivo."
             },
             "credentials": {
                 "data": {

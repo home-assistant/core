@@ -43,4 +43,4 @@ class LutronCasetaScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._bridge.activate_scene(self._scene_id)
+        await self._bridge.activate_scene(self._scene_id)

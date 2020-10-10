@@ -410,7 +410,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(data.get("variables"))
+            return str(tpl.async_render(data.get("variables")))
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTP_BAD_REQUEST

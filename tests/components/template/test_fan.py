@@ -662,7 +662,7 @@ def _verify(
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
-    assert state.state == expected_state
+    assert state.state == str(expected_state)
     assert attributes.get(ATTR_SPEED) == expected_speed
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction

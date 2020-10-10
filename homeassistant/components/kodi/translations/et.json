@@ -1,4 +1,21 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
     "device_automation": {
         "trigger_type": {
             "turn_off": "{entity_name} paluti v\u00e4lja l\u00fclitada",

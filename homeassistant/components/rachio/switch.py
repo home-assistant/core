@@ -56,6 +56,7 @@ from .webhooks import (
     SUBTYPE_SLEEP_MODE_OFF,
     SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED,
+    SUBTYPE_ZONE_PAUSED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
 )
@@ -392,7 +393,11 @@ class RachioZone(RachioSwitch):
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
-        elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
+        elif args[0][KEY_SUBTYPE] in [
+            SUBTYPE_ZONE_STOPPED,
+            SUBTYPE_ZONE_COMPLETED,
+            SUBTYPE_ZONE_PAUSED,
+        ]:
             self._state = False
 
         self.async_write_ha_state()

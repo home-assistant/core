@@ -9,7 +9,7 @@
         },
         "error": {
             "credential_timeout": "Se agot\u00f3 el tiempo para el servicio de credenciales. Pulsa enviar para reiniciar.",
-            "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
+            "login_failed": "No se ha podido vincular con PlayStation 4. Verifica que el PIN sea correcto.",
             "no_ipaddress": "Introduce la direcci\u00f3n IP de la PlayStation 4 que quieres configurar.",
             "not_ready": "PlayStation 4 no est\u00e1 encendido o conectado a la red."
         },

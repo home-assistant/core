@@ -213,9 +213,13 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
         res = list(range(min_value, max_value + 1))
-    elif isinstance(parameter, str) and parameter.startswith("/"):
-        parameter = int(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif isinstance(parameter, str):
+        if parameter.startswith("/"):
+            parameter = int(parameter[1:])
+            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+        else:
+            res = [int(parameter)]
+
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Tilgangstoken oppdatert"
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
             "authorization_error": "Autoriseringsfeil. Sjekk at du har tilgang til prosjektet og har riktig legitimasjon.",

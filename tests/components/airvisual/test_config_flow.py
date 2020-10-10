@@ -140,7 +140,7 @@ async def test_node_pro_error(hass):
             result["flow_id"], user_input=node_pro_conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
+        assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
 async def test_options_flow(hass):

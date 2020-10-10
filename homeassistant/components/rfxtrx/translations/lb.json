@@ -1,7 +1,69 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Verbindung's Adress auswielen"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Apparat auswielen"
+                },
+                "title": "Apparat"
+            },
+            "setup_serial_manual_path": {
+                "title": "Pad"
+            },
+            "user": {
+                "data": {
+                    "type": "Typ vun der Verbindung"
+                },
+                "title": "Typ vun der Verbindung auswielen"
+            }
         }
-    }
+    },
+    "options": {
+        "error": {
+            "invalid_event_code": "Ong\u00ebltegen  Evenement Code",
+            "invalid_input_2262_off": "Ong\u00eblteg Agab fir Kommando Aus",
+            "invalid_input_2262_on": "Ong\u00eblteg Agab fir Kommando Un",
+            "invalid_input_off_delay": "Ong\u00eblteg Agab fir Aus Verz\u00f6gerung"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Aktiv\u00e9ier automatesch dob\u00e4isetzen",
+                    "debug": "Aktiv\u00e9ier Debuggen",
+                    "device": "Wiel een Apparat fir ze konfigur\u00e9ieren",
+                    "event_code": "Evenement Code aginn fir dob\u00e4izesetzen",
+                    "remove_device": "Wiel een Apparat fir ze l\u00e4schen"
+                },
+                "title": "Rfxtrx Optioune"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Data bits W\u00e4ert fir Kommando aus",
+                    "command_on": "Data bits W\u00e4ert fir Kommando un",
+                    "data_bit": "Unzuel vun Data Bits",
+                    "fire_event": "Aktiv\u00e9ier Apparat Evenement",
+                    "off_delay": "Aus Verz\u00f6gerung",
+                    "off_delay_enabled": "Aktiv\u00e9iert Aus Verz\u00f6gerung",
+                    "replace_device": "Wiel een Apparat fir ze ersetzen",
+                    "signal_repetitions": "Zuel vu Signalwidderhuelungen"
+                },
+                "title": "Apparat Optioune konfigur\u00e9ieren"
+            }
+        }
+    },
+    "title": "Rfxtrx"
 }

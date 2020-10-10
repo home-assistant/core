@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
+from .const import LOGGER
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
 
 CONF_SUBTYPE = "subtype"
@@ -429,6 +430,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
+        LOGGER.error("No deconz_event tied to device %s found", device.name)
         raise InvalidDeviceAutomationConfig
 
     event_id = deconz_event.serial

@@ -86,9 +86,9 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the device's state."""
-        if ignore_update:
+        if not force_update and self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()

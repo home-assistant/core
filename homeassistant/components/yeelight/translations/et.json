@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Seade"
+                }
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP aadress"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Mudel (valikuline)"
+                }
+            }
+        }
+    }
+}

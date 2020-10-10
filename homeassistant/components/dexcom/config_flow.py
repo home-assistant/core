@@ -46,9 +46,9 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_SERVER] == SERVER_OUS,
                 )
             except SessionError:
-                errors["base"] = "session_error"
+                errors["base"] = "cannot_connect"
             except AccountError:
-                errors["base"] = "account_error"
+                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 

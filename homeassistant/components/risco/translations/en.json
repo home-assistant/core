@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "pin": "Pin code",
+                    "pin": "PIN Code",
                     "username": "Username"
                 }
             }
