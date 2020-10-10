@@ -2,6 +2,7 @@
 import logging
 
 from rachiopy import Rachio
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -14,7 +15,6 @@ from .const import (
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
-    RACHIO_API_EXCEPTIONS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -43,7 +43,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
-    except RACHIO_API_EXCEPTIONS as error:
+    except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect from error
 

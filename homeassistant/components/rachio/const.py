@@ -1,7 +1,5 @@
 """Constants for rachio."""
 
-from requests.exceptions import ConnectTimeout
-
 DEFAULT_NAME = "Rachio"
 
 DOMAIN = "rachio"
@@ -48,9 +46,6 @@ KEY_SCHEDULE_ID = "scheduleId"
 KEY_CUSTOM_SHADE = "customShade"
 KEY_CUSTOM_CROP = "customCrop"
 KEY_CUSTOM_SLOPE = "customSlope"
-
-# Default ConnectTimeout is set at 25
-RACHIO_API_EXCEPTIONS = ConnectTimeout
 
 STATUS_ONLINE = "ONLINE"
 

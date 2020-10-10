@@ -4,6 +4,7 @@ import logging
 import secrets
 
 from rachiopy import Rachio
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -18,7 +19,6 @@ from .const import (
     CONF_WEBHOOK_ID,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN,
-    RACHIO_API_EXCEPTIONS,
 )
 from .device import RachioPerson
 from .webhooks import (
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Get the API user
     try:
         await hass.async_add_executor_job(person.setup, hass)
-    except RACHIO_API_EXCEPTIONS as error:
+    except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
 
