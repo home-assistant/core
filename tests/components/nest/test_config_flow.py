@@ -17,10 +17,10 @@ async def test_abort_if_no_implementation_registered(hass):
     result = await flow.async_step_init()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_flows"
+    assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_single_instance_allowed(hass):
     """Test we abort if Nest is already setup."""
     flow = config_flow.NestFlowHandler()
     flow.hass = hass
@@ -29,7 +29,7 @@ async def test_abort_if_already_setup(hass):
         result = await flow.async_step_init()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_full_flow_implementation(hass):
