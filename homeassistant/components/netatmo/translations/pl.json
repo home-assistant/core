@@ -20,10 +20,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nazwa obszaru",
-                    "lat_ne": "Szeroko\u015b\u0107 geograficzna - cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
-                    "lat_sw": "Szeroko\u015b\u0107 geograficzna - cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
-                    "lon_ne": "D\u0142ugo\u015b\u0107 geograficzna - cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
-                    "lon_sw": "D\u0142ugo\u015b\u0107 geograficzna - cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
+                    "lat_ne": "Szeroko\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
+                    "lat_sw": "Szeroko\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
+                    "lon_ne": "D\u0142ugo\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 p\u00f3\u0142nocno-wschodnia",
+                    "lon_sw": "D\u0142ugo\u015b\u0107 geograficzna \u2014 cz\u0119\u015b\u0107 po\u0142udniowo-zachodnia",
                     "mode": "Obliczenia",
                     "show_on_map": "Poka\u017c na mapie"
                 },

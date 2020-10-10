@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nakonfigurov\u00e1no"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    }
+}

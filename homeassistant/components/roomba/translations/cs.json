@@ -1,10 +1,23 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
         "step": {
             "user": {
                 "data": {
+                    "delay": "Zpo\u017ed\u011bn\u00ed",
                     "host": "Hostitel",
                     "password": "Heslo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "delay": "Zpo\u017ed\u011bn\u00ed"
                 }
             }
         }

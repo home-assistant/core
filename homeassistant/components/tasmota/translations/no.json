@@ -13,6 +13,9 @@
                 },
                 "description": "Vennligst skriv inn Tasmota-konfigurasjonen.",
                 "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Vil du sette opp Tasmota?"
             }
         }
     }

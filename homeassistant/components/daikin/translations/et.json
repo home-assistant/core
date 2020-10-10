@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "forbidden": "Tuvastamine nurjus",
             "invalid_auth": "Tuvastamise viga",
             "unknown": "Tundmatu viga"
         },

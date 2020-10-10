@@ -13,10 +13,19 @@
             "unknown": "Tundmatu viga tuvastuskoodi kinnitamisel"
         },
         "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Pakkuja"
+                },
+                "description": "Vali millise autentimisteenuse pakkujaga soovid Nest-i autentida.",
+                "title": "Autentimisteenuse pakkuja"
+            },
             "link": {
                 "data": {
                     "code": "PIN-kood"
-                }
+                },
+                "description": "Nest-i konto linkimiseks [authorize your account] ({url}).\n\nP\u00e4rast autoriseerimist kopeeri allolev PIN kood.",
+                "title": "Lingi Nesti konto"
             }
         }
     }

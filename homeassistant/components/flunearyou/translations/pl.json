@@ -13,7 +13,7 @@
                     "latitude": "[%key::common::config_flow::data::latitude%]",
                     "longitude": "[%key::common::config_flow::data::longitude%]"
                 },
-                "description": "Monitoruj repoty oparte na u\u017cytkownikach i CDC dla pary wsp\u00f3\u0142rz\u0119dnych.",
+                "description": "Monitoruj raporty oparte na u\u017cytkownikach i CDC dla pary wsp\u00f3\u0142rz\u0119dnych.",
                 "title": "Skonfiguruj Flu Near You"
             }
         }

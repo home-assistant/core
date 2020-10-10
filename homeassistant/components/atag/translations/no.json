@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne enheten er allerede lagt til i HomeAssistant"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "connection_error": "Tilkobling mislyktes.",
             "unauthorized": "Parring nektet, sjekk enheten for autorisasjonsforesp\u00f8rsel"
         },

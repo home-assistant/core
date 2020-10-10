@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten Smile jest ju\u017c skonfigurowany"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
             "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
@@ -18,7 +18,7 @@
                     "port": "Port"
                 },
                 "description": "Szczeg\u00f3\u0142y",
-                "title": "Po\u0142\u0105cz si\u0119 ze Smile"
+                "title": "Wybierz typ Plugwise"
             },
             "user_gateway": {
                 "data": {
@@ -26,7 +26,7 @@
                     "password": "Identyfikator Smile",
                     "port": "Port"
                 },
-                "description": "Wpisz:",
+                "description": "Wprowad\u017a:",
                 "title": "Po\u0142\u0105cz si\u0119 ze Smile"
             }
         }

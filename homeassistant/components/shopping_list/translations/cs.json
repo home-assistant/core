@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+        },
+        "step": {
+            "user": {
+                "title": "N\u00e1kupn\u00ed seznam"
+            }
+        }
+    },
+    "title": "N\u00e1kupn\u00ed seznam"
+}
