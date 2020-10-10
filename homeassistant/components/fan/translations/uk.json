@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turned_off": "{entity_name} \u0432\u0438\u043c\u043a\u043d\u0435\u043d\u043e",
+            "turned_on": "{entity_name} \u0443\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u043e"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "\u0412\u0438\u043c\u043a\u043d\u0435\u043d\u043e",
+            "on": "\u0423\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u043e"
+        }
+    },
+    "title": "\u0412\u0435\u043d\u0442\u0438\u043b\u044f\u0442\u043e\u0440"
+}

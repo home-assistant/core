@@ -1,7 +1,9 @@
 """Tests for the WLED integration."""
 
+import json
+
 from homeassistant.components.wled.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -17,20 +19,34 @@ async def init_integration(
     """Set up the WLED integration in Home Assistant."""
 
     fixture = "wled/rgb.json" if not rgbw else "wled/rgbw.json"
+    data = json.loads(load_fixture(fixture))
+
     aioclient_mock.get(
-        "http://example.local:80/json/",
-        text=load_fixture(fixture),
-        headers={"Content-Type": "application/json"},
+        "http://192.168.1.123:80/json/",
+        json=data,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.post(
-        "http://example.local:80/json/state",
-        json={"success": True},
-        headers={"Content-Type": "application/json"},
+        "http://192.168.1.123:80/json/state",
+        json=data["state"],
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        "http://192.168.1.123:80/json/info",
+        json=data["info"],
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        "http://192.168.1.123:80/json/state",
+        json=data["state"],
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "example.local", CONF_MAC: "aabbccddeeff"}
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.123", CONF_MAC: "aabbccddeeff"}
     )
 
     entry.add_to_hass(hass)

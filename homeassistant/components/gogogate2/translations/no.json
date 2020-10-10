@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Gi n\u00f8dvendig informasjon nedenfor.",
+                "title": "Sett opp GogoGate2 eller iSmartGate"
+            }
+        }
+    }
+}

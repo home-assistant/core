@@ -1,26 +1,30 @@
 """Support for QNAP NAS Sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from qnapstats import QNAPStats
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    ATTR_NAME,
-    CONF_VERIFY_SSL,
     CONF_TIMEOUT,
-    CONF_MONITORED_CONDITIONS,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    DATA_GIBIBYTES,
+    DATA_RATE_MEBIBYTES_PER_SECOND,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,26 +62,26 @@ _SYSTEM_MON_COND = {
 }
 _CPU_MON_COND = {
     "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "cpu_usage": ["CPU Usage", "%", "mdi:chip"],
+    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip"],
 }
 _MEMORY_MON_COND = {
-    "memory_free": ["Memory Available", "GB", "mdi:memory"],
-    "memory_used": ["Memory Used", "GB", "mdi:memory"],
-    "memory_percent_used": ["Memory Usage", "%", "mdi:memory"],
+    "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
+    "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
+    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory"],
 }
 _NETWORK_MON_COND = {
     "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
-    "network_tx": ["Network Up", "MB/s", "mdi:upload"],
-    "network_rx": ["Network Down", "MB/s", "mdi:download"],
+    "network_tx": ["Network Up", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:upload"],
+    "network_rx": ["Network Down", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:download"],
 }
 _DRIVE_MON_COND = {
     "drive_smart_status": ["SMART Status", None, "mdi:checkbox-marked-circle-outline"],
     "drive_temp": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
 }
 _VOLUME_MON_COND = {
-    "volume_size_used": ["Used Space", "GB", "mdi:chart-pie"],
-    "volume_size_free": ["Free Space", "GB", "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", "%", "mdi:chart-pie"],
+    "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
+    "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
 }
 
 _MONITORED_CONDITIONS = (
@@ -170,11 +174,10 @@ class QNAPStatsAPI:
 
     def __init__(self, config):
         """Initialize the API wrapper."""
-        from qnapstats import QNAPStats
 
-        protocol = "https" if config.get(CONF_SSL) else "http"
+        protocol = "https" if config[CONF_SSL] else "http"
         self._api = QNAPStats(
-            "{}://{}".format(protocol, config.get(CONF_HOST)),
+            f"{protocol}://{config.get(CONF_HOST)}",
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -270,7 +273,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} GB"}
+            return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -354,9 +357,7 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return "{} {} (Drive {})".format(
-            server_name, self.var_name, self.monitor_device
-        )
+        return f"{server_name} {self.var_name} (Drive {self.monitor_device})"
 
     @property
     def device_state_attributes(self):
@@ -399,4 +400,4 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self._api.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: "{} GB".format(round_nicely(total_gb))}
+            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}

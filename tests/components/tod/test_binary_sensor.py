@@ -1,16 +1,25 @@
 """Test Times of the Day Binary Sensor."""
+from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
-from datetime import timedelta, datetime
+
+import pytest
 import pytz
 
 from homeassistant import setup
-import homeassistant.core as ha
 from homeassistant.const import STATE_OFF, STATE_ON
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component
+import homeassistant.core as ha
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
+from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
+from tests.async_mock import patch
+from tests.common import assert_setup_component, get_test_home_assistant
+
+
+@pytest.fixture(autouse=True)
+def mock_legacy_time(legacy_patchable_time):
+    """Make time patchable for all the tests."""
+    yield
 
 
 class TestBinarySensorTod(unittest.TestCase):
@@ -22,7 +31,7 @@ class TestBinarySensorTod(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitute = 50.27583
+        self.hass.config.latitude = 50.27583
         self.hass.config.longitude = 18.98583
 
     def teardown_method(self, method):
@@ -77,8 +86,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=test_time,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.evening")
         assert state.state == STATE_ON
 
@@ -95,8 +104,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=test_time,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.night")
         assert state.state == STATE_ON
 
@@ -115,6 +124,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=test_time,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             state = self.hass.states.get("binary_sensor.night")
             assert state.state == STATE_OFF
@@ -149,8 +159,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=test_time,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.night")
         assert state.state == STATE_OFF
 
@@ -170,8 +180,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=test_time,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get("binary_sensor.night")
         assert state.state == STATE_OFF
 
@@ -230,6 +240,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)
@@ -326,6 +337,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)
@@ -422,8 +434,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_OFF
 
@@ -495,8 +507,8 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
-        self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert state.state == STATE_OFF
 
@@ -542,6 +554,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)
@@ -657,6 +670,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)
@@ -772,6 +786,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)
@@ -881,6 +896,7 @@ class TestBinarySensorTod(unittest.TestCase):
             return_value=testtime,
         ):
             setup_component(self.hass, "binary_sensor", config)
+            self.hass.block_till_done()
 
             self.hass.block_till_done()
             state = self.hass.states.get(entity_id)

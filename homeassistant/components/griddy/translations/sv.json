@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "unknown": "Ov\u00e4ntat fel"
+        }
+    }
+}

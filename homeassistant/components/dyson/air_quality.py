@@ -1,7 +1,11 @@
 """Support for Dyson Pure Cool Air Quality Sensors."""
 import logging
 
-from homeassistant.components.air_quality import AirQualityEntity, DOMAIN
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
+
+from homeassistant.components.air_quality import DOMAIN, AirQualityEntity
+
 from . import DYSON_DEVICES
 
 ATTRIBUTION = "Dyson purifier air quality sensor"
@@ -15,7 +19,6 @@ ATTR_VOC = "volatile_organic_compounds"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
-    from libpurecool.dyson_pure_cool import DysonPureCool
 
     if discovery_info is None:
         return
@@ -24,9 +27,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Get Dyson Devices from parent component
     device_ids = [device.unique_id for device in hass.data[DYSON_AIQ_DEVICES]]
+    new_entities = []
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool) and device.serial not in device_ids:
-            hass.data[DYSON_AIQ_DEVICES].append(DysonAirSensor(device))
+            new_entities.append(DysonAirSensor(device))
+
+    if not new_entities:
+        return
+
+    hass.data[DYSON_AIQ_DEVICES].extend(new_entities)
     add_entities(hass.data[DYSON_AIQ_DEVICES])
 
 
@@ -47,8 +56,6 @@ class DysonAirSensor(AirQualityEntity):
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
-        from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
-
         _LOGGER.debug(
             "%s: Message received for %s device: %s", DOMAIN, self.name, message
         )

@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from sisyphus_control import Table
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -29,7 +30,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the sisyphus component."""
-    from sisyphus_control import Table
 
     class SocketIONoiseFilter(logging.Filter):
         """Filters out excessively verbose logs from SocketIO."""
@@ -99,19 +99,23 @@ class TableHolder:
 
     async def get_table(self):
         """Return the Table held by this holder, connecting to it if needed."""
+        if self._table:
+            return self._table
+
         if not self._table_task:
             self._table_task = self._hass.async_create_task(self._connect_table())
 
         return await self._table_task
 
     async def _connect_table(self):
-        from sisyphus_control import Table
-
-        self._table = await Table.connect(self._host, self._session)
-        if self._name is None:
-            self._name = self._table.name
-            _LOGGER.debug("Connected to %s at %s", self._name, self._host)
-        return self._table
+        try:
+            self._table = await Table.connect(self._host, self._session)
+            if self._name is None:
+                self._name = self._table.name
+                _LOGGER.debug("Connected to %s at %s", self._name, self._host)
+            return self._table
+        finally:
+            self._table_task = None
 
     async def close(self):
         """Close the table held by this holder, if any."""

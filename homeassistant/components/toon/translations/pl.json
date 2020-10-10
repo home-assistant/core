@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_service%]",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania autoryzowanego adresu URL.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_agreements": "To konto nie posiada wy\u015bwietlaczy Toon.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})"
+        },
+        "step": {
+            "agreement": {
+                "data": {
+                    "agreement": "Umowa"
+                },
+                "description": "Wybierz adres umowy, kt\u00f3ry chcesz doda\u0107.",
+                "title": "Wybierz swoj\u0105 umow\u0119"
+            },
+            "pick_implementation": {
+                "title": "Wybierz dzier\u017cawc\u0119 do uwierzytelnienia"
+            }
+        }
+    }
+}

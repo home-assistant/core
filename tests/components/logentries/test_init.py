@@ -3,9 +3,9 @@
 import unittest
 from unittest import mock
 
-from homeassistant.setup import setup_component
 import homeassistant.components.logentries as logentries
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -16,8 +16,9 @@ class TestLogentries(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -70,7 +71,7 @@ class TestLogentries(unittest.TestCase):
                 }
             ]
             payload = {
-                "host": "https://webhook.logentries.com/noformat/" "logs/token",
+                "host": "https://webhook.logentries.com/noformat/logs/token",
                 "event": body,
             }
             self.handler_method(event)

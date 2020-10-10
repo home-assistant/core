@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "identifier_exists": "\u00da\u010det je ji\u017e zaregistrov\u00e1n",
+            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "E-mail"
+                },
+                "title": "Vypl\u0148te sv\u00e9 \u00fadaje."
+            }
+        }
+    }
+}

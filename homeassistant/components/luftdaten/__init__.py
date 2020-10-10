@@ -7,10 +7,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
+    PERCENTAGE,
+    PRESSURE_PA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -34,21 +37,25 @@ SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
 SENSOR_PM2_5 = "P2"
 SENSOR_PRESSURE = "pressure"
+SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
 SENSOR_TEMPERATURE = "temperature"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
-
 SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
-    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", "%"],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", "Pa"],
-    SENSOR_PM10: ["PM10", "mdi:thought-bubble", VOLUME_MICROGRAMS_PER_CUBIC_METER],
+    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
+    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
+    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
+    SENSOR_PM10: [
+        "PM10",
+        "mdi:thought-bubble",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ],
     SENSOR_PM2_5: [
         "PM2.5",
         "mdi:thought-bubble-outline",
-        VOLUME_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ],
 }
 
@@ -142,8 +149,8 @@ async def async_setup_entry(hass, config_entry):
         )
         await luftdaten.async_update()
         hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][config_entry.entry_id] = luftdaten
-    except LuftdatenError:
-        raise ConfigEntryNotReady
+    except LuftdatenError as err:
+        raise ConfigEntryNotReady from err
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")

@@ -4,7 +4,6 @@ import logging
 import pypck
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -22,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
@@ -248,7 +248,7 @@ async def async_setup(hass, config):
             connections.append(connection)
             _LOGGER.info('LCN connected to "%s"', connection_name)
         except TimeoutError:
-            _LOGGER.error('Connection to PCHK server "%s" failed.', connection_name)
+            _LOGGER.error('Connection to PCHK server "%s" failed', connection_name)
             return False
 
     hass.data[DATA_LCN][CONF_CONNECTIONS] = connections

@@ -2,10 +2,11 @@
 from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.common import assert_lists_same, async_get_device_automations
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
 
 SENSORS = {
     "1": {
@@ -20,8 +21,8 @@ SENSORS = {
         "etag": "1b355c0b6d2af28febd7ca9165881952",
         "manufacturername": "IKEA of Sweden",
         "mode": 1,
-        "modelid": "TRADFRI on/off switch",
-        "name": "TRADFRI on/off switch ",
+        "modelid": "TRÅDFRI on/off switch",
+        "name": "TRÅDFRI on/off switch ",
         "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
         "swversion": "1.4.018",
         "type": "ZHASwitch",
@@ -34,9 +35,8 @@ async def test_get_triggers(hass):
     """Test triggers work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     device_id = gateway.events[0].device_id
     triggers = await async_get_device_automations(hass, "trigger", device_id)
 
@@ -93,3 +93,27 @@ async def test_get_triggers(hass):
     ]
 
     assert_lists_same(triggers, expected_triggers)
+
+
+async def test_helper_successful(hass):
+    """Verify trigger helper."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = deepcopy(SENSORS)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+    device_id = gateway.events[0].device_id
+    deconz_event = device_trigger._get_deconz_event_from_device_id(hass, device_id)
+    assert deconz_event == gateway.events[0]
+
+
+async def test_helper_no_match(hass):
+    """Verify trigger helper returns None when no event could be matched."""
+    await setup_deconz_integration(hass)
+    deconz_event = device_trigger._get_deconz_event_from_device_id(hass, "mock-id")
+    assert deconz_event is None
+
+
+async def test_helper_no_gateway_exist(hass):
+    """Verify trigger helper returns None when no gateway exist."""
+    deconz_event = device_trigger._get_deconz_event_from_device_id(hass, "mock-id")
+    assert deconz_event is None

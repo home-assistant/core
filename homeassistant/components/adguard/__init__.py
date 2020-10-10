@@ -1,5 +1,4 @@
 """Support for AdGuard Home."""
-from distutils.version import LooseVersion
 import logging
 from typing import Any, Dict
 
@@ -11,7 +10,6 @@ from homeassistant.components.adguard.const import (
     DATA_ADGUARD_CLIENT,
     DATA_ADGUARD_VERION,
     DOMAIN,
-    MIN_ADGUARD_HOME_VERSION,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
@@ -61,22 +59,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         password=entry.data[CONF_PASSWORD],
         tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
-        loop=hass.loop,
         session=session,
     )
 
     hass.data.setdefault(DOMAIN, {})[DATA_ADGUARD_CLIENT] = adguard
 
     try:
-        version = await adguard.version()
+        await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
-
-    if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-        _LOGGER.error(
-            "This integration requires AdGuard Home v0.99.0 or higher to work correctly"
-        )
-        raise ConfigEntryNotReady
 
     for component in "sensor", "switch":
         hass.async_create_task(
@@ -143,11 +134,14 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
 class AdGuardHomeEntity(Entity):
     """Defines a base AdGuard Home entity."""
 
-    def __init__(self, adguard, name: str, icon: str) -> None:
+    def __init__(
+        self, adguard, name: str, icon: str, enabled_default: bool = True
+    ) -> None:
         """Initialize the AdGuard Home entity."""
-        self._name = name
-        self._icon = icon
         self._available = True
+        self._enabled_default = enabled_default
+        self._icon = icon
+        self._name = name
         self.adguard = adguard
 
     @property
@@ -161,19 +155,27 @@ class AdGuardHomeEntity(Entity):
         return self._icon
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     async def async_update(self) -> None:
         """Update AdGuard Home entity."""
+        if not self.enabled:
+            return
+
         try:
             await self._adguard_update()
             self._available = True
         except AdGuardHomeError:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating AdGuard Home sensor.",
+                    "An error occurred while updating AdGuard Home sensor",
                     exc_info=True,
                 )
             self._available = False
@@ -196,4 +198,5 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",
             "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            "entry_type": "service",
         }

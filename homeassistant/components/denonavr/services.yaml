@@ -1,0 +1,11 @@
+# Describes the format for available webostv services
+
+get_command:
+  description: "Send a generic http get command."
+  fields:
+    entity_id:
+      description: Name(s) of the denonavr entities where to run the API method.
+      example: "media_player.living_room_receiver"
+    command:
+      description: Endpoint of the command, including associated parameters.
+      example: "/goform/formiPhoneAppDirect.xml?RCKSK0410370"

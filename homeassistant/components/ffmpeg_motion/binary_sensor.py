@@ -1,19 +1,24 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
+import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.components.ffmpeg import (
-    FFmpegBase,
-    DATA_FFMPEG,
-    CONF_INPUT,
     CONF_EXTRA_ARGUMENTS,
     CONF_INITIAL_STATE,
+    CONF_INPUT,
+    DATA_FFMPEG,
+    FFmpegBase,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
+class FFmpegBinarySensor(FFmpegBase, BinarySensorEntity):
     """A binary sensor which use FFmpeg for noise detection."""
 
     def __init__(self, config):
@@ -69,7 +74,7 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
     def _async_callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):
@@ -87,10 +92,11 @@ class FFmpegMotion(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
-        from haffmpeg.sensor import SensorMotion
 
         super().__init__(config)
-        self.ffmpeg = SensorMotion(manager.binary, hass.loop, self._async_callback)
+        self.ffmpeg = ffmpeg_sensor.SensorMotion(
+            manager.binary, hass.loop, self._async_callback
+        )
 
     async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
@@ -117,4 +123,4 @@ class FFmpegMotion(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return "motion"
+        return DEVICE_CLASS_MOTION

@@ -1,9 +1,9 @@
 """The tests for the Template vacuum platform."""
 import logging
+
 import pytest
 
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_UNAVAILABLE
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     STATE_CLEANING,
@@ -12,8 +12,9 @@ from homeassistant.components.vacuum import (
     STATE_PAUSED,
     STATE_RETURNING,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 
-from tests.common import async_mock_service, assert_setup_component
+from tests.common import assert_setup_component, async_mock_service
 from tests.components.vacuum import common
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ async def test_missing_optional_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -69,6 +71,7 @@ async def test_missing_start_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -89,6 +92,7 @@ async def test_invalid_config(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -119,6 +123,7 @@ async def test_templates_with_entities(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -151,6 +156,7 @@ async def test_templates_with_valid_values(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -177,6 +183,7 @@ async def test_templates_invalid_values(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -204,6 +211,7 @@ async def test_invalid_templates(hass, calls):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -229,6 +237,7 @@ async def test_available_template_with_entities(hass, calls):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -265,11 +274,79 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_attribute_templates(hass, calls):
+    """Test attribute_templates template."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum": {
+                        "value_template": "{{ 'cleaning' }}",
+                        "start": {"service": "script.vacuum_start"},
+                        "attribute_templates": {
+                            "test_attribute": "It {{ states.sensor.test_state.state }}."
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.test_template_vacuum")
+    assert state.attributes["test_attribute"] == "It ."
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    await hass.helpers.entity_component.async_update_entity(
+        "vacuum.test_template_vacuum"
+    )
+    state = hass.states.get("vacuum.test_template_vacuum")
+    assert state.attributes["test_attribute"] == "It Works."
+
+
+async def test_invalid_attribute_template(hass, caplog):
+    """Test that errors are logged if rendering template fails."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "invalid_template": {
+                        "value_template": "{{ states('input_select.state') }}",
+                        "start": {"service": "script.vacuum_start"},
+                        "attribute_templates": {
+                            "test_attribute": "{{ this_function_does_not_exist() }}"
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert "test_attribute" in caplog.text
+    assert "TemplateError" in caplog.text
 
 
 # End of template tests #
@@ -445,6 +522,7 @@ async def _register_basic_vacuum(hass):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -518,6 +596,9 @@ async def _register_components(hass):
                 },
             },
             "fan_speeds": ["low", "medium", "high"],
+            "attribute_templates": {
+                "test_attribute": "It {{ states.sensor.test_state.state }}."
+            },
         }
 
         assert await setup.async_setup_component(
@@ -531,5 +612,37 @@ async def _register_components(hass):
             },
         )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one vacuum per id."""
+    await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "start": {"service": "script.vacuum_start"},
+                    },
+                    "test_template_vacuum_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "start": {"service": "script.vacuum_start"},
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

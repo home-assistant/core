@@ -1,8 +1,9 @@
 """OpenTherm Gateway config flow."""
 import asyncio
-from serial import SerialException
 
 import pyotgw
+from pyotgw import vars as gw_vars
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +16,6 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import callback
-
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
@@ -54,7 +54,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 otgw = pyotgw.pyotgw()
                 status = await otgw.connect(self.hass.loop, device)
                 await otgw.disconnect()
-                return status.get(pyotgw.OTGW_ABOUT)
+                return status.get(gw_vars.OTGW_ABOUT)
 
             try:
                 res = await asyncio.wait_for(test_connection(), timeout=10)
@@ -68,9 +68,9 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._show_form()
 
-    async def async_step_user(self, info=None):
+    async def async_step_user(self, user_input=None):
         """Handle manual initiation of the config flow."""
-        return await self.async_step_init(info)
+        return await self.async_step_init(user_input)
 
     async def async_step_import(self, import_config):
         """

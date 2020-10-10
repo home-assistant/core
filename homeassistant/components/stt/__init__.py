@@ -184,7 +184,7 @@ class SpeechToTextView(HomeAssistantView):
             return None
 
         # Convert Header data
-        args = dict()
+        args = {}
         for value in data:
             value = value.strip()
             args[value.partition("=")[0]] = value.partition("=")[2]

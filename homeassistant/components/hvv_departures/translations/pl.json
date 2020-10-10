@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_results": "Brak wynik\u00f3w. Spr\u00f3buj z inn\u0105 stacj\u0105/adresem."
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Stacja/adres"
+                },
+                "title": "Wprowad\u017a stacj\u0119/adres"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Stacja/adres"
+                },
+                "title": "Wybierz stacj\u0119/adres"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "username": "[%key_id:common::config_flow::data::username%]"
+                },
+                "title": "Po\u0142\u0105czenie z API HVV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Wybierz linie",
+                    "offset": "Przesuni\u0119cie (minuty)",
+                    "real_time": "U\u017cywaj danych czasu rzeczywistego"
+                },
+                "description": "Zmie\u0144 opcje dla tego sensora odjazd\u00f3w",
+                "title": "Opcje"
+            }
+        }
+    },
+    "title": "Odjazdy HVV"
+}

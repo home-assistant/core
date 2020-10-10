@@ -1,9 +1,9 @@
 """Support for ecobee."""
 import asyncio
 from datetime import timedelta
-import voluptuous as vol
 
-from pyecobee import Ecobee, ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, ExpiredTokenError
+from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
@@ -11,11 +11,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
+    _LOGGER,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
     ECOBEE_PLATFORMS,
-    _LOGGER,
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
@@ -96,9 +96,7 @@ class EcobeeData:
             await self._hass.async_add_executor_job(self.ecobee.update)
             _LOGGER.debug("Updating ecobee")
         except ExpiredTokenError:
-            _LOGGER.warning(
-                "Ecobee update failed; attempting to refresh expired tokens"
-            )
+            _LOGGER.debug("Refreshing expired ecobee tokens")
             await self.refresh()
 
     async def refresh(self) -> bool:
@@ -113,7 +111,7 @@ class EcobeeData:
                 },
             )
             return True
-        _LOGGER.error("Error updating ecobee tokens")
+        _LOGGER.error("Error refreshing ecobee tokens")
         return False
 
 

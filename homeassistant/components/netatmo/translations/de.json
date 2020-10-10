@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Autorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle Authentifizierungs-Methode"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Name des Gebiets",
+                    "lat_ne": "Breitengrad Nord-Ost-Ecke",
+                    "lat_sw": "Breitengrad S\u00fcd-West-Ecke",
+                    "lon_ne": "L\u00e4ngengrad Nord-Ost-Ecke",
+                    "lon_sw": "L\u00e4ngengrad S\u00fcdwest-Ecke",
+                    "mode": "Berechnung",
+                    "show_on_map": "Auf Karte anzeigen"
+                }
+            },
+            "public_weather_areas": {
+                "data": {
+                    "weather_areas": "Wettergebiete"
+                },
+                "description": "Konfiguriere \u00f6ffentliche Wettersensoren.",
+                "title": "\u00d6ffentlicher Netatmo Wettersensor"
+            }
+        }
+    }
+}

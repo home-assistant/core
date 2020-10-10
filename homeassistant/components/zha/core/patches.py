@@ -1,9 +1,4 @@
-"""
-Patch functions for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Patch functions for Zigbee Home Automation."""
 
 
 def apply_application_controller_patch(zha_gateway):
@@ -12,8 +7,7 @@ def apply_application_controller_patch(zha_gateway):
     def handle_message(sender, profile, cluster, src_ep, dst_ep, message):
         """Handle message from a device."""
         if (
-            not sender.initializing
-            and sender.ieee in zha_gateway.devices
+            sender.ieee in zha_gateway.devices
             and not zha_gateway.devices[sender.ieee].available
         ):
             zha_gateway.async_device_became_available(

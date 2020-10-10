@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
+            "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "reauth_successful": "La riautenticazione ha avuto successo",
+            "token_request_timeout": "Timeout per l'ottenimento del token",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "faulty_credentials": "Autorizzazione non riuscita, verificare il Token",
+            "host_or_token": "Si deve fornire almeno un Host o un Token",
+            "no_servers": "Nessun server collegato all'account Plex",
+            "not_found": "Server Plex non trovato",
+            "ssl_error": "Problema con il certificato SSL"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta",
+                    "ssl": "Utilizza un certificato SSL",
+                    "token": "Token (opzionale)",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "title": "Configurazione manuale Plex"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Sono disponibili pi\u00f9 server, selezionarne uno:",
+                "title": "Selezionare il server Plex"
+            },
+            "user": {
+                "description": "Continuare su [plex.tv](https://plex.tv) per collegare un server Plex.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Metodo di impostazione"
+                },
+                "title": "Plex Media Server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignora nuovi utenti gestiti/condivisi",
+                    "ignore_plex_web_clients": "Ignora i client Web Plex",
+                    "monitored_users": "Utenti monitorati",
+                    "use_episode_art": "Usa la grafica dell'episodio"
+                },
+                "description": "Opzioni per i lettori multimediali Plex"
+            }
+        }
+    }
+}

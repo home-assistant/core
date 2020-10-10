@@ -1,6 +1,8 @@
 """Support for Qwikswitch devices."""
 import logging
 
+from pyqwikswitch.async_ import QSUsb
+from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, SENSORS, QSType
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
@@ -73,7 +75,7 @@ class QSEntity(Entity):
         return self._name
 
     @property
-    def poll(self):
+    def should_poll(self):
         """QS sensors gets packets in update_packet."""
         return False
 
@@ -85,12 +87,14 @@ class QSEntity(Entity):
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB. Match dispather_send signature."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, self.update_packet
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                self.qsid, self.update_packet
+            )
         )
 
 
@@ -99,7 +103,7 @@ class QSToggleEntity(QSEntity):
 
     Implemented:
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
-     - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
+     - QSSwitch extends QSToggleEntity and SwitchEntity[3] (ToggleEntity[1])
 
     [1] /helpers/entity.py
     [2] /components/light/__init__.py
@@ -128,8 +132,6 @@ class QSToggleEntity(QSEntity):
 
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
-    from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -163,9 +165,9 @@ async def async_setup(hass, config):
 
     comps = {"switch": [], "light": [], "sensor": [], "binary_sensor": []}
 
-    try:
-        sensor_ids = []
-        for sens in sensors:
+    sensor_ids = []
+    for sens in sensors:
+        try:
             _, _type = SENSORS[sens["type"]]
             sensor_ids.append(sens["id"])
             if _type is bool:
@@ -177,9 +179,12 @@ async def async_setup(hass, config):
                     _LOGGER.warning(
                         "%s should only be used for binary_sensors: %s", _key, sens
                     )
-
-    except KeyError:
-        _LOGGER.warning("Sensor validation failed")
+        except KeyError:
+            _LOGGER.warning(
+                "Sensor validation failed for sensor id=%s type=%s",
+                sens["id"],
+                sens["type"],
+            )
 
     for qsid, dev in qsusb.devices.items():
         if qsid in switches:
@@ -203,9 +208,7 @@ async def async_setup(hass, config):
         # If button pressed, fire a hass event
         if QS_ID in qspacket:
             if qspacket.get(QS_CMD, "") in cmd_buttons:
-                hass.bus.async_fire(
-                    "qwikswitch.button.{}".format(qspacket[QS_ID]), qspacket
-                )
+                hass.bus.async_fire(f"qwikswitch.button.{qspacket[QS_ID]}", qspacket)
                 return
 
             if qspacket[QS_ID] in sensor_ids:

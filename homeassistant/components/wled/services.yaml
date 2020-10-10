@@ -1,0 +1,18 @@
+effect:
+  description: Controls the effect settings of WLED
+  fields:
+    entity_id:
+      description: Name of the WLED light entity.
+      example: "light.wled"
+    effect:
+      description: Name or ID of the WLED light effect.
+      example: "Rainbow"
+    intensity:
+      description: Intensity of the effect
+      example: 100
+    speed:
+      description: Speed of the effect. Number between 0 (slow) and 255 (fast).
+      example: 150
+    reverse:
+      description: Reverse the effect. Either true to reverse or false otherwise.
+      example: false

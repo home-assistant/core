@@ -8,8 +8,8 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
-from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
@@ -48,7 +48,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self) -> Optional[str]:  # pylint: disable=invalid-name
+    def id(self) -> Optional[str]:
         """Return id of the auth provider.
 
         Optional, can be None.
@@ -116,7 +116,6 @@ class AuthProvider:
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
-        pass
 
 
 async def auth_provider_from_config(
@@ -147,7 +146,9 @@ async def load_auth_provider_module(
         module = importlib.import_module(f"homeassistant.auth.providers.{provider}")
     except ImportError as err:
         _LOGGER.error("Unable to load auth provider %s: %s", provider, err)
-        raise HomeAssistantError(f"Unable to load auth provider {provider}: {err}")
+        raise HomeAssistantError(
+            f"Unable to load auth provider {provider}: {err}"
+        ) from err
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
@@ -176,7 +177,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_module_id: Optional[str] = None
-        self._auth_manager = auth_provider.hass.auth  # type: ignore
+        self._auth_manager = auth_provider.hass.auth
         self.available_mfa_modules: Dict[str, str] = {}
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
@@ -225,6 +226,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         errors = {}
 
+        assert self._auth_module_id is not None
         auth_module = self._auth_manager.get_auth_mfa_module(self._auth_module_id)
         if auth_module is None:
             # Given an invalid input to async_step_select_mfa_module
@@ -235,7 +237,9 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(self.user.id)
+                await auth_module.async_initialize_login_mfa_step(  # type: ignore
+                    self.user.id
+                )
             except HomeAssistantError:
                 _LOGGER.exception("Error initializing MFA step")
                 return self.async_abort(reason="unknown_error")

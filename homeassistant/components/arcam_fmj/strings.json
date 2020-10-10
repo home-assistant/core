@@ -1,5 +1,28 @@
 {
-    "config": {
-        "title": "Arcam FMJ"
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {},
+    "flow_title": "Arcam FMJ on {host}",
+    "step": {
+      "confirm": {
+        "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Please enter the host name or IP address of device."
+      }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "{entity_name} was requested to turn on"
+    }
+  }
 }

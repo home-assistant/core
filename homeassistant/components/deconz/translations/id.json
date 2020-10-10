@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge sudah dikonfigurasi",
+            "no_bridges": "deCONZ bridges tidak ditemukan",
+            "one_instance_only": "Komponen hanya mendukung satu instance deCONZ"
+        },
+        "error": {
+            "no_key": "Tidak bisa mendapatkan kunci API"
+        },
+        "step": {
+            "link": {
+                "description": "Buka gerbang deCONZ Anda untuk mendaftar dengan Home Assistant. \n\n 1. Pergi ke pengaturan sistem deCONZ \n 2. Tekan tombol \"Buka Kunci Gateway\"",
+                "title": "Tautan dengan deCONZ"
+            }
+        }
+    }
+}

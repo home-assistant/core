@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Membersihkan",
+            "docked": "Berlabuh",
+            "error": "Kesalahan",
+            "idle": "Siaga",
+            "off": "Padam",
+            "on": "Nyala",
+            "paused": "Dijeda",
+            "returning": "Kembali ke dock"
+        }
+    },
+    "title": "Vakum"
+}

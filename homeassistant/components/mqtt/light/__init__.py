@@ -1,9 +1,4 @@
-"""
-Support for MQTT lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt/
-"""
+"""Support for MQTT lights."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,10 @@ from homeassistant.components.mqtt.discovery import (
     clear_discovery_hash,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from .. import DOMAIN, PLATFORMS
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
 from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json
@@ -43,7 +41,8 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT light through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -51,15 +50,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add a MQTT light."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -68,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
+    hass, config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up a MQTT Light."""
     setup_entity = {
@@ -77,5 +75,5 @@ async def _async_setup_entity(
         "template": async_setup_entity_template,
     }
     await setup_entity[config[CONF_SCHEMA]](
-        config, async_add_entities, config_entry, discovery_hash
+        hass, config, async_add_entities, config_entry, discovery_data
     )

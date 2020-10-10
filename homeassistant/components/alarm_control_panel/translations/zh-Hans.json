@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "armed": "\u8b66\u6212",
+            "armed_away": "\u79bb\u5bb6\u8b66\u6212",
+            "armed_custom_bypass": "\u81ea\u5b9a\u4e49\u533a\u57df\u8b66\u6212",
+            "armed_home": "\u5728\u5bb6\u8b66\u6212",
+            "armed_night": "\u591c\u95f4\u8b66\u6212",
+            "arming": "\u8b66\u6212\u4e2d",
+            "disarmed": "\u8b66\u6212\u89e3\u9664",
+            "disarming": "\u8b66\u6212\u89e3\u9664",
+            "pending": "\u6302\u8d77",
+            "triggered": "\u5df2\u89e6\u53d1"
+        }
+    },
+    "title": "\u8b66\u62a5\u63a7\u5236\u5668"
+}

@@ -2,22 +2,20 @@
 import asyncio
 import os
 import tempfile
-import unittest
 from typing import Tuple
-from unittest.mock import Mock, patch
+import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import shell_command
+from homeassistant.setup import async_setup_component, setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 
-@asyncio.coroutine
-def mock_process_creator(error: bool = False) -> asyncio.coroutine:
+def mock_process_creator(error: bool = False):
     """Mock a coroutine that creates a process when yielded."""
 
-    @asyncio.coroutine
-    def communicate() -> Tuple[bytes, bytes]:
+    async def communicate() -> Tuple[bytes, bytes]:
         """Mock a coroutine that runs a process when yielded.
 
         Returns a tuple of (stdout, stderr).
@@ -41,8 +39,9 @@ class TestShellCommand(unittest.TestCase):
         """
         self.hass = get_test_home_assistant()
         asyncio.get_child_watcher().attach_loop(self.hass.loop)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -53,7 +52,7 @@ class TestShellCommand(unittest.TestCase):
             assert setup_component(
                 self.hass,
                 shell_command.DOMAIN,
-                {shell_command.DOMAIN: {"test_service": "date > {}".format(path)}},
+                {shell_command.DOMAIN: {"test_service": f"date > {path}"}},
             )
 
             self.hass.services.call("shell_command", "test_service", blocking=True)
@@ -95,7 +94,7 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         cmd = mock_call.mock_calls[0][1][0]
 
-        assert 1 == mock_call.call_count
+        assert mock_call.call_count == 1
         assert "ls /bin" == cmd
 
     @patch(
@@ -111,7 +110,7 @@ class TestShellCommand(unittest.TestCase):
             shell_command.DOMAIN,
             {
                 shell_command.DOMAIN: {
-                    "test_service": ("ls /bin {{ states.sensor" ".test_state.state }}")
+                    "test_service": ("ls /bin {{ states.sensor.test_state.state }}")
                 }
             },
         )
@@ -121,7 +120,7 @@ class TestShellCommand(unittest.TestCase):
         self.hass.block_till_done()
         cmd = mock_call.mock_calls[0][1]
 
-        assert 1 == mock_call.call_count
+        assert mock_call.call_count == 1
         assert ("ls", "/bin", "Works") == cmd
 
     @patch(
@@ -137,14 +136,14 @@ class TestShellCommand(unittest.TestCase):
             assert setup_component(
                 self.hass,
                 shell_command.DOMAIN,
-                {shell_command.DOMAIN: {"test_service": "touch {}".format(path)}},
+                {shell_command.DOMAIN: {"test_service": f"touch {path}"}},
             )
 
             self.hass.services.call("shell_command", "test_service", blocking=True)
 
             self.hass.block_till_done()
-            assert 1 == mock_call.call_count
-            assert 1 == mock_error.call_count
+            assert mock_call.call_count == 1
+            assert mock_error.call_count == 1
             assert not os.path.isfile(path)
 
     @patch("homeassistant.components.shell_command._LOGGER.debug")
@@ -154,13 +153,13 @@ class TestShellCommand(unittest.TestCase):
         assert setup_component(
             self.hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": "echo {}".format(test_phrase)}},
+            {shell_command.DOMAIN: {"test_service": f"echo {test_phrase}"}},
         )
 
         self.hass.services.call("shell_command", "test_service", blocking=True)
 
         self.hass.block_till_done()
-        assert 1 == mock_output.call_count
+        assert mock_output.call_count == 1
         assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
 
     @patch("homeassistant.components.shell_command._LOGGER.debug")
@@ -170,11 +169,31 @@ class TestShellCommand(unittest.TestCase):
         assert setup_component(
             self.hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": ">&2 echo {}".format(test_phrase)}},
+            {shell_command.DOMAIN: {"test_service": f">&2 echo {test_phrase}"}},
         )
 
         self.hass.services.call("shell_command", "test_service", blocking=True)
 
         self.hass.block_till_done()
-        assert 1 == mock_output.call_count
+        assert mock_output.call_count == 1
         assert test_phrase.encode() + b"\n" == mock_output.call_args_list[0][0][-1]
+
+
+async def test_do_no_run_forever(hass, caplog):
+    """Test subprocesses terminate after the timeout."""
+
+    with patch.object(shell_command, "COMMAND_TIMEOUT", 0.001):
+        assert await async_setup_component(
+            hass,
+            shell_command.DOMAIN,
+            {shell_command.DOMAIN: {"test_service": "sleep 10000"}},
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            shell_command.DOMAIN, "test_service", blocking=True
+        )
+        await hass.async_block_till_done()
+
+    assert "Timed out" in caplog.text
+    assert "sleep 10000" in caplog.text

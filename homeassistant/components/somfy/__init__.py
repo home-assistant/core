@@ -1,24 +1,26 @@
-"""
-Support for Somfy hubs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/somfy/
-"""
+"""Support for Somfy hubs."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+from pymfy.api.devices.category import Category
 from requests import HTTPError
+import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import api
+from .const import DOMAIN
 
 API = "api"
 
@@ -26,12 +28,10 @@ DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(minutes=1)
 
-DOMAIN = "somfy"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
+CONF_OPTIMISTIC = "optimistic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -40,35 +40,36 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Inclusive(CONF_CLIENT_ID, "oauth"): cv.string,
+                vol.Inclusive(CONF_CLIENT_SECRET, "oauth"): cv.string,
+                vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover"]
+SOMFY_COMPONENTS = ["cover", "switch"]
 
 
 async def async_setup(hass, config):
     """Set up the Somfy component."""
     hass.data[DOMAIN] = {}
+    domain_config = config.get(DOMAIN, {})
+    hass.data[DOMAIN][CONF_OPTIMISTIC] = domain_config.get(CONF_OPTIMISTIC, False)
 
-    if DOMAIN not in config:
-        return True
-
-    config_flow.SomfyFlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+    if CONF_CLIENT_ID in domain_config:
+        config_flow.SomfyFlowHandler.async_register_implementation(
             hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            "https://accounts.somfy.com/oauth/oauth/v2/auth",
-            "https://accounts.somfy.com/oauth/oauth/v2/token",
-        ),
-    )
+            config_entry_oauth2_flow.LocalOAuth2Implementation(
+                hass,
+                DOMAIN,
+                config[DOMAIN][CONF_CLIENT_ID],
+                config[DOMAIN][CONF_CLIENT_SECRET],
+                "https://accounts.somfy.com/oauth/oauth/v2/auth",
+                "https://accounts.somfy.com/oauth/oauth/v2/token",
+            ),
+        )
 
     return True
 
@@ -81,13 +82,30 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, "auth_implementation": DOMAIN}
         )
 
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
 
     hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
+    hass.data[DOMAIN][DEVICES] = []
 
     await update_all_devices(hass)
+
+    device_registry = await dr.async_get_registry(hass)
+
+    devices = hass.data[DOMAIN][DEVICES]
+    hubs = [device for device in devices if Category.HUB.value in device.categories]
+
+    for hub in hubs:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, hub.id)},
+            manufacturer="Somfy",
+            name=hub.name,
+            model=hub.type,
+        )
 
     for component in SOMFY_COMPONENTS:
         hass.async_create_task(
@@ -137,7 +155,7 @@ class SomfyEntity(Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.site_id),
+            "via_hub": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }

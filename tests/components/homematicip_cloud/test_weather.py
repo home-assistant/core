@@ -15,23 +15,23 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, WEATHER_DOMAIN, {WEATHER_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, WEATHER_DOMAIN, {WEATHER_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_weather_sensor(hass, default_mock_hap):
+async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
     """Test HomematicipWeatherSensor."""
     entity_id = "weather.weather_sensor_plus"
     entity_name = "Weather Sensor – plus"
     device_model = "HmIP-SWO-PL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == ""
@@ -45,14 +45,17 @@ async def test_hmip_weather_sensor(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
 
 
-async def test_hmip_weather_sensor_pro(hass, default_mock_hap):
+async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
     """Test HomematicipWeatherSensorPro."""
     entity_id = "weather.wettersensor_pro"
     entity_name = "Wettersensor - pro"
     device_model = "HmIP-SWO-PR"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "sunny"
@@ -67,14 +70,15 @@ async def test_hmip_weather_sensor_pro(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 12.1
 
 
-async def test_hmip_home_weather(hass, default_mock_hap):
+async def test_hmip_home_weather(hass, default_mock_hap_factory):
     """Test HomematicipHomeWeather."""
     entity_id = "weather.weather_1010_wien_osterreich"
     entity_name = "Weather 1010  Wien, Österreich"
     device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap()
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
     assert hmip_device
     assert ha_state.state == "partlycloudy"
@@ -85,11 +89,7 @@ async def test_hmip_home_weather(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_WEATHER_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(
-        hass,
-        default_mock_hap.home.weather,
-        "temperature",
-        28.3,
-        fire_device=default_mock_hap.home,
+        hass, mock_hap.home.weather, "temperature", 28.3, fire_device=mock_hap.home
     )
 
     ha_state = hass.states.get(entity_id)

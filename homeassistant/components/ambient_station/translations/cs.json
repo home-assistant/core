@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+        },
+        "error": {
+            "invalid_key": "Neplatn\u00fd kl\u00ed\u010d API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                }
+            }
+        }
+    }
+}

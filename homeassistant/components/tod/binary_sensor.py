@@ -5,7 +5,7 @@ import logging
 import pytz
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
@@ -14,8 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
 from homeassistant.util import dt as dt_util
 
@@ -55,12 +54,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([sensor])
 
 
-def is_sun_event(event):
+def is_sun_event(sun_event):
     """Return true if event is sun event not time."""
-    return event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
+    return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
 
-class TodSensor(BinarySensorDevice):
+class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
     def __init__(self, name, after, after_offset, before, before_offset):
@@ -126,14 +125,14 @@ class TodSensor(BinarySensorDevice):
         current_local_date = self.current_datetime.astimezone(
             self.hass.config.time_zone
         ).date()
-        # calcuate utc datetime corecponding to local time
+        # calculate utc datetime corecponding to local time
         utc_datetime = self.hass.config.time_zone.localize(
             datetime.combine(current_local_date, naive_time)
         ).astimezone(tz=pytz.UTC)
         return utc_datetime
 
     def _calculate_initial_boudary_time(self):
-        """Calculate internal absolute time boudaries."""
+        """Calculate internal absolute time boundaries."""
         nowutc = self.current_datetime
         # If after value is a sun event instead of absolute time
         if is_sun_event(self._after):
@@ -173,6 +172,20 @@ class TodSensor(BinarySensorDevice):
                 before_event_date += timedelta(days=1)
 
         self._time_before = before_event_date
+
+        # We are calculating the _time_after value assuming that it will happen today
+        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
+        # If _time_before and _time_after are ahead of current_datetime:
+        # _time_before is set to 12:00 next day
+        # _time_after is set to 23:00 today
+        # current_datetime is set to 10:00 today
+        if (
+            self._time_after > self.current_datetime
+            and self._time_before > self.current_datetime + timedelta(days=1)
+        ):
+            # remove one day from _time_before and _time_after
+            self._time_after -= timedelta(days=1)
+            self._time_before -= timedelta(days=1)
 
         # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset
@@ -220,8 +233,8 @@ class TodSensor(BinarySensorDevice):
     def _point_in_time_listener(self, now):
         """Run when the state of the sensor should be updated."""
         self._calculate_next_update()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
-        async_track_point_in_utc_time(
+        event.async_track_point_in_utc_time(
             self.hass, self._point_in_time_listener, self.next_update
         )

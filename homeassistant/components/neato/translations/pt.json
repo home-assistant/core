@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unexpected_error": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

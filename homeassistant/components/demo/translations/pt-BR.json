@@ -1,0 +1,20 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Booleano opcional",
+                    "int": "Entrada num\u00e9rica"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Sele\u00e7\u00e3o m\u00faltipla",
+                    "select": "Selecione uma op\u00e7\u00e3o",
+                    "string": "Valor do texto"
+                }
+            }
+        }
+    },
+    "title": "Demonstra\u00e7\u00e3o"
+}

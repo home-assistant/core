@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gostitelj je \u017ee konfiguriran"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "register_failed": "Registracija ni uspela, poskusite znova",
+            "unknown": "Neznana napaka: poskusite pozneje"
+        },
+        "step": {
+            "link": {
+                "description": "Kliknite \u00bbPo\u0161lji\u00ab, nato pa se dotaknite desne pu\u0161\u010dice na usmerjevalniku, \u010de \u017eelite registrirati Freebox pri programu Home Assistant. \n\n ! [Lokacija gumba na usmerjevalniku] (/static/images/config_freebox.png)",
+                "title": "Povezava usmerjevalnika Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                },
+                "title": "Freebox"
+            }
+        }
+    }
+}

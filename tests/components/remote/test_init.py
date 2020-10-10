@@ -3,17 +3,17 @@
 
 import unittest
 
+import homeassistant.components.remote as remote
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     CONF_PLATFORM,
-    SERVICE_TURN_ON,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
-import homeassistant.components.remote as remote
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 from tests.components.remote import common
 
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -28,11 +28,7 @@ class TestRemote(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_is_on(self):
         """Test is_on."""
@@ -41,12 +37,6 @@ class TestRemote(unittest.TestCase):
 
         self.hass.states.set("remote.test", STATE_OFF)
         assert not remote.is_on(self.hass, "remote.test")
-
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_ON)
-        assert remote.is_on(self.hass)
-
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_OFF)
-        assert not remote.is_on(self.hass)
 
     def test_turn_on(self):
         """Test turn_on."""
@@ -123,3 +113,13 @@ class TestRemote(unittest.TestCase):
         assert call.domain == remote.DOMAIN
         assert call.service == SERVICE_LEARN_COMMAND
         assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomRemote(remote.RemoteDevice):
+        pass
+
+    CustomRemote()
+    assert "RemoteDevice is deprecated, modify CustomRemote" in caplog.text

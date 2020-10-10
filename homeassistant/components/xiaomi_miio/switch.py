@@ -13,7 +13,7 @@ from miio import (  # pylint: disable=import-error
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -23,6 +23,14 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    DOMAIN,
+    SERVICE_SET_POWER_MODE,
+    SERVICE_SET_POWER_PRICE,
+    SERVICE_SET_WIFI_LED_OFF,
+    SERVICE_SET_WIFI_LED_ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
                 "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -79,11 +88,6 @@ FEATURE_FLAGS_POWER_STRIP_V1 = (
 FEATURE_FLAGS_POWER_STRIP_V2 = FEATURE_SET_WIFI_LED | FEATURE_SET_POWER_PRICE
 
 FEATURE_FLAGS_PLUG_V3 = FEATURE_SET_WIFI_LED
-
-SERVICE_SET_WIFI_LED_ON = "xiaomi_miio_set_wifi_led_on"
-SERVICE_SET_WIFI_LED_OFF = "xiaomi_miio_set_wifi_led_off"
-SERVICE_SET_POWER_MODE = "xiaomi_miio_set_power_mode"
-SERVICE_SET_POWER_PRICE = "xiaomi_miio_set_power_price"
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
@@ -136,10 +140,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
@@ -214,7 +218,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPlugGenericSwitch(SwitchDevice):
+class XiaomiPlugGenericSwitch(SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, plug, model, unique_id):
@@ -230,11 +234,6 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
 
     @property
     def unique_id(self):
@@ -426,7 +425,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
-            unique_id = "{}-{}".format(unique_id, "usb")
+            unique_id = f"{unique_id}-usb"
 
         super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb

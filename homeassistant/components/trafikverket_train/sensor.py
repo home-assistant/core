@@ -11,8 +11,8 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
     CONF_WEEKDAY,
-    WEEKDAYS,
     DEVICE_CLASS_TIMESTAMP,
+    WEEKDAYS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv

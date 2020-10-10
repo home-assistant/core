@@ -48,11 +48,11 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
 
         title = ""
         if kwargs.get(ATTR_TITLE) is not None:
-            title = "{}{}".format(kwargs.get(ATTR_TITLE), "<br>")
+            title = f"{kwargs.get(ATTR_TITLE)}<br>"
 
         try:
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
         except ApiError as api_error:
             _LOGGER.error(
-                "Could not send CiscoWebexTeams notification. " "Error: %s", api_error
+                "Could not send CiscoWebexTeams notification. Error: %s", api_error
             )

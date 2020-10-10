@@ -1,173 +1,365 @@
 """Test Axis device."""
-from unittest.mock import Mock, patch
+from copy import deepcopy
+import json
+from unittest import mock
 
+import axis as axislib
+from axis.api_discovery import URL as API_DISCOVERY_URL
+from axis.applications import URL_LIST as APPLICATIONS_URL
+from axis.applications.vmd4 import URL as VMD4_URL
+from axis.basic_device_info import URL as BASIC_DEVICE_INFO_URL
+from axis.event_stream import OPERATION_INITIALIZED
+from axis.light_control import URL as LIGHT_CONTROL_URL
+from axis.mqtt import URL_CLIENT as MQTT_CLIENT_URL
+from axis.param_cgi import (
+    BRAND as BRAND_URL,
+    INPUT as INPUT_URL,
+    IOPORT as IOPORT_URL,
+    OUTPUT as OUTPUT_URL,
+    PROPERTIES as PROPERTIES_URL,
+    STREAM_PROFILES as STREAM_PROFILES_URL,
+)
+from axis.port_management import URL as PORT_MANAGEMENT_URL
 import pytest
 
-from tests.common import mock_coro, MockConfigEntry
+from homeassistant import config_entries
+from homeassistant.components import axis
+from homeassistant.components.axis.const import (
+    CONF_EVENTS,
+    CONF_MODEL,
+    DOMAIN as AXIS_DOMAIN,
+)
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 
-from homeassistant.components.axis import device, errors
-from homeassistant.components.axis.camera import AxisCamera
+from tests.async_mock import Mock, patch
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 
-DEVICE_DATA = {
-    device.CONF_HOST: "1.2.3.4",
-    device.CONF_USERNAME: "username",
-    device.CONF_PASSWORD: "password",
-    device.CONF_PORT: 1234,
-}
+MAC = "00408C12345"
+MODEL = "model"
+NAME = "name"
 
-ENTRY_OPTIONS = {device.CONF_CAMERA: True, device.CONF_EVENTS: True}
+ENTRY_OPTIONS = {CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
-    device.CONF_DEVICE: DEVICE_DATA,
-    device.CONF_MAC: "mac",
-    device.CONF_MODEL: "model",
-    device.CONF_NAME: "name",
+    CONF_HOST: "1.2.3.4",
+    CONF_USERNAME: "root",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 80,
+    CONF_MAC: MAC,
+    CONF_MODEL: MODEL,
+    CONF_NAME: NAME,
 }
 
+API_DISCOVERY_RESPONSE = {
+    "method": "getApiList",
+    "apiVersion": "1.0",
+    "data": {
+        "apiList": [
+            {"id": "api-discovery", "version": "1.0", "name": "API Discovery Service"},
+            {"id": "param-cgi", "version": "1.0", "name": "Legacy Parameter Handling"},
+        ]
+    },
+}
 
-async def test_device_setup():
-    """Successful setup."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-    entry.options = ENTRY_OPTIONS
-    api = Mock()
+API_DISCOVERY_BASIC_DEVICE_INFO = {
+    "id": "basic-device-info",
+    "version": "1.1",
+    "name": "Basic Device Information",
+}
+API_DISCOVERY_MQTT = {"id": "mqtt-client", "version": "1.0", "name": "MQTT Client API"}
+API_DISCOVERY_PORT_MANAGEMENT = {
+    "id": "io-port-management",
+    "version": "1.0",
+    "name": "IO Port Management",
+}
 
-    axis_device = device.AxisNetworkDevice(hass, entry)
-    axis_device.start = Mock()
+APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
+ <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
+</reply>"""
 
-    assert axis_device.host == DEVICE_DATA[device.CONF_HOST]
-    assert axis_device.model == ENTRY_CONFIG[device.CONF_MODEL]
-    assert axis_device.name == ENTRY_CONFIG[device.CONF_NAME]
-    assert axis_device.serial == ENTRY_CONFIG[device.CONF_MAC]
+BASIC_DEVICE_INFO_RESPONSE = {
+    "apiVersion": "1.1",
+    "data": {
+        "propertyList": {
+            "ProdNbr": "M1065-LW",
+            "ProdType": "Network Camera",
+            "SerialNumber": "00408C12345",
+            "Version": "9.80.1",
+        }
+    },
+}
 
-    with patch.object(device, "get_device", return_value=mock_coro(api)):
-        assert await axis_device.async_setup() is True
+LIGHT_CONTROL_RESPONSE = {
+    "apiVersion": "1.1",
+    "method": "getLightInformation",
+    "data": {
+        "items": [
+            {
+                "lightID": "led0",
+                "lightType": "IR",
+                "enabled": True,
+                "synchronizeDayNightMode": True,
+                "lightState": False,
+                "automaticIntensityMode": False,
+                "automaticAngleOfIlluminationMode": False,
+                "nrOfLEDs": 1,
+                "error": False,
+                "errorInfo": "",
+            }
+        ]
+    },
+}
 
-    assert axis_device.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == (
-        entry,
-        "camera",
+MQTT_CLIENT_RESPONSE = {
+    "apiVersion": "1.0",
+    "context": "some context",
+    "method": "getClientStatus",
+    "data": {"status": {"state": "active", "connectionStatus": "Connected"}},
+}
+
+PORT_MANAGEMENT_RESPONSE = {
+    "apiVersion": "1.0",
+    "method": "getPorts",
+    "data": {
+        "numberOfPorts": 1,
+        "items": [
+            {
+                "port": "0",
+                "configurable": False,
+                "usage": "",
+                "name": "PIR sensor",
+                "direction": "input",
+                "state": "open",
+                "normalState": "open",
+            }
+        ],
+    },
+}
+
+VMD4_RESPONSE = {
+    "apiVersion": "1.4",
+    "method": "getConfiguration",
+    "context": "Axis library",
+    "data": {
+        "cameras": [{"id": 1, "rotation": 0, "active": True}],
+        "profiles": [
+            {"filters": [], "camera": 1, "triggers": [], "name": "Profile 1", "uid": 1}
+        ],
+    },
+}
+
+BRAND_RESPONSE = """root.Brand.Brand=AXIS
+root.Brand.ProdFullName=AXIS M1065-LW Network Camera
+root.Brand.ProdNbr=M1065-LW
+root.Brand.ProdShortName=AXIS M1065-LW
+root.Brand.ProdType=Network Camera
+root.Brand.ProdVariant=
+root.Brand.WebURL=http://www.axis.com
+"""
+
+PORTS_RESPONSE = """root.Input.NbrOfInputs=1
+root.IOPort.I0.Configurable=no
+root.IOPort.I0.Direction=input
+root.IOPort.I0.Input.Name=PIR sensor
+root.IOPort.I0.Input.Trig=closed
+root.Output.NbrOfOutputs=0
+"""
+
+PROPERTIES_RESPONSE = """root.Properties.API.HTTP.Version=3
+root.Properties.API.Metadata.Metadata=yes
+root.Properties.API.Metadata.Version=1.0
+root.Properties.EmbeddedDevelopment.Version=2.16
+root.Properties.Firmware.BuildDate=Feb 15 2019 09:42
+root.Properties.Firmware.BuildNumber=26
+root.Properties.Firmware.Version=9.10.1
+root.Properties.Image.Format=jpeg,mjpeg,h264
+root.Properties.Image.NbrOfViews=2
+root.Properties.Image.Resolution=1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240
+root.Properties.Image.Rotation=0,180
+root.Properties.System.SerialNumber=00408C12345
+"""
+
+STREAM_PROFILES_RESPONSE = """root.StreamProfile.MaxGroups=26
+root.StreamProfile.S0.Description=profile_1_description
+root.StreamProfile.S0.Name=profile_1
+root.StreamProfile.S0.Parameters=videocodec=h264
+root.StreamProfile.S1.Description=profile_2_description
+root.StreamProfile.S1.Name=profile_2
+root.StreamProfile.S1.Parameters=videocodec=h265
+"""
+
+
+def vapix_session_request(session, url, **kwargs):
+    """Return data based on url."""
+    if API_DISCOVERY_URL in url:
+        return json.dumps(API_DISCOVERY_RESPONSE)
+    if APPLICATIONS_URL in url:
+        return APPLICATIONS_LIST_RESPONSE
+    if BASIC_DEVICE_INFO_URL in url:
+        return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
+    if LIGHT_CONTROL_URL in url:
+        return json.dumps(LIGHT_CONTROL_RESPONSE)
+    if MQTT_CLIENT_URL in url:
+        return json.dumps(MQTT_CLIENT_RESPONSE)
+    if PORT_MANAGEMENT_URL in url:
+        return json.dumps(PORT_MANAGEMENT_RESPONSE)
+    if VMD4_URL in url:
+        return json.dumps(VMD4_RESPONSE)
+    if BRAND_URL in url:
+        return BRAND_RESPONSE
+    if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
+        return PORTS_RESPONSE
+    if PROPERTIES_URL in url:
+        return PROPERTIES_RESPONSE
+    if STREAM_PROFILES_URL in url:
+        return STREAM_PROFILES_RESPONSE
+
+
+async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTIONS):
+    """Create the Axis device."""
+    config_entry = MockConfigEntry(
+        domain=AXIS_DOMAIN,
+        data=deepcopy(config),
+        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        options=deepcopy(options),
+        entry_id="1",
+        version=2,
     )
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == (
-        entry,
-        "binary_sensor",
-    )
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[2][1] == (
-        entry,
-        "switch",
-    )
+    config_entry.add_to_hass(hass)
 
-
-async def test_device_signal_new_address(hass):
-    """Successful setup."""
-    entry = MockConfigEntry(
-        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS
-    )
-
-    api = Mock()
-    api.vapix.get_param.return_value = "1234"
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
-
-    with patch.object(device, "get_device", return_value=mock_coro(api)), patch.object(
-        AxisCamera, "_new_address"
-    ) as new_address_mock:
-        await axis_device.async_setup()
+    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
+        "axis.rtsp.RTSPClient.start",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
-    assert len(axis_device.listeners) == 2
+    return hass.data[AXIS_DOMAIN].get(config_entry.unique_id)
 
-    entry.data[device.CONF_DEVICE][device.CONF_HOST] = "2.3.4.5"
-    hass.config_entries.async_update_entry(entry, data=entry.data)
+
+async def test_device_setup(hass):
+    """Successful setup."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
+        return_value=True,
+    ) as forward_entry_setup:
+        device = await setup_axis_integration(hass)
+
+    assert device.api.vapix.firmware_version == "9.10.1"
+    assert device.api.vapix.product_number == "M1065-LW"
+    assert device.api.vapix.product_type == "Network Camera"
+    assert device.api.vapix.serial_number == "00408C12345"
+
+    entry = device.config_entry
+
+    assert len(forward_entry_setup.mock_calls) == 4
+    assert forward_entry_setup.mock_calls[0][1] == (entry, "binary_sensor")
+    assert forward_entry_setup.mock_calls[1][1] == (entry, "camera")
+    assert forward_entry_setup.mock_calls[2][1] == (entry, "light")
+    assert forward_entry_setup.mock_calls[3][1] == (entry, "switch")
+
+    assert device.host == ENTRY_CONFIG[CONF_HOST]
+    assert device.model == ENTRY_CONFIG[CONF_MODEL]
+    assert device.name == ENTRY_CONFIG[CONF_NAME]
+    assert device.serial == ENTRY_CONFIG[CONF_MAC]
+
+
+async def test_device_info(hass):
+    """Verify other path of device information works."""
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_BASIC_DEVICE_INFO)
+
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
+        device = await setup_axis_integration(hass)
+
+    assert device.api.vapix.firmware_version == "9.80.1"
+    assert device.api.vapix.product_number == "M1065-LW"
+    assert device.api.vapix.product_type == "Network Camera"
+    assert device.api.vapix.serial_number == "00408C12345"
+
+
+async def test_device_support_mqtt(hass, mqtt_mock):
+    """Successful setup."""
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_MQTT)
+
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
+        await setup_axis_integration(hass)
+
+    mqtt_mock.async_subscribe.assert_called_with(f"{MAC}/#", mock.ANY, 0, "utf-8")
+
+    topic = f"{MAC}/event/tns:onvif/Device/tns:axis/Sensor/PIR/$source/sensor/0"
+    message = b'{"timestamp": 1590258472044, "topic": "onvif:Device/axis:Sensor/PIR", "message": {"source": {"sensor": "0"}, "key": {}, "data": {"state": "1"}}}'
+
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
+    async_fire_mqtt_message(hass, topic, message)
     await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
 
-    assert axis_device.host == "2.3.4.5"
-    assert axis_device.api.config.host == "2.3.4.5"
-    assert len(new_address_mock.mock_calls) == 1
+    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
+    assert pir.state == "on"
+    assert pir.name == f"{NAME} PIR 0"
+
+
+async def test_update_address(hass):
+    """Test update address works."""
+    device = await setup_axis_integration(hass)
+    assert device.api.config.host == "1.2.3.4"
+
+    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await hass.config_entries.flow.async_init(
+            AXIS_DOMAIN,
+            data={
+                "host": "2.3.4.5",
+                "port": 80,
+                "hostname": "name",
+                "properties": {"macaddress": MAC},
+            },
+            context={"source": "zeroconf"},
+        )
+        await hass.async_block_till_done()
+
+    assert device.api.config.host == "2.3.4.5"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_device_unavailable(hass):
     """Successful setup."""
-    entry = MockConfigEntry(
-        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS
-    )
-
-    api = Mock()
-    api.vapix.get_param.return_value = "1234"
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
-
-    with patch.object(device, "get_device", return_value=mock_coro(api)), patch.object(
-        device, "async_dispatcher_send"
-    ) as mock_dispatcher:
-        await axis_device.async_setup()
-        await hass.async_block_till_done()
-
-        axis_device.async_connection_status_callback(status=False)
-
-    assert not axis_device.available
-    assert len(mock_dispatcher.mock_calls) == 1
+    device = await setup_axis_integration(hass)
+    device.async_connection_status_callback(status=False)
+    assert not device.available
 
 
 async def test_device_reset(hass):
     """Successfully reset device."""
-    entry = MockConfigEntry(
-        domain=device.DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS
-    )
-
-    api = Mock()
-    api.vapix.get_param.return_value = "1234"
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-    hass.data[device.DOMAIN] = {axis_device.serial: axis_device}
-
-    with patch.object(device, "get_device", return_value=mock_coro(api)):
-        await axis_device.async_setup()
-        await hass.async_block_till_done()
-
-    await axis_device.async_reset()
-
-    assert len(api.stop.mock_calls) == 1
-    assert len(hass.states.async_all()) == 0
-    assert len(axis_device.listeners) == 0
+    device = await setup_axis_integration(hass)
+    result = await device.async_reset()
+    assert result is True
 
 
-async def test_device_not_accessible():
+async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
-    hass = Mock()
-    hass.data = dict()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-    entry.options = ENTRY_OPTIONS
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-
-    with patch.object(
-        device, "get_device", side_effect=errors.CannotConnect
-    ), pytest.raises(device.ConfigEntryNotReady):
-        await axis_device.async_setup()
-
-    assert not hass.helpers.event.async_call_later.mock_calls
+    with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
+        await setup_axis_integration(hass)
+    assert hass.data[AXIS_DOMAIN] == {}
 
 
-async def test_device_unknown_error():
+async def test_device_unknown_error(hass):
     """Unknown errors are handled."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = ENTRY_CONFIG
-    entry.options = ENTRY_OPTIONS
-
-    axis_device = device.AxisNetworkDevice(hass, entry)
-
-    with patch.object(device, "get_device", side_effect=Exception):
-        assert await axis_device.async_setup() is False
-
-    assert not hass.helpers.event.async_call_later.mock_calls
+    with patch.object(axis.device, "get_device", side_effect=Exception):
+        await setup_axis_integration(hass)
+    assert hass.data[AXIS_DOMAIN] == {}
 
 
 async def test_new_event_sends_signal(hass):
@@ -175,10 +367,10 @@ async def test_new_event_sends_signal(hass):
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = device.AxisNetworkDevice(hass, entry)
+    axis_device = axis.device.AxisNetworkDevice(hass, entry)
 
-    with patch.object(device, "async_dispatcher_send") as mock_dispatch_send:
-        axis_device.async_event_callback(action="add", event_id="event")
+    with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
+        axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
         await hass.async_block_till_done()
 
     assert len(mock_dispatch_send.mock_calls) == 1
@@ -191,47 +383,33 @@ async def test_shutdown():
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = device.AxisNetworkDevice(hass, entry)
+    axis_device = axis.device.AxisNetworkDevice(hass, entry)
     axis_device.api = Mock()
 
     axis_device.shutdown(None)
 
-    assert len(axis_device.api.stop.mock_calls) == 1
-
-
-async def test_get_device(hass):
-    """Successful call."""
-    with patch("axis.param_cgi.Params.update_brand", return_value=mock_coro()), patch(
-        "axis.param_cgi.Params.update_properties", return_value=mock_coro()
-    ), patch("axis.port_cgi.Ports.update", return_value=mock_coro()):
-        assert await device.get_device(hass, DEVICE_DATA)
+    assert len(axis_device.api.stream.stop.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
-    import axis
-
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axis.Unauthorized
-    ), pytest.raises(errors.AuthenticationRequired):
-        await device.get_device(hass, DEVICE_DATA)
+        "axis.vapix.session_request", side_effect=axislib.Unauthorized
+    ), pytest.raises(axis.errors.AuthenticationRequired):
+        await axis.device.get_device(hass, host="", port="", username="", password="")
 
 
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
-    import axis
-
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axis.RequestError
-    ), pytest.raises(errors.CannotConnect):
-        await device.get_device(hass, DEVICE_DATA)
+        "axis.vapix.session_request", side_effect=axislib.RequestError
+    ), pytest.raises(axis.errors.CannotConnect):
+        await axis.device.get_device(hass, host="", port="", username="", password="")
 
 
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
-    import axis
-
     with patch(
-        "axis.param_cgi.Params.update_brand", side_effect=axis.AxisException
-    ), pytest.raises(errors.AuthenticationRequired):
-        await device.get_device(hass, DEVICE_DATA)
+        "axis.vapix.session_request", side_effect=axislib.AxisException
+    ), pytest.raises(axis.errors.AuthenticationRequired):
+        await axis.device.get_device(hass, host="", port="", username="", password="")

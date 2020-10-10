@@ -2,12 +2,12 @@
 
 import logging
 
+from pyrecswitch import RSNetwork, RSNetworkError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the device."""
-    from pyrecswitch import RSNetwork
 
     host = config[CONF_HOST]
     mac_address = config[CONF_MAC]
@@ -41,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([RecSwitchSwitch(device, device_name, mac_address)])
 
 
-class RecSwitchSwitch(SwitchDevice):
+class RecSwitchSwitch(SwitchEntity):
     """Representation of a recswitch device."""
 
     def __init__(self, device, device_name, mac_address):
@@ -78,7 +77,6 @@ class RecSwitchSwitch(SwitchDevice):
 
     async def async_set_gpio_status(self, status):
         """Set the switch status."""
-        from pyrecswitch import RSNetworkError
 
         try:
             ret = await self.device.set_gpio_status(status)
@@ -88,7 +86,6 @@ class RecSwitchSwitch(SwitchDevice):
 
     async def async_update(self):
         """Update the current switch status."""
-        from pyrecswitch import RSNetworkError
 
         try:
             ret = await self.device.get_gpio_status()

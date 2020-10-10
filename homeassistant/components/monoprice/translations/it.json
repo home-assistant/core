@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Porta",
+                    "source_1": "Nome della fonte n. 1",
+                    "source_2": "Nome della fonte n. 2",
+                    "source_3": "Nome della fonte n. 3",
+                    "source_4": "Nome della fonte n. 4",
+                    "source_5": "Nome della fonte n. 5",
+                    "source_6": "Nome della fonte n. 6"
+                },
+                "title": "Connettersi al dispositivo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Nome della fonte n. 1",
+                    "source_2": "Nome della fonte n. 2",
+                    "source_3": "Nome della fonte n. 3",
+                    "source_4": "Nome della fonte n. 4",
+                    "source_5": "Nome della fonte n. 5",
+                    "source_6": "Nome della fonte n. 6"
+                },
+                "title": "Configurare le sorgenti"
+            }
+        }
+    }
+}

@@ -1,18 +1,18 @@
 """Support for VersaSense actuator peripheral."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DOMAIN
 from .const import (
-    PERIPHERAL_STATE_ON,
-    PERIPHERAL_STATE_OFF,
-    KEY_IDENTIFIER,
-    KEY_PARENT_NAME,
-    KEY_PARENT_MAC,
-    KEY_UNIT,
-    KEY_MEASUREMENT,
     KEY_CONSUMER,
+    KEY_IDENTIFIER,
+    KEY_MEASUREMENT,
+    KEY_PARENT_MAC,
+    KEY_PARENT_NAME,
+    KEY_UNIT,
+    PERIPHERAL_STATE_OFF,
+    PERIPHERAL_STATE_ON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(actuator_list)
 
 
-class VActuator(SwitchDevice):
+class VActuator(SwitchEntity):
     """Representation of an Actuator."""
 
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):

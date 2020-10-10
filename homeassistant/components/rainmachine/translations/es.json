@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "identifier_exists": "La cuenta ya ha sido configurada",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_credentials": "Credenciales no v\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nombre de host o direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                },
+                "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    }
+}

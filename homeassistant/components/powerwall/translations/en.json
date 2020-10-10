@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error",
+            "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address"
+                },
+                "title": "Connect to the powerwall"
+            }
+        }
+    }
+}

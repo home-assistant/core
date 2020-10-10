@@ -1,8 +1,9 @@
 """Mycroft AI notification platform."""
 import logging
 
-from homeassistant.components.notify import BaseNotificationService
+from mycroftapi import MycroftAPI
 
+from homeassistant.components.notify import BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,6 @@ class MycroftNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message mycroft to speak on instance."""
-        from mycroftapi import MycroftAPI
 
         text = message
         mycroft = MycroftAPI(self.mycroft_ip)

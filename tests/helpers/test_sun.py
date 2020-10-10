@@ -1,11 +1,12 @@
 """The tests for the Sun helpers."""
 # pylint: disable=protected-access
-from unittest.mock import patch
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-import homeassistant.util.dt as dt_util
 import homeassistant.helpers.sun as sun
+import homeassistant.util.dt as dt_util
+
+from tests.async_mock import patch
 
 
 def test_next_events(hass):

@@ -14,24 +14,41 @@ from miio import (  # pylint: disable=import-error
     PhilipsEyecare,
     PhilipsMoonlight,
 )
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    GatewayException,
+)
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_ENTITY_ID,
     ATTR_HS_COLOR,
-    DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
+
+from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
+from .const import (
+    DOMAIN,
+    SERVICE_EYECARE_MODE_OFF,
+    SERVICE_EYECARE_MODE_ON,
+    SERVICE_NIGHT_LIGHT_MODE_OFF,
+    SERVICE_NIGHT_LIGHT_MODE_ON,
+    SERVICE_REMINDER_OFF,
+    SERVICE_REMINDER_ON,
+    SERVICE_SET_DELAYED_TURN_OFF,
+    SERVICE_SET_SCENE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,15 +102,6 @@ ATTR_TOTAL_ASSISTANT_SLEEP_TIME = "total_assistant_sleep_time"
 ATTR_BRAND_SLEEP = "brand_sleep"
 ATTR_BRAND = "brand"
 
-SERVICE_SET_SCENE = "xiaomi_miio_set_scene"
-SERVICE_SET_DELAYED_TURN_OFF = "xiaomi_miio_set_delayed_turn_off"
-SERVICE_REMINDER_ON = "xiaomi_miio_reminder_on"
-SERVICE_REMINDER_OFF = "xiaomi_miio_reminder_off"
-SERVICE_NIGHT_LIGHT_MODE_ON = "xiaomi_miio_night_light_mode_on"
-SERVICE_NIGHT_LIGHT_MODE_OFF = "xiaomi_miio_night_light_mode_off"
-SERVICE_EYECARE_MODE_ON = "xiaomi_miio_eyecare_mode_on"
-SERVICE_EYECARE_MODE_OFF = "xiaomi_miio_eyecare_mode_off"
-
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
@@ -101,7 +109,7 @@ SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TIME_PERIOD): vol.All(cv.time_period, cv.positive_timedelta)}
+    {vol.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
 )
 
 SERVICE_TO_METHOD = {
@@ -120,6 +128,25 @@ SERVICE_TO_METHOD = {
     SERVICE_EYECARE_MODE_ON: {"method": "async_eyecare_mode_on"},
     SERVICE_EYECARE_MODE_OFF: {"method": "async_eyecare_mode_off"},
 }
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi light from a config entry."""
+    entities = []
+
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        # Gateway light
+        if gateway.model not in [
+            GATEWAY_MODEL_AC_V1,
+            GATEWAY_MODEL_AC_V2,
+            GATEWAY_MODEL_AC_V3,
+        ]:
+            entities.append(
+                XiaomiGatewayLight(gateway, config_entry.title, config_entry.unique_id)
+            )
+
+    async_add_entities(entities, update_before_add=True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -149,8 +176,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
     if model == "philips.light.sread1":
         light = PhilipsEyecare(host, token)
@@ -235,7 +262,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPhilipsAbstractLight(Light):
+class XiaomiPhilipsAbstractLight(LightEntity):
     """Representation of a Abstract Xiaomi Philips Light."""
 
     def __init__(self, name, light, model, unique_id):
@@ -250,11 +277,6 @@ class XiaomiPhilipsAbstractLight(Light):
         self._available = False
         self._state = None
         self._state_attrs = {ATTR_MODEL: self._model}
-
-    @property
-    def should_poll(self):
-        """Poll the light."""
-        return True
 
     @property
     def unique_id(self):
@@ -465,7 +487,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             )
 
             result = await self._try_command(
-                "Setting brightness and color temperature failed: " "%s bri, %s cct",
+                "Setting brightness and color temperature failed: %s bri, %s cct",
                 self._light.set_brightness_and_color_temperature,
                 percent_brightness,
                 percent_color_temp,
@@ -477,7 +499,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting color temperature: " "%s mireds, %s%% cct",
+                "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
                 percent_color_temp,
             )
@@ -717,7 +739,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
-            unique_id = "{}-{}".format(unique_id, "ambient")
+            unique_id = f"{unique_id}-ambient"
         super().__init__(name, light, model, unique_id)
 
     async def async_turn_on(self, **kwargs):
@@ -823,14 +845,14 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color: " "%s %s%%, %s",
+                "Setting brightness and color: %s %s%%, %s",
                 brightness,
                 percent_brightness,
                 rgb,
             )
 
             result = await self._try_command(
-                "Setting brightness and color failed: " "%s bri, %s color",
+                "Setting brightness and color failed: %s bri, %s color",
                 self._light.set_brightness_and_rgb,
                 percent_brightness,
                 rgb,
@@ -851,7 +873,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             result = await self._try_command(
-                "Setting brightness and color temperature failed: " "%s bri, %s cct",
+                "Setting brightness and color temperature failed: %s bri, %s cct",
                 self._light.set_brightness_and_color_temperature,
                 percent_brightness,
                 percent_color_temp,
@@ -873,7 +895,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                "Setting color temperature: " "%s mireds, %s%% cct",
+                "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
                 percent_color_temp,
             )
@@ -937,3 +959,104 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off. Unsupported."""
         return
+
+
+class XiaomiGatewayLight(LightEntity):
+    """Representation of a gateway device's light."""
+
+    def __init__(self, gateway_device, gateway_name, gateway_device_id):
+        """Initialize the XiaomiGatewayLight."""
+        self._gateway = gateway_device
+        self._name = f"{gateway_name} Light"
+        self._gateway_device_id = gateway_device_id
+        self._unique_id = gateway_device_id
+        self._available = False
+        self._is_on = None
+        self._brightness_pct = 100
+        self._rgb = (255, 255, 255)
+        self._hs = (0, 0)
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the gateway."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway_device_id)},
+        }
+
+    @property
+    def name(self):
+        """Return the name of this entity, if any."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._available
+
+    @property
+    def is_on(self):
+        """Return true if it is on."""
+        return self._is_on
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return int(255 * self._brightness_pct / 100)
+
+    @property
+    def hs_color(self):
+        """Return the hs color value."""
+        return self._hs
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+
+    def turn_on(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_HS_COLOR in kwargs:
+            rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+        else:
+            rgb = self._rgb
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness_pct = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
+        else:
+            brightness_pct = self._brightness_pct
+
+        self._gateway.light.set_rgb(brightness_pct, rgb)
+
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn the light off."""
+        self._gateway.light.set_rgb(0, self._rgb)
+        self.schedule_update_ha_state()
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        try:
+            state_dict = await self.hass.async_add_executor_job(
+                self._gateway.light.rgb_status
+            )
+        except GatewayException as ex:
+            if self._available:
+                self._available = False
+                _LOGGER.error(
+                    "Got exception while fetching the gateway light state: %s", ex
+                )
+            return
+
+        self._available = True
+        self._is_on = state_dict["is_on"]
+
+        if self._is_on:
+            self._brightness_pct = state_dict["brightness"]
+            self._rgb = state_dict["rgb"]
+            self._hs = color.color_RGB_to_hs(*self._rgb)

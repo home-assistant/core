@@ -3,20 +3,17 @@ import asyncio
 import base64
 from collections import OrderedDict
 import logging
-
 from typing import Any, Dict, List, Optional, Set, cast
 
 import bcrypt
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
-
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -31,6 +28,16 @@ def _disallow_id(conf: Dict[str, Any]) -> Dict[str, Any]:
 
 
 CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
+
+
+@callback
+def async_get_provider(hass: HomeAssistant) -> "HassAuthProvider":
+    """Get the provider."""
+    for prv in hass.auth.auth_providers:
+        if prv.type == "homeassistant":
+            return cast(HassAuthProvider, prv)
+
+    raise RuntimeError("Provider not found")
 
 
 class InvalidAuth(HomeAssistantError):
@@ -141,8 +148,9 @@ class Data:
         if not bcrypt.checkpw(password.encode(), user_hash):
             raise InvalidAuth
 
-    # pylint: disable=no-self-use
-    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
+    def hash_password(  # pylint: disable=no-self-use
+        self, password: str, for_storage: bool = False
+    ) -> bytes:
         """Encode a password."""
         hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
 
@@ -203,7 +211,7 @@ class Data:
 
 @AUTH_PROVIDERS.register("homeassistant")
 class HassAuthProvider(AuthProvider):
-    """Auth provider based on a local storage of users in HASS config dir."""
+    """Auth provider based on a local storage of users in Home Assistant config dir."""
 
     DEFAULT_TITLE = "Home Assistant Local"
 
@@ -236,6 +244,35 @@ class HassAuthProvider(AuthProvider):
         await self.hass.async_add_executor_job(
             self.data.validate_login, username, password
         )
+
+    async def async_add_auth(self, username: str, password: str) -> None:
+        """Call add_auth on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        await self.hass.async_add_executor_job(self.data.add_auth, username, password)
+        await self.data.async_save()
+
+    async def async_remove_auth(self, username: str) -> None:
+        """Call remove_auth on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        self.data.async_remove_auth(username)
+        await self.data.async_save()
+
+    async def async_change_password(self, username: str, new_password: str) -> None:
+        """Call change_password on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        await self.hass.async_add_executor_job(
+            self.data.change_password, username, new_password
+        )
+        await self.data.async_save()
 
     async def async_get_or_create_credentials(
         self, flow_result: Dict[str, str]

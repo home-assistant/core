@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Krmilnik je \u017ee konfiguriran.",
+            "cannot_connect": "Ni mogo\u010de vzpostaviti povezave s krmilnikom z URL-jem {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "ID-ji naprav Vera, ki jih \u017eelite izklju\u010diti iz programa Home Assistant.",
+                    "lights": "ID-ji stikal Vera, ki naj jih Home Assistant tretira kot lu\u010di.",
+                    "vera_controller_url": "URL krmilnika"
+                },
+                "description": "Spodaj navedite URL krmilnika Vera. Izgledati bi moral takole: http://192.168.1.161:3480.",
+                "title": "Nastavite krmilnik Vera"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "ID-ji naprav Vera, ki jih \u017eelite izklju\u010diti iz programa Home Assistant.",
+                    "lights": "ID-ji stikal Vera, ki naj jih Home Assistant tretira kot lu\u010di."
+                },
+                "description": "Podrobnosti o izbirnih parametrih najdete v vera dokumentaciji: https://www.home-assistant.io/integrations/vera/. Opomba: Za vse spremembe tukaj bo potreben ponovni zagon stre\u017enika Home Assistant. \u010ce \u017eelite po\u010distiti vrednosti, vnesite presledek.",
+                "title": "Mo\u017enosti krmilnika vera"
+            }
+        }
+    }
+}

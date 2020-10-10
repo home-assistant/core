@@ -5,15 +5,14 @@ import os.path
 import discord
 import voluptuous as vol
 
-from homeassistant.const import CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ ATTR_IMAGES = "images"
 
 def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     return DiscordNotificationService(hass, token)
 
 
@@ -40,7 +39,6 @@ class DiscordNotificationService(BaseNotificationService):
         """Check if a file exists on disk and is in authorized path."""
         if not self.hass.config.is_allowed_path(filename):
             return False
-
         return os.path.isfile(filename)
 
     async def async_send_message(self, message, **kwargs):
@@ -53,11 +51,10 @@ class DiscordNotificationService(BaseNotificationService):
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
-
         data = kwargs.get(ATTR_DATA) or {}
 
         if ATTR_IMAGES in data:
-            images = list()
+            images = []
 
             for image in data.get(ATTR_IMAGES):
                 image_exists = await self.hass.async_add_executor_job(
@@ -76,19 +73,19 @@ class DiscordNotificationService(BaseNotificationService):
             try:
                 for channelid in kwargs[ATTR_TARGET]:
                     channelid = int(channelid)
-                    channel = discord_bot.get_channel(channelid)
+                    channel = discord_bot.get_channel(
+                        channelid
+                    ) or discord_bot.get_user(channelid)
 
                     if channel is None:
                         _LOGGER.warning("Channel not found for id: %s", channelid)
                         continue
-
                     # Must create new instances of File for each channel.
                     files = None
                     if images:
-                        files = list()
+                        files = []
                         for image in images:
                             files.append(discord.File(image))
-
                     await channel.send(message, files=files)
             except (discord.errors.HTTPException, discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)

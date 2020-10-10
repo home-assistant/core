@@ -1,18 +1,24 @@
 """Support for an exposed aREST RESTful API of a device."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
 )
-from homeassistant.const import CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_DEVICE_CLASS
-from homeassistant.util import Throttle
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_RESOURCE,
+    HTTP_OK,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,15 +36,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST binary sensor."""
-    resource = config.get(CONF_RESOURCE)
-    pin = config.get(CONF_PIN)
+    resource = config[CONF_RESOURCE]
+    pin = config[CONF_PIN]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     try:
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:
@@ -61,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ArestBinarySensor(BinarySensorDevice):
+class ArestBinarySensor(BinarySensorEntity):
     """Implement an aREST binary sensor for a pin."""
 
     def __init__(self, arest, resource, name, device_class, pin):
@@ -74,7 +80,7 @@ class ArestBinarySensor(BinarySensorDevice):
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != 200:
+            if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

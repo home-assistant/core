@@ -2,9 +2,7 @@
   "domain": "filter",
   "name": "Filter",
   "documentation": "https://www.home-assistant.io/integrations/filter",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "dependencies": ["history"],
+  "codeowners": ["@dgomes"],
+  "quality_scale": "internal"
 }

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "Navnet eksisterer allerede"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Annonser IP",
+                    "advertise_port": "Annonser port",
+                    "host_ip": "Vert IP",
+                    "listen_port": "Lytte port",
+                    "name": "Navn",
+                    "upnp_bind_multicast": "Bind multicast (Sant/Usant)"
+                },
+                "title": "Definer serverkonfigurasjon"
+            }
+        }
+    },
+    "title": "Emulert Roku"
+}

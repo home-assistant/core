@@ -5,8 +5,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_RESOURCE
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import CONF_NAME, CONF_RESOURCE, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,13 +40,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST switches."""
-    resource = config.get(CONF_RESOURCE)
+    resource = config[CONF_RESOURCE]
 
     try:
         response = requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     dev = []
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
     for pinnum, pin in pins.items():
         dev.append(
             ArestSwitchPin(
@@ -62,11 +62,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_NAME, response.json()[CONF_NAME]),
                 pin.get(CONF_NAME),
                 pinnum,
-                pin.get(CONF_INVERT),
+                pin[CONF_INVERT],
             )
         )
 
-    functions = config.get(CONF_FUNCTIONS)
+    functions = config[CONF_FUNCTIONS]
     for funcname, func in functions.items():
         dev.append(
             ArestSwitchFunction(
@@ -80,13 +80,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ArestSwitchBase(SwitchDevice):
+class ArestSwitchBase(SwitchEntity):
     """Representation of an aREST switch."""
 
     def __init__(self, resource, location, name):
         """Initialize the switch."""
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._state = None
         self._available = True
 
@@ -116,7 +116,7 @@ class ArestSwitchFunction(ArestSwitchBase):
 
         request = requests.get(f"{self._resource}/{self._func}", timeout=10)
 
-        if request.status_code != 200:
+        if request.status_code != HTTP_OK:
             _LOGGER.error("Can't find function")
             return
 
@@ -133,7 +133,7 @@ class ArestSwitchFunction(ArestSwitchBase):
             f"{self._resource}/{self._func}", timeout=10, params={"params": "1"}
         )
 
-        if request.status_code == 200:
+        if request.status_code == HTTP_OK:
             self._state = True
         else:
             _LOGGER.error("Can't turn on function %s at %s", self._func, self._resource)
@@ -144,7 +144,7 @@ class ArestSwitchFunction(ArestSwitchBase):
             f"{self._resource}/{self._func}", timeout=10, params={"params": "0"}
         )
 
-        if request.status_code == 200:
+        if request.status_code == HTTP_OK:
             self._state = False
         else:
             _LOGGER.error(
@@ -172,7 +172,7 @@ class ArestSwitchPin(ArestSwitchBase):
         self.invert = invert
 
         request = requests.get(f"{self._resource}/mode/{self._pin}/o", timeout=10)
-        if request.status_code != 200:
+        if request.status_code != HTTP_OK:
             _LOGGER.error("Can't set mode")
             self._available = False
 
@@ -182,7 +182,7 @@ class ArestSwitchPin(ArestSwitchBase):
         request = requests.get(
             f"{self._resource}/digital/{self._pin}/{turn_on_payload}", timeout=10
         )
-        if request.status_code == 200:
+        if request.status_code == HTTP_OK:
             self._state = True
         else:
             _LOGGER.error("Can't turn on pin %s at %s", self._pin, self._resource)
@@ -193,7 +193,7 @@ class ArestSwitchPin(ArestSwitchBase):
         request = requests.get(
             f"{self._resource}/digital/{self._pin}/{turn_off_payload}", timeout=10
         )
-        if request.status_code == 200:
+        if request.status_code == HTTP_OK:
             self._state = False
         else:
             _LOGGER.error("Can't turn off pin %s at %s", self._pin, self._resource)

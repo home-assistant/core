@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_credentials": "Nombre de usuario y/o contrase\u00f1a incorrectos."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "URL de Home Control",
+                    "mydevolo_url": "URL de mydevolo",
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico / ID de devolo"
+                },
+                "title": "devolo Home Control"
+            }
+        }
+    },
+    "title": "devolo Home Control"
+}

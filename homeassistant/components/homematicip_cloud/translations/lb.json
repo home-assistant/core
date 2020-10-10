@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Acesspoint ass schon konfigur\u00e9iert",
+            "connection_aborted": "Konnt sech net mam HMIP Server verbannen",
+            "unknown": "Onbekannten Feeler opgetrueden"
+        },
+        "error": {
+            "invalid_pin": "Ong\u00ebltege Pin, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_sgtin_or_pin": "Ong\u00ebltege Pin, prob\u00e9iert w.e.g. nach emol.",
+            "press_the_button": "Dr\u00e9ckt w.e.g. de bloe Kn\u00e4ppchen.",
+            "register_failed": "Feeler beim registr\u00e9ieren, prob\u00e9iert w.e.g. nach emol.",
+            "timeout_button": "Z\u00e4itiwwerschreidung beim dr\u00e9cken vum bloe Kn\u00e4ppchen, prob\u00e9iert w.e.g. nach emol."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID vum Accesspoint (SGTIN)",
+                    "name": "Numm (optional, g\u00ebtt als prefixe fir all Apparat benotzt)",
+                    "pin": "Pin Code (Optional)"
+                },
+                "title": "HomematicIP Accesspoint auswielen"
+            },
+            "link": {
+                "description": "Dr\u00e9ckt de bloen Kn\u00e4ppchen um Accesspoint an den Submit Kn\u00e4ppchen fir d'HomematicIP mam Home Assistant ze registr\u00e9ieren.\n\n![Standuert vum Kn\u00e4ppchen op der Bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Accesspoint verbannen"
+            }
+        }
+    }
+}

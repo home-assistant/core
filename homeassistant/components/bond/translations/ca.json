@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "old_firmware": "Hi ha un programari antic i no compatible al dispositiu Bond - actualitza'l abans de continuar",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "Bond: {bond_id} ({host})",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s"
+                },
+                "description": "Vols configurar {bond_id}?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    }
+}

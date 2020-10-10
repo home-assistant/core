@@ -1,10 +1,11 @@
 """Provide functionality to stream video source."""
 import logging
+import secrets
 import threading
+from types import MappingProxyType
 
 import voluptuous as vol
 
-from homeassistant.auth.util import generate_secret
 from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -18,16 +19,11 @@ from .const import (
     CONF_LOOKBACK,
     CONF_STREAM_SOURCE,
     DOMAIN,
+    MAX_SEGMENTS,
     SERVICE_RECORD,
 )
 from .core import PROVIDERS
 from .hls import async_setup_hls
-
-try:
-    import uvloop
-except ImportError:
-    uvloop = None
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +38,6 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
         vol.Optional(CONF_LOOKBACK, default=0): int,
     }
 )
-DATA_UVLOOP_WARN = "stream_uvloop_warn"
-# Set log level to error for libav
-logging.getLogger("libav").setLevel(logging.ERROR)
 
 
 @bind_hass
@@ -53,32 +46,16 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    if DATA_UVLOOP_WARN not in hass.data:
-        hass.data[DATA_UVLOOP_WARN] = True
-        # Warn about https://github.com/home-assistant/home-assistant/issues/22999
-        if (
-            uvloop is not None
-            and isinstance(hass.loop, uvloop.Loop)
-            and (
-                "shell_command" in hass.config.components
-                or "ffmpeg" in hass.config.components
-            )
-        ):
-            _LOGGER.warning(
-                "You are using UVLoop with stream and shell_command. This is known to cause issues. Please uninstall uvloop."
-            )
-
     if options is None:
         options = {}
 
     # For RTSP streams, prefer TCP
-    if (
-        isinstance(stream_source, str)
-        and stream_source[:7] == "rtsp://"
-        and not options
-    ):
-        options["rtsp_flags"] = "prefer_tcp"
-        options["stimeout"] = "5000000"
+    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+        options = {
+            "rtsp_flags": "prefer_tcp",
+            "stimeout": "5000000",
+            **options,
+        }
 
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
@@ -94,16 +71,21 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         stream.add_provider(fmt)
 
         if not stream.access_token:
-            stream.access_token = generate_secret()
+            stream.access_token = secrets.token_hex()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
-    except Exception:
-        raise HomeAssistantError("Unable to get stream")
+    except Exception as err:
+        raise HomeAssistantError("Unable to get stream") from err
 
 
 async def async_setup(hass, config):
     """Set up stream."""
+    # Set log level to error for libav
+    logging.getLogger("libav").setLevel(logging.ERROR)
+    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
+
     # Keep import here so that we can import stream integration without installing reqs
+    # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder
 
     hass.data[DOMAIN] = {}
@@ -123,7 +105,7 @@ async def async_setup(hass, config):
         for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
             stream.keepalive = False
             stream.stop()
-        _LOGGER.info("Stopped stream workers.")
+        _LOGGER.info("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -157,8 +139,10 @@ class Stream:
 
     @property
     def outputs(self):
-        """Return stream outputs."""
-        return self._outputs
+        """Return a copy of the stream outputs."""
+        # A copy is returned so the caller can iterate through the outputs
+        # without concern about self._outputs being modified from another thread.
+        return MappingProxyType(self._outputs.copy())
 
     def add_provider(self, fmt):
         """Add provider output stream."""
@@ -184,9 +168,14 @@ class Stream:
     def start(self):
         """Start a stream."""
         # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
         from .worker import stream_worker
 
         if self._thread is None or not self._thread.isAlive():
+            if self._thread is not None:
+                # The thread must have crashed/exited. Join to clean up the
+                # previous thread.
+                self._thread.join(timeout=0)
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
                 name="stream_worker",
@@ -245,7 +234,7 @@ async def async_handle_record_service(hass, call):
     # Take advantage of lookback
     hls = stream.outputs.get("hls")
     if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), hls.num_segments)
+        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
         # Wait for latest segment, then add the lookback
         await hls.recv()
         recorder.prepend(list(hls.get_segment())[-num_segments:])

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebst Land ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Land"
+                },
+                "title": "Wiel ee Land aus fir z'iwwerwaachen"
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_location%]"
+        },
+        "error": {
+            "general_error": "Nieoczekiwany b\u0142\u0105d",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "[%key::common::config_flow::data::latitude%]",
+                    "longitude": "[%key::common::config_flow::data::longitude%]"
+                },
+                "description": "Monitoruj raporty oparte na u\u017cytkownikach i CDC dla pary wsp\u00f3\u0142rz\u0119dnych.",
+                "title": "Skonfiguruj Flu Near You"
+            }
+        }
+    }
+}

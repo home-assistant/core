@@ -1,27 +1,30 @@
 """Viessmann ViCare climate device."""
 import logging
-import requests
-import simplejson
 
-from homeassistant.components.climate import ClimateDevice
+import requests
+
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    PRESET_ECO,
-    PRESET_COMFORT,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_AUTO,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
-from . import DOMAIN as VICARE_DOMAIN
-from . import VICARE_API
-from . import VICARE_NAME
-from . import VICARE_HEATING_TYPE
-from . import HeatingType
+from . import (
+    DOMAIN as VICARE_DOMAIN,
+    PYVICARE_ERROR,
+    VICARE_API,
+    VICARE_HEATING_TYPE,
+    VICARE_NAME,
+    HeatingType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,8 +78,6 @@ HA_TO_VICARE_PRESET_HEATING = {
     PRESET_ECO: VICARE_PROGRAM_ECO,
 }
 
-PYVICARE_ERROR = "error"
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare climate devices."""
@@ -95,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareClimate(ClimateDevice):
+class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     def __init__(self, name, api, heating_type):
@@ -136,8 +137,6 @@ class ViCareClimate(ClimateDevice):
             # Update the generic device attributes
             self._attributes = {}
             self._attributes["room_temperature"] = _room_temperature
-            self._attributes["supply_temperature"] = _supply_temperature
-            self._attributes["outside_temperature"] = self._api.getOutsideTemperature()
             self._attributes["active_vicare_program"] = self._current_program
             self._attributes["active_vicare_mode"] = self._current_mode
             self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
@@ -148,28 +147,17 @@ class ViCareClimate(ClimateDevice):
             self._attributes["date_last_service"] = self._api.getLastServiceDate()
             self._attributes["error_history"] = self._api.getErrorHistory()
             self._attributes["active_error"] = self._api.getActiveError()
-            self._attributes[
-                "circulationpump_active"
-            ] = self._api.getCirculationPumpActive()
 
             # Update the specific device attributes
             if self._heating_type == HeatingType.gas:
                 self._current_action = self._api.getBurnerActive()
 
-                self._attributes["burner_modulation"] = self._api.getBurnerModulation()
-                self._attributes[
-                    "boiler_temperature"
-                ] = self._api.getBoilerTemperature()
-
             elif self._heating_type == HeatingType.heatpump:
                 self._current_action = self._api.getCompressorActive()
 
-                self._attributes[
-                    "return_temperature"
-                ] = self._api.getReturnTemperature()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
-        except simplejson.errors.JSONDecodeError:
+        except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
 
     @property

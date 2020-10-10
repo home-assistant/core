@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_error": "No es pot connectar amb Abode.",
+            "identifier_exists": "Compte ja registrat.",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_credentials": "Credencials inv\u00e0lides."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Introducci\u00f3 de la informaci\u00f3 d'inici de sessi\u00f3 a Abode."
+            }
+        }
+    }
+}

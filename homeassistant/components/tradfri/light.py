@@ -1,29 +1,32 @@
 """Support for IKEA Tradfri lights."""
 import logging
 
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    Light,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    LightEntity,
 )
-from .base_class import TradfriBaseDevice, TradfriBaseClass
+import homeassistant.util.color as color_util
+
+from .base_class import TradfriBaseClass, TradfriBaseDevice
 from .const import (
     ATTR_DIMMER,
     ATTR_HUE,
     ATTR_SAT,
     ATTR_TRANSITION_TIME,
-    SUPPORTED_LIGHT_FEATURES,
-    SUPPORTED_GROUP_FEATURES,
     CONF_GATEWAY_ID,
     CONF_IMPORT_GROUPS,
-    KEY_GATEWAY,
+    DEVICES,
+    DOMAIN,
+    GROUPS,
     KEY_API,
+    SUPPORTED_GROUP_FEATURES,
+    SUPPORTED_LIGHT_FEATURES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,23 +35,21 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    api = hass.data[KEY_API][config_entry.entry_id]
-    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
+    tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data[KEY_API]
+    devices = tradfri_data[DEVICES]
 
-    devices_commands = await api(gateway.get_devices())
-    devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
         async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
 
     if config_entry.data[CONF_IMPORT_GROUPS]:
-        groups_commands = await api(gateway.get_groups())
-        groups = await api(groups_commands)
+        groups = tradfri_data[GROUPS]
         if groups:
             async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
-class TradfriGroup(TradfriBaseClass, Light):
+class TradfriGroup(TradfriBaseClass, LightEntity):
     """The platform class for light groups required by hass."""
 
     def __init__(self, device, api, gateway_id):
@@ -105,7 +106,7 @@ class TradfriGroup(TradfriBaseClass, Light):
             await self._api(self._device.set_state(1))
 
 
-class TradfriLight(TradfriBaseDevice, Light):
+class TradfriLight(TradfriBaseDevice, LightEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):
@@ -245,7 +246,7 @@ class TradfriLight(TradfriBaseDevice, Light):
                 color_command = self._device_control.set_hsb(**color_data)
                 transition_time = None
 
-        # HSB can always be set, but color temp + brightness is bulb dependant
+        # HSB can always be set, but color temp + brightness is bulb dependent
         command = dimmer_command
         if command is not None:
             command += color_command

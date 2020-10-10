@@ -2,9 +2,9 @@
 # pylint: disable=protected-access
 import unittest
 
-from homeassistant.setup import setup_component
 import homeassistant.components.remote as remote
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 from tests.components.remote import common
@@ -22,9 +22,11 @@ class TestDemoRemote(unittest.TestCase):
         assert setup_component(
             self.hass, remote.DOMAIN, {"remote": {"platform": "demo"}}
         )
+        self.hass.block_till_done()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

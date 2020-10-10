@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Cambia modalit\u00e0 HVAC su {entity_name}",
+            "set_preset_mode": "Modifica preimpostazione su {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 HVAC specifica",
+            "is_preset_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 preimpostata specifica"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} umidit\u00e0 misurata modificata",
+            "current_temperature_changed": "{entity_name} temperatura misurata cambiata",
+            "hvac_mode_changed": "{entity_name} modalit\u00e0 HVAC modificata"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Freddo",
+            "dry": "Secco",
+            "fan_only": "Solo ventilatore",
+            "heat": "Caldo",
+            "heat_cool": "Caldo/Freddo",
+            "off": "Spento"
+        }
+    },
+    "title": "Termostato"
+}

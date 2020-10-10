@@ -1,28 +1,35 @@
 """Preference management for cloud."""
 from ipaddress import ip_address
+from typing import List, Optional
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import User
 from homeassistant.core import callback
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
+    DEFAULT_ALEXA_REPORT_STATE,
+    DEFAULT_EXPOSED_DOMAINS,
+    DEFAULT_GOOGLE_REPORT_STATE,
     DOMAIN,
+    PREF_ALEXA_DEFAULT_EXPOSE,
+    PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_ALEXA_REPORT_STATE,
+    PREF_ALIASES,
+    PREF_CLOUD_USER,
+    PREF_CLOUDHOOKS,
+    PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
-    PREF_GOOGLE_SECURE_DEVICES_PIN,
-    PREF_CLOUDHOOKS,
-    PREF_CLOUD_USER,
+    PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_ENTITY_CONFIGS,
-    PREF_OVERRIDE_NAME,
-    PREF_DISABLE_2FA,
-    PREF_ALIASES,
-    PREF_SHOULD_EXPOSE,
-    PREF_ALEXA_ENTITY_CONFIGS,
-    PREF_ALEXA_REPORT_STATE,
-    DEFAULT_ALEXA_REPORT_STATE,
-    PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
-    DEFAULT_GOOGLE_REPORT_STATE,
+    PREF_GOOGLE_REPORT_STATE,
+    PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_OVERRIDE_NAME,
+    PREF_SHOULD_EXPOSE,
+    PREF_USERNAME,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
 )
@@ -47,16 +54,7 @@ class CloudPreferences:
         prefs = await self._store.async_load()
 
         if prefs is None:
-            prefs = {
-                PREF_ENABLE_ALEXA: True,
-                PREF_ENABLE_GOOGLE: True,
-                PREF_ENABLE_REMOTE: False,
-                PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-                PREF_GOOGLE_ENTITY_CONFIGS: {},
-                PREF_ALEXA_ENTITY_CONFIGS: {},
-                PREF_CLOUDHOOKS: {},
-                PREF_CLOUD_USER: None,
-            }
+            prefs = self._empty_config("")
 
         self._prefs = prefs
 
@@ -86,6 +84,8 @@ class CloudPreferences:
         alexa_entity_configs=_UNDEF,
         alexa_report_state=_UNDEF,
         google_report_state=_UNDEF,
+        alexa_default_expose=_UNDEF,
+        google_default_expose=_UNDEF,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -101,6 +101,8 @@ class CloudPreferences:
             (PREF_ALEXA_ENTITY_CONFIGS, alexa_entity_configs),
             (PREF_ALEXA_REPORT_STATE, alexa_report_state),
             (PREF_GOOGLE_REPORT_STATE, google_report_state),
+            (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
+            (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
         ):
             if value is not _UNDEF:
                 prefs[key] = value
@@ -166,19 +168,41 @@ class CloudPreferences:
         updated_entities = {**entities, entity_id: updated_entity}
         await self.async_update(alexa_entity_configs=updated_entities)
 
+    async def async_set_username(self, username):
+        """Set the username that is logged in."""
+        # Logging out.
+        if username is None:
+            user = await self._load_cloud_user()
+
+            if user is not None:
+                await self._hass.auth.async_remove_user(user)
+                await self._save_prefs({**self._prefs, PREF_CLOUD_USER: None})
+            return
+
+        cur_username = self._prefs.get(PREF_USERNAME)
+
+        if cur_username == username:
+            return
+
+        if cur_username is None:
+            await self._save_prefs({**self._prefs, PREF_USERNAME: username})
+        else:
+            await self._save_prefs(self._empty_config(username))
+
     def as_dict(self):
         """Return dictionary version."""
         return {
+            PREF_ALEXA_DEFAULT_EXPOSE: self.alexa_default_expose,
+            PREF_ALEXA_ENTITY_CONFIGS: self.alexa_entity_configs,
+            PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
+            PREF_CLOUDHOOKS: self.cloudhooks,
             PREF_ENABLE_ALEXA: self.alexa_enabled,
             PREF_ENABLE_GOOGLE: self.google_enabled,
             PREF_ENABLE_REMOTE: self.remote_enabled,
-            PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
-            PREF_ALEXA_ENTITY_CONFIGS: self.alexa_entity_configs,
-            PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
-            PREF_CLOUDHOOKS: self.cloudhooks,
-            PREF_CLOUD_USER: self.cloud_user,
+            PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
         }
 
     @property
@@ -203,6 +227,19 @@ class CloudPreferences:
     def alexa_report_state(self):
         """Return if Alexa report state is enabled."""
         return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
+
+    @property
+    def alexa_default_expose(self) -> Optional[List[str]]:
+        """Return array of entity domains that are exposed by default to Alexa.
+
+        Can return None, in which case for backwards should be interpreted as allow all domains.
+        """
+        return self._prefs.get(PREF_ALEXA_DEFAULT_EXPOSE)
+
+    @property
+    def alexa_entity_configs(self):
+        """Return Alexa Entity configurations."""
+        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
 
     @property
     def google_enabled(self):
@@ -230,19 +267,41 @@ class CloudPreferences:
         return self._prefs[PREF_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @property
-    def alexa_entity_configs(self):
-        """Return Alexa Entity configurations."""
-        return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
+    def google_default_expose(self) -> Optional[List[str]]:
+        """Return array of entity domains that are exposed by default to Google.
+
+        Can return None, in which case for backwards should be interpreted as allow all domains.
+        """
+        return self._prefs.get(PREF_GOOGLE_DEFAULT_EXPOSE)
 
     @property
     def cloudhooks(self):
         """Return the published cloud webhooks."""
         return self._prefs.get(PREF_CLOUDHOOKS, {})
 
-    @property
-    def cloud_user(self) -> str:
+    async def get_cloud_user(self) -> str:
         """Return ID from Home Assistant Cloud system user."""
-        return self._prefs.get(PREF_CLOUD_USER)
+        user = await self._load_cloud_user()
+
+        if user:
+            return user.id
+
+        user = await self._hass.auth.async_create_system_user(
+            "Home Assistant Cloud", [GROUP_ID_ADMIN]
+        )
+        await self.async_update(cloud_user=user.id)
+        return user.id
+
+    async def _load_cloud_user(self) -> Optional[User]:
+        """Load cloud user if available."""
+        user_id = self._prefs.get(PREF_CLOUD_USER)
+
+        if user_id is None:
+            return None
+
+        # Fetch the user. It can happen that the user no longer exists if
+        # an image was restored without restoring the cloud prefs.
+        return await self._hass.auth.async_get_user(user_id)
 
     @property
     def _has_local_trusted_network(self) -> bool:
@@ -283,3 +342,21 @@ class CloudPreferences:
 
         for listener in self._listeners:
             self._hass.async_create_task(async_create_catching_coro(listener(self)))
+
+    @callback
+    def _empty_config(self, username):
+        """Return an empty config."""
+        return {
+            PREF_ALEXA_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
+            PREF_ALEXA_ENTITY_CONFIGS: {},
+            PREF_CLOUD_USER: None,
+            PREF_CLOUDHOOKS: {},
+            PREF_ENABLE_ALEXA: True,
+            PREF_ENABLE_GOOGLE: True,
+            PREF_ENABLE_REMOTE: False,
+            PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
+            PREF_GOOGLE_ENTITY_CONFIGS: {},
+            PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+            PREF_GOOGLE_SECURE_DEVICES_PIN: None,
+            PREF_USERNAME: username,
+        }

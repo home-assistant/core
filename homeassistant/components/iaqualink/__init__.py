@@ -5,8 +5,6 @@ import logging
 from typing import Any, Dict
 
 import aiohttp.client_exceptions
-import voluptuous as vol
-
 from iaqualink import (
     AqualinkBinarySensor,
     AqualinkClient,
@@ -17,6 +15,7 @@ from iaqualink import (
     AqualinkThermostat,
     AqualinkToggle,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -26,20 +25,18 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN, UPDATE_INTERVAL
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
         _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from aio_exception
 
     systems = await aqualink.get_systems()
     systems = list(systems.values())
@@ -208,11 +205,9 @@ class AqualinkEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
-
-    @callback
-    def _update_callback(self) -> None:
-        self.async_schedule_update_ha_state()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
+        )
 
     @property
     def should_poll(self) -> bool:

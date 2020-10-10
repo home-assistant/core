@@ -1,14 +1,15 @@
 """The tests for the mFi sensor platform."""
 import unittest
-import unittest.mock as mock
 
+from mficlient.client import FailedToLogin
 import requests
 
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 import homeassistant.components.mfi.sensor as mfi
+import homeassistant.components.sensor as sensor
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 
@@ -38,50 +39,50 @@ class TestMfiSensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_missing_config(self, mock_client):
         """Test setup with missing configuration."""
         config = {"sensor": {"platform": "mfi"}}
         assert setup_component(self.hass, "sensor", config)
         assert not mock_client.called
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_failed_login(self, mock_client):
         """Test setup with login failure."""
-        from mficlient.client import FailedToLogin
-
         mock_client.side_effect = FailedToLogin
         assert not self.PLATFORM.setup_platform(self.hass, dict(self.GOOD_CONFIG), None)
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_failed_connect(self, mock_client):
         """Test setup with connection failure."""
         mock_client.side_effect = requests.exceptions.ConnectionError
         assert not self.PLATFORM.setup_platform(self.hass, dict(self.GOOD_CONFIG), None)
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_minimum(self, mock_client):
         """Test setup with minimum configuration."""
         config = dict(self.GOOD_CONFIG)
         del config[self.THING]["port"]
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6443, use_tls=True, verify=True
         )
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_with_port(self, mock_client):
         """Test setup with port."""
         config = dict(self.GOOD_CONFIG)
         config[self.THING]["port"] = 6123
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6123, use_tls=True, verify=True
         )
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     def test_setup_with_tls_disabled(self, mock_client):
         """Test setup without TLS."""
         config = dict(self.GOOD_CONFIG)
@@ -89,12 +90,13 @@ class TestMfiSensorSetup(unittest.TestCase):
         config[self.THING]["ssl"] = False
         config[self.THING]["verify_ssl"] = False
         assert setup_component(self.hass, self.COMPONENT.DOMAIN, config)
+        self.hass.block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
             "foo", "user", "pass", port=6080, use_tls=False, verify=False
         )
 
-    @mock.patch("mficlient.client.MFiClient")
+    @mock.patch("homeassistant.components.mfi.sensor.MFiClient")
     @mock.patch("homeassistant.components.mfi.sensor.MfiSensor")
     def test_setup_adds_proper_devices(self, mock_sensor, mock_client):
         """Test if setup adds devices."""
@@ -106,6 +108,7 @@ class TestMfiSensorSetup(unittest.TestCase):
             mock.MagicMock(ports=ports)
         ]
         assert setup_component(self.hass, sensor.DOMAIN, self.GOOD_CONFIG)
+        self.hass.block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
                 mock_sensor.assert_any_call(port, self.hass)

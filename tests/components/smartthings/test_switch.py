@@ -6,7 +6,6 @@ real HTTP calls are not initiated during testing.
 """
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.smartthings import switch
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
@@ -16,11 +15,6 @@ from homeassistant.components.switch import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await switch.async_setup_platform(None, None, None)
 
 
 async def test_entity_and_device_attributes(hass, device_factory):

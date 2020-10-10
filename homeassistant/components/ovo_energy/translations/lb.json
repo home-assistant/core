@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "authorization_error": "Feeler bei der Autorisatioun. Iwwerpr\u00e9if deng Verbindungs Informatiounen.",
+            "connection_error": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "Eng OVO Energie Instanz arrichten fir d\u00e4in Energie Verbrauch ze gesinn.",
+                "title": "OVO Energy Kont dob\u00e4isetzen"
+            }
+        }
+    }
+}

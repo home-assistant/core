@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ruta del dongle inv\u00e0lida",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "invalid_dongle_path": "No s'ha trobat cap dongle v\u00e0lid en aquesta ruta"
+        },
+        "flow_title": "Configuraci\u00f3 d'ENOcean",
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "Ruta del dongle USB"
+                },
+                "title": "Selecciona la ruta del dongle ENOcean"
+            },
+            "manual": {
+                "data": {
+                    "path": "Ruta del dongle USB"
+                },
+                "title": "Introdueix la ruta del dongle ENOcean"
+            }
+        }
+    },
+    "title": "EnOcean"
+}

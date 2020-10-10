@@ -3,11 +3,11 @@ from datetime import timedelta
 import logging
 
 import requests
-import xmltodict
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    }
+}

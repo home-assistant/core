@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
@@ -16,6 +16,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_ECO,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -58,7 +60,12 @@ DAIKIN_TO_HA_STATE = {
     "off": HVAC_MODE_OFF,
 }
 
-HA_PRESET_TO_DAIKIN = {PRESET_AWAY: "on", PRESET_NONE: "off"}
+HA_PRESET_TO_DAIKIN = {
+    PRESET_AWAY: "on",
+    PRESET_NONE: "off",
+    PRESET_BOOST: "powerful",
+    PRESET_ECO: "econo",
+}
 
 HA_ATTR_TO_DAIKIN = {
     ATTR_PRESET_MODE: "en_hol",
@@ -70,6 +77,8 @@ HA_ATTR_TO_DAIKIN = {
     ATTR_TARGET_TEMPERATURE: "stemp",
 }
 
+DAIKIN_ATTR_ADVANCED = "adv"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the Daikin HVAC platform.
@@ -77,37 +86,33 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
-    async_add_entities([DaikinClimate(daikin_api)])
+    async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
-class DaikinClimate(ClimateDevice):
+class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     def __init__(self, api):
         """Initialize the climate device."""
-        from pydaikin import appliance
 
         self._api = api
         self._list = {
             ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
             ATTR_FAN_MODE: self._api.device.fan_rate,
-            ATTR_SWING_MODE: list(
-                map(
-                    str.title,
-                    appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]),
-                )
-            ),
+            ATTR_SWING_MODE: self._api.device.swing_modes,
         }
 
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
 
-        if self._api.device.support_away_mode:
+        if (
+            self._api.device.support_away_mode
+            or self._api.device.support_advanced_modes
+        ):
             self._supported_features |= SUPPORT_PRESET_MODE
 
         if self._api.device.support_fan_rate:
@@ -157,7 +162,7 @@ class DaikinClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._api.mac
+        return self._api.device.mac
 
     @property
     def temperature_unit(self):
@@ -234,19 +239,51 @@ class DaikinClimate(ClimateDevice):
             == HA_PRESET_TO_DAIKIN[PRESET_AWAY]
         ):
             return PRESET_AWAY
+        if (
+            HA_PRESET_TO_DAIKIN[PRESET_BOOST]
+            in self._api.device.represent(DAIKIN_ATTR_ADVANCED)[1]
+        ):
+            return PRESET_BOOST
+        if (
+            HA_PRESET_TO_DAIKIN[PRESET_ECO]
+            in self._api.device.represent(DAIKIN_ATTR_ADVANCED)[1]
+        ):
+            return PRESET_ECO
         return PRESET_NONE
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
         if preset_mode == PRESET_AWAY:
             await self._api.device.set_holiday(ATTR_STATE_ON)
+        elif preset_mode == PRESET_BOOST:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_ON
+            )
+        elif preset_mode == PRESET_ECO:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_ON
+            )
         else:
-            await self._api.device.set_holiday(ATTR_STATE_OFF)
+            if self.preset_mode == PRESET_AWAY:
+                await self._api.device.set_holiday(ATTR_STATE_OFF)
+            elif self.preset_mode == PRESET_BOOST:
+                await self._api.device.set_advanced_mode(
+                    HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_OFF
+                )
+            elif self.preset_mode == PRESET_ECO:
+                await self._api.device.set_advanced_mode(
+                    HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
+                )
 
     @property
     def preset_modes(self):
         """List of available preset modes."""
-        return list(HA_PRESET_TO_DAIKIN)
+        ret = [PRESET_NONE]
+        if self._api.device.support_away_mode:
+            ret.append(PRESET_AWAY)
+        if self._api.device.support_advanced_modes:
+            ret += [PRESET_ECO, PRESET_BOOST]
+        return ret
 
     async def async_update(self):
         """Retrieve latest state."""

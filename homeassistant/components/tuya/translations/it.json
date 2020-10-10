@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Autenticazione non valida",
+            "cannot_connect": "Impossibile connettersi",
+            "conn_error": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "auth_failed": "Autenticazione non valida",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "Configurazione di Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
+                    "password": "Password",
+                    "platform": "L'app in cui si registra il tuo account",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le tue credenziali Tuya.",
+                "title": "Tuya"
+            }
+        }
+    }
+}

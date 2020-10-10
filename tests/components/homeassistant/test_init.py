@@ -2,40 +2,43 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
-from unittest.mock import patch, Mock
 
+import pytest
+import voluptuous as vol
 import yaml
 
-import homeassistant.core as ha
 from homeassistant import config
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-    EVENT_CORE_CONFIG_UPDATE,
-)
 import homeassistant.components as comps
-from homeassistant.setup import async_setup_component
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_CORE_CONFIG,
+    SERVICE_SET_LOCATION,
 )
-import homeassistant.helpers.intent as intent
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+    EVENT_CORE_CONFIG_UPDATE,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+import homeassistant.core as ha
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
+from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import (
+    async_capture_events,
+    async_mock_service,
     get_test_home_assistant,
     mock_service,
     patch_yaml_files,
-    mock_coro,
-    async_mock_service,
-    async_capture_events,
 )
 
 
@@ -117,11 +120,7 @@ class TestComponentsCore(unittest.TestCase):
 
         self.hass.states.set("light.Bowl", STATE_ON)
         self.hass.states.set("light.Ceiling", STATE_OFF)
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_is_on(self):
         """Test is_on method."""
@@ -211,15 +210,15 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_error.called
         assert mock_process.called is False
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
     def test_stop_homeassistant(self, mock_stop):
         """Test stop service."""
         stop(self.hass)
         self.hass.block_till_done()
         assert mock_stop.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
-    @patch("homeassistant.config.async_check_ha_config_file", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
+    @patch("homeassistant.config.async_check_ha_config_file", return_value=None)
     def test_restart_homeassistant(self, mock_check, mock_restart):
         """Test stop service."""
         restart(self.hass)
@@ -227,7 +226,7 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_restart.called
         assert mock_check.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
     @patch(
         "homeassistant.config.async_check_ha_config_file",
         side_effect=HomeAssistantError("Test error"),
@@ -239,103 +238,14 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_check.called
         assert not mock_restart.called
 
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=mock_coro())
-    @patch("homeassistant.config.async_check_ha_config_file", return_value=mock_coro())
+    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
+    @patch("homeassistant.config.async_check_ha_config_file", return_value=None)
     def test_check_config(self, mock_check, mock_stop):
         """Test stop service."""
         check_config(self.hass)
         self.hass.block_till_done()
         assert mock_check.called
         assert not mock_stop.called
-
-
-async def test_turn_on_intent(hass):
-    """Test HassTurnOn intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test light on"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_on"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_turn_off_intent(hass):
-    """Test HassTurnOff intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "on")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOff", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test light off"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_off"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_toggle_intent(hass):
-    """Test HassToggle intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
-
-    response = await intent.async_handle(
-        hass, "test", "HassToggle", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Toggled test light"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "toggle"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_turn_on_multiple_intent(hass):
-    """Test HassTurnOn intent with multiple similar entities.
-
-    This tests that matching finds the proper entity among similar names.
-    """
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    hass.states.async_set("light.test_lights_2", "off")
-    hass.states.async_set("light.test_lighter", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test lights"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test lights 2 on"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_on"
-    assert call.data == {"entity_id": ["light.test_lights_2"]}
 
 
 async def test_turn_on_to_not_block_for_domains_without_service(hass):
@@ -357,9 +267,9 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
 
     with patch(
         "homeassistant.core.ServiceRegistry.async_call",
-        side_effect=lambda *args: mock_coro(),
+        return_value=None,
     ) as mock_call:
-        await service.func(service_call)
+        await service.job.target(service_call)
 
     assert mock_call.call_count == 2
     assert mock_call.call_args_list[0][0] == (
@@ -382,7 +292,7 @@ async def test_entity_update(hass):
 
     with patch(
         "homeassistant.helpers.entity_component.async_update_entity",
-        return_value=mock_coro(),
+        return_value=None,
     ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
@@ -411,3 +321,66 @@ async def test_setting_location(hass):
     assert len(events) == 1
     assert hass.config.latitude == 30
     assert hass.config.longitude == 40
+
+
+async def test_require_admin(hass, hass_read_only_user):
+    """Test services requiring admin."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in (
+        SERVICE_HOMEASSISTANT_RESTART,
+        SERVICE_HOMEASSISTANT_STOP,
+        SERVICE_CHECK_CONFIG,
+        SERVICE_RELOAD_CORE_CONFIG,
+    ):
+        with pytest.raises(Unauthorized):
+            await hass.services.async_call(
+                ha.DOMAIN,
+                service,
+                {},
+                context=ha.Context(user_id=hass_read_only_user.id),
+                blocking=True,
+            )
+            assert False, f"Should have raises for {service}"
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            ha.DOMAIN,
+            SERVICE_SET_LOCATION,
+            {"latitude": 0, "longitude": 0},
+            context=ha.Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )
+
+
+async def test_turn_on_off_toggle_schema(hass, hass_read_only_user):
+    """Test the schemas for the turn on/off/toggle services."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
+        for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
+            with pytest.raises(vol.Invalid):
+                await hass.services.async_call(
+                    ha.DOMAIN,
+                    service,
+                    {"entity_id": invalid},
+                    context=ha.Context(user_id=hass_read_only_user.id),
+                    blocking=True,
+                )
+
+
+async def test_not_allowing_recursion(hass, caplog):
+    """Test we do not allow recursion."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
+        await hass.services.async_call(
+            ha.DOMAIN,
+            service,
+            {"entity_id": "homeassistant.light"},
+            blocking=True,
+        )
+        assert (
+            f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"
+            in caplog.text
+        ), service

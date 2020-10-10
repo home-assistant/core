@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty",
+            "not_songpal_device": "Ei Songpal-laite"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 kohteen {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "P\u00e4\u00e4tepiste"
+                }
+            }
+        }
+    }
+}

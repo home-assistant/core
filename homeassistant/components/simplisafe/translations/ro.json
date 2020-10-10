@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Contul este deja \u00eenregistrat",
+            "invalid_credentials": "Credentiale invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Adresa de email"
+                },
+                "title": "Completa\u021bi informa\u021biile dvs."
+            }
+        }
+    }
+}

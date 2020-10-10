@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare un solo account di Spotify.",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione",
+            "missing_configuration": "L'integrazione di Spotify non \u00e8 configurata. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_account_mismatch": "L'account Spotify con cui si \u00e8 autenticati non corrisponde all'account necessario per la ri-autenticazione."
+        },
+        "create_entry": {
+            "default": "Autenticato con successo con Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione di Spotify deve essere nuovamente autenticata con Spotify per l'account: {account}",
+                "title": "Eseguire nuovamente l'autenticazione con Spotify"
+            }
+        }
+    }
+}

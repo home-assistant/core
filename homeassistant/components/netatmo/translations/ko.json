@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\uc778\uc99d URL \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "missing_configuration": "\uad6c\uc131\uc694\uc18c\uac00 \uad6c\uc131\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \uc124\uba85\uc11c\ub97c \ucc38\uace0\ud574\uc8fc\uc138\uc694.",
+            "no_url_available": "\uac00\ub2a5\ud55c URL\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \uc774 \uc5d0\ub7ec\uc5d0 \ub300\ud55c \uc815\ubcf4\ub294 \ub3c4\uc6c0\ub9d0 \uc139\uc158\uc744 \ud655\uc778\ud558\uc138\uc694({docs_url})"
+        },
+        "create_entry": {
+            "default": "\uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "\uc9c0\uc5ed \uc774\ub984",
+                    "lat_ne": "\ubd81\ub3d9\ucabd \uac00\uc7a5\uc790\ub9ac \uc704\ub3c4",
+                    "lat_sw": "\ub0a8\uc11c\ucabd \uac00\uc7a5\uc790\ub9ac \uc704\ub3c4",
+                    "lon_ne": "\ubd81\ub3d9\ucabd \uac00\uc7a5\uc790\ub9ac \uacbd\ub3c4",
+                    "lon_sw": "\ub0a8\uc11c\ucabd \uac00\uc7a5\uc790\ub9ac \uacbd\ub3c4",
+                    "mode": "\uacc4\uc0b0\ud558\uae30",
+                    "show_on_map": "\uc9c0\ub3c4\uc5d0 \ud45c\uc2dc\ud558\uae30"
+                },
+                "description": "\uc9c0\uc5ed\uc5d0 \ub300\ud55c \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Netamo \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "\uc9c0\uc5ed \uc774\ub984",
+                    "weather_areas": "\ub0a0\uc528 \uc9c0\uc5ed"
+                },
+                "description": "\uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
+                "title": "Netamo \uacf5\uc6a9 \ub0a0\uc528 \uc13c\uc11c"
+            }
+        }
+    }
+}

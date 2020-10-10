@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                },
+                "description": "M\u00f6chten Sie {name} einrichten?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Geben Sie Ihre Roku-Informationen ein."
+            }
+        }
+    }
+}

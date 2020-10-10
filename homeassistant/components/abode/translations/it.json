@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "connection_error": "Impossibile connettersi ad Abode.",
+            "identifier_exists": "Account gi\u00e0 registrato",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_credentials": "Credenziali non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "title": "Inserisci le tue informazioni di accesso Abode"
+            }
+        }
+    }
+}

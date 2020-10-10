@@ -1,19 +1,21 @@
 """Support for Synology Surveillance Station Cameras."""
+from functools import partial
 import logging
 
 import requests
+from synology.surveillance_station import SurveillanceStation
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
-    CONF_URL,
-    CONF_WHITELIST,
-    CONF_VERIFY_SSL,
     CONF_TIMEOUT,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    CONF_WHITELIST,
 )
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
@@ -40,18 +42,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Synology IP Camera."""
+    _LOGGER.warning(
+        "The Synology integration is deprecated."
+        " Please use the Synology DSM integration"
+        " (https://www.home-assistant.io/integrations/synology_dsm/) instead."
+        " This integration will be removed in version 0.118.0."
+    )
+
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        from synology.surveillance_station import SurveillanceStation
-
-        surveillance = SurveillanceStation(
-            config.get(CONF_URL),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            verify_ssl=verify_ssl,
-            timeout=timeout,
+        surveillance = await hass.async_add_executor_job(
+            partial(
+                SurveillanceStation,
+                config.get(CONF_URL),
+                config.get(CONF_USERNAME),
+                config.get(CONF_PASSWORD),
+                verify_ssl=verify_ssl,
+                timeout=timeout,
+            )
         )
     except (requests.exceptions.RequestException, ValueError):
         _LOGGER.exception("Error when initializing SurveillanceStation")

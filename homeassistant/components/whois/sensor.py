@@ -6,7 +6,7 @@ import voluptuous as vol
 import whois
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, TIME_DAYS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "WHOIS lookup for %s didn't contain an expiration date", domain
             )
             return
-    except whois.BaseException as ex:
+    except whois.BaseException as ex:  # pylint: disable=broad-except
         _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
@@ -75,7 +75,7 @@ class WhoisSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement to present the value in."""
-        return "days"
+        return TIME_DAYS
 
     @property
     def state(self):
@@ -96,7 +96,7 @@ class WhoisSensor(Entity):
         """Get the current WHOIS data for the domain."""
         try:
             response = self.whois(self._domain)
-        except whois.BaseException as ex:
+        except whois.BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_state_and_attributes()
             return

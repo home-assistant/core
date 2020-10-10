@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

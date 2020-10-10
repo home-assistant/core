@@ -1,8 +1,8 @@
 """Hass.io Add-on ingress service."""
 import asyncio
+from ipaddress import ip_address
 import logging
 import os
-from ipaddress import ip_address
 from typing import Dict, Union
 
 import aiohttp

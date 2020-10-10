@@ -12,10 +12,9 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -39,6 +38,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -51,6 +51,14 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    DOMAIN,
+    SERVICE_CLEAR_TIMER,
+    SERVICE_JOIN,
+    SERVICE_SET_TIMER,
+    SERVICE_UNJOIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BLUESOUND_GROUP = "bluesound_group"
@@ -62,10 +70,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-SERVICE_CLEAR_TIMER = "bluesound_clear_sleep_timer"
-SERVICE_JOIN = "bluesound_join"
-SERVICE_SET_TIMER = "bluesound_set_sleep_timer"
-SERVICE_UNJOIN = "bluesound_unjoin"
 STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
@@ -152,11 +156,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             hass,
             async_add_entities,
             discovery_info.get(CONF_HOST),
-            discovery_info.get(CONF_PORT, None),
+            discovery_info.get(CONF_PORT),
         )
         return
 
-    hosts = config.get(CONF_HOSTS, None)
+    hosts = config.get(CONF_HOSTS)
     if hosts:
         for host in hosts:
             _add_player(
@@ -196,7 +200,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class BluesoundPlayer(MediaPlayerDevice):
+class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
@@ -216,7 +220,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._last_status_update = None
         self._is_online = False
         self._retry_remove = None
-        self._lastvol = None
+        self._muted = False
         self._master = None
         self._is_master = False
         self._group_name = None
@@ -255,7 +259,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if not self._icon:
             self._icon = self._sync_status.get("@icon", self.host)
 
-        master = self._sync_status.get("master", None)
+        master = self._sync_status.get("master")
         if master is not None:
             self._is_master = False
             master_host = master.get("#text")
@@ -273,7 +277,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         else:
             if self._master is not None:
                 self._master = None
-            slaves = self._sync_status.get("slave", None)
+            slaves = self._sync_status.get("slave")
             self._is_master = slaves is not None
 
         if on_updated_cb:
@@ -351,7 +355,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             with async_timeout.timeout(10):
                 response = await websession.get(url)
 
-            if response.status == 200:
+            if response.status == HTTP_OK:
                 result = await response.text()
                 if result:
                     data = xmltodict.parse(result)
@@ -395,13 +399,13 @@ class BluesoundPlayer(MediaPlayerDevice):
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )
 
-            if response.status == 200:
+            if response.status == HTTP_OK:
                 result = await response.text()
                 self._is_online = True
                 self._last_status_update = dt_util.utcnow()
                 self._status = xmltodict.parse(result)["status"].copy()
 
-                group_name = self._status.get("groupName", None)
+                group_name = self._status.get("groupName")
                 if group_name != self._group_name:
                     _LOGGER.debug("Group name change detected on device: %s", self.host)
                     self._group_name = group_name
@@ -418,12 +422,12 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # sync_status. We will force an update if the player is
                     # grouped this isn't a foolproof solution. A better
                     # solution would be to fetch sync_status more often when
-                    # the device is playing. This would solve alot of
+                    # the device is playing. This would solve a lot of
                     # problems. This change will be done when the
                     # communication is moved to a separate library
                     await self.force_update_sync_status()
 
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -436,7 +440,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._is_online = False
             self._last_status_update = None
             self._status = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
 
@@ -497,7 +501,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
                     "url2": item.get("@url", ""),
-                    "url": "Preset?id={}".format(item.get("@id", "")),
+                    "url": f"Preset?id={item.get('@id', '')}",
                 }
             )
 
@@ -552,7 +556,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return STATE_GROUPED
 
-        status = self._status.get("state", None)
+        status = self._status.get("state")
         if status in ("pause", "stop"):
             return STATE_PAUSED
         if status in ("stream", "play"):
@@ -565,7 +569,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        return self._status.get("title1", None)
+        return self._status.get("title1")
 
     @property
     def media_artist(self):
@@ -576,9 +580,9 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return self._group_name
 
-        artist = self._status.get("artist", None)
+        artist = self._status.get("artist")
         if not artist:
-            artist = self._status.get("title2", None)
+            artist = self._status.get("title2")
         return artist
 
     @property
@@ -587,9 +591,9 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        album = self._status.get("album", None)
+        album = self._status.get("album")
         if not album:
-            album = self._status.get("title3", None)
+            album = self._status.get("title3")
         return album
 
     @property
@@ -598,7 +602,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        url = self._status.get("image", None)
+        url = self._status.get("image")
         if not url:
             return
         if url[0] == "/":
@@ -616,7 +620,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._last_status_update is None or mediastate == STATE_IDLE:
             return None
 
-        position = self._status.get("secs", None)
+        position = self._status.get("secs")
         if position is None:
             return None
 
@@ -632,7 +636,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
-        duration = self._status.get("totlen", None)
+        duration = self._status.get("totlen")
         if duration is None:
             return None
         return float(duration)
@@ -645,9 +649,9 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        volume = self._status.get("volume", None)
+        volume = self._status.get("volume")
         if self.is_grouped:
-            volume = self._sync_status.get("@volume", None)
+            volume = self._sync_status.get("@volume")
 
         if volume is not None:
             return int(volume) / 100
@@ -656,10 +660,13 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        volume = self.volume_level
-        if not volume:
-            return None
-        return 0 <= volume < 0.001
+        mute = self._status.get("mute")
+        if self.is_grouped:
+            mute = self._sync_status.get("@mute")
+
+        if mute is not None:
+            mute = bool(int(mute))
+        return mute
 
     @property
     def name(self):
@@ -774,7 +781,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     def supported_features(self):
         """Flag of media commands that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         if self.is_grouped and not self.is_master:
             return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
@@ -931,9 +938,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         selected_source = items[0]
-        url = "Play?url={}&preset_id&image={}".format(
-            selected_source["url"], selected_source["image"]
-        )
+        url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
         if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
             url = selected_source["url"]
@@ -999,7 +1004,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Play?seek={}".format(float(position)))
+        return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """
@@ -1020,16 +1025,16 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_volume_up(self):
         """Volume up the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol >= 1:
             return
-        return self.async_set_volume_level(((current_vol * 100) + 1) / 100)
+        return await self.async_set_volume_level(current_vol + 0.01)
 
     async def async_volume_down(self):
         """Volume down the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol <= 0:
             return
-        return self.async_set_volume_level(((current_vol * 100) - 1) / 100)
+        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
@@ -1037,17 +1042,10 @@ class BluesoundPlayer(MediaPlayerDevice):
             volume = 0
         elif volume > 1:
             volume = 1
-        return await self.send_bluesound_command(
-            "Volume?level=" + str(float(volume) * 100)
-        )
+        return await self.send_bluesound_command(f"Volume?level={float(volume) * 100}")
 
     async def async_mute_volume(self, mute):
         """Send mute command to media player."""
         if mute:
-            volume = self.volume_level
-            if volume > 0:
-                self._lastvol = volume
-            return await self.send_bluesound_command("Volume?level=0")
-        return await self.send_bluesound_command(
-            "Volume?level=" + str(float(self._lastvol) * 100)
-        )
+            return await self.send_bluesound_command("Volume?mute=1")
+        return await self.send_bluesound_command("Volume?mute=0")

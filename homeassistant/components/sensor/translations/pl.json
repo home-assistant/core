@@ -1,0 +1,41 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "obecny poziom na\u0142adowania baterii {entity_name}",
+            "is_current": "Bie\u017c\u0105cy pr\u0105d {entity_name}",
+            "is_energy": "Bie\u017c\u0105ca energia {entity_name}",
+            "is_humidity": "obecna wilgotno\u015b\u0107 {entity_name}",
+            "is_illuminance": "obecne nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
+            "is_power": "obecna moc {entity_name}",
+            "is_power_factor": "Bie\u017c\u0105cy wsp\u00f3\u0142czynnik mocy {entity_name}",
+            "is_pressure": "obecne ci\u015bnienie {entity_name}",
+            "is_signal_strength": "obecna si\u0142a sygna\u0142u {entity_name}",
+            "is_temperature": "obecna temperatura {entity_name}",
+            "is_timestamp": "obecny znacznik czasu {entity_name}",
+            "is_value": "obecna warto\u015b\u0107 {entity_name}",
+            "is_voltage": "Bie\u017c\u0105ce napi\u0119cie {entity_name}"
+        },
+        "trigger_type": {
+            "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
+            "current": "nat\u0119\u017cenie zmieni si\u0119 w {entity_name}",
+            "energy": "moc zmieni si\u0119 w {entity_name}",
+            "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",
+            "illuminance": "zmieni si\u0119 nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
+            "power": "zmieni si\u0119 moc {entity_name}",
+            "power_factor": "wsp\u00f3\u0142czynnik mocy zmieni si\u0119 w {entity_name}",
+            "pressure": "zmieni si\u0119 ci\u015bnienie {entity_name}",
+            "signal_strength": "zmieni si\u0119 si\u0142a sygna\u0142u {entity_name}",
+            "temperature": "zmieni si\u0119 temperatura {entity_name}",
+            "timestamp": "zmieni si\u0119 znacznik czasu {entity_name}",
+            "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}",
+            "voltage": "napi\u0119cie zmieni si\u0119 w {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        }
+    },
+    "title": "Sensor"
+}

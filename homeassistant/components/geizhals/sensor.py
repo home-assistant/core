@@ -1,15 +1,15 @@
 """Parse prices of a device from geizhals."""
-import logging
 from datetime import timedelta
+import logging
 
 from geizhals import Device, Geizhals
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ CONF_DESCRIPTION = "description"
 CONF_PRODUCT_ID = "product_id"
 CONF_LOCALE = "locale"
 
-ICON = "mdi:coin"
+ICON = "mdi:currency-usd-circle"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 

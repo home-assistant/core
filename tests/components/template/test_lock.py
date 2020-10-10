@@ -1,13 +1,12 @@
 """The tests for the Template lock platform."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components import lock
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import callback
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +57,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -95,6 +95,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -123,6 +124,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -151,6 +153,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -179,6 +182,7 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -193,6 +197,7 @@ class TestTemplateLock:
                 {"lock": {"platform": "template", "value_template": "Invalid"}},
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -220,13 +225,14 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
         assert self.hass.states.all() == []
 
-    def test_no_template_match_all(self, caplog):
-        """Test that we do not allow locks that match on all."""
+    def test_template_static(self, caplog):
+        """Test that we allow static templates."""
         with assert_setup_component(1, "lock"):
             assert setup.setup_component(
                 self.hass,
@@ -247,18 +253,12 @@ class TestTemplateLock:
                 },
             )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
         state = self.hass.states.get("lock.template_lock")
         assert state.state == lock.STATE_UNLOCKED
-
-        assert (
-            "Template lock 'Template Lock' has no entity ids configured "
-            "to track nor were we able to extract the entities to track "
-            "from the 'value_template' template. This entity will only "
-            "be able to be updated manually."
-        ) in caplog.text
 
         self.hass.states.set("lock.template_lock", lock.STATE_LOCKED)
         self.hass.block_till_done()
@@ -283,6 +283,7 @@ class TestTemplateLock:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -317,6 +318,7 @@ class TestTemplateLock:
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
 
@@ -343,7 +345,7 @@ async def test_available_template_with_entities(hass):
         {
             "lock": {
                 "platform": "template",
-                "value_template": "{{ 'on' }}",
+                "value_template": "{{ states('switch.test_state') }}",
                 "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
                 "unlock": {
                     "service": "switch.turn_off",
@@ -354,6 +356,7 @@ async def test_available_template_with_entities(hass):
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -391,8 +394,54 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
         },
     )
 
+    await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.template_lock").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one lock per id."""
+    await setup.async_setup_component(
+        hass,
+        "lock",
+        {
+            "lock": {
+                "platform": "template",
+                "name": "test_template_lock_01",
+                "unique_id": "not-so-unique-anymore",
+                "value_template": "{{ true }}",
+                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
+                "unlock": {
+                    "service": "switch.turn_off",
+                    "entity_id": "switch.test_state",
+                },
+            },
+        },
+    )
+
+    await setup.async_setup_component(
+        hass,
+        "lock",
+        {
+            "lock": {
+                "platform": "template",
+                "name": "test_template_lock_02",
+                "unique_id": "not-so-unique-anymore",
+                "value_template": "{{ false }}",
+                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
+                "unlock": {
+                    "service": "switch.turn_off",
+                    "entity_id": "switch.test_state",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

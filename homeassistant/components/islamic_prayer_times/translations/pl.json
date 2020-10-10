@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja",
+            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+        },
+        "step": {
+            "user": {
+                "description": "Czy chcesz skonfigurowa\u0107 Islamskie czasy modlitwy?",
+                "title": "Skonfiguruj Islamskie czasy modlitwy"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Metoda kalkulacji modlitwy"
+                }
+            }
+        }
+    },
+    "title": "Islamskie czasy modlitwy"
+}

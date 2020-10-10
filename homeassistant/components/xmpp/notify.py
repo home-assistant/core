@@ -9,23 +9,13 @@ import string
 import requests
 import slixmpp
 from slixmpp.exceptions import IqError, IqTimeout, XMPPError
-from slixmpp.xmlstream.xmlstream import NotConnectedError
 from slixmpp.plugins.xep_0363.http_upload import (
     FileTooBig,
     FileUploadError,
     UploadServiceNotFound,
 )
+from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
-
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_RECIPIENT,
-    CONF_RESOURCE,
-    CONF_ROOM,
-    CONF_SENDER,
-)
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.template as template_helper
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -33,6 +23,16 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_RESOURCE,
+    CONF_ROOM,
+    CONF_SENDER,
+    HTTP_BAD_REQUEST,
+)
+import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.template as template_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,7 +190,6 @@ async def async_send_message(
                     message = self.Message(sto=recipient, stype="chat")
 
                 message["body"] = url
-                # pylint: disable=invalid-sequence-index
                 message["oob"]["url"] = url
                 try:
                     message.send()
@@ -203,7 +202,7 @@ async def async_send_message(
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, could not upload file %s", ex)
             except UploadServiceNotFound as ex:
-                _LOGGER.error("UploadServiceNotFound: " " could not upload file %s", ex)
+                _LOGGER.error("UploadServiceNotFound, could not upload file %s", ex)
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
             except requests.exceptions.SSLError as ex:
@@ -264,7 +263,7 @@ async def async_send_message(
 
             result = await hass.async_add_executor_job(get_url, url)
 
-            if result.status_code >= 400:
+            if result.status_code >= HTTP_BAD_REQUEST:
                 _LOGGER.error("Could not load file from %s", url)
                 return None
 
@@ -299,10 +298,10 @@ async def async_send_message(
 
         async def upload_file_from_path(self, path, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s ...", path)
+            _LOGGER.info("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
-                raise PermissionError("Could not access file. Not in whitelist.")
+                raise PermissionError("Could not access file. Path not allowed")
 
             with open(path, "rb") as upfile:
                 _LOGGER.debug("Reading file %s", path)

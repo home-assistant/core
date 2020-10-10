@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare una singola connessione Heos poich\u00e9 supporta tutti i dispositivi sulla rete.",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "connection_failure": "Impossibile connettersi all'host specificato."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Inserire il nome host o l'indirizzo IP di un dispositivo Heos (preferibilmente uno connesso alla rete tramite cavo).",
+                "title": "Collegamento a Heos"
+            }
+        }
+    }
+}

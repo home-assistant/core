@@ -1,15 +1,12 @@
 """Support for the YesssSMS platform."""
 import logging
 
+from YesssSMS import YesssSMS
 import voluptuous as vol
 
-from YesssSMS import YesssSMS
-
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-
 
 from .const import CONF_PROVIDER
 
@@ -49,7 +46,6 @@ def get_service(hass, config, discovery_info=None):
             "Connection Error, could not verify login data for '%s'",
             yesss.get_provider(),
         )
-        pass
 
     _LOGGER.debug(
         "initialized; library version: %s, with %s",
@@ -70,7 +66,7 @@ class YesssSMSNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
         if self.yesss.account_is_suspended():
-            # only retry to login after HASS was restarted with (hopefully)
+            # only retry to login after Home Assistant was restarted with (hopefully)
             # new login data.
             _LOGGER.error(
                 "Account is suspended, cannot send SMS. "

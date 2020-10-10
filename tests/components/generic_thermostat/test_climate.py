@@ -1,11 +1,12 @@
 """The tests for the generic_thermostat."""
 import datetime
+from os import path
 
-from asynctest import mock
 import pytest
 import pytz
 import voluptuous as vol
 
+from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
@@ -16,12 +17,18 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
 )
+from homeassistant.components.generic_thermostat import (
+    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -30,7 +37,12 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import assert_setup_component, mock_restore_cache
+from tests.async_mock import patch
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+)
 from tests.components.climate import common
 
 ENTITY = "climate.test"
@@ -74,12 +86,11 @@ async def test_valid_conf(hass):
 
 
 @pytest.fixture
-def setup_comp_1(hass):
+async def setup_comp_1(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "homeassistant", {})
-    )
+    assert await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
 
 
 async def test_heater_input_boolean(hass, setup_comp_1):
@@ -102,6 +113,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
             }
         },
     )
+    await hass.async_block_till_done()
 
     assert STATE_OFF == hass.states.get(heater_switch).state
 
@@ -120,6 +132,7 @@ async def test_heater_switch(hass, setup_comp_1):
     assert await async_setup_component(
         hass, switch.DOMAIN, {"switch": {"platform": "test"}}
     )
+    await hass.async_block_till_done()
     heater_switch = switch_1.entity_id
 
     assert await async_setup_component(
@@ -152,27 +165,26 @@ def _setup_sensor(hass, temp):
 
 
 @pytest.fixture
-def setup_comp_2(hass):
+async def setup_comp_2(hass):
     """Initialize components."""
     hass.config.units = METRIC_SYSTEM
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 2,
-                    "hot_tolerance": 4,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "away_temp": 16,
-                    "initial_hvac_mode": HVAC_MODE_HEAT,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_temp": 16,
+                "initial_hvac_mode": HVAC_MODE_HEAT,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_setup_defaults_to_unknown(hass):
@@ -193,6 +205,7 @@ async def test_setup_defaults_to_unknown(hass):
             }
         },
     )
+    await hass.async_block_till_done()
     assert HVAC_MODE_OFF == hass.states.get(ENTITY).state
 
 
@@ -269,6 +282,46 @@ async def test_sensor_bad_value(hass, setup_comp_2):
 
     state = hass.states.get(ENTITY)
     assert temp == state.attributes.get("current_temperature")
+
+
+async def test_sensor_unknown(hass):
+    """Test when target sensor is Unknown."""
+    hass.states.async_set("sensor.unknown", STATE_UNKNOWN)
+    assert await async_setup_component(
+        hass,
+        "climate",
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "unknown",
+                "heater": ENT_SWITCH,
+                "target_sensor": "sensor.unknown",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.unknown")
+    assert state.attributes.get("current_temperature") is None
+
+
+async def test_sensor_unavailable(hass):
+    """Test when target sensor is Unavailable."""
+    hass.states.async_set("sensor.unavailable", STATE_UNAVAILABLE)
+    assert await async_setup_component(
+        hass,
+        "climate",
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "unavailable",
+                "heater": ENT_SWITCH,
+                "target_sensor": "sensor.unavailable",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.unavailable")
+    assert state.attributes.get("current_temperature") is None
 
 
 async def test_set_target_temp_heater_on(hass, setup_comp_2):
@@ -398,28 +451,27 @@ def _setup_switch(hass, is_on):
 
 
 @pytest.fixture
-def setup_comp_3(hass):
+async def setup_comp_3(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 2,
-                    "hot_tolerance": 4,
-                    "away_temp": 30,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "ac_mode": True,
-                    "initial_hvac_mode": HVAC_MODE_COOL,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "away_temp": 30,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "ac_mode": True,
+                "initial_hvac_mode": HVAC_MODE_COOL,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_set_target_temp_ac_off(hass, setup_comp_3):
@@ -544,28 +596,27 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
 
 
 @pytest.fixture
-def setup_comp_4(hass):
+async def setup_comp_4(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "ac_mode": True,
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_hvac_mode": HVAC_MODE_COOL,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "ac_mode": True,
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVAC_MODE_COOL,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_temp_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
@@ -582,7 +633,7 @@ async def test_temp_change_ac_trigger_on_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -610,7 +661,7 @@ async def test_temp_change_ac_trigger_off_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)
@@ -655,28 +706,27 @@ async def test_mode_change_ac_trigger_on_not_long_enough(hass, setup_comp_4):
 
 
 @pytest.fixture
-def setup_comp_5(hass):
+async def setup_comp_5(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "ac_mode": True,
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_hvac_mode": HVAC_MODE_COOL,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "ac_mode": True,
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVAC_MODE_COOL,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_temp_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
@@ -693,7 +743,7 @@ async def test_temp_change_ac_trigger_on_long_enough_2(hass, setup_comp_5):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -721,7 +771,7 @@ async def test_temp_change_ac_trigger_off_long_enough_2(hass, setup_comp_5):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)
@@ -766,27 +816,26 @@ async def test_mode_change_ac_trigger_on_not_long_enough_2(hass, setup_comp_5):
 
 
 @pytest.fixture
-def setup_comp_6(hass):
+async def setup_comp_6(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "min_cycle_duration": datetime.timedelta(minutes=10),
-                    "initial_hvac_mode": HVAC_MODE_HEAT,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVAC_MODE_HEAT,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_temp_change_heater_trigger_off_not_long_enough(hass, setup_comp_6):
@@ -812,7 +861,7 @@ async def test_temp_change_heater_trigger_on_long_enough(hass, setup_comp_6):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, False)
@@ -831,7 +880,7 @@ async def test_temp_change_heater_trigger_off_long_enough(hass, setup_comp_6):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = _setup_switch(hass, True)
@@ -876,30 +925,30 @@ async def test_mode_change_heater_trigger_on_not_long_enough(hass, setup_comp_6)
 
 
 @pytest.fixture
-def setup_comp_7(hass):
+async def setup_comp_7(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "heater": ENT_SWITCH,
-                    "target_temp": 25,
-                    "target_sensor": ENT_SENSOR,
-                    "ac_mode": True,
-                    "min_cycle_duration": datetime.timedelta(minutes=15),
-                    "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_hvac_mode": HVAC_MODE_COOL,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "heater": ENT_SWITCH,
+                "target_temp": 25,
+                "target_sensor": ENT_SENSOR,
+                "ac_mode": True,
+                "min_cycle_duration": datetime.timedelta(minutes=15),
+                "keep_alive": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVAC_MODE_COOL,
+            }
+        },
     )
+
+    await hass.async_block_till_done()
 
 
 async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
@@ -910,13 +959,13 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -933,13 +982,13 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -948,35 +997,29 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass, setup_comp_7):
     assert ENT_SWITCH == call.data["entity_id"]
 
 
-def _send_time_changed(hass, now):
-    """Send a time changed event."""
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
-
-
 @pytest.fixture
-def setup_comp_8(hass):
+async def setup_comp_8(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_CELSIUS
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "target_temp": 25,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "min_cycle_duration": datetime.timedelta(minutes=15),
-                    "keep_alive": datetime.timedelta(minutes=10),
-                    "initial_hvac_mode": HVAC_MODE_HEAT,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=15),
+                "keep_alive": datetime.timedelta(minutes=10),
+                "initial_hvac_mode": HVAC_MODE_HEAT,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
@@ -987,13 +1030,13 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1010,13 +1053,13 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
     test_time = datetime.datetime.now(pytz.UTC)
-    _send_time_changed(hass, test_time)
+    async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=5))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=5))
     await hass.async_block_till_done()
     assert 0 == len(calls)
-    _send_time_changed(hass, test_time + datetime.timedelta(minutes=10))
+    async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
     call = calls[0]
@@ -1026,29 +1069,28 @@ async def test_temp_change_heater_trigger_off_long_enough_2(hass, setup_comp_8):
 
 
 @pytest.fixture
-def setup_comp_9(hass):
+async def setup_comp_9(hass):
     """Initialize components."""
     hass.config.temperature_unit = TEMP_FAHRENHEIT
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "cold_tolerance": 0.3,
-                    "hot_tolerance": 0.3,
-                    "target_temp": 25,
-                    "heater": ENT_SWITCH,
-                    "target_sensor": ENT_SENSOR,
-                    "min_cycle_duration": datetime.timedelta(minutes=15),
-                    "keep_alive": datetime.timedelta(minutes=10),
-                    "precision": 0.1,
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=15),
+                "keep_alive": datetime.timedelta(minutes=10),
+                "precision": 0.1,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
 
 async def test_precision(hass, setup_comp_9):
@@ -1076,6 +1118,7 @@ async def test_custom_setup_params(hass):
         },
     )
     assert result
+    await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert state.attributes.get("min_temp") == MIN_TEMP
     assert state.attributes.get("max_temp") == MAX_TEMP
@@ -1110,7 +1153,7 @@ async def test_restore_state(hass):
             }
         },
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
     assert state.attributes[ATTR_TEMPERATURE] == 20
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
@@ -1148,7 +1191,7 @@ async def test_no_restore_state(hass):
             }
         },
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get("climate.test_thermostat")
     assert state.attributes[ATTR_TEMPERATURE] == 22
     assert state.state == HVAC_MODE_OFF
@@ -1209,3 +1252,46 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVAC_MODE_OFF):
             ),
         ),
     )
+
+
+async def test_reload(hass):
+    """Test we can reload."""
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "heater": "switch.any",
+                "target_sensor": "sensor.any",
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is not None
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "generic_thermostat/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            GENERIC_THERMOSTAT_DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is None
+    assert hass.states.get("climate.reload")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

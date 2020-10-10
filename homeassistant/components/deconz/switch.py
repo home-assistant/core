@@ -1,5 +1,5 @@
 """Support for deCONZ switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -8,16 +8,13 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for deCONZ component.
 
-    Switches are based same device class as lights in deCONZ.
+    Switches are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_switch(lights):
@@ -26,13 +23,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
 
-            if light.type in POWER_PLUGS:
+            if (
+                light.type in POWER_PLUGS
+                and light.uniqueid not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzPowerPlug(light, gateway))
 
-            elif light.type in SIRENS:
+            elif (
+                light.type in SIRENS and light.uniqueid not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzSiren(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -43,8 +46,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_switch(gateway.api.lights.values())
 
 
-class DeconzPowerPlug(DeconzDevice, SwitchDevice):
+class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
+
+    TYPE = DOMAIN
 
     @property
     def is_on(self):
@@ -62,8 +67,10 @@ class DeconzPowerPlug(DeconzDevice, SwitchDevice):
         await self._device.async_set_state(data)
 
 
-class DeconzSiren(DeconzDevice, SwitchDevice):
+class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
+
+    TYPE = DOMAIN
 
     @property
     def is_on(self):

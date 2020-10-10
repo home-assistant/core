@@ -1,0 +1,7 @@
+{
+  "domain": "kef",
+  "name": "KEF",
+  "documentation": "https://www.home-assistant.io/integrations/kef",
+  "codeowners": ["@basnijholt"],
+  "requirements": ["aiokef==0.2.13", "getmac==0.8.2"]
+}

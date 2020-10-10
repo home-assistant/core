@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "auth_failed": "Niepoprawne uwierzytelnienie",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "conn_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+        },
+        "error": {
+            "auth_failed": "Niepoprawne uwierzytelnienie",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "Konfiguracja integracji Tuya",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Kod kraju twojego konta (np. 1 dla USA lub 86 dla Chin)",
+                    "password": "Has\u0142o",
+                    "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
+                "title": "Tuya"
+            }
+        }
+    }
+}

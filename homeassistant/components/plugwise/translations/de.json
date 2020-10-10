@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Smile IP-Adresse",
+                    "password": "Smile ID"
+                },
+                "description": "Details",
+                "title": "Stellen Sie eine Verbindung zu Smile her"
+            }
+        }
+    }
+}

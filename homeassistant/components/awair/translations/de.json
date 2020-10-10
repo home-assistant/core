@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Unbekannter Awair-API-Fehler."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "E-Mail"
+                },
+                "description": "Bitte geben Sie Ihr Awair-Entwicklerzugriffstoken erneut ein."
+            },
+            "user": {
+                "data": {
+                    "email": "E-Mail"
+                }
+            }
+        }
+    }
+}

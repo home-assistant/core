@@ -1,11 +1,10 @@
 {
   "config": {
-    "title": "OpenTherm Gateway",
     "step": {
       "init": {
         "title": "OpenTherm Gateway",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "device": "Path or URL",
           "id": "ID"
         }
@@ -16,7 +15,7 @@
       "id_exists": "Gateway id already exists",
       "serial_error": "Error connecting to device",
       "timeout": "Connection attempt timed out"
-	}
+    }
   },
   "options": {
     "step": {

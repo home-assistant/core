@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_credentials": "Ugyldige Tile registreringsinformasjon gitt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post"
+                },
+                "title": "Konfigurer Tile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Vis inaktive Tiles"
+                },
+                "title": "Konfigurer Tile"
+            }
+        }
+    }
+}

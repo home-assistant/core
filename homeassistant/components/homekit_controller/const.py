@@ -4,6 +4,7 @@ DOMAIN = "homekit_controller"
 KNOWN_DEVICES = f"{DOMAIN}-devices"
 CONTROLLER = f"{DOMAIN}-controller"
 ENTITY_MAP = f"{DOMAIN}-entity-map"
+TRIGGERS = f"{DOMAIN}-triggers"
 
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
@@ -14,6 +15,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "outlet": "switch",
     "switch": "switch",
     "thermostat": "climate",
+    "heater-cooler": "climate",
     "security-system": "alarm_control_panel",
     "garage-door-opener": "cover",
     "window": "cover",
@@ -26,4 +28,13 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "light": "sensor",
     "temperature": "sensor",
     "battery": "sensor",
+    "smoke": "binary_sensor",
+    "carbon-monoxide": "binary_sensor",
+    "leak": "binary_sensor",
+    "fan": "fan",
+    "fanv2": "fan",
+    "air-quality": "air_quality",
+    "occupancy": "binary_sensor",
+    "television": "media_player",
+    "valve": "switch",
 }

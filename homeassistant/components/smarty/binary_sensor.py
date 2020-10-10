@@ -2,9 +2,13 @@
 
 import logging
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class SmartyBinarySensor(BinarySensorDevice):
+class SmartyBinarySensor(BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
     def __init__(self, name, device_class, smarty):
@@ -82,7 +86,9 @@ class AlarmSensor(SmartyBinarySensor):
 
     def __init__(self, name, smarty):
         """Alarm Sensor Init."""
-        super().__init__(name=f"{name} Alarm", device_class="problem", smarty=smarty)
+        super().__init__(
+            name=f"{name} Alarm", device_class=DEVICE_CLASS_PROBLEM, smarty=smarty
+        )
 
     def update(self) -> None:
         """Update state."""
@@ -95,7 +101,9 @@ class WarningSensor(SmartyBinarySensor):
 
     def __init__(self, name, smarty):
         """Warning Sensor Init."""
-        super().__init__(name=f"{name} Warning", device_class="problem", smarty=smarty)
+        super().__init__(
+            name=f"{name} Warning", device_class=DEVICE_CLASS_PROBLEM, smarty=smarty
+        )
 
     def update(self) -> None:
         """Update state."""

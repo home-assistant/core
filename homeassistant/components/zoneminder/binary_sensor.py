@@ -1,5 +1,8 @@
 """Support for ZoneMinder binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -13,7 +16,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class ZMAvailabilitySensor(BinarySensorDevice):
+class ZMAvailabilitySensor(BinarySensorEntity):
     """Representation of the availability of ZoneMinder as a binary sensor."""
 
     def __init__(self, host_name, client):
@@ -35,7 +38,7 @@ class ZMAvailabilitySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     def update(self):
         """Update the state of this sensor (availability of ZoneMinder)."""

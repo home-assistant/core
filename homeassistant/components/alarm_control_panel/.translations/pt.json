@@ -1,9 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "arm_home": "Armar casa {entity_name}",
-            "arm_night": "Armar noite {entity_name}",
-            "disarm": "Desarmar {entity_name}"
-        }
-    }
-}

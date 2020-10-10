@@ -2,8 +2,9 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import MonitorState
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 import homeassistant.helpers.config_validation as cv
 
@@ -21,7 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder switch platform."""
-    from zoneminder.monitor import MonitorState
 
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class ZMSwitchMonitors(SwitchDevice):
+class ZMSwitchMonitors(SwitchEntity):
     """Representation of a ZoneMinder switch."""
 
     icon = "mdi:record-rec"

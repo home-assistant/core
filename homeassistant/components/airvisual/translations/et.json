@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geograafiline asukoht"
+                }
+            }
+        }
+    }
+}

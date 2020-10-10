@@ -309,7 +309,9 @@ class AndroidIPCamEntity(Entity):
                 return
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_DATA, async_ipcam_update)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_UPDATE_DATA, async_ipcam_update)
+        )
 
     @property
     def should_poll(self):

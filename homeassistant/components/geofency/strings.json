@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Geofency Webhook",
     "step": {
       "user": {
         "title": "Set up the Geofency Webhook",
@@ -8,7 +7,7 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive messages from Geofency."
     },
     "create_entry": {

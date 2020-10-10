@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze DoorBird is al geconfigureerd",
+            "link_local_address": "Link-lokale adressen worden niet ondersteund",
+            "not_doorbird_device": "Dit apparaat is geen DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (IP-adres)",
+                    "name": "Apparaatnaam",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Maak verbinding met de DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Door komma's gescheiden lijst met gebeurtenissen."
+                },
+                "description": "Voeg een door komma's gescheiden evenementnaam toe voor elk evenement dat u wilt volgen. Nadat je ze hier hebt ingevoerd, gebruik je de DoorBird-app om ze toe te wijzen aan een specifiek evenement. Zie de documentatie op https://www.home-assistant.io/integrations/doorbird/#events. Voorbeeld: iemand_drukte_knop, beweging"
+            }
+        }
+    }
+}

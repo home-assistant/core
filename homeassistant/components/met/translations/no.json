@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "name_exists": "Lokasjonen finnes allerede"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Elevasjon",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "name": "Navn"
+                },
+                "description": "",
+                "title": "Lokasjon"
+            }
+        }
+    }
+}

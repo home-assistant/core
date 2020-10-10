@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Une seule instance de Vesync est autoris\u00e9e"
+        },
+        "error": {
+            "invalid_login": "Nom d'utilisateur ou mot de passe invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Email"
+                },
+                "title": "Entrez vos identifiants"
+            }
+        }
+    }
+}

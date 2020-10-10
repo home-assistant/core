@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Un contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9.",
+            "cannot_connect": "Impossible de se connecter au contr\u00f4leur avec l'url {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Identifiants d'appareils Vera \u00e0 exclure de Home Assistant.",
+                    "lights": "Identifiants des interrupteurs vera \u00e0 traiter comme des lumi\u00e8res dans Home Assistant",
+                    "vera_controller_url": "URL du contr\u00f4leur"
+                },
+                "description": "Fournissez une URL de contr\u00f4leur Vera ci-dessous. Cela devrait ressembler \u00e0 ceci : http://192.168.1.161:3480.",
+                "title": "Configurer le contr\u00f4leur Vera"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Identifiants d'appareils Vera \u00e0 exclure de Home Assistant.",
+                    "lights": "Identifiants des interrupteurs vera \u00e0 traiter comme des lumi\u00e8res dans Home Assistant"
+                },
+                "description": "Consultez la documentation de vera pour plus de d\u00e9tails sur les param\u00e8tres facultatifs: https://www.home-assistant.io/integrations/vera/. Remarque: toute modification ici n\u00e9cessitera un red\u00e9marrage du serveur Home Assistant. Pour effacer les valeurs, entrez un espace.",
+                "title": "Options du contr\u00f4leur Vera"
+            }
+        }
+    }
+}

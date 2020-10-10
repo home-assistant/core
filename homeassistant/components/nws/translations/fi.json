@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Odottamaton virhe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-avain (s\u00e4hk\u00f6posti)",
+                    "latitude": "Leveysaste",
+                    "longitude": "Pituusaste"
+                }
+            }
+        }
+    }
+}

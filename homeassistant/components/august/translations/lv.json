@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Pieteik\u0161an\u0101s metode",
+                    "password": "Parole"
+                }
+            }
+        }
+    }
+}

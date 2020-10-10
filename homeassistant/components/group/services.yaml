@@ -1,39 +1,19 @@
 # Describes the format for available group services
-
 reload:
-  description: Reload group configuration.
-
-set_visibility:
-  description: Hide or show a group.
-  fields:
-    entity_id:
-      description: Name(s) of entities to set value.
-      example: 'group.travel'
-    visible:
-      description: True if group should be shown or False if it should be hidden.
-      example: True
+  description: Reload group configuration, entities, and notify services.
 
 set:
   description: Create/Update a user group.
   fields:
     object_id:
       description: Group id and part of entity id.
-      example: 'test_group'
+      example: "test_group"
     name:
       description: Name of group
-      example: 'My test group'
-    view:
-      description: Boolean for if the group is a view.
-      example: True
+      example: "My test group"
     icon:
       description: Name of icon for the group.
-      example: 'mdi:camera'
-    control:
-      description: Value for control the group control.
-      example: 'hidden'
-    visible:
-      description: If the group is visible on UI.
-      example: True
+      example: "mdi:camera"
     entities:
       description: List of all members in the group. Not compatible with 'delta'.
       example: domain.entity_id1, domain.entity_id2
@@ -42,12 +22,11 @@ set:
       example: domain.entity_id1, domain.entity_id2
     all:
       description: Enable this option if the group should only turn on when all entities are on.
-      example: True
+      example: true
 
 remove:
   description: Remove a user group.
   fields:
     object_id:
       description: Group id and part of entity id.
-      example: 'test_group'
-
+      example: "test_group"

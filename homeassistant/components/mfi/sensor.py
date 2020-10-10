@@ -1,23 +1,24 @@
 """Support for Ubiquiti mFi sensors."""
 import logging
 
+from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    STATE_ON,
-    STATE_OFF,
     CONF_HOST,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +57,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_tls = config.get(CONF_VERIFY_SSL)
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
-
-    from mficlient.client import FailedToLogin, MFiClient
 
     try:
         client = MFiClient(

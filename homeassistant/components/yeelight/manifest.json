@@ -3,11 +3,12 @@
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
   "requirements": [
-    "yeelight==0.5.0"
+    "yeelight==0.5.4"
   ],
-  "dependencies": [],
   "codeowners": [
     "@rytilahti",
-    "@zewelor"
-  ]
+    "@zewelor",
+    "@shenxn"
+  ],
+  "config_flow": true
 }

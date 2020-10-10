@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -68,8 +68,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +107,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the universal media players."""
+
+    await async_setup_reload_service(hass, "universal", ["media_player"])
+
     player = UniversalMediaPlayer(
         hass,
         config.get(CONF_NAME),
@@ -116,7 +122,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([player])
 
 
-class UniversalMediaPlayer(MediaPlayerDevice):
+class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     def __init__(self, hass, name, children, commands, attributes, state_template=None):
@@ -132,30 +138,53 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                 attr.append(None)
             self._attrs[key] = attr
         self._child_state = None
+        self._state_template_result = None
         self._state_template = state_template
-        if state_template is not None:
-            self._state_template.hass = hass
 
     async def async_added_to_hass(self):
-        """Subscribe to children and template state changes.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe to children and template state changes."""
 
         @callback
-        def async_on_dependency_update(*_):
+        def _async_on_dependency_update(event):
             """Update ha state when dependencies update."""
+            self.async_set_context(event.context)
             self.async_schedule_update_ha_state(True)
+
+        @callback
+        def _async_on_template_update(event, updates):
+            """Update ha state when dependencies update."""
+            result = updates.pop().result
+
+            if isinstance(result, TemplateError):
+                self._state_template_result = None
+            else:
+                self._state_template_result = result
+
+            if event:
+                self.async_set_context(event.context)
+
+            self.async_schedule_update_ha_state(True)
+
+        if self._state_template is not None:
+            result = async_track_template_result(
+                self.hass,
+                [TrackTemplate(self._state_template, None)],
+                _async_on_template_update,
+            )
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, callback(lambda _: result.async_refresh())
+            )
+
+            self.async_on_remove(result.async_remove)
 
         depend = copy(self._children)
         for entity in self._attrs.values():
             depend.append(entity[0])
-        if self._state_template is not None:
-            for entity in self._state_template.extract_entities():
-                depend.append(entity)
 
-        self.hass.helpers.event.async_track_state_change(
-            list(set(depend)), async_on_dependency_update
+        self.async_on_remove(
+            self.hass.helpers.event.async_track_state_change_event(
+                list(set(depend)), _async_on_dependency_update
+            )
         )
 
     def _entity_lkp(self, entity_id, state_attr=None):
@@ -208,7 +237,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         await self.hass.services.async_call(
-            DOMAIN, service_name, service_data, blocking=True
+            DOMAIN, service_name, service_data, blocking=True, context=self._context
         )
 
     @property
@@ -220,7 +249,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """Return the master state for entity or None."""
         if self._state_template is not None:
-            return self._state_template.async_render()
+            return self._state_template_result
         if CONF_STATE in self._attrs:
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
@@ -255,7 +284,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
-        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL)
+        try:
+            return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
+        except (TypeError, ValueError):
+            return None
 
     @property
     def is_volume_muted(self):
@@ -413,132 +445,79 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """When was the position of the current playing media valid."""
         return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
 
-    def async_turn_on(self):
-        """Turn the media player on.
+    async def async_turn_on(self):
+        """Turn the media player on."""
+        await self._async_call_service(SERVICE_TURN_ON, allow_override=True)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_TURN_ON, allow_override=True)
+    async def async_turn_off(self):
+        """Turn the media player off."""
+        await self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
 
-    def async_turn_off(self):
-        """Turn the media player off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
-
-    def async_mute_volume(self, mute):
-        """Mute the volume.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_mute_volume(self, mute):
+        """Mute the volume."""
         data = {ATTR_MEDIA_VOLUME_MUTED: mute}
-        return self._async_call_service(SERVICE_VOLUME_MUTE, data, allow_override=True)
+        await self._async_call_service(SERVICE_VOLUME_MUTE, data, allow_override=True)
 
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
-        return self._async_call_service(SERVICE_VOLUME_SET, data, allow_override=True)
+        await self._async_call_service(SERVICE_VOLUME_SET, data, allow_override=True)
 
-    def async_media_play(self):
-        """Send play command.
+    async def async_media_play(self):
+        """Send play command."""
+        await self._async_call_service(SERVICE_MEDIA_PLAY)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_PLAY)
+    async def async_media_pause(self):
+        """Send pause command."""
+        await self._async_call_service(SERVICE_MEDIA_PAUSE)
 
-    def async_media_pause(self):
-        """Send pause command.
+    async def async_media_stop(self):
+        """Send stop command."""
+        await self._async_call_service(SERVICE_MEDIA_STOP)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_PAUSE)
+    async def async_media_previous_track(self):
+        """Send previous track command."""
+        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK)
 
-    def async_media_stop(self):
-        """Send stop command.
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_STOP)
-
-    def async_media_previous_track(self):
-        """Send previous track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK)
-
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_NEXT_TRACK)
-
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_seek(self, position):
+        """Send seek command."""
         data = {ATTR_MEDIA_SEEK_POSITION: position}
-        return self._async_call_service(SERVICE_MEDIA_SEEK, data)
+        await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """Play a piece of media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-        return self._async_call_service(SERVICE_PLAY_MEDIA, data)
+        await self._async_call_service(SERVICE_PLAY_MEDIA, data)
 
-    def async_volume_up(self):
-        """Turn volume up for media player.
+    async def async_volume_up(self):
+        """Turn volume up for media player."""
+        await self._async_call_service(SERVICE_VOLUME_UP, allow_override=True)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_VOLUME_UP, allow_override=True)
+    async def async_volume_down(self):
+        """Turn volume down for media player."""
+        await self._async_call_service(SERVICE_VOLUME_DOWN, allow_override=True)
 
-    def async_volume_down(self):
-        """Turn volume down for media player.
+    async def async_media_play_pause(self):
+        """Play or pause the media player."""
+        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_VOLUME_DOWN, allow_override=True)
-
-    def async_media_play_pause(self):
-        """Play or pause the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
-
-    def async_select_source(self, source):
-        """Set the input source.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_select_source(self, source):
+        """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
-        return self._async_call_service(
-            SERVICE_SELECT_SOURCE, data, allow_override=True
-        )
+        await self._async_call_service(SERVICE_SELECT_SOURCE, data, allow_override=True)
 
-    def async_clear_playlist(self):
-        """Clear players playlist.
+    async def async_clear_playlist(self):
+        """Clear players playlist."""
+        await self._async_call_service(SERVICE_CLEAR_PLAYLIST)
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._async_call_service(SERVICE_CLEAR_PLAYLIST)
-
-    def async_set_shuffle(self, shuffle):
-        """Enable/disable shuffling.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffling."""
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
-        return self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
+        await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
 
     async def async_update(self):
         """Update state in HA."""

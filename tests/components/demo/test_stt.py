@@ -1,16 +1,15 @@
 """The tests for the demo stt component."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import stt
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass):
     """Set up demo component."""
-    hass.loop.run_until_complete(
-        async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "demo"}})
-    )
+    assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "demo"}})
+    await hass.async_block_till_done()
 
 
 async def test_demo_settings(hass_client):

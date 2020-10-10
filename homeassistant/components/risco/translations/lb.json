@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "pin": "PIN Code",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Aktiv\u00e9iert \u00cbnnerwee",
+                    "armed_home": "Aktiv\u00e9iert Doheem",
+                    "armed_night": "Aktiv\u00e9iert Nuecht"
+                }
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "Pin Code n\u00e9ideg fir unzeschalten",
+                    "code_disarm_required": "Pin Code n\u00e9ideg fir auszeschalten"
+                },
+                "title": "Optioune konfigur\u00e9ieren"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grupp A",
+                    "B": "Grupp B",
+                    "C": "Grupp C",
+                    "D": "Grupp D"
+                }
+            }
+        }
+    }
+}

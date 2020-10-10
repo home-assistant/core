@@ -3,25 +3,39 @@ import logging
 
 from bimmer_connected.state import ChargingState, LockState
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PLUG,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
+from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "lids": ["Doors", "opening", "mdi:car-door-lock"],
-    "windows": ["Windows", "opening", "mdi:car-door"],
-    "door_lock_state": ["Door lock state", "safety", "mdi:car-key"],
+    "lids": ["Doors", DEVICE_CLASS_OPENING, "mdi:car-door-lock"],
+    "windows": ["Windows", DEVICE_CLASS_OPENING, "mdi:car-door"],
+    "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
-    "condition_based_services": ["Condition based services", "problem", "mdi:wrench"],
-    "check_control_messages": ["Control messages", "problem", "mdi:car-tire-alert"],
+    "condition_based_services": [
+        "Condition based services",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:wrench",
+    ],
+    "check_control_messages": [
+        "Control messages",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:car-tire-alert",
+    ],
 }
 
 SENSOR_TYPES_ELEC = {
     "charging_status": ["Charging status", "power", "mdi:ev-station"],
-    "connection_status": ["Connection status", "plug", "mdi:car-electric"],
+    "connection_status": ["Connection status", DEVICE_CLASS_PLUG, "mdi:car-electric"],
 }
 
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
@@ -53,13 +67,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class BMWConnectedDriveSensor(BinarySensorDevice):
+class BMWConnectedDriveSensor(BinarySensorEntity):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(
         self, account, vehicle, attribute: str, sensor_name, device_class, icon
     ):
-        """Constructor."""
+        """Initialize sensor."""
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute
@@ -107,7 +121,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = {"car": self._vehicle.name}
+        result = {
+            "car": self._vehicle.name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
         if self._attribute == "lids":
             for lid in vehicle_state.lids:
@@ -143,7 +160,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     def update(self):
         """Read new state data from the library."""
-
         vehicle_state = self._vehicle.state
 
         # device class opening: On means open, Off means closed
@@ -152,7 +168,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = not vehicle_state.all_lids_closed
         if self._attribute == "windows":
             self._state = not vehicle_state.all_windows_closed
-        # device class safety: On means unsafe, Off means safe
+        # device class lock: On means unlocked, Off means locked
         if self._attribute == "door_lock_state":
             # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
             self._state = vehicle_state.door_lock_state not in [

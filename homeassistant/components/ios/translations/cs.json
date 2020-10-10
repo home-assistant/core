@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Povolena je pouze jedna instance Home Assistant iOS."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit komponenty Home Assistant iOS?"
+            }
+        }
+    }
+}

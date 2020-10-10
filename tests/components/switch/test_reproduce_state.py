@@ -15,7 +15,6 @@ async def test_reproducing_states(hass, caplog):
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
         [State("switch.entity_off", "off"), State("switch.entity_on", "on", {})],
-        blocking=True,
     )
 
     assert len(turn_on_calls) == 0
@@ -23,7 +22,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("switch.entity_off", "not_supported")], blocking=True
+        [State("switch.entity_off", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -37,8 +36,7 @@ async def test_reproducing_states(hass, caplog):
             State("switch.entity_off", "on", {}),
             # Should not raise
             State("switch.non_existing", "on"),
-        ],
-        blocking=True,
+        ]
     )
 
     assert len(turn_on_calls) == 1

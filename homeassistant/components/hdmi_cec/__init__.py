@@ -4,6 +4,29 @@ from functools import reduce
 import logging
 import multiprocessing
 
+from pycec.cec import CecAdapter  # pylint: disable=import-error
+from pycec.commands import (  # pylint: disable=import-error
+    CecCommand,
+    KeyPressCommand,
+    KeyReleaseCommand,
+)
+from pycec.const import (  # pylint: disable=import-error
+    ADDR_AUDIOSYSTEM,
+    ADDR_BROADCAST,
+    ADDR_UNREGISTERED,
+    KEY_MUTE_OFF,
+    KEY_MUTE_ON,
+    KEY_MUTE_TOGGLE,
+    KEY_VOLUME_DOWN,
+    KEY_VOLUME_UP,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
+from pycec.network import HDMINetwork, PhysicalAddress  # pylint: disable=import-error
+from pycec.tcp import TcpAdapter  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
@@ -155,8 +178,6 @@ def parse_mapping(mapping, parents=None):
         parents = []
     for addr, val in mapping.items():
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
-            from pycec.network import PhysicalAddress
-
             yield (addr, PhysicalAddress(val))
         else:
             cur = parents + [addr]
@@ -168,20 +189,6 @@ def parse_mapping(mapping, parents=None):
 
 def setup(hass: HomeAssistant, base_config):
     """Set up the CEC capability."""
-    from pycec.network import HDMINetwork
-    from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
-    from pycec.const import (
-        KEY_VOLUME_UP,
-        KEY_VOLUME_DOWN,
-        KEY_MUTE_ON,
-        KEY_MUTE_OFF,
-        KEY_MUTE_TOGGLE,
-        ADDR_AUDIOSYSTEM,
-        ADDR_BROADCAST,
-        ADDR_UNREGISTERED,
-    )
-    from pycec.cec import CecAdapter
-    from pycec.tcp import TcpAdapter
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -199,7 +206,7 @@ def setup(hass: HomeAssistant, base_config):
         if multiprocessing.cpu_count() < 2
         else None
     )
-    host = base_config[DOMAIN].get(CONF_HOST, None)
+    host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
@@ -278,8 +285,6 @@ def setup(hass: HomeAssistant, base_config):
 
     def _select_device(call):
         """Select the active device."""
-        from pycec.network import PhysicalAddress
-
         addr = call.data[ATTR_DEVICE]
         if not addr:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
@@ -352,7 +357,7 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-class CecDevice(Entity):
+class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
     def __init__(self, device, logical) -> None:
@@ -366,14 +371,6 @@ class CecDevice(Entity):
     def update(self):
         """Update device status."""
         device = self._device
-        from pycec.const import (
-            STATUS_PLAY,
-            STATUS_STOP,
-            STATUS_STILL,
-            POWER_OFF,
-            POWER_ON,
-        )
-
         if device.power_status in [POWER_OFF, 3]:
             self._state = STATE_OFF
         elif device.status == STATUS_PLAY:
@@ -394,6 +391,15 @@ class CecDevice(Entity):
     def _update(self, device=None):
         """Device status changed, schedule an update."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecEntity.update() is called by the HDMI network when there is new data.
+        """
+        return False
 
     @property
     def name(self):

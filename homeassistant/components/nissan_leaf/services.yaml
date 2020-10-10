@@ -18,4 +18,3 @@ update:
       description: >
         The vehicle identification number (VIN) of the vehicle, 17 characters
       example: WBANXXXXXX1234567
-

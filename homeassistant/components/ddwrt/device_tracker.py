@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_OK,
+    HTTP_UNAUTHORIZED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -86,7 +88,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             if not data:
                 return None
 
-            dhcp_leases = data.get("dhcp_leases", None)
+            dhcp_leases = data.get("dhcp_leases")
 
             if not dhcp_leases:
                 return None
@@ -112,7 +114,7 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP")
 
         endpoint = "Wireless" if self.wireless_only else "Lan"
         url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"
@@ -124,9 +126,9 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.last_results = []
 
         if self.wireless_only:
-            active_clients = data.get("active_wireless", None)
+            active_clients = data.get("active_wireless")
         else:
-            active_clients = data.get("arp_table", None)
+            active_clients = data.get("arp_table")
         if not active_clients:
             return False
 
@@ -152,9 +154,9 @@ class DdWrtDeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
-        if response.status_code == 200:
+        if response.status_code == HTTP_OK:
             return _parse_ddwrt_response(response.text)
-        if response.status_code == 401:
+        if response.status_code == HTTP_UNAUTHORIZED:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"

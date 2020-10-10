@@ -1,10 +1,10 @@
 """Support for Volvo On Call."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
+from volvooncall import Connection
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -53,6 +54,7 @@ RESOURCES = [
     "odometer",
     "trip_meter1",
     "trip_meter2",
+    "average_speed",
     "fuel_amount",
     "fuel_amount_level",
     "average_fuel_consumption",
@@ -69,6 +71,7 @@ RESOURCES = [
     "last_trip",
     "is_engine_running",
     "doors_hood_open",
+    "doors_tailgate_open",
     "doors_front_left_door_open",
     "doors_front_right_door_open",
     "doors_rear_left_door_open",
@@ -114,8 +117,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
     session = async_get_clientsession(hass)
-
-    from volvooncall import Connection
 
     connection = Connection(
         session=session,
@@ -231,8 +232,10 @@ class VolvoEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_STATE_UPDATED, self.async_schedule_update_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
+            )
         )
 
     @property
@@ -280,3 +283,8 @@ class VolvoEntity(Entity):
             self.instrument.attributes,
             model=f"{self.vehicle.vehicle_type}/{self.vehicle.model_year}",
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.vin}-{self.component}-{self.attribute}"

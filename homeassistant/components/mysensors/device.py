@@ -1,6 +1,6 @@
 """Handle MySensors devices."""
-import logging
 from functools import partial
+import logging
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -137,11 +137,15 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Register update callback."""
         gateway_id = id(self.gateway)
         dev_id = gateway_id, self.node_id, self.child_id, self.value_type
-        async_dispatcher_connect(
-            self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback
+            )
         )
-        async_dispatcher_connect(
-            self.hass,
-            NODE_CALLBACK.format(gateway_id, self.node_id),
-            self.async_update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                NODE_CALLBACK.format(gateway_id, self.node_id),
+                self.async_update_callback,
+            )
         )

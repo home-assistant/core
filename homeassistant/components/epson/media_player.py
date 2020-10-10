@@ -1,8 +1,7 @@
 """Support for Epson projector."""
 import logging
 
-import voluptuous as vol
-
+import epson_projector as epson
 from epson_projector.const import (
     BACK,
     BUSY,
@@ -19,17 +18,16 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
-    TURN_ON,
     TURN_OFF,
-    VOLUME,
+    TURN_ON,
     VOL_DOWN,
     VOL_UP,
+    VOLUME,
 )
-import epson_projector as epson
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
@@ -50,15 +48,16 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    ATTR_CMODE,
+    DATA_EPSON,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_SELECT_CMODE,
+    SUPPORT_CMODE,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CMODE = "cmode"
-
-DATA_EPSON = "epson"
-DEFAULT_NAME = "EPSON Projector"
-
-SERVICE_SELECT_CMODE = "epson_select_cmode"
-SUPPORT_CMODE = 33001
 
 SUPPORT_EPSON = (
     SUPPORT_TURN_ON
@@ -91,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
+    ssl = config[CONF_SSL]
 
     epson_proj = EpsonProjector(
         async_get_clientsession(hass, verify_ssl=False), name, host, port, ssl
@@ -125,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class EpsonProjector(MediaPlayerDevice):
+class EpsonProjector(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
     def __init__(self, websession, name, host, port, encryption):
@@ -236,7 +235,6 @@ class EpsonProjector(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        if self._cmode is not None:
-            attributes[ATTR_CMODE] = self._cmode
-        return attributes
+        if self._cmode is None:
+            return {}
+        return {ATTR_CMODE: self._cmode}

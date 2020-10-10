@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Smile: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP Adresse",
+                    "password": "Smile ID",
+                    "port": "Port"
+                },
+                "description": "Detailler",
+                "title": "Mat Smile verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan Intervall (sekonnen)"
+                },
+                "description": "Plugwise Optioune \u00e4nneren"
+            }
+        }
+    }
+}

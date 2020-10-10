@@ -56,7 +56,6 @@ PRESET_SLEEP = "sleep"
 # Device is reacting to activity (e.g. movement sensors)
 PRESET_ACTIVITY = "activity"
 
-
 # Possible fan state
 FAN_ON = "on"
 FAN_OFF = "off"
@@ -83,6 +82,17 @@ CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_DRY = "drying"
 CURRENT_HVAC_IDLE = "idle"
 CURRENT_HVAC_FAN = "fan"
+
+
+# A list of possible HVAC actions.
+CURRENT_HVAC_ACTIONS = [
+    CURRENT_HVAC_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_FAN,
+]
 
 
 ATTR_AUX_HEAT = "aux_heat"

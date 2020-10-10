@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "name_exists": "El nom ja existeix"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Altitud",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nom"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Ubicaci\u00f3"
+            }
+        }
+    }
+}

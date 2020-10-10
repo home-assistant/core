@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan bare konfigurere en enkel iAqualink-tilkobling.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "connection_failure": "Kan ikke koble til iAqualink. Sjekk brukernavnet og passordet ditt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "Vennligst fyll inn brukernavn og passord for iAqualink-kontoen din.",
+                "title": "Koble til iAqualink"
+            }
+        }
+    }
+}

@@ -5,7 +5,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
-from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_USAGE, SENSOR_UNITS
+from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 _LOGGER = logging.getLogger(__name__)
 

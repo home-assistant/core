@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from pizzapi import Address, Customer, Order
+from pizzapi.address import StoreException
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -91,8 +93,6 @@ class Dominos:
     def __init__(self, hass, config):
         """Set up main service."""
         conf = config[DOMAIN]
-        from pizzapi import Address, Customer
-        from pizzapi.address import StoreException
 
         self.hass = hass
         self.customer = Customer(
@@ -113,7 +113,7 @@ class Dominos:
 
     def handle_order(self, call):
         """Handle ordering pizza."""
-        entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
+        entity_ids = call.data.get(ATTR_ORDER_ENTITY)
 
         target_orders = [
             order
@@ -127,8 +127,6 @@ class Dominos:
     @Throttle(MIN_TIME_BETWEEN_STORE_UPDATES)
     def update_closest_store(self):
         """Update the shared closest store (if open)."""
-        from pizzapi.address import StoreException
-
         try:
             self.closest_store = self.address.closest_store()
             return True
@@ -209,8 +207,6 @@ class DominosOrder(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the order state and refreshes the store."""
-        from pizzapi.address import StoreException
-
         try:
             self.dominos.update_closest_store()
         except StoreException:
@@ -226,9 +222,6 @@ class DominosOrder(Entity):
 
     def order(self):
         """Create the order object."""
-        from pizzapi import Order
-        from pizzapi.address import StoreException
-
         if self.dominos.closest_store is None:
             raise StoreException
 
@@ -246,8 +239,6 @@ class DominosOrder(Entity):
 
     def place(self):
         """Place the order."""
-        from pizzapi.address import StoreException
-
         try:
             order = self.order()
             order.place()

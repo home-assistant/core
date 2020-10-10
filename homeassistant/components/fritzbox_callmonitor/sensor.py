@@ -6,7 +6,7 @@ import socket
 import threading
 import time
 
-import fritzconnection as fc  # pylint: disable=import-error
+from fritzconnection.lib.fritzphonebook import FritzPhonebook
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -60,6 +60,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    # Try to resolve a hostname; if it is already an IP, it will be returned as-is
+    try:
+        host = socket.gethostbyname(host)
+    except OSError:
+        _LOGGER.error("Could not resolve hostname %s", host)
+        return
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -164,7 +170,7 @@ class FritzBoxCallMonitor:
         try:
             self.sock.connect((self.host, self.port))
             threading.Thread(target=self._listen).start()
-        except socket.error as err:
+        except OSError as err:
             self.sock = None
             _LOGGER.error(
                 "Cannot connect to %s on port %s: %s", self.host, self.port, err
@@ -250,7 +256,7 @@ class FritzBoxPhonebook:
         self.prefixes = prefixes or []
 
         # Establish a connection to the FRITZ!Box.
-        self.fph = fc.FritzPhonebook(
+        self.fph = FritzPhonebook(
             address=self.host, user=self.username, password=self.password
         )
 

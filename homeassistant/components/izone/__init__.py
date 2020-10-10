@@ -1,9 +1,4 @@
-"""
-Platform for the iZone AC.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/integrations/izone/
-"""
+"""Platform for the iZone AC."""
 import logging
 
 import voluptuous as vol
@@ -13,7 +8,7 @@ from homeassistant.const import CONF_EXCLUDE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import IZONE, DATA_CONFIG
+from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
 _LOGGER = logging.getLogger(__name__)

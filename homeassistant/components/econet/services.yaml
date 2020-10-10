@@ -1,0 +1,19 @@
+add_vacation:
+  description: Add a vacation to your water heater.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "water_heater.econet"
+    start_date:
+      description: The timestamp of when the vacation should start. (Optional, defaults to now)
+      example: 1513186320
+    end_date:
+      description: The timestamp of when the vacation should end.
+      example: 1513445520
+
+delete_vacation:
+  description: Delete your existing vacation from your water heater.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "water_heater.econet"

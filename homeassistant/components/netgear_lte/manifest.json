@@ -1,10 +1,7 @@
 {
   "domain": "netgear_lte",
-  "name": "Netgear lte",
+  "name": "NETGEAR LTE",
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",
-  "requirements": [
-    "eternalegypt==0.0.10"
-  ],
-  "dependencies": [],
+  "requirements": ["eternalegypt==0.0.12"],
   "codeowners": []
 }

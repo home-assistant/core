@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t bereits konfiguriert",
+            "not_songpal_device": "Kein Songpal-Ger\u00e4t"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpunkt"
+                }
+            }
+        }
+    }
+}

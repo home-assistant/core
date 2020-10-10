@@ -1,10 +1,9 @@
 """Support for Amazon Web Services (AWS)."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
 
 import aiobotocore
-
 import voluptuous as vol
 
 from homeassistant import config_entries

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Country"
+                },
+                "title": "Pick a country to monitor"
+            }
+        }
+    }
+}

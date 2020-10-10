@@ -1,15 +1,16 @@
 """Support for OpenTherm Gateway devices."""
+import asyncio
+from datetime import date, datetime
 import logging
-from datetime import datetime, date
 
 import pyotgw
 import pyotgw.vars as gw_vars
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ID,
@@ -24,14 +25,14 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-import homeassistant.helpers.config_validation as cv
-
 from .const import (
+    ATTR_CH_OVRD,
+    ATTR_DHW_OVRD,
     ATTR_GW_ID,
     ATTR_LEVEL,
-    ATTR_DHW_OVRD,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -39,16 +40,17 @@ from .const import (
     DATA_OPENTHERM_GW,
     DOMAIN,
     SERVICE_RESET_GATEWAY,
+    SERVICE_SET_CH_OVRD,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
-    SERVICE_SET_HOT_WATER_OVRD,
     SERVICE_SET_GPIO_MODE,
+    SERVICE_SET_HOT_WATER_OVRD,
+    SERVICE_SET_HOT_WATER_SETPOINT,
     SERVICE_SET_LED_MODE,
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +129,14 @@ def register_services(hass):
             )
         }
     )
+    service_set_central_heating_ovrd_schema = vol.Schema(
+        {
+            vol.Required(ATTR_GW_ID): vol.All(
+                cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
+            ),
+            vol.Required(ATTR_CH_OVRD): cv.boolean,
+        }
+    )
     service_set_clock_schema = vol.Schema(
         {
             vol.Required(ATTR_GW_ID): vol.All(
@@ -146,6 +156,7 @@ def register_services(hass):
             ),
         }
     )
+    service_set_hot_water_setpoint_schema = service_set_control_setpoint_schema
     service_set_hot_water_ovrd_schema = vol.Schema(
         {
             vol.Required(ATTR_GW_ID): vol.All(
@@ -234,6 +245,18 @@ def register_services(hass):
         DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway, service_reset_schema
     )
 
+    async def set_ch_ovrd(call):
+        """Set the central heating override on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        await gw_dev.gateway.set_ch_enable_bit(1 if call.data[ATTR_CH_OVRD] else 0)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CH_OVRD,
+        set_ch_ovrd,
+        service_set_central_heating_ovrd_schema,
+    )
+
     async def set_control_setpoint(call):
         """Set the control setpoint on the OpenTherm Gateway."""
         gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
@@ -262,6 +285,21 @@ def register_services(hass):
         SERVICE_SET_HOT_WATER_OVRD,
         set_dhw_ovrd,
         service_set_hot_water_ovrd_schema,
+    )
+
+    async def set_dhw_setpoint(call):
+        """Set the domestic hot water setpoint on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_var = gw_vars.DATA_DHW_SETPOINT
+        value = await gw_dev.gateway.set_dhw_setpoint(call.data[ATTR_TEMPERATURE])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_HOT_WATER_SETPOINT,
+        set_dhw_setpoint,
+        service_set_hot_water_setpoint_schema,
     )
 
     async def set_device_clock(call):
@@ -344,6 +382,18 @@ def register_services(hass):
     )
 
 
+async def async_unload_entry(hass, entry):
+    """Cleanup and disconnect from gateway."""
+    await asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, COMP_BINARY_SENSOR),
+        hass.config_entries.async_forward_entry_unload(entry, COMP_CLIMATE),
+        hass.config_entries.async_forward_entry_unload(entry, COMP_SENSOR),
+    )
+    gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+    await gateway.cleanup()
+    return True
+
+
 class OpenThermGatewayDevice:
     """OpenTherm Gateway device class."""
 
@@ -358,18 +408,21 @@ class OpenThermGatewayDevice:
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
         self.gateway = pyotgw.pyotgw()
+        self.gw_version = None
+
+    async def cleanup(self, event=None):
+        """Reset overrides on the gateway."""
+        await self.gateway.set_control_setpoint(0)
+        await self.gateway.set_max_relative_mod("-")
+        await self.gateway.disconnect()
 
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
-        await self.gateway.connect(self.hass.loop, self.device_path)
+        self.status = await self.gateway.connect(self.hass.loop, self.device_path)
         _LOGGER.debug("Connected to OpenTherm Gateway at %s", self.device_path)
+        self.gw_version = self.status.get(gw_vars.OTGW_BUILD)
 
-        async def cleanup(event):
-            """Reset overrides on the gateway."""
-            await self.gateway.set_control_setpoint(0)
-            await self.gateway.set_max_relative_mod("-")
-
-        self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, cleanup)
+        self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)
 
         async def handle_report(status):
             """Handle reports from the OpenTherm Gateway."""

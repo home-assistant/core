@@ -12,7 +12,12 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 
 from tests.components.rflink.test_init import mock_rflink
 
@@ -42,23 +47,27 @@ async def test_default_setup(hass, monkeypatch):
     config_sensor = hass.states.get("sensor.test")
     assert config_sensor
     assert config_sensor.state == "unknown"
-    assert config_sensor.attributes["unit_of_measurement"] == "°C"
+    assert config_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
     # test event for config sensor
-    event_callback({"id": "test", "sensor": "temperature", "value": 1, "unit": "°C"})
+    event_callback(
+        {"id": "test", "sensor": "temperature", "value": 1, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test").state == "1"
 
     # test event for new unconfigured sensor
-    event_callback({"id": "test2", "sensor": "temperature", "value": 0, "unit": "°C"})
+    event_callback(
+        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     # test  state of new sensor
     new_sensor = hass.states.get("sensor.test2")
     assert new_sensor
     assert new_sensor.state == "0"
-    assert new_sensor.attributes["unit_of_measurement"] == "°C"
+    assert new_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert new_sensor.attributes["icon"] == "mdi:thermometer"
 
 
@@ -73,7 +82,9 @@ async def test_disable_automatic_add(hass, monkeypatch):
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
-    event_callback({"id": "test2", "sensor": "temperature", "value": 0, "unit": "°C"})
+    event_callback(
+        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     # make sure new device is not added
@@ -115,8 +126,8 @@ async def test_entity_availability(hass, monkeypatch):
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
-async def test_aliasses(hass, monkeypatch):
-    """Validate the response to sensor's alias (with aliasses)."""
+async def test_aliases(hass, monkeypatch):
+    """Validate the response to sensor's alias (with aliases)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
         DOMAIN: {
@@ -125,7 +136,7 @@ async def test_aliasses(hass, monkeypatch):
                 "test_02": {
                     "name": "test_02",
                     "sensor_type": "humidity",
-                    "aliasses": ["test_alias_02_0"],
+                    "aliases": ["test_alias_02_0"],
                 }
             },
         },
@@ -141,7 +152,12 @@ async def test_aliasses(hass, monkeypatch):
 
     # test event for config sensor
     event_callback(
-        {"id": "test_alias_02_0", "sensor": "humidity", "value": 65, "unit": "%"}
+        {
+            "id": "test_alias_02_0",
+            "sensor": "humidity",
+            "value": 65,
+            "unit": PERCENTAGE,
+        }
     )
     await hass.async_block_till_done()
 
@@ -149,7 +165,7 @@ async def test_aliasses(hass, monkeypatch):
     updated_sensor = hass.states.get("sensor.test_02")
     assert updated_sensor
     assert updated_sensor.state == "65"
-    assert updated_sensor.attributes["unit_of_measurement"] == "%"
+    assert updated_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
 
 async def test_race_condition(hass, monkeypatch):
@@ -176,7 +192,7 @@ async def test_race_condition(hass, monkeypatch):
     assert updated_sensor
 
     # test  state of new sensor
-    new_sensor = hass.states.get(DOMAIN + ".test3")
+    new_sensor = hass.states.get(f"{DOMAIN}.test3")
     assert new_sensor
     assert new_sensor.state == "ok"
 
@@ -186,6 +202,6 @@ async def test_race_condition(hass, monkeypatch):
     assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test3"]
 
     # test  state of new sensor
-    new_sensor = hass.states.get(DOMAIN + ".test3")
+    new_sensor = hass.states.get(f"{DOMAIN}.test3")
     assert new_sensor
     assert new_sensor.state == "ko"

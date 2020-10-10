@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "bad_config_file": "Dados incorretos do arquivo de configura\u00e7\u00e3o",
+            "link_local_address": "Link de endere\u00e7os locais n\u00e3o s\u00e3o suportados",
+            "not_axis_device": "Dispositivo descoberto n\u00e3o \u00e9 um dispositivo Axis"
+        },
+        "error": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o para o dispositivo j\u00e1 est\u00e1 em andamento.",
+            "device_unavailable": "O dispositivo n\u00e3o est\u00e1 dispon\u00edvel",
+            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas"
+        },
+        "flow_title": "Eixos do dispositivo: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio"
+                },
+                "title": "Configurar o dispositivo Axis"
+            }
+        }
+    }
+}

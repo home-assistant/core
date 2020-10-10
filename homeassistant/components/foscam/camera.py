@@ -1,26 +1,26 @@
 """This component provides basic support for Foscam IP cameras."""
-import logging
 import asyncio
+import logging
 
 from libpyfoscam import FoscamCamera
-
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, SUPPORT_STREAM
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_PORT,
-    ATTR_ENTITY_ID,
+    CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .const import DOMAIN as FOSCAM_DOMAIN
-from .const import DATA as FOSCAM_DATA
-from .const import ENTITIES as FOSCAM_ENTITIES
-
+from .const import (
+    DATA as FOSCAM_DATA,
+    DOMAIN as FOSCAM_DOMAIN,
+    ENTITIES as FOSCAM_ENTITIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,12 +190,7 @@ class HassFoscamCamera(Camera):
     async def stream_source(self):
         """Return the stream source."""
         if self._rtsp_port:
-            return "rtsp://{}:{}@{}:{}/videoMain".format(
-                self._username,
-                self._password,
-                self._foscam_session.host,
-                self._rtsp_port,
-            )
+            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/videoMain"
         return None
 
     @property

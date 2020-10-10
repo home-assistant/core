@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "host": "Amfitri\u00f3",
+                    "location": "Ubicaci\u00f3",
+                    "name": "Nom",
+                    "port": "Port",
+                    "ssl": "Utilitza un certificat SSL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                }
+            }
+        }
+    }
+}

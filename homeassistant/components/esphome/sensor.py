@@ -69,9 +69,7 @@ class EsphomeSensor(EsphomeEntity):
             return None
         if self._state.missing_state:
             return None
-        return "{:.{prec}f}".format(
-            self._state.state, prec=self._static_info.accuracy_decimals
-        )
+        return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
     def unit_of_measurement(self) -> str:

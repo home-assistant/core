@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "name_exists": "Lokalizacja ju\u017c istnieje."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Wysoko\u015b\u0107",
+                    "latitude": "[%key::common::config_flow::data::latitude%]",
+                    "longitude": "[%key::common::config_flow::data::longitude%]",
+                    "name": "Nazwa"
+                },
+                "description": "Instytut Meteorologiczny",
+                "title": "Lokalizacja"
+            }
+        }
+    }
+}

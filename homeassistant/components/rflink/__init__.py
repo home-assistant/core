@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -33,12 +32,9 @@ ATTR_EVENT = "event"
 ATTR_STATE = "state"
 
 CONF_ALIASES = "aliases"
-CONF_ALIASSES = "aliasses"
 CONF_GROUP_ALIASES = "group_aliases"
-CONF_GROUP_ALIASSES = "group_aliasses"
 CONF_GROUP = "group"
 CONF_NOGROUP_ALIASES = "nogroup_aliases"
-CONF_NOGROUP_ALIASSES = "nogroup_aliasses"
 CONF_DEVICE_DEFAULTS = "device_defaults"
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICES = "devices"
@@ -162,7 +158,7 @@ async def async_setup(hass, config):
             return
 
         # Lookup entities who registered this device id as device id or alias
-        event_id = event.get(EVENT_KEY_ID, None)
+        event_id = event.get(EVENT_KEY_ID)
 
         is_group_event = (
             event_type == EVENT_KEY_COMMAND
@@ -234,7 +230,7 @@ async def async_setup(hass, config):
         )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT, loop=hass.loop):
+            with async_timeout.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
@@ -317,7 +313,7 @@ class RflinkDevice(Entity):
         self._handle_event(event)
 
         # Propagate changes through ha
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(event) == EVENT_KEY_COMMAND:
@@ -364,7 +360,7 @@ class RflinkDevice(Entity):
     def _availability_callback(self, availability):
         """Update availability state."""
         self._available = availability
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
@@ -408,13 +404,17 @@ class RflinkDevice(Entity):
                 self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][_id].append(
                     self.entity_id
                 )
-        async_dispatcher_connect(
-            self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
         )
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_HANDLE_EVENT.format(self.entity_id),
-            self.handle_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_HANDLE_EVENT.format(self.entity_id),
+                self.handle_event_callback,
+            )
         )
 
         # Process the initial event now that the entity is created
@@ -498,7 +498,7 @@ class RflinkCommand(RflinkDevice):
         await self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def cancel_queued_send_commands(self):
         """Cancel queued signal repetition commands.
@@ -556,25 +556,10 @@ class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
         elif command in ["off", "alloff"]:
             self._state = False
 
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        return self._async_handle_command("turn_on")
+        await self._async_handle_command("turn_on")
 
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        return self._async_handle_command("turn_off")
-
-
-DEPRECATED_CONFIG_OPTIONS = [CONF_ALIASSES, CONF_GROUP_ALIASSES, CONF_NOGROUP_ALIASSES]
-REPLACEMENT_CONFIG_OPTIONS = [CONF_ALIASES, CONF_GROUP_ALIASES, CONF_NOGROUP_ALIASES]
-
-
-def remove_deprecated(config):
-    """Remove deprecated config options from device config."""
-    for index, deprecated_option in enumerate(DEPRECATED_CONFIG_OPTIONS):
-        if deprecated_option in config:
-            replacement_option = REPLACEMENT_CONFIG_OPTIONS[index]
-            # generate deprecation warning
-            get_deprecated(config, replacement_option, deprecated_option)
-            # remove old config value replacing new one
-            config[replacement_option] = config.pop(deprecated_option)
+        await self._async_handle_command("turn_off")

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Non sono stati scoperti nuovi hub Pulse.",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID host"
+                },
+                "title": "Scegliere un hub da aggiungere"
+            }
+        }
+    },
+    "title": "Rollease Acmeda Automate"
+}

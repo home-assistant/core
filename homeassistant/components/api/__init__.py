@@ -8,6 +8,7 @@ from aiohttp.web_exceptions import HTTPBadRequest
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
@@ -16,6 +17,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
     HTTP_NOT_FOUND,
+    HTTP_OK,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -25,24 +27,28 @@ from homeassistant.const import (
     URL_API_EVENTS,
     URL_API_SERVICES,
     URL_API_STATES,
-    URL_API_STATES_ENTITY,
     URL_API_STREAM,
     URL_API_TEMPLATE,
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.exceptions import TemplateError, Unauthorized, ServiceNotFound
+from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
+from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BASE_URL = "base_url"
+ATTR_EXTERNAL_URL = "external_url"
+ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
+ATTR_INSTALLATION_TYPE = "installation_type"
 ATTR_REQUIRES_API_PASSWORD = "requires_api_password"
+ATTR_UUID = "uuid"
 ATTR_VERSION = "version"
 
 DOMAIN = "api"
@@ -173,19 +179,38 @@ class APIDiscoveryView(HomeAssistantView):
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
 
-    @ha.callback
-    def get(self, request):
+    async def get(self, request):
         """Get discovery information."""
         hass = request.app["hass"]
-        return self.json(
-            {
-                ATTR_BASE_URL: hass.config.api.base_url,
-                ATTR_LOCATION_NAME: hass.config.location_name,
-                # always needs authentication
-                ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: __version__,
-            }
-        )
+        uuid = await hass.helpers.instance_id.async_get()
+        system_info = await async_get_system_info(hass)
+
+        data = {
+            ATTR_UUID: uuid,
+            ATTR_BASE_URL: None,
+            ATTR_EXTERNAL_URL: None,
+            ATTR_INTERNAL_URL: None,
+            ATTR_LOCATION_NAME: hass.config.location_name,
+            ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
+            # always needs authentication
+            ATTR_REQUIRES_API_PASSWORD: True,
+            ATTR_VERSION: __version__,
+        }
+
+        try:
+            data["external_url"] = get_url(hass, allow_internal=False)
+        except NoURLAvailableError:
+            pass
+
+        try:
+            data["internal_url"] = get_url(hass, allow_external=False)
+        except NoURLAvailableError:
+            pass
+
+        # Set old base URL based on external or internal
+        data["base_url"] = data["external_url"] or data["internal_url"]
+
+        return self.json(data)
 
 
 class APIStatesView(HomeAssistantView):
@@ -251,10 +276,10 @@ class APIEntityStateView(HomeAssistantView):
         )
 
         # Read the state back for our response
-        status_code = HTTP_CREATED if is_new_state else 200
+        status_code = HTTP_CREATED if is_new_state else HTTP_OK
         resp = self.json(hass.states.get(entity_id), status_code)
 
-        resp.headers.add("Location", URL_API_STATES_ENTITY.format(entity_id))
+        resp.headers.add("Location", f"/api/states/{entity_id}")
 
         return resp
 
@@ -354,8 +379,8 @@ class APIDomainServicesView(HomeAssistantView):
                 await hass.services.async_call(
                     domain, service, data, True, self.context(request)
                 )
-            except (vol.Invalid, ServiceNotFound):
-                raise HTTPBadRequest()
+            except (vol.Invalid, ServiceNotFound) as ex:
+                raise HTTPBadRequest() from ex
 
         return self.json(changed_states)
 
@@ -385,7 +410,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(data.get("variables"))
+            return str(tpl.async_render(data.get("variables")))
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTP_BAD_REQUEST
@@ -411,6 +436,7 @@ async def async_services_json(hass):
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
 
 
+@ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
     return [

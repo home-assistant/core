@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "identifier_exists": "L'account \u00e8 gi\u00e0 configurato",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_credentials": "Credenziali non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nome dell'host o indirizzo IP",
+                    "password": "Password",
+                    "port": "Porta"
+                },
+                "title": "Inserisci i tuoi dati"
+            }
+        }
+    }
+}

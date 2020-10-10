@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Va\u0161 Home Assistant mora biti dostupan s interneta za primanje poruka od Plaato Airlocka.",
+            "one_instance_allowed": "Potrebna je samo jedna instanca."
+        },
+        "create_entry": {
+            "default": "Za slanje doga\u0111aja kod ku\u0107nog pomo\u0107nika, morat \u0107ete postaviti zna\u010dajku webhook u Plaato Airlock.\n\nIspunite sljede\u0107e informacije:\n\n-URL: ' {webhook_url} '\n-Metoda: POST\n\nZa dodatne detalje pogledajte [dokumentaciju] ({docs_url})."
+        },
+        "step": {
+            "user": {
+                "description": "Jeste li sigurni da \u017eelite postaviti Plaato Airlock?",
+                "title": "Postavljanje Plaato Webhook"
+            }
+        }
+    }
+}

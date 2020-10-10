@@ -10,18 +10,19 @@ from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_NAME,
+    EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
-    EVENT_CORE_CONFIG_UPDATE,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .auth import async_setup_auth_view
 from .addon_panel import async_setup_addon_panel
+from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
@@ -41,7 +42,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_HOMEASSISTANT_VERSION = "hassio_hass_version"
+DATA_INFO = "hassio_info"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_CORE_INFO = "hassio_core_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -123,24 +126,106 @@ MAP_SERVICE_API = {
 }
 
 
+@bind_hass
+async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
+    """Return add-on info.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    return await hassio.get_addon_info(slug)
+
+
+@bind_hass
+async def async_install_addon(hass: HomeAssistantType, slug: str) -> None:
+    """Install add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/install"
+    await hassio.send_command(command)
+
+
+@bind_hass
+async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> None:
+    """Uninstall add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/uninstall"
+    await hassio.send_command(command)
+
+
+@bind_hass
+async def async_start_addon(hass: HomeAssistantType, slug: str) -> None:
+    """Start add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/start"
+    await hassio.send_command(command)
+
+
+@bind_hass
+async def async_stop_addon(hass: HomeAssistantType, slug: str) -> None:
+    """Stop add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/stop"
+    await hassio.send_command(command)
+
+
 @callback
 @bind_hass
-def get_homeassistant_version(hass):
-    """Return latest available Home Assistant version.
+def get_info(hass):
+    """Return generic information from Supervisor.
 
     Async friendly.
     """
-    return hass.data.get(DATA_HOMEASSISTANT_VERSION)
+    return hass.data.get(DATA_INFO)
+
+
+@callback
+@bind_hass
+def get_host_info(hass):
+    """Return generic host information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_HOST_INFO)
+
+
+@callback
+@bind_hass
+def get_core_info(hass):
+    """Return Home Assistant Core information from Supervisor.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_CORE_INFO)
 
 
 @callback
 @bind_hass
 def is_hassio(hass):
-    """Return true if hass.io is loaded.
+    """Return true if Hass.io is loaded.
 
     Async friendly.
     """
     return DOMAIN in hass.config.components
+
+
+@callback
+def get_supervisor_ip():
+    """Return the supervisor ip address."""
+    if "SUPERVISOR" not in os.environ:
+        return None
+    return os.environ["SUPERVISOR"].partition(":")[0]
 
 
 async def async_setup(hass, config):
@@ -149,7 +234,7 @@ async def async_setup(hass, config):
     for env in ("HASSIO", "HASSIO_TOKEN"):
         if os.environ.get(env):
             continue
-        _LOGGER.error("Missing %s environment variable.", env)
+        _LOGGER.error("Missing %s environment variable", env)
         return False
 
     host = os.environ["HASSIO"]
@@ -157,7 +242,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
     if not await hassio.is_connected():
-        _LOGGER.warning("Not connected with Hass.io / system to busy!")
+        _LOGGER.warning("Not connected with Hass.io / system too busy!")
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
@@ -171,7 +256,7 @@ async def async_setup(hass, config):
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
-            # Migrate old hass.io users to be admin.
+            # Migrate old Hass.io users to be admin.
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
@@ -190,22 +275,31 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HassIOView(host, websession))
 
-    if "frontend" in hass.config.components:
-        await hass.components.panel_custom.async_register_panel(
-            frontend_url_path="hassio",
-            webcomponent_name="hassio-main",
-            sidebar_title="Hass.io",
-            sidebar_icon="hass:home-assistant",
-            js_url="/api/hassio/app/entrypoint.js",
-            embed_iframe=True,
-            require_admin=True,
-        )
+    await hass.components.panel_custom.async_register_panel(
+        frontend_url_path="hassio",
+        webcomponent_name="hassio-main",
+        sidebar_title="Supervisor",
+        sidebar_icon="hass:home-assistant",
+        js_url="/api/hassio/app/entrypoint.js",
+        embed_iframe=True,
+        require_admin=True,
+    )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
+
+    last_timezone = None
 
     async def push_config(_):
         """Push core config to Hass.io."""
-        await hassio.update_hass_timezone(str(hass.config.time_zone))
+        nonlocal last_timezone
+
+        new_timezone = str(hass.config.time_zone)
+
+        if new_timezone == last_timezone:
+            return
+
+        last_timezone = new_timezone
+        await hassio.update_hass_timezone(new_timezone)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
@@ -219,7 +313,7 @@ async def async_setup(hass, config):
         snapshot = data.pop(ATTR_SNAPSHOT, None)
         payload = None
 
-        # Pass data to hass.io API
+        # Pass data to Hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
         elif MAP_SERVICE_API[service.service][3]:
@@ -240,20 +334,21 @@ async def async_setup(hass, config):
             DOMAIN, service, async_service_handler, schema=settings[1]
         )
 
-    async def update_homeassistant_version(now):
-        """Update last available Home Assistant version."""
+    async def update_info_data(now):
+        """Update last available supervisor information."""
         try:
-            data = await hassio.get_homeassistant_info()
-            hass.data[DATA_HOMEASSISTANT_VERSION] = data["last_version"]
+            hass.data[DATA_INFO] = await hassio.get_info()
+            hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
+            hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
-            update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL
+            update_info_data, utcnow() + HASSIO_UPDATE_INTERVAL
         )
 
     # Fetch last version
-    await update_homeassistant_version(None)
+    await update_info_data(None)
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
@@ -269,7 +364,7 @@ async def async_setup(hass, config):
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See [the logs](/developer-tools/logs) for details.",
+                "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",
             )
@@ -290,7 +385,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)

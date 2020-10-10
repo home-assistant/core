@@ -1,370 +1,171 @@
 """The tests for the RFXtrx switch platform."""
-import unittest
+from unittest.mock import call
 
-import RFXtrx as rfxtrxmod
 import pytest
 
-from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.setup import setup_component
+from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.core import State
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.rfxtrx.conftest import create_rfx_test_cfg
+
+EVENT_RFY_ENABLE_SUN_AUTO = "081a00000301010113"
+EVENT_RFY_DISABLE_SUN_AUTO = "081a00000301010114"
 
 
-@pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
-class TestSwitchRfxtrx(unittest.TestCase):
-    """Test the RFXtrx switch platform."""
+async def test_one_switch(hass, rfxtrx):
+    """Test with 1 switch."""
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f210010f51": {"signal_repetitions": 1}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        mock_component(self.hass, "rfxtrx")
+    mock_entry.add_to_hass(hass)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
-        rfxtrx_core.RFX_DEVICES = {}
-        if rfxtrx_core.RFXOBJECT:
-            rfxtrx_core.RFXOBJECT.close_connection()
-        self.hass.stop()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def test_valid_config(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "0b1100cd0213c7f210010f51": {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    state = hass.states.get("switch.ac_213c7f2_16")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:16"
 
-    def test_valid_config_int_device_id(self):
-        """Test configuration."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        710000141010170: {
-                            "name": "Test",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.ac_213c7f2_16"}, blocking=True
+    )
 
-    def test_invalid_config1(self):
-        """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "2FF7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            "signal_repetitions": 3,
-                        }
-                    },
-                }
-            },
-        )
+    state = hass.states.get("switch.ac_213c7f2_16")
+    assert state.state == "on"
 
-    def test_invalid_config2(self):
-        """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "invalid_key": "afda",
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.ac_213c7f2_16"}, blocking=True
+    )
 
-    def test_invalid_config3(self):
-        """Test invalid configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {
-                            "name": "Test",
-                            "packetid": "AA1100cd0213c7f210010f51",
-                            rfxtrx_core.ATTR_FIREEVENT: True,
-                        }
-                    },
-                }
-            },
-        )
+    state = hass.states.get("switch.ac_213c7f2_16")
+    assert state.state == "off"
 
-    def test_invalid_config4(self):
-        """Test configuration."""
-        assert not setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "automatic_add": True,
-                    "devices": {
-                        "213c7f216": {"name": "Test", rfxtrx_core.ATTR_FIREEVENT: True}
-                    },
-                }
-            },
-        )
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x01\x00\x00")),
+        call(bytearray(b"\x0b\x11\x00\x00\x02\x13\xc7\xf2\x10\x00\x00\x00")),
+    ]
 
-    def test_default_config(self):
-        """Test with 0 switches."""
-        assert setup_component(
-            self.hass, "switch", {"switch": {"platform": "rfxtrx", "devices": {}}}
-        )
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
-    def test_old_config(self):
-        """Test with 1 switch."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "devices": {
-                        "123efab1": {
-                            "name": "Test",
-                            "packetid": "0b1100cd0213c7f210010f51",
-                        }
-                    },
-                }
-            },
-        )
+@pytest.mark.parametrize("state", ["on", "off"])
+async def test_state_restore(hass, rfxtrx, state):
+    """State restoration."""
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
+    entity_id = "switch.ac_213c7f2_16"
 
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.assumed_state
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
+    mock_restore_cache(hass, [State(entity_id, state)])
 
-        assert not entity.is_on
-        entity.turn_on()
-        assert entity.is_on
-        entity.turn_off()
-        assert not entity.is_on
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f210010f51": {"signal_repetitions": 1}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    def test_one_switch(self):
-        """Test with 1 switch."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "devices": {"0b1100cd0213c7f210010f51": {"name": "Test"}},
-                }
-            },
-        )
+    mock_entry.add_to_hass(hass)
 
-        rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
-            "", transport_protocol=rfxtrxmod.DummyTransport
-        )
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        entity = rfxtrx_core.RFX_DEVICES["213c7f216"]
-        assert "Test" == entity.name
-        assert "off" == entity.state
-        assert entity.assumed_state
-        assert entity.signal_repetitions == 1
-        assert not entity.should_fire_event
-        assert not entity.should_poll
+    assert hass.states.get(entity_id).state == state
 
-        assert not entity.is_on
-        entity.turn_on()
-        assert entity.is_on
-        entity.turn_off()
-        assert not entity.is_on
 
-        entity_id = rfxtrx_core.RFX_DEVICES["213c7f216"].entity_id
-        entity_hass = self.hass.states.get(entity_id)
-        assert "Test" == entity_hass.name
-        assert "off" == entity_hass.state
-        entity.turn_on()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "on" == entity_hass.state
-        entity.turn_off()
-        entity_hass = self.hass.states.get(entity_id)
-        assert "off" == entity_hass.state
+async def test_several_switches(hass, rfxtrx):
+    """Test with 3 switches."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "0b1100cd0213c7f230010f71": {"signal_repetitions": 1},
+            "0b1100100118cdea02010f70": {"signal_repetitions": 1},
+            "0b1100101118cdea02010f70": {"signal_repetitions": 1},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    def test_several_switches(self):
-        """Test with 3 switches."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {
-                "switch": {
-                    "platform": "rfxtrx",
-                    "signal_repetitions": 3,
-                    "devices": {
-                        "0b1100cd0213c7f230010f71": {"name": "Test"},
-                        "0b1100100118cdea02010f70": {"name": "Bath"},
-                        "0b1100101118cdea02010f70": {"name": "Living"},
-                    },
-                }
-            },
-        )
+    mock_entry.add_to_hass(hass)
 
-        assert 3 == len(rfxtrx_core.RFX_DEVICES)
-        device_num = 0
-        for id in rfxtrx_core.RFX_DEVICES:
-            entity = rfxtrx_core.RFX_DEVICES[id]
-            assert entity.signal_repetitions == 3
-            if entity.name == "Living":
-                device_num = device_num + 1
-                assert "off" == entity.state
-                assert "<Entity Living: off>" == entity.__str__()
-            elif entity.name == "Bath":
-                device_num = device_num + 1
-                assert "off" == entity.state
-                assert "<Entity Bath: off>" == entity.__str__()
-            elif entity.name == "Test":
-                device_num = device_num + 1
-                assert "off" == entity.state
-                assert "<Entity Test: off>" == entity.__str__()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert 3 == device_num
+    state = hass.states.get("switch.ac_213c7f2_48")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
-    def test_discover_switch(self):
-        """Test with discovery of switches."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {"switch": {"platform": "rfxtrx", "automatic_add": True, "devices": {}}},
-        )
+    state = hass.states.get("switch.ac_118cdea_2")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-        )
+    state = hass.states.get("switch.ac_1118cdea_2")
+    assert state
+    assert state.state == "off"
+    assert state.attributes.get("friendly_name") == "AC 1118cdea:2"
 
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["118cdea2"]
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
-        assert "<Entity 0b1100100118cdea01010f70: on>" == entity.__str__()
 
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 1 == len(rfxtrx_core.RFX_DEVICES)
+@pytest.mark.parametrize("repetitions", [1, 3])
+async def test_repetitions(hass, rfxtrx, repetitions):
+    """Test signal repetitions."""
+    entry_data = create_rfx_test_cfg(
+        devices={"0b1100cd0213c7f230010f71": {"signal_repetitions": repetitions}}
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdeb02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x00, 0x12, 0x01, 0x18, 0xCD, 0xEA, 0x02, 0x00, 0x00, 0x70]
-        )
+    mock_entry.add_to_hass(hass)
 
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        entity = rfxtrx_core.RFX_DEVICES["118cdeb2"]
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
-        assert "<Entity 0b1100120118cdea02000070: on>" == entity.__str__()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.ac_213c7f2_48"}, blocking=True
+    )
+    await hass.async_block_till_done()
 
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
+    assert rfxtrx.transport.send.call_count == repetitions
 
-        # Trying to add a rollershutter
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 2 == len(rfxtrx_core.RFX_DEVICES)
 
-    def test_discover_switch_noautoadd(self):
-        """Test with discovery of switch when auto add is False."""
-        assert setup_component(
-            self.hass,
-            "switch",
-            {"switch": {"platform": "rfxtrx", "automatic_add": False, "devices": {}}},
-        )
+async def test_discover_switch(hass, rfxtrx_automatic):
+    """Test with discovery of switches."""
+    rfxtrx = rfxtrx_automatic
 
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x00, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x01, 0x0F, 0x70]
-        )
+    await rfxtrx.signal("0b1100100118cdea02010f70")
+    state = hass.states.get("switch.ac_118cdea_2")
+    assert state
+    assert state.state == "on"
 
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await rfxtrx.signal("0b1100100118cdeb02010f70")
+    state = hass.states.get("switch.ac_118cdeb_2")
+    assert state
+    assert state.state == "on"
 
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
 
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdeb02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x00, 0x12, 0x01, 0x18, 0xCD, 0xEA, 0x02, 0x00, 0x00, 0x70]
-        )
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+async def test_discover_rfy_sun_switch(hass, rfxtrx_automatic):
+    """Test with discovery of switches."""
+    rfxtrx = rfxtrx_automatic
 
-        # Trying to add a sensor
-        event = rfxtrx_core.get_rfx_object("0a52085e070100b31b0279")
-        event.data = bytearray(b"\nR\x08^\x07\x01\x00\xb3\x1b\x02y")
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await rfxtrx.signal(EVENT_RFY_DISABLE_SUN_AUTO)
+    state = hass.states.get("switch.rfy_030101_1")
+    assert state
+    assert state.state == "off"
 
-        # Trying to add a light
-        event = rfxtrx_core.get_rfx_object("0b1100100118cdea02010f70")
-        event.data = bytearray(
-            [0x0B, 0x11, 0x11, 0x10, 0x01, 0x18, 0xCD, 0xEA, 0x01, 0x02, 0x0F, 0x70]
-        )
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+    await rfxtrx.signal(EVENT_RFY_ENABLE_SUN_AUTO)
+    state = hass.states.get("switch.rfy_030101_1")
+    assert state
+    assert state.state == "on"
 
-        # Trying to add a rollershutter
-        event = rfxtrx_core.get_rfx_object("0a1400adf394ab020e0060")
-        event.data = bytearray(
-            [0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94, 0xAB, 0x02, 0x0E, 0x00, 0x60]
-        )
-        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
-        assert 0 == len(rfxtrx_core.RFX_DEVICES)
+
+async def test_unknown_event_code(hass, rfxtrx):
+    """Test with 3 switches."""
+    entry_data = create_rfx_test_cfg(devices={"1234567890": {"signal_repetitions": 1}})
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(conf_entries) == 1
+
+    entry = conf_entries[0]
+    assert entry.state == "loaded"

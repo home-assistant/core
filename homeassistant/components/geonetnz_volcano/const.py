@@ -14,6 +14,3 @@ ATTR_HAZARDS = "hazards"
 DEFAULT_ICON = "mdi:image-filter-hdr"
 DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
-
-SIGNAL_NEW_SENSOR = "geonetnz_volcano_new_sensor_{}"
-SIGNAL_UPDATE_ENTITY = "geonetnz_volcano_update_{}"

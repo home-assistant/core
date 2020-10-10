@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "identifier_exists": "Account is already configured",
+            "invalid_auth": "Invalid authentication",
+            "invalid_credentials": "Invalid credentials"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Hostname or IP Address",
+                    "password": "Password",
+                    "port": "Port"
+                },
+                "title": "Fill in your information"
+            }
+        }
+    }
+}

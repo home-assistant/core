@@ -1,0 +1,71 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "faulty_credentials": "Authentification invalide",
+            "service_unavailable": "\u00c9chec de connexion",
+            "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "site": "ID du site",
+                    "username": "Nom d'utilisateur",
+                    "verify_ssl": "Contr\u00f4leur utilisant un certificat appropri\u00e9"
+                },
+                "title": "Configurer le contr\u00f4leur UniFi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
+                    "poe_clients": "Autoriser le contr\u00f4le POE des clients"
+                },
+                "description": "Configurer les contr\u00f4les client \n\n Cr\u00e9ez des interrupteurs pour les num\u00e9ros de s\u00e9rie pour lesquels vous souhaitez contr\u00f4ler l'acc\u00e8s au r\u00e9seau.",
+                "title": "Options UniFi 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Temps en secondes depuis la derni\u00e8re vue avant de consid\u00e9rer comme absent",
+                    "ignore_wired_bug": "D\u00e9sactiver la logique de bogue filaire UniFi",
+                    "ssid_filter": "S\u00e9lectionnez les SSID pour suivre les clients sans fil",
+                    "track_clients": "Suivre les clients du r\u00e9seau",
+                    "track_devices": "Suivre les p\u00e9riph\u00e9riques r\u00e9seau (p\u00e9riph\u00e9riques Ubiquiti)",
+                    "track_wired_clients": "Inclure les clients du r\u00e9seau filaire"
+                },
+                "description": "Configurer le suivi des appareils",
+                "title": "Options UniFi 1/3"
+            },
+            "init": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
+                    "track_clients": "Suivi de clients r\u00e9seaux",
+                    "track_devices": "Suivi d'\u00e9quipement r\u00e9seau (Equipements Ubiquiti)"
+                },
+                "description": "Configurer l'int\u00e9gration UniFi"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau",
+                    "allow_uptime_sensors": "Capteurs de disponibilit\u00e9 pour les clients r\u00e9seau"
+                },
+                "description": "Configurer des capteurs de statistiques",
+                "title": "Options UniFi 3/3"
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+        },
+        "error": {
+            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "P\u0159\u00edstupov\u00fd token"
+                },
+                "title": "Tibber"
+            }
+        }
+    },
+    "title": "Tibber"
+}

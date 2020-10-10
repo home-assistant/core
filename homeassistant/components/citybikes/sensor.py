@@ -57,7 +57,7 @@ SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 STATIONS_URI = "v2/networks/{uid}?fields=network.stations"
 
 CITYBIKES_ATTRIBUTION = (
-    "Information provided by the CityBikes Project " "(https://citybik.es/#about)"
+    "Information provided by the CityBikes Project (https://citybik.es/#about)"
 )
 
 CITYBIKES_NETWORKS = "citybikes_networks"
@@ -125,8 +125,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema(
 class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
-    pass
-
 
 async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
@@ -143,9 +141,7 @@ async def async_citybikes_request(hass, uri, schema):
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
     except vol.Invalid as err:
-        _LOGGER.error(
-            "Received unexpected JSON from CityBikes" " API endpoint: %s", err
-        )
+        _LOGGER.error("Received unexpected JSON from CityBikes API endpoint: %s", err)
     raise CityBikesRequestError
 
 
@@ -229,8 +225,8 @@ class CityBikesNetworks:
                     result = network[ATTR_ID]
 
             return result
-        except CityBikesRequestError:
-            raise PlatformNotReady
+        except CityBikesRequestError as err:
+            raise PlatformNotReady from err
         finally:
             self.networks_loading.release()
 
@@ -255,11 +251,11 @@ class CityBikesNetwork:
             )
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()
-        except CityBikesRequestError:
+        except CityBikesRequestError as err:
             if now is not None:
                 self.ready.clear()
             else:
-                raise PlatformNotReady
+                raise PlatformNotReady from err
 
 
 class CityBikesStation(Entity):

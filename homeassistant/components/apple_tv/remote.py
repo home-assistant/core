@@ -17,7 +17,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([AppleTVRemote(atv, power, name)])
 
 
-class AppleTVRemote(remote.RemoteDevice):
+class AppleTVRemote(remote.RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
     def __init__(self, atv, power, name):
@@ -61,17 +61,10 @@ class AppleTVRemote(remote.RemoteDevice):
         """
         self._power.set_power_on(False)
 
-    def async_send_command(self, command, **kwargs):
-        """Send a command to one device.
+    async def async_send_command(self, command, **kwargs):
+        """Send a command to one device."""
+        for single_command in command:
+            if not hasattr(self._atv.remote_control, single_command):
+                continue
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        # Send commands in specified order but schedule only one coroutine
-        async def _send_commands():
-            for single_command in command:
-                if not hasattr(self._atv.remote_control, single_command):
-                    continue
-
-                await getattr(self._atv.remote_control, single_command)()
-
-        return _send_commands()
+            await getattr(self._atv.remote_control, single_command)()

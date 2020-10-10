@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "device_fail": "V\u00e1ratlan hiba",
+            "device_timeout": "Sikertelen csatlakoz\u00e1s",
+            "forbidden": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "key": "API kulcs",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Add meg a Daikin l\u00e9gkond\u00edcion\u00e1l\u00f3 IP-c\u00edm\u00e9t.",
+                "title": "A Daikin l\u00e9gkond\u00edcion\u00e1l\u00f3 konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

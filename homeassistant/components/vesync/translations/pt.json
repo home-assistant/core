@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_login": "Nome de utilizador ou palavra passe incorretos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Endere\u00e7o de email"
+                },
+                "title": "Introduza o nome de utilizador e a palavra-passe"
+            }
+        }
+    }
+}

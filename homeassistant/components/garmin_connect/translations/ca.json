@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_account%]"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "too_many_requests": "Massa sol\u00b7licituds, torna-ho a intentar m\u00e9s tard.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix les teves credencials.",
+                "title": "Garmin Connect"
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_service%]"
+        },
+        "step": {
+            "user": {
+                "description": "Czy chcesz skonfigurowa\u0107 list\u0119 zakup\u00f3w?",
+                "title": "Lista zakup\u00f3w"
+            }
+        }
+    },
+    "title": "Lista zakup\u00f3w"
+}

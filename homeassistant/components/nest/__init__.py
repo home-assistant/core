@@ -1,16 +1,17 @@
 """Support for Nest devices."""
-import logging
-import socket
 from datetime import datetime, timedelta
+import logging
 import threading
 
 from nest import Nest
-from nest.nest import AuthorizationError, APIError
+from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_FILENAME,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -20,11 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from . import local_auth
+from .const import DOMAIN
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -38,8 +39,6 @@ DATA_NEST_CONFIG = "nest_config"
 SIGNAL_NEST_UPDATE = "nest_update"
 
 NEST_CONFIG_FILE = "nest.conf"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 ATTR_ETA = "eta"
 ATTR_ETA_WINDOW = "eta_window"
@@ -201,7 +200,7 @@ async def async_setup_entry(hass, entry):
 
                     now = datetime.utcnow()
                     trip_id = service.data.get(
-                        ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp()))
+                        ATTR_TRIP_ID, f"trip_{int(now.timestamp())}"
                     )
                     eta_begin = now + service.data[ATTR_ETA]
                     eta_window = service.data.get(ATTR_ETA_WINDOW, timedelta(minutes=1))
@@ -216,7 +215,7 @@ async def async_setup_entry(hass, entry):
                     structure.set_eta(trip_id, eta_begin, eta_end)
                 else:
                     _LOGGER.info(
-                        "No thermostats found in structure: %s, " "unable to set ETA",
+                        "No thermostats found in structure: %s, unable to set ETA",
                         structure.name,
                     )
 
@@ -294,7 +293,7 @@ class NestDevice:
             if self.local_structure is None:
                 self.local_structure = structure_names
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
             return False
         return True
@@ -312,7 +311,7 @@ class NestDevice:
                     continue
                 yield structure
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
 
     def thermostats(self):
@@ -348,13 +347,13 @@ class NestDevice:
                         _LOGGER.warning(
                             "Cannot retrieve device name for [%s]"
                             ", please check your Nest developer "
-                            "account permission settings.",
+                            "account permission settings",
                             device.serial,
                         )
                         continue
                     yield (structure, device)
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
 
 
@@ -369,15 +368,11 @@ class NestSensorDevice(Entity):
         if device is not None:
             # device specific
             self.device = device
-            self._name = "{} {}".format(
-                self.device.name_long, self.variable.replace("_", " ")
-            )
+            self._name = f"{self.device.name_long} {self.variable.replace('_', ' ')}"
         else:
             # structure only
             self.device = structure
-            self._name = "{} {}".format(
-                self.structure.name, self.variable.replace("_", " ")
-            )
+            self._name = f"{self.structure.name} {self.variable.replace('_', ' ')}"
 
         self._state = None
         self._unit = None
@@ -437,4 +432,6 @@ class NestSensorDevice(Entity):
             """Update sensor state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        )

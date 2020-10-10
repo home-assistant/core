@@ -1,0 +1,39 @@
+{
+  "title": "Yeelight",
+  "config": {
+    "step": {
+      "user": {
+        "description": "If you leave the host empty, discovery will be used to find devices.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "If you leave model empty, it will be automatically detected.",
+        "data": {
+          "model": "Model (Optional)",
+          "transition": "Transition Time (ms)",
+          "use_music_mode": "Enable Music Mode",
+          "save_on_change": "Save Status On Change",
+          "nightlight_switch": "Use Nightlight Switch"
+        }
+      }
+    }
+  }
+}

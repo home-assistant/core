@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "IFTTT",
     "step": {
       "user": {
         "title": "Set up the IFTTT Webhook Applet",
@@ -8,7 +7,7 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive IFTTT messages."
     },
     "create_entry": {

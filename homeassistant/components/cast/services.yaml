@@ -4,6 +4,9 @@ show_lovelace_view:
     entity_id:
       description: Media Player entity to show the Lovelace view on.
       example: "media_player.kitchen"
+    dashboard_path:
+      description: The url path of the Lovelace dashboard to show.
+      example: lovelace-cast
     view_path:
       description: The path of the Lovelace view to show.
       example: downstairs

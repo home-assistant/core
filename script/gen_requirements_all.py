@@ -9,24 +9,27 @@ import re
 import sys
 
 from homeassistant.util.yaml.loader import load_yaml
-
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "Adafruit-DHT",
+    "avea",  # depends on bluepy
     "avion",
     "beacontools",
+    "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
     "bme680",
     "credstash",
     "decora",
+    "decora_wifi",
+    "env_canada",
     "envirophat",
     "evdev",
     "face_recognition",
-    "fritzconnection",
     "i2csense",
+    "nuimo",
     "opencv-python-headless",
     "py_noaa",
     "pybluez",
@@ -34,6 +37,7 @@ COMMENT_REQUIREMENTS = (
     "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
+    "python-gammu",
     "python-lirc",
     "pyuserinput",
     "raspihats",
@@ -41,6 +45,7 @@ COMMENT_REQUIREMENTS = (
     "RPi.GPIO",
     "smbus-cffi",
     "tensorflow",
+    "tf-models-official",
     "VL53L1X2",
 )
 
@@ -58,12 +63,35 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
-# Breaks Python 3.6 and is not needed for our supported Python versions
-enum34==1000000000.0.0
+# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
+urllib3>=1.24.3
+
+# Constrain httplib2 to protect against CVE-2020-11078
+httplib2>=0.18.0
+
+# gRPC 1.32+ currently causes issues on ARMv7, see:
+# https://github.com/home-assistant/core/issues/40148
+grpcio==1.31.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# To remove reliance on typing
+btlewrap>=0.0.10
+
+# This overrides a built-in Python package
+enum34==1000000000.0.0
+typing==1000000000.0.0
+uuid==1000000000.0.0
+
 """
+
+IGNORE_PRE_COMMIT_HOOK_ID = (
+    "check-executables-have-shebangs",
+    "check-json",
+    "no-commit-to-branch",
+    "prettier",
+)
 
 
 def has_tests(module: str):
@@ -97,7 +125,7 @@ def explore_module(package, explore_children):
     if not hasattr(module, "__path__"):
         return found
 
-    for _, name, _ in pkgutil.iter_modules(module.__path__, package + "."):
+    for _, name, _ in pkgutil.iter_modules(module.__path__, f"{package}."):
         found.append(name)
 
         if explore_children:
@@ -122,15 +150,15 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
-    reqs = set(integration.manifest["requirements"])
-    for dep_domain in integration.manifest["dependencies"]:
+    reqs = set(integration.requirements)
+    for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
 
 
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(ign in req for ign in COMMENT_REQUIREMENTS)
+    return any(ign.lower() in req.lower() for ign in COMMENT_REQUIREMENTS)
 
 
 def gather_modules():
@@ -163,11 +191,11 @@ def gather_requirements_from_manifests(errors, reqs):
             errors.append(f"The manifest for integration {domain} is invalid.")
             continue
 
+        if integration.disabled:
+            continue
+
         process_requirements(
-            errors,
-            integration.manifest["requirements"],
-            f"homeassistant.components.{domain}",
-            reqs,
+            errors, integration.requirements, f"homeassistant.components.{domain}", reqs
         )
 
 
@@ -180,7 +208,7 @@ def gather_requirements_from_modules(errors, reqs):
         try:
             module = importlib.import_module(package)
         except ImportError as err:
-            print("{}: {}".format(package.replace(".", "/") + ".py", err))
+            print(f"{package.replace('.', '/')}.py: {err}")
             errors.append(package)
             continue
 
@@ -212,26 +240,38 @@ def generate_requirements_list(reqs):
     return "".join(output)
 
 
-def requirements_all_output(reqs):
-    """Generate output for requirements_all."""
-    output = []
-    output.append("# Home Assistant core")
-    output.append("\n")
+def requirements_output(reqs):
+    """Generate output for requirements."""
+    output = [
+        "-c homeassistant/package_constraints.txt\n",
+        "\n",
+        "# Home Assistant Core\n",
+    ]
     output.append("\n".join(core_requirements()))
     output.append("\n")
+
+    return "".join(output)
+
+
+def requirements_all_output(reqs):
+    """Generate output for requirements_all."""
+    output = [
+        "# Home Assistant Core, full dependency set\n",
+        "-r requirements.txt\n",
+    ]
     output.append(generate_requirements_list(reqs))
 
     return "".join(output)
 
 
-def requirements_test_output(reqs):
+def requirements_test_all_output(reqs):
     """Generate output for test_requirements."""
-    output = []
-    output.append("# Home Assistant tests, full dependency set\n")
-    output.append(
-        f"# Automatically generated by {Path(__file__).name}, do not edit\n\n"
-    )
-    output.append("-r requirements_test.txt\n")
+    output = [
+        "# Home Assistant tests, full dependency set\n",
+        f"# Automatically generated by {Path(__file__).name}, do not edit\n",
+        "\n",
+        "-r requirements_test.txt\n",
+    ]
 
     filtered = {
         requirement: modules
@@ -251,13 +291,14 @@ def requirements_test_output(reqs):
 
 def requirements_pre_commit_output():
     """Generate output for pre-commit dependencies."""
-    source = ".pre-commit-config-all.yaml"
+    source = ".pre-commit-config.yaml"
     pre_commit_conf = load_yaml(source)
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
         for hook in repo["hooks"]:
-            reqs.append(f"{hook['id']}=={repo['rev']}")
-            reqs.extend(x for x in hook.get("additional_dependencies", ()))
+            if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
+                reqs.append(f"{hook['id']}=={repo['rev'].lstrip('v')}")
+                reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "
         f"from {source} by {Path(__file__).name}, do not edit",
@@ -272,8 +313,11 @@ def gather_constraints():
     return (
         "\n".join(
             sorted(
-                core_requirements()
-                + list(gather_recursive_requirements("default_config"))
+                {
+                    *core_requirements(),
+                    *gather_recursive_requirements("default_config"),
+                    *gather_recursive_requirements("mqtt"),
+                }
             )
             + [""]
         )
@@ -285,8 +329,8 @@ def diff_file(filename, content):
     """Diff a file."""
     return list(
         difflib.context_diff(
-            [line + "\n" for line in Path(filename).read_text().split("\n")],
-            [line + "\n" for line in content.split("\n")],
+            [f"{line}\n" for line in Path(filename).read_text().split("\n")],
+            [f"{line}\n" for line in content.split("\n")],
             filename,
             "generated",
         )
@@ -304,15 +348,17 @@ def main(validate):
     if data is None:
         return 1
 
-    reqs_file = requirements_all_output(data)
-    reqs_test_file = requirements_test_output(data)
+    reqs_file = requirements_output(data)
+    reqs_all_file = requirements_all_output(data)
+    reqs_test_all_file = requirements_test_all_output(data)
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
     files = (
-        ("requirements_all.txt", reqs_file),
+        ("requirements.txt", reqs_file),
+        ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_file),
+        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
 

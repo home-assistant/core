@@ -1,22 +1,27 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
+from os import path
 import unittest
-from unittest.mock import patch
 
+from homeassistant import config as hass_config
 from homeassistant.components.filter.sensor import (
+    DOMAIN,
     LowPassFilter,
     OutlierFilter,
+    RangeFilter,
     ThrottleFilter,
     TimeSMAFilter,
-    RangeFilter,
     TimeThrottleFilter,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import setup_component
+from homeassistant.const import SERVICE_RELOAD
 import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
+
+from tests.async_mock import patch
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
+    get_test_home_assistant,
     init_recorder_component,
 )
 
@@ -27,6 +32,7 @@ class TestFilterSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.add("history")
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []
 
@@ -57,6 +63,7 @@ class TestFilterSensor(unittest.TestCase):
         }
         with assert_setup_component(0):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
     def test_chain(self):
         """Test if filter chaining works."""
@@ -75,6 +82,7 @@ class TestFilterSensor(unittest.TestCase):
 
         with assert_setup_component(1, "sensor"):
             assert setup_component(self.hass, "sensor", config)
+            self.hass.block_till_done()
 
             for value in self.values:
                 self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -102,6 +110,7 @@ class TestFilterSensor(unittest.TestCase):
         t_0 = dt_util.utcnow() - timedelta(minutes=1)
         t_1 = dt_util.utcnow() - timedelta(minutes=2)
         t_2 = dt_util.utcnow() - timedelta(minutes=3)
+        t_3 = dt_util.utcnow() - timedelta(minutes=4)
 
         if missing:
             fake_states = {}
@@ -109,21 +118,23 @@ class TestFilterSensor(unittest.TestCase):
             fake_states = {
                 "sensor.test_monitored": [
                     ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
-                    ha.State("sensor.test_monitored", 19.0, last_changed=t_1),
-                    ha.State("sensor.test_monitored", 18.2, last_changed=t_2),
+                    ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
+                    ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
+                    ha.State("sensor.test_monitored", 18.2, last_changed=t_3),
                 ]
             }
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 for value in self.values:
                     self.hass.states.set(config["sensor"]["entity_id"], value.state)
@@ -163,15 +174,16 @@ class TestFilterSensor(unittest.TestCase):
             ]
         }
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
                     assert setup_component(self.hass, "sensor", config)
+                    self.hass.block_till_done()
 
                 self.hass.block_till_done()
                 state = self.hass.states.get("sensor.test")
@@ -206,11 +218,33 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         assert 21 == filtered.state
 
+    def test_unknown_state_outlier(self):
+        """Test issue #32395."""
+        filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
+        assert 21 == filtered.state
+
+    def test_precision_zero(self):
+        """Test if precision of zero returns an integer."""
+        filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        assert isinstance(filtered.state, int)
+
     def test_lowpass(self):
         """Test if lowpass filter works."""
         filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
-        for state in self.values:
-            filtered = filt.filter_state(state)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
         assert 18.05 == filtered.state
 
     def test_range(self):
@@ -277,3 +311,58 @@ class TestFilterSensor(unittest.TestCase):
         for state in self.values:
             filtered = filt.filter_state(state)
         assert 21.5 == filtered.state
+
+
+async def test_reload(hass):
+    """Verify we can reload filter sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    hass.states.async_set("sensor.test_monitored", 12345)
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "filter",
+                "name": "test",
+                "entity_id": "sensor.test_monitored",
+                "filters": [
+                    {"filter": "outlier", "window_size": 10, "radius": 4.0},
+                    {"filter": "lowpass", "time_constant": 10, "precision": 2},
+                    {"filter": "throttle", "window_size": 1},
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "filter/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.filtered_realistic_humidity")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

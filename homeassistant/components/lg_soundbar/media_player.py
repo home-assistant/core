@@ -3,7 +3,7 @@ import logging
 
 import temescal
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -25,16 +25,18 @@ SUPPORT_LG = (
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG platform."""
     if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)], True)
+        add_entities([LGDevice(discovery_info)])
 
 
-class LGDevice(MediaPlayerDevice):
+class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     def __init__(self, discovery_info):
         """Initialize the LG speakers."""
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
+        self._host = discovery_info.get("host")
+        self._port = discovery_info.get("port")
+        properties = discovery_info.get("properties")
+        self._uuid = properties.get("UUID")
 
         self._name = ""
         self._volume = 0
@@ -53,8 +55,17 @@ class LGDevice(MediaPlayerDevice):
         self._woofer_volume_max = 0
         self._bass = 0
         self._treble = 0
+        self._device = None
 
-        self._device = temescal.temescal(host, port=port, callback=self.handle_event)
+    async def async_added_to_hass(self):
+        """Register the callback after hass is ready for it."""
+        await self.hass.async_add_executor_job(self._connect)
+
+    def _connect(self):
+        """Perform the actual devices setup."""
+        self._device = temescal.temescal(
+            self._host, port=self._port, callback=self.handle_event
+        )
         self.update()
 
     def handle_event(self, response):
@@ -114,6 +125,16 @@ class LGDevice(MediaPlayerDevice):
         self._device.get_settings()
         self._device.get_product_info()
 
+        # Temporary fix until handling of unknown equaliser settings is integrated in the temescal library
+        for equaliser in self._equalisers:
+            if equaliser >= len(temescal.equalisers):
+                temescal.equalisers.append("unknown " + str(equaliser))
+
+    @property
+    def unique_id(self):
+        """Return the device's unique ID."""
+        return self._uuid
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -139,9 +160,8 @@ class LGDevice(MediaPlayerDevice):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-
-        if self._equaliser == -1:
-            return ""
+        if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
+            return None
         return temescal.equalisers[self._equaliser]
 
     @property
@@ -156,7 +176,7 @@ class LGDevice(MediaPlayerDevice):
     def source(self):
         """Return the current input source."""
         if self._function == -1:
-            return ""
+            return None
         return temescal.functions[self._function]
 
     @property

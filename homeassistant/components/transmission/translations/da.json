@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "V\u00e6rten er allerede konfigureret."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse til v\u00e6rt",
+            "name_exists": "Navnet findes allerede",
+            "wrong_credentials": "Ugyldigt brugernavn eller adgangskode"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "name": "Navn",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "username": "Brugernavn"
+                },
+                "title": "Konfigurer Transmission-klient"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Opdateringsfrekvens"
+                },
+                "title": "Konfigurationsindstillinger for Transmission"
+            }
+        }
+    }
+}

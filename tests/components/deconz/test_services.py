@@ -1,19 +1,19 @@
 """deCONZ service tests."""
-from copy import deepcopy
 
-from asynctest import Mock, patch
+from copy import deepcopy
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.const import CONF_BRIDGE_ID
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
-from .test_gateway import (
-    BRIDGEID,
-    ENTRY_CONFIG,
-    DECONZ_WEB_REQUEST,
-    setup_deconz_integration,
-)
+from .test_gateway import BRIDGEID, DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import Mock, patch
 
 GROUP = {
     "1": {
@@ -48,6 +48,17 @@ SENSOR = {
     }
 }
 
+SWITCH = {
+    "1": {
+        "id": "Switch 1 id",
+        "name": "Switch 1",
+        "type": "ZHASwitch",
+        "state": {"buttonevent": 1000, "gesture": 1},
+        "config": {"battery": 100},
+        "uniqueid": "00:00:00:00:00:00:00:03-00",
+    },
+}
+
 
 async def test_service_setup(hass):
     """Verify service setup works."""
@@ -57,7 +68,7 @@ async def test_service_setup(hass):
     ) as async_register:
         await deconz.services.async_setup_services(hass)
         assert hass.data[deconz.services.DECONZ_SERVICES] is True
-        assert async_register.call_count == 2
+        assert async_register.call_count == 3
 
 
 async def test_service_setup_already_registered(hass):
@@ -78,7 +89,7 @@ async def test_service_unload(hass):
     ) as async_remove:
         await deconz.services.async_unload_services(hass)
         assert hass.data[deconz.services.DECONZ_SERVICES] is False
-        assert async_remove.call_count == 2
+        assert async_remove.call_count == 3
 
 
 async def test_service_unload_not_registered(hass):
@@ -93,33 +104,28 @@ async def test_service_unload_not_registered(hass):
 
 async def test_configure_service_with_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    await setup_deconz_integration(hass)
 
     data = {
         deconz.services.SERVICE_FIELD: "/light/2",
-        deconz.CONF_BRIDGEID: BRIDGEID,
+        CONF_BRIDGE_ID: BRIDGEID,
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
-        put_state.assert_called_with("/light/2", {"on": True, "attr1": 10, "attr2": 20})
+        put_state.assert_called_with(
+            "put", "/light/2", json={"on": True, "attr1": 10, "attr2": 20}
+        )
 
 
 async def test_configure_service_with_entity(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -127,22 +133,20 @@ async def test_configure_service_with_entity(hass):
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
-        put_state.assert_called_with("/light/1", {"on": True, "attr1": 10, "attr2": 20})
+        put_state.assert_called_with(
+            "put", "/light/1", json={"on": True, "attr1": 10, "attr2": 20}
+        )
 
 
 async def test_configure_service_with_entity_and_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     gateway.deconz_ids["light.test"] = "/light/1"
     data = {
@@ -151,24 +155,19 @@ async def test_configure_service_with_entity_and_field(hass):
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_called_with(
-            "/light/1/state", {"on": True, "attr1": 10, "attr2": 20}
+            "put", "/light/1/state", json={"on": True, "attr1": 10, "attr2": 20}
         )
 
 
 async def test_configure_service_with_faulty_field(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    await setup_deconz_integration(hass)
 
     data = {deconz.services.SERVICE_FIELD: "light/2", deconz.services.SERVICE_DATA: {}}
 
@@ -181,19 +180,14 @@ async def test_configure_service_with_faulty_field(hass):
 
 async def test_configure_service_with_faulty_entity(hass):
     """Test that service invokes pydeconz with the correct path and data."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    await setup_deconz_integration(hass)
 
     data = {
         deconz.services.SERVICE_ENTITY: "light.nonexisting",
         deconz.services.SERVICE_DATA: {},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
@@ -203,15 +197,13 @@ async def test_configure_service_with_faulty_entity(hass):
 
 async def test_service_refresh_devices(hass):
     """Test that service can refresh devices."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    data = {deconz.CONF_BRIDGEID: BRIDGEID}
+    data = {CONF_BRIDGE_ID: BRIDGEID}
 
     with patch(
-        "pydeconz.DeconzSession.async_get_state",
+        "pydeconz.DeconzSession.request",
         return_value={"groups": GROUP, "lights": LIGHT, "sensors": SENSOR},
     ):
         await hass.services.async_call(
@@ -225,3 +217,67 @@ async def test_service_refresh_devices(hass):
         "scene.group_1_name_scene_1": "/groups/1/scenes/1",
         "sensor.sensor_1_name": "/sensors/1",
     }
+
+
+async def test_remove_orphaned_entries_service(hass):
+    """Test service works and also don't remove more than expected."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["lights"] = deepcopy(LIGHT)
+    data["sensors"] = deepcopy(SWITCH)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+
+    data = {CONF_BRIDGE_ID: BRIDGEID}
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("mac", "123")}
+    )
+
+    assert (
+        len(
+            [
+                entry
+                for entry in device_registry.devices.values()
+                if config_entry.entry_id in entry.config_entries
+            ]
+        )
+        == 4  # Gateway, light, switch and orphan
+    )
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        deconz.DOMAIN,
+        "12345",
+        suggested_object_id="Orphaned sensor",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    assert (
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 3  # Light, switch battery and orphan
+    )
+
+    await hass.services.async_call(
+        deconz.DOMAIN,
+        deconz.services.SERVICE_REMOVE_ORPHANED_ENTRIES,
+        service_data=data,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            [
+                entry
+                for entry in device_registry.devices.values()
+                if config_entry.entry_id in entry.config_entries
+            ]
+        )
+        == 3  # Gateway, light and switch
+    )
+
+    assert (
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 2  # Light and switch battery
+    )

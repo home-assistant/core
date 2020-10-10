@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Unable to connect to Abode.",
+            "identifier_exists": "Account already registered.",
+            "invalid_auth": "Invalid authentication",
+            "invalid_credentials": "Invalid credentials."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Fill in your Abode login information"
+            }
+        }
+    }
+}

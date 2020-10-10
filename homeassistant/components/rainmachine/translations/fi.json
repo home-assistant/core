@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Tili on jo rekister\u00f6ity",
+            "invalid_credentials": "Virheelliset tunnistetiedot"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Palvelin tai IP-osoite",
+                    "password": "Salasana",
+                    "port": "Portti"
+                },
+                "title": "T\u00e4yt\u00e4 tietosi."
+            }
+        }
+    }
+}

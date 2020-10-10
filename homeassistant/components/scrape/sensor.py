@@ -2,27 +2,27 @@
 import logging
 
 from bs4 import BeautifulSoup
-import voluptuous as vol
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_HEADERS,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_USERNAME,
-    CONF_HEADERS,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ class ScrapeSensor(Entity):
         """Get the latest data from the source and updates the state."""
         self.rest.update()
         if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data")
+            _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
 
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
@@ -132,10 +132,14 @@ class ScrapeSensor(Entity):
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = raw_data.select(self._select)[self._index].text
+                tag = raw_data.select(self._select)[self._index]
+                if tag.name in ("style", "script", "template"):
+                    value = tag.string
+                else:
+                    value = tag.text
             _LOGGER.debug(value)
         except IndexError:
-            _LOGGER.error("Unable to extract data from HTML")
+            _LOGGER.error("Unable to extract data from HTML for %s", self.name)
             return
 
         if self._value_template is not None:

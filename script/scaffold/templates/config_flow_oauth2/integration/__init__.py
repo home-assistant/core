@@ -3,17 +3,17 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import (
-    config_validation as cv,
-    config_entry_oauth2_flow,
-    aiohttp_client,
-)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from . import api, config_flow
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -56,8 +56,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up NEW_NAME from a config entry."""
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)

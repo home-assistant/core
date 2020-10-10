@@ -4,10 +4,11 @@ from homeassistant.components.water_heater import (
     STATE_OFF,
     STATE_ON,
     SUPPORT_OPERATION_MODE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import TEMP_CELSIUS
-from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
+
+from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
@@ -28,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveWaterHeater(HiveEntity, WaterHeaterDevice):
+class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     """Hive Water Heater Device."""
 
     @property

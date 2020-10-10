@@ -1,7 +1,6 @@
 """The tests for the Buienradar sensor platform."""
-from homeassistant.setup import async_setup_component
 from homeassistant.components import sensor
-
+from homeassistant.setup import async_setup_component
 
 CONDITIONS = ["stationname", "temperature"]
 BASE_CONFIG = {
@@ -20,6 +19,7 @@ BASE_CONFIG = {
 async def test_smoke_test_setup_component(hass):
     """Smoke test for successfully set-up with default config."""
     assert await async_setup_component(hass, sensor.DOMAIN, BASE_CONFIG)
+    await hass.async_block_till_done()
 
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.volkel_{cond}")

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_service%]"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Kraj"
+                },
+                "title": "Wybierz kraj do monitorowania"
+            }
+        }
+    }
+}

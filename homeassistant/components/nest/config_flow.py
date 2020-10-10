@@ -14,7 +14,6 @@ from homeassistant.util.json import load_json
 
 from .const import DOMAIN
 
-
 DATA_FLOW_IMPL = "nest_flow_implementation"
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +100,7 @@ class NestFlowHandler(config_entries.ConfigFlow):
                 with async_timeout.timeout(10):
                     tokens = await flow["convert_code"](user_input["code"])
                 return self._entry_from_tokens(
-                    "Nest (via {})".format(flow["name"]), flow, tokens
+                    f"Nest (via {flow['name']})", flow, tokens
                 )
 
             except asyncio.TimeoutError:

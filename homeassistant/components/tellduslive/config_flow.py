@@ -4,6 +4,7 @@ import logging
 import os
 
 import async_timeout
+from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -43,7 +44,6 @@ class FlowHandler(config_entries.ConfigFlow):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
-        from tellduslive import Session
 
         self._session = Session(
             public_key=PUBLIC_KEY,
@@ -91,7 +91,7 @@ class FlowHandler(config_entries.ConfigFlow):
                         KEY_SESSION: session,
                     },
                 )
-            errors["base"] = "auth_error"
+            errors["base"] = "invalid_auth"
 
         try:
             with async_timeout.timeout(10):
@@ -114,14 +114,14 @@ class FlowHandler(config_entries.ConfigFlow):
             },
         )
 
-    async def async_step_discovery(self, user_input):
+    async def async_step_discovery(self, discovery_info):
         """Run when a Tellstick is discovered."""
-        from tellduslive import supports_local_api
+        await self._async_handle_discovery_without_unique_id()
 
-        _LOGGER.info("Discovered tellstick device: %s", user_input)
-        if supports_local_api(user_input[1]):
-            _LOGGER.info("%s support local API", user_input[1])
-            self._hosts.append(user_input[0])
+        _LOGGER.info("Discovered tellstick device: %s", discovery_info)
+        if supports_local_api(discovery_info[1]):
+            _LOGGER.info("%s support local API", discovery_info[1])
+            self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()
 

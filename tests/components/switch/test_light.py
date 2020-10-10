@@ -1,6 +1,7 @@
 """The tests for the Light Switch platform."""
 
 from homeassistant.setup import async_setup_component
+
 from tests.components.light import common
 from tests.components.switch import common as switch_common
 
@@ -55,6 +56,7 @@ async def test_light_service_calls(hass):
     assert hass.states.get("light.light_switch").state == "on"
 
     await common.async_turn_off(hass, "light.light_switch")
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == "off"
     assert hass.states.get("light.light_switch").state == "off"
@@ -73,11 +75,13 @@ async def test_switch_service_calls(hass):
     assert hass.states.get("light.light_switch").state == "on"
 
     await switch_common.async_turn_off(hass, "switch.decorative_lights")
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == "off"
     assert hass.states.get("light.light_switch").state == "off"
 
     await switch_common.async_turn_on(hass, "switch.decorative_lights")
+    await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == "on"
     assert hass.states.get("light.light_switch").state == "on"

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD je \u017ee konfiguriran",
+            "no_devices_discovered": "Ni odkritih UPnP/IGD naprav",
+            "no_devices_found": "Naprav UPnP/IGD ni mogo\u010de najti v omre\u017eju."
+        },
+        "error": {
+            "few": "nekaj",
+            "one": "ena",
+            "other": "ve\u010d",
+            "two": "dve"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Ali \u017eelite nastaviti to UPnP/IGD napravo?"
+            },
+            "user": {
+                "data": {
+                    "usn": "Naprava"
+                }
+            }
+        }
+    }
+}

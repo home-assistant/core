@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Eng Bridge mat d\u00ebsem Numm oder Port ass sch konfigur\u00e9iert."
+        },
+        "step": {
+            "pairing": {
+                "description": "Soubaal {name} bridge prett ass, ass Kopplung disponibel an den 'Notifikatioune' als \"HomeKit Bridge Setup\".",
+                "title": "Pair Homekit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
+                    "include_domains": "Domaine d\u00e9i solle abegraff ginn."
+                },
+                "description": "Eng HomeKit Bridge erlaabt et Home Assistant Entit\u00e9iten am HomeKit z'acc\u00e9d\u00e9ieren.HomeKit Bridges sinn op 150 Accessoire limit\u00e9iert, mat der Bridge selwer. Falls d'Bridge m\u00e9i w\u00e9i d\u00e9i max. Unzuel vun Accessoire soll \u00ebnnerst\u00ebtzen ass et recommand\u00e9iert verschidden HomeKit Bridges fir verschidden Domaine anzesetzen. Eng detaill\u00e9iert Konfiguratioun ass n\u00ebmme via YAML fir d\u00e9i prim\u00e4r Bridge verf\u00fcgbar.",
+                "title": "HomeKit Bridge aktiv\u00e9ieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
+                    "safe_mode": "Safe Mode (n\u00ebmmen aktiv\u00e9ieren wann Kopplung net geht)"
+                },
+                "description": "D\u00ebs Astellungen brauche n\u00ebmmen ajust\u00e9iert ze ginn fals d'HomeKit Bridge net funktion\u00e9iert.",
+                "title": "Erweidert Konfiguratioun"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamera mat nativer H.264 Stream \u00cbnnerst\u00ebtzung"
+                },
+                "description": "Iwwerpr\u00e9if all Kamera op nativ H.264 \u00cbnnerst\u00ebtzung. Falls d'Kamera keng H.264 Stream Ausgab huet, transkod\u00e9iert de System de Video op H.264 fir Homekit. Transkod\u00e9iere ben\u00e9idegt eng performant CPU an w\u00e4ert net anst\u00e4nneg op Single Board Computer funktion\u00e9ieren.",
+                "title": "Kamera Video Codec auswielen."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entit\u00e9iten d\u00e9i ausgeschloss solle ginn"
+                },
+                "description": "Wiel d'Entit\u00e9iten aus d\u00e9i NET sollen iwwerbr\u00e9ckt ginn.",
+                "title": "Entit\u00e9iten aus den ausgewielten Domaine vun der Bridge ausschl\u00e9issen"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domaine d\u00e9i solle ageschloss ginn"
+                },
+                "description": "Entit\u00e9iten an den \"Domaine fir anzeschl\u00e9issen\" ginn op HomeKit iwwerbr\u00e9ckt. Am n\u00e4chste Schr\u00ebtt k\u00ebnnen d'Entit\u00e9iten ausgewielt ginn d\u00e9i sollen vun d\u00ebser L\u00ebscht ausgeschloss ginn.",
+                "title": "Domaine auswielen fir an d'Bridge"
+            },
+            "yaml": {
+                "description": "D\u00ebs Entr\u00e9e ass via YAML kontroll\u00e9iert",
+                "title": "HomeKit Bridge Optioune ajust\u00e9ieren"
+            }
+        }
+    },
+    "title": "HomeKit Bridge"
+}

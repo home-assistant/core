@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "name_exists": "La ubicaci\u00f3n ya existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Altitud",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                },
+                "description": "Instituto de meteorolog\u00eda",
+                "title": "Ubicaci\u00f3n"
+            }
+        }
+    }
+}

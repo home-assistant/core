@@ -1,17 +1,19 @@
 """Define tests for the OpenUV config flow."""
-from unittest.mock import patch
+from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.rainmachine import DOMAIN, config_flow
+from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_SCAN_INTERVAL,
+    CONF_SSL,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass):
@@ -23,18 +25,19 @@ async def test_duplicate_error(hass):
         CONF_SSL: True,
     }
 
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
-    flow = config_flow.RainMachineFlowHandler()
-    flow.hass = hass
+    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
+        hass
+    )
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_IP_ADDRESS: "identifier_exists"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_invalid_password(hass):
     """Test that an invalid password throws an error."""
-    from regenmaschine.errors import RainMachineError
-
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "bad_password",
@@ -44,18 +47,21 @@ async def test_invalid_password(hass):
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "regenmaschine.login", return_value=mock_coro(exception=RainMachineError)
+        "regenmaschine.client.Client.load_local",
+        side_effect=RainMachineError,
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     result = await flow.async_step_user(user_input=None)
 
@@ -70,12 +76,17 @@ async def test_step_import(hass):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
+        CONF_SCAN_INTERVAL: 60,
     }
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
-    with patch("regenmaschine.login", return_value=mock_coro(True)):
+    with patch(
+        "regenmaschine.client.Client.load_local",
+        return_value=True,
+    ):
         result = await flow.async_step_import(import_config=conf)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -86,6 +97,7 @@ async def test_step_import(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }
 
 
@@ -96,12 +108,17 @@ async def test_step_user(hass):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
+        CONF_SCAN_INTERVAL: 60,
     }
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
-    with patch("regenmaschine.login", return_value=mock_coro(True)):
+    with patch(
+        "regenmaschine.client.Client.load_local",
+        return_value=True,
+    ):
         result = await flow.async_step_user(user_input=conf)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -112,4 +129,5 @@ async def test_step_user(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }

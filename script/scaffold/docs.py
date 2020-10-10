@@ -1,7 +1,6 @@
 """Print links to relevant docs."""
 from .model import Info
 
-
 DATA = {
     "config_flow": {
         "title": "Config Flow",
@@ -70,7 +69,7 @@ def print_relevant_docs(template: str, info: Info) -> None:
         print()
 
     print(
-        f"The next step is to look at the files and deal with all areas marked as TODO."
+        "The next step is to look at the files and deal with all areas marked as TODO."
     )
 
     if "extra" in data:

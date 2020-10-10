@@ -1,43 +1,43 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import datetime
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 import requests
-import voluptuous as vol
 import somecomfort
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_FAN,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    PRESET_AWAY,
-    PRESET_NONE,
 )
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE,
-    CONF_REGION,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -47,24 +47,29 @@ ATTR_FAN_ACTION = "fan_action"
 
 CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
+CONF_DEV_ID = "thermostat"
+CONF_LOC_ID = "location"
 
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
-DEFAULT_REGION = "eu"
-REGIONS = ["eu", "us"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(
-            CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-        ): vol.Coerce(int),
-        vol.Optional(
-            CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-        ): vol.Coerce(int),
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_REGION),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(
+                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(
+                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(CONF_REGION): cv.string,
+            vol.Optional(CONF_DEV_ID): cv.string,
+            vol.Optional(CONF_LOC_ID): cv.string,
+        }
+    ),
 )
 
 HVAC_MODE_TO_HW_MODE = {
@@ -104,48 +109,45 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if config.get(CONF_REGION) == "us":
-        try:
-            client = somecomfort.SomeComfort(username, password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", username)
-            return
-        except somecomfort.SomeComfortError:
-            _LOGGER.error(
-                "Failed to initialize the Honeywell client: "
-                "Check your configuration (username, password), "
-                "or maybe you have exceeded the API rate limit?"
-            )
-            return
-
-        dev_id = config.get("thermostat")
-        loc_id = config.get("location")
-        cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
-        heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
-
-        add_entities(
-            [
-                HoneywellUSThermostat(
-                    client, device, cool_away_temp, heat_away_temp, username, password
-                )
-                for location in client.locations_by_id.values()
-                for device in location.devices_by_id.values()
-                if (
-                    (not loc_id or location.locationid == loc_id)
-                    and (not dev_id or device.deviceid == dev_id)
-                )
-            ]
+    try:
+        client = somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        return
+    except somecomfort.SomeComfortError:
+        _LOGGER.error(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
         )
         return
 
-    _LOGGER.warning(
-        "The honeywell component has been deprecated for EU (i.e. non-US) "
-        "systems. For EU-based systems, use the evohome component, "
-        "see: https://home-assistant.io/integrations/evohome"
+    dev_id = config.get(CONF_DEV_ID)
+    loc_id = config.get(CONF_LOC_ID)
+    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
+
+    add_entities(
+        [
+            HoneywellUSThermostat(
+                client,
+                device,
+                cool_away_temp,
+                heat_away_temp,
+                username,
+                password,
+            )
+            for location in client.locations_by_id.values()
+            for device in location.devices_by_id.values()
+            if (
+                (not loc_id or location.locationid == loc_id)
+                and (not dev_id or device.deviceid == dev_id)
+            )
+        ]
     )
 
 
-class HoneywellUSThermostat(ClimateDevice):
+class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     def __init__(
@@ -160,9 +162,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        _LOGGER.debug(
-            "latestData = %s ", device._data  # pylint: disable=protected-access
-        )
+        _LOGGER.debug("latestData = %s ", device._data)
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -174,13 +174,13 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:  # pylint: disable=protected-access
+        if device._data["canControlHumidification"]:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        if not device._data["hasFan"]:  # pylint: disable=protected-access
+        if not device._data["hasFan"]:
             return
 
         # not all honeywell fans support all modes

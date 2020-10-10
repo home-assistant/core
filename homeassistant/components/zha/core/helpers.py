@@ -4,30 +4,25 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+
 import asyncio
+import binascii
 import collections
+import functools
+import itertools
 import logging
+from random import uniform
+import re
+from typing import Any, Callable, Iterator, List, Optional, Tuple
 
-import bellows.ezsp
-import bellows.zigbee.application
+import voluptuous as vol
+import zigpy.exceptions
 import zigpy.types
-import zigpy_deconz.api
-import zigpy_deconz.zigbee.application
-import zigpy_xbee.api
-import zigpy_xbee.zigbee.application
-import zigpy_zigate.api
-import zigpy_zigate.zigbee.application
+import zigpy.util
 
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
-from .const import (
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-    DEFAULT_BAUDRATE,
-    RadioType,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,42 +49,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-async def check_zigpy_connection(usb_path, radio_type, database_path):
-    """Test zigpy radio connection."""
-    if radio_type == RadioType.ezsp.name:
-        radio = bellows.ezsp.EZSP()
-        ControllerApplication = bellows.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.xbee.name:
-        radio = zigpy_xbee.api.XBee()
-        ControllerApplication = zigpy_xbee.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.deconz.name:
-        radio = zigpy_deconz.api.Deconz()
-        ControllerApplication = zigpy_deconz.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.zigate.name:
-        radio = zigpy_zigate.api.ZiGate()
-        ControllerApplication = zigpy_zigate.zigbee.application.ControllerApplication
-    try:
-        await radio.connect(usb_path, DEFAULT_BAUDRATE)
-        controller = ControllerApplication(radio, database_path)
-        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
-        await controller.shutdown()
-    except Exception:  # pylint: disable=broad-except
-        return False
-    return True
-
-
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
 
 
 async def get_matched_clusters(source_zha_device, target_zha_device):
@@ -142,6 +101,45 @@ async def async_get_zha_device(hass, device_id):
     return zha_gateway.devices[ieee]
 
 
+def find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+    """Find attributes with matching key from states."""
+    for state in states:
+        value = state.attributes.get(key)
+        if value is not None:
+            yield value
+
+
+def mean_int(*args):
+    """Return the mean of the supplied values."""
+    return int(sum(args) / len(args))
+
+
+def mean_tuple(*args):
+    """Return the mean values along the columns of the supplied values."""
+    return tuple(sum(x) / len(x) for x in zip(*args))
+
+
+def reduce_attribute(
+    states: List[State],
+    key: str,
+    default: Optional[Any] = None,
+    reduce: Callable[..., Any] = mean_int,
+) -> Any:
+    """Find the first attribute matching key from states.
+
+    If none are found, return default.
+    """
+    attrs = list(find_state_attributes(states, key))
+
+    if not attrs:
+        return default
+
+    if len(attrs) == 1:
+        return attrs[0]
+
+    return reduce(*attrs)
+
+
 class LogMixin:
     """Log helper."""
 
@@ -164,3 +162,110 @@ class LogMixin:
     def error(self, msg, *args):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
+
+
+def retryable_req(
+    delays=(1, 5, 10, 15, 30, 60, 120, 180, 360, 600, 900, 1800), raise_=False
+):
+    """Make a method with ZCL requests retryable.
+
+    This adds delays keyword argument to function.
+    len(delays) is number of tries.
+    raise_ if the final attempt should raise the exception.
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(channel, *args, **kwargs):
+
+            exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
+            try_count, errors = 1, []
+            for delay in itertools.chain(delays, [None]):
+                try:
+                    return await func(channel, *args, **kwargs)
+                except exceptions as ex:
+                    errors.append(ex)
+                    if delay:
+                        delay = uniform(delay * 0.75, delay * 1.25)
+                        channel.debug(
+                            (
+                                "%s: retryable request #%d failed: %s. "
+                                "Retrying in %ss"
+                            ),
+                            func.__name__,
+                            try_count,
+                            ex,
+                            round(delay, 1),
+                        )
+                        try_count += 1
+                        await asyncio.sleep(delay)
+                    else:
+                        channel.warning(
+                            "%s: all attempts have failed: %s", func.__name__, errors
+                        )
+                        if raise_:
+                            raise
+
+        return wrapper
+
+    return decorator
+
+
+def convert_install_code(value: str) -> bytes:
+    """Convert string to install code bytes and validate length."""
+
+    try:
+        code = binascii.unhexlify(value.replace("-", "").lower())
+    except binascii.Error as exc:
+        raise vol.Invalid(f"invalid hex string: {value}") from exc
+
+    if len(code) != 18:  # 16 byte code + 2 crc bytes
+        raise vol.Invalid("invalid length of the install code")
+
+    if zigpy.util.convert_install_code(code) is None:
+        raise vol.Invalid("invalid install code")
+
+    return code
+
+
+QR_CODES = (
+    # Consciot
+    r"^([\da-fA-F]{16})\|([\da-fA-F]{36})$",
+    # Enbrighten
+    r"""
+        ^Z:
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
+        $
+    """,
+    # Aqara
+    r"""
+        \$A:
+        ([0-9a-fA-F]{16})  # IEEE address
+        \$I:
+        ([0-9a-fA-F]{36})  # install code
+        $
+    """,
+)
+
+
+def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
+    """Try to parse the QR code.
+
+    if successful, return a tuple of a EUI64 address and install code.
+    """
+
+    for code_pattern in QR_CODES:
+        match = re.search(code_pattern, qr_code, re.VERBOSE)
+        if match is None:
+            continue
+
+        ieee_hex = binascii.unhexlify(match[1])
+        ieee = zigpy.types.EUI64(ieee_hex[::-1])
+        install_code = match[2]
+        # install_code sanity check
+        install_code = convert_install_code(install_code)
+        return ieee, install_code
+
+    raise vol.Invalid(f"couldn't convert qr code: {qr_code}")

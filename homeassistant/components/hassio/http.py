@@ -7,16 +7,19 @@ from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE, CONTENT_LENGTH
+from aiohttp.hdrs import CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPBadGateway
 import async_timeout
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.const import HTTP_UNAUTHORIZED
 
 from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
 NO_TIMEOUT = re.compile(
     r"^(?:"
@@ -31,7 +34,13 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r")$")
+NO_AUTH_ONBOARDING = re.compile(
+    r"^(?:" r"|supervisor/logs" r"|snapshots/[^/]+/.+" r")$"
+)
+
+NO_AUTH = re.compile(
+    r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$"
+)
 
 
 class HassIOView(HomeAssistantView):
@@ -50,11 +59,13 @@ class HassIOView(HomeAssistantView):
         self, request: web.Request, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Route data to Hass.io."""
-        if _need_auth(path) and not request[KEY_AUTHENTICATED]:
-            return web.Response(status=401)
+        hass = request.app["hass"]
+        if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
+            return web.Response(status=HTTP_UNAUTHORIZED)
 
         return await self._command_proxy(path, request)
 
+    delete = _handle
     get = _handle
     post = _handle
 
@@ -68,6 +79,16 @@ class HassIOView(HomeAssistantView):
         read_timeout = _get_timeout(path)
         data = None
         headers = _init_header(request)
+        if path == "snapshots/new/upload":
+            # We need to reuse the full content type that includes the boundary
+            headers[
+                "Content-Type"
+            ] = request._stored_content_type  # pylint: disable=protected-access
+
+            # Snapshots are big, so we need to adjust the allowed size
+            request._client_max_size = (  # pylint: disable=protected-access
+                MAX_UPLOAD_SIZE
+            )
 
         try:
             with async_timeout.timeout(10):
@@ -131,8 +152,10 @@ def _get_timeout(path: str) -> int:
     return 300
 
 
-def _need_auth(path: str) -> bool:
+def _need_auth(hass, path: str) -> bool:
     """Return if a path need authentication."""
+    if not async_is_onboarded(hass) and NO_AUTH_ONBOARDING.match(path):
+        return False
     if NO_AUTH.match(path):
         return False
     return True

@@ -1,6 +1,7 @@
 """Support for LIFX Cloud scenes."""
 import asyncio
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
@@ -8,13 +9,18 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_TOKEN, CONF_TIMEOUT, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_PLATFORM,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
+    HTTP_OK,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-LIFX_API_URL = "https://api.lifx.com/v1/{0}"
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -33,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     headers = {AUTHORIZATION: f"Bearer {token}"}
 
-    url = LIFX_API_URL.format("scenes")
+    url = "https://api.lifx.com/v1/scenes"
 
     try:
         httpsession = async_get_clientsession(hass)
@@ -45,14 +51,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return False
 
     status = scenes_resp.status
-    if status == 200:
+    if status == HTTP_OK:
         data = await scenes_resp.json()
-        devices = []
-        for scene in data:
-            devices.append(LifxCloudScene(hass, headers, timeout, scene))
+        devices = [LifxCloudScene(hass, headers, timeout, scene) for scene in data]
         async_add_entities(devices)
         return True
-    if status == 401:
+    if status == HTTP_UNAUTHORIZED:
         _LOGGER.error("Unauthorized (bad token?) on %s", url)
         return False
 
@@ -76,9 +80,9 @@ class LifxCloudScene(Scene):
         """Return the name of the scene."""
         return self._name
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        url = LIFX_API_URL.format("scenes/scene_id:%s/activate" % self._uuid)
+        url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
 
         try:
             httpsession = async_get_clientsession(self.hass)

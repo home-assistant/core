@@ -1,27 +1,24 @@
 boost_heating:
-  description: "Set the boost mode ON defining the period of time and the desired target temperature
-  for the boost."
+  description: Set the boost mode ON defining the period of time and the desired target temperature for the boost.
   fields:
     entity_id:
-      {
-        description: Enter the entity_id for the device required to set the boost mode.,
-        example: "climate.heating",
-      }
+      description: Enter the entity_id for the device required to set the boost mode.
+      example: "climate.heating"
     time_period:
-      { description: Set the time period for the boost., example: "01:30:00"  }
+      description: Set the time period for the boost.
+      example: "01:30:00"
     temperature:
-      {
-        description: Set the target temperature for the boost period.,
-        example: "20.5",
-      }
+      description: Set the target temperature for the boost period.
+      example: "20.5"
 boost_hot_water:
-  description:
-    "Set the boost mode ON or OFF defining the period of time for the boost."
+  description: "Set the boost mode ON or OFF defining the period of time for the boost."
   fields:
     entity_id:
-      {
-        description: Enter the entity_id for the device reuired to set the boost mode.,
-        example: "water_heater.hot_water",
-      }
-    time_period: { description: Set the time period for the boost., example: "01:30:00" }
-    on_off: { description: Set the boost function on or off., example: "on" }
+      description: Enter the entity_id for the device reuired to set the boost mode.
+      example: "water_heater.hot_water"
+    time_period:
+      description: Set the time period for the boost.
+      example: "01:30:00"
+    on_off:
+      description: Set the boost function on or off.
+      example: "on"

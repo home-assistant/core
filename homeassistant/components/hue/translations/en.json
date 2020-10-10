@@ -1,0 +1,67 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All Philips Hue bridges are already configured",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
+            "discover_timeout": "Unable to discover Hue bridges",
+            "no_bridges": "No Philips Hue bridges discovered",
+            "not_hue_bridge": "Not a Hue bridge",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "linking": "Unexpected error",
+            "register_failed": "Failed to register, please try again"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Pick Hue bridge"
+            },
+            "link": {
+                "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Manual configure a Hue bridge"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "dim_down": "Dim down",
+            "dim_up": "Dim up",
+            "double_buttons_1_3": "First and Third buttons",
+            "double_buttons_2_4": "Second and Fourth buttons",
+            "turn_off": "Turn off",
+            "turn_on": "Turn on"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" button released after long press",
+            "remote_button_short_press": "\"{subtype}\" button pressed",
+            "remote_button_short_release": "\"{subtype}\" button released",
+            "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
+            "remote_double_button_short_press": "Both \"{subtype}\" released"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Allow Hue groups",
+                    "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
+                }
+            }
+        }
+    }
+}

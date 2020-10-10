@@ -1,9 +1,15 @@
 """Support for Satel Integra alarm, using ETHM module."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
+
+from satel_integra.satel_integra import AlarmState
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -17,8 +23,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
-    DATA_SATEL,
     CONF_ZONE_NAME,
+    DATA_SATEL,
     SIGNAL_PANEL_MESSAGE,
 )
 
@@ -46,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
+class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     def __init__(self, controller, name, arm_home_mode, partition_id):
@@ -61,8 +67,10 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")
         self._update_alarm_status()
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+            )
         )
 
     @callback
@@ -72,13 +80,12 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         _LOGGER.debug("Got status update, current status: %s", state)
         if state != self._state:
             self._state = state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             _LOGGER.debug("Ignoring alarm status message, same state")
 
     def _read_alarm_state(self):
         """Read current status of the alarm and translate it into HA status."""
-        from satel_integra.satel_integra import AlarmState
 
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED
@@ -130,6 +137,11 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

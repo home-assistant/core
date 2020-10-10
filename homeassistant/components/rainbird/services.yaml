@@ -3,7 +3,7 @@ start_irrigation:
   fields:
     entity_id:
       description: Name of a single irrigation to turn on
-      example: 'switch.sprinkler_1'
+      example: "switch.sprinkler_1"
     duration:
       description: Duration for this sprinkler to be turned on
       example: 1

@@ -2,14 +2,20 @@
 from itertools import chain
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from . import CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_TYPES = {"online": "connectivity"}
+BINARY_TYPES = {"online": DEVICE_CLASS_CONNECTIVITY}
 
 CLIMATE_BINARY_TYPES = {
     "fan": None,
@@ -19,9 +25,9 @@ CLIMATE_BINARY_TYPES = {
 }
 
 CAMERA_BINARY_TYPES = {
-    "motion_detected": "motion",
-    "sound_detected": "sound",
-    "person_detected": "occupancy",
+    "motion_detected": DEVICE_CLASS_MOTION,
+    "sound_detected": DEVICE_CLASS_SOUND,
+    "person_detected": DEVICE_CLASS_OCCUPANCY,
 }
 
 STRUCTURE_BINARY_TYPES = {"away": None}
@@ -69,9 +75,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for variable in conditions:
         if variable in _BINARY_TYPES_DEPRECATED:
             wstr = (
-                variable + " is no a longer supported "
+                f"{variable} is no a longer supported "
                 "monitored_conditions. See "
-                "https://home-assistant.io/components/binary_sensor.nest/ "
+                "https://www.home-assistant.io/integrations/binary_sensor.nest/ "
                 "for valid options."
             )
             _LOGGER.error(wstr)
@@ -114,7 +120,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_job(get_binary_sensors), True)
 
 
-class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
+class NestBinarySensor(NestSensorDevice, BinarySensorEntity):
     """Represents a Nest binary sensor."""
 
     @property
@@ -153,7 +159,7 @@ class NestActivityZoneSensor(NestBinarySensor):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     def update(self):
         """Retrieve latest state."""

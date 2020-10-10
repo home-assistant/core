@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "import_failed": {
+        "title": "Failed to import Caséta bridge configuration.",
+        "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}

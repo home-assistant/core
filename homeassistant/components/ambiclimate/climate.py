@@ -5,19 +5,24 @@ import logging
 import ambiclimate
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import (
-    ATTR_VALUE,
+from homeassistant.const import (
+    ATTR_NAME,
+    ATTR_TEMPERATURE,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    TEMP_CELSIUS,
+)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
+    ATTR_VALUE,
     DOMAIN,
     SERVICE_COMFORT_FEEDBACK,
     SERVICE_COMFORT_MODE,
@@ -129,7 +134,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class AmbiclimateEntity(ClimateDevice):
+class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
     def __init__(self, heater, store):

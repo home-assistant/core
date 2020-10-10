@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "closed": "Toe",
+            "closing": "Sluiting",
+            "open": "Oop",
+            "opening": "Opening",
+            "stopped": "Gestop"
+        }
+    },
+    "title": "Dekking"
+}

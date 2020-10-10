@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Fel vid anslutning; kontrollera n\u00e4tverket och f\u00f6rs\u00f6k igen",
+            "identifier_exists": "E-post redan registrerad",
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
+            "unknown_error": "Ok\u00e4nt fel, var god att rapportera logginformation"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "description": "V\u00e4nligen ange din information.",
+                "title": "Tesla - Konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunder mellan skanningar"
+                }
+            }
+        }
+    }
+}

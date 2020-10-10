@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puede configurar una cuenta Soma.",
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
+            "connection_error": "No se pudo conectar a SOMA Connect.",
+            "missing_configuration": "El componente Soma no est\u00e1 configurado. Por favor, siga la documentaci\u00f3n.",
+            "result_error": "SOMA Connect respondi\u00f3 con estado de error."
+        },
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito con Soma."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "description": "Ingrese la configuraci\u00f3n de conexi\u00f3n de su SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        }
+    }
+}

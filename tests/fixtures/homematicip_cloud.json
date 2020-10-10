@@ -14,8 +14,1662 @@
         }
     },
     "devices": {
+        "3014F7110TILTVIBRATIONSENSOR": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.16",
+            "firmwareVersionInteger": 65552,
+            "functionalChannels": {
+                "0": {
+                    "busConfigMismatch": null,
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110TILTVIBRATIONSENSOR",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "multicastRoutingEnabled": false,
+                    "powerShortCircuit": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -59,
+                    "rssiPeerValue": null,
+                    "shortCircuitDataLine": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureBusConfigMismatch": false,
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false,
+                        "IFeatureMulticastRouter": false,
+                        "IFeaturePowerShortCircuit": false,
+                        "IFeatureRssiValue": true,
+                        "IFeatureShortCircuitDataLine": false,
+                        "IOptionalFeatureDutyCycle": true,
+                        "IOptionalFeatureLowBat": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "accelerationSensorEventFilterPeriod": 0.5,
+                    "accelerationSensorMode": "FLAT_DECT",
+                    "accelerationSensorNeutralPosition": "VERTICAL",
+                    "accelerationSensorSensitivity": "SENSOR_RANGE_2G",
+                    "accelerationSensorTriggerAngle": 45,
+                    "accelerationSensorTriggered": true,
+                    "deviceId": "3014F7110TILTVIBRATIONSENSOR",
+                    "functionalChannelType": "TILT_VIBRATION_SENSOR_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": ""
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110TILTVIBRATIONSENSOR",
+            "label": "Garage Neigungs- und Ersch\u00fctterungssensor",
+            "lastStatusUpdate": 1598610615630,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 378,
+            "modelType": "HmIP-STV",
+            "oem": "eQ-3",
+            "permanentlyReachable": false,
+            "serializedGlobalTradeItemNumber": "3014F7110TILTVIBRATIONSENSOR",
+            "type": "TILT_VIBRATION_SENSOR",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000WIREDSWITCH8": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_WIRED",
+            "firmwareVersion": "1.2.4",
+            "firmwareVersionInteger": 66052,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": null,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": null,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": true,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "Fernseher (Wohnzimmer)",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "2": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [],
+                    "index": 2,
+                    "label": "Steckdosen (Wohnzimmer)",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "3": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 3,
+                    "groups": [],
+                    "index": 3,
+                    "label": "Steckdosen Kaffeeecke (K\u00fcche)",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "4": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 4,
+                    "groups": [],
+                    "index": 4,
+                    "label": "Steckdosen (K\u00fcche)",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "5": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 5,
+                    "groups": [],
+                    "index": 5,
+                    "label": "T\u00fcrlicht (Garten)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "6": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 6,
+                    "groups": [],
+                    "index": 6,
+                    "label": "Arbeitsplattenlicht (K\u00fcche)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "7": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 7,
+                    "groups": [],
+                    "index": 7,
+                    "label": "Raumlich (Flur/Oben)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "8": {
+                    "deviceId": "3014F711000WIREDSWITCH8",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 8,
+                    "groups": [],
+                    "index": 8,
+                    "label": "Spiegellicht (Bad/Oben)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000WIREDSWITCH8",
+            "label": "Wired Schaltaktor \u2013 8-fach",
+            "lastStatusUpdate": 1595225535806,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 343,
+            "modelType": "HmIPW-DRS8",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000WIREDSWITCH8",
+            "type": "WIRED_SWITCH_8",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000WIREDDIMMER3": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_WIRED",
+            "firmwareVersion": "1.0.0",
+            "firmwareVersionInteger": 65536,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000WIREDDIMMER3",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": null,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": null,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": true,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "deviceId": "3014F711000WIREDDIMMER3",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "dimLevel": 0.0,
+                    "functionalChannelType": "DIMMER_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "Raumlich (K\u00fcche)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceOverloaded": true
+                    },
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "2": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "deviceId": "3014F711000WIREDDIMMER3",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "dimLevel": 0.0,
+                    "functionalChannelType": "DIMMER_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [],
+                    "index": 2,
+                    "label": "Raumlicht (Bad/Oben)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceOverloaded": true
+                    },
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "3": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "deviceId": "3014F711000WIREDDIMMER3",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "dimLevel": 0.0,
+                    "functionalChannelType": "DIMMER_CHANNEL",
+                    "groupIndex": 3,
+                    "groups": [],
+                    "index": 3,
+                    "label": "Raumlich (Kinderzimmer/Oben)",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceOverloaded": true
+                    },
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000WIREDDIMMER3",
+            "label": "Wired Dimmaktor \u2013 3-fach (K\u00fcche)",
+            "lastStatusUpdate": 1595225686220,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 345,
+            "modelType": "HmIPW-DRD3",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000WIREDDIMMER3",
+            "type": "WIRED_DIMMER_3",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000WIREDINPUT32": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_WIRED",
+            "firmwareVersion": "1.2.2",
+            "firmwareVersionInteger": 66050,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": null,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": null,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": true,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "10": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 10,
+                    "groups": [],
+                    "index": 10,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "11": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 11,
+                    "groups": [],
+                    "index": 11,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "12": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 12,
+                    "groups": [],
+                    "index": 12,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "13": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 13,
+                    "groups": [],
+                    "index": 13,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "14": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 14,
+                    "groups": [],
+                    "index": 14,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "15": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 15,
+                    "groups": [],
+                    "index": 15,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "16": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 16,
+                    "groups": [],
+                    "index": 16,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "17": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 17,
+                    "groups": [],
+                    "index": 17,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "18": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 18,
+                    "groups": [],
+                    "index": 18,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "19": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 19,
+                    "groups": [],
+                    "index": 19,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "2": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [],
+                    "index": 2,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "20": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 20,
+                    "groups": [],
+                    "index": 20,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "21": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 21,
+                    "groups": [],
+                    "index": 21,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "22": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 22,
+                    "groups": [],
+                    "index": 22,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "23": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 23,
+                    "groups": [],
+                    "index": 23,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "24": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 24,
+                    "groups": [],
+                    "index": 24,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "25": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 25,
+                    "groups": [],
+                    "index": 25,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "26": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 26,
+                    "groups": [],
+                    "index": 26,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "27": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 27,
+                    "groups": [],
+                    "index": 27,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "28": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 28,
+                    "groups": [],
+                    "index": 28,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "29": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 29,
+                    "groups": [],
+                    "index": 29,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "3": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 3,
+                    "groups": [],
+                    "index": 3,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "30": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 30,
+                    "groups": [],
+                    "index": 30,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "31": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 31,
+                    "groups": [],
+                    "index": 31,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "32": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 32,
+                    "groups": [],
+                    "index": 32,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "4": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 4,
+                    "groups": [],
+                    "index": 4,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "5": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 5,
+                    "groups": [],
+                    "index": 5,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "6": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 6,
+                    "groups": [],
+                    "index": 6,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "7": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 7,
+                    "groups": [],
+                    "index": 7,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "8": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 8,
+                    "groups": [],
+                    "index": 8,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                },
+                "9": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F711000WIREDINPUT32",
+                    "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
+                    "groupIndex": 9,
+                    "groups": [],
+                    "index": 9,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "supportedOptionalFeatures": {
+                        "IOptionalFeatureWindowState": false
+                    },
+                    "windowState": "CLOSED"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000WIREDINPUT32",
+            "label": "Wired Eingangsmodul \u2013 32-fach",
+            "lastStatusUpdate": 1595222885844,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 347,
+            "modelType": "HmIPW-DRI32",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000WIREDINPUT32",
+            "type": "WIRED_INPUT_32",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110SHUTTER_OPTICAL": {
+            "availableFirmwareVersion": "1.16.10",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.16.10",
+            "firmwareVersionInteger": 69642,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110SHUTTER_OPTICAL",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_SABOTAGE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -72,
+                    "rssiPeerValue": null,
+                    "sabotage": false,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110SHUTTER_OPTICAL",
+                    "eventDelay": 0,
+                    "functionalChannelType": "SHUTTER_CONTACT_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000016",
+                        "00000000-0000-0000-0000-000000000044",
+                        "00000000-0000-0000-0000-000000000009"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "windowState": "CLOSED"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110SHUTTER_OPTICAL",
+            "label": "Sitzplatzt\u00fcre",
+            "lastStatusUpdate": 1589401621441,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 398,
+            "modelType": "HmIP-SWDO-PL",
+            "oem": "eQ-3",
+            "permanentlyReachable": false,
+            "serializedGlobalTradeItemNumber": "3014F7110SHUTTER_OPTICAL",
+            "type": "SHUTTER_CONTACT_OPTICAL_PLUS",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000HmIPFSI16": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.16.2",
+            "firmwareVersionInteger": 69634,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000HmIPFSI16",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "devicePowerFailureDetected": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -57,
+                    "rssiPeerValue": -54,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceIdentify": false,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDevicePowerFailure": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "binaryBehaviorType": "NORMALLY_CLOSE",
+                    "deviceId": "3014F7110000000HmIPFSI16",
+                    "functionalChannelType": "MULTI_MODE_INPUT_SWITCH_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "multiModeInputMode": "KEY_BEHAVIOR",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000HmIPFSI16",
+            "label": "Wohnzimmer Beleuchtung",
+            "lastStatusUpdate": 1587233145096,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 404,
+            "modelType": "HmIP-FSI16",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000HmIPFSI16",
+            "type": "FULL_FLUSH_INPUT_SWITCH",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000HOERMANN": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.14",
+            "firmwareVersionInteger": 65550,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000HOERMANN",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -71,
+                    "rssiPeerValue": -76,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000HOERMANN",
+                    "doorState": "CLOSED",
+                    "functionalChannelType": "DOOR_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "on": false,
+                    "processing": false,
+                    "ventilationPositionSupported": true
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000HOERMANN",
+            "label": "Garage door",
+            "lastStatusUpdate": 1584029477755,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 399,
+            "modelType": "HmIP-MOD-HO",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000HOERMANN",
+            "type": "HOERMANN_DRIVES_MODULE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000BBBB000000000": {
+            "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "2.0.2",
+            "firmwareVersionInteger": 131074,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000BBBB000000000",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_OPERATIONLOCK",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "operationLockActive": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -45,
+                    "rssiPeerValue": -54,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 23.0,
+                    "deviceId": "3014F711000BBBB000000000",
+                    "display": "ACTUAL",
+                    "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "humidity": 52,
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 20.0,
+                    "temperatureOffset": 0.0,
+                    "vaporAmount": 10.662700840292974
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000BBBB000000000",
+            "label": "Raumbedienger\u00e4t",
+            "lastStatusUpdate": 1579383507353,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 282,
+            "modelType": "ALPHA-IP-RBG",
+            "oem": "M\u00f6hlenhoff",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000BBBB000000000",
+            "type": "ROOM_CONTROL_DEVICE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000000BBBB000005": {
+            "availableFirmwareVersion": "1.0.16",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000000BBBB000005",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -41,
+                    "rssiPeerValue": -29,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 23.3,
+                    "deviceId": "3014F711000000BBBB000005",
+                    "functionalChannelType": "ANALOG_ROOM_CONTROL_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 23.0,
+                    "temperatureOffset": 0.0
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000000BBBB000005",
+            "label": "Raumbedienger\u00e4t Analog",
+            "lastStatusUpdate": 1579384126279,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 281,
+            "modelType": "ALPHA-IP-RBGa",
+            "oem": "M\u00f6hlenhoff",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000000BBBB000005",
+            "type": "ROOM_CONTROL_DEVICE_ANALOG",
+            "updateState": "TRANSFERING_UPDATE"
+        },
+        "3014F711000000000000AAA5": {
+            "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000000000000AAA5",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_OPERATIONLOCK",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "operationLockActive": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -58,
+                    "rssiPeerValue": -59,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 16.0,
+                    "deviceId": "3014F711000000000000AAA5",
+                    "display": "ACTUAL",
+                    "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "humidity": 42,
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 12.0,
+                    "temperatureOffset": 0.0,
+                    "vaporAmount": 5.710127947243264
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000000000000AAA5",
+            "label": "Thermostat Schlafen Tal",
+            "lastStatusUpdate": 1578954498192,
+            "liveUpdateState": "UP_TO_DATE",
+            "manufacturerCode": 1,
+            "modelId": 408,
+            "modelType": "HmIP-WTH-B",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000000000000AAA5",
+            "type": "WALL_MOUNTED_THERMOSTAT_BASIC_HUMIDITY",
+            "updateState": "BACKGROUND_UPDATE_NOT_SUPPORTED"
+        },
+        "3014F7110000000000ABCD50": {
+            "availableFirmwareVersion": "1.0.12",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000ABCD50",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -58,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000ABCD50",
+                    "functionalChannelType": "MAINS_FAILURE_CHANNEL",
+                    "genericAlarmSignal": "FULL_ALARM",
+                    "groupIndex": 1,
+                    "groups": [
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "powerMainsFailure": false
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000ABCD50",
+            "label": "Netzausfall\u00fcberwachung",
+            "lastStatusUpdate": 1577487207542,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 309,
+            "modelType": "HmIP-PMFS",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000ABCD50",
+            "type": "PLUGGABLE_MAINS_FAILURE_SURVEILLANCE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000049": {
+            "availableFirmwareVersion": "1.0.8",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.8",
+            "firmwareVersionInteger": 65544,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "coolingEmergencyValue": 0.0,
+                    "deviceId": "3014F7110000000000000049",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "frostProtectionTemperature": 8.0,
+                    "functionalChannelType": "DEVICE_BASE_FLOOR_HEATING",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "heatingEmergencyValue": 0.25,
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "minimumFloorHeatingValvePosition": 0.0,
+                    "pulseWidthModulationAtLowFloorHeatingValvePositionEnabled": true,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -55,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false,
+                        "IFeatureMinimumFloorHeatingValvePosition": true,
+                        "IFeaturePulseWidthModulationAtLowFloorHeatingValvePosition": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false,
+                    "valveProtectionDuration": 5,
+                    "valveProtectionSwitchingInterval": 14
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "10": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 10,
+                    "groups": [],
+                    "index": 10,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "11": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 11,
+                    "groups": [],
+                    "index": 11,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "12": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 12,
+                    "groups": [],
+                    "index": 12,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "13": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "HEAT_DEMAND_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 13,
+                    "label": ""
+                },
+                "14": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "DEHUMIDIFIER_DEMAND_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 14,
+                    "label": ""
+                },
+                "15": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "CHANGE_OVER_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 15,
+                    "label": ""
+                },
+                "2": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [],
+                    "index": 2,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "3": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 3,
+                    "groups": [],
+                    "index": 3,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "4": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 4,
+                    "groups": [],
+                    "index": 4,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "5": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 5,
+                    "groups": [],
+                    "index": 5,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "6": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 6,
+                    "groups": [],
+                    "index": 6,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "7": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 7,
+                    "groups": [],
+                    "index": 7,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "8": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 8,
+                    "groups": [],
+                    "index": 8,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "9": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 9,
+                    "groups": [],
+                    "index": 9,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000049",
+            "label": "Fu\u00dfbodenheizungsaktor OG motorisch",
+            "lastStatusUpdate": 1577486092047,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 365,
+            "modelType": "HmIP-FALMOT-C12",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000049",
+            "type": "FLOOR_TERMINAL_BLOCK_12",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000148": {
+            "availableFirmwareVersion": "1.4.0",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.4.0",
+            "firmwareVersionInteger": 66560,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000000148",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000039"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -52,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000000148",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000043",
+                        "00000000-0000-0000-0000-000000000041"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "2": {
+                    "deviceId": "3014F7110000000000000148",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000041",
+                        "00000000-0000-0000-0000-000000000044"
+                    ],
+                    "index": 2,
+                    "label": "",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000148",
+            "label": "Heizungsaktor",
+            "lastStatusUpdate": 1577482332693,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 356,
+            "modelType": "HmIP-WHS2",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000148",
+            "type": "HEATING_SWITCH_2",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000ABCDABCD0033": {
+            "availableFirmwareVersion": "1.0.6",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.6",
+            "firmwareVersionInteger": 65542,
+            "functionalChannels": {
+                "0": {
+                    "badBatteryHealth": true,
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000ABCDABCD0033",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_RECHARGEABLE_WITH_SABOTAGE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -51,
+                    "rssiPeerValue": null,
+                    "sabotage": false,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000ABCDABCD0033",
+                    "functionalChannelType": "ALARM_SIREN_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": ""
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000ABCDABCD0033",
+            "label": "Alarmsirene \u2013 au\u00dfen",
+            "lastStatusUpdate": 1573078567665,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 385,
+            "modelType": "HmIP-ASIR-O",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000ABCDABCD0033",
+            "type": "ALARM_SIREN_OUTDOOR",
+            "updateState": "UP_TO_DATE"
+        },
         "3014F7110000000000000031": {
             "availableFirmwareVersion": "1.2.1",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.1",
             "firmwareVersionInteger": 66049,
             "functionalChannels": {
@@ -84,6 +1738,7 @@
         },
         "3014F7110000000000000052": {
             "availableFirmwareVersion": "1.0.5",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.5",
             "firmwareVersionInteger": 65541,
             "functionalChannels": {
@@ -202,6 +1857,7 @@
         },
         "3014F71100000000FAL24C10": {
             "availableFirmwareVersion": "1.6.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.2",
             "firmwareVersionInteger": 67074,
             "functionalChannels": {
@@ -228,7 +1884,8 @@
                     "rssiPeerValue": -74,
                     "unreach": false,
                     "valveProtectionDuration": 5,
-                    "valveProtectionSwitchingInterval": 14
+                    "valveProtectionSwitchingInterval": 14,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000FAL24C10",
@@ -358,6 +2015,7 @@
         },
         "3014F71100000000000BBL24": {
             "availableFirmwareVersion": "1.6.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.2",
             "firmwareVersionInteger": 67074,
             "functionalChannels": {
@@ -377,7 +2035,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -64,
                     "rssiPeerValue": -76,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "blindModeActive": true,
@@ -423,6 +2082,7 @@
         },
         "3014F7110000000000BCBB11": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.10.10",
             "firmwareVersionInteger": 68106,
             "functionalChannels": {
@@ -441,7 +2101,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -53,
                     "rssiPeerValue": -56,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BCBB11",
@@ -485,6 +2146,7 @@
         },
         "3014F711ABCD0ABCD000002": {
             "availableFirmwareVersion": "1.6.4",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.4",
             "firmwareVersionInteger": 67076,
             "functionalChannels": {
@@ -504,7 +2166,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -79,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711ABCD0ABCD000002",
@@ -572,6 +2235,7 @@
         "3014F71100000000ABCDEF10": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.6",
             "firmwareVersionInteger": 65542,
             "functionalChannels": {
@@ -592,7 +2256,8 @@
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -50,
                     "sabotage": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000ABCDEF10",
@@ -626,6 +2291,7 @@
         },
         "3014F71100000000000TEST1": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.8",
             "firmwareVersionInteger": 67592,
             "functionalChannels": {
@@ -644,7 +2310,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -51,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000000TEST1",
@@ -681,18 +2348,19 @@
         },
         "3014F7110000000000000064": {
             "availableFirmwareVersion": "1.0.6",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.6",
             "firmwareVersionInteger": 65542,
             "functionalChannels": {
                 "0": {
-                    "coProFaulty": false,
-                    "coProRestartNeeded": false,
-                    "coProUpdateFailure": false,
+                    "coProFaulty": true,
+                    "coProRestartNeeded": true,
+                    "coProUpdateFailure": true,
                     "configPending": false,
                     "deviceId": "3014F7110000000000000064",
                     "deviceOverheated": true,
-                    "deviceOverloaded": false,
-                    "deviceUndervoltage": false,
+                    "deviceOverloaded": true,
+                    "deviceUndervoltage": true,
                     "dutyCycle": false,
                     "functionalChannelType": "DEVICE_SABOTAGE",
                     "groupIndex": 0,
@@ -709,15 +2377,15 @@
                     "rssiPeerValue": null,
                     "sabotage": false,
                     "supportedOptionalFeatures": {
-                        "IFeatureDeviceCoProError": false,
-                        "IFeatureDeviceCoProRestart": false,
-                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceCoProError": true,
+                        "IFeatureDeviceCoProRestart": true,
+                        "IFeatureDeviceCoProUpdate": true,
                         "IFeatureDeviceOverheated": true,
-                        "IFeatureDeviceOverloaded": false,
-                        "IFeatureDeviceTemperatureOutOfRange": false,
-                        "IFeatureDeviceUndervoltage": false
+                        "IFeatureDeviceOverloaded": true,
+                        "IFeatureDeviceTemperatureOutOfRange": true,
+                        "IFeatureDeviceUndervoltage": true
                     },
-                    "temperatureOutOfRange": false,
+                    "temperatureOutOfRange": true,
                     "unreach": false
                 },
                 "1": {
@@ -753,6 +2421,7 @@
         },
         "3014F711BADCAFE000000001": {
             "availableFirmwareVersion": "1.2.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.0",
             "firmwareVersionInteger": 66048,
             "functionalChannels": {
@@ -771,7 +2440,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -73,
                     "rssiPeerValue": -78,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "blindModeActive": true,
@@ -817,6 +2487,7 @@
         },
         "3014F7110000000000000055": {
             "availableFirmwareVersion": "1.2.4",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.4",
             "firmwareVersionInteger": 66052,
             "functionalChannels": {
@@ -837,7 +2508,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": -77,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 21.0,
@@ -888,6 +2560,7 @@
         },
         "3014F711ABCDEF0000000014": {
             "availableFirmwareVersion": "1.4.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.4.2",
             "firmwareVersionInteger": 66562,
             "functionalChannels": {
@@ -907,7 +2580,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": null,
                     "rssiPeerValue": null,
-                    "unreach": null
+                    "unreach": null,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711ABCDEF0000000014",
@@ -958,6 +2632,7 @@
         },
         "3014F711BSL0000000000050": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.2",
             "firmwareVersionInteger": 65538,
             "functionalChannels": {
@@ -975,7 +2650,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": -70,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BSL0000000000050",
@@ -983,7 +2659,7 @@
                     "groupIndex": 1,
                     "groups": [],
                     "index": 1,
-                    "label": "",
+                    "label": "Treppe CH",
                     "on": true,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"
@@ -995,7 +2671,7 @@
                     "groupIndex": 2,
                     "groups": [],
                     "index": 2,
-                    "label": "",
+                    "label": "Alarm Status",
                     "on": null,
                     "profileMode": "AUTOMATIC",
                     "simpleRGBColorState": "RED",
@@ -1031,6 +2707,7 @@
         },
         "3014F711SLO0000000000026": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.16",
             "firmwareVersionInteger": 65552,
             "functionalChannels": {
@@ -1048,7 +2725,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "averageIllumination": 807.3,
@@ -1079,6 +2757,7 @@
         },
         "3014F7110000000000000054": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.0",
             "firmwareVersionInteger": 65536,
             "functionalChannels": {
@@ -1099,7 +2778,8 @@
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000054",
@@ -1135,6 +2815,7 @@
         },
         "3014F711000000000AAAAA25": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.12",
             "firmwareVersionInteger": 65548,
             "functionalChannels": {
@@ -1155,7 +2836,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711000000000AAAAA25",
@@ -1210,6 +2892,7 @@
         },
         "3014F7110000000000000038": {
             "availableFirmwareVersion": "1.0.18",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.18",
             "firmwareVersionInteger": 65554,
             "functionalChannels": {
@@ -1228,7 +2911,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -55,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 4.3,
@@ -1272,6 +2956,7 @@
         },
         "3014F7110000000000BBBBB1": {
             "availableFirmwareVersion": "1.6.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.2",
             "firmwareVersionInteger": 67074,
             "functionalChannels": {
@@ -1299,7 +2984,8 @@
                     "rssiPeerValue": null,
                     "unreach": false,
                     "valveProtectionDuration": 5,
-                    "valveProtectionSwitchingInterval": 14
+                    "valveProtectionSwitchingInterval": 14,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BBBBB1",
@@ -1399,6 +3085,7 @@
         },
         "3014F7110000000000BBBBB8": {
             "availableFirmwareVersion": "1.2.16",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.16",
             "firmwareVersionInteger": 66064,
             "functionalChannels": {
@@ -1418,7 +3105,8 @@
                     "rssiDeviceValue": -59,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BBBBB8",
@@ -1446,6 +3134,7 @@
         },
         "3014F711000000000000BB11": {
             "availableFirmwareVersion": "1.4.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.4.8",
             "firmwareVersionInteger": 66568,
             "functionalChannels": {
@@ -1464,7 +3153,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": -52,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -1497,6 +3187,7 @@
         },
         "3014F71100000000000BBB17": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.2",
             "firmwareVersionInteger": 65538,
             "functionalChannels": {
@@ -1515,7 +3206,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -70,
                     "rssiPeerValue": -67,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -1549,6 +3241,7 @@
         },
         "3014F7110000000000000050": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.2",
             "firmwareVersionInteger": "65538",
             "functionalChannels": {
@@ -1569,7 +3262,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -65,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "acousticAlarmSignal": "FREQUENCY_RISING",
@@ -1606,6 +3300,7 @@
         },
         "3014F7110000000000000000": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1627,7 +3322,8 @@
                     "rssiDeviceValue": -85,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000000",
@@ -1660,6 +3356,7 @@
         },
         "3014F7110000000000005551": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.12",
             "firmwareVersionInteger": 66060,
             "functionalChannels": {
@@ -1677,7 +3374,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -73,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000005551",
@@ -1709,6 +3407,7 @@
         },
         "3014F7110000000000000001": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1730,7 +3429,8 @@
                     "rssiDeviceValue": -64,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000001",
@@ -1763,6 +3463,7 @@
         },
         "3014F7110000000000000002": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1784,7 +3485,8 @@
                     "rssiDeviceValue": -95,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000002",
@@ -1817,6 +3519,7 @@
         },
         "3014F7110000000000000003": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1838,7 +3541,8 @@
                     "rssiDeviceValue": -78,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000003",
@@ -1871,6 +3575,7 @@
         },
         "3014F7110000000000000004": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1892,7 +3597,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000004",
@@ -1925,6 +3631,7 @@
         },
         "3014F7110000000000000005": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -1946,7 +3653,8 @@
                     "rssiDeviceValue": -80,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000005",
@@ -1979,6 +3687,7 @@
         },
         "3014F7110000000000000006": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -2000,7 +3709,8 @@
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000006",
@@ -2032,6 +3742,7 @@
         },
         "3014F7110000000000000007": {
             "availableFirmwareVersion": "1.16.8",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.16.8",
             "firmwareVersionInteger": 69640,
             "functionalChannels": {
@@ -2053,7 +3764,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000007",
@@ -2085,6 +3797,7 @@
         },
         "3014F7110000000000000108": {
             "availableFirmwareVersion": "1.12.6",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.12.6",
             "firmwareVersionInteger": 68614,
             "functionalChannels": {
@@ -2154,6 +3867,7 @@
         },
         "3014F7110000000000000109": {
             "availableFirmwareVersion": "1.6.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.2",
             "firmwareVersionInteger": 67074,
             "functionalChannels": {
@@ -2223,6 +3937,7 @@
         },
         "3014F7110000000000000008": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.6.2",
             "firmwareVersionInteger": 132610,
             "functionalChannels": {
@@ -2242,7 +3957,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -48,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 195.3,
@@ -2276,6 +3992,7 @@
         },
         "3014F7110000000000000009": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.6.2",
             "firmwareVersionInteger": 132610,
             "functionalChannels": {
@@ -2295,7 +4012,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": -66,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 0.0,
@@ -2329,6 +4047,7 @@
         },
         "3014F7110000000000000010": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.6.2",
             "firmwareVersionInteger": 132610,
             "functionalChannels": {
@@ -2348,7 +4067,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 2.04,
@@ -2382,6 +4102,7 @@
         },
         "3014F7110000000000000110": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.6.2",
             "firmwareVersionInteger": 132610,
             "functionalChannels": {
@@ -2401,7 +4122,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000110",
@@ -2434,6 +4156,7 @@
         "3014F7110000000000000011": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2454,7 +4177,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": -51,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000011",
@@ -2489,6 +4213,7 @@
         "3014F7110000000000000012": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2509,7 +4234,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": -54,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000012",
@@ -2544,6 +4270,7 @@
         "3014F7110000000000000013": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2564,7 +4291,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -58,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000013",
@@ -2584,7 +4312,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000013",
-            "label": "Heizkörperthermostat",
+            "label": "Heizkörperthermostat2",
             "lastStatusUpdate": 1524514007132,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2599,6 +4327,7 @@
         "3014F7110000000000000014": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2619,7 +4348,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000014",
@@ -2654,6 +4384,7 @@
         "3014F7110000000000000015": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2674,7 +4405,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -65,
                     "rssiPeerValue": -66,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000015",
@@ -2709,6 +4441,7 @@
         "3014F7110000000000000016": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2729,7 +4462,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -50,
                     "rssiPeerValue": -51,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000016",
@@ -2749,7 +4483,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000016",
-            "label": "Heizkörperthermostat",
+            "label": "Heizkörperthermostat3",
             "lastStatusUpdate": 1524514626157,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2764,6 +4498,7 @@
         "3014F7110000000000000017": {
             "automaticValveAdaptionNeeded": false,
             "availableFirmwareVersion": "2.0.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "2.0.2",
             "firmwareVersionInteger": 131074,
             "functionalChannels": {
@@ -2784,7 +4519,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": -62,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000017",
@@ -2818,6 +4554,7 @@
         },
         "3014F7110000000000000018": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.11",
             "firmwareVersionInteger": 65547,
             "functionalChannels": {
@@ -2838,7 +4575,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000018",
@@ -2869,6 +4607,7 @@
         },
         "3014F7110000000000000019": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.11",
             "firmwareVersionInteger": 65547,
             "functionalChannels": {
@@ -2889,7 +4628,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -50,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000019",
@@ -2906,7 +4646,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000019",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder2",
             "lastStatusUpdate": 1524480981494,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2920,6 +4660,7 @@
         },
         "3014F7110000000000000020": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.11",
             "firmwareVersionInteger": 65547,
             "functionalChannels": {
@@ -2940,7 +4681,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000020",
@@ -2957,7 +4699,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000020",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder3",
             "lastStatusUpdate": 1524456324824,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2971,6 +4713,7 @@
         },
         "3014F7110000000000000021": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.11",
             "firmwareVersionInteger": 65547,
             "functionalChannels": {
@@ -2991,7 +4734,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -80,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000021",
@@ -3008,7 +4752,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000021",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder4",
             "lastStatusUpdate": 1524443129876,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3022,6 +4766,7 @@
         },
         "3014F7110000000000000022": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.0",
             "firmwareVersionInteger": 67584,
             "functionalChannels": {
@@ -3042,7 +4787,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": -63,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 24.7,
@@ -3078,6 +4824,7 @@
         },
         "3014F7110000000000000023": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.0",
             "firmwareVersionInteger": 67584,
             "functionalChannels": {
@@ -3098,7 +4845,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -61,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 24.5,
@@ -3120,7 +4868,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000023",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat4",
             "lastStatusUpdate": 1524516454116,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3134,6 +4882,7 @@
         },
         "3014F7110000000000000024": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.0",
             "firmwareVersionInteger": 67584,
             "functionalChannels": {
@@ -3154,7 +4903,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -75,
                     "rssiPeerValue": -85,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 23.6,
@@ -3176,7 +4926,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000024",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat2",
             "lastStatusUpdate": 1524516436601,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3190,6 +4940,7 @@
         },
         "3014F7110000000000000025": {
             "availableFirmwareVersion": "1.8.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.0",
             "firmwareVersionInteger": 67584,
             "functionalChannels": {
@@ -3210,7 +4961,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": -47,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 23.8,
@@ -3232,7 +4984,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000025",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat3",
             "lastStatusUpdate": 1524516556479,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3246,6 +4998,7 @@
         },
         "3014F7110000000000000029": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.14",
             "firmwareVersionInteger": 65550,
             "functionalChannels": {
@@ -3265,7 +5018,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "binaryBehaviorType": "NORMALLY_CLOSE",
@@ -3297,6 +5051,7 @@
         },
         "3014F711AAAA000000000001": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.10",
             "firmwareVersionInteger": 65546,
             "functionalChannels": {
@@ -3316,7 +5071,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -68,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.4,
@@ -3364,6 +5120,7 @@
         },
         "3014F711AAAA000000000002": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.6",
             "firmwareVersionInteger": 65542,
             "functionalChannels": {
@@ -3383,7 +5140,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -55,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.1,
@@ -3415,6 +5173,7 @@
         },
         "3014F711AAAA000000000003": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.10",
             "firmwareVersionInteger": 65546,
             "functionalChannels": {
@@ -3432,7 +5191,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -77,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.2,
@@ -3471,6 +5231,7 @@
         },
         "3014F711AAAA000000000004": {
             "availableFirmwareVersion": "1.2.10",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.2.10",
             "firmwareVersionInteger": 66058,
             "functionalChannels": {
@@ -3489,7 +5250,8 @@
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711AAAA000000000004",
@@ -3518,6 +5280,7 @@
         },
         "3014F711AAAA000000000005": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.4.8",
             "firmwareVersionInteger": 66568,
             "functionalChannels": {
@@ -3537,7 +5300,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -44,
                     "rssiPeerValue": -42,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711AAAA000000000005",
@@ -3569,6 +5333,7 @@
         },
         "3014F711BBBBBBBBBBBBB017": {
             "availableFirmwareVersion": "1.0.19",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.19",
             "firmwareVersionInteger": 65555,
             "functionalChannels": {
@@ -3587,7 +5352,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -61,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB017",
@@ -3660,6 +5426,7 @@
         },
         "3014F711BBBBBBBBBBBBB016": {
             "availableFirmwareVersion": "1.0.19",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.0.19",
             "firmwareVersionInteger": 65555,
             "functionalChannels": {
@@ -3678,7 +5445,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -42,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB016",
@@ -3771,6 +5539,7 @@
         },
         "3014F711AAAAAAAAAAAAAA51": {
             "availableFirmwareVersion": "1.4.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.4.0",
             "firmwareVersionInteger": 66560,
             "functionalChannels": {
@@ -3792,7 +5561,8 @@
                     "rssiDeviceValue": -62,
                     "rssiPeerValue": -61,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -3828,6 +5598,7 @@
         },
         "3014F711ACBCDABCADCA66": {
             "availableFirmwareVersion": "1.6.2",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.6.2",
             "firmwareVersionInteger": 67074,
             "functionalChannels": {
@@ -3847,7 +5618,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -78,
                     "rssiPeerValue": -77,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "bottomToTopReferenceTime": 30.080000000000002,
@@ -3891,6 +5663,7 @@
         },
         "3014F711BBBBBBBBBBBBB18": {
             "availableFirmwareVersion": "0.0.0",
+            "connectionType": "HMIP_RF",
             "firmwareVersion": "1.8.12",
             "firmwareVersionInteger": 67596,
             "functionalChannels": {
@@ -3910,7 +5683,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -35,
                     "rssiPeerValue": -36,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB18",
@@ -3920,7 +5694,7 @@
                         "00000000-0000-0000-0000-000000000042"
                     ],
                     "index": 1,
-                    "label": "",
+                    "label": "SW1",
                     "on": false,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"
@@ -3934,7 +5708,7 @@
                         "00000000-0000-0000-0000-000000000040"
                     ],
                     "index": 2,
-                    "label": "",
+                    "label": "SW2",
                     "on": false,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"
@@ -4030,6 +5804,75 @@
             "permanentlyReachable": true,
             "serializedGlobalTradeItemNumber": "3014F711BBBBBBBBBBBBB18",
             "type": "OPEN_COLLECTOR_8_MODULE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F0000000000000FAF9B4": {
+            "availableFirmwareVersion": "1.0.0",
+            "connectionType": "HMIP_RF",
+            "firmwareVersion": "1.0.0",
+            "firmwareVersionInteger": 65536,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F0000000000000FAF9B4",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000004"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -52,
+                    "rssiPeerValue": -54,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F0000000000000FAF9B4",
+                    "doorState": "CLOSED",
+                    "functionalChannelType": "DOOR_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000005"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": false,
+                    "processing": false,
+                    "ventilationPositionSupported": true
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F0000000000000FAF9B4",
+            "label": "Garage Door Module",
+            "lastStatusUpdate": 1574878451970,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 376,
+            "modelType": "HmIP-MOD-TM",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F0000000000000FAF9B4",
+            "type": "TORMATIC_MODULE",
             "updateState": "UP_TO_DATE"
         }
     },
@@ -4406,7 +6249,11 @@
             "lowBat": null,
             "metaGroupId": "00000000-0000-0000-0000-000000000017",
             "on": true,
-            "processing": null,
+            "primaryShadingLevel": 1.0,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
             "shutterLevel": null,
             "slatsLevel": null,
             "type": "SWITCHING",
@@ -5394,9 +7241,78 @@
             "type": "HUMIDITY_WARNING_RULE_GROUP",
             "unreach": false,
             "ventilationRecommended": false
+        },
+        "00000000-0000-0000-0000-000000000050": {
+            "bottomShutterLevel": 1.0,
+            "bottomSlatsLevel": 1.0,
+            "channels": [],
+            "dutyCycle": false,
+            "groupVisibility": "VISIBLE",
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000050",
+            "label": "Rollos",
+            "lastStatusUpdate": 1573078054795,
+            "lowBat": null,
+            "metaGroupId": null,
+            "primaryShadingLevel": 1.0,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
+            "sensorSpecificParameters": {},
+            "shutterLevel": 1.0,
+            "slatsLevel": null,
+            "topShutterLevel": 0.0,
+            "topSlatsLevel": 0.0,
+            "type": "EXTENDED_LINKED_SHUTTER",
+            "unreach": false
+        },
+        "00000000-0000-0000-0000-000000000067": {
+            "channels": [],
+            "dutyCycle": null,
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000067",
+            "label": "HOT_WATER",
+            "lastStatusUpdate": 0,
+            "lowBat": null,
+            "metaGroupId": null,
+            "on": null,
+            "onTime": 900.0,
+            "profileId": "00000000-0000-0000-0000-000000000068",
+            "profileMode": null,
+            "type": "HOT_WATER",
+            "unreach": null
+        },
+        "00000000-0000-0000-0000-000000000093": {
+            "channels": [],
+            "dutyCycle": false,
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000093",
+            "label": "Rollladen Schiebet\u00fcr",
+            "lastStatusUpdate": 1577488124150,
+            "lowBat": null,
+            "metaGroupId": null,
+            "primaryShadingLevel": 0.97,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "profileId": "00000000-0000-0000-0000-000000000113",
+            "profileMode": "AUTOMATIC",
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
+            "shutterLevel": 0.97,
+            "slatsLevel": null,
+            "type": "SHUTTER_PROFILE",
+            "unreach": false
         }
     },
     "home": {
+        "accessPointUpdateStates": {
+            "3014F711A000000BAD0C0DED": {
+                "accessPointUpdateState": "UP_TO_DATE",
+                "successfulUpdateTimestamp": 0,
+                "updateStateChangedTimestamp": 0
+            }
+        },
         "apExchangeClientId": null,
         "apExchangeState": "NONE",
         "availableAPVersion": null,

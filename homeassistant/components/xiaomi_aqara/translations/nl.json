@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adres (optioneel)",
+                    "mac": "MAC-adres (optioneel)"
+                },
+                "title": "Xiaomi Aqara Gateway"
+            }
+        }
+    }
+}

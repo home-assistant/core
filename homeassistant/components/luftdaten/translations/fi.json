@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "N\u00e4yt\u00e4 kartalla",
+                    "station_id": "Luftdaten-anturin ID"
+                },
+                "title": "M\u00e4\u00e4rit\u00e4 Luftdaten"
+            }
+        }
+    }
+}

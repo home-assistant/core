@@ -3,14 +3,13 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union, Any, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
-from homeassistant.helpers.event import async_call_later
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -25,25 +24,33 @@ async def async_migrator(
     old_path,
     store,
     *,
-    old_conf_load_func=json_util.load_json,
+    old_conf_load_func=None,
     old_conf_migrate_func=None,
 ):
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
     """
+    store_data = await store.async_load()
+
+    # If we already have store data we have already migrated in the past.
+    if store_data is not None:
+        return store_data
 
     def load_old_config():
         """Load old config."""
         if not os.path.isfile(old_path):
             return None
 
-        return old_conf_load_func(old_path)
+        if old_conf_load_func is not None:
+            return old_conf_load_func(old_path)
+
+        return json_util.load_json(old_path)
 
     config = await hass.async_add_executor_job(load_old_config)
 
     if config is None:
-        return await store.async_load()
+        return None
 
     if old_conf_migrate_func is not None:
         config = await old_conf_migrate_func(config)
@@ -73,7 +80,7 @@ class Store:
         self._private = private
         self._data: Optional[Dict[str, Any]] = None
         self._unsub_delay_listener: Optional[CALLBACK_TYPE] = None
-        self._unsub_stop_listener: Optional[CALLBACK_TYPE] = None
+        self._unsub_final_write_listener: Optional[CALLBACK_TYPE] = None
         self._write_lock = asyncio.Lock()
         self._load_task: Optional[asyncio.Future] = None
         self._encoder = encoder
@@ -93,8 +100,7 @@ class Store:
         the second call will wait and return the result of the first call.
         """
         if self._load_task is None:
-            self._load_task = self.hass.async_add_job(self._async_load())
-            assert self._load_task is not None
+            self._load_task = self.hass.async_create_task(self._async_load())
 
         return await self._load_task
 
@@ -133,7 +139,12 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data": data}
 
         self._async_cleanup_delay_listener()
-        self._async_cleanup_stop_listener()
+        self._async_cleanup_final_write_listener()
+
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_final_write_listener()
+            return
+
         await self._async_handle_write_data()
 
     @callback
@@ -142,27 +153,31 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
         self._async_cleanup_delay_listener()
+        self._async_cleanup_final_write_listener()
+
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_final_write_listener()
+            return
 
         self._unsub_delay_listener = async_call_later(
             self.hass, delay, self._async_callback_delayed_write
         )
-
-        self._async_ensure_stop_listener()
+        self._async_ensure_final_write_listener()
 
     @callback
-    def _async_ensure_stop_listener(self):
+    def _async_ensure_final_write_listener(self):
         """Ensure that we write if we quit before delay has passed."""
-        if self._unsub_stop_listener is None:
-            self._unsub_stop_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._async_callback_stop_write
+        if self._unsub_final_write_listener is None:
+            self._unsub_final_write_listener = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
             )
 
     @callback
-    def _async_cleanup_stop_listener(self):
+    def _async_cleanup_final_write_listener(self):
         """Clean up a stop listener."""
-        if self._unsub_stop_listener is not None:
-            self._unsub_stop_listener()
-            self._unsub_stop_listener = None
+        if self._unsub_final_write_listener is not None:
+            self._unsub_final_write_listener()
+            self._unsub_final_write_listener = None
 
     @callback
     def _async_cleanup_delay_listener(self):
@@ -173,26 +188,35 @@ class Store:
 
     async def _async_callback_delayed_write(self, _now):
         """Handle a delayed write callback."""
+        # catch the case where a call is scheduled and then we stop Home Assistant
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_final_write_listener()
+            return
         self._unsub_delay_listener = None
-        self._async_cleanup_stop_listener()
+        self._async_cleanup_final_write_listener()
         await self._async_handle_write_data()
 
-    async def _async_callback_stop_write(self, _event):
-        """Handle a write because Home Assistant is stopping."""
-        self._unsub_stop_listener = None
+    async def _async_callback_final_write(self, _event):
+        """Handle a write because Home Assistant is in final write state."""
+        self._unsub_final_write_listener = None
         self._async_cleanup_delay_listener()
         await self._async_handle_write_data()
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
-        data = self._data
-
-        if "data_func" in data:
-            data["data"] = data.pop("data_func")()
-
-        self._data = None
 
         async with self._write_lock:
+            if self._data is None:
+                # Another write already consumed the data
+                return
+
+            data = self._data
+
+            if "data_func" in data:
+                data["data"] = data.pop("data_func")()
+
+            self._data = None
+
             try:
                 await self.hass.async_add_executor_job(
                     self._write_data, self.path, data
@@ -211,3 +235,10 @@ class Store:
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
         raise NotImplementedError
+
+    async def async_remove(self):
+        """Remove all data."""
+        try:
+            await self.hass.async_add_executor_job(os.unlink, self.path)
+        except FileNotFoundError:
+            pass

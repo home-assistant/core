@@ -38,7 +38,7 @@ def urlbase(value) -> str:
     value = str(value).strip("/")
     if not value:
         return value
-    return value + "/"
+    return f"{value}/"
 
 
 SUBMIT_MOVIE_REQUEST_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})

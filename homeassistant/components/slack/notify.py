@@ -1,10 +1,13 @@
 """Slack platform for notify component."""
+import asyncio
 import logging
+import os
+from urllib.parse import urlparse
 
-import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
-import slacker
-from slacker import Slacker
+from aiohttp import BasicAuth, FormData
+from aiohttp.client_exceptions import ClientError
+from slack import WebClient
+from slack.errors import SlackApiError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -15,157 +18,267 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.template as template
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CHANNEL = "default_channel"
-CONF_TIMEOUT = 15
-
-# Top level attributes in 'data'
-ATTR_ATTACHMENTS = "attachments"
+ATTR_BLOCKS = "blocks"
+ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
-# Attributes contained in file
-ATTR_FILE_URL = "url"
-ATTR_FILE_PATH = "path"
-ATTR_FILE_USERNAME = "username"
-ATTR_FILE_PASSWORD = "password"
-ATTR_FILE_AUTH = "auth"
-# Any other value or absence of 'auth' lead to basic authentication being used
-ATTR_FILE_AUTH_DIGEST = "digest"
+ATTR_ICON = "icon"
+ATTR_PASSWORD = "password"
+ATTR_PATH = "path"
+ATTR_URL = "url"
+ATTR_USERNAME = "username"
+
+CONF_DEFAULT_CHANNEL = "default_channel"
+
+DEFAULT_TIMEOUT_SECONDS = 15
+
+FILE_PATH_SCHEMA = vol.Schema({vol.Required(ATTR_PATH): cv.isfile})
+
+FILE_URL_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_URL): cv.url,
+        vol.Inclusive(ATTR_USERNAME, "credentials"): cv.string,
+        vol.Inclusive(ATTR_PASSWORD, "credentials"): cv.string,
+    }
+)
+
+DATA_FILE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_FILE): vol.Any(FILE_PATH_SCHEMA, FILE_URL_SCHEMA)}
+)
+
+DATA_TEXT_ONLY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_ICON): cv.string,
+        vol.Optional(ATTR_BLOCKS): list,
+        vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
+    }
+)
+
+DATA_SCHEMA = vol.All(
+    cv.ensure_list, [vol.Any(DATA_FILE_SCHEMA, DATA_TEXT_ONLY_SCHEMA)]
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_CHANNEL): cv.string,
+        vol.Required(CONF_DEFAULT_CHANNEL): cv.string,
         vol.Optional(CONF_ICON): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
     }
 )
 
 
-def get_service(hass, config, discovery_info=None):
-    """Get the Slack notification service."""
-
-    channel = config.get(CONF_CHANNEL)
-    api_key = config.get(CONF_API_KEY)
-    username = config.get(CONF_USERNAME)
-    icon = config.get(CONF_ICON)
+async def async_get_service(hass, config, discovery_info=None):
+    """Set up the Slack notification service."""
+    session = aiohttp_client.async_get_clientsession(hass)
+    client = WebClient(token=config[CONF_API_KEY], run_async=True, session=session)
 
     try:
-        return SlackNotificationService(
-            channel, api_key, username, icon, hass.config.is_allowed_path
-        )
+        await client.auth_test()
+    except SlackApiError as err:
+        _LOGGER.error("Error while setting up integration: %s", err)
+        return
 
-    except slacker.Error:
-        _LOGGER.exception("Authentication failed")
-        return None
+    return SlackNotificationService(
+        hass,
+        client,
+        config[CONF_DEFAULT_CHANNEL],
+        username=config.get(CONF_USERNAME),
+        icon=config.get(CONF_ICON),
+    )
+
+
+@callback
+def _async_get_filename_from_url(url):
+    """Return the filename of a passed URL."""
+    parsed_url = urlparse(url)
+    return os.path.basename(parsed_url.path)
+
+
+@callback
+def _async_sanitize_channel_names(channel_list):
+    """Remove any # symbols from a channel list."""
+    return [channel.lstrip("#") for channel in channel_list]
+
+
+@callback
+def _async_templatize_blocks(hass, value):
+    """Recursive template creator helper function."""
+    if isinstance(value, list):
+        return [_async_templatize_blocks(hass, item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _async_templatize_blocks(hass, item) for key, item in value.items()
+        }
+
+    tmpl = template.Template(value, hass=hass)
+    return tmpl.async_render()
 
 
 class SlackNotificationService(BaseNotificationService):
-    """Implement the notification service for Slack."""
+    """Define the Slack notification logic."""
 
-    def __init__(self, default_channel, api_token, username, icon, is_allowed_path):
-        """Initialize the service."""
-
+    def __init__(self, hass, client, default_channel, username, icon):
+        """Initialize."""
+        self._client = client
         self._default_channel = default_channel
-        self._api_token = api_token
-        self._username = username
+        self._hass = hass
         self._icon = icon
-        if self._username or self._icon:
-            self._as_user = False
-        else:
-            self._as_user = True
+        self._username = username
 
-        self.is_allowed_path = is_allowed_path
-        self.slack = Slacker(self._api_token)
-        self.slack.auth.test()
+    async def _async_send_local_file_message(self, path, targets, message, title):
+        """Upload a local file (with message) to Slack."""
+        if not self._hass.config.is_allowed_path(path):
+            _LOGGER.error("Path does not exist or is not allowed: %s", path)
+            return
 
-    def send_message(self, message="", **kwargs):
-        """Send a message to a user."""
+        parsed_url = urlparse(path)
+        filename = os.path.basename(parsed_url.path)
 
-        if kwargs.get(ATTR_TARGET) is None:
-            targets = [self._default_channel]
-        else:
-            targets = kwargs.get(ATTR_TARGET)
-
-        data = kwargs.get(ATTR_DATA)
-        attachments = data.get(ATTR_ATTACHMENTS) if data else None
-        file = data.get(ATTR_FILE) if data else None
-        title = kwargs.get(ATTR_TITLE)
-
-        for target in targets:
-            try:
-                if file is not None:
-                    # Load from file or URL
-                    file_as_bytes = self.load_file(
-                        url=file.get(ATTR_FILE_URL),
-                        local_path=file.get(ATTR_FILE_PATH),
-                        username=file.get(ATTR_FILE_USERNAME),
-                        password=file.get(ATTR_FILE_PASSWORD),
-                        auth=file.get(ATTR_FILE_AUTH),
-                    )
-                    # Choose filename
-                    if file.get(ATTR_FILE_URL):
-                        filename = file.get(ATTR_FILE_URL)
-                    else:
-                        filename = file.get(ATTR_FILE_PATH)
-                    # Prepare structure for Slack API
-                    data = {
-                        "content": None,
-                        "filetype": None,
-                        "filename": filename,
-                        # If optional title is none use the filename
-                        "title": title if title else filename,
-                        "initial_comment": message,
-                        "channels": target,
-                    }
-                    # Post to slack
-                    self.slack.files.post(
-                        "files.upload", data=data, files={"file": file_as_bytes}
-                    )
-                else:
-                    self.slack.chat.post_message(
-                        target,
-                        message,
-                        as_user=self._as_user,
-                        username=self._username,
-                        icon_emoji=self._icon,
-                        attachments=attachments,
-                        link_names=True,
-                    )
-            except slacker.Error as err:
-                _LOGGER.error("Could not send notification. Error: %s", err)
-
-    def load_file(
-        self, url=None, local_path=None, username=None, password=None, auth=None
-    ):
-        """Load image/document/etc from a local path or URL."""
         try:
-            if url:
-                # Check whether authentication parameters are provided
-                if username:
-                    # Use digest or basic authentication
-                    if ATTR_FILE_AUTH_DIGEST == auth:
-                        auth_ = HTTPDigestAuth(username, password)
-                    else:
-                        auth_ = HTTPBasicAuth(username, password)
-                    # Load file from URL with authentication
-                    req = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
-                else:
-                    # Load file from URL without authentication
-                    req = requests.get(url, timeout=CONF_TIMEOUT)
-                return req.content
+            await self._client.files_upload(
+                channels=",".join(targets),
+                file=path,
+                filename=filename,
+                initial_comment=message,
+                title=title or filename,
+            )
+        except SlackApiError as err:
+            _LOGGER.error("Error while uploading file-based message: %s", err)
 
-            if local_path:
-                # Check whether path is whitelisted in configuration.yaml
-                if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")
-                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+    async def _async_send_remote_file_message(
+        self, url, targets, message, title, *, username=None, password=None
+    ):
+        """Upload a remote file (with message) to Slack.
+
+        Note that we bypass the python-slackclient WebClient and use aiohttp directly,
+        as the former would require us to download the entire remote file into memory
+        first before uploading it to Slack.
+        """
+        if not self._hass.config.is_allowed_external_url(url):
+            _LOGGER.error("URL is not allowed: %s", url)
+            return
+
+        filename = _async_get_filename_from_url(url)
+        session = aiohttp_client.async_get_clientsession(self.hass)
+
+        kwargs = {}
+        if username and password is not None:
+            kwargs = {"auth": BasicAuth(username, password=password)}
+
+        resp = await session.request("get", url, **kwargs)
+
+        try:
+            resp.raise_for_status()
+        except ClientError as err:
+            _LOGGER.error("Error while retrieving %s: %s", url, err)
+            return
+
+        data = FormData(
+            {
+                "channels": ",".join(targets),
+                "filename": filename,
+                "initial_comment": message,
+                "title": title or filename,
+                "token": self._client.token,
+            },
+            charset="utf-8",
+        )
+        data.add_field("file", resp.content, filename=filename)
+
+        try:
+            await session.post("https://slack.com/api/files.upload", data=data)
+        except ClientError as err:
+            _LOGGER.error("Error while uploading file message: %s", err)
+
+    async def _async_send_text_only_message(
+        self, targets, message, title, blocks, username, icon
+    ):
+        """Send a text-only message."""
+        message_dict = {
+            "blocks": blocks,
+            "link_names": True,
+            "text": message,
+            "username": username,
+        }
+
+        icon = icon or self._icon
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
             else:
-                _LOGGER.warning("Neither URL nor local path found in params!")
+                icon_type = "emoji"
 
-        except OSError as error:
-            _LOGGER.error("Can't load from URL or local path: %s", error)
+            message_dict[f"icon_{icon_type}"] = icon
 
-        return None
+        tasks = {
+            target: self._client.chat_postMessage(**message_dict, channel=target)
+            for target in targets
+        }
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        for target, result in zip(tasks, results):
+            if isinstance(result, SlackApiError):
+                _LOGGER.error(
+                    "There was a Slack API error while sending to %s: %s",
+                    target,
+                    result,
+                )
+
+    async def async_send_message(self, message, **kwargs):
+        """Send a message to Slack."""
+        data = kwargs.get(ATTR_DATA)
+
+        if data is None:
+            data = {}
+
+        try:
+            DATA_SCHEMA(data)
+        except vol.Invalid as err:
+            _LOGGER.error("Invalid message data: %s", err)
+            data = {}
+
+        title = kwargs.get(ATTR_TITLE)
+        targets = _async_sanitize_channel_names(
+            kwargs.get(ATTR_TARGET, [self._default_channel])
+        )
+
+        # Message Type 1: A text-only message
+        if ATTR_FILE not in data:
+            if ATTR_BLOCKS_TEMPLATE in data:
+                blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
+            elif ATTR_BLOCKS in data:
+                blocks = data[ATTR_BLOCKS]
+            else:
+                blocks = {}
+
+            return await self._async_send_text_only_message(
+                targets,
+                message,
+                title,
+                blocks,
+                username=data.get(ATTR_USERNAME, self._username),
+                icon=data.get(ATTR_ICON, self._icon),
+            )
+
+        # Message Type 2: A message that uploads a remote file
+        if ATTR_URL in data[ATTR_FILE]:
+            return await self._async_send_remote_file_message(
+                data[ATTR_FILE][ATTR_URL],
+                targets,
+                message,
+                title,
+                username=data[ATTR_FILE].get(ATTR_USERNAME),
+                password=data[ATTR_FILE].get(ATTR_PASSWORD),
+            )
+
+        # Message Type 3: A message that uploads a local file
+        return await self._async_send_local_file_message(
+            data[ATTR_FILE][ATTR_PATH], targets, message, title
+        )

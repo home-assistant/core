@@ -1,5 +1,6 @@
 """Support for Fibaro scenes."""
 import logging
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -21,6 +22,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FibaroScene(FibaroDevice, Scene):
     """Representation of a Fibaro scene entity."""
 
-    def activate(self):
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.fibaro_device.start()

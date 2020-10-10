@@ -1,10 +1,8 @@
 """Simplepush notification service."""
 import logging
 
+from simplepush import send, send_encrypted
 import voluptuous as vol
-
-from homeassistant.const import CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -12,6 +10,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_PASSWORD
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,6 @@ class SimplePushNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Simplepush user."""
-        from simplepush import send, send_encrypted
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

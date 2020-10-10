@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "closed": "Fechado",
+            "closing": "Fechando",
+            "open": "Aberto",
+            "opening": "Abrindo",
+            "stopped": "Parado"
+        }
+    },
+    "title": "Cobertura"
+}

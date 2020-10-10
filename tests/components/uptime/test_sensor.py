@@ -1,11 +1,12 @@
 """The tests for the uptime sensor platform."""
 import asyncio
-import unittest
-from unittest.mock import patch
 from datetime import timedelta
+import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components.uptime.sensor import UptimeSensor
+from homeassistant.setup import setup_component
+
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -15,10 +16,7 @@ class TestUptimeSensor(unittest.TestCase):
     def setUp(self):
         """Set up things to run when tests begin."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_uptime_min_config(self):
         """Test minimum uptime configuration."""

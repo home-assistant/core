@@ -4,26 +4,26 @@ import logging
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_COOL,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -88,7 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(all_devices, True)
 
 
-class NestThermostat(ClimateDevice):
+class NestThermostat(ClimateEntity):
     """Representation of a Nest thermostat."""
 
     def __init__(self, structure, device, temp_unit):
@@ -151,7 +151,9 @@ class NestThermostat(ClimateDevice):
             """Update device state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        )
 
     @property
     def supported_features(self):

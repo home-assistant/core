@@ -1,11 +1,11 @@
 """The tests for the Pilight sensor platform."""
 import logging
 
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 from homeassistant.components import pilight
+import homeassistant.components.sensor as sensor
+from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component, mock_component
+from tests.common import assert_setup_component, get_test_home_assistant, mock_component
 
 HASS = None
 
@@ -48,6 +48,7 @@ def test_sensor_value_from_code():
                 }
             },
         )
+        HASS.block_till_done()
 
         state = HASS.states.get("sensor.test")
         assert state.state == "unknown"
@@ -77,6 +78,7 @@ def test_disregard_wrong_payload():
                 }
             },
         )
+        HASS.block_till_done()
 
         # Try set value from data with incorrect payload
         fire_pilight_message(
@@ -120,6 +122,7 @@ def test_variable_missing(caplog):
                 }
             },
         )
+        HASS.block_till_done()
 
         # Create code without sensor variable
         fire_pilight_message(

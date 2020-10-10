@@ -1,13 +1,18 @@
 """The tests for the MoldIndicator sensor."""
 import unittest
 
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 from homeassistant.components.mold_indicator.sensor import (
-    ATTR_DEWPOINT,
     ATTR_CRITICAL_TEMP,
+    ATTR_DEWPOINT,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+import homeassistant.components.sensor as sensor
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -25,10 +30,11 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -47,10 +53,10 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
-
+        self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
         assert moldind
-        assert "%" == moldind.attributes.get("unit_of_measurement")
+        assert PERCENTAGE == moldind.attributes.get("unit_of_measurement")
 
     def test_invalidcalib(self):
         """Test invalid sensor values."""
@@ -61,7 +67,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
 
         assert setup_component(
@@ -77,6 +83,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -94,7 +101,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
 
         assert setup_component(
@@ -111,6 +118,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             },
         )
 
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -120,7 +128,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set(
-            "test.indoorhumidity", "A", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "A", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -154,6 +162,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -191,6 +200,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
 
         self.hass.states.set(
@@ -220,7 +230,9 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "25", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity",
+            STATE_UNKNOWN,
+            {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE},
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -230,7 +242,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set(
-            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -261,6 +273,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 }
             },
         )
+        self.hass.block_till_done()
         self.hass.start()
 
         self.hass.states.set(
@@ -276,7 +289,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert self.hass.states.get("sensor.mold_indicator").state == "57"
 
         self.hass.states.set(
-            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         assert self.hass.states.get("sensor.mold_indicator").state == "23"

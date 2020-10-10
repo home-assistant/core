@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare una sola connessione iAqualink.",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "connection_failure": "Impossibile connettersi a iAqualink. Controllare il nome utente e la password."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci il nome utente e la password del tuo account iAqualink.",
+                "title": "Collegati a iAqualink"
+            }
+        }
+    }
+}

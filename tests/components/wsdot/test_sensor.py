@@ -4,7 +4,6 @@ import re
 import unittest
 
 import requests_mock
-from tests.common import get_test_home_assistant, load_fixture
 
 import homeassistant.components.wsdot.sensor as wsdot
 from homeassistant.components.wsdot.sensor import (
@@ -18,6 +17,8 @@ from homeassistant.components.wsdot.sensor import (
     SCAN_INTERVAL,
 )
 from homeassistant.setup import setup_component
+
+from tests.common import get_test_home_assistant, load_fixture
 
 
 class TestWSDOT(unittest.TestCase):
@@ -41,8 +42,9 @@ class TestWSDOT(unittest.TestCase):
             CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
         }
         self.entities = []
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop everything that was started."""
         self.hass.stop()
 

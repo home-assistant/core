@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "port_exists": "Questa porta \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "connection_failed": "La connessione Velbus non \u00e8 riuscita",
+            "port_exists": "Questa porta \u00e8 gi\u00e0 configurata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Il nome per questa connessione Velbus",
+                    "port": "Stringa di connessione"
+                },
+                "title": "Definire il tipo di connessione Velbus"
+            }
+        }
+    }
+}

@@ -1,8 +1,8 @@
 """Adds a simulated sensor."""
+from datetime import datetime
 import logging
 import math
 from random import Random
-from datetime import datetime
 
 import voluptuous as vol
 
@@ -142,7 +142,7 @@ class SimulatedSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "amplitude": self._amp,
             "mean": self._mean,
             "period": self._period,
@@ -151,4 +151,3 @@ class SimulatedSensor(Entity):
             "seed": self._seed,
             "relative_to_epoch": self._relative_to_epoch,
         }
-        return attr

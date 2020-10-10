@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Twee-factor code"
+                },
+                "description": "Voer de pincode in die naar uw e-mail is gestuurd. Als de e-mail geen pincode bevat, laat u dit leeg",
+                "title": "Tweestapsverificatie"
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Aanmelden met Blink account"
+            }
+        }
+    }
+}

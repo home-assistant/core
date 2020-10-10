@@ -1,5 +1,6 @@
 """Support for Lutron scenes."""
 import logging
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -30,13 +31,11 @@ class LutronScene(LutronDevice, Scene):
         self._keypad_name = keypad_name
         self._led = lutron_led
 
-    def activate(self):
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lutron_device.press()
 
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}: {}".format(
-            self._area_name, self._keypad_name, self._lutron_device.name
-        )
+        return f"{self._area_name} {self._keypad_name}: {self._lutron_device.name}"

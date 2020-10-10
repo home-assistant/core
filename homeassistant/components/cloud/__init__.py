@@ -4,14 +4,12 @@ import logging
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_REGION,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -34,7 +32,6 @@ from .const import (
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
     CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
-    CONF_GOOGLE_ACTIONS_SYNC_URL,
     CONF_RELAYER,
     CONF_REMOTE_API_URL,
     CONF_SUBSCRIPTION_INFO_URL,
@@ -94,7 +91,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_USER_POOL_ID): str,
                 vol.Optional(CONF_REGION): str,
                 vol.Optional(CONF_RELAYER): str,
-                vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): vol.Url(),
                 vol.Optional(CONF_SUBSCRIPTION_INFO_URL): vol.Url(),
                 vol.Optional(CONF_CLOUDHOOK_CREATE_URL): vol.Url(),
                 vol.Optional(CONF_REMOTE_API_URL): vol.Url(),
@@ -156,10 +152,13 @@ def async_remote_ui_url(hass) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
+    if not hass.data[DOMAIN].client.prefs.remote_enabled:
+        raise CloudNotAvailable
+
     if not hass.data[DOMAIN].remote.instance_domain:
         raise CloudNotAvailable
 
-    return "https://" + hass.data[DOMAIN].remote.instance_domain
+    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
 
 
 def is_cloudhook_request(request):
@@ -186,29 +185,10 @@ async def async_setup(hass, config):
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
 
-    # Cloud user
-    user = None
-    if prefs.cloud_user:
-        # Fetch the user. It can happen that the user no longer exists if
-        # an image was restored without restoring the cloud prefs.
-        user = await hass.auth.async_get_user(prefs.cloud_user)
-
-    if user is None:
-        user = await hass.auth.async_create_system_user(
-            "Home Assistant Cloud", [GROUP_ID_ADMIN]
-        )
-        await prefs.async_update(cloud_user=user.id)
-
     # Initialize Cloud
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
-
-    async def _startup(event):
-        """Startup event."""
-        await cloud.start()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _startup)
 
     async def _shutdown(event):
         """Shutdown event."""
@@ -243,20 +223,15 @@ async def async_setup(hass, config):
             return
         loaded = True
 
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                "binary_sensor", DOMAIN, {}, config
-            )
+        await hass.helpers.discovery.async_load_platform(
+            "binary_sensor", DOMAIN, {}, config
         )
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
-        )
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
-        )
+        await hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
+        await hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
 
     cloud.iot.register_on_connect(_on_connect)
 
+    await cloud.start()
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)

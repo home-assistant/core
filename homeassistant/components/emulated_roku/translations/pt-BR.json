@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "O nome j\u00e1 existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Anunciar IP",
+                    "advertise_port": "Anunciar porta",
+                    "host_ip": "IP do host",
+                    "listen_port": "Porta de escuta",
+                    "name": "Nome",
+                    "upnp_bind_multicast": "Vincular multicast (Verdadeiro/Falso)"
+                },
+                "title": "Definir configura\u00e7\u00e3o do servidor"
+            }
+        }
+    },
+    "title": "EmulatedRoku"
+}

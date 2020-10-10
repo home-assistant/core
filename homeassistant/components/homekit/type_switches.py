@@ -9,8 +9,13 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.switch import DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    STATE_CLEANING,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_TYPE,
@@ -18,11 +23,10 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import callback, split_entity_id
 from homeassistant.helpers.event import call_later
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,
@@ -55,7 +59,7 @@ class Outlet(HomeAccessory):
     def __init__(self, *args):
         """Initialize an Outlet accessory object."""
         super().__init__(*args, category=CATEGORY_OUTLET)
-        self._flag_state = False
+        state = self.hass.states.get(self.entity_id)
 
         serv_outlet = self.add_preload_service(SERV_OUTLET)
         self.char_on = serv_outlet.configure_char(
@@ -64,22 +68,24 @@ class Outlet(HomeAccessory):
         self.char_outlet_in_use = serv_outlet.configure_char(
             CHAR_OUTLET_IN_USE, value=True
         )
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        self._flag_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
-        if not self._flag_state:
+        if self.char_on.value is not current_state:
             _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
             self.char_on.set_value(current_state)
-        self._flag_state = False
 
 
 @TYPES.register("Switch")
@@ -90,7 +96,7 @@ class Switch(HomeAccessory):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._domain = split_entity_id(self.entity_id)[0]
-        self._flag_state = False
+        state = self.hass.states.get(self.entity_id)
 
         self.activate_only = self.is_activate(self.hass.states.get(self.entity_id))
 
@@ -98,28 +104,28 @@ class Switch(HomeAccessory):
         self.char_on = serv_switch.configure_char(
             CHAR_ON, value=False, setter_callback=self.set_state
         )
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
 
     def is_activate(self, state):
         """Check if entity is activate only."""
-        can_cancel = state.attributes.get(ATTR_CAN_CANCEL)
         if self._domain == "scene":
-            return True
-        if self._domain == "script" and not can_cancel:
             return True
         return False
 
     def reset_switch(self, *args):
         """Reset switch to emulate activate click."""
         _LOGGER.debug("%s: Reset switch to off", self.entity_id)
-        self.char_on.set_value(0)
+        if self.char_on.value is not False:
+            self.char_on.set_value(False)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        if self.activate_only and value == 0:
+        if self.activate_only and not value:
             _LOGGER.debug("%s: Ignoring turn_off call", self.entity_id)
             return
-        self._flag_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.call_service(self._domain, service, params)
@@ -127,7 +133,8 @@ class Switch(HomeAccessory):
         if self.activate_only:
             call_later(self.hass, 1, self.reset_switch)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         self.activate_only = self.is_activate(new_state)
         if self.activate_only:
@@ -137,10 +144,29 @@ class Switch(HomeAccessory):
             return
 
         current_state = new_state.state == STATE_ON
-        if not self._flag_state:
+        if self.char_on.value is not current_state:
             _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
             self.char_on.set_value(current_state)
-        self._flag_state = False
+
+
+@TYPES.register("DockVacuum")
+class DockVacuum(Switch):
+    """Generate a Switch accessory."""
+
+    def set_state(self, value):
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = SERVICE_START if value else SERVICE_RETURN_TO_BASE
+        self.call_service(VACUUM_DOMAIN, service, params)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update switch state after state changed."""
+        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
+        if self.char_on.value is not current_state:
+            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+            self.char_on.set_value(current_state)
 
 
 @TYPES.register("Valve")
@@ -150,7 +176,7 @@ class Valve(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Valve accessory object."""
         super().__init__(*args)
-        self._flag_state = False
+        state = self.hass.states.get(self.entity_id)
         valve_type = self.config[CONF_TYPE]
         self.category = VALVE_TYPE[valve_type][0]
 
@@ -162,21 +188,25 @@ class Valve(HomeAccessory):
         self.char_valve_type = serv_valve.configure_char(
             CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type][1]
         )
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
 
     def set_state(self, value):
         """Move value state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        self._flag_state = True
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
-        current_state = new_state.state == STATE_ON
-        if not self._flag_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        current_state = 1 if new_state.state == STATE_ON else 0
+        if self.char_active.value != current_state:
+            _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
             self.char_active.set_value(current_state)
+        if self.char_in_use.value != current_state:
+            _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
             self.char_in_use.set_value(current_state)
-        self._flag_state = False

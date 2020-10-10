@@ -1,9 +1,9 @@
 """The tests for Kira sensor platform."""
 import unittest
-from unittest.mock import MagicMock
 
 from homeassistant.components.kira import remote as kira
 
+from tests.async_mock import MagicMock
 from tests.common import get_test_home_assistant
 
 SERVICE_SEND_COMMAND = "send_command"
@@ -30,10 +30,7 @@ class TestKiraSensor(unittest.TestCase):
         self.mock_kira = MagicMock()
         self.hass.data[kira.DOMAIN] = {kira.CONF_REMOTE: {}}
         self.hass.data[kira.DOMAIN][kira.CONF_REMOTE]["kira"] = self.mock_kira
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_service_call(self):
         """Test Kira's ability to send commands."""

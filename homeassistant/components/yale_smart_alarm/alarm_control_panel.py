@@ -2,15 +2,26 @@
 import logging
 
 import voluptuous as vol
+from yalesmartalarmclient.client import (
+    YALE_STATE_ARM_FULL,
+    YALE_STATE_ARM_PARTIAL,
+    YALE_STATE_DISARM,
+    AuthenticationError,
+    YaleSmartAlarmClient,
+)
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel,
     PLATFORM_SCHEMA,
+    AlarmControlPanelEntity,
+)
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_NAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
@@ -42,8 +53,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     area_id = config[CONF_AREA_ID]
 
-    from yalesmartalarmclient.client import YaleSmartAlarmClient, AuthenticationError
-
     try:
         client = YaleSmartAlarmClient(username, password, area_id)
     except AuthenticationError:
@@ -53,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([YaleAlarmDevice(name, client)], True)
 
 
-class YaleAlarmDevice(AlarmControlPanel):
+class YaleAlarmDevice(AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
     def __init__(self, name, client):
@@ -61,12 +70,6 @@ class YaleAlarmDevice(AlarmControlPanel):
         self._name = name
         self._client = client
         self._state = None
-
-        from yalesmartalarmclient.client import (
-            YALE_STATE_DISARM,
-            YALE_STATE_ARM_PARTIAL,
-            YALE_STATE_ARM_FULL,
-        )
 
         self._state_map = {
             YALE_STATE_DISARM: STATE_ALARM_DISARMED,
@@ -83,6 +86,11 @@ class YaleAlarmDevice(AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Return the state of the device."""

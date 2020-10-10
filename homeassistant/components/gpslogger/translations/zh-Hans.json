@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u60a8\u7684 Home Assistant \u5b9e\u4f8b\u9700\u8981\u53ef\u4ece\u4e92\u8054\u7f51\u8bbf\u95ee\u4ee5\u63a5\u6536 GPSLogger \u6d88\u606f\u3002",
+            "one_instance_allowed": "\u53ea\u6709\u4e00\u4e2a\u5b9e\u4f8b\u662f\u5fc5\u9700\u7684\u3002"
+        },
+        "create_entry": {
+            "default": "\u8981\u5411 Home Assistant \u53d1\u9001\u4e8b\u4ef6\uff0c\u60a8\u9700\u8981\u914d\u7f6e GPSLogger \u7684 Webhook \u529f\u80fd\u3002\n\n\u586b\u5199\u4ee5\u4e0b\u4fe1\u606f\uff1a\n\n- URL: `{webhook_url}`\n- Method: POST\n\n\u8bf7\u53c2\u9605[\u6587\u6863]({docs_url})\u4ee5\u4e86\u89e3\u66f4\u591a\u4fe1\u606f\u3002"
+        },
+        "step": {
+            "user": {
+                "description": "\u60a8\u786e\u5b9a\u8981\u8bbe\u7f6e GPSLogger Webhook \u5417\uff1f",
+                "title": "\u8bbe\u7f6e GPSLogger Webhook"
+            }
+        }
+    }
+}

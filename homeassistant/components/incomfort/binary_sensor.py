@@ -1,7 +1,10 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, Optional
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
 
 from . import DOMAIN, IncomfortChild
 
@@ -17,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IncomfortFailed(client, h) for h in heaters])
 
 
-class IncomfortFailed(IncomfortChild, BinarySensorDevice):
+class IncomfortFailed(IncomfortChild, BinarySensorEntity):
     """Representation of an InComfort Failed sensor."""
 
     def __init__(self, client, heater) -> None:
@@ -25,7 +28,7 @@ class IncomfortFailed(IncomfortChild, BinarySensorDevice):
         super().__init__()
 
         self._unique_id = f"{heater.serial_no}_failed"
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_failed")
+        self.entity_id = f"{BINARY_SENSOR_DOMAIN}.{DOMAIN}_failed"
         self._name = "Boiler Fault"
 
         self._client = client

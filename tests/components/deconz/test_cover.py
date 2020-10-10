@@ -1,21 +1,21 @@
 """deCONZ cover platform tests."""
 from copy import deepcopy
 
-from asynctest import patch
-
 from homeassistant.components import deconz
+import homeassistant.components.cover as cover
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.cover as cover
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from tests.async_mock import patch
 
 COVERS = {
     "1": {
         "id": "Level controllable cover id",
         "name": "Level controllable cover",
         "type": "Level controllable output",
-        "state": {"bri": 255, "on": False, "reachable": True},
+        "state": {"bri": 254, "on": False, "reachable": True},
         "modelid": "Not zigbee spec",
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
@@ -23,7 +23,7 @@ COVERS = {
         "id": "Window covering device id",
         "name": "Window covering device",
         "type": "Window covering device",
-        "state": {"bri": 255, "on": True, "reachable": True},
+        "state": {"bri": 254, "on": True, "reachable": True},
         "modelid": "lumi.curtain",
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
@@ -33,6 +33,22 @@ COVERS = {
         "type": "Not a cover",
         "state": {"reachable": True},
         "uniqueid": "00:00:00:00:00:00:00:02-00",
+    },
+    "4": {
+        "id": "deconz old brightness cover id",
+        "name": "deconz old brightness cover",
+        "type": "Level controllable output",
+        "state": {"bri": 255, "on": False, "reachable": True},
+        "modelid": "Not zigbee spec",
+        "uniqueid": "00:00:00:00:00:00:00:03-00",
+    },
+    "5": {
+        "id": "Window covering controller id",
+        "name": "Window covering controller",
+        "type": "Window covering controller",
+        "state": {"bri": 254, "on": True, "reachable": True},
+        "modelid": "Motor controller",
+        "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
 }
 
@@ -50,11 +66,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_covers(hass):
     """Test that no cover entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
-    assert len(gateway.deconz_ids) == 0
+    await setup_deconz_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
@@ -62,27 +74,38 @@ async def test_cover(hass):
     """Test that all supported cover entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(COVERS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
-    assert "cover.level_controllable_cover" in gateway.deconz_ids
-    assert "cover.window_covering_device" in gateway.deconz_ids
-    assert "cover.unsupported_cover" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 5
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    level_controllable_cover = hass.states.get("cover.level_controllable_cover")
-    assert level_controllable_cover.state == "open"
+    assert len(hass.states.async_all()) == 5
+    assert hass.states.get("cover.level_controllable_cover").state == "open"
+    assert hass.states.get("cover.window_covering_device").state == "closed"
+    assert hass.states.get("cover.unsupported_cover") is None
+    assert hass.states.get("cover.deconz_old_brightness_cover").state == "open"
+    assert hass.states.get("cover.window_covering_controller").state == "closed"
+
+    # Event signals cover is closed
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.level_controllable_cover").state == "closed"
+
+    # Verify service calls
 
     level_controllable_cover_device = gateway.api.lights["1"]
 
-    level_controllable_cover_device.async_update({"state": {"on": True}})
-    await hass.async_block_till_done()
-
-    level_controllable_cover = hass.states.get("cover.level_controllable_cover")
-    assert level_controllable_cover.state == "closed"
+    # Service open cover
 
     with patch.object(
-        level_controllable_cover_device, "_async_set_callback", return_value=True
+        level_controllable_cover_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             cover.DOMAIN,
@@ -91,10 +114,12 @@ async def test_cover(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/1/state", {"on": False})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
+
+    # Service close cover
 
     with patch.object(
-        level_controllable_cover_device, "_async_set_callback", return_value=True
+        level_controllable_cover_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             cover.DOMAIN,
@@ -103,10 +128,14 @@ async def test_cover(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/1/state", {"on": True, "bri": 255})
+        set_callback.assert_called_with(
+            "put", "/lights/1/state", json={"on": True, "bri": 254}
+        )
+
+    # Service stop cover movement
 
     with patch.object(
-        level_controllable_cover_device, "_async_set_callback", return_value=True
+        level_controllable_cover_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             cover.DOMAIN,
@@ -115,8 +144,25 @@ async def test_cover(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/1/state", {"bri_inc": 0})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"bri_inc": 0})
 
-    await gateway.async_reset()
+    # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
+    assert hass.states.get("cover.deconz_old_brightness_cover").state == "open"
 
-    assert len(hass.states.async_all()) == 2
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "4",
+        "state": {"on": True},
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
+    assert deconz_old_brightness_cover.state == "closed"
+    assert deconz_old_brightness_cover.attributes["current_position"] == 0
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert len(hass.states.async_all()) == 0

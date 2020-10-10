@@ -1,22 +1,21 @@
 """The tests for the mochad switch platform."""
 import unittest
-import unittest.mock as mock
 
 import pytest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import switch
 from homeassistant.components.mochad import switch as mochad
+from homeassistant.setup import setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant
 
 
 @pytest.fixture(autouse=True)
 def pymochad_mock():
     """Mock pymochad."""
-    with mock.patch.dict(
-        "sys.modules",
-        {"pymochad": mock.MagicMock(), "pymochad.exceptions": mock.MagicMock()},
+    with mock.patch("homeassistant.components.mochad.switch.device"), mock.patch(
+        "homeassistant.components.mochad.switch.MochadException"
     ):
         yield
 
@@ -31,10 +30,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     @mock.patch("homeassistant.components.mochad.switch.MochadSwitch")
     def test_setup_adds_proper_devices(self, mock_switch):

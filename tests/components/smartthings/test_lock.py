@@ -8,16 +8,10 @@ from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.components.smartthings import lock
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await lock.async_setup_platform(None, None, None)
 
 
 async def test_entity_and_device_attributes(hass, device_factory):

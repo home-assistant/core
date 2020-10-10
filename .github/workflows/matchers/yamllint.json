@@ -1,0 +1,22 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "yamllint",
+      "pattern": [
+        {
+          "regexp": "^(.*\\.ya?ml)$",
+          "file": 1
+        },
+        {
+          "regexp": "^\\s{2}(\\d+):(\\d+)\\s+(error|warning)\\s+(.*?)\\s+\\((.*)\\)$",
+          "line": 1,
+          "column": 2,
+          "severity": 3,
+          "message": 4,
+          "code": 5,
+          "loop": true
+        }
+      ]
+    }
+  ]
+}

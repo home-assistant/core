@@ -1,11 +1,10 @@
 """Test APRS device tracker."""
-from unittest.mock import Mock, patch
-
 import aprslib
 
 import homeassistant.components.aprs.device_tracker as device_tracker
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 DEFAULT_PORT = 14580
@@ -302,7 +301,7 @@ def test_aprs_listener_rx_msg_no_position():
 def test_setup_scanner():
     """Test setup_scanner."""
     with patch(
-        "homeassistant.components." "aprs.device_tracker.AprsListenerThread"
+        "homeassistant.components.aprs.device_tracker.AprsListenerThread"
     ) as listener:
         hass = get_test_home_assistant()
         hass.start()

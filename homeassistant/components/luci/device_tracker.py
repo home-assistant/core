@@ -1,6 +1,7 @@
 """Support for OpenWRT (luci) routers."""
 import logging
 
+from openwrt_luci_rpc import OpenWrtRpc
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -45,7 +46,6 @@ class LuciDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from openwrt_luci_rpc import OpenWrtRpc
 
         self.router = OpenWrtRpc(
             config[CONF_HOST],
@@ -94,6 +94,12 @@ class LuciDeviceScanner(DeviceScanner):
 
         last_results = []
         for device in result:
-            last_results.append(device)
+            if (
+                not hasattr(self.router.router.owrt_version, "release")
+                or not self.router.router.owrt_version.release
+                or self.router.router.owrt_version.release[0] < 19
+                or device.reachable
+            ):
+                last_results.append(device)
 
         self.last_results = last_results

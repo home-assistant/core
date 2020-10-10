@@ -2,7 +2,6 @@
   "domain": "bizkaibus",
   "name": "Bizkaibus",
   "documentation": "https://www.home-assistant.io/integrations/bizkaibus",
-  "dependencies": [],
   "codeowners": ["@UgaitzEtxebarria"],
   "requirements": ["bizkaibus==0.1.1"]
 }

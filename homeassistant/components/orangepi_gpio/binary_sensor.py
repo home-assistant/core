@@ -1,6 +1,6 @@
 """Support for binary sensor using Orange Pi GPIO."""
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 
 from . import edge_detect, read_input, setup_input, setup_mode
 from .const import CONF_INVERT_LOGIC, CONF_PIN_MODE, CONF_PORTS, PORT_SCHEMA
@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(binary_sensors)
 
 
-class OPiGPIOBinarySensor(BinarySensorDevice):
+class OPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses Orange Pi GPIO."""
 
     def __init__(self, hass, name, port, invert_logic):

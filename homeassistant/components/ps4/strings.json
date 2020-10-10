@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "PlayStation 4",
     "step": {
       "creds": {
         "title": "PlayStation 4",
@@ -19,9 +18,9 @@
         "description": "Enter your PlayStation 4 information. For 'PIN', navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
         "data": {
           "region": "Region",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "code": "PIN",
-          "ip_address": "IP Address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       }
     },

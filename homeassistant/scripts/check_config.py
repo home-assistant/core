@@ -1,23 +1,23 @@
 """Script to check the configuration file."""
-
 import argparse
+import asyncio
+from collections import OrderedDict
+from collections.abc import Mapping, Sequence
+from glob import glob
 import logging
 import os
-from collections import OrderedDict
-from glob import glob
-from typing import Dict, List, Sequence, Any, Tuple, Callable
+from typing import Any, Callable, Dict, List, Tuple
 from unittest.mock import patch
 
 from homeassistant import bootstrap, core
 from homeassistant.config import get_default_config_dir
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import async_check_ha_config_file
 import homeassistant.util.yaml.loader as yaml_loader
-from homeassistant.exceptions import HomeAssistantError
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.0.2",)
+REQUIREMENTS = ("colorlog==4.2.1",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -36,6 +36,7 @@ ERROR_STR = "General Errors"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
+    # pylint: disable=import-outside-toplevel
     from colorlog.escape_codes import escape_codes, parse_colors
 
     try:
@@ -44,7 +45,7 @@ def color(the_color, *args, reset=None):
             return parse_colors(the_color)
         return parse_colors(the_color) + " ".join(args) + escape_codes[reset or "reset"]
     except KeyError as k:
-        raise ValueError("Invalid color {} in {}".format(str(k), the_color))
+        raise ValueError(f"Invalid color {k!s} in {the_color}") from k
 
 
 def run(script_args: List) -> int:
@@ -119,7 +120,7 @@ def run(script_args: List) -> int:
                 if domain == ERROR_STR:
                     continue
                 print(" ", color(C_HEAD, domain + ":"))
-                dump_dict(res["components"].get(domain, None))
+                dump_dict(res["components"].get(domain))
 
     if args.secrets:
         flatsecret: Dict[str, str] = {}
@@ -187,7 +188,7 @@ def check(config_dir, secrets=False):
             continue
         # The * in the key is removed to find the mock_function (side_effect)
         # This allows us to use one side_effect to patch multiple locations
-        mock_function = locals()["mock_" + key.replace("*", "")]
+        mock_function = locals()[f"mock_{key.replace('*', '')}"]
         PATCHES[key] = patch(val[0], side_effect=mock_function)
 
     # Start all patches
@@ -199,12 +200,7 @@ def check(config_dir, secrets=False):
         yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     try:
-        hass = core.HomeAssistant()
-        hass.config.config_dir = config_dir
-
-        res["components"] = hass.loop.run_until_complete(
-            async_check_ha_config_file(hass)
-        )
+        res["components"] = asyncio.run(async_check_config(config_dir))
         res["secret_cache"] = OrderedDict(yaml_loader.__SECRET_CACHE)
         for err in res["components"].errors:
             domain = err.domain or ERROR_STR
@@ -213,7 +209,6 @@ def check(config_dir, secrets=False):
                 res["except"].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("BURB")
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -230,13 +225,20 @@ def check(config_dir, secrets=False):
     return res
 
 
+async def async_check_config(config_dir):
+    """Check the HA config."""
+    hass = core.HomeAssistant()
+    hass.config.config_dir = config_dir
+    components = await async_check_ha_config_file(hass)
+    await hass.async_stop(force=True)
+    return components
+
+
 def line_info(obj, **kwargs):
     """Display line config source."""
     if hasattr(obj, "__config_file__"):
         return color(
-            "cyan",
-            "[source {}:{}]".format(obj.__config_file__, obj.__line__ or "?"),
-            **kwargs,
+            "cyan", f"[source {obj.__config_file__}:{obj.__line__ or '?'}]", **kwargs
         )
     return "?"
 
@@ -255,7 +257,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     indent_str = indent_count * " "
     if listi or isinstance(layer, list):
         indent_str = indent_str[:-1] + "-"
-    if isinstance(layer, Dict):
+    if isinstance(layer, Mapping):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
                 print(indent_str, str(key) + ":", line_info(value, **kwargs))

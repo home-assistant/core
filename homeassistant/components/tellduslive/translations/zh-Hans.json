@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "\u751f\u6210\u6388\u6743\u7f51\u5740\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002",
+            "authorize_url_timeout": "\u751f\u6210\u6388\u6743\u7f51\u5740\u8d85\u65f6\u3002",
+            "unknown": "\u53d1\u751f\u672a\u77e5\u7684\u9519\u8bef"
+        },
+        "error": {
+            "auth_error": "\u53cc\u91cd\u8ba4\u8bc1\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002"
+        },
+        "step": {
+            "auth": {
+                "description": "\u8981\u94fe\u63a5\u60a8\u7684TelldusLive\u8d26\u6237\uff1a \n 1. \u70b9\u51fb\u4e0b\u9762\u7684\u94fe\u63a5\n 2. \u767b\u5f55 Telldus Live \n 3. \u6388\u6743 **{app_name}** (\u70b9\u51fb **\u662f**)\u3002 \n 4. \u8fd4\u56de\u6b64\u9875\uff0c\u7136\u540e\u70b9\u51fb**\u63d0\u4ea4**\u3002 \n\n [\u94fe\u63a5 TelldusLive \u8d26\u6237]({auth_url})",
+                "title": "\u4f7f\u7528 TelldusLive \u8fdb\u884c\u8eab\u4efd\u9a8c\u8bc1"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a"
+                },
+                "description": "\u7a7a",
+                "title": "\u9009\u62e9 endpoint\u3002"
+            }
+        }
+    }
+}

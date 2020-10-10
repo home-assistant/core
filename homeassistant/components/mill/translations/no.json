@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "connection_error": "Tilkobling mislyktes."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

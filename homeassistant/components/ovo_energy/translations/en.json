@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Account is already configured",
+            "authorization_error": "Authorization error. Check your credentials.",
+            "connection_error": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Set up an OVO Energy instance to access your energy usage.",
+                "title": "Add OVO Energy Account"
+            }
+        }
+    }
+}

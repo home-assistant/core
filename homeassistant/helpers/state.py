@@ -1,13 +1,11 @@
 """Helpers that help with state related things."""
 import asyncio
+from collections import defaultdict
 import datetime as dt
 import logging
-from collections import defaultdict
 from types import ModuleType, TracebackType
-from typing import Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Type, Union
 
-from homeassistant.loader import bind_hass, async_get_integration, IntegrationNotFound
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
     STATE_CLOSED,
@@ -21,6 +19,9 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, State
+from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
+import homeassistant.util.dt as dt_util
+
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,8 +69,9 @@ def get_changed_since(
 async def async_reproduce_state(
     hass: HomeAssistantType,
     states: Union[State, Iterable[State]],
-    blocking: bool = False,
+    *,
     context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
@@ -96,7 +98,7 @@ async def async_reproduce_state(
             return
 
         await platform.async_reproduce_states(  # type: ignore
-            hass, states_by_domain, context=context
+            hass, states_by_domain, context=context, reproduce_options=reproduce_options
         )
 
     if to_call:

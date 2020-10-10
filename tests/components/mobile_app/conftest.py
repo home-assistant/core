@@ -2,13 +2,12 @@
 # pylint: disable=redefined-outer-name,unused-import
 import pytest
 
-from tests.common import mock_device_registry
-
+from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import DOMAIN
-
 from .const import REGISTER, REGISTER_CLEARTEXT
+
+from tests.common import mock_device_registry
 
 
 @pytest.fixture
@@ -18,8 +17,10 @@ def registry(hass):
 
 
 @pytest.fixture
-async def create_registrations(authed_api_client):
+async def create_registrations(hass, authed_api_client):
     """Return two new registrations."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     enc_reg = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER
     )
@@ -34,15 +35,19 @@ async def create_registrations(authed_api_client):
     assert clear_reg.status == 201
     clear_reg_json = await clear_reg.json()
 
+    await hass.async_block_till_done()
+
     return (enc_reg_json, clear_reg_json)
 
 
 @pytest.fixture
-async def webhook_client(hass, aiohttp_client):
+async def webhook_client(hass, authed_api_client, aiohttp_client):
     """mobile_app mock client."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
-    return await aiohttp_client(hass.http.app)
+    # We pass in the authed_api_client server instance because
+    # it is used inside create_registrations and just passing in
+    # the app instance would cause the server to start twice,
+    # which caused deprecation warnings to be printed.
+    return await aiohttp_client(authed_api_client.server)
 
 
 @pytest.fixture

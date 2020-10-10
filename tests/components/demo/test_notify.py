@@ -1,16 +1,16 @@
 """The tests for the notify demo platform."""
 import unittest
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
 import homeassistant.components.demo.notify as demo
+import homeassistant.components.notify as notify
 from homeassistant.core import callback
-from homeassistant.helpers import discovery, script
+from homeassistant.helpers import discovery
+from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.notify import common
 
@@ -32,8 +32,9 @@ class TestNotifyDemo(unittest.TestCase):
             self.events.append(event)
 
         self.hass.bus.listen(demo.EVENT_NOTIFY, record_event)
+        self.addCleanup(self.tear_down_cleanup)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tear_down_cleanup(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -103,7 +104,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.block_till_done()
         last_event = self.events[-1]
         assert last_event.data[notify.ATTR_TITLE] == "temperature"
-        assert last_event.data[notify.ATTR_MESSAGE] == "10"
+        assert last_event.data[notify.ATTR_MESSAGE] == 10
 
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
@@ -121,7 +122,7 @@ class TestNotifyDemo(unittest.TestCase):
     def test_calling_notify_from_script_loaded_from_yaml_without_title(self):
         """Test if we can call a notify from a script."""
         self._setup_notify()
-        conf = {
+        step = {
             "service": "notify.notify",
             "data": {
                 "data": {
@@ -130,8 +131,8 @@ class TestNotifyDemo(unittest.TestCase):
             },
             "data_template": {"message": "Test 123 {{ 2 + 2 }}\n"},
         }
-
-        script.call_from_config(self.hass, conf)
+        setup_component(self.hass, "script", {"script": {"test": {"sequence": step}}})
+        self.hass.services.call("script", "test")
         self.hass.block_till_done()
         assert len(self.events) == 1
         assert {
@@ -144,7 +145,7 @@ class TestNotifyDemo(unittest.TestCase):
     def test_calling_notify_from_script_loaded_from_yaml_with_title(self):
         """Test if we can call a notify from a script."""
         self._setup_notify()
-        conf = {
+        step = {
             "service": "notify.notify",
             "data": {
                 "data": {
@@ -153,8 +154,8 @@ class TestNotifyDemo(unittest.TestCase):
             },
             "data_template": {"message": "Test 123 {{ 2 + 2 }}\n", "title": "Test"},
         }
-
-        script.call_from_config(self.hass, conf)
+        setup_component(self.hass, "script", {"script": {"test": {"sequence": step}}})
+        self.hass.services.call("script", "test")
         self.hass.block_till_done()
         assert len(self.events) == 1
         assert {

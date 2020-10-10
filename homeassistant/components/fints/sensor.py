@@ -3,10 +3,13 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+
+from fints.client import FinTS3PinTanClient
+from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PIN, CONF_URL, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -118,7 +121,6 @@ class FinTsClient:
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
         """
-        from fints.client import FinTS3PinTanClient
 
         return FinTS3PinTanClient(
             self._credentials.blz,
@@ -129,7 +131,6 @@ class FinTsClient:
 
     def detect_accounts(self):
         """Identify the accounts of the bank."""
-        from fints.dialog import FinTSDialogError
 
         balance_accounts = []
         holdings_accounts = []
@@ -167,14 +168,6 @@ class FinTsAccount(Entity):
         self._name = name
         self._balance: float = None
         self._currency: str = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
 
     def update(self) -> None:
         """Get the current balance and currency for the account."""
@@ -227,14 +220,6 @@ class FinTsHoldingsAccount(Entity):
         self._account = account
         self._holdings = []
         self._total: float = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
 
     def update(self) -> None:
         """Get the current holdings for the account."""

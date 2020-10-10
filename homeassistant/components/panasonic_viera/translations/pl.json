@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_connected": "Zdalne po\u0142\u0105czenie z telewizorem Panasonic Viera zosta\u0142o utracone. Sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej informacji.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_pin_code": "Podany kod PIN jest nieprawid\u0142owy",
+            "not_connected": "Nie uda\u0142o si\u0119 nawi\u0105za\u0107 zdalnego po\u0142\u0105czenia z telewizorem Panasonic Viera."
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "Kod PIN"
+                },
+                "description": "Wprowad\u017a kod PIN wy\u015bwietlony na ekranie telewizora",
+                "title": "Parowanie"
+            },
+            "user": {
+                "data": {
+                    "host": "Adres IP",
+                    "name": "Nazwa"
+                },
+                "description": "Wprowad\u017a adres IP telewizora Panasonic Viera",
+                "title": "Skonfiguruj telewizor"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

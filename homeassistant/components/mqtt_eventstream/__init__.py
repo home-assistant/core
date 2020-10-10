@@ -1,10 +1,8 @@
 """Connect two Home Assistant instances via MQTT."""
-import asyncio
 import json
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.const import (
     ATTR_SERVICE_DATA,
@@ -13,7 +11,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.core import EventOrigin, State
+from homeassistant.core import EventOrigin, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import JSONEncoder
 
@@ -40,8 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the MQTT eventstream component."""
     mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
@@ -104,6 +101,6 @@ def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        yield from mqtt.async_subscribe(sub_topic, _event_receiver)
+        await mqtt.async_subscribe(sub_topic, _event_receiver)
 
     return True

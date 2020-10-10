@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen, iwwerpr\u00e9ift w.e.g d'Adresse vum Apparat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Prefix dee fir \u00e4r Solar-Log Sensoren soll benotz ginn"
+                },
+                "title": "D\u00e9fin\u00e9iert \u00e4r Solar-Log Verbindung"
+            }
+        }
+    }
+}

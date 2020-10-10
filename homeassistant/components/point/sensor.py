@@ -6,6 +6,8 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,8 +22,8 @@ DEVICE_CLASS_SOUND = "sound_level"
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: (None, 1, TEMP_CELSIUS),
-    DEVICE_CLASS_PRESSURE: (None, 0, "hPa"),
-    DEVICE_CLASS_HUMIDITY: (None, 1, "%"),
+    DEVICE_CLASS_PRESSURE: (None, 0, PRESSURE_HPA),
+    DEVICE_CLASS_HUMIDITY: (None, 1, PERCENTAGE),
     DEVICE_CLASS_SOUND: ("mdi:ear-hearing", 1, "dBa"),
 }
 
@@ -61,7 +63,7 @@ class MinutPointSensor(MinutPointEntity):
                 self.device.sensor, self.device_class
             )
             self._updated = parse_datetime(self.device.last_update)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def icon(self):

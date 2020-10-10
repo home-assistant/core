@@ -1,18 +1,21 @@
 """Viessmann ViCare water_heater device."""
 import logging
+
 import requests
-import simplejson
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
-from . import DOMAIN as VICARE_DOMAIN
-from . import VICARE_API
-from . import VICARE_NAME
-from . import VICARE_HEATING_TYPE
+from . import (
+    DOMAIN as VICARE_DOMAIN,
+    PYVICARE_ERROR,
+    VICARE_API,
+    VICARE_HEATING_TYPE,
+    VICARE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +46,6 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
-PYVICARE_ERROR = "error"
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare water_heater devices."""
@@ -63,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareWater(WaterHeaterDevice):
+class ViCareWater(WaterHeaterEntity):
     """Representation of the ViCare domestic hot water device."""
 
     def __init__(self, name, api, heating_type):
@@ -93,7 +94,7 @@ class ViCareWater(WaterHeaterDevice):
             self._current_mode = self._api.getActiveMode()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
-        except simplejson.errors.JSONDecodeError:
+        except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
 
     @property
@@ -125,7 +126,8 @@ class ViCareWater(WaterHeaterDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setDomesticHotWaterTemperature(self._target_temperature)
+            self._api.setDomesticHotWaterTemperature(temp)
+            self._target_temperature = temp
 
     @property
     def min_temp(self):

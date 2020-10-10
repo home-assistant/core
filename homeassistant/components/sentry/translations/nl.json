@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Sentry is al geconfigureerd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "bad_dsn": "Ongeldige DSN",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "description": "Voer uw Sentry DSN in",
+                "title": "Sentry"
+            }
+        }
+    }
+}

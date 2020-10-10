@@ -1,6 +1,7 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 import logging
 
+from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED, Homeworks
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -21,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "homeworks"
 
 HOMEWORKS_CONTROLLER = "homeworks"
-ENTITY_SIGNAL = "homeworks_entity_{}"
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
@@ -65,13 +65,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Start Homeworks controller."""
-    from pyhomeworks.pyhomeworks import Homeworks
 
     def hw_callback(msg_type, values):
         """Dispatch state changes."""
         _LOGGER.debug("callback: %s, %s", msg_type, values)
         addr = values[0]
-        signal = ENTITY_SIGNAL.format(addr)
+        signal = f"homeworks_entity_{addr}"
         dispatcher_send(hass, signal, msg_type, values)
 
     config = base_config.get(DOMAIN)
@@ -98,7 +97,7 @@ class HomeworksDevice:
     """Base class of a Homeworks device."""
 
     def __init__(self, controller, addr, name):
-        """Controller, address, and name of the device."""
+        """Initialize Homeworks device."""
         self._addr = addr
         self._name = name
         self._controller = controller
@@ -132,13 +131,12 @@ class HomeworksKeypadEvent:
         self._addr = addr
         self._name = name
         self._id = slugify(self._name)
-        signal = ENTITY_SIGNAL.format(self._addr)
+        signal = f"homeworks_entity_{self._addr}"
         async_dispatcher_connect(self._hass, signal, self._update_callback)
 
     @callback
     def _update_callback(self, msg_type, values):
         """Fire events if button is pressed or released."""
-        from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
 
         if msg_type == HW_BUTTON_PRESSED:
             event = EVENT_BUTTON_PRESS

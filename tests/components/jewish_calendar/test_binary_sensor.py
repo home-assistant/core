@@ -1,17 +1,21 @@
 """The tests for the Jewish calendar binary sensors."""
-from datetime import timedelta
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 import pytest
 
-from homeassistant.const import STATE_ON, STATE_OFF
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
+
+from . import (
+    HDATE_DEFAULT_ALTITUDE,
+    alter_time,
+    make_jerusalem_test_params,
+    make_nyc_test_params,
+)
 
 from tests.common import async_fire_time_changed
-from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
-
 
 MELACHA_PARAMS = [
     make_nyc_test_params(dt(2018, 9, 1, 16, 0), STATE_ON),
@@ -61,7 +65,16 @@ MELACHA_TEST_IDS = [
     ids=MELACHA_TEST_IDS,
 )
 async def test_issur_melacha_sensor(
-    hass, now, candle_lighting, havdalah, diaspora, tzname, latitude, longitude, result
+    hass,
+    legacy_patchable_time,
+    now,
+    candle_lighting,
+    havdalah,
+    diaspora,
+    tzname,
+    latitude,
+    longitude,
+    result,
 ):
     """Test Issur Melacha sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
@@ -70,6 +83,8 @@ async def test_issur_melacha_sensor(
     hass.config.time_zone = time_zone
     hass.config.latitude = latitude
     hass.config.longitude = longitude
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
 
     with alter_time(test_time):
         assert await async_setup_component(
@@ -95,3 +110,21 @@ async def test_issur_melacha_sensor(
             hass.states.get("binary_sensor.test_issur_melacha_in_effect").state
             == result
         )
+        entity = registry.async_get("binary_sensor.test_issur_melacha_in_effect")
+        target_uid = "_".join(
+            map(
+                str,
+                [
+                    latitude,
+                    longitude,
+                    time_zone,
+                    HDATE_DEFAULT_ALTITUDE,
+                    diaspora,
+                    "english",
+                    candle_lighting,
+                    havdalah,
+                    "issur_melacha_in_effect",
+                ],
+            )
+        )
+        assert entity.unique_id == target_uid

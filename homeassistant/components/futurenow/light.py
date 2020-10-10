@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -55,16 +55,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def to_futurenow_level(level):
-    """Convert the given HASS light level (0-255) to FutureNow (0-100)."""
+    """Convert the given Home Assistant light level (0-255) to FutureNow (0-100)."""
     return int((level * 100) / 255)
 
 
 def to_hass_level(level):
-    """Convert the given FutureNow (0-100) light level to HASS (0-255)."""
+    """Convert the given FutureNow (0-100) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
 
-class FutureNowLight(Light):
+class FutureNowLight(LightEntity):
     """Representation of an FutureNow light."""
 
     def __init__(self, device):

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty"
+        },
+        "error": {
+            "already_in_progress": "Laitteen m\u00e4\u00e4ritysvirta on jo k\u00e4ynniss\u00e4.",
+            "device_unavailable": "Laite ei ole k\u00e4ytett\u00e4viss\u00e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti"
+                },
+                "title": "Asenna Agent DVR"
+            }
+        }
+    },
+    "title": "Agent DVR"
+}

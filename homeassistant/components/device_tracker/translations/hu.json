@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} otthon van",
+            "is_not_home": "{entity_name} nincs otthon"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Otthon",
+            "not_home": "T\u00e1vol"
+        }
+    },
+    "title": "Eszk\u00f6z nyomk\u00f6vet\u0151"
+}

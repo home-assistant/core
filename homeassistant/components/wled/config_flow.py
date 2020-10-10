@@ -11,10 +11,10 @@ from homeassistant.config_entries import (
     ConfigFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN  # pylint: disable=W0611
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
         if user_input is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         # Hostname is format: wled-livingroom.local.
         host = user_input["hostname"].rstrip(".")
@@ -44,7 +44,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
-            {CONF_HOST: host, CONF_NAME: name, "title_placeholders": {"name": name}}
+            {
+                CONF_HOST: user_input["host"],
+                CONF_NAME: name,
+                CONF_MAC: user_input["properties"].get(CONF_MAC),
+                "title_placeholders": {"name": name},
+            }
         )
 
         # Prepare configuration flow
@@ -72,25 +77,22 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         if source == SOURCE_ZEROCONF:
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
+            user_input[CONF_MAC] = self.context.get(CONF_MAC)
 
-        errors = {}
-        session = async_get_clientsession(self.hass)
-        wled = WLED(user_input[CONF_HOST], loop=self.hass.loop, session=session)
-
-        try:
-            device = await wled.update()
-        except WLEDConnectionError:
-            if source == SOURCE_ZEROCONF:
-                return self.async_abort(reason="connection_error")
-            errors["base"] = "connection_error"
-            return self._show_setup_form(errors)
+        if user_input.get(CONF_MAC) is None or not prepare:
+            session = async_get_clientsession(self.hass)
+            wled = WLED(user_input[CONF_HOST], session=session)
+            try:
+                device = await wled.update()
+            except WLEDConnectionError:
+                if source == SOURCE_ZEROCONF:
+                    return self.async_abort(reason="cannot_connect")
+                return self._show_setup_form({"base": "cannot_connect"})
+            user_input[CONF_MAC] = device.info.mac_address
 
         # Check if already configured
-        mac_address = device.info.mac_address
-        for entry in self._async_current_entries():
-            if entry.data[CONF_MAC] == mac_address:
-                # This mac address is already configured
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(user_input[CONF_MAC])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         title = user_input[CONF_HOST]
         if source == SOURCE_ZEROCONF:
@@ -101,7 +103,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_zeroconf_confirm()
 
         return self.async_create_entry(
-            title=title, data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: mac_address}
+            title=title,
+            data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
         )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:

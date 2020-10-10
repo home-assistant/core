@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Only a single instance is necessary.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "wrong_server_id": "Server id is not valid"
+        },
+        "step": {
+            "user": {
+                "description": "Are you sure you want to set up SpeedTest?",
+                "title": "Set up SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Error retriving servers list"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Disable auto update",
+                    "scan_interval": "Update frequency (minutes)",
+                    "server_name": "Select test server"
+                }
+            }
+        }
+    }
+}

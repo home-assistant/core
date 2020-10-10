@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "title": ""
+            }
+        }
+    }
+}

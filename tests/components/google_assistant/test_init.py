@@ -1,30 +1,33 @@
 """The tests for google-assistant init."""
-import asyncio
-
+from homeassistant.components import google_assistant as ga
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
-from homeassistant.components import google_assistant as ga
 
-GA_API_KEY = "Agdgjsj399sdfkosd932ksd"
+from .test_http import DUMMY_CONFIG
 
 
-@asyncio.coroutine
-def test_request_sync_service(aioclient_mock, hass):
+async def test_request_sync_service(aioclient_mock, hass):
     """Test that it posts to the request_sync url."""
+    aioclient_mock.post(
+        ga.const.HOMEGRAPH_TOKEN_URL,
+        status=200,
+        json={"access_token": "1234", "expires_in": 3600},
+    )
+
     aioclient_mock.post(ga.const.REQUEST_SYNC_BASE_URL, status=200)
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         "google_assistant",
-        {"google_assistant": {"project_id": "test_project", "api_key": GA_API_KEY}},
+        {"google_assistant": DUMMY_CONFIG},
     )
 
     assert aioclient_mock.call_count == 0
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         ga.const.DOMAIN,
         ga.const.SERVICE_REQUEST_SYNC,
         blocking=True,
         context=Context(user_id="123"),
     )
 
-    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.call_count == 2  # token + request

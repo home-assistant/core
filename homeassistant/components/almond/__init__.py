@@ -5,32 +5,35 @@ import logging
 import time
 from typing import Optional
 
+from aiohttp import ClientError, ClientSession
 import async_timeout
-from aiohttp import ClientSession, ClientError
-from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
+from pyalmond import AbstractAlmondWebAuth, AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, CoreState
-from homeassistant.const import CONF_TYPE, CONF_HOST, EVENT_HOMEASSISTANT_START
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import conversation
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+)
+from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
-    config_validation as cv,
+    aiohttp_client,
     config_entry_oauth2_flow,
+    config_validation as cv,
     event,
     intent,
-    aiohttp_client,
-    storage,
     network,
+    storage,
 )
-from homeassistant import config_entries
-from homeassistant.components import conversation
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
-
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
@@ -105,8 +108,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         auth = AlmondLocalAuth(entry.data["host"], websession)
     else:
         # OAuth2
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
         oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, entry, implementation
@@ -147,16 +152,15 @@ async def _configure_almond_for_ha(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, api: WebAlmondAPI
 ):
     """Configure Almond to connect to HA."""
-
-    if entry.data["type"] == TYPE_OAUTH2:
-        # If we're connecting over OAuth2, we will only set up connection
-        # with Home Assistant if we're remotely accessible.
-        hass_url = network.async_get_external_url(hass)
-    else:
-        hass_url = hass.config.api.base_url
-
-    # If hass_url is None, we're not going to configure Almond to connect to HA.
-    if hass_url is None:
+    try:
+        if entry.data["type"] == TYPE_OAUTH2:
+            # If we're connecting over OAuth2, we will only set up connection
+            # with Home Assistant if we're remotely accessible.
+            hass_url = network.get_url(hass, allow_internal=False, prefer_cloud=True)
+        else:
+            hass_url = network.get_url(hass)
+    except network.NoURLAvailableError:
+        # If no URL is available, we're not going to configure Almond to connect to HA.
         return
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
@@ -204,7 +208,7 @@ async def _configure_almond_for_ha(
             msg = err
         _LOGGER.warning("Unable to configure Almond: %s", msg)
         await hass.auth.async_remove_refresh_token(refresh_token)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     # Clear all other refresh tokens
     for token in list(user.refresh_tokens.values()):
@@ -277,7 +281,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: Optional[str] = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
@@ -286,15 +290,13 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         buffer = ""
         for message in response["messages"]:
             if message["type"] == "text":
-                buffer += "\n" + message["text"]
+                buffer += f"\n{message['text']}"
             elif message["type"] == "picture":
-                buffer += "\n Picture: " + message["url"]
+                buffer += f"\n Picture: {message['url']}"
             elif message["type"] == "rdl":
                 buffer += (
-                    "\n Link: "
-                    + message["rdl"]["displayTitle"]
-                    + " "
-                    + message["rdl"]["webCallback"]
+                    f"\n Link: {message['rdl']['displayTitle']} "
+                    f"{message['rdl']['webCallback']}"
                 )
             elif message["type"] == "choice":
                 if first_choice:

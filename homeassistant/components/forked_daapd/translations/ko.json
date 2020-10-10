@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "not_forked_daapd": "\uae30\uae30\uac00 forked-daapd \uc11c\ubc84\uac00 \uc544\ub2d9\ub2c8\ub2e4."
+        },
+        "error": {
+            "unknown_error": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958",
+            "websocket_not_enabled": "forked-daapd \uc11c\ubc84 \uc6f9\uc18c\ucf13\uc774 \ube44\ud65c\uc131\ud654 \ub418\uc5b4\uc788\uc2b5\ub2c8\ub2e4.",
+            "wrong_host_or_port": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8\uc640 \ud3ec\ud2b8\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+            "wrong_password": "\ube44\ubc00\ubc88\ud638\uac00 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+            "wrong_server_type": "forked-daapd \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 forked-daapd \uc11c\ubc84 \ubc84\uc804 27.0 \uc774\uc0c1\uc774 \ud544\uc694\ud569\ub2c8\ub2e4."
+        },
+        "flow_title": "forked-daapd \uc11c\ubc84: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uce5c\uc219\ud55c \uc774\ub984",
+                    "password": "API \ube44\ubc00\ubc88\ud638 (\ube44\ubc00\ubc88\ud638\uac00 \uc5c6\uc73c\uba74 \ube44\uc6cc\ub450\uc138\uc694)",
+                    "port": "API \ud3ec\ud2b8"
+                },
+                "title": "forked-daapd \uae30\uae30 \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "librespot-java \ud30c\uc774\ud504 \ucee8\ud2b8\ub864\uc6a9 \ud3ec\ud2b8 (\uc0ac\uc6a9\ud558\ub294 \uacbd\uc6b0)",
+                    "max_playlists": "\uc18c\uc2a4\ub85c \uc0ac\uc6a9\ub41c \ucd5c\ub300 \uc7ac\uc0dd \ubaa9\ub85d \uc218",
+                    "tts_pause_time": "TTS \uc804\ud6c4\uc5d0 \uc77c\uc2dc\uc911\uc9c0\ud560 \uc2dc\uac04(\ucd08)",
+                    "tts_volume": "TTS \ubcfc\ub968 (0~1 \uc758 \uc2e4\uc218\uac12)"
+                },
+                "description": "forked-daapd \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0 \ub300\ud55c \ub2e4\uc591\ud55c \uc635\uc158\uc744 \uc124\uc815\ud574\uc8fc\uc138\uc694.",
+                "title": "forked-daapd \uc635\uc158 \uc124\uc815\ud558\uae30"
+            }
+        }
+    }
+}

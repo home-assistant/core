@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from aioesphomeapi import CoverInfo, CoverState
+from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCover(EsphomeEntity, CoverDevice):
+class EsphomeCover(EsphomeEntity, CoverEntity):
     """A cover implementation for ESPHome."""
 
     @property
@@ -82,15 +82,11 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_OPENING
 
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
     @esphome_state_property

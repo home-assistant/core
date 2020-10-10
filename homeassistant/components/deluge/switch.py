@@ -1,21 +1,22 @@
 """Support for setting the Deluge BitTorrent client in Pause."""
 import logging
 
+from deluge_client import DelugeRPCClient, FailedToReconnectException
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,20 +36,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deluge switch."""
-    from deluge_client import DelugeRPCClient
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    port = config[CONF_PORT]
 
     deluge_api = DelugeRPCClient(host, port, username, password)
     try:
         deluge_api.connect()
-    except ConnectionRefusedError:
+    except ConnectionRefusedError as err:
         _LOGGER.error("Connection to Deluge Daemon failed")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
 
     add_entities([DelugeSwitch(deluge_api, name)])
 
@@ -95,7 +95,6 @@ class DelugeSwitch(ToggleEntity):
 
     def update(self):
         """Get the latest data from deluge and updates the state."""
-        from deluge_client import FailedToReconnectException
 
         try:
             torrent_list = self.deluge_client.call(

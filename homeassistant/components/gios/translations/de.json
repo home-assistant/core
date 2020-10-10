@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "GIO\u015a integration f\u00fcr diese Messstation ist bereits konfiguriert. "
+        },
+        "error": {
+            "cannot_connect": "Es kann keine Verbindung zum GIO\u015a-Server hergestellt werden.",
+            "invalid_sensors_data": "Ung\u00fcltige Sensordaten f\u00fcr diese Messstation.",
+            "wrong_station_id": "ID der Messstation ist nicht korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name der Integration",
+                    "station_id": "ID der Messstation"
+                },
+                "description": "Einrichtung von GIO\u015a (Polnische Hauptinspektion f\u00fcr Umweltschutz) Integration der Luftqualit\u00e4t. Wenn du Hilfe bei der Konfiguration ben\u00f6tigst, schaue hier: https://www.home-assistant.io/integrations/gios",
+                "title": "GIO\u015a (Polnische Hauptinspektion f\u00fcr Umweltschutz)"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Coordonatele deja \u00eenregistrate",
+            "invalid_api_key": "Cheie API invalid\u0103"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cheie API OpenUV",
+                    "elevation": "Altitudine",
+                    "latitude": "Latitudine",
+                    "longitude": "Longitudine"
+                },
+                "title": "Completa\u021bi informa\u021biile dvs."
+            }
+        }
+    }
+}

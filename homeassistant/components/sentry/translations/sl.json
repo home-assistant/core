@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Sentry je \u017ee nastavljen"
+        },
+        "error": {
+            "bad_dsn": "Neveljaven DSN",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "description": "Vpi\u0161ite va\u0161 Sentry DSN",
+                "title": "Sentry"
+            }
+        }
+    }
+}

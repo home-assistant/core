@@ -3,7 +3,13 @@ Provide a mock alarm_control_panel platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -11,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+
 from tests.common import MockEntity
 
 ENTITIES = {}
@@ -25,12 +32,12 @@ def init(empty=False):
         if empty
         else {
             "arm_code": MockAlarm(
-                name=f"Alarm arm code",
+                name="Alarm arm code",
                 code_arm_required=True,
                 unique_id="unique_arm_code",
             ),
             "no_arm_code": MockAlarm(
-                name=f"Alarm no arm code",
+                name="Alarm no arm code",
                 code_arm_required=False,
                 unique_id="unique_no_arm_code",
             ),
@@ -45,7 +52,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockAlarm(MockEntity, AlarmControlPanel):
+class MockAlarm(MockEntity, AlarmControlPanelEntity):
     """Mock Alarm control panel class."""
 
     def __init__(self, **values):
@@ -63,6 +70,16 @@ class MockAlarm(MockEntity, AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return (
+            SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_TRIGGER
+        )
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""

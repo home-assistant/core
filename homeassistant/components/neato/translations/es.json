@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_credentials": "Credenciales no v\u00e1lidas"
+        },
+        "create_entry": {
+            "default": "Ver [documentaci\u00f3n Neato]({docs_url})."
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "unexpected_error": "Error inesperado",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario",
+                    "vendor": "Vendedor"
+                },
+                "description": "Ver [documentaci\u00f3n Neato]({docs_url}).",
+                "title": "Informaci\u00f3n de la cuenta de Neato"
+            }
+        }
+    }
+}

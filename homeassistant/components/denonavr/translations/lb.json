@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun fir d\u00ebsen Denon AVR ass schonn am gaang.",
+            "connection_error": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "not_denonavr_manufacturer": "Kee Denon AVR Netzwierk Empf\u00e4nger, entdeckte Hiersteller passt net",
+            "not_denonavr_missing": "Kee Denon AVR Netzwierk Empf\u00e4nger, Discovery Informatioun net vollst\u00e4nneg"
+        },
+        "error": {
+            "discovery_error": "Feeler beim entdecken vun engem Denon AVR Netzwierk Empf\u00e4nger"
+        },
+        "flow_title": "Denon AVR Netzwierk Empf\u00e4nger: {name}",
+        "step": {
+            "confirm": {
+                "description": "Best\u00e4teg dob\u00e4isetzen vum Receiver",
+                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+            },
+            "select": {
+                "data": {
+                    "select_host": "IP vum Receiver"
+                },
+                "description": "Start den Setup nach eemol falls nach zous\u00e4tzlech Receiver solle verbonne ginn",
+                "title": "Wielt de Receiver aus dee soll verbonne ginn"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adress"
+                },
+                "description": "Mam Receiver verbannen, falls keng IP Adress uginn ass g\u00ebtt auto-discovery benotzt",
+                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "All Quelle uweisen",
+                    "zone2": "Zone 2 ariichten",
+                    "zone3": "Zone 3 ariichten"
+                },
+                "description": "Optionell Astellungen uginn",
+                "title": "Denon AVR Netzwierk Empf\u00e4nger"
+            }
+        }
+    }
+}

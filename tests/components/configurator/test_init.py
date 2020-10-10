@@ -3,7 +3,7 @@
 import unittest
 
 import homeassistant.components.configurator as configurator
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED
 
 from tests.common import get_test_home_assistant
 
@@ -15,11 +15,7 @@ class TestConfigurator(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_request_least_info(self):
         """Test request config with least amount of data."""

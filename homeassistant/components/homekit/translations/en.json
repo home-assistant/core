@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "A bridge with the same name or port is already configured."
+        },
+        "step": {
+            "pairing": {
+                "description": "As soon as the {name} bridge is ready, pairing will be available in \u201cNotifications\u201d as \u201cHomeKit Bridge Setup\u201d.",
+                "title": "Pair HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
+                    "include_domains": "Domains to include"
+                },
+                "description": "A HomeKit Bridge will allow you to access your Home Assistant entities in HomeKit. HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",
+                "title": "Activate HomeKit Bridge"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
+                    "safe_mode": "Safe Mode (enable only if pairing fails)"
+                },
+                "description": "These settings only need to be adjusted if the HomeKit bridge is not functional.",
+                "title": "Advanced Configuration"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Cameras that support native H.264 streams"
+                },
+                "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
+                "title": "Select camera video codec."
+            },
+            "exclude": {
+                "data": {
+                    "exclude_entities": "Entities to exclude"
+                },
+                "description": "Choose the entities that you do NOT want to be bridged.",
+                "title": "Exclude entities in selected domains from bridge"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domains to include"
+                },
+                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
+                "title": "Select domains to bridge."
+            },
+            "yaml": {
+                "description": "This entry is controlled via YAML",
+                "title": "Adjust HomeKit Bridge Options"
+            }
+        }
+    },
+    "title": "HomeKit Bridge"
+}

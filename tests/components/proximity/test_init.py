@@ -3,8 +3,8 @@ import unittest
 
 from homeassistant.components import proximity
 from homeassistant.components.proximity import DOMAIN
-
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 
@@ -14,6 +14,7 @@ class TestProximity(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.add("zone")
         self.hass.states.set(
             "zone.home",
             "zoning",
@@ -24,10 +25,7 @@ class TestProximity(unittest.TestCase):
             "zoning",
             {"name": "work", "latitude": 2.3, "longitude": 1.3, "radius": 10},
         )
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.addCleanup(self.hass.stop)
 
     def test_proximities(self):
         """Test a list of proximities."""
@@ -47,14 +45,14 @@ class TestProximity(unittest.TestCase):
         proximities = ["home", "work"]
 
         for prox in proximities:
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "not set"
             assert state.attributes.get("nearest") == "not set"
             assert state.attributes.get("dir_of_travel") == "not set"
 
-            self.hass.states.set("proximity." + prox, "0")
+            self.hass.states.set(f"proximity.{prox}", "0")
             self.hass.block_till_done()
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "0"
 
     def test_proximities_setup(self):
@@ -211,7 +209,7 @@ class TestProximity(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get("proximity.home")
         assert state.attributes.get("nearest") == "test1"
-        assert state.attributes.get("dir_of_travel") == "towards"
+        assert state.attributes.get("dir_of_travel") == "away_from"
 
     def test_device_tracker_test1_awaycloser(self):
         """Test for tracker state away closer."""
@@ -245,7 +243,7 @@ class TestProximity(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get("proximity.home")
         assert state.attributes.get("nearest") == "test1"
-        assert state.attributes.get("dir_of_travel") == "away_from"
+        assert state.attributes.get("dir_of_travel") == "towards"
 
     def test_all_device_trackers_in_ignored_zone(self):
         """Test for tracker in ignored zone."""

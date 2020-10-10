@@ -2,10 +2,9 @@
 import logging
 
 import sharp_aquos_rc
-
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -80,11 +79,11 @@ SOURCES = {
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
 
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    power_on_enabled = config.get("power_on_enabled")
+    name = config[CONF_NAME]
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    power_on_enabled = config["power_on_enabled"]
 
     if discovery_info:
         _LOGGER.debug("%s", discovery_info)
@@ -97,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
         return True
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
@@ -122,15 +121,15 @@ def _retry(func):
     return wrapper
 
 
-class SharpAquosTVDevice(MediaPlayerDevice):
+class SharpAquosTVDevice(MediaPlayerEntity):
     """Representation of a Aquos TV."""
 
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
-        global SUPPORT_SHARPTV
+        self._supported_features = SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
         if self._power_on_enabled:
-            SUPPORT_SHARPTV = SUPPORT_SHARPTV | SUPPORT_TURN_ON
+            self._supported_features |= SUPPORT_TURN_ON
         # Save a reference to the imported class
         self._name = name
         # Assume that the TV is not muted
@@ -200,7 +199,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SHARPTV
+        return self._supported_features
 
     @_retry
     def turn_off(self):

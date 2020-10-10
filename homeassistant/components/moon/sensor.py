@@ -56,8 +56,13 @@ class MoonSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the device."""
+        """Return the name of the entity."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of the entity."""
+        return "moon__phase"
 
     @property
     def state(self):
@@ -81,7 +86,7 @@ class MoonSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return MOON_ICONS.get(self.state, "mdi:brightness-3")
+        return MOON_ICONS.get(self.state)
 
     async def async_update(self):
         """Get the time and updates the states."""

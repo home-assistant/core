@@ -1,8 +1,9 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import Any, Union, Optional, Tuple, List, cast, Dict
+from typing import Any, Dict, List, Optional, Union, cast
 
+import ciso8601
 import pytz
 import pytz.exceptions as pytzexceptions
 import pytz.tzinfo as pytzinfo
@@ -30,7 +31,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE
+    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
@@ -51,7 +52,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.now(UTC)
+    return dt.datetime.utcnow().replace(tzinfo=UTC)
 
 
 def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
@@ -122,6 +123,10 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
+    try:
+        return ciso8601.parse_datetime(dt_str)
+    except (ValueError, IndexError):
+        pass
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
@@ -171,7 +176,6 @@ def parse_time(time_str: str) -> Optional[dt.time]:
         return None
 
 
-# Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date: dt.datetime) -> str:
     """
     Take a datetime and return its "age" as a string.
@@ -188,42 +192,34 @@ def get_age(date: dt.datetime) -> str:
             return f"1 {unit}"
         return f"{number:d} {unit}s"
 
-    def q_n_r(first: int, second: int) -> Tuple[int, int]:
-        """Return quotient and remaining."""
-        return first // second, first % second
+    delta = (now() - date).total_seconds()
+    rounded_delta = round(delta)
 
-    delta = now() - date
-    day = delta.days
-    second = delta.seconds
+    units = ["second", "minute", "hour", "day", "month"]
+    factors = [60, 60, 24, 30, 12]
+    selected_unit = "year"
 
-    year, day = q_n_r(day, 365)
-    if year > 0:
-        return formatn(year, "year")
+    for i, next_factor in enumerate(factors):
+        if rounded_delta < next_factor:
+            selected_unit = units[i]
+            break
+        delta /= next_factor
+        rounded_delta = round(delta)
 
-    month, day = q_n_r(day, 30)
-    if month > 0:
-        return formatn(month, "month")
-    if day > 0:
-        return formatn(day, "day")
-
-    hour, second = q_n_r(second, 3600)
-    if hour > 0:
-        return formatn(hour, "hour")
-
-    minute, second = q_n_r(second, 60)
-    if minute > 0:
-        return formatn(minute, "minute")
-
-    return formatn(second, "second")
+    return formatn(rounded_delta, selected_unit)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> List[int]:
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
         res = list(range(min_value, max_value + 1))
-    elif isinstance(parameter, str) and parameter.startswith("/"):
-        parameter = int(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif isinstance(parameter, str):
+        if parameter.startswith("/"):
+            parameter = int(parameter[1:])
+            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+        else:
+            res = [int(parameter)]
+
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
@@ -232,16 +228,18 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     for val in res:
         if val < min_value or val > max_value:
             raise ValueError(
-                "Time expression '{}': parameter {} out of range ({} to {})"
-                "".format(parameter, val, min_value, max_value)
+                f"Time expression '{parameter}': parameter {val} out of range "
+                f"({min_value} to {max_value})"
             )
 
     return res
 
 
-# pylint: disable=redefined-outer-name
 def find_next_time_expression_time(
-    now: dt.datetime, seconds: List[int], minutes: List[int], hours: List[int]
+    now: dt.datetime,  # pylint: disable=redefined-outer-name
+    seconds: List[int],
+    minutes: List[int],
+    hours: List[int],
 ) -> dt.datetime:
     """Find the next datetime from now for which the time expression matches.
 
@@ -253,7 +251,7 @@ def find_next_time_expression_time(
     including daylight saving time.
     """
     if not seconds or not minutes or not hours:
-        raise ValueError("Cannot find a next time: Time expression never " "matches!")
+        raise ValueError("Cannot find a next time: Time expression never matches!")
 
     def _lower_bound(arr: List[int], cmp: int) -> Optional[int]:
         """Return the first value in arr greater or equal to cmp.

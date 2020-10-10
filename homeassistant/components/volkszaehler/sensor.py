@@ -9,11 +9,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
-    CONF_MONITORED_CONDITIONS,
-    POWER_WATT,
     ENERGY_WATT_HOUR,
+    POWER_WATT,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

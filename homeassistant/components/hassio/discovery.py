@@ -5,9 +5,9 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
 
 from .const import (
     ATTR_ADDON,
@@ -66,7 +66,7 @@ class HassIODiscovery(HomeAssistantView):
         try:
             data = await self.hassio.get_discovery_message(uuid)
         except HassioAPIError as err:
-            _LOGGER.error("Can't read discovey data: %s", err)
+            _LOGGER.error("Can't read discovery data: %s", err)
             raise HTTPServiceUnavailable() from None
 
         await self.async_process_new(data)
