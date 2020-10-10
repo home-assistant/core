@@ -50,4 +50,4 @@ async def test_form_cannot_connect(hass, aiohttp_unused_port):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
