@@ -1,6 +1,4 @@
 """Data size util functions."""
-
-import logging
 import numbers
 
 from homeassistant.const import (
@@ -24,8 +22,6 @@ from homeassistant.const import (
     DATA_ZETTABYTES,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 VALID_UNITS_SI = [
     DATA_BYTES,

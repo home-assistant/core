@@ -1,6 +1,4 @@
 """Config flow for filesize integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -27,9 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN  # pylint: disable=unused-import
 
 UNIT_OF_MEASUREMENTS = {
     DATA_BYTES,
@@ -69,8 +65,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         cv.isfile(data[CONF_FILE_PATH])
-    except vol.Invalid:
-        raise NotAFile
+    except vol.Invalid as ex:
+        raise NotAFile from ex
 
     # Return info that you want to store in the config entry.
     return {"title": f"{data[CONF_FILE_PATH]} ({data[CONF_UNIT_OF_MEASUREMENT]})"}
