@@ -458,6 +458,7 @@ class HomeKit:
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
         if not self.bridge:
+            self.driver.config_changed()
             return
 
         aid_storage = self.hass.data[DOMAIN][self._entry_id][AID_STORAGE]
