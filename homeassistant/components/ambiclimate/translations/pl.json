@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Kliknij poni\u017cszy [link]({authorization_url}) i <b>Zezw\u00f3l</b> na dost\u0119p do konta Ambiclimate, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Zatwierd\u017a</b> poni\u017cej. \n(Upewnij si\u0119, \u017ce podany adres URL to {cb_url})",
+                "description": "Kliknij poni\u017cszy [link]({authorization_url}) i **Zezw\u00f3l** na dost\u0119p do konta Ambiclimate, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij **Zatwierd\u017a** poni\u017cej.\n(Upewnij si\u0119, \u017ce podany adres \"URL callback\" to {cb_url})",
                 "title": "Uwierzytelnienie Ambiclimate"
             }
         }

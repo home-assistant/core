@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {

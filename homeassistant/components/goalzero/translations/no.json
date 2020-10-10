@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
-            "invalid_host": "Ugyldig vert gitt",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
             "unknown": "Uventet feil"
         },
         "step": {
