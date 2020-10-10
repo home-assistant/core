@@ -131,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         with_family,
         max_interval,
         gps_accuracy_threshold,
+        entry,
     )
     await hass.async_add_executor_job(account.setup)
 
