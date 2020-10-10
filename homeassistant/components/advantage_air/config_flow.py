@@ -38,12 +38,13 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data = await advantage_air(
                     ip_address, port, ADVANTAGE_AIR_RETRY
                 ).async_get(1)
+            except ApiError:
+                errors["base"] = "connection_error"
+            else:
                 return self.async_create_entry(
                     title=data["system"]["name"],
                     data=user_input,
                 )
-            except ApiError:
-                errors["base"] = "connection_error"
 
         return self.async_show_form(
             step_id="user",
