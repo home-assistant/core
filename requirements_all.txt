@@ -1899,7 +1899,7 @@ qnapstats==0.3.0
 quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
-rachiopy==0.1.4
+rachiopy==1.0.3
 
 # homeassistant.components.radiotherm
 radiotherm==2.0.0

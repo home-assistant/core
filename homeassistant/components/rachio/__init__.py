@@ -113,8 +113,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Get the API user
     try:
         await hass.async_add_executor_job(person.setup, hass)
-    # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    # and there is not a reasonable timeout here so it can block for a long time
     except RACHIO_API_EXCEPTIONS as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
