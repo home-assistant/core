@@ -5,6 +5,7 @@ import logging
 import os
 
 from aiohttp import web
+from pyhap.const import STANDALONE_AID
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -425,7 +426,7 @@ class HomeKit:
     def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
         # pylint: disable=import-outside-toplevel
-        from .accessories import HomeBridge, HomeDriver
+        from .accessories import HomeDriver
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
@@ -450,13 +451,15 @@ class HomeKit:
         else:
             self.driver.persist()
 
-        self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
             _LOGGER.debug("Safe_mode selected for %s", self._name)
             self.driver.safe_mode = True
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
+        if not self.bridge:
+            return
+
         aid_storage = self.hass.data[DOMAIN][self._entry_id][AID_STORAGE]
         removed = []
         for entity_id in entity_ids:
@@ -616,10 +619,19 @@ class HomeKit:
             type_thermostats,
         )
 
-        for state in bridged_states:
-            self.add_bridge_accessory(state)
+        if len(bridged_states) == 1:
+            state = bridged_states[0]
+            conf = self._config.pop(state.entity_id, {})
+            acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+            self.driver.add_accessory(acc)
+        else:
+            # pylint: disable=import-outside-toplevel
+            from .accessories import HomeBridge
 
-        self.driver.add_accessory(self.bridge)
+            self.bridge = HomeBridge(self.hass, self.driver, self._name)
+            for state in bridged_states:
+                self.add_bridge_accessory(state)
+            self.driver.add_accessory(self.bridge)
 
         if not self.driver.state.paired:
             show_setup_message(
@@ -627,7 +639,7 @@ class HomeKit:
                 self._entry_id,
                 self._name,
                 self.driver.state.pincode,
-                self.bridge.xhm_uri(),
+                self.driver.accessory.xhm_uri(),
             )
 
     async def async_stop(self, *args):
@@ -637,7 +649,7 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         await self.driver.async_stop()
-        for acc in self.bridge.accessories.values():
+        for acc in self.driver.accessory.accessories.values():
             acc.async_stop()
 
     @callback
