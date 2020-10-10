@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -53,7 +54,7 @@ ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 # Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
+    "light": ["Light intensity", LIGHT_LUX, "mdi:white-balance-sunny"],
     "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent"],
     "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle"],
     "battery": ["Battery", PERCENTAGE, "mdi:battery-charging"],

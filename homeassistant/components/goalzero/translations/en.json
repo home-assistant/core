@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "This is not the Yeti you are looking for",
+            "unknown": "Unknown Error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "First, you need to download the Goal Zero app: https://www.goalzero.com/product-features/yeti-app/\n\nFollow the instructions to connect your Yeti to your Wifi network. Then get the host ip from your router. DHCP must be set up in your router settings for the device to ensure the host ip does not change. Refer to your router's user manual.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

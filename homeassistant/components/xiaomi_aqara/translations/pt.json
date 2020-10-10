@@ -4,6 +4,11 @@
             "invalid_host": "Endere\u00e7o IP Inv\u00e1lido"
         },
         "step": {
+            "select": {
+                "data": {
+                    "select_ip": ""
+                }
+            },
             "settings": {
                 "data": {
                     "name": "Nome da Gateway"

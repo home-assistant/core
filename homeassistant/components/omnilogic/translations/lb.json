@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "\u00a7",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Intervall vun den Offroen (sekonnen)"
+                }
+            }
+        }
+    },
+    "title": "Omnilogic"
+}

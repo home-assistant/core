@@ -21,6 +21,7 @@
             "user": {
                 "data": {
                     "password": "Has\u0142o",
+                    "url": "URL",
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a szczeg\u00f3\u0142y dost\u0119pu do urz\u0105dzenia. Okre\u015blenie nazwy u\u017cytkownika i has\u0142a jest opcjonalne, ale umo\u017cliwia obs\u0142ug\u0119 wi\u0119kszej liczby funkcji integracji. Z drugiej strony u\u017cycie autoryzowanego po\u0142\u0105czenia mo\u017ce powodowa\u0107 problemy z dost\u0119pem do interfejsu internetowego urz\u0105dzenia z zewn\u0105trz Home Assistanta gdy integracja jest aktywna.",

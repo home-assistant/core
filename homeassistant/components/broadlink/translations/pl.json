@@ -24,7 +24,7 @@
                 "title": "Wprowad\u017a nazw\u0119 dla urz\u0105dzenia"
             },
             "reset": {
-                "description": "Twoje urz\u0105dzenie jest zablokowane. Post\u0119puj zgodnie z instrukcjami, aby je odblokowa\u0107:\\n1. Zresetuj urz\u0105dzenie do ustawie\u0144 fabrycznych.\\n2. Dodaj urz\u0105dzenie w oficjalnej aplikacji do swojej sieci.\\n3. Stop! Nie ko\u0144cz konfiguracji w aplikacji tylko j\u0105 zamknij.\\n4. Potwierd\u017a odblokowanie (przycisk Odblokuj).",
+                "description": "Twoje urz\u0105dzenie jest zablokowane. Post\u0119puj zgodnie z instrukcjami, aby je odblokowa\u0107: \nOpcja 1 (preferowana):\n1. W aplikacji Broadlink wejd\u017a w swoje urz\u0105dzenie\n2. Kliknij \"\u2022 \u2022 \u2022\" \n3. Wy\u0142\u0105cz opcje \"Lock Device\"\n\nOpcja 2:\n1. Zresetuj urz\u0105dzenie do ustawie\u0144 fabrycznych. \n2. Dodaj urz\u0105dzenie w oficjalnej aplikacji do swojej sieci. \n3. Stop! Nie ko\u0144cz konfiguracji w aplikacji tylko j\u0105 zamknij. \n4. Potwierd\u017a odblokowanie (przycisk Odblokuj).",
                 "title": "Odblokuj urz\u0105dzeniem"
             },
             "unlock": {

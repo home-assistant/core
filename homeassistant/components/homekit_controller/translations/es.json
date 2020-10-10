@@ -7,6 +7,7 @@
             "already_paired": "Este accesorio ya est\u00e1 emparejado con otro dispositivo. Por favor, reinicia el accesorio e int\u00e9ntalo de nuevo.",
             "ignored_model": "El soporte de HomeKit para este modelo est\u00e1 bloqueado ya que est\u00e1 disponible una integraci\u00f3n nativa m\u00e1s completa.",
             "invalid_config_entry": "Este dispositivo se muestra como listo para vincular, pero ya existe una entrada que causa conflicto en Home Assistant y se debe eliminar primero.",
+            "invalid_properties": "Propiedades no v\u00e1lidas anunciadas por dispositivo.",
             "no_devices": "No se encontraron dispositivos no emparejados"
         },
         "error": {
@@ -51,6 +52,26 @@
                 "description": "Selecciona el dispositivo que quieres vincular",
                 "title": "Vincular con accesorio HomeKit"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bot\u00f3n 1",
+            "button10": "Bot\u00f3n 10",
+            "button2": "Bot\u00f3n 2",
+            "button3": "Bot\u00f3n 3",
+            "button4": "Bot\u00f3n 4",
+            "button5": "Bot\u00f3n 5",
+            "button6": "Bot\u00f3n 6",
+            "button7": "Bot\u00f3n 7",
+            "button8": "Bot\u00f3n 8",
+            "button9": "Bot\u00f3n 9",
+            "doorbell": "Timbre de la puerta"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" pulsado dos veces",
+            "long_press": "\"{subtype}\" pulsado y mantenido",
+            "single_press": "\"{subtype}\" pulsado"
         }
     },
     "title": "Accesorio HomeKit"

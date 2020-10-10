@@ -14,8 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -234,7 +236,7 @@ class Illuminance(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_ILLUMINANCE
-    _unit = "lx"
+    _unit = LIGHT_LUX
 
     @staticmethod
     def formatter(value):
@@ -266,7 +268,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _unit = "hPa"
+    _unit = PRESSURE_HPA
 
 
 @STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)

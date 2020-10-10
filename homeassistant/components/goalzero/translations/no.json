@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_host": "Dette er ikke Yetien du leter etter",
+            "unknown": "Ukjent feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn"
+                },
+                "description": "F\u00f8rst m\u00e5 du laste ned appen Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\n F\u00f8lg instruksjonene for \u00e5 koble Yeti til Wifi-nettverket. S\u00e5 f\u00e5 verts-ip fra ruteren din. DHCP m\u00e5 v\u00e6re satt opp i ruteren innstillinger for enheten for \u00e5 sikre at verts-IP ikke endres. Se brukerh\u00e5ndboken til ruteren.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

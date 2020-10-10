@@ -13,6 +13,7 @@ from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -49,6 +50,7 @@ CONTROLLER_HOST = {
     "sw_port": 1,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
+    "uptime": 1562600160,
 }
 
 CONTROLLER_DATA = {
@@ -175,6 +177,7 @@ async def test_controller_setup(hass):
     assert controller.site_role == SITES[controller.site_name]["role"]
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
+    assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
     assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == DEFAULT_TRACK_DEVICES

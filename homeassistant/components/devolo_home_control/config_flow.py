@@ -38,8 +38,8 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.data_schema = {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_MYDEVOLO): str,
-                vol.Required(CONF_HOMECONTROL): str,
+                vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
+                vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
             }
         if user_input is None:
             return self._show_form(user_input)

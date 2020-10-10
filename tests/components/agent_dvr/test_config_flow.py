@@ -3,7 +3,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.agent_dvr import config_flow
 from homeassistant.components.agent_dvr.const import SERVER_URL
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -61,13 +61,13 @@ async def test_full_user_flow_implementation(
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getStatus",
         text=load_fixture("agent_dvr/status.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getObjects",
         text=load_fixture("agent_dvr/objects.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(

@@ -2,11 +2,11 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
-from tests.components.automation import common
 
 
 @pytest.fixture
@@ -38,11 +38,15 @@ async def test_if_fires_on_event(hass, calls):
 
     hass.bus.async_fire("test_event", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
@@ -66,8 +70,12 @@ async def test_if_fires_on_event_extra_data(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()

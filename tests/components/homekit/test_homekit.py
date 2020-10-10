@@ -1018,6 +1018,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
         options={},
     )
+    assert await async_setup_component(hass, "zeroconf", {"zeroconf": {}})
     system_zc = await zeroconf.async_get_instance(hass)
 
     with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(

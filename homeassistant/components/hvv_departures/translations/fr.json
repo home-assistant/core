@@ -35,11 +35,14 @@
         "step": {
             "init": {
                 "data": {
+                    "filter": "S\u00e9lectionnez des lignes",
                     "offset": "D\u00e9calage (minutes)",
                     "real_time": "Utiliser des donn\u00e9es en temps r\u00e9el"
                 },
+                "description": "Modifier les options de ce capteur de d\u00e9part",
                 "title": "Options"
             }
         }
-    }
+    },
+    "title": "D\u00e9parts HVV"
 }

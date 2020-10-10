@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "\u6c34\u74f6\u5ea7",
+            "aries": "\u7261\u7f8a\u5ea7",
+            "cancer": "\u5de8\u87f9\u5ea7",
+            "capricorn": "\u6469\u7faf\u5ea7",
+            "gemini": "\u96d9\u5b50\u5ea7",
+            "leo": "\u7345\u5b50\u5ea7",
+            "libra": "\u5929\u79e4\u5ea7",
+            "pisces": "\u96d9\u9b5a\u5ea7",
+            "sagittarius": "\u5c04\u624b\u5ea7",
+            "scorpio": "\u5929\u880d\u5ea7",
+            "taurus": "\u91d1\u725b\u5ea7",
+            "virgo": "\u8655\u5973\u5ea7"
+        }
+    }
+}

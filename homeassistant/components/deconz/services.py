@@ -3,6 +3,10 @@ from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_entries_for_device,
+)
 
 from .config_flow import get_master_gateway
 from .const import (
@@ -35,7 +39,8 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
 )
 
 SERVICE_DEVICE_REFRESH = "device_refresh"
-SERVICE_DEVICE_REFRESH_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
+SERVICE_REMOVE_ORPHANED_ENTRIES = "remove_orphaned_entries"
+SELECT_GATEWAY_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
 
 async def async_setup_services(hass):
@@ -56,6 +61,9 @@ async def async_setup_services(hass):
         elif service == SERVICE_DEVICE_REFRESH:
             await async_refresh_devices_service(hass, service_data)
 
+        elif service == SERVICE_REMOVE_ORPHANED_ENTRIES:
+            await async_remove_orphaned_entries_service(hass, service_data)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_CONFIGURE_DEVICE,
@@ -67,7 +75,14 @@ async def async_setup_services(hass):
         DOMAIN,
         SERVICE_DEVICE_REFRESH,
         async_call_deconz_service,
-        schema=SERVICE_DEVICE_REFRESH_SCHEMA,
+        schema=SELECT_GATEWAY_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_ORPHANED_ENTRIES,
+        async_call_deconz_service,
+        schema=SELECT_GATEWAY_SCHEMA,
     )
 
 
@@ -80,6 +95,7 @@ async def async_unload_services(hass):
 
     hass.services.async_remove(DOMAIN, SERVICE_CONFIGURE_DEVICE)
     hass.services.async_remove(DOMAIN, SERVICE_DEVICE_REFRESH)
+    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ORPHANED_ENTRIES)
 
 
 async def async_configure_service(hass, data):
@@ -127,7 +143,9 @@ async def async_refresh_devices_service(hass, data):
     scenes = set(gateway.api.scenes.keys())
     sensors = set(gateway.api.sensors.keys())
 
-    await gateway.api.refresh_state(ignore_update=True)
+    gateway.ignore_state_updates = True
+    await gateway.api.refresh_state()
+    gateway.ignore_state_updates = False
 
     gateway.async_add_device_callback(
         NEW_GROUP,
@@ -164,3 +182,54 @@ async def async_refresh_devices_service(hass, data):
             if sensor_id not in sensors
         ],
     )
+
+
+async def async_remove_orphaned_entries_service(hass, data):
+    """Remove orphaned deCONZ entries from device and entity registries."""
+    gateway = get_master_gateway(hass)
+    if CONF_BRIDGE_ID in data:
+        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    entity_entries = async_entries_for_config_entry(
+        entity_registry, gateway.config_entry.entry_id
+    )
+
+    entities_to_be_removed = []
+    devices_to_be_removed = [
+        entry.id
+        for entry in device_registry.devices.values()
+        if gateway.config_entry.entry_id in entry.config_entries
+    ]
+
+    # Don't remove the Gateway device
+    if gateway.device_id in devices_to_be_removed:
+        devices_to_be_removed.remove(gateway.device_id)
+
+    # Don't remove devices belonging to available events
+    for event in gateway.events:
+        if event.device_id in devices_to_be_removed:
+            devices_to_be_removed.remove(event.device_id)
+
+    for entry in entity_entries:
+
+        # Don't remove available entities
+        if entry.unique_id in gateway.entities[entry.domain]:
+
+            # Don't remove devices with available entities
+            if entry.device_id in devices_to_be_removed:
+                devices_to_be_removed.remove(entry.device_id)
+            continue
+        # Remove entities that are not available
+        entities_to_be_removed.append(entry.entity_id)
+
+    # Remove unavailable entities
+    for entity_id in entities_to_be_removed:
+        entity_registry.async_remove(entity_id)
+
+    # Remove devices that don't belong to any entity
+    for device_id in devices_to_be_removed:
+        if len(async_entries_for_device(entity_registry, device_id)) == 0:
+            device_registry.async_remove_device(device_id)

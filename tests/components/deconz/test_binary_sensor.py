@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_VIBRATION,
 )
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -182,3 +183,34 @@ async def test_add_new_binary_sensor(hass):
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == "off"
+
+
+async def test_add_new_binary_sensor_ignored(hass):
+    """Test that adding a new binary sensor is not allowed."""
+    gateway = await setup_deconz_integration(
+        hass,
+        options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
+    )
+    assert len(hass.states.async_all()) == 0
+
+    state_added_event = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": deepcopy(SENSORS["1"]),
+    }
+    gateway.api.event_handler(state_added_event)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    assert (
+        len(
+            async_entries_for_config_entry(
+                entity_registry, gateway.config_entry.entry_id
+            )
+        )
+        == 0
+    )

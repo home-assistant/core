@@ -54,7 +54,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "\u7db2\u8def\u5ba2\u6236\u7aef\u983b\u5bec\u7528\u91cf\u611f\u61c9\u5668"
+                    "allow_bandwidth_sensors": "\u7db2\u8def\u5ba2\u6236\u7aef\u983b\u5bec\u7528\u91cf\u611f\u61c9\u5668",
+                    "allow_uptime_sensors": "\u7db2\u8def\u5ba2\u6236\u7aef\u4e0a\u7dda\u6642\u9593\u611f\u6e2c\u5668"
                 },
                 "description": "\u8a2d\u5b9a\u7d71\u8a08\u6578\u64da\u611f\u61c9\u5668",
                 "title": "UniFi \u9078\u9805 3/3"

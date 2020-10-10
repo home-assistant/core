@@ -5,6 +5,7 @@
             "already_in_progress": "Ja hi ha un flux de configuraci\u00f3 en curs per a aquest dispositiu",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids",
+            "not_supported": "Dispositiu no compatible",
             "unknown": "Error inesperat"
         },
         "error": {

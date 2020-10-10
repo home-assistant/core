@@ -10,12 +10,16 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
+    SERVICE_TRIGGER,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
@@ -26,7 +30,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
-from tests.components.automation import common
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
@@ -402,45 +405,59 @@ async def test_services(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_turn_off(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
 
     assert not automation.is_on(hass, entity_id)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_toggle(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
 
     assert automation.is_on(hass, entity_id)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
 
-    await common.async_toggle(hass, entity_id)
-    await hass.async_block_till_done()
-
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
     assert not automation.is_on(hass, entity_id)
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
 
-    await common.async_toggle(hass, entity_id)
-    await hass.async_block_till_done()
-
-    await common.async_trigger(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TRIGGER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
     assert len(calls) == 3
 
-    await common.async_turn_off(hass, entity_id)
-    await hass.async_block_till_done()
-    await common.async_trigger(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TRIGGER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
     assert len(calls) == 4
 
-    await common.async_turn_on(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
     assert automation.is_on(hass, entity_id)
 
 
@@ -492,10 +509,18 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
         },
     ):
         with pytest.raises(Unauthorized):
-            await common.async_reload(hass, Context(user_id=hass_read_only_user.id))
-            await hass.async_block_till_done()
-        await common.async_reload(hass, Context(user_id=hass_admin_user.id))
-        await hass.async_block_till_done()
+            await hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                context=Context(user_id=hass_read_only_user.id),
+                blocking=True,
+            )
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            context=Context(user_id=hass_admin_user.id),
+            blocking=True,
+        )
         # De-flake ?!
         await hass.async_block_till_done()
 
@@ -547,8 +572,7 @@ async def test_reload_config_when_invalid_config(hass, calls):
         autospec=True,
         return_value={automation.DOMAIN: "not valid"},
     ):
-        await common.async_reload(hass)
-        await hass.async_block_till_done()
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     assert hass.states.get("automation.hello") is None
 
@@ -585,8 +609,7 @@ async def test_reload_config_handles_load_fails(hass, calls):
         "homeassistant.config.load_yaml_config_file",
         side_effect=HomeAssistantError("bla"),
     ):
-        await common.async_reload(hass)
-        await hass.async_block_till_done()
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
     assert hass.states.get("automation.hello") is not None
 
@@ -646,7 +669,9 @@ async def test_automation_stops(hass, calls, service):
             autospec=True,
             return_value=config,
         ):
-            await common.async_reload(hass)
+            await hass.services.async_call(
+                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+            )
 
     hass.states.async_set(test_entity, "goodbye")
     await hass.async_block_till_done()

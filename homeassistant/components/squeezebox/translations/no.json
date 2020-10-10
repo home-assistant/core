@@ -10,11 +10,13 @@
             "no_server_found": "Kan ikke automatisk oppdage serveren.",
             "unknown": "Uventet feil"
         },
+        "flow_title": "",
         "step": {
             "edit": {
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Redigere tilkoblingsinformasjon"
@@ -26,5 +28,6 @@
                 "title": "Konfigurer Logitech Media Server"
             }
         }
-    }
+    },
+    "title": ""
 }

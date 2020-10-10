@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
         },
         "error": {
             "auth_not_supported": "Actualment els dispositius Shelly amb autenticaci\u00f3 no son compatibles.",
@@ -12,7 +13,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Voleu configurar {model} a {host}?"
+                "description": "Vols configurar {model} a {host}? \n\nAbans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
             },
             "credentials": {
                 "data": {
@@ -23,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                }
+                },
+                "description": "Abans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
             }
         }
     },

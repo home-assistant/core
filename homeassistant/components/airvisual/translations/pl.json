@@ -4,7 +4,7 @@
             "already_configured": "Ten klucz API jest ju\u017c w u\u017cyciu."
         },
         "error": {
-            "general_error": "Nieoczekiwany b\u0142\u0105d.",
+            "general_error": "Nieoczekiwany b\u0142\u0105d",
             "invalid_api_key": "Nieprawid\u0142owy klucz API.",
             "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z jednostk\u0105 Node/Pro."
         },

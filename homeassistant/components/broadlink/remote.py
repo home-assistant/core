@@ -9,7 +9,7 @@ import logging
 from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
-    DeviceOfflineError,
+    NetworkTimeoutError,
     ReadError,
     StorageError,
 )
@@ -262,7 +262,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             try:
                 await self._device.async_request(self._device.api.send_data, code)
 
-            except (AuthorizationError, DeviceOfflineError, OSError) as err:
+            except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                 _LOGGER.error("Failed to send '%s': %s", command, err)
                 break
 
@@ -295,7 +295,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 if toggle:
                     code = [code, await self._async_learn_command(command)]
 
-            except (AuthorizationError, DeviceOfflineError, OSError) as err:
+            except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                 _LOGGER.error("Failed to learn '%s': %s", command, err)
                 break
 

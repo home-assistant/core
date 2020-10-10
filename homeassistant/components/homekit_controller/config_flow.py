@@ -23,9 +23,27 @@ HOMEKIT_BRIDGE_MODEL = "Home Assistant HomeKit Bridge"
 
 PAIRING_FILE = "pairing.json"
 
+MDNS_SUFFIX = "._hap._tcp.local."
+
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DISALLOWED_CODES = {
+    "00000000",
+    "11111111",
+    "22222222",
+    "33333333",
+    "44444444",
+    "55555555",
+    "66666666",
+    "77777777",
+    "88888888",
+    "99999999",
+    "12345678",
+    "87654321",
+}
 
 
 def normalize_hkid(hkid):
@@ -49,8 +67,11 @@ def ensure_pin_format(pin):
 
     If incorrect code is entered, an exception is raised.
     """
-    match = PIN_FORMAT.search(pin)
+    match = PIN_FORMAT.search(pin.strip())
     if not match:
+        raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
+    pin_without_dashes = "".join(match.groups())
+    if pin_without_dashes in DISALLOWED_CODES:
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     return "-".join(match.groups())
 
@@ -66,6 +87,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         """Initialize the homekit_controller flow."""
         self.model = None
         self.hkid = None
+        self.name = None
         self.devices = {}
         self.controller = None
         self.finish_pairing = None
@@ -83,9 +105,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             key = user_input["device"]
             self.hkid = self.devices[key].device_id
             self.model = self.devices[key].info["md"]
+            self.name = key[: -len(MDNS_SUFFIX)] if key.endswith(MDNS_SUFFIX) else key
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
+
             return await self.async_step_pair()
 
         if self.controller is None:
@@ -222,7 +246,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["hkid"] = hkid
-        self.context["title_placeholders"] = {"name": name}
 
         if paired:
             # Device is paired but not to us - ignore it
@@ -235,6 +258,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if await self._hkid_is_homekit_bridge(hkid):
             return self.async_abort(reason="ignored_model")
 
+        self.name = name
         self.model = model
         self.hkid = hkid
 
@@ -355,9 +379,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        placeholders = {"name": self.name}
+        self.context["title_placeholders"] = {"name": self.name}
+
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
+            description_placeholders=placeholders,
             data_schema=vol.Schema(
                 {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
             ),

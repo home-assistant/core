@@ -7,8 +7,8 @@
             "sleeping": "Ootel"
         },
         "query_stage": {
-            "dead": "Surnud ({query_stage})",
-            "initializing": "L\u00e4htestan ( {query_stage} )"
+            "dead": "Surnud",
+            "initializing": "L\u00e4htestan"
         }
     }
 }

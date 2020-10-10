@@ -72,7 +72,7 @@
                     "birth_retain": "Birth message retain",
                     "birth_topic": "Birth message topic",
                     "discovery": "Enable discovery",
-                    "will_enable": "Enable birth message",
+                    "will_enable": "Enable will message",
                     "will_payload": "Will message payload",
                     "will_qos": "Will message QoS",
                     "will_retain": "Will message retain",

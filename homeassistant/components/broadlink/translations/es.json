@@ -5,6 +5,7 @@
             "already_in_progress": "Ya hay un flujo de configuraci\u00f3n en curso para este dispositivo",
             "cannot_connect": "No se pudo conectar",
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
+            "not_supported": "Dispositivo no compatible",
             "unknown": "Error inesperado"
         },
         "error": {

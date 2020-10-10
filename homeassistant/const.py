@@ -1,13 +1,13 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 115
-PATCH_VERSION = "6"
+MINOR_VERSION = 116
+PATCH_VERSION = "2"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = ""
+REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -383,10 +383,15 @@ ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
 # Degree units
 DEGREE = "°"
 
+# Currency units
+CURRENCY_EURO = "€"
+CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
+
 # Temperature units
 TEMP_CELSIUS = f"{DEGREE}C"
 TEMP_FAHRENHEIT = f"{DEGREE}F"
-TEMP_KELVIN = f"{DEGREE}K"
+TEMP_KELVIN = "K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -400,6 +405,7 @@ TIME_MONTHS = "m"
 TIME_YEARS = "y"
 
 # Length units
+LENGTH_MILLIMETERS: str = "mm"
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
 LENGTH_KILOMETERS: str = "km"
@@ -425,6 +431,7 @@ PRESSURE_PSI: str = "psi"
 VOLUME_LITERS: str = "L"
 VOLUME_MILLILITERS: str = "mL"
 VOLUME_CUBIC_METERS = f"{LENGTH_METERS}³"
+VOLUME_CUBIC_FEET = f"{LENGTH_FEET}³"
 
 VOLUME_GALLONS: str = "gal"
 VOLUME_FLUID_OUNCE: str = "fl. oz."
@@ -443,6 +450,9 @@ MASS_POUNDS: str = "lb"
 
 # Conductivity units
 CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+
+# Light units
+LIGHT_LUX: str = "lx"
 
 # UV Index units
 UV_INDEX: str = "UV index"
@@ -567,6 +577,7 @@ URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
+HTTP_ACCEPTED = 202
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -576,6 +587,7 @@ HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_BAD_GATEWAY = 502
 HTTP_SERVICE_UNAVAILABLE = 503
 
 HTTP_BASIC_AUTHENTICATION = "basic"
@@ -613,3 +625,7 @@ CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"
+
+# The tracker error allow when converting
+# loop time to human readable time
+MAX_TIME_TRACKING_ERROR = 0.001

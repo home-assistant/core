@@ -5,7 +5,14 @@ import json
 import logging
 
 import plexapi.exceptions
-from plexwebsocket import PlexWebsocket
+from plexwebsocket import (
+    SIGNAL_CONNECTION_STATE,
+    SIGNAL_DATA,
+    STATE_CONNECTED,
+    STATE_DISCONNECTED,
+    STATE_STOPPED,
+    PlexWebsocket,
+)
 import requests.exceptions
 import voluptuous as vol
 
@@ -14,12 +21,15 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
 )
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY, SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_SOURCE,
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -75,7 +85,11 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(entry, options=options)
 
     plex_server = PlexServer(
-        hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
+        hass,
+        server_config,
+        entry.data[CONF_SERVER_IDENTIFIER],
+        entry.options,
+        entry.entry_id,
     )
     try:
         await hass.async_add_executor_job(plex_server.connect)
@@ -89,15 +103,28 @@ async def async_setup_entry(hass, entry):
             entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
         )
     except requests.exceptions.ConnectionError as error:
-        _LOGGER.error(
-            "Plex server (%s) could not be reached: [%s]",
-            server_config[CONF_URL],
-            error,
-        )
+        if entry.state != ENTRY_STATE_SETUP_RETRY:
+            _LOGGER.error(
+                "Plex server (%s) could not be reached: [%s]",
+                server_config[CONF_URL],
+                error,
+            )
         raise ConfigEntryNotReady from error
+    except plexapi.exceptions.Unauthorized:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                PLEX_DOMAIN,
+                context={CONF_SOURCE: SOURCE_REAUTH},
+                data={**entry.data, "config_entry_id": entry.entry_id},
+            )
+        )
+        _LOGGER.error(
+            "Token not accepted, please reauthenticate Plex server '%s'",
+            entry.data[CONF_SERVER],
+        )
+        return False
     except (
         plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
         plexapi.exceptions.NotFound,
     ) as error:
         _LOGGER.error(
@@ -124,13 +151,36 @@ async def async_setup_entry(hass, entry):
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-    def update_plex():
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    @callback
+    def plex_websocket_callback(signal, data, error):
+        """Handle callbacks from plexwebsocket library."""
+        if signal == SIGNAL_CONNECTION_STATE:
+
+            if data == STATE_CONNECTED:
+                _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
+            elif data == STATE_DISCONNECTED:
+                _LOGGER.debug(
+                    "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
+                )
+            # Stopped websockets without errors are expected during shutdown and ignored
+            elif data == STATE_STOPPED and error:
+                _LOGGER.error(
+                    "Websocket to %s failed, aborting [Error: %s]",
+                    entry.data[CONF_SERVER],
+                    error,
+                )
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+        elif signal == SIGNAL_DATA:
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     session = async_get_clientsession(hass)
     verify_ssl = server_config.get(CONF_VERIFY_SSL)
     websocket = PlexWebsocket(
-        plex_server.plex_server, update_plex, session=session, verify_ssl=verify_ssl
+        plex_server.plex_server,
+        plex_websocket_callback,
+        session=session,
+        verify_ssl=verify_ssl,
     )
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
@@ -207,7 +257,10 @@ async def async_unload_entry(hass, entry):
 async def async_options_updated(hass, entry):
     """Triggered by config entry options updates."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
-    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+    # Guard incomplete setup during reauth flows
+    if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
+        hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
 
 
 def play_on_sonos(hass, service_call):

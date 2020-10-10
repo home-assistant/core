@@ -17,6 +17,7 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -1532,7 +1533,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
+    camera_image = hass.states.get(entity.entity_id).attributes[ATTR_ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

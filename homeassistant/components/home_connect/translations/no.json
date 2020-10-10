@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "Home Connect-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "missing_configuration": "Home Connect-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk {docs_url} ] ( {docs_url} )"
         },
         "create_entry": {
             "default": "Vellykket godkjenning med Home Connect"

@@ -46,5 +46,11 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} soll ugeschalt ginn",
+            "turn_on": "{entity_name} soll ugeschalt ginn"
+        }
     }
 }

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Nombre de usuario o contrase\u00f1a incorrectos.",
+            "connection_error": "No se pudo conectar con un servidor ZoneMinder."
+        },
+        "create_entry": {
+            "default": "Servidor ZoneMinder a\u00f1adido."
+        },
+        "error": {
+            "auth_fail": "Nombre de usuario o contrase\u00f1a incorrectos.",
+            "connection_error": "No se pudo conectar con un servidor ZoneMinder."
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host y Puerto (ej 10.10.0.4:8010)",
+                    "password": "Contrase\u00f1a",
+                    "path": "Ruta ZM",
+                    "path_zms": "Ruta ZMS",
+                    "ssl": "Usar SSL para conexiones a ZoneMinder",
+                    "username": "Usuario",
+                    "verify_ssl": "Verificar certificado SSL"
+                },
+                "title": "A\u00f1adir Servidor ZoneMinder"
+            }
+        }
+    }
+}

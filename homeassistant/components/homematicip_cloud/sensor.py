@@ -30,6 +30,8 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
@@ -125,7 +127,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize access point status entity."""
-        super().__init__(hap, hap.home)
+        super().__init__(hap, hap.home, "Duty Cycle")
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -134,7 +136,7 @@ class HomematicipAccesspointStatus(HomematicipGenericEntity):
         return {
             "identifiers": {
                 # Serial numbers of Homematic IP device
-                (HMIPC_DOMAIN, self._device.id)
+                (HMIPC_DOMAIN, self._home.id)
             }
         }
 
@@ -281,7 +283,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "lx"
+        return LIGHT_LUX
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -367,7 +369,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "mm"
+        return LENGTH_MILLIMETERS
 
 
 class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity):

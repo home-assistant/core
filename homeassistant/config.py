@@ -488,7 +488,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_UNIT_SYSTEM,
             CONF_EXTERNAL_URL,
             CONF_INTERNAL_URL,
-            CONF_MEDIA_DIRS,
         ]
     ):
         hac.config_source = SOURCE_YAML

@@ -5,6 +5,7 @@ from typing import Optional, Sequence
 from pysmartthings import Attribute, Capability
 
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
@@ -41,7 +43,12 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.battery, "Battery", PERCENTAGE, DEVICE_CLASS_BATTERY)
     ],
     Capability.body_mass_index_measurement: [
-        Map(Attribute.bmi_measurement, "Body Mass Index", f"{MASS_KILOGRAMS}/m^2", None)
+        Map(
+            Attribute.bmi_measurement,
+            "Body Mass Index",
+            f"{MASS_KILOGRAMS}/{AREA_SQUARE_METERS}",
+            None,
+        )
     ],
     Capability.body_weight_measurement: [
         Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)
@@ -110,7 +117,7 @@ CAPABILITY_TO_SENSORS = {
         )
     ],
     Capability.illuminance_measurement: [
-        Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
+        Map(Attribute.illuminance, "Illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE)
     ],
     Capability.infrared_level: [
         Map(Attribute.infrared_level, "Infrared Level", PERCENTAGE, None)

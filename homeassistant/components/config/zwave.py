@@ -6,7 +6,7 @@ from aiohttp.web import Response
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.const import HTTP_ACCEPTED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_OK
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 
@@ -254,7 +254,9 @@ class ZWaveProtectionView(HomeAssistantView):
                 )
             state = node.set_protection(value_id, selection)
             if not state:
-                return self.json_message("Protection setting did not complete", 202)
+                return self.json_message(
+                    "Protection setting did not complete", HTTP_ACCEPTED
+                )
             return self.json_message("Protection setting succsessfully set", HTTP_OK)
 
         return await hass.async_add_executor_job(_set_protection)

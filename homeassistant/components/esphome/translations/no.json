@@ -23,7 +23,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert"
+                    "host": "Vert",
+                    "port": ""
                 },
                 "description": "Vennligst fyll inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node."
             }

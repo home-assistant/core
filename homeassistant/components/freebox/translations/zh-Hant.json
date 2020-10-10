@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_failed": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "connection_failed": "\u9023\u7dda\u5931\u6557",
             "register_failed": "\u8a3b\u518a\u5931\u6557\uff0c\u8acb\u7a0d\u5f8c\u518d\u8a66",
-            "unknown": "\u672a\u77e5\u932f\u8aa4\uff1a\u8acb\u7a0d\u5f8c\u518d\u8a66"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "link": {

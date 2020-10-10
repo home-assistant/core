@@ -32,6 +32,7 @@ SUPPORTED_COMPONENTS = [
     "lock",
     "sensor",
     "switch",
+    "tag",
     "vacuum",
 ]
 
@@ -154,6 +155,12 @@ async def async_start(
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
+                    elif component == "tag":
+                        # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
+                        from . import tag
+
+                        await tag.async_setup_entry(hass, config_entry)
                     else:
                         await hass.config_entries.async_forward_entry_setup(
                             config_entry, component

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "reauth_successful": "Re-Authentifikatioun erfollegr\u00e4ich"
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",

@@ -176,6 +176,8 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
             {"person": [{"id": "me", "name": "Me", "device_trackers": [device_1]}]},
         )
 
+        assert await async_setup_component(hass, "group", {})
+        await hass.async_block_till_done()
         await group.Group.async_create_group(hass, "person_me", ["person.me"])
 
         assert await async_setup_component(

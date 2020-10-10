@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "M\u00f5\u00f5t\u00fchik"
+                }
+            }
+        }
+    }
+}

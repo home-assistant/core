@@ -5,6 +5,7 @@
             "already_in_progress": "Et ass schonn ee Konfiguratioun's Oflaf fir d\u00ebsen Apparat am gaang.",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "not_supported": "Apparat net \u00ebnnerst\u00ebtzt.",
             "unknown": "Onerwaarte Feeler"
         },
         "error": {

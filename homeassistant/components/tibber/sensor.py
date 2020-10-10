@@ -157,8 +157,7 @@ class TibberSensorElPrice(TibberSensor):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
         try:
-            await self._tibber_home.update_info()
-            await self._tibber_home.update_price_info()
+            await self._tibber_home.update_info_and_price_info()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info["viewer"]["home"]

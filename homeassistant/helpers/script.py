@@ -123,29 +123,70 @@ def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
     )
 
 
+STATIC_VALIDATION_ACTION_TYPES = (
+    cv.SCRIPT_ACTION_CALL_SERVICE,
+    cv.SCRIPT_ACTION_DELAY,
+    cv.SCRIPT_ACTION_WAIT_TEMPLATE,
+    cv.SCRIPT_ACTION_FIRE_EVENT,
+    cv.SCRIPT_ACTION_ACTIVATE_SCENE,
+    cv.SCRIPT_ACTION_VARIABLES,
+)
+
+
+async def async_validate_actions_config(
+    hass: HomeAssistant, actions: List[ConfigType]
+) -> List[ConfigType]:
+    """Validate a list of actions."""
+    return await asyncio.gather(
+        *[async_validate_action_config(hass, action) for action in actions]
+    )
+
+
 async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
     action_type = cv.determine_script_action(config)
 
-    if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+    if action_type in STATIC_VALIDATION_ACTION_TYPES:
+        pass
+
+    elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "action"
         )
         config = platform.ACTION_SCHEMA(config)  # type: ignore
-    elif (
-        action_type == cv.SCRIPT_ACTION_CHECK_CONDITION
-        and config[CONF_CONDITION] == "device"
-    ):
-        platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "condition"
-        )
-        config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
+    elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
+        if config[CONF_CONDITION] == "device":
+            platform = await device_automation.async_get_device_automation_platform(
+                hass, config[CONF_DOMAIN], "condition"
+            )
+            config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
             hass, config[CONF_WAIT_FOR_TRIGGER]
         )
+
+    elif action_type == cv.SCRIPT_ACTION_REPEAT:
+        config[CONF_SEQUENCE] = await async_validate_actions_config(
+            hass, config[CONF_REPEAT][CONF_SEQUENCE]
+        )
+
+    elif action_type == cv.SCRIPT_ACTION_CHOOSE:
+        if CONF_DEFAULT in config:
+            config[CONF_DEFAULT] = await async_validate_actions_config(
+                hass, config[CONF_DEFAULT]
+            )
+
+        for choose_conf in config[CONF_CHOOSE]:
+            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
+                hass, choose_conf[CONF_SEQUENCE]
+            )
+
+    else:
+        raise ValueError(f"No validation for {action_type}")
 
     return config
 
@@ -850,7 +891,7 @@ class Script:
 
                 entity_ids = data.get(ATTR_ENTITY_ID)
 
-                if entity_ids is None:
+                if entity_ids is None or isinstance(entity_ids, template.Template):
                     continue
 
                 if isinstance(entity_ids, str):

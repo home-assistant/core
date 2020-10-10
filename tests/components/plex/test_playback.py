@@ -10,32 +10,11 @@ from homeassistant.components.plex.const import DOMAIN, SERVERS, SERVICE_PLAY_ON
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .mock_classes import MockPlexAccount, MockPlexServer
-
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
-async def test_sonos_playback(hass):
+async def test_sonos_playback(hass, mock_plex_server):
     """Test playing media on a Sonos speaker."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()
-    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
 

@@ -1,6 +1,7 @@
 """Voluptuous schemas for the KNX integration."""
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.io import DEFAULT_MCAST_PORT
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -29,9 +30,9 @@ class ConnectionSchema:
 
     TUNNELING_SCHEMA = vol.Schema(
         {
+            vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
-            vol.Optional(CONF_PORT): cv.port,
         }
     )
 
@@ -84,27 +85,14 @@ class BinarySensorSchema:
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-    CONF_AUTOMATION = "automation"
-    CONF_HOOK = "hook"
-    CONF_DEFAULT_HOOK = "on"
-    CONF_COUNTER = "counter"
-    CONF_DEFAULT_COUNTER = 1
-    CONF_ACTION = "action"
+    CONF_CONTEXT_TIMEOUT = "context_timeout"
     CONF_RESET_AFTER = "reset_after"
 
     DEFAULT_NAME = "KNX Binary Sensor"
-    AUTOMATION_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
-            vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-        }
-    )
-
-    AUTOMATIONS_SCHEMA = vol.All(cv.ensure_list, [AUTOMATION_SCHEMA])
 
     SCHEMA = vol.All(
         cv.deprecated("significant_bit"),
+        cv.deprecated("automation"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -113,11 +101,13 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
+                vol.Optional(CONF_CONTEXT_TIMEOUT, default=1.0): vol.All(
+                    vol.Coerce(float), vol.Range(min=0, max=10)
+                ),
                 vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_int,
-                vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
             }
         ),
     )
@@ -350,6 +340,7 @@ class WeatherSchema:
     CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS = "address_brightness_south"
     CONF_KNX_BRIGHTNESS_EAST_ADDRESS = "address_brightness_east"
     CONF_KNX_BRIGHTNESS_WEST_ADDRESS = "address_brightness_west"
+    CONF_KNX_BRIGHTNESS_NORTH_ADDRESS = "address_brightness_north"
     CONF_KNX_WIND_SPEED_ADDRESS = "address_wind_speed"
     CONF_KNX_RAIN_ALARM_ADDRESS = "address_rain_alarm"
     CONF_KNX_FROST_ALARM_ADDRESS = "address_frost_alarm"
@@ -374,6 +365,7 @@ class WeatherSchema:
             vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): cv.string,

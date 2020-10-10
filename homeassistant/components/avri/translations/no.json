@@ -15,8 +15,10 @@
                     "house_number_extension": "Utvidelse av husnummer",
                     "zip_code": "Postnummer"
                 },
-                "description": "Skriv inn adressen din"
+                "description": "Skriv inn adressen din",
+                "title": ""
             }
         }
-    }
+    },
+    "title": ""
 }

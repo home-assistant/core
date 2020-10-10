@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Passwuert"
+                }
+            }
+        }
+    }
+}
