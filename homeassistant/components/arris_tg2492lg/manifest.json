@@ -3,7 +3,7 @@
   "name": "Arris TG2492LG",
   "documentation": "https://www.home-assistant.io/integrations/arris_tg2492lg",
   "requirements": [
-    "arris-tg2492lg==1.0.0"
+    "arris-tg2492lg==1.1.0"
   ],
   "codeowners": [
     "@vanbalken"
