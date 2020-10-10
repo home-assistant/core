@@ -51,7 +51,7 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         IntegrationNotFound,
         InvalidDeviceAutomationConfig,
     ) as ex:
-        async_log_exception(ex, DOMAIN, config or full_config, hass)
+        async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
     return config
