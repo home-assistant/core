@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan endast konfigurera ett Nest-konto.",
+            "single_instance_allowed": "Du kan endast konfigurera ett Nest-konto.",
             "authorize_url_fail": "Ok\u00e4nt fel vid generering av autentisieringsadress.",
             "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress.",
-            "no_flows": "Du m\u00e5ste konfigurera Nest innan du kan autentisera med det. [V\u00e4nligen l\u00e4s instruktionerna] (https://www.home-assistant.io/components/nest/)."
+            "missing_configuration": "Du m\u00e5ste konfigurera Nest innan du kan autentisera med det. [V\u00e4nligen l\u00e4s instruktionerna] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Internt fel vid validering av kod",

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan berre konfiguere \u00e9in Nest-brukar.",
+            "single_instance_allowed": "Du kan berre konfiguere \u00e9in Nest-brukar.",
             "authorize_url_fail": "Ukjent feil ved generering av autentiserings-URL",
             "authorize_url_timeout": "Tida gjekk ut for generert autentikasjons-URL",
-            "no_flows": "Du m\u00e5 konfiguere Nest f\u00f8r du kan autentisere den. (Les instruksjonane) (https://www.home-assistant.io/components/nest/)"
+            "missing_configuration": "Du m\u00e5 konfiguere Nest f\u00f8r du kan autentisere den. (Les instruksjonane) (https://www.home-assistant.io/components/nest/)"
         },
         "error": {
             "internal_error": "Intern feil ved validering av kode",

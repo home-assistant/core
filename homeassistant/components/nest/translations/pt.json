@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "S\u00f3 pode configurar uma \u00fanica conta Nest.",
+            "single_instance_allowed": "S\u00f3 pode configurar uma \u00fanica conta Nest.",
             "authorize_url_fail": "Erro desconhecido ao gerar um URL de autoriza\u00e7\u00e3o.",
             "authorize_url_timeout": "Limite temporal ultrapassado ao gerar um URL de autoriza\u00e7\u00e3o.",
-            "no_flows": "\u00c9 necess\u00e1rio configurar o Nest antes de poder autenticar com ele. [Por favor, leia as instru\u00e7\u00f5es] (https://www.home-assistant.io/components/nest/)."
+            "missing_configuration": "\u00c9 necess\u00e1rio configurar o Nest antes de poder autenticar com ele. [Por favor, leia as instru\u00e7\u00f5es] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
             "internal_error": "Erro interno ao validar o c\u00f3digo",
