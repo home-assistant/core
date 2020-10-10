@@ -807,7 +807,7 @@ class VacuumCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.OTHER]
+        return [DisplayCategory.VACUUM_CLEANER]
 
     def interfaces(self):
         """Yield the supported interfaces."""
