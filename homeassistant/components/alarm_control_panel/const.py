@@ -12,3 +12,5 @@ CONDITION_ARMED_HOME = "is_armed_home"
 CONDITION_ARMED_AWAY = "is_armed_away"
 CONDITION_ARMED_NIGHT = "is_armed_night"
 CONDITION_ARMED_CUSTOM_BYPASS = "is_armed_custom_bypass"
+
+ATTR_DELAY = "delay"

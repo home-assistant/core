@@ -227,21 +227,24 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Return the state of the device."""
         if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
+                _LOGGER.debug("State is: STATE_ALARM_PENDING")
                 return STATE_ALARM_PENDING
-            trigger_time = self._trigger_time_by_state[self._previous_state]
-            if (
-                self._state_ts + self._pending_time(self._state) + trigger_time
-            ) < dt_util.utcnow():
+            if not self._within_trigger_time(self._state):
+                self._delay_override_by_trigger = None
                 if self._disarm_after_trigger:
+                    _LOGGER.debug("State is: STATE_ALARM_DISARMED")
                     return STATE_ALARM_DISARMED
                 self._state = self._previous_state
+                _LOGGER.debug("State is: %s", self._state)
                 return self._state
 
         if self._state in SUPPORTED_ARMING_STATES and self._within_arming_time(
             self._state
         ):
+            _LOGGER.debug("State is: STATE_ALARM_ARMING")
             return STATE_ALARM_ARMING
 
+        _LOGGER.debug("State is: %s", self._state)
         return self._state
 
     @property
@@ -266,7 +269,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Get the arming time."""
         return self._arming_time_by_state[state]
 
-    def _pending_time(self, state):
+    def _delay_time(self, state):
         """Get the pending time."""
         return self._delay_time_by_state[self._previous_state]
 
@@ -274,9 +277,26 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Get if the action is in the arming time window."""
         return self._state_ts + self._arming_time(state) > dt_util.utcnow()
 
+    def _get_pending_time_ends(self, state):
+        """Get the pending time window for this state and override if needed."""
+        delay = self._delay_time(state)
+        if self._delay_override_by_trigger is not None:
+            delay = datetime.timedelta(seconds=self._delay_override_by_trigger)
+        return self._state_ts + delay
+
     def _within_pending_time(self, state):
-        """Get if the action is in the pending time window."""
-        return self._state_ts + self._pending_time(state) > dt_util.utcnow()
+        """Check if the action is in the pending time window."""
+        return self._get_pending_time_ends(state) > dt_util.utcnow()
+
+    def _get_trigger_time_ends(self, state):
+        """Get the trigger time window for this state."""
+        trigger_time_length = self._trigger_time_by_state[self._previous_state]
+        pending_time_ends = self._get_pending_time_ends(state)
+        return pending_time_ends + trigger_time_length
+
+    def _within_trigger_time(self, state):
+        """Check if the action is in the trigger time window."""
+        return self._get_trigger_time_ends(state) > dt_util.utcnow()
 
     @property
     def code_format(self):
@@ -337,14 +357,13 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-    def alarm_trigger(self, code=None, delay=None):
-        """
-        Send alarm trigger command.
-
-        No code needed, a trigger time of zero for the current state
-        disables the alarm.
-        """
-        if not self._trigger_time_by_state[self._active_state]:
+    def alarm_trigger(self, delay=None):
+        """Send alarm trigger command."""
+        if self._active_state not in SUPPORTED_PRETRIGGER_STATES:
+            _LOGGER.debug(
+                "Transition to triggered state not supported from current state (%s)",
+                self._active_state,
+            )
             return
         self._delay_override_by_trigger = delay
 
@@ -355,26 +374,23 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if self._state == state:
             return
 
+        _LOGGER.debug("Changing state from %s to %s", self._state, state)
         self._previous_state = self._state
         self._state = state
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
         if state == STATE_ALARM_TRIGGERED:
-            pending_time = None
-            if (self._delay_override_by_trigger is None):
-                pending_time = self._pending_time(state)
-            else:
-                pending_time = self._delay_override_by_trigger
-            track_point_in_time(
-                self._hass, self.async_scheduled_update, self._state_ts + pending_time
-            )
-
-            trigger_time = self._trigger_time_by_state[self._previous_state]
             track_point_in_time(
                 self._hass,
                 self.async_scheduled_update,
-                self._state_ts + pending_time + trigger_time,
+                self._get_pending_time_ends(state),
+            )
+
+            track_point_in_time(
+                self._hass,
+                self.async_scheduled_update,
+                self._get_trigger_time_ends(self._previous_state),
             )
         elif state in SUPPORTED_ARMING_STATES:
             arming_time = self._arming_time(state)

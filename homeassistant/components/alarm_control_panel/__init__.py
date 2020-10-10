@@ -25,6 +25,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .const import (
+    ATTR_DELAY,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
@@ -43,7 +44,12 @@ ATTR_CODE_ARM_REQUIRED = "code_arm_required"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ALARM_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
+ALARM_SERVICE_SCHEMA = make_entity_service_schema(
+    {
+        vol.Optional(ATTR_CODE): cv.string,
+        vol.Optional(ATTR_DELAY): cv.positive_int,
+    }
+)
 
 
 async def async_setup(hass, config):
@@ -151,13 +157,13 @@ class AlarmControlPanelEntity(Entity):
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, delay=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
 
-    async def async_alarm_trigger(self, code=None, delay=None):
+    async def async_alarm_trigger(self, delay=None):
         """Send alarm trigger command."""
-        await self.hass.async_add_executor_job(self.alarm_trigger, code, delay)
+        await self.hass.async_add_executor_job(self.alarm_trigger, delay)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
