@@ -7,17 +7,17 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry, load_fixture
 
-getSystemData = load_fixture("advantage_air/getSystemData.json")
-setAircon = load_fixture("advantage_air/setAircon.json")
+TEST_SYSTEM_DATA = load_fixture("advantage_air/getSystemData.json")
+TEST_SET_RESPONSE = load_fixture("advantage_air/setAircon.json")
 
 
 async def api_response(request):
     """Advantage Air API response."""
     if request.method == "GET":
         if request.path == "/getSystemData":
-            return web.Response(body=getSystemData)
+            return web.Response(body=TEST_SYSTEM_DATA)
         if request.path == "/setAircon":
-            return web.Response(body=setAircon)
+            return web.Response(body=TEST_SET_RESPONSE)
     raise web.HTTPException
 
 
