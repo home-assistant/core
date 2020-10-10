@@ -20,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-_THROTTLED_REFRESH = None
 
 DEFAULT_NAME = "Deluge"
 DEFAULT_PORT = 58846

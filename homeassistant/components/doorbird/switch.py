@@ -1,14 +1,11 @@
 """Support for powering relays in a DoorBird video doorbell."""
 import datetime
-import logging
 
 from homeassistant.components.switch import SwitchEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
 from .entity import DoorBirdEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 IR_RELAY = "__ir_light__"
 

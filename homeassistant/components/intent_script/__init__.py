@@ -1,6 +1,5 @@
 """Handle intents with scripts."""
 import copy
-import logging
 
 import voluptuous as vol
 
@@ -43,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):

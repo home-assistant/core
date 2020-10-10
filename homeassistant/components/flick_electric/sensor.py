@@ -14,8 +14,6 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_AUTH_URL = "https://api.flick.energy/identity/oauth/token"
-_RESOURCE = "https://api.flick.energy/customer/mobile_provider/price"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

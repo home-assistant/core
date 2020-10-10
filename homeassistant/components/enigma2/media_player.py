@@ -1,6 +1,4 @@
 """Support for Enigma2 media players."""
-import logging
-
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
@@ -31,8 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"

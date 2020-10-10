@@ -1,6 +1,5 @@
 """Platform for retrieving meteorological data from Environment Canada."""
 import datetime
-import logging
 import re
 
 from env_canada import ECData  # pylint: disable=import-error
@@ -18,8 +17,6 @@ from homeassistant.components.weather import (
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
