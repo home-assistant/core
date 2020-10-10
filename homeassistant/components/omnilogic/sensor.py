@@ -119,7 +119,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         state = sensor_data
 
         if self._unit_type == "Metric":
-            hayward_state = round((hayward_state - 32) * 5 / 9, 1)
+            hayward_state = round((int(hayward_state) - 32) * 5 / 9, 1)
             hayward_unit_of_measure = TEMP_CELSIUS
 
         if int(sensor_data) == -1:
