@@ -31,6 +31,7 @@ WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
 WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = "shopping_list/items/update"
 WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = "shopping_list/items/clear"
+WS_TYPE_SHOPPING_LIST_REORDER_ITEMS = "shopping_list/items/reorder"
 
 SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_ITEMS}
@@ -51,6 +52,13 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS}
+)
+
+SCHEMA_WEBSOCKET_REORDER_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        vol.Required("type"): WS_TYPE_SHOPPING_LIST_REORDER_ITEMS,
+        vol.Required("item_ids"): [str],
+    }
 )
 
 
@@ -128,6 +136,12 @@ async def async_setup_entry(hass, config_entry):
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
     )
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SHOPPING_LIST_REORDER_ITEMS,
+        websocket_handle_reorder,
+        SCHEMA_WEBSOCKET_REORDER_ITEMS,
+    )
+
     return True
 
 
@@ -164,6 +178,31 @@ class ShoppingData:
     def async_clear_completed(self):
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
+        self.hass.async_add_job(self.save)
+
+    @callback
+    def async_reorder(self, item_ids):
+        """Reorder items."""
+        # The array for sorted items.
+        new_items = []
+        all_items_mapping = dict((item["id"], item) for item in self.items)
+        # Append items by the order of passed in array.
+        for item_id in item_ids:
+            if not item_id in all_items_mapping:
+                raise KeyError
+            new_items.append(all_items_mapping[item_id])
+            # Remove the item from mapping after it's appended in the result array.
+            del all_items_mapping[item_id]
+        # Append the rest of the items
+        for key in all_items_mapping:
+            # All the unchecked items must be passed in the item_ids array,
+            # so all items left in the mapping should be checked items.
+            if all_items_mapping[key]["complete"] is False:
+                raise vol.Invalid(
+                    "The item ids array doesn't contain all the unchecked shopping list items."
+                )
+            new_items.append(all_items_mapping[key])
+        self.items = new_items
         self.hass.async_add_job(self.save)
 
     async def async_load(self):
@@ -281,3 +320,23 @@ def websocket_handle_clear(hass, connection, msg):
     hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@callback
+def websocket_handle_reorder(hass, connection, msg):
+    """Handle reordering shopping_list items."""
+    msg_id = msg.pop("id")
+    try:
+        hass.data[DOMAIN].async_reorder(msg.pop("item_ids"))
+        hass.bus.async_fire(EVENT, {"action": "reorder"})
+        connection.send_message(websocket_api.result_message(msg_id))
+    except KeyError:
+        connection.send_message(
+            websocket_api.error_message(
+                msg_id, "item_not_found", "One or more item id(s) not found."
+            )
+        )
+    except vol.Invalid as err:
+        connection.send_message(
+            websocket_api.error_message(msg_id, "bad_request", f"{err}")
+        )
