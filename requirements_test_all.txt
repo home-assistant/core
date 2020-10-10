@@ -404,7 +404,7 @@ hyperion-py==0.3.0
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.1.3
+icmplib==1.2.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.8.0
