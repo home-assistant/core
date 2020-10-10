@@ -189,7 +189,7 @@ class DHTClient:
                 self.data[SENSOR_TEMPERATURE] = temperature
             if humidity:
                 self.data[SENSOR_HUMIDITY] = humidity
-        except RuntimeError as error:
+        except RuntimeError:
             _LOGGER.debug("Unexpected value from DHT sensor: %s", self.name)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error updating DHT sensor: %s", self.name)
