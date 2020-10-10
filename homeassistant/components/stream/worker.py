@@ -248,12 +248,6 @@ def _stream_worker_internal(hass, stream, quit_event):
                     finalize_stream()
                     break
                 last_packet_had_large_negative_dts_gap = True
-            if packet.dts < last_dts[packet.stream]:
-                _LOGGER.warning(
-                    "Dropping out of order packet: %s < %s",
-                    packet.dts,
-                    last_dts[packet.stream],
-                )
             continue
         last_packet_had_large_negative_dts_gap = False
 
