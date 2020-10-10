@@ -74,7 +74,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
-    return True
 
 
 class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
