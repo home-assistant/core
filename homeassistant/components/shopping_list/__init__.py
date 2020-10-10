@@ -185,10 +185,10 @@ class ShoppingData:
         """Reorder items."""
         # The array for sorted items.
         new_items = []
-        all_items_mapping = dict((item["id"], item) for item in self.items)
+        all_items_mapping = {item["id"]: item for item in self.items}
         # Append items by the order of passed in array.
         for item_id in item_ids:
-            if not item_id in all_items_mapping:
+            if item_id not in all_items_mapping:
                 raise KeyError
             new_items.append(all_items_mapping[item_id])
             # Remove the item from mapping after it's appended in the result array.
