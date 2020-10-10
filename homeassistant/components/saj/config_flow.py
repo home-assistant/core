@@ -46,16 +46,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception as error:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", error)
                 errors["base"] = "unknown"
+        else:
+            user_input = {}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_TYPE): vol.In(INVERTER_TYPES),
-                    vol.Optional(CONF_NAME, default=""): str,
-                    vol.Optional(CONF_USERNAME, "credentials"): str,
-                    vol.Optional(CONF_PASSWORD, "credentials"): str,
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
+                    vol.Required(CONF_TYPE, default=user_input.get(CONF_TYPE)): vol.In(
+                        INVERTER_TYPES
+                    ),
+                    vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
+                    vol.Optional(
+                        CONF_USERNAME,
+                        "credentials",
+                        default=user_input.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        "credentials",
+                        default=user_input.get(CONF_PASSWORD, ""),
+                    ): str,
                 }
             ),
             errors=errors,
