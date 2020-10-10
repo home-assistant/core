@@ -41,18 +41,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
-    gateway_id = gateway_ids[0]
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
-        hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
-            partial(
-                HomeControl,
-                gateway_id=gateway_id,
-                zeroconf_instance=zeroconf_instance,
-                url=conf[CONF_HOMECONTROL],
+        hass.data[DOMAIN][entry.entry_id] = []
+        for gateway_id in gateway_ids:
+            hass.data[DOMAIN][entry.entry_id].append(
+                await hass.async_add_executor_job(
+                    partial(
+                        HomeControl,
+                        gateway_id=gateway_id,
+                        zeroconf_instance=zeroconf_instance,
+                        url=conf[CONF_HOMECONTROL],
+                    )
+                )
             )
-        )
     except ConnectionError as err:
         raise ConfigEntryNotReady from err
 
@@ -62,9 +65,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
 
     def shutdown(event):
-        hass.data[DOMAIN][entry.entry_id].websocket_disconnect(
-            f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
-        )
+        for gateway in hass.data[DOMAIN][entry.entry_id]:
+            gateway.websocket_disconnect(
+                f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
+            )
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
@@ -83,8 +87,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         )
     )
 
-    await hass.async_add_executor_job(
-        hass.data[DOMAIN][entry.entry_id].websocket_disconnect
-    )
+    for gateway in hass.data[DOMAIN][entry.entry_id]:
+        await hass.async_add_executor_job(gateway.websocket_disconnect)
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload
