@@ -38,8 +38,3 @@ class SubaruEntity(CoordinatorEntity):
             "name": self.car_name,
             "manufacturer": DOMAIN,
         }
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success

@@ -49,44 +49,39 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         error = None
 
-        if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): str,
-                        vol.Required(CONF_PASSWORD): str,
-                        vol.Required(CONF_PIN): str,
-                    }
-                ),
-            )
+        if user_input:
+            if user_input[CONF_USERNAME] in configured_instances(self.hass):
+                return self.async_abort(reason="already_configured")
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return self.async_abort(reason="already_configured")
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except InvalidCredentials:
-            error = {"base": "invalid_auth"}
-        except InvalidPIN:
-            error = {"base": "invalid_pin"}
-        except SubaruException as ex:
-            _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
-            return self.async_abort(reason="cannot_connect")
-        else:
-            return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
+            try:
+                info = await validate_input(self.hass, user_input)
+            except InvalidCredentials:
+                error = {"base": "invalid_auth"}
+            except InvalidPIN:
+                error = {"base": "invalid_pin"}
+            except SubaruException as ex:
+                _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
+                return self.async_abort(reason="cannot_connect")
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=info
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                        CONF_USERNAME,
+                        default=user_input.get(CONF_USERNAME) if user_input else "",
                     ): str,
                     vol.Required(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)
+                        CONF_PASSWORD,
+                        default=user_input.get(CONF_PASSWORD) if user_input else "",
                     ): str,
-                    vol.Required(CONF_PIN, default=user_input.get(CONF_PIN)): str,
+                    vol.Required(
+                        CONF_PIN, default=user_input.get(CONF_PIN) if user_input else ""
+                    ): str,
                 }
             ),
             errors=error,

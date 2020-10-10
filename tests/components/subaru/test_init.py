@@ -40,9 +40,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_with_no_config(hass):
-    """Test DOMAIN does not exist if there is no config."""
+    """Test DOMAIN is empty if there is no config."""
     assert await async_setup_component(hass, DOMAIN, {}) is True
-    assert DOMAIN not in hass.data
+    assert DOMAIN in hass.data
+    assert hass.data[DOMAIN] == {}
 
 
 async def test_setup_EV(hass):
@@ -86,7 +87,8 @@ async def test_unsuccessful_connect(hass):
     )
     await hass.async_block_till_done()
 
-    assert DOMAIN not in hass.data
+    assert DOMAIN in hass.data
+    assert hass.data[DOMAIN] == {}
 
 
 async def test_update_listener(hass):
@@ -128,7 +130,8 @@ async def test_unload_entry(hass):
     assert hass.data[DOMAIN][entry.entry_id]
 
     assert await subaru.async_unload_entry(hass, entry)
-    assert DOMAIN not in hass.data
+    assert DOMAIN in hass.data
+    assert hass.data[DOMAIN] == {}
 
 
 TEST_CONFIG = {

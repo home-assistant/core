@@ -46,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, base_config):
     """Do nothing since this integration does not support configuration.yml setup."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -71,9 +72,6 @@ async def async_setup_entry(hass, entry):
             raise ConfigEntryNotReady("Failed to connect")
     except SubaruException as err:
         raise ConfigEntryNotReady(err) from err
-
-    if DOMAIN not in hass.data:
-        hass.data.setdefault(DOMAIN, {})
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
@@ -126,8 +124,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][ENTRY_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
-    if len(hass.data[DOMAIN]) == 0:
-        hass.data.pop(DOMAIN)
 
     return unload_ok
 
