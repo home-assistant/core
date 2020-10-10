@@ -55,18 +55,9 @@ async def async_setup_entry(hass, config_entry):
     if not coordinator.data:
         raise ConfigEntryNotReady
 
-    device = {
-        "identifiers": {(DOMAIN, coordinator.data["system"]["rid"])},
-        "name": coordinator.data["system"]["name"],
-        "manufacturer": "Advantage Air",
-        "model": coordinator.data["system"]["sysType"],
-        "sw_version": coordinator.data["system"]["myAppRev"],
-    }
-
     hass.data[DOMAIN][config_entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": async_change,
-        "device": device,
     }
 
     for platform in ADVANTAGE_AIR_PLATFORMS:

@@ -27,7 +27,6 @@ async def test_async_setup_entry(hass, aiohttp_raw_server, aiohttp_unused_port):
         hass.data[DOMAIN][entry.entry_id]["coordinator"], DataUpdateCoordinator
     )
     assert callable(hass.data[DOMAIN][entry.entry_id]["async_change"])
-    assert isinstance(hass.data[DOMAIN][entry.entry_id]["device"], dict)
 
 
 async def test_async_setup_entry_failure(hass, aiohttp_unused_port):

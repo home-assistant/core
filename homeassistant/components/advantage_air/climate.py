@@ -84,7 +84,6 @@ class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
         """Initialize the base Advantage Air climate entity."""
         super().__init__(instance["coordinator"])
         self.async_change = instance["async_change"]
-        self.device = instance["device"]
 
     @property
     def temperature_unit(self):
@@ -109,7 +108,13 @@ class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
     @property
     def device_info(self):
         """Return parent device information."""
-        return self.device
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "name": self.coordinator.data["system"]["name"],
+            "manufacturer": "Advantage Air",
+            "model": self.coordinator.data["system"]["sysType"],
+            "sw_version": self.coordinator.data["system"]["myAppRev"],
+        }
 
 
 class AdvantageAirAC(AdvantageAirClimateEntity):
