@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "faulty_credentials": "Tuvastamine nurjus",
             "service_unavailable": "\u00dchendamine nurjus"
         },
         "step": {

@@ -6,6 +6,9 @@
             "reauth_successful": "Taastuvastus oli edukas",
             "unknown": "Tundmatu viga"
         },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus"
+        },
         "step": {
             "reauth": {
                 "data": {
