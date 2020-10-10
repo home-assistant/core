@@ -275,9 +275,12 @@ class RenderInfo:
         if self.all_states:
             return
 
-        self.filter = self._filter_domains_and_entities
+        if self.entities or self.domains:
+            self.filter = self._filter_domains_and_entities
+        else:
+            self.filter = _false
+
         if self.has_time and self.time_pattern is None:
-            # Accessing time and no entities
             self.time_pattern = DEFAULT_TIME_PATTERN
 
 
