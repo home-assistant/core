@@ -218,6 +218,7 @@ FLOWS = [
     "tile",
     "toon",
     "totalconnect",
+    "tp_link_eap",
     "tplink",
     "traccar",
     "tradfri",

@@ -1103,6 +1103,7 @@ pencompy==0.0.3
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
+# homeassistant.components.tp_link_eap
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
