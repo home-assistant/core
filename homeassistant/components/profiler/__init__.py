@@ -7,10 +7,8 @@ import time
 
 import objgraph
 from pyprof2calltree import convert
-from sqlalchemy.orm.session import Session
 import voluptuous as vol
 
-from homeassistant.components.recorder.models import Events, States
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -51,32 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def _log_objects(*_):
-        _LOGGER.debug("Most common types: %s", objgraph.most_common_types(limit=25))
-        _LOGGER.debug("Growth: %s", objgraph.growth(limit=25))
-        _LOGGER.debug(
-            "Most States: %s",
-            objgraph.most_common_types(filter=lambda x: isinstance(x, States)),
-        )
-        _LOGGER.debug(
-            "Growth States: %s",
-            objgraph.growth(filter=lambda x: isinstance(x, States)),
-        )
-        _LOGGER.debug(
-            "Most Events: %s",
-            objgraph.most_common_types(filter=lambda x: isinstance(x, Events)),
-        )
-        _LOGGER.debug(
-            "Growth Events: %s",
-            objgraph.growth(filter=lambda x: isinstance(x, Events)),
-        )
-        _LOGGER.debug(
-            "Most Session: %s",
-            objgraph.most_common_types(filter=lambda x: isinstance(x, Session)),
-        )
-        _LOGGER.debug(
-            "Growth Session: %s",
-            objgraph.growth(filter=lambda x: isinstance(x, Session)),
-        )
+        _LOGGER.debug("Most common types: %s", objgraph.most_common_types(limit=50))
+        _LOGGER.debug("Growth: %s", objgraph.growth(limit=50))
 
     async_track_time_interval(hass, _log_objects, timedelta(seconds=30))
 
