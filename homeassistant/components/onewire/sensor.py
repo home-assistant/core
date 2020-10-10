@@ -131,7 +131,15 @@ def hb_info_from_type(dev_type="std"):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Old way of setting up 1-Wire platform."""
-    devs = get_entities(config)
+    adjusted_config = config
+    if adjusted_config.get(CONF_HOST):
+        adjusted_config[CONF_TYPE] = CONF_TYPE_OWSERVER
+    elif adjusted_config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
+        adjusted_config[CONF_TYPE] = CONF_TYPE_SYSBUS
+    else:
+        adjusted_config[CONF_TYPE] = CONF_TYPE_OWFS
+
+    devs = get_entities(adjusted_config)
     add_entities(devs, True)
 
 
@@ -143,32 +151,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 def get_entities(config):
     """Get a list of entities."""
-    # CONF_TYPE is available from config_flow, but not from platform config schema
-    conf_type = config.get(CONF_TYPE)
-    # CONF_MOUNT_DIR has default on old platform config schema, but is optional from config_flow
-    base_dir = config.get(CONF_MOUNT_DIR, DEFAULT_SYSBUS_MOUNT_DIR)
-    # CONF_HOST is optional on old platform config schema and config_flow
-    owhost = config.get(CONF_HOST)
-    # CONF_PORT has default on old platform config schema, but is required from config_flow
-    owport = config.get(CONF_PORT, DEFAULT_OWSERVER_PORT)
-
-    # Ensure type is configured
-    if conf_type is None:
-        if owhost:
-            conf_type = CONF_TYPE_OWSERVER
-        elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
-            conf_type = CONF_TYPE_SYSBUS
-        else:
-            conf_type = CONF_TYPE_OWFS
-
     entities = []
     device_names = {}
     if CONF_NAMES in config:
         if isinstance(config[CONF_NAMES], dict):
             device_names = config[CONF_NAMES]
 
+    conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
+        owhost = config.get[CONF_HOST]
+        owport = config.get[CONF_PORT]
+
         _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -214,8 +208,9 @@ def get_entities(config):
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
-        _LOGGER.debug("Initializing using SysBus")
-        for p1sensor in Pi1Wire().find_all_sensors():
+        base_dir = config[CONF_MOUNT_DIR]
+        _LOGGER.debug("Initializing using SysBus %s", base_dir)
+        for p1sensor in Pi1Wire(base_dir).find_all_sensors():
             family = p1sensor.mac_address[:2]
             sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:
@@ -244,6 +239,7 @@ def get_entities(config):
 
     # We have an owfs mounted
     else:
+        base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:

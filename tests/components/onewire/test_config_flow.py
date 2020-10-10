@@ -2,6 +2,7 @@
 from pyownet import protocol
 
 from homeassistant.components.onewire.const import (
+    CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DOMAIN,
@@ -70,17 +71,26 @@ async def test_config_flow_sysbus(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "mount_dir"
+    assert result["errors"] == {}
+
     # Invalid path
     with patch(
         "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=False
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
+            user_input={CONF_MOUNT_DIR: "/sys/bus/invalid_directory"},
         )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "mount_dir"
     assert result["errors"] == {"base": "invalid_path"}
 
     # Valid path
@@ -89,11 +99,12 @@ async def test_config_flow_sysbus(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_TYPE: CONF_TYPE_SYSBUS},
+            user_input={CONF_MOUNT_DIR: "/sys/bus/directory"},
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == CONF_TYPE_SYSBUS
     assert result["data"] == {
         CONF_TYPE: CONF_TYPE_SYSBUS,
+        CONF_MOUNT_DIR: "/sys/bus/directory",
     }

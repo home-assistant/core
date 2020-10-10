@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 from .const import (  # pylint: disable=unused-import
+    CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_HOST,
@@ -41,7 +42,9 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_TYPE_OWSERVER == user_input[CONF_TYPE]:
                 return await self.async_step_owserver()
             if CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
+                return await self.async_step_mount_dir()
                 if os.path.isdir(DEFAULT_SYSBUS_MOUNT_DIR):
+                    self.onewire_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
                     await self.async_set_unique_id(CONF_TYPE_SYSBUS)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
@@ -81,6 +84,29 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=DEFAULT_OWSERVER_HOST): str,
                     vol.Required(CONF_PORT, default=DEFAULT_OWSERVER_PORT): int,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_mount_dir(self, user_input=None):
+        """Handle OWFS / SysBus configuration."""
+        errors = {}
+        if user_input:
+            self.onewire_config.update(user_input)
+            mount_dir = user_input.get(CONF_MOUNT_DIR)
+            if os.path.isdir(mount_dir):
+                title = mount_dir
+                if self.onewire_config[CONF_TYPE] == CONF_TYPE_SYSBUS:
+                    title = CONF_TYPE_SYSBUS
+                return self.async_create_entry(title=title, data=self.onewire_config)
+            errors["base"] = "invalid_path"
+
+        return self.async_show_form(
+            step_id="mount_dir",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): str,
                 }
             ),
             errors=errors,
