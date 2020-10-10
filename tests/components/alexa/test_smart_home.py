@@ -1490,7 +1490,7 @@ async def test_automation(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "automation#test"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
     assert appliance["friendlyName"] == "Test automation"
     assert_endpoint_capabilities(
         appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
