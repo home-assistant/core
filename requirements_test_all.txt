@@ -893,7 +893,7 @@ pywilight==0.0.65
 pyzerproc==0.2.5
 
 # homeassistant.components.rachio
-rachiopy==1.0.2
+rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
 regenmaschine==2.1.0
