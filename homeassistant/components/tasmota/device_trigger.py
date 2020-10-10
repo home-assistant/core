@@ -3,7 +3,7 @@ import logging
 from typing import Callable, List, Optional
 
 import attr
-from hatasmota.binary_sensor import TasmotaTrigger
+from hatasmota.trigger import TasmotaTrigger
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
