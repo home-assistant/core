@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+        }
+    }
+}

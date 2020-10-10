@@ -16,7 +16,7 @@
                     "port": "",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
-                    "verify_ssl": "Kontroller bruker riktig sertifikat"
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Sett opp UniFi kontroller"
             }

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Service is already configured",
-            "reauth_successful": "Successfully re-authenticated",
+            "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
         },
         "error": {

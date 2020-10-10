@@ -25,6 +25,7 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 
@@ -202,6 +203,21 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     return ssdp
 
 
+async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+    """Return cached list of MQTT mappings."""
+
+    mqtt: Dict[str, List] = MQTT.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.mqtt:
+            continue
+
+        mqtt[integration.domain] = integration.mqtt
+
+    return mqtt
+
+
 class Integration:
     """An integration in Home Assistant."""
 
@@ -322,6 +338,11 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def mqtt(self) -> Optional[list]:
+        """Return Integration MQTT entries."""
+        return cast(List[dict], self.manifest.get("mqtt"))
 
     @property
     def ssdp(self) -> Optional[list]:

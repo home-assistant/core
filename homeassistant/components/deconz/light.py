@@ -209,10 +209,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        attributes["is_deconz_group"] = self._device.type == "LightGroup"
-
-        return attributes
+        return {"is_deconz_group": self._device.type == "LightGroup"}
 
 
 class DeconzLight(DeconzBaseLight):

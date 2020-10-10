@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_VIBRATION,
 )
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
@@ -74,7 +75,8 @@ async def test_binary_sensors(hass):
     """Test successful creation of binary sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 3
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
@@ -98,7 +100,7 @@ async def test_binary_sensors(hass):
 
     assert hass.states.get("binary_sensor.presence_sensor").state == "on"
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -107,7 +109,7 @@ async def test_allow_clip_sensor(hass):
     """Test that CLIP sensors can be allowed."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
+    config_entry = await setup_deconz_integration(
         hass,
         options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
@@ -122,7 +124,7 @@ async def test_allow_clip_sensor(hass):
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -132,7 +134,7 @@ async def test_allow_clip_sensor(hass):
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
@@ -142,7 +144,8 @@ async def test_allow_clip_sensor(hass):
 
 async def test_add_new_binary_sensor(hass):
     """Test that adding a new binary sensor works."""
-    gateway = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass)
+    gateway = deconz.gateway.get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 
     state_added_event = {
@@ -161,10 +164,11 @@ async def test_add_new_binary_sensor(hass):
 
 async def test_add_new_binary_sensor_ignored(hass):
     """Test that adding a new binary sensor is not allowed."""
-    gateway = await setup_deconz_integration(
+    config_entry = await setup_deconz_integration(
         hass,
         options={deconz.gateway.CONF_ALLOW_NEW_DEVICES: False},
     )
+    gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 
     state_added_event = {
@@ -181,10 +185,5 @@ async def test_add_new_binary_sensor_ignored(hass):
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     assert (
-        len(
-            async_entries_for_config_entry(
-                entity_registry, gateway.config_entry.entry_id
-            )
-        )
-        == 0
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )

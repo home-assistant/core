@@ -7,12 +7,14 @@
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
-	}
+        }
       }
     },
-    "error": { "general_error": "There was an unknown error." },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "abort": {
-      "already_configured": "These coordinates are already registered."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

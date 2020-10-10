@@ -477,11 +477,6 @@ class ADBDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
     def source(self):
         """Return the current app."""
         return self._app_id_to_name.get(self._current_app, self._current_app)

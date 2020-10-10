@@ -77,4 +77,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn device off."""
-        self._multi_level_switch_property.set(0)
+        if self._binary_switch_property is not None:
+            self._binary_switch_property.set(False)
+        else:
+            self._multi_level_switch_property.set(0)

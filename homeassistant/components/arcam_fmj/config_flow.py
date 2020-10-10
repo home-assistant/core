@@ -37,7 +37,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
         try:
             await client.start()
         except ConnectionFailed:
-            return self.async_abort(reason="unable_to_connect")
+            return self.async_abort(reason="cannot_connect")
         finally:
             await client.stop()
 

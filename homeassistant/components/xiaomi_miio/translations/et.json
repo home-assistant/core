@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {

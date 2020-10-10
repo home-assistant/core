@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, callback
 from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import (
     async_track_same_state,
@@ -73,6 +73,7 @@ async def async_attach_trigger(
     entities_triggered = set()
     period: dict = {}
     attribute = config.get(CONF_ATTRIBUTE)
+    job = HassJob(action)
 
     if value_template is not None:
         value_template.hass = hass
@@ -106,8 +107,8 @@ async def async_attach_trigger(
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": platform_type,

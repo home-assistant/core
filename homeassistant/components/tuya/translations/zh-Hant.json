@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "conn_error": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
-            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548"
+            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "flow_title": "Tuya \u8a2d\u5b9a",
         "step": {

@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
-            "missing_configuration": "Komponenta nen\u00ed nakonfigurov\u00e1na. Postupujte podle dokumentace."
+            "missing_configuration": "Komponenta nen\u00ed nakonfigurov\u00e1na. Postupujte podle dokumentace.",
+            "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",
+            "single_instance_allowed": "Ji\u017e nakonfigurov\u00e1no. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "create_entry": {
             "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"
@@ -10,6 +12,15 @@
         "step": {
             "pick_implementation": {
                 "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "show_on_map": "Zobrazit na map\u011b"
+                }
             }
         }
     }
