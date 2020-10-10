@@ -358,7 +358,12 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
     def alarm_trigger(self, code=None, delay=None):
-        """Send alarm trigger command."""
+        """
+        Send alarm trigger command.
+
+        No code needed, a trigger time of zero for the current state
+        disables the alarm.
+        """
         if self._active_state not in SUPPORTED_PRETRIGGER_STATES:
             _LOGGER.debug(
                 "Transition to triggered state not supported from current state (%s)",
