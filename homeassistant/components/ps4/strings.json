@@ -10,7 +10,7 @@
         "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
         "data": {
           "mode": "Config Mode",
-          "ip_address": "IP Address (Leave empty if using Auto Discovery)."
+          "ip_address": "[%key:common::config_flow::data::ip%] (Leave empty if using Auto Discovery)."
         }
       },
       "link": {
@@ -19,7 +19,7 @@
         "data": {
           "region": "Region",
           "name": "[%key:common::config_flow::data::name%]",
-          "code": "PIN",
+          "code": "[%key:common::config_flow::data::pin%]",
           "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       }
@@ -32,7 +32,7 @@
     },
     "abort": {
       "credential_error": "Error fetching credentials.",
-      "no_devices_found": "No PlayStation 4 devices found on the network.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "devices_configured": "All devices found are already configured.",
       "port_987_bind_error": "Could not bind to port 987. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
       "port_997_bind_error": "Could not bind to port 997. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info."
