@@ -34,6 +34,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             ip_address = user_input[CONF_IP_ADDRESS]
             port = user_input[CONF_PORT]
+
             try:
                 data = await advantage_air(
                     ip_address, port, ADVANTAGE_AIR_RETRY
@@ -41,6 +42,9 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ApiError:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(data["system"]["rid"])
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=data["system"]["name"],
                     data=user_input,
