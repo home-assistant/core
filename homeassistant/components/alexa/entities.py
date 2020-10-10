@@ -385,6 +385,9 @@ class GenericCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        if self.entity.domain == automation.DOMAIN:
+            return [DisplayCategory.ACTIVITY_TRIGGER]
+
         return [DisplayCategory.OTHER]
 
     def interfaces(self):
