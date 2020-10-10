@@ -4,14 +4,14 @@ import datetime
 import pytest
 
 from homeassistant.components.input_timetable import (
-    ATTR_END,
-    ATTR_ON_PERIODS,
-    ATTR_START,
+    ATTR_STATE,
+    ATTR_TIME,
+    ATTR_TIMETABLE,
     DOMAIN,
     SERVICE_RELOAD,
     SERVICE_RESET,
-    SERVICE_SET_OFF,
-    SERVICE_SET_ON,
+    SERVICE_SET,
+    SERVICE_UNSET,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -62,28 +62,28 @@ def storage_setup_fixture(hass, hass_storage):
     return _storage
 
 
-async def set_on(hass, entity_id, start, end):
-    """Add an on period."""
+async def call_set(hass, entity_id, time, state):
+    """Add a state change event."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_START: start, ATTR_END: end},
+        SERVICE_SET,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time, ATTR_STATE: state},
         blocking=True,
     )
 
 
-async def set_off(hass, entity_id, start, end):
-    """Add an off period."""
+async def call_unset(hass, entity_id, time):
+    """Remove a state change."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_OFF,
-        {ATTR_ENTITY_ID: entity_id, ATTR_START: start, ATTR_END: end},
+        SERVICE_UNSET,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time},
         blocking=True,
     )
 
 
-async def reset(hass, entity_id):
-    """Remove all on periods."""
+async def call_reset(hass, entity_id):
+    """Remove all state changes."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_RESET,
@@ -113,183 +113,121 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes[ATTR_EDITABLE]
 
 
-async def test_set_on(hass, caplog):
-    """Test set_on method."""
+async def test_set(hass, caplog):
+    """Test set method."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
     entity_id = "input_timetable.test"
 
     test_cases = [
         (
-            "simple",
-            [("01:02:03", "04:05:06")],
+            "single",
+            [("01:02:03", STATE_ON)],
             [
                 {
-                    ATTR_START: "01:02:03",
-                    ATTR_END: "04:05:06",
+                    ATTR_TIME: "01:02:03",
+                    ATTR_STATE: STATE_ON,
                 },
             ],
         ),
         (
             "multiple",
-            (("10:00:00", "11:00:00"), ("02:00:00", "03:00:00")),
+            [("04:05:06", STATE_ON), ("01:02:03", STATE_OFF)],
             [
                 {
-                    ATTR_START: "02:00:00",
-                    ATTR_END: "03:00:00",
+                    ATTR_TIME: "01:02:03",
+                    ATTR_STATE: STATE_OFF,
                 },
                 {
-                    ATTR_START: "10:00:00",
-                    ATTR_END: "11:00:00",
-                },
-            ],
-        ),
-        (
-            "overlapping",
-            (("01:00:00", "03:00:00"), ("02:00:00", "04:00:00")),
-            [
-                {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "04:00:00",
+                    ATTR_TIME: "04:05:06",
+                    ATTR_STATE: STATE_ON,
                 },
             ],
         ),
         (
-            "adjusted",
-            (("01:00:00", "02:00:00"), ("02:00:00", "03:00:00")),
+            "override",
+            [("01:02:03", STATE_ON), ("01:02:03", STATE_OFF)],
             [
                 {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "03:00:00",
-                },
-            ],
-        ),
-        (
-            "subset",
-            (("01:00:00", "04:00:00"), ("02:00:00", "03:00:00")),
-            [
-                {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "04:00:00",
-                },
-            ],
-        ),
-        (
-            "superset",
-            (("02:00:00", "03:00:00"), ("01:00:00", "04:00:00")),
-            [
-                {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "04:00:00",
-                },
-            ],
-        ),
-        (
-            "merge",
-            (
-                ("01:00:00", "02:00:00"),
-                ("03:00:00", "04:00:00"),
-                ("02:00:00", "03:00:00"),
-            ),
-            [
-                {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "04:00:00",
+                    ATTR_TIME: "01:02:03",
+                    ATTR_STATE: STATE_OFF,
                 },
             ],
         ),
     ]
 
     for test_case in test_cases:
-        await reset(hass, entity_id)
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-
-        for period in test_case[1]:
-            start = datetime.time.fromisoformat(period[0])
-            end = datetime.time.fromisoformat(period[1])
-            await set_on(hass, entity_id, start, end)
-
+        await call_reset(hass, entity_id)
+        for event in test_case[1]:
+            time = datetime.time.fromisoformat(event[0])
+            state = event[1]
+            await call_set(hass, entity_id, time, state)
         state = hass.states.get(entity_id)
         assert (
-            state.attributes[ATTR_ON_PERIODS] == test_case[2]
-        ), f"'{test_case[0]}' test case failed: state is '{state.attributes[ATTR_ON_PERIODS]}' but expecting '{test_case[2]}''"
+            state.attributes[ATTR_TIMETABLE] == test_case[2]
+        ), f"'{test_case[0]}' test case failed: timetable is '{state.attributes[ATTR_TIMETABLE]}' but expecting '{test_case[2]}''"
 
 
-async def test_set_off(hass, caplog):
-    """Test set_off method."""
+async def test_unset(hass, caplog):
+    """Test unset method."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
     entity_id = "input_timetable.test"
 
     test_cases = [
         (
-            "simple",
-            [("01:02:03", "04:05:06")],
-            ("02:03:04", "04:05:06"),
+            "single",
+            [("01:02:03", STATE_ON)],
+            "01:02:03",
+            [],
+        ),
+        (
+            "multiple",
+            [("04:05:06", STATE_ON), ("01:02:03", STATE_OFF)],
+            "04:05:06",
             [
                 {
-                    ATTR_START: "01:02:03",
-                    ATTR_END: "02:03:04",
+                    ATTR_TIME: "01:02:03",
+                    ATTR_STATE: STATE_OFF,
                 },
             ],
         ),
         (
-            "entire",
-            [("01:02:03", "04:05:06")],
-            ("01:02:03", "04:05:06"),
-            [],
-        ),
-        (
-            "superset",
-            [("01:00:00", "05:00:00")],
-            ("00:00:00", "10:00:00"),
-            [],
-        ),
-        (
-            "subset",
-            [("01:00:00", "05:00:00")],
-            ("02:00:00", "04:00:00"),
+            "none",
+            [("01:02:03", STATE_ON)],
+            "04:05:06",
             [
                 {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "02:00:00",
-                },
-                {
-                    ATTR_START: "04:00:00",
-                    ATTR_END: "05:00:00",
-                },
-            ],
-        ),
-        (
-            "adjusted",
-            [("01:00:00", "02:00:00")],
-            ("02:00:00", "03:00:00"),
-            [
-                {
-                    ATTR_START: "01:00:00",
-                    ATTR_END: "02:00:00",
+                    ATTR_TIME: "01:02:03",
+                    ATTR_STATE: STATE_ON,
                 },
             ],
         ),
     ]
 
     for test_case in test_cases:
-        await reset(hass, entity_id)
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_OFF
-
-        for on_period in test_case[1]:
-            start = datetime.time.fromisoformat(on_period[0])
-            end = datetime.time.fromisoformat(on_period[1])
-            await set_on(hass, entity_id, start, end)
-
-        start = datetime.time.fromisoformat(test_case[2][0])
-        end = datetime.time.fromisoformat(test_case[2][1])
-        await set_off(hass, entity_id, start, end)
-
+        await call_reset(hass, entity_id)
+        for event in test_case[1]:
+            time = datetime.time.fromisoformat(event[0])
+            state = event[1]
+            await call_set(hass, entity_id, time, state)
+        time = datetime.time.fromisoformat(test_case[2])
+        await call_unset(hass, entity_id, time)
         state = hass.states.get(entity_id)
         assert (
-            state.attributes[ATTR_ON_PERIODS] == test_case[3]
-        ), f"'{test_case[0]}' test case failed: state is '{state.attributes[ATTR_ON_PERIODS]}' but expecting '{test_case[3]}''"
+            state.attributes[ATTR_TIMETABLE] == test_case[3]
+        ), f"'{test_case[0]}' test case failed: timetable is '{state.attributes[ATTR_TIMETABLE]}' but expecting '{test_case[3]}''"
+
+
+async def test_reset(hass, caplog):
+    """Test reset method."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
+    entity_id = "input_timetable.test"
+    await call_set(hass, entity_id, "01:02:03", STATE_ON)
+    await call_set(hass, entity_id, "04:05:06", STATE_OFF)
+    await call_set(hass, entity_id, "07:08:09", STATE_ON)
+    await call_set(hass, entity_id, "10:11:12", STATE_OFF)
+    assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 4
+    await call_reset(hass, entity_id)
+    assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 0
 
 
 async def test_state(hass, caplog):
@@ -299,18 +237,34 @@ async def test_state(hass, caplog):
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    now = datetime.datetime.now()
-    in_2_minutes = now + datetime.timedelta(minutes=2)
+    now = datetime.datetime.now().replace(microsecond=0)
+    in_5_minutes = now + datetime.timedelta(minutes=5)
+    in_10_minutes = now + datetime.timedelta(minutes=10)
+    previous_10_minutes = now + datetime.timedelta(minutes=-10)
+    previous_5_minutes = now + datetime.timedelta(minutes=-5)
 
-    start = now.time()
-    end = in_2_minutes.time()
-
-    if end < start:
-        # The rare case of day overlap - skip the test
-        return
-
-    await set_on(hass, entity_id, start, end)
+    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_ON)
     assert hass.states.get(entity_id).state == STATE_ON
+    await call_reset(hass, entity_id)
+
+    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_ON)
+    assert hass.states.get(entity_id).state == STATE_ON
+    await call_reset(hass, entity_id)
+
+    await call_set(hass, entity_id, previous_10_minutes.time().isoformat(), STATE_ON)
+    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_OFF)
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await call_reset(hass, entity_id)
+
+    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_ON)
+    await call_set(hass, entity_id, in_10_minutes.time().isoformat(), STATE_OFF)
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await call_reset(hass, entity_id)
+
+    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_ON)
+    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_OFF)
+    assert hass.states.get(entity_id).state == STATE_ON
+    await call_reset(hass, entity_id)
 
 
 async def test_state_update(hass, caplog):
@@ -321,59 +275,61 @@ async def test_state_update(hass, caplog):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
         entity_id = f"{DOMAIN}.test"
 
-        # No update if there are no on periods.
-        assert async_track_point_in_time.call_count == 0
-
         now = datetime.datetime.now().replace(microsecond=0)
         in_5_minutes = now + datetime.timedelta(minutes=5)
         in_10_minutes = now + datetime.timedelta(minutes=10)
         previous_5_minutes = now + datetime.timedelta(minutes=-5)
-        next_midnight = datetime.datetime.combine(
-            now.date() + datetime.timedelta(days=1),
-            datetime.time.fromisoformat("00:00:00"),
-        )
+        previous_10_minutes = now + datetime.timedelta(minutes=-10)
 
-        if in_10_minutes.time() < previous_5_minutes.time():
-            # The rare case of day overlap - skip the test
-            return
+        # No events => no updates.
+        assert async_track_point_in_time.call_count == 0
 
-        # State is on => update is at the end of the range.
-        await set_on(hass, entity_id, now.time(), in_5_minutes.time())
+        # One event => no updates.
+        await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
+        assert async_track_point_in_time.call_count == 0
+        await call_reset(hass, entity_id)
+
+        # Between 2 events.
+        await call_set(hass, entity_id, previous_5_minutes.time(), STATE_ON)
+        await call_set(hass, entity_id, in_5_minutes.time(), STATE_OFF)
         next_update = async_track_point_in_time.call_args[0][2]
         assert next_update == in_5_minutes
+        await call_reset(hass, entity_id)
 
-        # State if off => update is at the beginning of the next range.
-        await reset(hass, entity_id)
-        await set_on(hass, entity_id, in_5_minutes.time(), in_10_minutes.time())
+        # After any event.
+        await call_set(hass, entity_id, previous_10_minutes.time(), STATE_ON)
+        await call_set(hass, entity_id, previous_5_minutes.time(), STATE_OFF)
+        next_update = async_track_point_in_time.call_args[0][2]
+        assert next_update == previous_10_minutes + datetime.timedelta(days=1)
+        await call_reset(hass, entity_id)
+
+        # Before any event.
+        await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
+        await call_set(hass, entity_id, in_10_minutes.time(), STATE_OFF)
         next_update = async_track_point_in_time.call_args[0][2]
         assert next_update == in_5_minutes
-
-        # State is off, and range is eariler in the day => update in midnight.
-        await reset(hass, entity_id)
-        await set_on(hass, entity_id, previous_5_minutes.time(), now.time())
-        next_update = async_track_point_in_time.call_args[0][2]
-        assert next_update == next_midnight
+        await call_reset(hass, entity_id)
 
 
 async def test_restore_state(hass):
     """Ensure states are restored on startup."""
-    a_on_periods = [
+    a_timetable = [
         {
-            ATTR_START: "01:02:03",
-            ATTR_END: "02:03:04",
+            ATTR_TIME: "01:02:03",
+            ATTR_STATE: STATE_ON,
         },
     ]
-    b_on_periods = [
+    b_timetable = [
         {
-            ATTR_START: "07:08:09",
-            ATTR_END: "10:11:12",
+            ATTR_TIME: "07:08:09",
+            ATTR_STATE: STATE_OFF,
         },
     ]
     mock_restore_cache(
         hass,
         (
-            State("input_timetable.a", "", {ATTR_ON_PERIODS: a_on_periods}),
-            State("input_timetable.b", "", {ATTR_ON_PERIODS: b_on_periods}),
+            State("input_timetable.a", "", {ATTR_TIMETABLE: a_timetable}),
+            State("input_timetable.b", "", {ATTR_TIMETABLE: b_timetable}),
         ),
     )
 
@@ -387,11 +343,11 @@ async def test_restore_state(hass):
 
     state = hass.states.get("input_timetable.a")
     assert state
-    assert state.attributes[ATTR_ON_PERIODS] == a_on_periods
+    assert state.attributes[ATTR_TIMETABLE] == a_timetable
 
     state = hass.states.get("input_timetable.b")
     assert state
-    assert state.attributes[ATTR_ON_PERIODS] == b_on_periods
+    assert state.attributes[ATTR_TIMETABLE] == b_timetable
 
 
 async def test_input_scheudle_context(hass, hass_admin_user):
@@ -403,11 +359,11 @@ async def test_input_scheudle_context(hass, hass_admin_user):
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_ON,
+        SERVICE_SET,
         {
             ATTR_ENTITY_ID: state.entity_id,
-            ATTR_START: datetime.time.fromisoformat("01:02:03"),
-            ATTR_END: datetime.time.fromisoformat("04:05:06"),
+            ATTR_TIME: datetime.time.fromisoformat("01:02:03"),
+            ATTR_STATE: STATE_ON,
         },
         True,
         Context(user_id=hass_admin_user.id),
@@ -415,7 +371,7 @@ async def test_input_scheudle_context(hass, hass_admin_user):
 
     state2 = hass.states.get(f"{DOMAIN}.x")
     assert state2 is not None
-    assert state.attributes[ATTR_ON_PERIODS] != state2.attributes[ATTR_ON_PERIODS]
+    assert state.attributes[ATTR_TIMETABLE] != state2.attributes[ATTR_TIMETABLE]
     assert state2.context.user_id == hass_admin_user.id
 
 

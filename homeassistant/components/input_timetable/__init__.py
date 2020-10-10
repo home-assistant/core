@@ -1,5 +1,6 @@
 """Support to set a timetable (on and off times during the day)."""
 import datetime
+import enum
 import logging
 import typing
 
@@ -8,6 +9,7 @@ import voluptuous as vol
 import homeassistant
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_STATE,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -16,7 +18,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import collection, event
+from homeassistant.helpers import collection, event as event_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -27,13 +29,21 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_timetable"
 
-ATTR_START = "start"
-ATTR_END = "end"
-ATTR_ON_PERIODS = "on_periods"
+ATTR_TIME = "time"
+ATTR_TIMETABLE = "timetable"
 
-SERVICE_SET_ON = "set_on"
-SERVICE_SET_OFF = "set_off"
+SERVICE_SET = "set"
+SERVICE_UNSET = "unset"
 SERVICE_RESET = "reset"
+
+MIDNIGHT = datetime.time.fromisoformat("00:00:00")
+
+
+class StateType(enum.Enum):
+    """Possible options for states."""
+
+    on = STATE_ON
+    off = STATE_OFF
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -53,9 +63,19 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_START): cv.time,
-        vol.Required(ATTR_END): cv.time,
+        vol.Required(ATTR_TIME): cv.time,
+        vol.Required(ATTR_STATE): cv.enum(StateType),
     },
+    extra=vol.ALLOW_EXTRA,
+)
+SERVICE_UNSET_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TIME): cv.time,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+SERVICE_RESET_SCHEMA = vol.Schema(
+    {},
     extra=vol.ALLOW_EXTRA,
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -107,6 +127,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
     collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
+    component.async_register_entity_service(
+        SERVICE_SET, SERVICE_SET_SCHEMA, "async_set"
+    )
+    component.async_register_entity_service(
+        SERVICE_UNSET, SERVICE_UNSET_SCHEMA, "async_unset"
+    )
+    component.async_register_entity_service(
+        SERVICE_RESET, SERVICE_RESET_SCHEMA, "async_reset"
+    )
+
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
@@ -118,14 +148,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 for id_, conf in conf.get(DOMAIN, {}).items()
             ]
         )
-
-    component.async_register_entity_service(
-        SERVICE_SET_ON, SERVICE_SET_SCHEMA, "async_set_on"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_OFF, SERVICE_SET_SCHEMA, "async_set_off"
-    )
-    component.async_register_entity_service(SERVICE_RESET, {}, "async_reset")
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -165,7 +187,7 @@ class InputTimeTable(RestoreEntity):
     def __init__(self, config: typing.Dict):
         """Initialize an input timetable."""
         self._config = config
-        self._on_periods = []
+        self._timetable = []
         self.editable = True
         self._event_unsub = None
 
@@ -194,19 +216,23 @@ class InputTimeTable(RestoreEntity):
 
     @property
     def state(self):
-        """Return 'on' when we are in an on period."""
+        """Return the state based on the timetable events."""
+        if not self._timetable:
+            return STATE_OFF
         now = datetime.datetime.now().time()
-        for period in self._on_periods:
-            if _is_in_period(now, period):
-                return STATE_ON
-        return STATE_OFF
+        prev = StateEvent(MIDNIGHT, self._timetable[-1].state)
+        for event in self._timetable:
+            if prev.time <= now < event.time:
+                break
+            prev = event
+        return prev.state.value
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,
-            ATTR_ON_PERIODS: self._on_periods_to_attribute(),
+            ATTR_TIMETABLE: self._timetable_to_attribute(),
         }
 
     @property
@@ -218,85 +244,55 @@ class InputTimeTable(RestoreEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
-        if state and state.attributes.get(ATTR_ON_PERIODS):
-            self._on_periods_from_attribute(state.attributes[ATTR_ON_PERIODS])
+        if state and state.attributes.get(ATTR_TIMETABLE):
+            self._timetable_from_attribute(state.attributes[ATTR_TIMETABLE])
         self._update_state()
 
-    def _on_periods_to_attribute(self):
+    def _timetable_to_attribute(self):
         return [
-            {ATTR_START: period.start.isoformat(), ATTR_END: period.end.isoformat()}
-            for period in self._on_periods
+            {ATTR_TIME: event.time.isoformat(), ATTR_STATE: event.state.value}
+            for event in self._timetable
         ]
 
-    def _on_periods_from_attribute(self, periods):
-        self._on_periods = [
-            Period(_read_time(period[ATTR_START]), _read_time(period[ATTR_END]))
-            for period in periods
+    def _timetable_from_attribute(self, value):
+        self._timetable = [
+            StateEvent(
+                datetime.time.fromisoformat(item[ATTR_TIME]).replace(
+                    microsecond=0, tzinfo=None
+                ),
+                StateType(item[ATTR_STATE]),
+            )
+            for item in value
         ]
+        self._sort_timetable()
 
-    async def async_set_on(self, start, end):
-        """Add on period."""
-        start = start.replace(microsecond=0, tzinfo=None)
-        end = end.replace(microsecond=0, tzinfo=None)
-        if end <= start:
-            raise vol.Invalid("Start time must be earlier than end time")
+    def _sort_timetable(self):
+        self._timetable.sort(key=lambda event: event.time)
 
-        # Merge overlapping and adjusting periods.
-        for period in self._on_periods:
-            if _is_in_period(start, period) or start == period.end:
-                start = period.start
-            if _is_in_period(end, period) or end == period.start:
-                end = period.end
-
-        on_periods = [Period(start, end)]
-
-        # Copy non overlapping periods.
-        for period in self._on_periods:
-            if period.end <= start or period.start >= end:
-                on_periods.append(period)
-
-        on_periods.sort(key=lambda period: period.start)
-
-        self._on_periods = on_periods
+    async def async_set(self, time, state):
+        """Add an state change event to the timetable."""
+        time = time.replace(microsecond=0, tzinfo=None)
+        for event in self._timetable:
+            if event.time == time:
+                event.state = state
+                break
+        else:
+            self._timetable.append(StateEvent(time, state))
+            self._sort_timetable()
         self._update_state()
 
-    async def async_set_off(self, start, end):
-        """Add off period (subtracting the on periods)."""
-        start = start.replace(microsecond=0, tzinfo=None)
-        end = end.replace(microsecond=0, tzinfo=None)
-        if end <= start:
-            raise vol.Invalid("Start time must be earlier than end time")
-
-        on_periods = []
-
-        # Trim and split periods.
-        for period in self._on_periods:
-            if _is_in_period(start, period):
-                self._on_periods.remove(period)
-                if start > period.start:
-                    on_periods.append(Period(period.start, start))
-                if _is_in_period(end, period):
-                    on_periods.append(Period(end, period.end))
+    async def async_unset(self, time):
+        """Remove a state change event."""
+        time = time.replace(microsecond=0, tzinfo=None)
+        for event in self._timetable:
+            if event.time == time:
+                self._timetable.remove(event)
                 break
-        for period in self._on_periods:
-            if _is_in_period(end, period):
-                self._on_periods.remove(period)
-                on_periods.append(Period(period.start, end))
-                break
-
-        # Copy non overlapping periods.
-        for period in self._on_periods:
-            if period.end <= start or period.start >= end:
-                on_periods.append(period)
-
-        on_periods.sort(key=lambda period: period.start)
-
-        self._on_periods = on_periods
         self._update_state()
 
     async def async_reset(self):
-        """Delete all on periods."""
-        self._on_periods = []
+        """Remove all state changes."""
+        self._timetable.clear()
         self._update_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
@@ -309,27 +305,28 @@ class InputTimeTable(RestoreEntity):
             self._event_unsub()
             self._event_unsub = None
 
-        if not self._on_periods:
+        if not self._timetable or len(self._timetable) == 1:
             return
 
         now = datetime.datetime.now()
         time = now.time()
-        midnight = datetime.time.fromisoformat("00:00:00")
-        prev_end = midnight
-        for period in self._on_periods:
-            if _is_in_period(time, period):
-                next_change = datetime.datetime.combine(now.date(), period.end)
+        today = now.date()
+        prev = MIDNIGHT
+        for event in self._timetable:
+            if prev <= time < event.time:
+                next_change = datetime.datetime.combine(
+                    today,
+                    event.time,
+                )
                 break
-            if prev_end <= time < period.start:
-                next_change = datetime.datetime.combine(now.date(), period.start)
-                break
-            prev_end = period.end
+            prev = event.time
         else:
             next_change = datetime.datetime.combine(
-                datetime.date.today() + datetime.timedelta(days=1), midnight
+                today + datetime.timedelta(days=1),
+                self._timetable[0].time,
             )
 
-        self._event_unsub = event.async_track_point_in_time(
+        self._event_unsub = event_helper.async_track_point_in_time(
             self.hass, self._update_state, next_change
         )
 
@@ -340,18 +337,10 @@ class InputTimeTable(RestoreEntity):
         self.async_write_ha_state()
 
 
-class Period:
-    """Simple time range."""
+class StateEvent:
+    """State event properties (time, and state value)."""
 
-    def __init__(self, start, end):
-        """Initialize the range."""
-        self.start = start
-        self.end = end
-
-
-def _read_time(value):
-    return datetime.time.fromisoformat(value).replace(microsecond=0, tzinfo=None)
-
-
-def _is_in_period(value, period):
-    return period.start <= value < period.end
+    def __init__(self, time, state):
+        """Initialize the object."""
+        self.time = time
+        self.state = state

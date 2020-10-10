@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "off": "[%key:common::state::off%]",
-            "on": "[%key:common::state::on%]"
+            "off": "off",
+            "on": "on"
         }
     },
     "title": "Input timetable"
