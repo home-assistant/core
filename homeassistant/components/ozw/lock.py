@@ -1,8 +1,9 @@
 """Representation of Z-Wave locks."""
 import logging
 
-from openzwavemqtt.const import ATTR_CODE_SLOT
+from openzwavemqtt.const import ATTR_CODE_SLOT, CommandClass, ValueIndex
 from openzwavemqtt.exceptions import BaseOZWError
+from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.util.lock import clear_usercode, set_usercode
 import voluptuous as vol
 
@@ -73,6 +74,19 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     def is_locked(self):
         """Return a boolean for the state of the lock."""
         return bool(self.values.primary.value)
+
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        node: OZWNode = self.values.primary.node
+        user_code = node.get_value(
+            CommandClass.NOTIFICATION, ValueIndex.NOTIFICATION_EVENT_PARAMETER_USER_CODE
+        )
+
+        if user_code is None:
+            return
+
+        return f"{user_code.value}"
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""

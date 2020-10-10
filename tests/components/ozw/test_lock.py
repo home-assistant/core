@@ -10,6 +10,7 @@ async def test_lock(hass, lock_data, sent_messages, lock_msg, caplog):
     state = hass.states.get("lock.danalock_v3_btze_locked")
     assert state is not None
     assert state.state == "unlocked"
+    assert state.attributes["changed_by"] == "127"
 
     # Test locking
     await hass.services.async_call(
