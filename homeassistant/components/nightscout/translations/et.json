@@ -10,7 +10,8 @@
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti"
-                }
+                },
+                "title": "Sisesta oma Nightscouti serveri teave."
             }
         }
     }

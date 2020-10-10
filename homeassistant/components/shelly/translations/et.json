@@ -4,6 +4,9 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
         },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus"
+        },
         "step": {
             "credentials": {
                 "data": {

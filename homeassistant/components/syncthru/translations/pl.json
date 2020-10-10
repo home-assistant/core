@@ -13,13 +13,13 @@
             "confirm": {
                 "data": {
                     "name": "Nazwa",
-                    "url": "Adress URL interfejsu internetowego"
+                    "url": "Adres URL interfejsu internetowego"
                 }
             },
             "user": {
                 "data": {
                     "name": "Nazwa",
-                    "url": "Adress URL interfejsu internetowego"
+                    "url": "Adres URL interfejsu internetowego"
                 }
             }
         }

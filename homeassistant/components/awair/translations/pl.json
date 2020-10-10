@@ -9,7 +9,7 @@
         "error": {
             "auth": "Token dost\u0119pu",
             "invalid_access_token": "Niepoprawny token dost\u0119pu",
-            "unknown": "Nieznany b\u0142\u0105d API Awair."
+            "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "step": {
             "reauth": {

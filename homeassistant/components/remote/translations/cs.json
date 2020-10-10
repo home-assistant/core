@@ -16,9 +16,9 @@
     },
     "state": {
         "_": {
-            "off": "Neaktivn\u00ed",
-            "on": "Aktivn\u00ed"
+            "off": "Vypnuto",
+            "on": "Zapnuto"
         }
     },
-    "title": "D\u00e1lkov\u00e9"
+    "title": "D\u00e1lkov\u00e9 ovl\u00e1d\u00e1n\u00ed"
 }

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
+            "single_instance_allowed": "Juba seadistatud, lubatud on ainult \u00fcks sidumine."
+        }
+    }
+}

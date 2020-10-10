@@ -12,8 +12,18 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "Tilkoblingstype",
                     "host": "IP adresse",
                     "password": "",
+                    "port": "Port"
+                },
+                "description": "Produkt:",
+                "title": "Plugwise type"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP adresse",
+                    "password": "Smile ID",
                     "port": "Port"
                 },
                 "description": "Vennligst skriv inn:",

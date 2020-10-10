@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_house_number": "Neplatn\u00e9 \u010d\u00edslo domu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "2p\u00edsmenn\u00fd k\u00f3d zem\u011b",
+                    "house_number": "\u010c\u00edslo domu",
+                    "house_number_extension": "Roz\u0161\u00ed\u0159en\u00ed \u010d\u00edsla domu",
+                    "zip_code": "PS\u010c"
+                },
+                "title": "Avri"
+            }
+        }
+    },
+    "title": "Avri"
+}
