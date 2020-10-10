@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import device_trigger
-from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW, clear_discovery_hash
+from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,14 +23,10 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_discover(tasmota_automation, discovery_hash):
         """Discover and add a Tasmota device automation."""
-        try:
-            if tasmota_automation.automation_type == AUTOMATION_TYPE_TRIGGER:
-                await device_trigger.async_setup_trigger(
-                    hass, tasmota_automation, config_entry, discovery_hash
-                )
-        except Exception:
-            clear_discovery_hash(hass, discovery_hash)
-            raise
+        if tasmota_automation.automation_type == AUTOMATION_TYPE_TRIGGER:
+            await device_trigger.async_setup_trigger(
+                hass, tasmota_automation, config_entry, discovery_hash
+            )
 
     async_dispatcher_connect(
         hass,
