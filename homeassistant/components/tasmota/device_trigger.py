@@ -228,8 +228,6 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
         if device_trigger:
             discovery_hash = device_trigger.discovery_hash
 
-            # TODO: Add test to provoke a crash?
-            # if device_trigger.tasmota_trigger:
             await device_trigger.tasmota_trigger.unsubscribe_topics()
             device_trigger.detach_trigger()
             clear_discovery_hash(hass, discovery_hash)
