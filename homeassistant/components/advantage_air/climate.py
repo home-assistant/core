@@ -16,17 +16,16 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_OPEN,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, STATE_CLOSE
+from .const import (
+    ADVANTAGE_AIR_STATE_CLOSE,
+    ADVANTAGE_AIR_STATE_OFF,
+    ADVANTAGE_AIR_STATE_ON,
+    ADVANTAGE_AIR_STATE_OPEN,
+    DOMAIN,
+)
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVAC_MODE_HEAT,
@@ -44,6 +43,15 @@ ADVANTAGE_AIR_FAN_MODES = {
 }
 HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
+
+AC_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_DRY,
+]
+ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +138,10 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if self.coordinator.data["aircons"][self.ac_key]["info"]["state"] == STATE_ON:
+        if (
+            self.coordinator.data["aircons"][self.ac_key]["info"]["state"]
+            == ADVANTAGE_AIR_STATE_ON
+        ):
             return ADVANTAGE_AIR_HVAC_MODES.get(
                 self.coordinator.data["aircons"][self.ac_key]["info"]["mode"]
             )
@@ -139,13 +150,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def hvac_modes(self):
         """Return the supported HVAC modes."""
-        return [
-            HVAC_MODE_OFF,
-            HVAC_MODE_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_FAN_ONLY,
-            HVAC_MODE_DRY,
-        ]
+        return AC_HVAC_MODES
 
     @property
     def fan_mode(self):
@@ -172,13 +177,15 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVAC_MODE_OFF:
-            await self.async_change({self.ac_key: {"info": {"state": STATE_OFF}}})
+            await self.async_change(
+                {self.ac_key: {"info": {"state": ADVANTAGE_AIR_STATE_OFF}}}
+            )
         else:
             await self.async_change(
                 {
                     self.ac_key: {
                         "info": {
-                            "state": STATE_ON,
+                            "state": ADVANTAGE_AIR_STATE_ON,
                             "mode": HASS_HVAC_MODES.get(hvac_mode),
                         }
                     }
@@ -239,7 +246,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
             self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
                 "state"
             ]
-            == STATE_OPEN
+            == ADVANTAGE_AIR_STATE_OPEN
         ):
             return HVAC_MODE_FAN_ONLY
         return HVAC_MODE_OFF
@@ -247,7 +254,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     @property
     def hvac_modes(self):
         """Return supported HVAC modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+        return ZONE_HVAC_MODES
 
     @property
     def device_state_attributes(self):
@@ -263,11 +270,19 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         """Set the HVAC Mode and State."""
         if hvac_mode == HVAC_MODE_OFF:
             await self.async_change(
-                {self.ac_key: {"zones": {self.zone_key: {"state": STATE_CLOSE}}}}
+                {
+                    self.ac_key: {
+                        "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_CLOSE}}
+                    }
+                }
             )
         else:
             await self.async_change(
-                {self.ac_key: {"zones": {self.zone_key: {"state": STATE_OPEN}}}}
+                {
+                    self.ac_key: {
+                        "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_OPEN}}
+                    }
+                }
             )
 
     async def async_set_temperature(self, **kwargs):
