@@ -68,8 +68,7 @@ async def async_setup_entry(hass, entry):
                 CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
             ),
         )
-        if not await controller.connect():
-            raise ConfigEntryNotReady("Failed to connect")
+        await controller.connect()
     except SubaruException as err:
         raise ConfigEntryNotReady(err) from err
 
