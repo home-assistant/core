@@ -350,7 +350,7 @@ async def test_set_target_temperature_with_state_and_optimistic_flag(hass, mqtt_
     config["climate"]["temperature_low_state_topic"] = "temperature-low-state"
     config["climate"]["temperature_high_state_topic"] = "temperature-high-state"'''
     """..but also set the optimistic flag"""
-    '''config["climate"]["optimistic"] = True'''
+    """config["climate"]["optimistic"] = True"""
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()
