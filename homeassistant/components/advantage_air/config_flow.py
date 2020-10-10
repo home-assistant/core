@@ -39,7 +39,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ip_address, port, ADVANTAGE_AIR_RETRY
                 ).async_get(1)
             except ApiError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
                     title=data["system"]["name"],
