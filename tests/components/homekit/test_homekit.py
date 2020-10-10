@@ -624,7 +624,7 @@ async def test_homekit_stop(hass):
     homekit.driver = Mock()
     homekit.driver.async_stop = AsyncMock()
     homekit.bridge = Mock()
-    homekit.driver.accessory.accessories = {}
+    homekit.bridge.accessories = {}
 
     assert homekit.status == STATUS_READY
     await homekit.async_stop()
