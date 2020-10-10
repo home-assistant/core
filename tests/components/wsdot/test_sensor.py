@@ -14,6 +14,7 @@ from homeassistant.components.wsdot.sensor import (
     SCAN_INTERVAL,
 )
 from homeassistant.setup import async_setup_component
+
 from tests.common import load_fixture
 
 config = {
