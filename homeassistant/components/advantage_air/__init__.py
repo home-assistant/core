@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             return await api.async_get()
         except ApiError as err:
-            raise UpdateFailed(err) from advantage_air
+            raise UpdateFailed(err) from err
 
     coordinator = DataUpdateCoordinator(
         hass,
