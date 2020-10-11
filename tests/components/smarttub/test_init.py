@@ -32,8 +32,8 @@ async def test_setup_with_no_config(hass, mock_controller):
 
 async def test_setup_entry_not_ready(hass, mock_controller, config_entry):
     """Test setup when the entry is not ready."""
-    mock_controller.coordinator.last_update_success = False
     assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
+    mock_controller.async_setup_entry.return_value = False
 
     with pytest.raises(ConfigEntryNotReady):
         await smarttub.async_setup_entry(hass, config_entry)

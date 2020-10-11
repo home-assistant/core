@@ -5,6 +5,7 @@ DOMAIN = "smarttub"
 EVENT_SMARTTUB = "smarttub"
 
 SMARTTUB_CONTROLLER = "smarttub_controller"
+UNSUB_UPDATE_LISTENER = "unsub_update_listener"
 
 DEFAULT_SCAN_INTERVAL = 60
 

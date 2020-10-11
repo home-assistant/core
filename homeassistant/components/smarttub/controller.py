@@ -70,17 +70,11 @@ class SmartTubController:
 
         await self.async_register_devices(entry)
 
-        self._unsub_config_entry_listener = entry.add_update_listener(
-            self.async_update_listener
-        )
-
         return True
 
     async def async_unload_entry(self, entry):
         """Tear down."""
         await self.async_unregister_devices()
-        if self._unsub_config_entry_listener is not None:
-            self._unsub_config_entry_listener()
         return True
 
     async def async_update_data(self):
@@ -117,10 +111,6 @@ class SmartTubController:
         for device in self._spa_devices.values():
             device_registry.async_remove_device(device.id)
         self._spa_devices = {}
-
-    async def async_update_listener(self, hass, entry):
-        """Handle options update."""
-        await hass.config_entries.async_reload(entry.entry_id)
 
     async def get_account_id(self, email, password):
         """Retrieve the account ID corresponding to the specified email and password.
