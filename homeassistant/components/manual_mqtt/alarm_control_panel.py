@@ -361,7 +361,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code=None, delay=None):
         """
         Send alarm trigger command.
 
