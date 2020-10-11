@@ -1,10 +1,8 @@
 """The test for the Facebook notify module."""
-import pytest
-
-import requests_mock
-
-# import homeassistant.components.facebook as facebook
 import homeassistant.components.facebook.notify as fb
+# import homeassistant.components.facebook as facebook
+import pytest
+import requests_mock
 
 
 @pytest.fixture
