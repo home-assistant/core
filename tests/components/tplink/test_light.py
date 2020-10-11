@@ -567,7 +567,7 @@ async def test_update_failure(
 
     light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
 
-    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 2):
+    with patch("homeassistant.components.tplink.light", MAX_ATTEMPTS=2, SLEEP_TIME=0):
         caplog.clear()
         caplog.set_level(logging.DEBUG)
 
