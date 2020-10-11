@@ -16,9 +16,13 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+        return await self.async_step_use_mqtt_integration()
+
+    async def async_step_use_mqtt_integration(self, user_input=None):
+        """Handle logic when using the MQTT integration."""
         if "mqtt" not in self.hass.config.components:
             return self.async_abort(reason="mqtt_required")
         if user_input is not None:
             return self.async_create_entry(title=TITLE, data={})
 
-        return self.async_show_form(step_id="user")
+        return self.async_show_form(step_id="use_mqtt_integration")

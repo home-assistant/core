@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "user": {
+      "use_mqtt_integration": {
         "title": "Confirm set up"
       }
     },
