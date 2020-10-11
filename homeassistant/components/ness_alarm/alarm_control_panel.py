@@ -88,7 +88,7 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         """Send arm home command."""
         await self._client.arm_home(code)
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code=None, delay=None):
         """Send trigger/panic command."""
         await self._client.panic(code)
 

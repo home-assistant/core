@@ -3,10 +3,9 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.alarm_control_panel import DOMAIN
+from homeassistant.components.alarm_control_panel import ATTR_DELAY, DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
-    ATTR_DELAY,
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_ALARM_ARM_AWAY,
