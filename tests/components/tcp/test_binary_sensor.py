@@ -47,7 +47,6 @@ def test_is_on_true(hass, mock_update):
     """Check the return that _state is value_on."""
     sensor = bin_tcp.TcpBinarySensor(hass, test_tcp.TEST_CONFIG["sensor"])
     sensor._state = test_tcp.TEST_CONFIG["sensor"][tcp.CONF_VALUE_ON]
-    print(sensor._state)
     assert sensor.is_on
 
 
