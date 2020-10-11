@@ -19,20 +19,16 @@ DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    import pprint
-
-    pprint.pprint(data)
-
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(session, f"http://{data['host']}", data["username"], data["password"])
     hub = KMTronicHubAPI(auth)
 
     try:
         await hub.async_get_status()
-    except aiohttp.client_exceptions.ClientResponseError:
-        raise InvalidAuth
-    except aiohttp.client_exceptions.ClientConnectorError:
-        raise CannotConnect
+    except aiohttp.client_exceptions.ClientResponseError as err:
+        raise InvalidAuth from err
+    except aiohttp.client_exceptions.ClientConnectorError as err:
+        raise CannotConnect from err
 
     return data
 

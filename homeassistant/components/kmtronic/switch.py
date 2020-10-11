@@ -1,8 +1,8 @@
 """KMtronic Switch integration."""
-
 from datetime import timedelta
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.switch import SwitchEntity
@@ -27,8 +27,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         try:
             async with async_timeout.timeout(10):
                 await hub.async_update_relays()
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+        except aiohttp.client_exceptions.ClientConnectorError as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
