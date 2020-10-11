@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "Erreur lors de la r\u00e9cup\u00e9ration de la liste des serveurs"
+        },
         "step": {
             "init": {
                 "data": {

@@ -5,6 +5,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "Fehler beim Abrufen der Serverliste"
+        },
         "step": {
             "init": {
                 "data": {

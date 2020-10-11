@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "\u63a5\u6536\u4f3a\u670d\u5668\u5217\u8868\u932f\u8aa4"
+        },
         "step": {
             "init": {
                 "data": {

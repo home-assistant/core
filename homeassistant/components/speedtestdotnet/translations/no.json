@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "Feil ved henting av serverlisten"
+        },
         "step": {
             "init": {
                 "data": {

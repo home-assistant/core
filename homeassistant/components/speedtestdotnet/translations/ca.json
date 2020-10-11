@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "S'ha produ\u00eft un error en recuperar la llista de servidors"
+        },
         "step": {
             "init": {
                 "data": {

@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "Viga serverite loendi hankimisel"
+        },
         "step": {
             "init": {
                 "data": {

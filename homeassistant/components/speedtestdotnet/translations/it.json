@@ -13,6 +13,9 @@
         }
     },
     "options": {
+        "error": {
+            "retrive_error": "Errore nel recuperare l'elenco dei server"
+        },
         "step": {
             "init": {
                 "data": {
