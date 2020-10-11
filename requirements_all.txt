@@ -1103,7 +1103,6 @@ pencompy==0.0.3
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
-# homeassistant.components.tp_link_eap
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
@@ -1857,6 +1856,9 @@ pythonegardia==1.0.40
 
 # homeassistant.components.tile
 pytile==5.2.0
+
+# homeassistant.components.tplink_eap
+pytleap==1.0.1
 
 # homeassistant.components.touchline
 pytouchline==0.7

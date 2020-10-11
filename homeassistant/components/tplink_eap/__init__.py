@@ -1,29 +1,37 @@
 """The TP-Link EAP integration."""
 import asyncio
 
-import voluptuous as vol
+from pytleap import Eap
 
+from homeassistant.components.device_tracker.const import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = [DEVICE_TRACKER_DOMAIN]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the TP-Link EAP component."""
+async def async_setup(hass: HomeAssistant, config):
+    """Set up the TP-Link EAP component.
+
+    Configuration through YAML is not supported at this time.
+    """
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up TP-Link EAP from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    hass.data.setdefault(DOMAIN, {})
+
+    url = entry.data[CONF_URL]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+
+    hass.data[DOMAIN][entry.entry_id] = Eap(url, username, password)
 
     for component in PLATFORMS:
         hass.async_create_task(

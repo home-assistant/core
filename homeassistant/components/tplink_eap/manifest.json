@@ -1,11 +1,9 @@
 {
-  "domain": "tp_link_eap",
+  "domain": "tplink_eap",
   "name": "TP-Link EAP",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/tp_link_eap",
-  "requirements": [
-    "pexpect==4.6.0"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/tplink_eap",
+  "requirements": ["pytleap==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
