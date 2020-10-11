@@ -227,24 +227,19 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Return the state of the device."""
         if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
-                _LOGGER.debug("State is: STATE_ALARM_PENDING")
                 return STATE_ALARM_PENDING
             if not self._within_trigger_time(self._state):
                 self._delay_override_by_trigger = None
                 if self._disarm_after_trigger:
-                    _LOGGER.debug("State is: STATE_ALARM_DISARMED")
                     return STATE_ALARM_DISARMED
                 self._state = self._previous_state
-                _LOGGER.debug("State is: %s", self._state)
                 return self._state
 
         if self._state in SUPPORTED_ARMING_STATES and self._within_arming_time(
             self._state
         ):
-            _LOGGER.debug("State is: STATE_ALARM_ARMING")
             return STATE_ALARM_ARMING
 
-        _LOGGER.debug("State is: %s", self._state)
         return self._state
 
     @property
