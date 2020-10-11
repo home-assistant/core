@@ -18,7 +18,7 @@
                     "mode": "Mode",
                     "entities": "Entities"
                 },
-                "description": "Choose the entities to be bridged. In include mode, all entities in the domain will be bridged unless specific entities that are selected. In exclude mode, all entities in the domain will be bridged except for the excluded entities.",
+                "description": "Choose the entities to be bridged. In include mode, all entities in the domain will be bridged unless specific entities are selected. In exclude mode, all entities in the domain will be bridged except for the excluded entities.",
                 "title": "Select entities to be bridged"
             },
             "cameras": {

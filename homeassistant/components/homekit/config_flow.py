@@ -375,11 +375,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.homekit_options = dict(self.config_entry.options)
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
 
-        include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
+        include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
-            domains = list(_domains_set_from_entities(include_entities))
-        else:
-            domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
+            domains.extend(_domains_set_from_entities(include_entities))
 
         data_schema = vol.Schema(
             {
