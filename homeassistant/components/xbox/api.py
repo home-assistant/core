@@ -1,4 +1,6 @@
 """API for xbox bound to Home Assistant OAuth."""
+from datetime import datetime, timezone
+
 from aiohttp import ClientSession
 from xbox.webapi.authentication.manager import AuthenticationManager
 from xbox.webapi.authentication.models import OAuth2TokenResponse
@@ -30,9 +32,9 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         await super().refresh_tokens()
 
     def _get_oauth_token(self) -> OAuth2TokenResponse:
-        tokens = self._oauth_session.token
+        tokens = {**self._oauth_session.token}
         issued = tokens["expires_at"] - tokens["expires_in"]
         del tokens["expires_at"]
         token_response = OAuth2TokenResponse.parse_obj(tokens)
-        token_response.issued = issued
+        token_response.issued = datetime.fromtimestamp(issued, timezone.utc)
         return token_response
