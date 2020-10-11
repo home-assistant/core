@@ -102,7 +102,7 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
             self._state = STATE_ALARM_DISARMED
             self.async_write_ha_state()
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code=None, delay=None):
         """Send alarm trigger command."""
         self._state = STATE_ALARM_TRIGGERED
         self.async_write_ha_state()

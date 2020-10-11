@@ -6,6 +6,7 @@ components. Instead call the service directly.
 from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DELAY,
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     SERVICE_ALARM_ARM_AWAY,
@@ -61,9 +62,11 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
 
 
-async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_trigger(hass, delay=None, code=None, entity_id=ENTITY_MATCH_ALL):
     """Send the alarm the command for disarm."""
     data = {}
+    if delay:
+        data[ATTR_DELAY] = delay
     if code:
         data[ATTR_CODE] = code
     if entity_id:
