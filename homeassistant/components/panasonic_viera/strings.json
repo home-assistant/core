@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Setup your TV",
-        "description": "Enter your Panasonic Viera TV's IP address",
+        "description": "Enter your Panasonic Viera TV's [%key:common::config_flow::data::ip%]",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "name": "[%key:common::config_flow::data::name%]"
@@ -20,7 +20,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_pin_code": "The PIN code you entered was invalid"
+      "invalid_pin_code": "The [%key:common::config_flow::data::pin%] you entered was invalid"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
