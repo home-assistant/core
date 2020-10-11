@@ -87,7 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
             [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
         ),
-        vol.Optional(CONF_PRESETS, default=[]): vol.All(
+        vol.Optional(CONF_PRESETS): vol.All(
             dict,
             vol.Schema(
                 {
@@ -204,6 +204,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._default_preset = default_preset
         if presets and len(presets) > 0:
             self._presets = presets
+            self._presets[PRESET_NONE] = self._target_temp
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
             self._current_preset = self._default_preset or list(self._presets.keys())[0]
         else:
@@ -385,7 +386,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if temperature is None:
             return
         self._presets[PRESET_NONE] = temperature
-        await self.async_set_preset_mode(PRESET_NONE)
+        self._current_preset = PRESET_NONE
+        self._target_temp = self._presets[PRESET_NONE]
+        await self._async_control_heating(force=True)
+
+        self.async_write_ha_state()
 
     @property
     def min_temp(self):

@@ -50,7 +50,7 @@ ENT_SENSOR = "sensor.test"
 ENT_SWITCH = "switch.test"
 HEAT_ENTITY = "climate.test_heat"
 COOL_ENTITY = "climate.test_cool"
-ATTR_AWAY_MODE = "away_mode"
+# ATTR_AWAY_MODE = "away_mode"
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
@@ -179,7 +179,7 @@ async def setup_comp_2(hass):
                 "hot_tolerance": 4,
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "away_temp": 16,
+                "presets": {"away": 16},
                 "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
@@ -201,7 +201,7 @@ async def test_setup_defaults_to_unknown(hass):
                 "hot_tolerance": 4,
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "away_temp": 16,
+                "presets": {"away": 16},
             }
         },
     )
@@ -463,7 +463,7 @@ async def setup_comp_3(hass):
                 "name": "test",
                 "cold_tolerance": 2,
                 "hot_tolerance": 4,
-                "away_temp": 30,
+                "presets": {"away": 30},
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "ac_mode": True,
@@ -1149,7 +1149,7 @@ async def test_restore_state(hass):
                 "name": "test_thermostat",
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "away_temp": 14,
+                "presets": {"away": 14},
             }
         },
     )
@@ -1232,7 +1232,7 @@ async def _setup_climate(hass):
                 "name": "test",
                 "cold_tolerance": 2,
                 "hot_tolerance": 4,
-                "away_temp": 30,
+                "presets": {"away": 30},
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "ac_mode": True,
