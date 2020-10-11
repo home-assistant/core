@@ -915,6 +915,7 @@ omit =
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
+    homeassistant/components/tplink/common.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
