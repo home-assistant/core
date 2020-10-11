@@ -34,7 +34,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "These coordinates or Node/Pro ID are already registered."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%] or Node/Pro ID is already registered."
     }
   },
   "options": {

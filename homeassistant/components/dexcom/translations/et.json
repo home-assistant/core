@@ -1,4 +1,22 @@
 {
+    "config": {
+        "abort": {
+            "already_configured_account": "Konto on juba seadistatud"
+        },
+        "error": {
+            "account_error": "Tuvastamine nurjus",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

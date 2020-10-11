@@ -60,7 +60,7 @@ class DeviceTrackerPlatform:
                     hass, {DOMAIN: self.config}
                 )
             elif hasattr(self.platform, "get_scanner"):
-                scanner = await hass.async_add_job(
+                scanner = await hass.async_add_executor_job(
                     self.platform.get_scanner, hass, {DOMAIN: self.config}
                 )
             elif hasattr(self.platform, "async_setup_scanner"):
@@ -68,7 +68,7 @@ class DeviceTrackerPlatform:
                     hass, self.config, tracker.async_see, discovery_info
                 )
             elif hasattr(self.platform, "setup_scanner"):
-                setup = await hass.async_add_job(
+                setup = await hass.async_add_executor_job(
                     self.platform.setup_scanner,
                     hass,
                     self.config,

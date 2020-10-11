@@ -1,16 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "already_in_progress": "Konfiguracja integracji Broadlink jest ju\u017c w toku.",
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem",
-            "invalid_host": "B\u0142\u0119dna nazwa hosta b\u0105d\u017a adres IP",
-            "unknown": "Wyst\u0105pi\u0142 nieoczekiwany b\u0142\u0105d"
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
+            "already_in_progress": "[%key::common::config_flow::abort::already_in_progress%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "[%key::common::config_flow::error::invalid_host%]",
+            "not_supported": "Urz\u0105dzenie nie jest obs\u0142ugiwane",
+            "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem",
-            "invalid_host": "B\u0142\u0119dna nazwa hosta b\u0105d\u017a adres IP",
-            "unknown": "Wyst\u0105pi\u0142 nieoczekiwany b\u0142\u0105d"
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
+            "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "flow_title": "{name} ({model}, IP: {host})",
         "step": {
@@ -36,7 +37,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host lub Adres IP",
+                    "host": "Nazwa hosta lub adres IP",
                     "timeout": "Timeout (limit czasu)"
                 },
                 "title": "\u0141\u0105czenie z urz\u0105dzeniem"

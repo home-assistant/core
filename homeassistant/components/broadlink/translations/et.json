@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "not_supported": "Seadet ei toetata"
+        },
+        "error": {
+            "invalid_host": "Sobimatu hostinimi v\u00f5i IP-aadress"
         }
     }
 }

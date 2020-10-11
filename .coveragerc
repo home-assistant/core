@@ -651,6 +651,9 @@ omit =
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
     homeassistant/components/ovo_energy/sensor.py
+    homeassistant/components/ozw/__init__.py
+    homeassistant/components/ozw/entity.py
+    homeassistant/components/ozw/services.py
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
@@ -1050,11 +1053,9 @@ omit =
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/xbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
+    homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
-    homeassistant/components/ozw/__init__.py
-    homeassistant/components/ozw/entity.py
-    homeassistant/components/ozw/services.py
 
 [report]
 # Regexes for lines to exclude from consideration

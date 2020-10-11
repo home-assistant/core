@@ -15,6 +15,7 @@ DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
 _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }

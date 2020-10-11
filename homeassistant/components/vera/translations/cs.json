@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ovlada\u010d je ji\u017e nastaven."
+        },
+        "step": {
+            "user": {
+                "title": "Nastaven\u00ed ovlada\u010de Vera"
+            }
+        }
+    }
+}

@@ -1,6 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "service_unavailable": "\u00dchendamine nurjus"
+        },
         "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Seadme edastuskiirus",
+                    "device_path": "Seadme asukoht"
+                },
+                "title": "M\u00e4\u00e4ra \u00fchenduse seaded"
+            },
             "user": {
                 "data": {
                     "protocol": "Protokoll"

@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
-            "invalid_host": "Dette er ikke Yetien du leter etter",
-            "unknown": "Ukjent feil"
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

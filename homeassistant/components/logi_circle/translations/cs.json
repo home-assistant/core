@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "description": "Postupujte podle n\u00ed\u017ee uveden\u00e9ho odkazu a **P\u0159ijm\u011bte** p\u0159\u00edstup k \u00fa\u010dtu Logi Circle, pot\u00e9 se vra\u0165te zp\u011bt a stiskn\u011bte n\u00ed\u017ee **Odeslat**. \n\n[Odkaz]({authorization_url})"
+            }
+        }
+    }
+}

@@ -5,8 +5,8 @@
         "title": "Pick HomematicIP Access point",
         "data": {
           "hapid": "Access point ID (SGTIN)",
-          "pin": "Pin Code (optional)",
-          "name": "Name (optional, used as name prefix for all devices)"
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "name": "[%key:common::config_flow::data::name%] (optional, used as name prefix for all devices)"
         }
       },
       "link": {
@@ -21,9 +21,9 @@
       "timeout_button": "Blue button press timeout, please try again."
     },
     "abort": {
-      "unknown": "Unknown error occurred.",
-      "connection_aborted": "Could not connect to HMIP server",
-      "already_configured": "Access point is already configured"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "connection_aborted": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

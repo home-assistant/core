@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "cannot_connect": "\u00dchendus nurjus"
         },
         "error": {
@@ -52,8 +53,8 @@
             },
             "set_device_options": {
                 "data": {
-                    "command_off": "V\u00e4ljal\u00fclitamise k\u00e4su andmebitte v\u00e4\u00e4rtus",
-                    "command_on": "Sissel\u00fclitamise k\u00e4su andmebitte v\u00e4\u00e4rtus",
+                    "command_off": "V\u00e4ljal\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
+                    "command_on": "Sissel\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
                     "data_bit": "Andmebittide arv",
                     "fire_event": "Luba seadme s\u00fcndmus",
                     "off_delay": "V\u00e4ljal\u00fclitamise viivitus",

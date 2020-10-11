@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_password": "Vale salas\u00f5na!"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

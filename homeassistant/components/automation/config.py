@@ -10,7 +10,7 @@ from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.condition import async_validate_condition_config
-from homeassistant.helpers.script import async_validate_action_config
+from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import IntegrationNotFound
 
@@ -36,9 +36,7 @@ async def async_validate_config_item(hass, config, full_config=None):
             ]
         )
 
-    config[CONF_ACTION] = await asyncio.gather(
-        *[async_validate_action_config(hass, action) for action in config[CONF_ACTION]]
-    )
+    config[CONF_ACTION] = await async_validate_actions_config(hass, config[CONF_ACTION])
 
     return config
 

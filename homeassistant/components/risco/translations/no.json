@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "pin": "PIN kode",
+                    "pin": "PIN-kode",
                     "username": "Brukernavn"
                 }
             }

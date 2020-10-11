@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 
 # mypy: allow-untyped-defs
 
@@ -23,14 +23,15 @@ TRIGGER_SCHEMA = vol.Schema(
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
+    job = HassJob(action)
 
     if event == EVENT_SHUTDOWN:
 
         @callback
         def hass_shutdown(event):
             """Execute when Home Assistant is shutting down."""
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": "homeassistant",
@@ -46,8 +47,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.
     if automation_info["home_assistant_start"]:
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {
                 "trigger": {
                     "platform": "homeassistant",

@@ -305,7 +305,7 @@ homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
 homeassistant/components/onboarding/* @home-assistant/core
-homeassistant/components/onewire/* @garbled1
+homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opengarage/* @danielhiversen
@@ -334,6 +334,7 @@ homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
 homeassistant/components/powerwall/* @bdraco @jrester
+homeassistant/components/profiler/* @bdraco
 homeassistant/components/progettihwsw/* @ardaseremet
 homeassistant/components/prometheus/* @knyar
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe
@@ -363,6 +364,7 @@ homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/roon/* @pavoni
 homeassistant/components/rpi_power/* @shenxn @swetoast
+homeassistant/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
@@ -436,6 +438,7 @@ homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
+homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne
@@ -512,7 +515,7 @@ homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
-homeassistant/components/zoneminder/* @rohankapoorcom @vangorra
+homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
 
 # Individual files

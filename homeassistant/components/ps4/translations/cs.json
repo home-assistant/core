@@ -1,9 +1,26 @@
 {
     "config": {
+        "abort": {
+            "port_987_bind_error": "Nelze se p\u0159ipojit na port 987. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/).",
+            "port_997_bind_error": "Nelze se p\u0159ipojit na port 997. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/)."
+        },
         "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
             "link": {
                 "data": {
+                    "code": "PIN k\u00f3d",
+                    "ip_address": "IP adresa",
+                    "name": "Jm\u00e9no",
                     "region": "Region"
+                },
+                "description": "Zadejte sv\u00e9 informace o PlayStation 4. \"PIN\" naleznete v \"Nastaven\u00ed\" sv\u00e9 konzole PlayStation 4. Pot\u00e9 p\u0159ejd\u011bte do \"Nastaven\u00ed p\u0159ipojen\u00ed mobiln\u00ed aplikace\" a vyberte \"P\u0159idat za\u0159\u00edzen\u00ed\". Zadejte PIN. Dal\u0161\u00ed informace naleznete v [dokumentaci](https://www.home-assistant.io/components/ps4/).",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP adresa (Pokud pou\u017e\u00edv\u00e1te automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed, ponechte pr\u00e1zdnou)."
                 },
                 "title": "PlayStation 4"
             }

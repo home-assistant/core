@@ -5,7 +5,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "pin": "Pin code"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },
