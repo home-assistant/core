@@ -1,4 +1,5 @@
 """Constants used by the Nest component."""
+
 DOMAIN = "nest"
 DATA_SDM = "sdm"
 
