@@ -286,11 +286,7 @@ async def async_setup(hass, config):
         SERVICE_MEDIA_SEEK,
         vol.All(
             cv.make_entity_service_schema(
-                {
-                    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                        vol.Coerce(float), vol.Range(min=0)
-                    )
-                }
+                {vol.Required(ATTR_MEDIA_SEEK_POSITION): cv.positive_float}
             ),
             _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
