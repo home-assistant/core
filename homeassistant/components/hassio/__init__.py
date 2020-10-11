@@ -144,7 +144,8 @@ async def async_install_addon(hass: HomeAssistantType, slug: str) -> None:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/install"
-    await hassio.send_command(command)
+    api_call = api_valid(hassio.send_command)
+    await api_call(command)
 
 
 @bind_hass
@@ -155,7 +156,8 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> None:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/uninstall"
-    await hassio.send_command(command)
+    api_call = api_valid(hassio.send_command)
+    await api_call(command)
 
 
 @bind_hass
@@ -166,7 +168,8 @@ async def async_start_addon(hass: HomeAssistantType, slug: str) -> None:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/start"
-    await hassio.send_command(command)
+    api_call = api_valid(hassio.send_command)
+    await api_call(command)
 
 
 @bind_hass
@@ -177,7 +180,8 @@ async def async_stop_addon(hass: HomeAssistantType, slug: str) -> None:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/stop"
-    await hassio.send_command(command)
+    api_call = api_valid(hassio.send_command)
+    await api_call(command)
 
 
 @bind_hass
