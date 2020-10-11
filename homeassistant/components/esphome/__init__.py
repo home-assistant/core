@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, State, callback
@@ -65,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
+    interval = entry.data.get(CONF_SCAN_INTERVAL, 0)
     password = entry.data[CONF_PASSWORD]
     device_id = None
 
@@ -198,7 +200,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             # Re-connection logic will trigger after this
             await cli.disconnect()
 
-    try_connect = await _setup_auto_reconnect_logic(hass, cli, entry, host, on_login)
+    try_connect = await _setup_auto_reconnect_logic(
+        hass, cli, entry, host, interval, on_login
+    )
 
     async def complete_setup() -> None:
         """Complete the config entry setup."""
@@ -215,7 +219,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 
 async def _setup_auto_reconnect_logic(
-    hass: HomeAssistantType, cli: APIClient, entry: ConfigEntry, host: str, on_login
+    hass: HomeAssistantType,
+    cli: APIClient,
+    entry: ConfigEntry,
+    host: str,
+    interval: int,
+    on_login,
 ):
     """Set up the re-connect logic for the API client."""
 
@@ -251,6 +260,8 @@ async def _setup_auto_reconnect_logic(
             # really short reconnect interval.
             tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8 ** tries, 60.0)))
+            if interval > 0:
+                wait_time = min(interval, wait_time)
             _LOGGER.info("Trying to reconnect to %s in %s seconds", host, wait_time)
             await asyncio.sleep(wait_time)
 

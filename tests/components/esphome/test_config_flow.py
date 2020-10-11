@@ -4,7 +4,7 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.esphome import DATA_KEY
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -63,11 +63,16 @@ async def test_user_connection_works(hass, mock_client):
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": "user"},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80, CONF_SCAN_INTERVAL: 0},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: "127.0.0.1", CONF_PORT: 80, CONF_PASSWORD: ""}
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 80,
+        CONF_PASSWORD: "",
+        CONF_SCAN_INTERVAL: 0,
+    }
     assert result["title"] == "test"
 
     assert len(mock_client.connect.mock_calls) == 1
@@ -96,7 +101,7 @@ async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
         result = await hass.config_entries.flow.async_init(
             "esphome",
             context={"source": "user"},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_SCAN_INTERVAL: 0},
         )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -115,7 +120,7 @@ async def test_user_connection_error(hass, mock_api_connection_error, mock_clien
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": "user"},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_SCAN_INTERVAL: 0},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -134,7 +139,7 @@ async def test_user_with_password(hass, mock_client):
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": "user"},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_SCAN_INTERVAL: 0},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -149,6 +154,7 @@ async def test_user_with_password(hass, mock_client):
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
         CONF_PASSWORD: "password1",
+        CONF_SCAN_INTERVAL: 0,
     }
     assert mock_client.password == "password1"
 
@@ -160,7 +166,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
     result = await hass.config_entries.flow.async_init(
         "esphome",
         context={"source": "user"},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_SCAN_INTERVAL: 0},
     )
 
     assert result["type"] == RESULT_TYPE_FORM

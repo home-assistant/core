@@ -7,7 +7,13 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -26,6 +32,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._host: Optional[str] = None
         self._port: Optional[int] = None
+        self._interval: Optional[int] = None
         self._password: Optional[str] = None
 
     async def async_step_user(
@@ -38,6 +45,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         fields = OrderedDict()
         fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
         fields[vol.Optional(CONF_PORT, default=self._port or 6053)] = int
+        fields[vol.Optional(CONF_SCAN_INTERVAL, default=self._interval or 0)] = int
 
         errors = {}
         if error is not None:
@@ -63,6 +71,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return
         self._host = user_input[CONF_HOST]
         self._port = user_input[CONF_PORT]
+        self._interval = user_input[CONF_SCAN_INTERVAL]
 
     async def _async_authenticate_or_add(self, user_input):
         self._set_user_input(user_input)
@@ -128,6 +137,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._host = discovery_info[CONF_HOST]
         self._port = discovery_info[CONF_PORT]
+        self._interval = 0
         self._name = node_name
 
         return await self.async_step_discovery_confirm()
@@ -139,6 +149,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
+                CONF_SCAN_INTERVAL: self._interval,
                 # The API uses protobuf, so empty string denotes absence
                 CONF_PASSWORD: self._password or "",
             },

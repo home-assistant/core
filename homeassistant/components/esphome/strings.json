@@ -13,7 +13,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "scan_interval": "Maximum reconnect interval in seconds, 0 for random"
         },
         "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
       },

@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
             "invalid_auth": "Invalid authentication",
-            "invalid_password": "Invalid password!",
             "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
@@ -25,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "scan_interval": "Reconnect interval in seconds, 0 for random"
                 },
                 "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
             }
