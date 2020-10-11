@@ -284,7 +284,7 @@ async def test_duplicate_abort(hass):
             result["flow_id"], user_input=MOCK_AUTO
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured_device"
+    assert result["reason"] == "already_configured"
 
 
 async def test_additional_device(hass):
