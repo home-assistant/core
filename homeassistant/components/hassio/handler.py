@@ -49,6 +49,19 @@ def _api_data(funct):
     return _wrapper
 
 
+def api_valid(func):
+    """Raise error if api result is not ok."""
+
+    async def wrapper(*args, **kwargs):
+        """Wrap function."""
+        data = await func(*args, **kwargs)
+        if data["result"] == "ok":
+            return data
+        raise HassioAPIError(data["message"])
+
+    return wrapper
+
+
 class HassIO:
     """Small API wrapper for Hass.io."""
 

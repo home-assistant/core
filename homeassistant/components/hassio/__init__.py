@@ -24,7 +24,7 @@ from homeassistant.util.dt import utcnow
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, HassioAPIError, api_valid
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 
@@ -190,7 +190,8 @@ async def async_set_addon_options(
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/options"
-    await hassio.send_command(command, payload=options)
+    api_call = api_valid(hassio.send_command)
+    await api_call(command, payload=options)
 
 
 @callback
