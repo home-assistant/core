@@ -268,7 +268,7 @@ async def test_options_flow_include_mode_basic(hass):
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": [],
+            "include_domains": ["fan", "vacuum"],
             "include_entities": ["climate.new"],
         },
         "safe_mode": True,
@@ -447,7 +447,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": [],
+            "include_domains": ["fan", "vacuum", "climate"],
             "include_entities": ["camera.native_h264", "camera.transcode_h264"],
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},

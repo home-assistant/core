@@ -369,7 +369,6 @@ homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
-homeassistant/components/scaletest/* @bdraco
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff

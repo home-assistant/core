@@ -298,6 +298,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             if user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
                 entity_filter[CONF_INCLUDE_ENTITIES] = user_input[CONF_ENTITIES]
+                # Include all of the domain if there are no entities
+                # explicitly included as the user selected the domain
+                domains_with_entities_selected = _domains_set_from_entities(
+                    user_input[CONF_ENTITIES]
+                )
+                entity_filter[CONF_INCLUDE_DOMAINS] = [
+                    domain
+                    for domain in self.homekit_options[CONF_DOMAINS]
+                    if domain not in domains_with_entities_selected
+                ]
+
                 for entity_id in list(self.included_cameras):
                     if entity_id not in user_input[CONF_ENTITIES]:
                         self.included_cameras.remove(entity_id)
@@ -336,14 +347,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_INCLUDE_EXCLUDE_MODE,
-                    default=include_exclude_mode,
-                ): vol.In(INCLUDE_EXCLUDE_MODES),
                 vol.Optional(
                     CONF_ENTITIES,
                     default=entities,
                 ): cv.multi_select(all_supported_entities),
+                vol.Required(
+                    CONF_INCLUDE_EXCLUDE_MODE,
+                    default=include_exclude_mode,
+                ): vol.In(INCLUDE_EXCLUDE_MODES),
             }
         )
         return self.async_show_form(step_id="include_exclude", data_schema=data_schema)
@@ -362,10 +373,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if include_entities:
-            domains = set()
-            for entity_id in include_entities:
-                domains.add(split_entity_id(entity_id)[0])
-            domains = list(domains)
+            domains = list(_domains_set_from_entities(include_entities))
         else:
             domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
 
@@ -390,3 +398,11 @@ def _get_entities_matching_domains(hass, domains):
     ]
     entity_ids.sort()
     return entity_ids
+
+
+def _domains_set_from_entities(entity_ids):
+    """Build a set of domains for the given entity ids."""
+    domains = set()
+    for entity_id in entity_ids:
+        domains.add(split_entity_id(entity_id)[0])
+    return domains

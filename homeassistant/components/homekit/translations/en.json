@@ -10,7 +10,7 @@
                 "data": {
                     "include_domains": "[%key:component::homekit::config::step::user::data::include_domains%]"
                 },
-                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
+                "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
                 "title": "Select domains to bridge."
             },
             "include_exclude": {
@@ -18,7 +18,7 @@
                     "mode": "Mode",
                     "entities": "Entities"
                 },
-                "description": "Choose the entities to be bridged. In include mode, only entities that are included will be bridged. In exclude mode, all entities in the domain will be bridged except for the excluded entities.",
+                "description": "Choose the entities to be bridged. In include mode, all entities in the domain will be bridged unless specific entities that are selected. In exclude mode, all entities in the domain will be bridged except for the excluded entities.",
                 "title": "Select entities to be bridged"
             },
             "cameras": {

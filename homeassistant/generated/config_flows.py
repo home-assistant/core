@@ -160,7 +160,6 @@ FLOWS = [
     "rpi_power",
     "ruckus_unleashed",
     "samsungtv",
-    "scaletest",
     "sense",
     "sentry",
     "sharkiq",
