@@ -1,21 +1,35 @@
 {
-    "title": "Buienradar",
     "config": {
+        "abort": {
+            "already_configured": "Location is already configured"
+        },
         "error": {
-            "name_exists": "Location already exists",
-            "empty_selection": "Select at least one platform to setup"
+            "already_configured": "Location is already configured"
         },
         "step": {
+            "camera": {
+                "data": {
+                    "country_code": "Country",
+                    "dimension": "Dimension",
+                    "name": "Name"
+                },
+                "title": "Buienradar Camera"
+            },
             "user": {
+                "data": {
+                    "domain": "Select domain to setup"
+                },
+                "title": "Buienradar"
+            },
+            "weather": {
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name",
-                    "camera": "Add radar image",
-                    "country_code": "Country"
+                    "name": "Name"
                 },
-                "title": "Buienradar"
+                "title": "Buienradar Weather"
             }
         }
-    }
+    },
+    "title": "Buienradar"
 }

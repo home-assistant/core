@@ -4,15 +4,32 @@
       "user": {
         "title": "Buienradar",
         "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude",
-          "name": "Name",
-          "camera": "Add radar image",
+          "domain": "Select domain to setup"
+        }
+      },
+      "camera": {
+        "title": "Buienradar Camera",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "dimension": "Dimension",
           "country_code": "Country"
+        }
+      },
+      "weather": {
+        "title": "Buienradar Weather",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
-    "error": { "name_exists": "Location already exists" }
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
   },
   "title": "Buienradar"
 }
