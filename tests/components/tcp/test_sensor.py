@@ -77,13 +77,13 @@ async def test_setup_platform_invalid_config(hass):
         )
 
 
-def test_name(hass, mock_update):
+def test_name(hass):
     """Return the name if set in the configuration."""
     sensor = tcp.TcpSensor(hass, TEST_CONFIG["sensor"])
     assert sensor.name == TEST_CONFIG["sensor"][tcp.CONF_NAME]
 
 
-def test_name_not_set(hass, mock_update):
+def test_name_not_set(hass):
     """Return the superclass name property if not set in configuration."""
     config = copy(TEST_CONFIG["sensor"])
     del config[tcp.CONF_NAME]
@@ -92,7 +92,7 @@ def test_name_not_set(hass, mock_update):
     assert sensor.name == entity.name
 
 
-def test_state(hass, mock_update):
+def test_state(hass):
     """Return the contents of _state."""
     sensor = tcp.TcpSensor(hass, TEST_CONFIG["sensor"])
     uuid = str(uuid4())
@@ -100,7 +100,7 @@ def test_state(hass, mock_update):
     assert sensor.state == uuid
 
 
-def test_unit_of_measurement(hass, mock_update):
+def test_unit_of_measurement(hass):
     """Return the configured unit of measurement."""
     sensor = tcp.TcpSensor(hass, TEST_CONFIG["sensor"])
     assert (
@@ -112,9 +112,10 @@ def test_unit_of_measurement(hass, mock_update):
 def test_config_valid_keys(hass, *args):
     """Store valid keys in _config."""
     sensor = tcp.TcpSensor(hass, TEST_CONFIG["sensor"])
-    del TEST_CONFIG["sensor"]["platform"]
+    expected_config = copy(TEST_CONFIG["sensor"])
+    del expected_config["platform"]
 
-    for key in TEST_CONFIG["sensor"]:
+    for key in expected_config:
         assert key in sensor._config
 
 
@@ -124,7 +125,7 @@ async def test_validate_config_valid_keys(hass):
         assert await async_setup_component(hass, "sensor", TEST_CONFIG)
 
 
-def test_config_invalid_keys(hass, mock_update):
+def test_config_invalid_keys(hass):
     """Shouldn't store invalid keys in _config."""
     config = copy(TEST_CONFIG["sensor"])
     config.update({"a": "test_a", "b": "test_b", "c": "test_c"})
@@ -141,14 +142,13 @@ async def test_validate_config_invalid_keys(hass):
         assert await async_setup_component(hass, "sensor", {"tcp": config})
 
 
-async def test_config_uses_defaults(hass, mock_update):
+async def test_config_uses_defaults(hass):
     """Check if defaults were set."""
     config = copy(TEST_CONFIG["sensor"])
 
     for key in KEYS_AND_DEFAULTS:
         del config[key]
 
-    config["platform"] = "tcp"
     with assert_setup_component(1) as result_config:
         assert await async_setup_component(hass, "sensor", {"sensor": config})
 
@@ -251,7 +251,7 @@ def test_update_receives_packet_and_sets_as_state(hass, mock_select, mock_socket
     assert sensor._state == test_value
 
 
-async def test_update_renders_value_in_template(hass, mock_select, mock_socket):
+def test_update_renders_value_in_template(hass, mock_select, mock_socket):
     """Render the value in the provided template."""
     test_value = "test_value"
     with patch("socket.socket") as mock_socket:
@@ -259,11 +259,11 @@ async def test_update_renders_value_in_template(hass, mock_select, mock_socket):
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG["sensor"])
         config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ value }} {{ 1+1 }}")
-        sensor = await tcp.TcpSensor(hass, config)
+        sensor = tcp.TcpSensor(hass, config)
         assert sensor._state == "%s 2" % test_value
 
 
-async def test_update_returns_if_template_render_fails(hass, mock_select):
+def test_update_returns_if_template_render_fails(hass, mock_select):
     """Return None if rendering the template fails."""
     test_value = "test_value"
     with patch("socket.socket") as mock_socket:
@@ -271,5 +271,5 @@ async def test_update_returns_if_template_render_fails(hass, mock_select):
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG["sensor"])
         config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ this won't work")
-        sensor = await tcp.TcpSensor(hass, config)
-        assert await sensor.update() is None
+        sensor = tcp.TcpSensor(hass, config)
+        assert sensor.update() is None
