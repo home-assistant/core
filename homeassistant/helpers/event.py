@@ -752,6 +752,7 @@ class _TrackTemplateResultInfo:
             Template, Optional[Union[bool, TrackTimePattern]]
         ] = {}
         self._time_pattern_listeners: Dict[Template, Callable] = {}
+        self._skip_next_time_pattern: Set[Template] = set()
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
@@ -810,6 +811,9 @@ class _TrackTemplateResultInfo:
 
         @callback
         def _refresh_from_time_pattern(now: datetime) -> None:
+            if template in self._skip_next_time_pattern:
+                self._skip_next_time_pattern.remove(template)
+                return
             self._refresh(None, track_templates=track_templates)
 
         assert isinstance(time_pattern, TrackTimePattern)
@@ -917,6 +921,9 @@ class _TrackTemplateResultInfo:
             update = self._render_template_if_ready(track_template_, now, event)
             if not update:
                 continue
+
+            if event:
+                self._skip_next_time_pattern.add(track_template_.template)
 
             info_changed = True
             if isinstance(update, TrackTemplateResult):
