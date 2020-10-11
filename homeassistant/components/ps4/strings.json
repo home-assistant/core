@@ -15,7 +15,7 @@
       },
       "link": {
         "title": "PlayStation 4",
-        "description": "[%key:common::config_flow::data::pin%]",
+        "description": "Enter your PlayStation 4 information. For [%key:common::config_flow::data::pin%], navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the [%key:common::config_flow::data::pin%] that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
         "data": {
           "region": "Region",
           "name": "[%key:common::config_flow::data::name%]",
