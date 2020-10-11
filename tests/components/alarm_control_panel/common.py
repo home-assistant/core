@@ -64,7 +64,7 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
 async def async_alarm_trigger(hass, delay=None, code=None, entity_id=ENTITY_MATCH_ALL):
     """Send the alarm the command for disarm."""
     data = {}
-    if delay:
+    if delay is not None:
         data[ATTR_DELAY] = delay
     if code:
         data[ATTR_CODE] = code

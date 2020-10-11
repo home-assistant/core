@@ -500,6 +500,38 @@ async def test_trigger_with_delay(hass):
     assert STATE_ALARM_TRIGGERED == state.state
 
 
+async def test_trigger_with_delay_override(hass):
+    """Test trigger method and switch from pending to triggered."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "delay_time": 5,
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
+
+    await common.async_alarm_arm_away(hass, CODE)
+
+    assert STATE_ALARM_ARMED_AWAY == hass.states.get(entity_id).state
+
+    await common.async_alarm_trigger(hass, delay=0, entity_id=entity_id)
+
+    state = hass.states.get(entity_id)
+    assert STATE_ALARM_TRIGGERED == state.state
+
+
 async def test_trigger_zero_trigger_time(hass):
     """Test disabled trigger."""
     assert await async_setup_component(
