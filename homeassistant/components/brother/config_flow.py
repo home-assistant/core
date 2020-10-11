@@ -59,7 +59,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except ConnectionError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
@@ -72,7 +72,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
         if discovery_info is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         if not discovery_info.get("name") or not discovery_info["name"].startswith(
             "Brother"
@@ -86,7 +86,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
         await self.async_set_unique_id(self.brother.serial.lower())

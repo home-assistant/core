@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "already_in_progress": "Config flow for this Denon AVR is already in progress",
+            "already_in_progress": "Configuration flow is already in progress",
             "connection_error": "Failed to connect, please try again, disconnecting mains power and ethernet cables and reconnecting them may help",
             "not_denonavr_manufacturer": "Not a Denon AVR Network Receiver, discovered manafucturer did not match",
             "not_denonavr_missing": "Not a Denon AVR Network Receiver, discovery information not complete"
@@ -25,7 +25,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP address"
+                    "host": "IP Address"
                 },
                 "description": "Connect to your receiver, if the IP address is not set, auto-discovery is used",
                 "title": "Denon AVR Network Receivers"

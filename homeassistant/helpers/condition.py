@@ -4,6 +4,7 @@ from collections import deque
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import re
 import sys
 from typing import Any, Callable, Container, List, Optional, Set, Union, cast
 
@@ -47,6 +48,10 @@ FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
 _LOGGER = logging.getLogger(__name__)
+
+INPUT_ENTITY_ID = re.compile(
+    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
+)
 
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
@@ -171,8 +176,8 @@ async def async_not_from_config(
 def numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    below: Optional[float] = None,
-    above: Optional[float] = None,
+    below: Optional[Union[float, str]] = None,
+    above: Optional[Union[float, str]] = None,
     value_template: Optional[Template] = None,
     variables: TemplateVarsType = None,
 ) -> bool:
@@ -192,8 +197,8 @@ def numeric_state(
 def async_numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    below: Optional[float] = None,
-    above: Optional[float] = None,
+    below: Optional[Union[float, str]] = None,
+    above: Optional[Union[float, str]] = None,
     value_template: Optional[Template] = None,
     variables: TemplateVarsType = None,
     attribute: Optional[str] = None,
@@ -233,11 +238,29 @@ def async_numeric_state(
         )
         return False
 
-    if below is not None and fvalue >= below:
-        return False
+    if below is not None:
+        if isinstance(below, str):
+            below_entity = hass.states.get(below)
+            if (
+                not below_entity
+                or below_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                or fvalue >= float(below_entity.state)
+            ):
+                return False
+        elif fvalue >= below:
+            return False
 
-    if above is not None and fvalue <= above:
-        return False
+    if above is not None:
+        if isinstance(above, str):
+            above_entity = hass.states.get(above)
+            if (
+                not above_entity
+                or above_entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+                or fvalue <= float(above_entity.state)
+            ):
+                return False
+        elif fvalue <= above:
+            return False
 
     return True
 
@@ -274,7 +297,7 @@ def async_numeric_state_from_config(
 def state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    req_state: Union[str, List[str]],
+    req_state: Any,
     for_period: Optional[timedelta] = None,
     attribute: Optional[str] = None,
 ) -> bool:
@@ -290,13 +313,28 @@ def state(
 
     assert isinstance(entity, State)
 
-    if isinstance(req_state, str):
+    if attribute is None:
+        value: Any = entity.state
+    else:
+        value = entity.attributes.get(attribute)
+
+    if not isinstance(req_state, list):
         req_state = [req_state]
 
-    if attribute is None:
-        is_state = entity.state in req_state
-    else:
-        is_state = str(entity.attributes.get(attribute)) in req_state
+    is_state = False
+    for req_state_value in req_state:
+        state_value = req_state_value
+        if (
+            isinstance(req_state_value, str)
+            and INPUT_ENTITY_ID.match(req_state_value) is not None
+        ):
+            state_entity = hass.states.get(req_state_value)
+            if not state_entity:
+                continue
+            state_value = state_entity.state
+        is_state = value == state_value
+        if is_state:
+            break
 
     if for_period is None or not is_state:
         return is_state
@@ -420,7 +458,10 @@ def async_template(
         _LOGGER.error("Error during template condition: %s", ex)
         return False
 
-    return value.lower() == "true"
+    if isinstance(value, bool):
+        return value
+
+    return str(value).lower() == "true"
 
 
 def async_template_from_config(
@@ -614,13 +655,16 @@ async def async_validate_condition_config(
 
 
 @callback
-def async_extract_entities(config: ConfigType) -> Set[str]:
+def async_extract_entities(config: Union[ConfigType, Template]) -> Set[str]:
     """Extract entities from a condition."""
     referenced: Set[str] = set()
     to_process = deque([config])
 
     while to_process:
         config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
         condition = config[CONF_CONDITION]
 
         if condition in ("and", "not", "or"):
@@ -639,13 +683,16 @@ def async_extract_entities(config: ConfigType) -> Set[str]:
 
 
 @callback
-def async_extract_devices(config: ConfigType) -> Set[str]:
+def async_extract_devices(config: Union[ConfigType, Template]) -> Set[str]:
     """Extract devices from a condition."""
     referenced = set()
     to_process = deque([config])
 
     while to_process:
         config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
         condition = config[CONF_CONDITION]
 
         if condition in ("and", "not", "or"):

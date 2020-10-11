@@ -3,6 +3,6 @@
   "name": "CoolMasterNet",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coolmaster",
-  "requirements": ["pycoolmasternet-async==0.1.1"],
+  "requirements": ["pycoolmasternet-async==0.1.2"],
   "codeowners": ["@OnFreund"]
 }

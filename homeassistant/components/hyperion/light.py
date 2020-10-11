@@ -1,8 +1,7 @@
-"""Support for Hyperion remotes."""
-import json
+"""Support for Hyperion-NG remotes."""
 import logging
-import socket
 
+from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -16,6 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -26,103 +26,91 @@ CONF_PRIORITY = "priority"
 CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
 
+# As we want to preserve brightness control for effects (e.g. to reduce the
+# brightness for V4L), we need to persist the effect that is in flight, so
+# subsequent calls to turn_on will know the keep the effect enabled.
+# Unfortunately the Home Assistant UI does not easily expose a way to remove a
+# selected effect (there is no 'No Effect' option by default). Instead, we
+# create a new fake effect ("Solid") that is always selected by default for
+# showing a solid color. This is the same method used by WLED.
+KEY_EFFECT_SOLID = "Solid"
+
 DEFAULT_COLOR = [255, 255, 255]
+DEFAULT_BRIGHTNESS = 255
+DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
+DEFAULT_ORIGIN = "Home Assistant"
 DEFAULT_PORT = 19444
 DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = [
-    "HDMI",
-    "Cinema brighten lights",
-    "Cinema dim lights",
-    "Knight rider",
-    "Blue mood blobs",
-    "Cold mood blobs",
-    "Full color mood blobs",
-    "Green mood blobs",
-    "Red mood blobs",
-    "Warm mood blobs",
-    "Police Lights Single",
-    "Police Lights Solid",
-    "Rainbow mood",
-    "Rainbow swirl fast",
-    "Rainbow swirl",
-    "Random",
-    "Running dots",
-    "System Shutdown",
-    "Snake",
-    "Sparks Color",
-    "Sparks",
-    "Strobe blue",
-    "Strobe Raspbmc",
-    "Strobe white",
-    "Color traces",
-    "UDP multicast listener",
-    "UDP listener",
-    "X-Mas",
-]
+DEFAULT_EFFECT_LIST = []
 
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
-            list,
-            vol.Length(min=3, max=3),
-            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-        vol.Optional(
-            CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
-        ): cv.positive_int,
-        vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.118"),
+    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.118"),
+    cv.deprecated(CONF_EFFECT_LIST, invalidation_version="0.118"),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
+                list,
+                vol.Length(min=3, max=3),
+                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
+            ),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
+            vol.Optional(
+                CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
+            ): cv.positive_int,
+            vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+        }
+    ),
 )
 
+ICON_LIGHTBULB = "mdi:lightbulb"
+ICON_EFFECT = "mdi:lava-lamp"
+ICON_EXTERNAL_SOURCE = "mdi:video-input-hdmi"
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Hyperion server remote."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     priority = config[CONF_PRIORITY]
-    hdmi_priority = config[CONF_HDMI_PRIORITY]
-    default_color = config[CONF_DEFAULT_COLOR]
-    effect_list = config[CONF_EFFECT_LIST]
 
-    device = Hyperion(
-        name, host, port, priority, default_color, hdmi_priority, effect_list
-    )
+    hyperion_client = client.HyperionClient(host, port)
 
-    if device.setup():
-        add_entities([device])
+    if not await hyperion_client.async_client_connect():
+        raise PlatformNotReady
+
+    async_add_entities([Hyperion(name, priority, hyperion_client)])
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(
-        self, name, host, port, priority, default_color, hdmi_priority, effect_list
-    ):
+    def __init__(self, name, priority, hyperion_client):
         """Initialize the light."""
-        self._host = host
-        self._port = port
         self._name = name
         self._priority = priority
-        self._hdmi_priority = hdmi_priority
-        self._default_color = default_color
-        self._rgb_color = [0, 0, 0]
-        self._rgb_mem = [0, 0, 0]
-        self._brightness = 255
-        self._icon = "mdi:lightbulb"
-        self._effect_list = effect_list
-        self._effect = None
-        self._skip_update = False
+        self._client = hyperion_client
+
+        # Active state representing the Hyperion instance.
+        self._set_internal_state(
+            brightness=255, rgb_color=DEFAULT_COLOR, effect=KEY_EFFECT_SOLID
+        )
+        self._effect_list = []
+
+    @property
+    def should_poll(self):
+        """Return whether or not this entity should be polled."""
+        return False
 
     @property
     def name(self):
@@ -142,7 +130,7 @@ class Hyperion(LightEntity):
     @property
     def is_on(self):
         """Return true if not black."""
-        return self._rgb_color != [0, 0, 0]
+        return self._client.is_on()
 
     @property
     def icon(self):
@@ -157,158 +145,233 @@ class Hyperion(LightEntity):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._effect_list
+        return (
+            self._effect_list
+            + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            + [KEY_EFFECT_SOLID]
+        )
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_HYPERION
 
-    def turn_on(self, **kwargs):
+    @property
+    def available(self):
+        """Return server availability."""
+        return self._client.has_loaded_state
+
+    @property
+    def unique_id(self):
+        """Return a unique id for this instance."""
+        return self._client.id
+
+    async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
+        # == Turn device on ==
+        # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
+        # preferable to enable LEDDEVICE after the settings (e.g. brightness,
+        # color, effect), but this is not possible due to:
+        # https://github.com/hyperion-project/hyperion.ng/issues/967
+        if not self.is_on:
+            if not await self._client.async_send_set_component(
+                **{
+                    const.KEY_COMPONENTSTATE: {
+                        const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                        const.KEY_STATE: True,
+                    }
+                }
+            ):
+                return
+
+            if not await self._client.async_send_set_component(
+                **{
+                    const.KEY_COMPONENTSTATE: {
+                        const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                        const.KEY_STATE: True,
+                    }
+                }
+            ):
+                return
+
+        # == Get key parameters ==
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        effect = kwargs.get(ATTR_EFFECT, self._effect)
         if ATTR_HS_COLOR in kwargs:
             rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-        elif self._rgb_mem == [0, 0, 0]:
-            rgb_color = self._default_color
         else:
-            rgb_color = self._rgb_mem
+            rgb_color = self._rgb_color
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-
-        if ATTR_EFFECT in kwargs:
-            self._skip_update = True
-            self._effect = kwargs[ATTR_EFFECT]
-            if self._effect == "HDMI":
-                self.json_request({"command": "clearall"})
-                self._icon = "mdi:video-input-hdmi"
-                self._brightness = 255
-                self._rgb_color = [125, 125, 125]
-            else:
-                self.json_request(
-                    {
-                        "command": "effect",
-                        "priority": self._priority,
-                        "effect": {"name": self._effect},
+        # == Set brightness ==
+        if self._brightness != brightness:
+            if not await self._client.async_send_set_adjustment(
+                **{
+                    const.KEY_ADJUSTMENT: {
+                        const.KEY_BRIGHTNESS: int(
+                            round((float(brightness) * 100) / 255)
+                        )
                     }
-                )
-                self._icon = "mdi:lava-lamp"
-                self._rgb_color = [175, 0, 255]
-            return
-
-        cal_color = [int(round(x * float(brightness) / 255)) for x in rgb_color]
-        self.json_request(
-            {"command": "color", "priority": self._priority, "color": cal_color}
-        )
-
-    def turn_off(self, **kwargs):
-        """Disconnect all remotes."""
-        self.json_request({"command": "clearall"})
-        self.json_request(
-            {"command": "color", "priority": self._priority, "color": [0, 0, 0]}
-        )
-
-    def update(self):
-        """Get the lights status."""
-        # postpone the immediate state check for changes that take time
-        if self._skip_update:
-            self._skip_update = False
-            return
-        response = self.json_request({"command": "serverinfo"})
-        if response:
-            # workaround for outdated Hyperion
-            if "activeLedColor" not in response["info"]:
-                self._rgb_color = self._default_color
-                self._rgb_mem = self._default_color
-                self._brightness = 255
-                self._icon = "mdi:lightbulb"
-                self._effect = None
+                }
+            ):
                 return
-            # Check if Hyperion is in ambilight mode trough an HDMI grabber
-            try:
-                active_priority = response["info"]["priorities"][0]["priority"]
-                if active_priority == self._hdmi_priority:
-                    self._brightness = 255
-                    self._rgb_color = [125, 125, 125]
-                    self._icon = "mdi:video-input-hdmi"
-                    self._effect = "HDMI"
+
+        # == Set an external source
+        if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+
+            # Clear any color/effect.
+            if not await self._client.async_send_clear(
+                **{const.KEY_PRIORITY: self._priority}
+            ):
+                return
+
+            # Turn off all external sources, except the intended.
+            for key in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                if not await self._client.async_send_set_component(
+                    **{
+                        const.KEY_COMPONENTSTATE: {
+                            const.KEY_COMPONENT: key,
+                            const.KEY_STATE: effect == key,
+                        }
+                    }
+                ):
                     return
-            except (KeyError, IndexError):
-                pass
 
-            led_color = response["info"]["activeLedColor"]
-            if not led_color or led_color[0]["RGB Value"] == [0, 0, 0]:
-                # Get the active effect
-                if response["info"].get("activeEffects"):
-                    self._rgb_color = [175, 0, 255]
-                    self._icon = "mdi:lava-lamp"
-                    try:
-                        s_name = response["info"]["activeEffects"][0]["script"]
-                        s_name = s_name.split("/")[-1][:-3].split("-")[0]
-                        self._effect = [
-                            x for x in self._effect_list if s_name.lower() in x.lower()
-                        ][0]
-                    except (KeyError, IndexError):
-                        self._effect = None
-                # Bulb off state
-                else:
-                    self._rgb_color = [0, 0, 0]
-                    self._icon = "mdi:lightbulb"
-                    self._effect = None
+        # == Set an effect
+        elif effect and effect != KEY_EFFECT_SOLID:
+            # This call should not be necessary, but without it there is no priorities-update issued:
+            # https://github.com/hyperion-project/hyperion.ng/issues/992
+            if not await self._client.async_send_clear(
+                **{const.KEY_PRIORITY: self._priority}
+            ):
+                return
+
+            if not await self._client.async_send_set_effect(
+                **{
+                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_EFFECT: {const.KEY_NAME: effect},
+                    const.KEY_ORIGIN: DEFAULT_ORIGIN,
+                }
+            ):
+                return
+        # == Set a color
+        else:
+            if not await self._client.async_send_set_color(
+                **{
+                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_COLOR: rgb_color,
+                    const.KEY_ORIGIN: DEFAULT_ORIGIN,
+                }
+            ):
+                return
+
+    async def async_turn_off(self, **kwargs):
+        """Disable the LED output component."""
+        if not await self._client.async_send_set_component(
+            **{
+                const.KEY_COMPONENTSTATE: {
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                    const.KEY_STATE: False,
+                }
+            }
+        ):
+            return
+
+    def _set_internal_state(self, brightness=None, rgb_color=None, effect=None):
+        """Set the internal state."""
+        if brightness is not None:
+            self._brightness = brightness
+        if rgb_color is not None:
+            self._rgb_color = rgb_color
+        if effect is not None:
+            self._effect = effect
+            if effect == KEY_EFFECT_SOLID:
+                self._icon = ICON_LIGHTBULB
+            elif effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                self._icon = ICON_EXTERNAL_SOURCE
             else:
-                # Get the RGB color
-                self._rgb_color = led_color[0]["RGB Value"]
-                self._brightness = max(self._rgb_color)
-                self._rgb_mem = [
-                    int(round(float(x) * 255 / self._brightness))
-                    for x in self._rgb_color
-                ]
-                self._icon = "mdi:lightbulb"
-                self._effect = None
+                self._icon = ICON_EFFECT
 
-    def setup(self):
-        """Get the hostname of the remote."""
-        response = self.json_request({"command": "serverinfo"})
-        if response:
-            if self._name == self._host:
-                self._name = response["info"]["hostname"]
-            return True
-        return False
+    def _update_components(self, _=None):
+        """Update Hyperion components."""
+        self.async_write_ha_state()
 
-    def json_request(self, request, wait_for_response=False):
-        """Communicate with the JSON server."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
+    def _update_adjustment(self, _=None):
+        """Update Hyperion adjustments."""
+        if self._client.adjustment:
+            brightness_pct = self._client.adjustment[0].get(
+                const.KEY_BRIGHTNESS, DEFAULT_BRIGHTNESS
+            )
+            if brightness_pct < 0 or brightness_pct > 100:
+                return
+            self._set_internal_state(
+                brightness=int(round((brightness_pct * 255) / float(100)))
+            )
+            self.async_write_ha_state()
 
-        try:
-            sock.connect((self._host, self._port))
-        except OSError:
-            sock.close()
-            return False
+    def _update_priorities(self, _=None):
+        """Update Hyperion priorities."""
+        visible_priority = self._client.visible_priority
+        if visible_priority:
+            componentid = visible_priority.get(const.KEY_COMPONENTID)
+            if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
+            elif componentid == const.KEY_COMPONENTID_EFFECT:
+                # Owner is the effect name.
+                # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
+                self._set_internal_state(
+                    rgb_color=DEFAULT_COLOR, effect=visible_priority[const.KEY_OWNER]
+                )
+            elif componentid == const.KEY_COMPONENTID_COLOR:
+                self._set_internal_state(
+                    rgb_color=visible_priority[const.KEY_VALUE][const.KEY_RGB],
+                    effect=KEY_EFFECT_SOLID,
+                )
+            self.async_write_ha_state()
 
-        sock.send(bytearray(f"{json.dumps(request)}\n", "utf-8"))
-        try:
-            buf = sock.recv(4096)
-        except socket.timeout:
-            # Something is wrong, assume it's offline
-            sock.close()
-            return False
+    def _update_effect_list(self, _=None):
+        """Update Hyperion effects."""
+        if not self._client.effects:
+            return
+        effect_list = []
+        for effect in self._client.effects or []:
+            if const.KEY_NAME in effect:
+                effect_list.append(effect[const.KEY_NAME])
+        if effect_list:
+            self._effect_list = effect_list
+            self.async_write_ha_state()
 
-        # Read until a newline or timeout
-        buffering = True
-        while buffering:
-            if "\n" in str(buf, "utf-8"):
-                response = str(buf, "utf-8").split("\n")[0]
-                buffering = False
-            else:
-                try:
-                    more = sock.recv(4096)
-                except socket.timeout:
-                    more = None
-                if not more:
-                    buffering = False
-                    response = str(buf, "utf-8")
-                else:
-                    buf += more
+    def _update_full_state(self):
+        """Update full Hyperion state."""
+        self._update_adjustment()
+        self._update_priorities()
+        self._update_effect_list()
 
-        sock.close()
-        return json.loads(response)
+        _LOGGER.debug(
+            "Hyperion full state update: On=%s,Brightness=%i,Effect=%s "
+            "(%i effects total),Color=%s",
+            self.is_on,
+            self._brightness,
+            self._effect,
+            len(self._effect_list),
+            self._rgb_color,
+        )
+
+    def _update_client(self, json):
+        """Update client connection state."""
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Register callbacks when entity added to hass."""
+        self._client.set_callbacks(
+            {
+                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
+                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+                f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
+            }
+        )
+
+        # Load initial state.
+        self._update_full_state()
+        return True

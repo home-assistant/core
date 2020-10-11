@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "flow_title": "NZBGet: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    }
+}

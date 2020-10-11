@@ -18,16 +18,21 @@
                     "username": "Nome de Utilizador"
                 }
             },
+            "discovery_confirm": {
+                "title": "Kodi descoberto"
+            },
             "host": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "ssl": "Conecte-se por SSL"
                 }
             },
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "ssl": "Conecte-se por SSL"
                 },
                 "description": "Informa\u00e7\u00f5es de conex\u00e3o Kodi. Certifique-se de habilitar \"Permitir controle do Kodi via HTTP\" em Sistema / Configura\u00e7\u00f5es / Rede / Servi\u00e7os."
             },

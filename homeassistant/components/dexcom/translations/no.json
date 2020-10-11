@@ -5,6 +5,8 @@
         },
         "error": {
             "account_error": "Ugyldig godkjenning",
+            "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_auth": "Ugyldig godkjenning",
             "session_error": "Tilkobling mislyktes.",
             "unknown": "Uventet feil"
         },
@@ -12,6 +14,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
+                    "server": "",
                     "username": "Brukernavn"
                 },
                 "description": "Angi Dexcom Share-legitimasjon",

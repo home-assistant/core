@@ -13,6 +13,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Union,
 )
 
 import voluptuous as vol
@@ -43,9 +44,8 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity import Entity  # noqa
+    from homeassistant.helpers.entity_platform import EntityPlatform
 
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 CONF_SERVICE_DATA = "data"
@@ -340,7 +340,13 @@ def async_set_service_schema(
 
 
 @bind_hass
-async def entity_service_call(hass, platforms, func, call, required_features=None):
+async def entity_service_call(
+    hass: HomeAssistantType,
+    platforms: Iterable["EntityPlatform"],
+    func: Union[str, Callable[..., Any]],
+    call: ha.ServiceCall,
+    required_features: Optional[Iterable[int]] = None,
+) -> None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -349,7 +355,9 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms = user.permissions.check_entity
+        entity_perms: Optional[
+            Callable[[str, str], bool]
+        ] = user.permissions.check_entity
     else:
         entity_perms = None
 
@@ -361,7 +369,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data = {
+        data: Union[Dict, ha.ServiceCall] = {
             key: val
             for key, val in call.data.items()
             if key not in cv.ENTITY_SERVICE_FIELDS
@@ -373,7 +381,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
     # Check the permissions
 
     # A list with entities to call the service on.
-    entity_candidates = []
+    entity_candidates: List["Entity"] = []
 
     if entity_perms is None:
         for platform in platforms:
@@ -435,9 +443,12 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
             continue
 
         # Skip entities that don't have the required feature.
-        if required_features is not None and not any(
-            entity.supported_features & feature_set == feature_set
-            for feature_set in required_features
+        if required_features is not None and (
+            entity.supported_features is None
+            or not any(
+                entity.supported_features & feature_set == feature_set
+                for feature_set in required_features
+            )
         ):
             continue
 
@@ -476,12 +487,18 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
             future.result()  # pop exception if have
 
 
-async def _handle_entity_call(hass, entity, func, data, context):
+async def _handle_entity_call(
+    hass: HomeAssistantType,
+    entity: "Entity",
+    func: Union[str, Callable[..., Any]],
+    data: Union[Dict, ha.ServiceCall],
+    context: ha.Context,
+) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
 
     if isinstance(func, str):
-        result = hass.async_add_job(partial(getattr(entity, func), **data))
+        result = hass.async_add_job(partial(getattr(entity, func), **data))  # type: ignore
     else:
         result = hass.async_add_job(func, entity, data)
 
@@ -495,7 +512,7 @@ async def _handle_entity_call(hass, entity, func, data, context):
             func,
             entity.entity_id,
         )
-        await result
+        await result  # type: ignore
 
 
 @bind_hass
@@ -530,12 +547,12 @@ def async_register_admin_service(
 def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
     """Ensure permission to access any entity under domain in service call."""
 
-    def decorator(service_handler: Callable) -> Callable:
+    def decorator(service_handler: Callable[[ha.ServiceCall], Any]) -> Callable:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
 
-        async def check_permissions(call):
+        async def check_permissions(call: ha.ServiceCall) -> Any:
             """Check user permission and raise before call if unauthorized."""
             if not call.context.user_id:
                 return await service_handler(call)

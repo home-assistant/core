@@ -77,6 +77,18 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
+        # C=36: Active power L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:36.7.0*255": "L1 active instantaneous power",
+        # C=56: Active power L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:56.7.0*255": "L2 active instantaneous power",
+        # C=76: Active power L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:76.7.0*255": "L3 active instantaneous power",
     }
     _OBIS_BLACKLIST = {
         # A=129: Manufacturer specific
@@ -133,7 +145,7 @@ class EDL21:
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
-                        'https://github.com/home-assistant/home-assistant/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
+                        'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
                         obis,
                     )
                     self._OBIS_BLACKLIST.add(obis)

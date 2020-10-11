@@ -33,7 +33,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
         except ElgatoError:
-            return self._show_setup_form({"base": "connection_error"})
+            return self._show_setup_form({"base": "cannot_connect"})
 
         # Check if already configured
         await self.async_set_unique_id(info.serial_number)
@@ -53,14 +53,14 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
         if user_input is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         try:
             info = await self._get_elgato_info(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
         except ElgatoError:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
         await self.async_set_unique_id(info.serial_number)
@@ -92,7 +92,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.context.get(CONF_HOST), self.context.get(CONF_PORT)
             )
         except ElgatoError:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
         await self.async_set_unique_id(info.serial_number)

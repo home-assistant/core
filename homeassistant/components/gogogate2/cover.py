@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_GATE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     CoverEntity,
@@ -33,7 +34,7 @@ from .common import (
     cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +120,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
+        door = self._get_door()
+        if door.gate:
+            return DEVICE_CLASS_GATE
+
         return DEVICE_CLASS_GARAGE
 
     @property
@@ -149,3 +154,15 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
+
+    @property
+    def device_info(self):
+        """Device info for the controller."""
+        data = self.coordinator.data
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "name": self._config_entry.title,
+            "manufacturer": MANUFACTURER,
+            "model": data.model,
+            "sw_version": data.firmwareversion,
+        }

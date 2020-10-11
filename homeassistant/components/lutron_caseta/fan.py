@@ -84,7 +84,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        self._smartbridge.set_fan(self.device_id, SPEED_TO_VALUE[speed])
+        await self._smartbridge.set_fan(self.device_id, SPEED_TO_VALUE[speed])
 
     @property
     def is_on(self):

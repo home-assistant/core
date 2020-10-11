@@ -43,8 +43,15 @@
             "ws_port": {
                 "data": {
                     "ws_port": "Port"
-                }
+                },
+                "description": "De Websocket Port (heiansdo TCP port am Kodi genannt). Fir sech k\u00ebnnen iwwer Websocket ze verbannen muss du \"Allow programs ... to control Kodi\" an de System/Settings/Network/Services aktiv\u00e9ieren. Falls Websocket net aktiv\u00e9iert ass, l\u00e4sch de Port a loss eidel."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} soll ugeschalt ginn",
+            "turn_on": "{entity_name} soll ugeschalt ginn"
         }
     }
 }

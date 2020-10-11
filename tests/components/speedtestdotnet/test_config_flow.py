@@ -108,7 +108,7 @@ async def test_options(hass):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_SERVER_NAME: "Country1 - Server1",
+                CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
                 CONF_SCAN_INTERVAL: 30,
                 CONF_MANUAL: False,
             },
@@ -116,7 +116,7 @@ async def test_options(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_SERVER_NAME: "Country1 - Server1",
+            CONF_SERVER_NAME: "Country1 - Sponsor1 - Server1",
             CONF_SERVER_ID: "1",
             CONF_SCAN_INTERVAL: 30,
             CONF_MANUAL: False,
@@ -135,4 +135,4 @@ async def test_integration_already_configured(hass):
         speedtestdotnet.DOMAIN, context={"source": "user"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"

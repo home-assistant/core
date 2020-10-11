@@ -29,11 +29,31 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize the config flow."""
+        self._ip_address = None
+        self._device_type = None
+
     async def async_step_import(self, config_data: dict = None):
         """Handle importing of configuration."""
         result = await self.async_step_user(config_data)
         self._abort_if_unique_id_configured()
         return result
+
+    async def async_step_homekit(self, discovery_info):
+        """Handle homekit discovery."""
+        await self.async_set_unique_id(discovery_info["properties"]["id"])
+        self._abort_if_unique_id_configured({CONF_IP_ADDRESS: discovery_info["host"]})
+
+        ip_address = discovery_info["host"]
+
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
+                return self.async_abort(reason="already_configured")
+
+        self._ip_address = ip_address
+        self._device_type = DEVICE_TYPE_ISMARTGATE
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input: dict = None):
         """Handle user initiated flow."""
@@ -88,10 +108,12 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_DEVICE,
-                        default=user_input.get(CONF_DEVICE, DEVICE_TYPE_GOGOGATE2),
+                        default=self._device_type
+                        or user_input.get(CONF_DEVICE, DEVICE_TYPE_GOGOGATE2),
                     ): vol.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
                     vol.Required(
-                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS, "")
+                        CONF_IP_ADDRESS,
+                        default=user_input.get(CONF_IP_ADDRESS, self._ip_address),
                     ): str,
                     vol.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")

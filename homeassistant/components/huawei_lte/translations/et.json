@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "incorrect_password": "Vale salas\u00f5na",
+            "incorrect_username_or_password": "Vale kasutajanimi v\u00f5i salas\u00f5na",
+            "invalid_auth": "Tuvastamise viga",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

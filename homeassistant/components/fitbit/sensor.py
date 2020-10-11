@@ -357,7 +357,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get("code") is not None:
-            redirect_uri = f"{get_url(hass)}{FITBIT_AUTH_CALLBACK_PATH}"
+            redirect_uri = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
                 result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)

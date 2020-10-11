@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana."
+            "already_configured": "[%key::common::config_flow::abort::already_configured_service%]"
         },
         "step": {
             "user": {

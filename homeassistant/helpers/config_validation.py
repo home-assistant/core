@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
+    CONF_VARIABLES,
     CONF_WAIT_FOR_TRIGGER,
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
@@ -81,7 +82,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_helper
+from homeassistant.helpers import (
+    script_variables as script_variables_helper,
+    template as template_helper,
+)
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
@@ -698,7 +702,7 @@ def deprecated(
     else:
         # If Python is unable to access the sources files, the call stack frame
         # will be missing information, so let's guard.
-        # https://github.com/home-assistant/home-assistant/issues/24982
+        # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
 
     if replacement_key and invalidation_version:
@@ -824,6 +828,12 @@ def custom_serializer(schema: Any) -> Any:
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
+    if schema is string:
+        return {"type": "string"}
+
+    if schema is boolean:
+        return {"type": "boolean"}
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
 
@@ -861,6 +871,13 @@ def make_entity_service_schema(
         ),
         has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
     )
+
+
+SCRIPT_VARIABLES_SCHEMA = vol.All(
+    vol.Schema({str: template_complex}),
+    # pylint: disable=unnecessary-lambda
+    lambda val: script_variables_helper.ScriptVariables(val),
+)
 
 
 def script_action(value: Any) -> dict:
@@ -906,29 +923,55 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Coerce(float),
-            CONF_ABOVE: vol.Coerce(float),
+            CONF_BELOW: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
+            CONF_ABOVE: vol.Any(
+                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+            ),
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
     has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-STATE_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
-            vol.Optional(CONF_ATTRIBUTE): str,
-            vol.Required(CONF_STATE): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): positive_time_period,
-            # To support use_trigger_value in automation
-            # Deprecated 2016/04/25
-            vol.Optional("from"): str,
-        }
-    ),
-    key_dependency("for", "state"),
+STATE_CONDITION_BASE_SCHEMA = {
+    vol.Required(CONF_CONDITION): "state",
+    vol.Required(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ATTRIBUTE): str,
+    vol.Optional(CONF_FOR): positive_time_period,
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional("from"): str,
+}
+
+STATE_CONDITION_STATE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): vol.Any(str, [str]),
+    }
 )
+
+STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): match_all,
+    }
+)
+
+
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+    """Validate a state condition."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Expected a dictionary")
+
+    if CONF_ATTRIBUTE in value:
+        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+    else:
+        validated = STATE_CONDITION_STATE_SCHEMA(value)
+
+    return key_dependency("for", "state")(validated)
+
 
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema(
@@ -1113,6 +1156,13 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+    }
+)
+
 SCRIPT_ACTION_DELAY = "delay"
 SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 SCRIPT_ACTION_CHECK_CONDITION = "condition"
@@ -1123,6 +1173,7 @@ SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
 SCRIPT_ACTION_REPEAT = "repeat"
 SCRIPT_ACTION_CHOOSE = "choose"
 SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_VARIABLES = "variables"
 
 
 def determine_script_action(action: dict) -> str:
@@ -1154,6 +1205,9 @@ def determine_script_action(action: dict) -> str:
     if CONF_WAIT_FOR_TRIGGER in action:
         return SCRIPT_ACTION_WAIT_FOR_TRIGGER
 
+    if CONF_VARIABLES in action:
+        return SCRIPT_ACTION_VARIABLES
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1168,4 +1222,5 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }

@@ -143,9 +143,12 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
         self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
-            server_list.values(), key=lambda server: server[0]["country"]
+            server_list.values(),
+            key=lambda server: server[0]["country"] + server[0]["sponsor"],
         ):
-            self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
+            self.servers[
+                f"{server[0]['country']} - {server[0]['sponsor']} - {server[0]['name']}"
+            ] = server[0]
 
     def update_data(self):
         """Get the latest data from speedtest.net."""

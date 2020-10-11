@@ -27,6 +27,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -71,6 +72,7 @@ from .const import (
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
@@ -85,6 +87,7 @@ from .const import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN,
+    MEDIA_CLASS_DIRECTORY,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
@@ -138,6 +141,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
 ATTR_TO_PROPERTY = [
@@ -519,7 +523,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_executor_job(self.turn_on)
 
     def turn_off(self):
         """Turn the media player off."""
@@ -527,7 +531,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        await self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_executor_job(self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -535,7 +539,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.hass.async_add_job(self.mute_volume, mute)
+        await self.hass.async_add_executor_job(self.mute_volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -543,7 +547,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self.hass.async_add_job(self.set_volume_level, volume)
+        await self.hass.async_add_executor_job(self.set_volume_level, volume)
 
     def media_play(self):
         """Send play command."""
@@ -551,7 +555,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_play(self):
         """Send play command."""
-        await self.hass.async_add_job(self.media_play)
+        await self.hass.async_add_executor_job(self.media_play)
 
     def media_pause(self):
         """Send pause command."""
@@ -559,7 +563,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self.hass.async_add_job(self.media_pause)
+        await self.hass.async_add_executor_job(self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
@@ -567,7 +571,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_stop(self):
         """Send stop command."""
-        await self.hass.async_add_job(self.media_stop)
+        await self.hass.async_add_executor_job(self.media_stop)
 
     def media_previous_track(self):
         """Send previous track command."""
@@ -575,7 +579,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self.hass.async_add_job(self.media_previous_track)
+        await self.hass.async_add_executor_job(self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
@@ -583,7 +587,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self.hass.async_add_job(self.media_next_track)
+        await self.hass.async_add_executor_job(self.media_next_track)
 
     def media_seek(self, position):
         """Send seek command."""
@@ -591,7 +595,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_seek(self, position):
         """Send seek command."""
-        await self.hass.async_add_job(self.media_seek, position)
+        await self.hass.async_add_executor_job(self.media_seek, position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -599,7 +603,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
@@ -609,7 +613,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_select_source(self, source):
         """Select input source."""
-        await self.hass.async_add_job(self.select_source, source)
+        await self.hass.async_add_executor_job(self.select_source, source)
 
     def select_sound_mode(self, sound_mode):
         """Select sound mode."""
@@ -617,7 +621,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
-        await self.hass.async_add_job(self.select_sound_mode, sound_mode)
+        await self.hass.async_add_executor_job(self.select_sound_mode, sound_mode)
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -625,7 +629,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
-        await self.hass.async_add_job(self.clear_playlist)
+        await self.hass.async_add_executor_job(self.clear_playlist)
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -633,7 +637,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        await self.hass.async_add_job(self.set_shuffle, shuffle)
+        await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
 
     # No need to overwrite these.
     @property
@@ -705,7 +709,7 @@ class MediaPlayerEntity(Entity):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.toggle)
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in [STATE_OFF, STATE_IDLE]:
@@ -720,7 +724,7 @@ class MediaPlayerEntity(Entity):
         """
         if hasattr(self, "volume_up"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.volume_up)
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if self.volume_level < 1 and self.supported_features & SUPPORT_VOLUME_SET:
@@ -733,7 +737,7 @@ class MediaPlayerEntity(Entity):
         """
         if hasattr(self, "volume_down"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.volume_down)
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if self.volume_level > 0 and self.supported_features & SUPPORT_VOLUME_SET:
@@ -743,7 +747,7 @@ class MediaPlayerEntity(Entity):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.media_play_pause)
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == STATE_PLAYING:
@@ -816,23 +820,10 @@ class MediaPlayerEntity(Entity):
         media_content_type: Optional[str] = None,
         media_content_id: Optional[str] = None,
     ) -> "BrowseMedia":
-        """
-        Return a payload for the "media_player/browse_media" websocket command.
+        """Return a BrowseMedia instance.
 
-        Payload should follow this format:
-            {
-                "title": str - Title of the item
-                "media_content_type": str - see below
-                "media_content_id": str - see below
-                  - Can be passed back in to browse further
-                  - Can be used as-is with media_player.play_media service
-                "can_play": bool - If item is playable
-                "can_expand": bool - If item contains other media
-                "thumbnail": str (Optional) - URL to image thumbnail for item
-                "children": list (Optional) - [{<item_with_keys_above>}, ...]
-            }
-
-        Note: Children should omit the children key.
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
         """
         raise NotImplementedError()
 
@@ -892,7 +883,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else 401
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
             return web.Response(status=status)
 
         authenticated = (
@@ -901,7 +892,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=401)
+            return web.Response(status=HTTP_UNAUTHORIZED)
 
         data, content_type = await player.async_get_media_image()
 
@@ -1046,31 +1037,40 @@ class BrowseMedia:
     def __init__(
         self,
         *,
+        media_class: str,
         media_content_id: str,
         media_content_type: str,
         title: str,
         can_play: bool,
         can_expand: bool,
         children: Optional[List["BrowseMedia"]] = None,
+        children_media_class: Optional[str] = None,
         thumbnail: Optional[str] = None,
     ):
         """Initialize browse media item."""
+        self.media_class = media_class
         self.media_content_id = media_content_id
         self.media_content_type = media_content_type
         self.title = title
         self.can_play = can_play
         self.can_expand = can_expand
         self.children = children
+        self.children_media_class = children_media_class
         self.thumbnail = thumbnail
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
+        if self.children_media_class is None:
+            self.calculate_children_class()
+
         response = {
             "title": self.title,
+            "media_class": self.media_class,
             "media_content_type": self.media_content_type,
             "media_content_id": self.media_content_id,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "children_media_class": self.children_media_class,
             "thumbnail": self.thumbnail,
         }
 
@@ -1085,3 +1085,14 @@ class BrowseMedia:
             response["children"] = []
 
         return response
+
+    def calculate_children_class(self) -> None:
+        """Count the children media classes and calculate the correct class."""
+        if self.children is None or len(self.children) == 0:
+            return
+
+        self.children_media_class = MEDIA_CLASS_DIRECTORY
+
+        proposed_class = self.children[0].media_class
+        if all(child.media_class == proposed_class for child in self.children):
+            self.children_media_class = proposed_class

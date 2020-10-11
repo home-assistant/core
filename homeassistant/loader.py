@@ -25,6 +25,7 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 
@@ -145,18 +146,25 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: Dict[str, List] = ZEROCONF.copy()
+    zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
-        for typ in integration.zeroconf:
-            zeroconf.setdefault(typ, [])
-            if integration.domain not in zeroconf[typ]:
-                zeroconf[typ].append(integration.domain)
+        for entry in integration.zeroconf:
+            data = {"domain": integration.domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
+
+            zeroconf.setdefault(typ, []).append(data)
 
     return zeroconf
 
@@ -193,6 +201,21 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
         ssdp[integration.domain] = integration.ssdp
 
     return ssdp
+
+
+async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+    """Return cached list of MQTT mappings."""
+
+    mqtt: Dict[str, List] = MQTT.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.mqtt:
+            continue
+
+        mqtt[integration.domain] = integration.mqtt
+
+    return mqtt
 
 
 class Integration:
@@ -315,6 +338,11 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def mqtt(self) -> Optional[list]:
+        """Return Integration MQTT entries."""
+        return cast(List[dict], self.manifest.get("mqtt"))
 
     @property
     def ssdp(self) -> Optional[list]:

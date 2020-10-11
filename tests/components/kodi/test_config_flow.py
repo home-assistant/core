@@ -165,6 +165,51 @@ async def test_form_valid_ws_port(hass, user_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_empty_ws_port(hass, user_flow):
+    """Test we handle an empty websocket port input."""
+    with patch(
+        "homeassistant.components.kodi.config_flow.Kodi.ping",
+        return_value=True,
+    ), patch.object(
+        MockWSConnection,
+        "connect",
+        AsyncMock(side_effect=CannotConnectError),
+    ), patch(
+        "homeassistant.components.kodi.config_flow.get_kodi_connection",
+        new=get_kodi_connection,
+    ):
+        result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "ws_port"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.kodi.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.kodi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ws_port": 0}
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_HOST["host"]
+    assert result["data"] == {
+        **TEST_HOST,
+        "ws_port": None,
+        "password": None,
+        "username": None,
+        "name": None,
+        "timeout": DEFAULT_TIMEOUT,
+    }
+
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_auth(hass, user_flow):
     """Test we handle invalid auth."""
     with patch(

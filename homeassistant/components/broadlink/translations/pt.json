@@ -11,6 +11,21 @@
         },
         "flow_title": "{name} ({model} em {host})",
         "step": {
+            "auth": {
+                "title": "Autenticar no dispositivo"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nome"
+                },
+                "title": "Escolha um nome para o dispositivo"
+            },
+            "reset": {
+                "title": "Desbloqueie o dispositivo"
+            },
+            "unlock": {
+                "title": "Desbloqueie o dispositivo (opcional)"
+            },
             "user": {
                 "data": {
                     "host": "Servidor"

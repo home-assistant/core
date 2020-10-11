@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "connection_error": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata"
+        }
+    }
+}

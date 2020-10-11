@@ -1,7 +1,7 @@
 """
 Test against characteristics captured from a SIMPLEconnect Fan.
 
-https://github.com/home-assistant/home-assistant/issues/26180
+https://github.com/home-assistant/core/issues/26180
 """
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED

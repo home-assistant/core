@@ -6,6 +6,7 @@ from unittest import mock
 
 from homeassistant import setup
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
@@ -411,7 +412,10 @@ async def test_available_without_availability_template(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_DEVICE_CLASS] == "motion"
 
 
 async def test_availability_template(hass):
@@ -443,7 +447,10 @@ async def test_availability_template(hass):
     hass.states.async_set("sensor.test_state", STATE_ON)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_DEVICE_CLASS] == "motion"
 
 
 async def test_invalid_attribute_template(hass, caplog):

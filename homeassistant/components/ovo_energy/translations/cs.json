@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "P\u0159idejte \u00fa\u010det OVO Energy"
+            }
+        }
+    }
+}

@@ -16,7 +16,7 @@
                     "port": "[%key::common::config_flow::data::port%]",
                     "site": "ID del lloc",
                     "username": "[%key::common::config_flow::data::username%]",
-                    "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Configuraci\u00f3 del controlador UniFi"
             }
@@ -54,7 +54,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Sensors d'utilitzaci\u00f3 d'ample de banda per a clients de la xarxa"
+                    "allow_bandwidth_sensors": "Sensors d'utilitzaci\u00f3 d'ample de banda per a clients de la xarxa",
+                    "allow_uptime_sensors": "Sensors de temps d'activitat per a clients de xarxa"
                 },
                 "description": "Configuraci\u00f3 dels sensors d'estad\u00edstiques",
                 "title": "Opcions d'UniFi 3/3"

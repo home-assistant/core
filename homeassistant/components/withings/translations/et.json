@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+        },
+        "error": {
+            "already_configured_account": "Konto on juba h\u00e4\u00e4lestatud"
+        }
+    }
+}

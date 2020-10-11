@@ -410,6 +410,11 @@ class MockPlexLibrarySection:
             return "photo"
 
     @property
+    def TYPE(self):
+        """Return the library type."""
+        return self.type
+
+    @property
     def key(self):
         """Mock the key identifier property."""
         return str(id(self.title))

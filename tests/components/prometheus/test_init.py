@@ -9,6 +9,7 @@ from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
@@ -97,7 +98,7 @@ async def test_view(hass, hass_client):
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
-    assert resp.headers["content-type"] == "text/plain"
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")
 

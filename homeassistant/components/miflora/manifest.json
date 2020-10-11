@@ -1,8 +1,7 @@
 {
-  "disabled": "Dependency contains code that breaks Home Assistant.",
   "domain": "miflora",
   "name": "Mi Flora",
   "documentation": "https://www.home-assistant.io/integrations/miflora",
-  "requirements": ["bluepy==1.3.0", "miflora==0.6.0"],
-  "codeowners": ["@danielhiversen", "@ChristianKuehnel"]
+  "requirements": ["bluepy==1.3.0", "miflora==0.7.0"],
+  "codeowners": ["@danielhiversen", "@ChristianKuehnel", "@basnijholt"]
 }

@@ -3,8 +3,13 @@ import asyncio
 from datetime import timedelta
 from math import ceil
 
-from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, NodeProError
+from pyairvisual import CloudAPI, NodeSamba
+from pyairvisual.errors import (
+    AirVisualError,
+    InvalidKeyError,
+    KeyExpiredError,
+    NodeProError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -206,29 +211,36 @@ def _standardize_node_pro_config_entry(hass, config_entry):
 
 async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
-    websession = aiohttp_client.async_get_clientsession(hass)
-
     if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
 
-        client = Client(api_key=config_entry.data[CONF_API_KEY], session=websession)
+        websession = aiohttp_client.async_get_clientsession(hass)
+        cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
         async def async_update_data():
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
-                api_coro = client.api.city(
+                api_coro = cloud_api.air_quality.city(
                     config_entry.data[CONF_CITY],
                     config_entry.data[CONF_STATE],
                     config_entry.data[CONF_COUNTRY],
                 )
             else:
-                api_coro = client.api.nearest_city(
+                api_coro = cloud_api.air_quality.nearest_city(
                     config_entry.data[CONF_LATITUDE],
                     config_entry.data[CONF_LONGITUDE],
                 )
 
             try:
                 return await api_coro
+            except (InvalidKeyError, KeyExpiredError):
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=config_entry.data,
+                    )
+                )
             except AirVisualError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -254,17 +266,13 @@ async def async_setup_entry(hass, config_entry):
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
-        client = Client(session=websession)
-
         async def async_update_data():
             """Get new data from the API."""
             try:
-                return await client.node.from_samba(
-                    config_entry.data[CONF_IP_ADDRESS],
-                    config_entry.data[CONF_PASSWORD],
-                    include_history=False,
-                    include_trends=False,
-                )
+                async with NodeSamba(
+                    config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
+                ) as node:
+                    return await node.async_get_latest_measurements()
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 

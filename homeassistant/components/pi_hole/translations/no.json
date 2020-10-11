@@ -13,7 +13,8 @@
                     "host": "Vert",
                     "location": "Beliggenhet",
                     "name": "Navn",
-                    "ssl": "Bruk SSL",
+                    "port": "",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }

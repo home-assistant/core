@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_account": "Account is already configured",
             "cannot_connect": "Failed to connect",
-            "reauth_successful": "Access Token updated successfully",
+            "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
         },
         "error": {

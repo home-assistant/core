@@ -15,8 +15,10 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ROUTER,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.process import kill_subprocess
 
+from . import async_get_next_ping_id
 from .const import PING_ATTEMPTS_COUNT, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,15 +78,22 @@ class HostSubProcess:
 class HostICMPLib:
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, _, config):
+    def __init__(self, ip_address, dev_id, hass, config):
         """Initialize the Host pinger."""
+        self.hass = hass
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        return icmp_ping(self.ip_address, count=PING_ATTEMPTS_COUNT).is_alive
+        next_id = run_callback_threadsafe(
+            self.hass.loop, async_get_next_ping_id, self.hass
+        ).result()
+
+        return icmp_ping(
+            self.ip_address, count=PING_ATTEMPTS_COUNT, id=next_id
+        ).is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""

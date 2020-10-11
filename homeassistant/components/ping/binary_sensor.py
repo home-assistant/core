@@ -1,6 +1,7 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 import re
 import sys
@@ -9,12 +10,16 @@ from typing import Any, Dict
 from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
-from . import DOMAIN, PLATFORMS
+from . import DOMAIN, PLATFORMS, async_get_next_ping_id
 from .const import PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +34,6 @@ CONF_PING_COUNT = "count"
 
 DEFAULT_NAME = "Ping"
 DEFAULT_PING_COUNT = 5
-DEFAULT_DEVICE_CLASS = "connectivity"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -93,7 +97,7 @@ class PingBinarySensor(BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
-        return DEFAULT_DEVICE_CLASS
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def is_on(self) -> bool:
@@ -131,20 +135,28 @@ class PingData:
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
-    def ping(self):
-        """Send ICMP echo request and return details."""
-        return icmp_ping(self._ip_address, count=self._count)
-
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
-        data = await self.hass.async_add_executor_job(self.ping)
+        _LOGGER.debug("ping address: %s", self._ip_address)
+        data = await self.hass.async_add_executor_job(
+            partial(
+                icmp_ping,
+                self._ip_address,
+                count=self._count,
+                id=async_get_next_ping_id(self.hass),
+            )
+        )
+        self.available = data.is_alive
+        if not self.available:
+            self.data = False
+            return
+
         self.data = {
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
             "mdev": "",
         }
-        self.available = data.is_alive
 
 
 class PingDataSubProcess(PingData):
@@ -201,7 +213,8 @@ class PingDataSubProcess(PingData):
                     out_error,
                 )
 
-            if pinger.returncode != 0:
+            if pinger.returncode > 1:
+                # returncode of 1 means the host is unreachable
                 _LOGGER.exception(
                     "Error running command: `%s`, return code: %s",
                     " ".join(self._ping_cmd),

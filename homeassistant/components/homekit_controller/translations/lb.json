@@ -7,6 +7,7 @@
             "already_paired": "D\u00ebsen Accessoire ass schonn mat engem aneren Apparat verbonnen. S\u00ebtzt den Apparat op Wierksastellungen zer\u00e9ck an prob\u00e9iert nach emol w.e.g.",
             "ignored_model": "HomeKit Support fir d\u00ebse Modell ass block\u00e9iert well eng m\u00e9i komplett nativ Integratioun disponibel ass.",
             "invalid_config_entry": "D\u00ebsen Apparat mellt sech prett fir ze verbanne mee et g\u00ebtt schonn eng Entr\u00e9e am Home Assistant d\u00e9i ee Konflikt duerstellt welch fir d'\u00e9ischt muss erausgeholl ginn.",
+            "invalid_properties": "Ong\u00eblteg Eegeschafte vum Apparat annonc\u00e9iert",
             "no_devices": "Keng net verbonnen Apparater fonnt"
         },
         "error": {
@@ -51,6 +52,26 @@
                 "description": "Wielt den Apparat aus dee soll verbonne ginn",
                 "title": "Mam HomeKit Accessoire verbannen"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Kn\u00e4ppchen 1",
+            "button10": "Kn\u00e4ppchen 10",
+            "button2": "Kn\u00e4ppchen 2",
+            "button3": "Kn\u00e4ppchen 3",
+            "button4": "Kn\u00e4ppchen 4",
+            "button5": "Kn\u00e4ppchen 5",
+            "button6": "Kn\u00e4ppchen 6",
+            "button7": "Kn\u00e4ppchen 7",
+            "button8": "Kn\u00e4ppchen 8",
+            "button9": "Kn\u00e4ppchen 9",
+            "doorbell": "Schell"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" zwee mol gedr\u00e9ckt",
+            "long_press": "\"{subtype}\" gedr\u00e9ckt an ugehal",
+            "single_press": "\"{subtype}\" gedr\u00e9ckt"
         }
     },
     "title": "HomeKit Kontroller"

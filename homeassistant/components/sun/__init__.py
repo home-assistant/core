@@ -41,7 +41,7 @@ STATE_ATTR_NEXT_SETTING = "next_setting"
 # The algorithm used here is somewhat complicated. It aims to cut down
 # the number of sensor updates over the day. It's documented best in
 # the PR for the change, see the Discussion section of:
-# https://github.com/home-assistant/home-assistant/pull/23832
+# https://github.com/home-assistant/core/pull/23832
 
 
 # As documented in wikipedia: https://en.wikipedia.org/wiki/Twilight

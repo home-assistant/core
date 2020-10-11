@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "already_configured": "Tjenesten er allerede konfigurert",
             "name_exists": "Lokasjonen finnes allerede"
         },
         "step": {
@@ -11,6 +12,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
+                "description": "",
                 "title": "Lokasjon"
             }
         }

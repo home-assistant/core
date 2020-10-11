@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -38,12 +38,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
     cancel_pressed_more_than = None
+    job = HassJob(action)
 
     @callback
     def call_action():
         """Call action with right context."""
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {
                 "trigger": {
                     CONF_PLATFORM: "litejet",

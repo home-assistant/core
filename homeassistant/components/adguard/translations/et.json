@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "Olemasolevad seaded v\u00e4rskendatud."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus eba\u00f5nnestus",
+            "connection_error": "\u00dchenduse loomine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    }
+}

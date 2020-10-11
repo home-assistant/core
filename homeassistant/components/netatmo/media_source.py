@@ -1,12 +1,17 @@
 """Netatmo Media Source Implementation."""
 import datetime as dt
+import logging
 import re
 from typing import Optional, Tuple
 
-from homeassistant.components.media_player.const import MEDIA_TYPE_VIDEO
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_VIDEO,
+    MEDIA_TYPE_VIDEO,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.const import MEDIA_MIME_TYPES
-from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -17,7 +22,12 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DATA_CAMERAS, DATA_EVENTS, DOMAIN, MANUFACTURER
 
+_LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
+
+
+class IncompatibleMediaSource(MediaSourceError):
+    """Incompatible media source attributes."""
 
 
 async def async_get_media_source(hass: HomeAssistant):
@@ -44,7 +54,7 @@ class NetatmoSource(MediaSource):
 
     async def async_browse_media(
         self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
-    ) -> Optional[BrowseMediaSource]:
+    ) -> BrowseMediaSource:
         """Return media."""
         try:
             source, camera_id, event_id = async_parse_identifier(item)
@@ -55,7 +65,7 @@ class NetatmoSource(MediaSource):
 
     def _browse_media(
         self, source: str, camera_id: str, event_id: int
-    ) -> Optional[BrowseMediaSource]:
+    ) -> BrowseMediaSource:
         """Browse media."""
         if camera_id and camera_id not in self.events:
             raise BrowseError("Camera does not exist.")
@@ -67,11 +77,23 @@ class NetatmoSource(MediaSource):
 
     def _build_item_response(
         self, source: str, camera_id: str, event_id: int = None
-    ) -> Optional[BrowseMediaSource]:
+    ) -> BrowseMediaSource:
         if event_id and event_id in self.events[camera_id]:
             created = dt.datetime.fromtimestamp(event_id)
-            thumbnail = self.events[camera_id][event_id].get("snapshot", {}).get("url")
-            message = remove_html_tags(self.events[camera_id][event_id]["message"])
+            if self.events[camera_id][event_id]["type"] == "outdoor":
+                thumbnail = (
+                    self.events[camera_id][event_id]["event_list"][0]
+                    .get("snapshot", {})
+                    .get("url")
+                )
+                message = remove_html_tags(
+                    self.events[camera_id][event_id]["event_list"][0]["message"]
+                )
+            else:
+                thumbnail = (
+                    self.events[camera_id][event_id].get("snapshot", {}).get("url")
+                )
+                message = remove_html_tags(self.events[camera_id][event_id]["message"])
             title = f"{created} - {message}"
         else:
             title = self.hass.data[DOMAIN][DATA_CAMERAS].get(camera_id, MANUFACTURER)
@@ -82,9 +104,12 @@ class NetatmoSource(MediaSource):
         else:
             path = f"{source}/{camera_id}"
 
+        media_class = MEDIA_CLASS_DIRECTORY if event_id is None else MEDIA_CLASS_VIDEO
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=path,
+            media_class=media_class,
             media_content_type=MEDIA_TYPE_VIDEO,
             title=title,
             can_play=bool(
@@ -95,7 +120,10 @@ class NetatmoSource(MediaSource):
         )
 
         if not media.can_play and not media.can_expand:
-            return None
+            _LOGGER.debug(
+                "Camera %s with event %s without media url found", camera_id, event_id
+            )
+            raise IncompatibleMediaSource
 
         if not media.can_expand:
             return media
@@ -109,7 +137,10 @@ class NetatmoSource(MediaSource):
                     media.children.append(child)
         else:
             for eid in self.events[camera_id]:
-                child = self._build_item_response(source, camera_id, eid)
+                try:
+                    child = self._build_item_response(source, camera_id, eid)
+                except IncompatibleMediaSource:
+                    continue
                 if child:
                     media.children.append(child)
 

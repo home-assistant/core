@@ -1,11 +1,10 @@
 """The tests for the MQTT sensor platform."""
+import copy
 from datetime import datetime, timedelta
 import json
 
 import pytest
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
@@ -74,9 +73,7 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     assert state.attributes.get("unit_of_measurement") == "fav unit"
 
 
-async def test_setting_sensor_value_expires_availability_topic(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -106,9 +103,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -430,12 +425,71 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     await help_test_discovery_removal(hass, mqtt_mock, caplog, sensor.DOMAIN, data)
 
 
-async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
+async def test_discovery_update_sensor_topic_template(hass, mqtt_mock, caplog):
     """Test update of discovered sensor."""
-    data1 = '{ "name": "Beer", "state_topic": "test_topic" }'
-    data2 = '{ "name": "Milk", "state_topic": "test_topic" }'
+    config = {"name": "test", "state_topic": "test_topic"}
+    config1 = copy.deepcopy(config)
+    config2 = copy.deepcopy(config)
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state2"
+    config1["value_template"] = "{{ value_json.state | int }}"
+    config2["value_template"] = "{{ value_json.state | int * 2 }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state":100}')], "100", None),
+    ]
+    state_data2 = [
+        ([("sensor/state1", '{"state":1000}')], "100", None),
+        ([("sensor/state1", '{"state":1000}')], "100", None),
+        ([("sensor/state2", '{"state":100}')], "200", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, sensor.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_sensor_template(hass, mqtt_mock, caplog):
+    """Test update of discovered sensor."""
+    config = {"name": "test", "state_topic": "test_topic"}
+    config1 = copy.deepcopy(config)
+    config2 = copy.deepcopy(config)
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state1"
+    config1["value_template"] = "{{ value_json.state | int }}"
+    config2["value_template"] = "{{ value_json.state | int * 2 }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state":100}')], "100", None),
+    ]
+    state_data2 = [
+        ([("sensor/state1", '{"state":100}')], "200", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 
@@ -504,9 +558,6 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     registry = await hass.helpers.device_registry.async_get_registry()
     hub = registry.async_get_or_create(
         config_entry_id="123",

@@ -11,13 +11,6 @@ from wolf_smartset.models import (
     Temperature,
 )
 
-from homeassistant.components.wolflink.const import (
-    COORDINATOR,
-    DEVICE_ID,
-    DOMAIN,
-    PARAMETERS,
-    STATES,
-)
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -26,6 +19,8 @@ from homeassistant.const import (
     TIME_HOURS,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS, STATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +58,7 @@ class WolfLinkSensor(CoordinatorEntity):
         super().__init__(coordinator)
         self.wolf_object = wolf_object
         self.device_id = device_id
+        self._state = None
 
     @property
     def name(self):
@@ -71,8 +67,10 @@ class WolfLinkSensor(CoordinatorEntity):
 
     @property
     def state(self):
-        """Return the state."""
-        return self.coordinator.data[self.wolf_object.value_id]
+        """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
+        if self.wolf_object.value_id in self.coordinator.data:
+            self._state = self.coordinator.data[self.wolf_object.value_id]
+        return self._state
 
     @property
     def device_state_attributes(self):
@@ -151,7 +149,7 @@ class WolfLinkState(WolfLinkSensor):
     @property
     def state(self):
         """Return the state converting with supported values."""
-        state = self.coordinator.data[self.wolf_object.value_id]
+        state = super().state
         resolved_state = [
             item for item in self.wolf_object.items if item.value == int(state)
         ]

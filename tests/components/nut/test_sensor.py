@@ -72,7 +72,7 @@ async def test_5e850i(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -97,7 +97,7 @@ async def test_5e650i(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online Battery Charging",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -125,7 +125,7 @@ async def test_backupsses600m1(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

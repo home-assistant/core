@@ -2,7 +2,11 @@
 import pytest
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CURRENCY_EURO,
+    ENERGY_KILO_WATT_HOUR,
+)
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -15,7 +19,10 @@ FIXTURE_JSON_DATA_2019_10_29 = "PVPC_CURV_DD_2019_10_29.json"
 def check_valid_state(state, tariff: str, value=None, key_attr=None):
     """Ensure that sensor has a valid state and attributes."""
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == f"€/{ENERGY_KILO_WATT_HOUR}"
+    assert (
+        state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
     try:
         _ = float(state.state)
         # safety margins for current electricity price (it shouldn't be out of [0, 0.2])

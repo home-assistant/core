@@ -127,3 +127,4 @@ def get_static_devices(config_data) -> SmartDevices:
                     "Failed to setup device %s due to %s; not retrying", host, sde
                 )
     return SmartDevices(lights, switches)
+

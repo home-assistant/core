@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_UNIQUE_ID,
+    CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -157,6 +158,9 @@ async def async_setup_entity_basic(
     hass, config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
+    if CONF_STATE_VALUE_TEMPLATE not in config and CONF_VALUE_TEMPLATE in config:
+        config[CONF_STATE_VALUE_TEMPLATE] = config[CONF_VALUE_TEMPLATE]
+
     async_add_entities([MqttLight(hass, config, config_entry, discovery_data)])
 
 
@@ -250,7 +254,7 @@ class MqttLight(
 
         value_templates = {}
         for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = lambda value: value
+            value_templates[key] = lambda value, _: value
         for key in VALUE_TEMPLATE_KEYS & config.keys():
             tpl = config[key]
             value_templates[key] = tpl.async_render_with_possible_json_value
@@ -300,7 +304,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](
+                msg.payload, None
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
                 return
@@ -324,7 +330,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def brightness_received(msg):
             """Handle new MQTT messages for the brightness."""
-            payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](
+                msg.payload, None
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty brightness message from '%s'", msg.topic)
                 return
@@ -356,7 +364,7 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
-            payload = self._value_templates[CONF_RGB_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_RGB_VALUE_TEMPLATE](msg.payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty rgb message from '%s'", msg.topic)
                 return
@@ -388,7 +396,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def color_temp_received(msg):
             """Handle new MQTT messages for color temperature."""
-            payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](
+                msg.payload, None
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty color temp message from '%s'", msg.topic)
                 return
@@ -418,7 +428,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def effect_received(msg):
             """Handle new MQTT messages for effect."""
-            payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](
+                msg.payload, None
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty effect message from '%s'", msg.topic)
                 return
@@ -448,7 +460,7 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def hs_received(msg):
             """Handle new MQTT messages for hs color."""
-            payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](msg.payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
                 return
@@ -480,7 +492,9 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def white_value_received(msg):
             """Handle new MQTT messages for white value."""
-            payload = self._value_templates[CONF_WHITE_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_WHITE_VALUE_TEMPLATE](
+                msg.payload, None
+            )
             if not payload:
                 _LOGGER.debug("Ignoring empty white value message from '%s'", msg.topic)
                 return
@@ -512,7 +526,7 @@ class MqttLight(
         @log_messages(self.hass, self.entity_id)
         def xy_received(msg):
             """Handle new MQTT messages for xy color."""
-            payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](msg.payload)
+            payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](msg.payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
                 return

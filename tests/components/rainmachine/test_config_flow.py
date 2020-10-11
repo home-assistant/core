@@ -54,7 +54,7 @@ async def test_invalid_password(hass):
         side_effect=RainMachineError,
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_show_form(hass):
