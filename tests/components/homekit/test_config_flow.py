@@ -590,7 +590,7 @@ async def test_options_flow_include_mode_basic_accessory(hass):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"entities": "media_player.tv", "include_exclude_mode": "include"},
+        user_input={"entities": "media_player.tv"},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "advanced"

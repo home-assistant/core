@@ -304,7 +304,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 entities = [user_input[CONF_ENTITIES]]
 
-            if user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
+            if (
+                self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
+                or user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE
+            ):
                 entity_filter[CONF_INCLUDE_ENTITIES] = entities
                 # Include all of the domain if there are no entities
                 # explicitly included as the user selected the domain
@@ -344,34 +347,28 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if entity_id.startswith("camera.")
         }
 
+        data_schema = {}
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-            entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
             entity_schema = vol.In
-            include_exclude_modes = [MODE_INCLUDE]
-            include_exclude_mode = MODE_INCLUDE
         else:
-            entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-            entity_schema = cv.multi_select
-            include_exclude_modes = INCLUDE_EXCLUDE_MODES
             if entities:
                 include_exclude_mode = MODE_INCLUDE
             else:
                 include_exclude_mode = MODE_EXCLUDE
                 entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
+            data_schema[
+                vol.Required(CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode)
+            ] = vol.In(INCLUDE_EXCLUDE_MODES)
+            entity_schema = cv.multi_select
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_INCLUDE_EXCLUDE_MODE,
-                    default=include_exclude_mode,
-                ): vol.In(include_exclude_modes),
-                vol.Optional(
-                    CONF_ENTITIES,
-                    default=entities,
-                ): entity_schema(all_supported_entities),
-            }
+        data_schema[vol.Optional(CONF_ENTITIES, default=entities)] = entity_schema(
+            all_supported_entities
         )
-        return self.async_show_form(step_id="include_exclude", data_schema=data_schema)
+
+        return self.async_show_form(
+            step_id="include_exclude", data_schema=vol.Schema(data_schema)
+        )
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
@@ -385,6 +382,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.homekit_options = dict(self.config_entry.options)
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
 
+        homekit_mode = self.homekit_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
@@ -392,7 +390,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
+                vol.Optional(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
                     HOMEKIT_MODES
                 ),
                 vol.Optional(
