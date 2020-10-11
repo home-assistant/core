@@ -13,12 +13,13 @@
                 "description": "Entities in the \u201cDomains to include\u201d will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
                 "title": "Select domains to bridge."
             },
-            "exclude": {
+            "include_exclude": {
                 "data": {
-                    "exclude_entities": "Entities to exclude"
+                    "mode": "Mode",
+                    "entities": "Entities"
                 },
-                "description": "Choose the entities that you do NOT want to be bridged.",
-                "title": "Exclude entities in selected domains from bridge"
+                "description": "Choose the entities to be bridged. In include mode, only entities that are included will be bridged. In exclude mode, all entities in the domain will be bridged except for the excluded entities.",
+                "title": "Select entities to be bridged"
             },
             "cameras": {
                 "data": {

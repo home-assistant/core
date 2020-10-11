@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_NAME, CONF_PORT
 from homeassistant.core import callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -35,7 +35,12 @@ from .util import find_next_available_port
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERA_COPY = "camera_copy"
-CONF_DOMAINS = "domains"
+CONF_INCLUDE_EXCLUDE_MODE = "mode"
+
+MODE_INCLUDE = "include"
+MODE_EXCLUDE = "exclude"
+
+INCLUDE_EXCLUDE_MODES = ["exclude", "include"]
 
 SUPPORTED_DOMAINS = [
     "alarm_control_panel",
@@ -67,6 +72,7 @@ DEFAULT_DOMAINS = [
     "climate",
     "cover",
     "humidifier",
+    "fan",
     "light",
     "lock",
     "media_player",
@@ -213,7 +219,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Choose advanced options."""
         if user_input is not None:
             self.homekit_options.update(user_input)
-            del self.homekit_options[CONF_INCLUDE_DOMAINS]
+            for key in (CONF_DOMAINS, CONF_ENTITIES):
+                if key in self.homekit_options:
+                    del self.homekit_options[key]
             return self.async_create_entry(title="", data=self.homekit_options)
 
         schema_base = {}
@@ -278,46 +286,67 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
-    async def async_step_exclude(self, user_input=None):
-        """Choose entities to exclude from the domain."""
+    async def async_step_include_exclude(self, user_input=None):
+        """Choose entities to include or exclude from the domain."""
         if user_input is not None:
-            self.homekit_options[CONF_FILTER] = {
-                CONF_INCLUDE_DOMAINS: self.homekit_options[CONF_INCLUDE_DOMAINS],
-                CONF_EXCLUDE_DOMAINS: self.homekit_options.get(
-                    CONF_EXCLUDE_DOMAINS, []
-                ),
-                CONF_INCLUDE_ENTITIES: self.homekit_options.get(
-                    CONF_INCLUDE_ENTITIES, []
-                ),
-                CONF_EXCLUDE_ENTITIES: user_input[CONF_EXCLUDE_ENTITIES],
+            entity_filter = {
+                CONF_INCLUDE_DOMAINS: [],
+                CONF_EXCLUDE_DOMAINS: [],
+                CONF_INCLUDE_ENTITIES: [],
+                CONF_EXCLUDE_ENTITIES: [],
             }
-            for entity_id in user_input[CONF_EXCLUDE_ENTITIES]:
-                if entity_id in self.included_cameras:
-                    self.included_cameras.remove(entity_id)
+
+            if user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE:
+                entity_filter[CONF_INCLUDE_ENTITIES] = user_input[CONF_ENTITIES]
+                for entity_id in list(self.included_cameras):
+                    if entity_id not in user_input[CONF_ENTITIES]:
+                        self.included_cameras.remove(entity_id)
+            else:
+                entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_options[CONF_DOMAINS]
+                entity_filter[CONF_EXCLUDE_ENTITIES] = user_input[CONF_ENTITIES]
+                for entity_id in user_input[CONF_ENTITIES]:
+                    if entity_id in self.included_cameras:
+                        self.included_cameras.remove(entity_id)
+
+            self.homekit_options[CONF_FILTER] = entity_filter
+
             if self.included_cameras:
                 return await self.async_step_cameras()
+
             return await self.async_step_advanced()
 
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
         all_supported_entities = await self.hass.async_add_executor_job(
             _get_entities_matching_domains,
             self.hass,
-            self.homekit_options[CONF_INCLUDE_DOMAINS],
+            self.homekit_options[CONF_DOMAINS],
         )
         self.included_cameras = {
             entity_id
             for entity_id in all_supported_entities
             if entity_id.startswith("camera.")
         }
+
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        if entities:
+            include_exclude_mode = MODE_INCLUDE
+        else:
+            include_exclude_mode = MODE_EXCLUDE
+            entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
+
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_EXCLUDE_ENTITIES,
-                    default=entity_filter.get(CONF_EXCLUDE_ENTITIES, []),
+                    CONF_ENTITIES,
+                    default=entities,
                 ): cv.multi_select(all_supported_entities),
+                vol.Required(
+                    CONF_INCLUDE_EXCLUDE_MODE,
+                    default=include_exclude_mode,
+                ): vol.In(INCLUDE_EXCLUDE_MODES),
             }
         )
-        return self.async_show_form(step_id="exclude", data_schema=data_schema)
+        return self.async_show_form(step_id="include_exclude", data_schema=data_schema)
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
@@ -326,16 +355,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             self.homekit_options.update(user_input)
-            return await self.async_step_exclude()
+            return await self.async_step_include_exclude()
 
         self.homekit_options = dict(self.config_entry.options)
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
 
+        include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
+        if include_entities:
+            domains = set()
+            for entity_id in include_entities:
+                domains.add(split_entity_id(entity_id)[0])
+            domains = list(domains)
+        else:
+            domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
+
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_INCLUDE_DOMAINS,
-                    default=entity_filter.get(CONF_INCLUDE_DOMAINS, []),
+                    CONF_DOMAINS,
+                    default=domains,
                 ): cv.multi_select(SUPPORTED_DOMAINS)
             }
         )
