@@ -27,7 +27,7 @@
                 "title": "Vyberte um\u00edst\u011bn\u00ed"
             },
             "user": {
-                "description": "SmartThings bude nakonfigurov\u00e1n tak, aby odes\u00edlal aktualizace do Home Assistant na: > {webhook_url}\n\nPokud to nen\u00ed spr\u00e1vn\u011b, zm\u011bnte pros\u00edm sv\u00e9 nastaven\u00ed, restartujte Home Assistant a zkuste to znovu.",
+                "description": "SmartThings bude nastaveno tak, aby odes\u00edlalo aktualizace do Home Assistant na: > {webhook_url}\n\nPokud to nen\u00ed spr\u00e1vn\u011b, zm\u011bnte pros\u00edm sv\u00e9 nastaven\u00ed, restartujte Home Assistant a zkuste to znovu.",
                 "title": "Potvr\u010fte URL adresu zp\u011btn\u00e9ho vol\u00e1n\u00ed"
             }
         }

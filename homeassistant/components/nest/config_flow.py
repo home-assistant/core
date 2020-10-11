@@ -66,10 +66,10 @@ class NestFlowHandler(config_entries.ConfigFlow):
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         if not flows:
-            return self.async_abort(reason="no_flows")
+            return self.async_abort(reason="missing_configuration")
 
         if len(flows) == 1:
             self.flow_impl = list(flows)[0]
@@ -106,7 +106,7 @@ class NestFlowHandler(config_entries.ConfigFlow):
             except asyncio.TimeoutError:
                 errors["code"] = "timeout"
             except CodeInvalid:
-                errors["code"] = "invalid_code"
+                errors["code"] = "invalid_pin"
             except NestAuthError:
                 errors["code"] = "unknown"
             except Exception:  # pylint: disable=broad-except
@@ -132,7 +132,7 @@ class NestFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, info):
         """Import existing auth from Nest."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         config_path = info["nest_conf_path"]
 

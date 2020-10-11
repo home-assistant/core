@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
         "step": {
             "user": {
