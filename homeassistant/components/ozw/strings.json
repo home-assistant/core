@@ -3,6 +3,11 @@
     "step": {
       "use_mqtt_integration": {
         "title": "Confirm set up"
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Select how to connect to the OpenZWave controller MQTT broker",
+        "data": {"connection": "Connection method"}
       }
     },
     "abort": {
