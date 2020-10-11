@@ -37,9 +37,9 @@ class FibaroCover(FibaroDevice, CoverEntity):
         if position is None:
             return None
         position = int(position)
-        if position <= 5:
+        if position <= 1:
             return 0
-        if position >= 95:
+        if position >= 99:
             return 100
         return position
 
