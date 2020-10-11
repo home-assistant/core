@@ -42,7 +42,7 @@ async def run_command(args: argparse.Namespace) -> None:
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     data = await store.async_load()
 
-    if data is None or not isinstance(data, Dict):
+    if data is None or not isinstance(data, dict):
         data = {"done": []}
 
     if not await check_has_owner(hass, data):
@@ -69,6 +69,6 @@ async def check_has_owner(hass: HomeAssistant, data: Dict) -> bool:
         return False
     await provider.async_initialize()
 
-    if provider.data and provider.data.users and len(provider.data.users):
+    if provider.data and provider.data.users and len(provider.data.users) > 0:
         return True
     return False
