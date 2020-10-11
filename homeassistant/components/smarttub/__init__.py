@@ -47,6 +47,10 @@ async def async_unload_entry(hass, entry):
     for platform in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(entry, platform)
 
+    unsub_listener = hass.data[DOMAIN][entry.unique_id].get(UNSUB_UPDATE_LISTENER)
+    if unsub_listener:
+        unsub_listener()
+
     controller = hass.data[DOMAIN][entry.unique_id][SMARTTUB_CONTROLLER]
     await controller.async_unload_entry(entry)
     hass.data[DOMAIN].pop(entry.unique_id)
