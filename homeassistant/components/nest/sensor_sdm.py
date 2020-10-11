@@ -106,7 +106,6 @@ class SensorBase(Entity):
 
         async def async_update_state():
             """Update sensor state."""
-            _LOGGER.info("async_update_state")
             await self.async_update_ha_state(True)
 
         # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
@@ -129,7 +128,6 @@ class TemperatureSensor(SensorBase):
     def state(self):
         """Return the state of the sensor."""
         trait = self._device.traits[TemperatureTrait.NAME]
-        _LOGGER.error(f"TemperatureSensor {trait.ambient_temperature_celsius}")
         return trait.ambient_temperature_celsius
 
     @property
