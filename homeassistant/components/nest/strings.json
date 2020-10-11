@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "init": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "description": "Pick via which authentication provider you want to authenticate with Nest.",
+        "title": "Authentication Provider",
+        "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": { "flow_impl": "Provider" }
       },
       "link": {
