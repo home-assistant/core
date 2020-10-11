@@ -129,8 +129,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
-        _LOGGER.debug("Home Assistant is shutting down")
-        await self.hass.data[DOMAIN]["coap_context"].shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
