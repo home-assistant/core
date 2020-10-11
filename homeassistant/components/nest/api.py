@@ -6,7 +6,7 @@ from google_nest_sdm.auth import AbstractAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
-# See the docs at https://developers.google.com/nest/device-access/registration
+# See https://developers.google.com/nest/device-access/registration
 
 
 class AsyncConfigEntryAuth(AbstractAuth):

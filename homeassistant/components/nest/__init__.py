@@ -1,5 +1,4 @@
 """Support for Nest devices."""
-
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -82,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
                 # Required to use the new API (optional for compatibility)
                 vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
-                # Config that only currently works on the new API
+                # Config that only currently works on the old API
                 vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
@@ -121,7 +120,7 @@ CANCEL_ETA_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up Nest components."""
+    """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
@@ -176,13 +175,13 @@ class SignalUpdateCallback(EventCallback):
             # Note: Currently ignoring events like camera motion
             return
         # This event triggered an update to a device that changed some
-        # properties.  The DeviceManager should have already updated the
-        # devices, so trigger an entity refresh
+        # properties which the DeviceManager should already have received.
+        # Send a signal to refresh state of all listening devices.
         dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Nest from a config entry."""
+    """Set up Nest from a config entry with dispatch between old/new flows."""
 
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
@@ -205,8 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
     subscriber.set_update_callback(SignalUpdateCallback(hass))
-    # Start the pubsub subscriber which will send an initial call to populate
-    # the subscribers DeviceManager
     hass.async_create_task(subscriber.start_async())
     hass.data[DOMAIN][entry.entry_id] = subscriber
 
@@ -265,9 +262,6 @@ def nest_update_event_broker(hass, nest):
 
 async def async_setup_legacy(hass, config):
     """Set up Nest components using the legacy nest API."""
-
-    hass.data[DOMAIN] = {}
-
     if DOMAIN not in config:
         return True
 
