@@ -116,7 +116,7 @@ async def test_abort_if_no_implementation_registered(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "oauth2_missing_configuration"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_abort_if_already_setup(hass):
@@ -147,7 +147,7 @@ async def test_abort_if_already_setup(hass):
 @pytest.mark.parametrize(
     "side_effect,error",
     [
-        (asyncio.TimeoutError, "oauth2_authorize_url_timeout"),
+        (asyncio.TimeoutError, "authorize_url_timeout"),
         (AuthorizationFailed, "invalid_auth"),
     ],
 )

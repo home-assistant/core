@@ -81,7 +81,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="already_configured")
 
         if not flows:
-            return self.async_abort(reason="oauth2_missing_configuration")
+            return self.async_abort(reason="missing_configuration")
 
         if len(flows) == 1:
             self.flow_impl = list(flows)[0]
@@ -172,7 +172,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         except asyncio.TimeoutError:
             (
                 self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
-            ) = "oauth2_authorize_url_timeout"
+            ) = "authorize_url_timeout"
             return self.async_abort(reason="external_error")
 
         account_id = (await logi_session.account)["accountId"]

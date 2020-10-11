@@ -13,14 +13,14 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "oauth2_authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "follow_link": "Please follow the link and authenticate before pressing Submit."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "external_error": "Exception occurred from another flow.",
       "external_setup": "Logi Circle successfully configured from another flow.",
-      "oauth2_missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     }
   }
 }
