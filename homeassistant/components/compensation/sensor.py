@@ -1,17 +1,17 @@
 """Support for compensation sensor."""
-import numpy as np
-import re
 import logging
+import re
 
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ATTRIBUTE,
     CONF_ENTITY_ID,
     CONF_NAME,
-    CONF_ATTRIBUTE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
@@ -23,10 +23,10 @@ from homeassistant.helpers.event import async_track_state_change_event
 from .const import (
     CONF_DEGREE,
     CONF_PRECISION,
-    MATCH_DATAPOINT,
     DEFAULT_DEGREE,
-    DEFAULT_PRECISION,
     DEFAULT_NAME,
+    DEFAULT_PRECISION,
+    MATCH_DATAPOINT,
 )
 
 _LOGGER = logging.getLogger(__name__)
