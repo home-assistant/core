@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up the Plaato Webhook",
-        "confirm_setup": "[%key:common::config_flow::description::confirm_setup%]"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
