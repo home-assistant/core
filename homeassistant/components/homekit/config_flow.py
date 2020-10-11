@@ -355,10 +355,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_ENTITIES,
                     default=entities,
                 ): cv.multi_select(all_supported_entities),
-                vol.Required(
-                    CONF_INCLUDE_EXCLUDE_MODE,
-                    default=include_exclude_mode,
-                ): vol.In(INCLUDE_EXCLUDE_MODES),
             }
         )
         return self.async_show_form(step_id="include_exclude", data_schema=data_schema)
