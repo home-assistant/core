@@ -29,9 +29,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
-            vol.Optional(CONF_DELTA, default=600.0): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            ),
+            vol.Optional(CONF_DELTA, default=600.0): cv.positive_float,
             vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
             vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
                 vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)

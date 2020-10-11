@@ -20,7 +20,7 @@ SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DURATION): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        vol.Required(ATTR_DURATION): cv.positive_float,
     }
 )
 

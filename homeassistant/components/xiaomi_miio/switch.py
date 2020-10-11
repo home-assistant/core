@@ -96,7 +96,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
