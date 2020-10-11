@@ -10,6 +10,7 @@ from datetime import timedelta
 import functools
 import hashlib
 import logging
+import math
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import astral
@@ -119,7 +120,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 # Consider it a significant change when attribute changes more than
 BRIGHTNESS_CHANGE = 25  # ≈10% of total range
 COLOR_TEMP_CHANGE = 20  # ≈5% of total range
-RGB_CHANGE = 30  # ≈12% of total range per component
+RGB_REDMEAN_CHANGE = 80  # ≈10% of total range
 
 # Keep a short domain version for the context instances (which can only be 36 chars)
 _DOMAIN_SHORT = "adapt_lgt"
@@ -253,6 +254,25 @@ def _supported_features(hass: HomeAssistant, light: str):
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
 
 
+def color_difference_redmean(
+    rgb1: Tuple[float, float, float], rgb2: Tuple[float, float, float]
+) -> float:
+    """Distance between colors in RGB space (redmean metric).
+
+    The maximal distance between (255, 255, 255) and (0, 0, 0) ≈ 765.
+
+    Sources:
+    - https://en.wikipedia.org/wiki/Color_difference#Euclidean
+    - https://www.compuphase.com/cmetric.htm
+    """
+    r_hat = (rgb1[0] + rgb2[0]) / 2
+    delta_r, delta_g, delta_b = [(col1 - col2) for col1, col2 in zip(rgb1, rgb2)]
+    red_term = (2 + r_hat / 256) * delta_r ** 2
+    green_term = 4 * delta_g ** 2
+    blue_term = (2 + (255 - r_hat) / 256) * delta_b ** 2
+    return math.sqrt(red_term + green_term + blue_term)
+
+
 def _attributes_have_changed(
     light: str,
     old_attributes: Dict[str, Any],
@@ -305,17 +325,17 @@ def _attributes_have_changed(
     ):
         last_rgb_color = old_attributes[ATTR_RGB_COLOR]
         current_rgb_color = new_attributes[ATTR_RGB_COLOR]
-        for last_col, current_col in zip(last_rgb_color, current_rgb_color):
-            if abs(last_col - current_col) > RGB_CHANGE:
-                _LOGGER.debug(
-                    "color RGB of '%s' significantly changed from %s to %s with"
-                    " context.id='%s'",
-                    light,
-                    last_rgb_color,
-                    current_rgb_color,
-                    context.id,
-                )
-                return True
+        redmean_change = color_difference_redmean(last_rgb_color, current_rgb_color)
+        if redmean_change > RGB_REDMEAN_CHANGE:
+            _LOGGER.debug(
+                "color RGB of '%s' significantly changed from %s to %s with"
+                " context.id='%s'",
+                light,
+                last_rgb_color,
+                current_rgb_color,
+                context.id,
+            )
+            return True
 
     switched_color_temp = (
         ATTR_RGB_COLOR in old_attributes and ATTR_RGB_COLOR not in new_attributes
