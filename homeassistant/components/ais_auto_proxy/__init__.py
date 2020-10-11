@@ -1,4 +1,4 @@
-"""AIS zigbee2mqtt ingress service."""
+"""AIS ingress service."""
 import asyncio
 from ipaddress import ip_address
 import logging
@@ -16,44 +16,38 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import X_HASSIO, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "ais_web_zigbee2mqtt"
+
+DOMAIN = "ais_auto_proxy"
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, host: str, port: int):
+def async_setup_ingress_view(hass: HomeAssistantType):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    hassio_ingress = HassIOIngress(hass, host, port, websession)
+    hassio_ingress = HassIOIngress(hass, websession)
     hass.http.register_view(hassio_ingress)
 
 
 class HassIOIngress(HomeAssistantView):
     """Hass.io view to handle base part."""
 
-    name = "api:zigbee2mqtt"
-    url = "/api/zigbee2mqtt/{token}/{path:.*}"
+    name = "api:ais_auto_proxy"
+    url = "/api/ais_auto_proxy/{token}/{host}/{port}/{path:.*}"
     requires_auth = False
 
-    def __init__(
-        self,
-        hass: HomeAssistantType,
-        host: str,
-        port: int,
-        websession: aiohttp.ClientSession,
-    ):
+    def __init__(self, hass: HomeAssistantType, websession: aiohttp.ClientSession):
         """Initialize a Hass.io ingress view."""
-        self._host = host
-        self._port = port
         self._hass = hass
         self._websession = websession
 
-    def _create_url(self, token: str, path: str) -> str:
+    def _create_url(self, request: web.Request, host: str, port: int, path: str) -> str:
         """Create URL to service."""
-        return f"http://{self._host}:{self._port}/{path}"
+        url = f"http://{host}:{port}/{path}"
+        return url
 
     async def _handle(
-        self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, host: str, port: int, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
         # validate token
@@ -64,17 +58,16 @@ class HassIOIngress(HomeAssistantView):
                 raise HTTPUnauthorized() from None
         except Exception:
             raise HTTPUnauthorized() from None
-
         try:
-            # Websockettoken
+            # Websocket
             if _is_websocket(request):
-                return await self._handle_websocket(request, token, path)
+                return await self._handle_websocket(request, token, host, port, path)
 
             # Request
-            return await self._handle_request(request, token, path)
+            return await self._handle_request(request, token, host, port, path)
 
         except aiohttp.ClientError as err:
-            _LOGGER.debug("Ingress error with %s / %s: %s", token, path, err)
+            _LOGGER.debug("Ingress error with %s: %s", path, err)
 
         raise HTTPBadGateway() from None
 
@@ -86,7 +79,7 @@ class HassIOIngress(HomeAssistantView):
     options = _handle
 
     async def _handle_websocket(
-        self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, host: str, port: int, path: str
     ) -> web.WebSocketResponse:
         """Ingress route for websocket."""
         if hdrs.SEC_WEBSOCKET_PROTOCOL in request.headers:
@@ -103,7 +96,7 @@ class HassIOIngress(HomeAssistantView):
         await ws_server.prepare(request)
 
         # Preparing
-        url = self._create_url(token, path)
+        url = self._create_url(request, host, port, path)
         source_header = _init_header(request, token)
 
         # Support GET query
@@ -130,10 +123,10 @@ class HassIOIngress(HomeAssistantView):
         return ws_server
 
     async def _handle_request(
-        self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, host: str, port: int, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
-        url = self._create_url(token, path)
+        url = self._create_url(request, host, port, path)
         data = await request.read()
         source_header = _init_header(request, token)
 
@@ -171,7 +164,7 @@ class HassIOIngress(HomeAssistantView):
                     await response.write(data)
 
             except (aiohttp.ClientError, aiohttp.ClientPayloadError) as err:
-                _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
+                _LOGGER.debug("Stream error %s / %s: %s", path, err)
 
             return response
 
@@ -199,11 +192,10 @@ def _init_header(
     # headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
     headers[X_HASSIO] = token
 
-    # Ingress information
-    headers[X_INGRESS_PATH] = f"/api/zigbee2mqtt/{token}"
-
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
+    # Ingress information
+    headers[X_INGRESS_PATH] = f"/api/zigbee2mqtt/{token}"
     connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
     if forward_for:
         forward_for = f"{forward_for}, {connected_ip!s}"
@@ -276,9 +268,6 @@ async def _websocket_forward(ws_from, ws_to):
 async def async_setup(hass, config):
     """Set up the  component."""
     config = config.get(DOMAIN, {})
-    host = config.get("host")
-    port = config.get("port")
     # Init ingress feature
-    async_setup_ingress_view(hass, host, port)
-
+    async_setup_ingress_view(hass)
     return True

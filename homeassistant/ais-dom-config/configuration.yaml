@@ -87,5 +87,7 @@ ais_mdns:
 media_source:
 
 # ais ingress
+ais_auto_proxy:
 ais_web_zigbee2mqtt:
+  host: localhost
   port: 8099
