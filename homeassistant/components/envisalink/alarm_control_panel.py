@@ -198,7 +198,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code=None, delay=None):
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 

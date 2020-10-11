@@ -59,3 +59,6 @@ alarm_trigger:
     code:
       description: An optional code to trigger the alarm control panel with.
       example: "1234"
+    delay:
+      description: An optional delay time to override the state one. In seconds.
+      example: "5"
