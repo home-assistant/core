@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiocoap
 import aiohttp
 import aioshelly
 import async_timeout
@@ -33,13 +34,15 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     options = aioshelly.ConnectionOptions(
         host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
+    coap_context = await aiocoap.Context.create_client_context()
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
             aiohttp_client.async_get_clientsession(hass),
+            coap_context,
             options,
         )
 
-    await device.shutdown()
+    await coap_context.shutdown()
 
     # Return info that you want to store in the config entry.
     return {"title": device.settings["name"], "mac": device.settings["device"]["mac"]}

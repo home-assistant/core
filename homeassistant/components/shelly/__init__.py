@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiocoap import error as aiocoap_error
+import aiocoap
 import aioshelly
 import async_timeout
 
@@ -39,10 +39,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
     )
+    if not hass.data[DOMAIN].get("coap_context"):
+        coap_context = hass.data[DOMAIN][
+            "coap_context"
+        ] = await aiocoap.Context.create_client_context()
+    else:
+        coap_context = hass.data[DOMAIN]["coap_context"]
     try:
         async with async_timeout.timeout(10):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
+                coap_context,
                 options,
             )
     except (asyncio.TimeoutError, OSError) as err:
@@ -86,7 +93,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except (aiocoap_error.Error, OSError) as err:
+        except (aiocoap.error.Error, OSError) as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
@@ -122,7 +129,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
-        await self.device.shutdown()
+        _LOGGER.debug("Home Assistant is shutting down")
+        await self.hass.data[DOMAIN]["coap_context"].shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
@@ -141,6 +149,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN].pop(entry.entry_id).shutdown()
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if len(hass.data[DOMAIN]) == 1:
+            await hass.data[DOMAIN].pop("coap_context").shutdown()
 
     return unload_ok
