@@ -426,12 +426,11 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
             value = self.router.data[self.key][self.item]
         except KeyError:
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
-            self._available = False
-            return
-        self._available = True
+            value = None
 
         formatter = self.meta.formatter
         if not callable(formatter):
             formatter = format_default
 
         self._state, self._unit = formatter(value)
+        self._available = value is not None
