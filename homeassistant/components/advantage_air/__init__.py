@@ -7,6 +7,7 @@ from advantage_air import ApiError, advantage_air
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
@@ -27,7 +28,12 @@ async def async_setup_entry(hass, config_entry):
     """Set up AdvantageAir Config."""
     ip_address = config_entry.data[CONF_IP_ADDRESS]
     port = config_entry.data[CONF_PORT]
-    api = advantage_air(ip_address, port, ADVANTAGE_AIR_RETRY)
+    api = advantage_air(
+        ip_address,
+        port=port,
+        session=async_get_clientsession(hass),
+        retry=ADVANTAGE_AIR_RETRY,
+    )
 
     async def async_get():
         try:

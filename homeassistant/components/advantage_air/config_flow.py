@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 
@@ -37,7 +38,10 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 data = await advantage_air(
-                    ip_address, port, ADVANTAGE_AIR_RETRY
+                    ip_address,
+                    port=port,
+                    session=async_get_clientsession(self.hass),
+                    retry=ADVANTAGE_AIR_RETRY,
                 ).async_get(1)
             except ApiError:
                 errors["base"] = "cannot_connect"
