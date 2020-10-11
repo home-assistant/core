@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        }
+    }
+}

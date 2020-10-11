@@ -1,7 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured_account": "Konto on juba seadistatud",
+            "cannot_connect": "\u00dchendus nurjus",
+            "reauth_successful": "Taastuvastus oli edukas",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus"
+        },
         "step": {
             "reauth": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"

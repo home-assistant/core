@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "hub2": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modemi mudel."
+                },
+                "description": "Vali Insteoni modemi mudel."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    }
+}

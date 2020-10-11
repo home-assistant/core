@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 Google Cast.",
-            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja Google Cast."
+            "no_devices_found": "[%key::common::config_flow::abort::no_devices_found%]",
+            "single_instance_allowed": "[%key::common::config_flow::abort::single_instance_allowed%]"
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Google Cast?"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
     }

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja MQTT."
+            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z po\u015brednikiem."
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
         },
         "step": {
             "broker": {
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
             "bad_will": "Nieprawid\u0142owy temat \"will\".",
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z po\u015brednikiem."
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
         },
         "step": {
             "broker": {
@@ -76,7 +76,7 @@
                     "will_payload": "Warto\u015b\u0107 wiadomo\u015bci \"will\"",
                     "will_qos": "QoS wiadomo\u015bci \"will\"",
                     "will_retain": "Flaga \"retain\" wiadomo\u015bci \"will\"",
-                    "will_topic": "Temat "
+                    "will_topic": "Temat wiadomo\u015bci \"will\""
                 },
                 "description": "Opcje MQTT"
             }

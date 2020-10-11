@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Po\u0142\u0105czenie z modemem Insteon jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -93,7 +93,7 @@
             },
             "add_x10": {
                 "data": {
-                    "housecode": "Housecode (a - p)",
+                    "housecode": "Housecode (a \u2014 p)",
                     "platform": "Platforma",
                     "steps": "Kroki \u015bciemniacza (tylko dla urz\u0105dze\u0144 o\u015bwietleniowych, domy\u015blnie 22)",
                     "unitcode": "Unitcode (1\u201316)"
@@ -108,7 +108,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany, musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
                 "title": "Insteon"
             },
             "init": {

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
-            "reauth_successful": "SimpliSafe successfully reauthenticated."
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "identifier_exists": "Account already registered",

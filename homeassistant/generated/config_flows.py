@@ -158,6 +158,7 @@ FLOWS = [
     "roomba",
     "roon",
     "rpi_power",
+    "ruckus_unleashed",
     "samsungtv",
     "sense",
     "sentry",
@@ -220,6 +221,5 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
-    "zoneminder",
     "zwave"
 ]

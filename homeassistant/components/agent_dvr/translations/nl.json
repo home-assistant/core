@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "user": {
                 "data": {

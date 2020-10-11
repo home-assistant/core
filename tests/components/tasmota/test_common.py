@@ -59,22 +59,27 @@ DEFAULT_CONFIG = {
 async def help_test_availability_when_connection_lost(
     hass, mqtt_client_mock, mqtt_mock, domain, config
 ):
-    """Test availability after MQTT disconnection."""
+    """Test availability after MQTT disconnection.
+
+    This is a test helper for the TasmotaAvailability mixin.
+    """
     async_fire_mqtt_message(
         hass,
         f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
         json.dumps(config),
     )
     await hass.async_block_till_done()
+
+    # Device online
     async_fire_mqtt_message(
         hass,
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
 
+    # Disconnected from MQTT server -> state changed to unavailable
     mqtt_mock.connected = False
     await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
     await hass.async_block_till_done()
@@ -83,11 +88,21 @@ async def help_test_availability_when_connection_lost(
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
 
+    # Reconnected to MQTT server -> state still unavailable
     mqtt_mock.connected = True
     await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Receive LWT again
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_online(config),
+    )
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
 
@@ -192,6 +207,61 @@ async def help_test_availability_discovery_update(
     async_fire_mqtt_message(hass, availability_topic2, online2)
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
+
+
+async def help_test_availability_poll_state(
+    hass, mqtt_client_mock, mqtt_mock, domain, config, poll_topic, poll_payload
+):
+    """Test polling of state when device is available.
+
+    This is a test helper for the TasmotaAvailability mixin.
+    """
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.reset_mock()
+
+    # Device online, verify poll for state
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_online(config),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # Disconnected from MQTT server
+    mqtt_mock.connected = False
+    await hass.async_add_executor_job(mqtt_client_mock.on_disconnect, None, None, 0)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert not mqtt_mock.async_publish.called
+
+    # Reconnected to MQTT server
+    mqtt_mock.connected = True
+    await hass.async_add_executor_job(mqtt_client_mock.on_connect, None, None, None, 0)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert not mqtt_mock.async_publish.called
+
+    # Device online, verify poll for state
+    async_fire_mqtt_message(
+        hass,
+        get_topic_tele_will(config),
+        config_get_state_online(config),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_called_once_with(poll_topic, poll_payload, 0, False)
 
 
 async def help_test_discovery_removal(
@@ -301,7 +371,8 @@ async def help_test_entity_id_update_subscriptions(
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
 
-    topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
+    if not topics:
+        topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
     assert len(topics) > 0
 
     state = hass.states.get(f"{domain}.test")

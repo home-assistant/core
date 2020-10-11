@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cuenta ya configurada",
+            "already_configured": "La cuenta ya ha sido configurada",
             "no_device": "Ninguno de tus dispositivos tiene activado \"Buscar mi iPhone\""
         },
         "error": {

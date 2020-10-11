@@ -1599,7 +1599,7 @@ async def test_empty_config(hass, hass_client):
     )
     await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", config)
-    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

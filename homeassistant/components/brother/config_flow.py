@@ -50,6 +50,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
+                brother.shutdown()
 
                 await self.async_set_unique_id(brother.serial.lower())
                 self._abort_if_unique_id_configured()

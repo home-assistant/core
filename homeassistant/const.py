@@ -7,7 +7,7 @@ __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = ""
+REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_ALLOWLIST_EXTERNAL_URLS = "allowlist_external_urls"
 CONF_API_KEY = "api_key"
+CONF_API_TOKEN = "api_token"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"

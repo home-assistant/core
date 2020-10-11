@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "Integrace MQTT nen\u00ed nastavena",
+            "one_instance_allowed": "Integrace podporuje pouze jednu instanci Z-Wave",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "step": {
+            "user": {
+                "title": "Potvr\u010fte nastaven\u00ed"
+            }
+        }
+    }
+}

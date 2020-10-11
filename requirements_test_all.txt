@@ -207,7 +207,7 @@ bravia-tv==1.0.6
 broadlink==0.15.0
 
 # homeassistant.components.brother
-brother==0.1.17
+brother==0.1.18
 
 # homeassistant.components.bsblan
 bsblan==0.3.7
@@ -278,7 +278,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.19
+elkm1-lib==0.8.1
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -379,7 +379,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.1
+home-assistant-frontend==20201001.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -404,7 +404,7 @@ hyperion-py==0.3.0
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.1.3
+icmplib==1.2.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.8.0
@@ -502,8 +502,7 @@ openerz-api==0.1.0
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
-# homeassistant.components.shiftr
-paho-mqtt==1.5.1
+paho-mqtt==1.5.0
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
@@ -516,6 +515,9 @@ pdunehd==1.3.2
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
+
+# homeassistant.components.onewire
+pi1wire==0.1.0
 
 # homeassistant.components.pilight
 pilight==0.1.1
@@ -619,7 +621,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.0.0
+pyatmo==4.1.0
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -774,6 +776,9 @@ pyotp==2.3.0
 # homeassistant.components.openweathermap
 pyowm==2.10.0
 
+# homeassistant.components.onewire
+pyownet==0.10.0.post1
+
 # homeassistant.components.point
 pypoint==1.1.2
 
@@ -788,6 +793,9 @@ pyqwikswitch==0.93
 
 # homeassistant.components.risco
 pyrisco==0.3.1
+
+# homeassistant.components.ruckus_unleashed
+pyruckus==0.7
 
 # homeassistant.components.acer_projector
 # homeassistant.components.zha
@@ -812,7 +820,7 @@ pysmartthings==0.7.4
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.34
+pysonos==0.0.35
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -842,7 +850,7 @@ python-miio==0.5.3
 python-nest==4.1.0
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.2.0
+python-openzwave-mqtt==1.2.2
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -893,7 +901,7 @@ pywilight==0.0.65
 pyzerproc==0.2.5
 
 # homeassistant.components.rachio
-rachiopy==0.1.4
+rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
 regenmaschine==2.1.0
@@ -930,7 +938,7 @@ samsungtvws==1.4.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.8.0
+sense_energy==0.8.1
 
 # homeassistant.components.sentry
 sentry-sdk==0.18.0
@@ -1006,7 +1014,7 @@ surepy==0.2.6
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.12
+tesla-powerwall==0.3.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.10.4
@@ -1021,7 +1029,7 @@ total_connect_client==0.55
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.7
+tuyaha==0.0.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
@@ -1074,7 +1082,7 @@ wolf_smartset==0.1.6
 xmltodict==0.12.0
 
 # homeassistant.components.yeelight
-yeelight==0.5.3
+yeelight==0.5.4
 
 # homeassistant.components.zeroconf
 zeroconf==0.28.5
@@ -1098,7 +1106,4 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.2.1
 
 # homeassistant.components.zha
-zigpy==0.25.0
-
-# homeassistant.components.zoneminder
-zm-py==0.4.0
+zigpy==0.26.0

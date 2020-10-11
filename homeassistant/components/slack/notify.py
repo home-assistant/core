@@ -32,7 +32,6 @@ ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
 ATTR_USERNAME = "username"
-ATTR_USERNAME = "username"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
 

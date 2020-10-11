@@ -187,6 +187,7 @@ def test_parse_time_expression():
     assert [x for x in range(24)] == dt_util.parse_time_expression("*", 0, 23)
 
     assert [42] == dt_util.parse_time_expression(42, 0, 59)
+    assert [42] == dt_util.parse_time_expression("42", 0, 59)
 
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)

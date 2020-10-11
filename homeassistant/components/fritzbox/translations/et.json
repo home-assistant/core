@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid"
+        },
+        "error": {
+            "auth_failed": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

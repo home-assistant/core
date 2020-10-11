@@ -5,6 +5,13 @@
             "already_configured_account": "Kasutaja on juba lisatud",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
         }
     }
 }

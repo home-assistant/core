@@ -187,6 +187,23 @@ async def test_install_on_docker(hass):
         )
 
 
+async def test_discovery_requirements_mqtt(hass):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    mqtt = await loader.async_get_integration(hass, "mqtt")
+
+    mock_integration(
+        hass, MockModule("mqtt_comp", partial_manifest={"mqtt": ["foo/discovery"]})
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "mqtt_comp")
+
+    assert len(mock_process.mock_calls) == 2  # mqtt also depends on http
+    assert mock_process.mock_calls[0][1][2] == mqtt.requirements
+
+
 async def test_discovery_requirements_ssdp(hass):
     """Test that we load discovery requirements."""
     hass.config.skip_pip = False

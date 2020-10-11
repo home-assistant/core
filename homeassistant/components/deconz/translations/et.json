@@ -1,7 +1,19 @@
 {
     "config": {
         "abort": {
-            "no_hardware_available": "DeCONZi raadio riistvara puudub"
+            "already_configured": "L\u00fc\u00fcs on juba h\u00e4\u00e4lestatud",
+            "no_bridges": "DeCONZ l\u00fc\u00fcse ei leitud",
+            "no_hardware_available": "DeCONZi raadio riistvara puudub",
+            "one_instance_only": "Komponent toetab ainult \u00fchte deCONZ-i sidumist"
+        },
+        "error": {
+            "no_key": "API v\u00f5tit ei leitud"
+        },
+        "step": {
+            "link": {
+                "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Minge deCONZ Settings - > Gateway - > Advanced\n 2. Vajutage nuppu \"Authenticate app\"",
+                "title": "\u00dchenda deCONZ-iga"
+            }
         }
     },
     "device_automation": {
