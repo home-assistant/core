@@ -14,7 +14,7 @@
         "title": "Configure an AirVisual Node/Pro",
         "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
         "data": {
-          "ip_address": "Unit IP Address/Hostname",
+          "ip_address": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
