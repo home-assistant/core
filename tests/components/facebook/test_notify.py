@@ -1,13 +1,13 @@
 """The test for the Facebook notify module."""
-import homeassistant.components.facebook.notify as fb
-# import homeassistant.components.facebook as facebook
 import pytest
 import requests_mock
+
+import homeassistant.components.facebook.notify as fb
 
 
 @pytest.fixture
 def facebook():
-    """Fixture for facebook"""
+    """Fixture for facebook."""
     access_token = "page-access-token"
     return fb.FacebookNotificationService(access_token)
 
@@ -68,7 +68,12 @@ async def test_send_message_attachment(hass, facebook):
         mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=200)
 
         message = "This will be thrown away."
-        data = {"attachment": {"type": "image", "payload": {"url": "http://www.example.com/image.jpg"},}}
+        data = {
+            "attachment": {
+                "type": "image",
+                "payload": {"url": "http://www.example.com/image.jpg"},
+            }
+        }
         target = ["+15555551234"]
 
         facebook.send_message(message=message, data=data, target=target)
