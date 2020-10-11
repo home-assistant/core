@@ -36,12 +36,11 @@ from miio.airpurifier_miot import (  # pylint: disable=import-error, import-erro
 )
 import voluptuous as vol
 
-
 from homeassistant.components.fan import (
+    PLATFORM_SCHEMA,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    PLATFORM_SCHEMA,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
@@ -1171,11 +1170,20 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            if AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.Low:
+            if (
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+                == AirhumidifierMiotOperationMode.Low
+            ):
                 return SPEED_LOW
-            elif AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.Mid:
+            elif (
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+                == AirhumidifierMiotOperationMode.Mid
+            ):
                 return SPEED_MEDIUM
-            elif AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.High:
+            elif (
+                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
+                == AirhumidifierMiotOperationMode.High
+            ):
                 return SPEED_HIGH
             else:
                 return None
