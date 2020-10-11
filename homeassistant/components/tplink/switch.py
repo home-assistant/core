@@ -97,10 +97,12 @@ class SmartPlugSwitch(SwitchEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.smartplug.turn_on()
+        self.update_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
+        self.update_state()
 
     @property
     def device_state_attributes(self):
