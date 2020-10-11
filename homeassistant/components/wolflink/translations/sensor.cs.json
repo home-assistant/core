@@ -2,7 +2,13 @@
     "state": {
         "wolflink__state": {
             "auto": "Automatika",
-            "permanent": "Trval\u00fd"
+            "cooling": "Chlazen\u00ed",
+            "heizbetrieb": "Re\u017eim topen\u00ed",
+            "heizung": "Topen\u00ed",
+            "permanent": "Trval\u00fd",
+            "standby": "Pohotovostn\u00ed re\u017eim",
+            "start": "Start",
+            "storung": "Chyba"
         }
     }
 }

@@ -16,10 +16,18 @@
             },
             "user": {
                 "data": {
+                    "code": "K\u00f3d (pou\u017eit\u00fd v u\u017eivatelsk\u00e9m rozhran\u00ed Home Assistant)",
                     "password": "Heslo",
                     "username": "E-mail"
                 },
                 "title": "Vypl\u0148te sv\u00e9 \u00fadaje."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Nastavte SimpliSafe"
             }
         }
     }
