@@ -91,7 +91,7 @@ class GarminConnectData:
         self.data = None
 
     async def _get_combined_alarms_of_all_devices(self):
-        """"Combine the list of active alarms from all garmin devices.""""
+        """"Combine the list of active alarms from all garmin devices."""
         alarms = []
         devices = await self.hass.async_add_executor_job(self.client.get_devices)
         for device in devices:
