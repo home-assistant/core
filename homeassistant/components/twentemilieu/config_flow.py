@@ -62,7 +62,7 @@ class TwenteMilieuFlowHandler(ConfigFlow):
         try:
             unique_id = await twentemilieu.unique_id()
         except TwenteMilieuConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
         except TwenteMilieuAddressError:
             errors["base"] = "invalid_address"
@@ -71,7 +71,7 @@ class TwenteMilieuFlowHandler(ConfigFlow):
         entries = self._async_current_entries()
         for entry in entries:
             if entry.data[CONF_ID] == unique_id:
-                return self.async_abort(reason="address_already_set_up")
+                return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
             title=unique_id,
