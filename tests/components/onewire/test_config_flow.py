@@ -103,7 +103,7 @@ async def test_config_flow_sysbus(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == CONF_TYPE_SYSBUS
+    assert result["title"] == "/sys/bus/directory"
     assert result["data"] == {
         CONF_TYPE: CONF_TYPE_SYSBUS,
         CONF_MOUNT_DIR: "/sys/bus/directory",
