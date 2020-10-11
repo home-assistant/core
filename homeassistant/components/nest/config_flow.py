@@ -106,7 +106,7 @@ class NestFlowHandler(config_entries.ConfigFlow):
             except asyncio.TimeoutError:
                 errors["code"] = "timeout"
             except CodeInvalid:
-                errors["code"] = "invalid_code"
+                errors["code"] = "invalid_pin"
             except NestAuthError:
                 errors["code"] = "unknown"
             except Exception:  # pylint: disable=broad-except

@@ -14,7 +14,7 @@
     },
     "error": {
       "timeout": "Timeout validating code",
-      "invalid_code": "Invalid code",
+      "invalid_pin": "Invalid [%key:common::config_flow::data::pin%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "internal_error": "Internal error validating code"
     },

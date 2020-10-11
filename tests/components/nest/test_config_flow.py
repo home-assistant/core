@@ -140,7 +140,7 @@ async def test_verify_code_invalid(hass):
     result = await flow.async_step_link({"code": "123ABC"})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
-    assert result["errors"] == {"code": "invalid_code"}
+    assert result["errors"] == {"code": "invalid_pin"}
 
 
 async def test_verify_code_unknown_error(hass):
