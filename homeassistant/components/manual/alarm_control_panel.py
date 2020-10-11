@@ -364,11 +364,9 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         No code needed, a trigger time of zero for the current state
         disables the alarm.
         """
-        if self._active_state not in SUPPORTED_PRETRIGGER_STATES:
-            _LOGGER.debug(
-                "Transition to triggered state not supported from current state (%s)",
-                self._active_state,
-            )
+        if (self._active_state not in SUPPORTED_PRETRIGGER_STATES) or (
+            not self._trigger_time_by_state[self._active_state]
+        ):
             return
         self._delay_override_by_trigger = delay
 
