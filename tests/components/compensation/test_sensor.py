@@ -1,11 +1,7 @@
 """The tests for the integration sensor platform."""
-from datetime import timedelta
-
+from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.setup import async_setup_component
-from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
-
-from tests.async_mock import patch
 
 
 async def test_linear_state(hass):

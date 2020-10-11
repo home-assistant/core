@@ -38,7 +38,7 @@ CONF_DATAPOINTS = "data_points"
 
 
 def datapoints_greater_than_degree(value: dict) -> dict:
-    """Validate data point list is greater than polynomial degrees"""
+    """Validate data point list is greater than polynomial degrees."""
     if not len(value[CONF_DATAPOINTS]) > value[CONF_DEGREE]:
         raise vol.Invalid(
             f"{CONF_DATAPOINTS} must have at least {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
@@ -99,7 +99,7 @@ class CompensationSensor(Entity):
         datapoints,
         unit_of_measurement,
     ):
-        """Initialization of the Compensation sensor."""
+        """Initialize the Compensation sensor."""
         self._entity_id = entity_id
         self._name = name
         self._precision = precision
