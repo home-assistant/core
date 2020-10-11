@@ -57,6 +57,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
     CONF_FILTER,
+    CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -66,10 +67,13 @@ from .const import (
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
     DEFAULT_AUTO_START,
+    DEFAULT_HOMEKIT_MODE,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
     DOMAIN,
     HOMEKIT,
+    HOMEKIT_MODE_ACCESSORY,
+    HOMEKIT_MODES,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     MANUFACTURER,
@@ -112,6 +116,9 @@ BRIDGE_SCHEMA = vol.All(
     cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
     vol.Schema(
         {
+            vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
+                HOMEKIT_MODES
+            ),
             vol.Optional(CONF_NAME, default=BRIDGE_NAME): vol.All(
                 cv.string, vol.Length(min=3, max=25)
             ),
@@ -229,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
-
+    homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
@@ -243,6 +250,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entity_filter,
         entity_config,
         safe_mode,
+        homekit_mode,
         advertise_ip,
         entry.entry_id,
     )
@@ -405,6 +413,7 @@ class HomeKit:
         entity_filter,
         entity_config,
         safe_mode,
+        homekit_mode,
         advertise_ip=None,
         entry_id=None,
     ):
@@ -418,6 +427,7 @@ class HomeKit:
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
+        self._homekit_mode = homekit_mode
         self.status = STATUS_READY
 
         self.bridge = None
@@ -620,7 +630,7 @@ class HomeKit:
             type_thermostats,
         )
 
-        if len(bridged_states) == 1:
+        if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
             state = bridged_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
