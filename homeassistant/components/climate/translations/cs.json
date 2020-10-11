@@ -1,7 +1,8 @@
 {
     "device_automation": {
         "action_type": {
-            "set_hvac_mode": "Zm\u011bnit re\u017eim HVAC na {entity_name}"
+            "set_hvac_mode": "Zm\u011bnit re\u017eim HVAC na {entity_name}",
+            "set_preset_mode": "Zm\u011bnit p\u0159ednastaven\u00fd re\u017eim na {entity_name}"
         },
         "condition_type": {
             "is_hvac_mode": "{entity_name} je nastaveno na ur\u010dit\u00fd re\u017eim HVAC",

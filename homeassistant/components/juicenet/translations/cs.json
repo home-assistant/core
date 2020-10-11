@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u00da\u010det je ji\u017e nakonfigurov\u00e1n"
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "api_token": "API token"
-                }
+                },
+                "title": "P\u0159ipojen\u00ed k JuiceNet"
             }
         }
     }
