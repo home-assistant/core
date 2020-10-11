@@ -171,7 +171,7 @@ class SmartPlugSwitch(SwitchEntity):
                     self._alias,
                     ex,
                 )
-            return
+            return False
 
     async def async_update(self):
         """Update the TP-Link switch's state."""

@@ -245,7 +245,7 @@ class TPLinkSmartBulb(LightEntity):
         """Attempt to get details the TP-Link bulb."""
         # State is currently being set, ignore.
         if self._is_setting_light_state:
-            return
+            return False
 
         try:
             if not self._light_features:
@@ -264,7 +264,7 @@ class TPLinkSmartBulb(LightEntity):
                     self._alias,
                     ex,
                 )
-            return
+            return False
 
     @property
     def supported_features(self):
