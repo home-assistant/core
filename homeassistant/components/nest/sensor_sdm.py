@@ -1,12 +1,10 @@
 """Support for Google Nest SDM sensors."""
 
-from datetime import timedelta
 import logging
 from typing import Optional
 
-import async_timeout
-from google_nest_sdm.device import Device, HumidityMixin, InfoMixin, TemperatureMixin
-from google_nest_sdm.google_nest_api import GoogleNestAPI
+from google_nest_sdm.device import Device
+from google_nest_sdm.device_traits import HumidityTrait, InfoTrait, TemperatureTrait
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,13 +13,11 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
-from .const import DOMAIN, POLLING_INTERVAL_SEC
+from .const import DOMAIN, SIGNAL_NEST_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,50 +27,31 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the sensors."""
 
-    auth = hass.data[DOMAIN][entry.entry_id]
-    nest_api = GoogleNestAPI(auth)
-
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        async with async_timeout.timeout(10):
-            return await nest_api.async_get_devices()
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=POLLING_INTERVAL_SEC),
-    )
+    subscriber = hass.data[DOMAIN][entry.entry_id]
+    device_manager = await subscriber.async_device_manager
 
     # Fetch initial data so we have data when entities subscribe.
-    await coordinator.async_refresh()
 
     entities = []
-    for idx, device in enumerate(coordinator.data):
-        if device.has_trait(TemperatureMixin.NAME):
-            entities.append(TemperatureSensor(coordinator, idx))
-        if device.has_trait(HumidityMixin.NAME):
-            entities.append(HumiditySensor(coordinator, idx))
+    for (device_id, device) in device_manager.devices.items():
+        if TemperatureTrait.NAME in device.traits:
+            entities.append(TemperatureSensor(device))
+        if HumidityTrait.NAME in device.traits:
+            entities.append(HumiditySensor(device))
     async_add_entities(entities)
 
 
-class SensorBase(CoordinatorEntity):
+class SensorBase(Entity):
     """Representation of a dynamically updated Sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, idx: int):
+    def __init__(self, device: Device):
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._idx = idx
+        self._device = device
 
     @property
-    def _device(self) -> Device:
-        """Return the latest device state from the coordinator."""
-        return self.coordinator.data[self._idx]
+    def should_pool(self) -> bool:
+        """Disable polling since entities have state pushed via pubsub."""
+        return False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -85,8 +62,10 @@ class SensorBase(CoordinatorEntity):
     @property
     def device_name(self):
         """Return the name of the physical device that includes the sensor."""
-        if self._device.has_trait(InfoMixin.NAME) and self._device.custom_name:
-            return self._device.custom_name
+        if InfoTrait.NAME in self._device.traits:
+            trait = self._device.traits[InfoTrait.NAME]
+            if trait.custom_name:
+                return trait.custom_name
         # Build a name from the room/structure.  Note: This room/structure name
         # is not associated with a home assistant Area.
         parent_relations = self._device.parent_relations
@@ -102,7 +81,40 @@ class SensorBase(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self._device.name)},
             "name": self.device_name,
+            "manufacturer": "Google Nest",
+            "model": self.device_model,
         }
+
+    @property
+    def device_model(self):
+        """Return device model information."""
+        # The API intentionally returns minimal information about specific
+        # devices, instead relying on traits, but we can infer a generic model
+        # name based on the type
+        if self._device.type == "sdm.devices.types.CAMERA":
+            return "Camera"
+        if self._device.type == "sdm.devices.types.DISPLAY":
+            return "Display"
+        if self._device.type == "sdm.devices.types.DOORBELL":
+            return "Doorbell"
+        if self._device.type == "sdm.devices.types.THERMOSTAT":
+            return "Thermostat"
+        return None
+
+    async def async_added_to_hass(self):
+        """Run when entity is added to register update signal handler."""
+
+        async def async_update_state():
+            """Update sensor state."""
+            _LOGGER.info("async_update_state")
+            await self.async_update_ha_state(True)
+
+        # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
+        # here to re-fresh the signals from _device.  Unregister this callback
+        # when the entity is removed.
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        )
 
 
 class TemperatureSensor(SensorBase):
@@ -116,7 +128,9 @@ class TemperatureSensor(SensorBase):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.ambient_temperature_celsius
+        trait = self._device.traits[TemperatureTrait.NAME]
+        _LOGGER.error(f"TemperatureSensor {trait.ambient_temperature_celsius}")
+        return trait.ambient_temperature_celsius
 
     @property
     def unit_of_measurement(self):
@@ -146,7 +160,8 @@ class HumiditySensor(SensorBase):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.ambient_humidity_percent
+        trait = self._device.traits[HumidityTrait.NAME]
+        return trait.ambient_humidity_percent
 
     @property
     def unit_of_measurement(self):

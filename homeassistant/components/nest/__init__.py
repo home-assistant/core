@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import logging
 import threading
 
+from google_nest_sdm.event import EventCallback, EventMessage
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
 from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
@@ -32,12 +34,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 
 from . import api, config_flow, local_auth
-from .const import API_URL, DATA_SDM, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    API_URL,
+    DATA_SDM,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    SIGNAL_NEST_UPDATE,
+)
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
+CONF_SUBSCRIBER_ID = "subscriber_id"
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -45,8 +55,6 @@ SERVICE_SET_ETA = "set_eta"
 
 DATA_NEST = "nest"
 DATA_NEST_CONFIG = "nest_config"
-
-SIGNAL_NEST_UPDATE = "nest_update"
 
 NEST_CONFIG_FILE = "nest.conf"
 
@@ -69,9 +77,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
+                # Required to use the new API (optional for compatibility)
+                vol.Optional(CONF_PROJECT_ID): cv.string,
+                vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
+                # Config that only currently works on the new API
                 vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,
@@ -109,7 +120,7 @@ CANCEL_ETA_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up Nest components."""
     hass.data[DOMAIN] = {}
 
@@ -119,10 +130,13 @@ async def async_setup(hass, config):
     if CONF_PROJECT_ID not in config[DOMAIN]:
         return await async_setup_legacy(hass, config)
 
-    hass.data[DOMAIN][DATA_SDM] = {}  # Indicates to other flows which API
+    if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
+        _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
+        return False
 
+    # For setup of ConfigEntry below
+    hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
-    hass.data[DOMAIN][CONF_PROJECT_ID] = project_id
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
@@ -139,10 +153,38 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+class SignalUpdateCallback(EventCallback):
+    """An EventCallback invoked when new events arrive from subscriber."""
+
+    def __init__(self, hass: HomeAssistant):
+        """Initialize EventCallback."""
+        self._hass = hass
+
+    def handle_event(self, event_message: EventMessage):
+        """Process an incoming EventMessage."""
+        _LOGGER.debug(f"Update {event_message.event_id} @ {event_message.timestamp}")
+        traits = event_message.resource_update_traits
+        if traits:
+            for (name, trait) in traits.items():
+                _LOGGER.debug(f"Trait update {name}: {trait._data}")
+        events = event_message.resource_update_events
+        if events:
+            for (name, event) in events.items():
+                _LOGGER.debug(f"Event Update {name}: {event.event_id}")
+
+        if not event_message.resource_update_traits:
+            # Note: Currently ignoring events like camera motion
+            return
+        # This event triggered an update to a device that changed some
+        # properties.  The DeviceManager should have already updated the
+        # devices, so trigger an entity refresh
+        dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nest from a config entry."""
 
-    if DATA_SDM not in hass.data[DOMAIN]:
+    if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
     implementation = (
@@ -151,12 +193,22 @@ async def async_setup_entry(hass, entry):
         )
     )
 
+    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
+
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
+    auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
         API_URL,
     )
+    subscriber = GoogleNestSubscriber(
+        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
+    )
+    subscriber.set_update_callback(SignalUpdateCallback(hass))
+    # Start the pubsub subscriber which will send an initial call to populate
+    # the subscribers DeviceManager
+    hass.async_create_task(subscriber.start_async())
+    hass.data[DOMAIN][entry.entry_id] = subscriber
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -168,10 +220,12 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    if DATA_SDM not in hass.data[DOMAIN]:
+    if DATA_SDM not in entry.data:
         # Legacy API
         return True
 
+    subscriber = hass.data[DOMAIN][entry.entry_id]
+    subscriber.stop_async()
     unload_ok = all(
         await asyncio.gather(
             *[

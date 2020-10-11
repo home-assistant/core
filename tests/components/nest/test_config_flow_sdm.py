@@ -9,6 +9,7 @@ from tests.async_mock import patch
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 PROJECT_ID = "project-id-4321"
+SUBSCRIBER_ID = "subscriber-id-9876"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
@@ -19,6 +20,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
         {
             DOMAIN: {
                 "project_id": PROJECT_ID,
+                "subscriber_id": SUBSCRIBER_ID,
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
             },

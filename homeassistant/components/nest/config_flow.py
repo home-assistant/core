@@ -97,6 +97,11 @@ class NestFlowHandler(
             "prompt": "consent",
         }
 
+    async def async_oauth_create_entry(self, data: dict) -> dict:
+        """Create an entry for the SDM flow."""
+        data[DATA_SDM] = {}
+        return await super().async_oauth_create_entry(data)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():

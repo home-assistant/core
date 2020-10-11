@@ -1,6 +1,7 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
 from aiohttp import ClientSession
+from google.oauth2.credentials import Credentials
 from google_nest_sdm.auth import AbstractAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -27,3 +28,8 @@ class AsyncConfigEntryAuth(AbstractAuth):
             await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
+
+    async def async_get_creds(self):
+        """Return a minimal OAuth credential."""
+        token = await self.async_get_access_token()
+        return Credentials(token=token)
