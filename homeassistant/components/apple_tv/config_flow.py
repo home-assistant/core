@@ -130,9 +130,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.async_find_device()
             except DeviceNotFound:
-                errors["base"] = "device_not_found"
+                errors["base"] = "no_devices_found"
             except DeviceAlreadyConfigured:
-                errors["base"] = "device_already_configured"
+                errors["base"] = "already_configured"
             except exceptions.NoServiceError:
                 errors["base"] = "no_usable_service"
             except Exception:  # pylint: disable=broad-except
@@ -168,7 +168,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             identifier = discovery_info["name"].split(".")[0]
             name = properties["CtlN"]
         else:
-            return self.async_abort(reason="unrecoverable_error")
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
@@ -188,12 +188,12 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.async_find_device(allow_exist)
         except DeviceNotFound:
-            return self.async_abort(reason="device_not_found")
+            return self.async_abort(reason="no_devices_found")
         except DeviceAlreadyConfigured:
-            return self.async_abort(reason="already_configured_device")
+            return self.async_abort(reason="already_configured")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unrecoverable_error")
+            return self.async_abort(reason="unknown")
 
         return await next_func()
 
@@ -246,11 +246,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Initiate the pairing process
         abort_reason = None
+        session = async_get_clientsession(self.hass)
+        self.pairing = await pair(
+            self.atv, self.protocol, self.hass.loop, session=session
+        )
         try:
-            session = async_get_clientsession(self.hass)
-            self.pairing = await pair(
-                self.atv, self.protocol, self.hass.loop, session=session
-            )
             await self.pairing.begin()
         except exceptions.ConnectionFailedError:
             return await self.async_step_service_problem()
@@ -261,7 +261,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             abort_reason = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            abort_reason = "unrecoverable_error"
+            abort_reason = "unknown"
 
         if abort_reason:
             if self.pairing:

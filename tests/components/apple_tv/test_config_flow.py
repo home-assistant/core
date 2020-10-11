@@ -44,7 +44,7 @@ async def test_user_input_device_not_found(hass, mrp_device):
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "device_not_found"}
+    assert result2["errors"] == {"base": "no_devices_found"}
 
 
 async def test_user_input_unexpected_error(hass, mock_scan):
@@ -232,7 +232,7 @@ async def test_user_adds_existing_device(hass, mrp_device):
         {"device_input": "127.0.0.1"},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "device_already_configured"}
+    assert result2["errors"] == {"base": "already_configured"}
 
 
 async def test_user_adds_unusable_device(hass, airplay_device):
@@ -387,7 +387,7 @@ async def test_user_pair_begin_unexpected_error(hass, mrp_device, pairing_mock):
         {},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result2["reason"] == "unrecoverable_error"
+    assert result2["reason"] == "unknown"
 
 
 # Zeroconf
@@ -404,7 +404,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unrecoverable_error"
+    assert result["reason"] == "unknown"
 
 
 async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
@@ -483,7 +483,7 @@ async def test_zeroconf_add_but_device_not_found(hass, mock_scan):
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DMAP_SERVICE
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "device_not_found"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_zeroconf_add_existing_device(hass, dmap_device):
@@ -505,7 +505,7 @@ async def test_zeroconf_unexpected_error(hass, mock_scan):
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DMAP_SERVICE
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "unrecoverable_error"
+    assert result["reason"] == "unknown"
 
 
 # Re-configuration

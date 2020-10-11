@@ -35,21 +35,20 @@
       }
     },
     "error": {
-      "device_not_found": "Device could not be found on network, please try again.",
-      "device_already_configured": "This device has already been configured. Please pick another device.",
+      "no_devices_found": "No devices found on the network",
+      "already_configured": "Device is already configured",
       "no_usable_service": "A device was found but could not identify any way to establish a connection to it. If you keep seeing this message, try specifying its IP address or restarting your Apple TV.",
       "unknown": "Unexpected error",
       "invalid_auth": "Invalid authentication"
     },
     "abort": {
-      "device_not_found": "Device could not be found on network, please try again.",
+      "no_devices_found": "No devices found on the network",
       "already_configured_device": "Device is already configured",
-      "unrecoverable_error": "An unrecoverable error occurred! Check log file for further details.",
       "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
       "backoff": "Device does not accept pairing reqests at this time (you might have entered an invalid PIN code too many times), try again later.",
       "invalid_config": "The configuration for this device is incomplete. Please try adding it again.",
-      "auth": "Authentication error. You might have entered an invalid PIN code or not have permission to pair via this protocol. Please check access settings on your Apple TV.",
-      "missing_credentials": "Credentials missing, please verify your configuration."
+      "already_in_progress": "Configuration flow is already in progress",
+      "unknown": "Unexpected error"
     }
   },
   "options": {
