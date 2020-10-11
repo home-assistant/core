@@ -163,6 +163,7 @@ async def test_options_flow_exclude_mode_advanced(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
@@ -213,6 +214,7 @@ async def test_options_flow_exclude_mode_basic(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old"],
@@ -265,6 +267,7 @@ async def test_options_flow_include_mode_basic(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
@@ -330,6 +333,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -384,6 +388,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -450,6 +455,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
@@ -504,6 +510,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": False,
+        "mode": "bridge",
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
@@ -553,3 +560,56 @@ async def test_options_flow_blocked_when_from_yaml(hass):
             user_input={},
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_options_flow_include_mode_basic_accessory(hass):
+    """Test config flow options in include mode with a single accessory."""
+
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set("media_player.sonos", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["media_player"], "mode": "accessory"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include_exclude"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": "media_player.tv"},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"safe_mode": False},
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": False,
+        "mode": "accessory",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": [],
+            "include_entities": ["media_player.tv"],
+        },
+        "safe_mode": False,
+    }
