@@ -347,6 +347,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                vol.Required(
+                    CONF_INCLUDE_EXCLUDE_MODE,
+                    default=include_exclude_mode,
+                ): vol.In(INCLUDE_EXCLUDE_MODES),
                 vol.Optional(
                     CONF_ENTITIES,
                     default=entities,
