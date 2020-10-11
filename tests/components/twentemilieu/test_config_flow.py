@@ -80,7 +80,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "address_already_set_up"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow_implementation(hass, aioclient_mock):

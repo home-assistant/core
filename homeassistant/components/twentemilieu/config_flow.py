@@ -71,7 +71,7 @@ class TwenteMilieuFlowHandler(ConfigFlow):
         entries = self._async_current_entries()
         for entry in entries:
             if entry.data[CONF_ID] == unique_id:
-                return self.async_abort(reason="address_already_set_up")
+                return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
             title=unique_id,
