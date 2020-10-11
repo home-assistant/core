@@ -36,7 +36,15 @@ from miio.airpurifier_miot import (  # pylint: disable=import-error, import-erro
 )
 import voluptuous as vol
 
-from homeassistant.components.fan import PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity
+
+from homeassistant.components.fan import (
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    PLATFORM_SCHEMA,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -171,7 +179,6 @@ ATTR_BUTTON_PRESSED = "button_pressed"
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_TRANS_LEVEL = "trans_level"
-ATTR_HARDWARE_VERSION = "hardware_version"
 
 # Air Humidifier CA
 # ATTR_MOTOR_SPEED = "motor_speed"
@@ -183,7 +190,6 @@ ATTR_WATER_LEVEL = "water_level"
 ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_FAHRENHEIT = "fahrenheit"
 ATTR_FAULT = "fault"
-ATTR_POWER_TIME = "power_time"
 
 # Air Fresh
 ATTR_CO2 = "co2"
@@ -320,14 +326,12 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON = {
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
-    ATTR_HARDWARE_VERSION: "hardware_version",
     ATTR_TRANS_LEVEL: "trans_level",
     ATTR_BUTTON_PRESSED: "button_pressed",
 }
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
-    ATTR_HARDWARE_VERSION: "hardware_version",
     ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_DEPTH: "depth",
     ATTR_DRY: "dry",
@@ -340,7 +344,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_DRY: "dry",
     ATTR_FAHRENHEIT: "fahrenheit",
     ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_POWER_TIME: "power_time",
     ATTR_WATER_LEVEL: "water_level",
 }
 
@@ -1052,7 +1055,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4
-            self._speed_list = [mode.name for mode in AirhumidifierMiotOperationMode]
+            self._speed_list = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
@@ -1168,7 +1171,14 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            return AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]).name
+            if AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.Low:
+                return SPEED_LOW
+            elif AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.Mid:
+                return SPEED_MEDIUM
+            elif AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE]) == AirhumidifierMiotOperationMode.High:
+                return SPEED_HIGH
+            else:
+                return None
 
         return None
 
@@ -1184,15 +1194,22 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        if self.supported_features & SUPPORT_SET_SPEED == 0:
-            return
 
-        _LOGGER.debug("Setting the operation mode to: %s", speed)
+        translated_speed = 0
+
+        if speed == SPEED_LOW:
+            translated_speed = AirhumidifierMiotOperationMode.Low
+        elif speed == SPEED_MEDIUM:
+            translated_speed = AirhumidifierMiotOperationMode.Mid
+        elif speed == SPEED_HIGH:
+            translated_speed = AirhumidifierMiotOperationMode.High
+        else:
+            return None
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            AirhumidifierMiotOperationMode[speed.title()],
+            translated_speed,
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
