@@ -31,10 +31,10 @@ def calculate_next_active_alarms(alarms):
         if alarm_setting["alarmMode"] != "ON":
             continue
         for day in alarm_setting["alarmDays"]:
+            alarm_time = alarm_setting["alarmTime"]
             if day == "ONCE":
                 midnight = datetime.combine(date.today(), datetime.min.time())
-                alarmtime = alarm_setting["alarmTime"]
-                alarm = midnight + timedelta(minutes=alarmtime)
+                alarm = midnight + timedelta(minutes=alarm_time)
                 if alarm < datetime.now():
                     alarm += timedelta(days=1)
                 active_alarms.append(alarm.isoformat())
@@ -43,9 +43,8 @@ def calculate_next_active_alarms(alarms):
                     date.today() - timedelta(days=datetime.today().isoweekday() % 7),
                     datetime.min.time(),
                 )
-                alarmtime = alarm_setting["alarmTime"]
                 days_to_add = DAY_TO_NUMBER[day] % 7
-                alarm = start_of_week + timedelta(minutes=alarmtime, days=days_to_add)
+                alarm = start_of_week + timedelta(minutes=alarm_time, days=days_to_add)
                 if alarm < datetime.now():
                     alarm += timedelta(days=7)
                 active_alarms.append(alarm.isoformat())
