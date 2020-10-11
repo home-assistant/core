@@ -2,8 +2,13 @@
 from glob import glob
 import logging
 import os
-import time
 
+from pi1wire import (
+    InvalidCRCException,
+    NotFoundSensorException,
+    Pi1Wire,
+    UnsupportResponseException,
+)
 from pyownet import protocol
 import voluptuous as vol
 
@@ -23,6 +28,9 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     CONF_MOUNT_DIR,
     CONF_NAMES,
+    CONF_TYPE_OWFS,
+    CONF_TYPE_OWSERVER,
+    CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
 )
@@ -53,6 +61,8 @@ DEVICE_SENSORS = {
     "1D": {"counter_a": "counter.A", "counter_b": "counter.B"},
     "EF": {"HobbyBoard": "special"},
 }
+
+DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
 # EF sensors are usually hobbyboards specialized sensors.
 # These can only be read by OWFS.  Currently this driver only supports them
@@ -120,18 +130,32 @@ def hb_info_from_type(dev_type="std"):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up 1-Wire platform."""
-    base_dir = config[CONF_MOUNT_DIR]
-    owport = config[CONF_PORT]
-    owhost = config.get(CONF_HOST)
+    entities = get_entities(config)
+    add_entities(entities, True)
 
-    devs = []
+
+def get_entities(config):
+    """Get a list of entities."""
+    base_dir = config[CONF_MOUNT_DIR]
+    owhost = config.get(CONF_HOST)
+    owport = config[CONF_PORT]
+
+    # Ensure type is configured
+    if owhost:
+        conf_type = CONF_TYPE_OWSERVER
+    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
+        conf_type = CONF_TYPE_SYSBUS
+    else:
+        conf_type = CONF_TYPE_OWFS
+
+    entities = []
     device_names = {}
     if CONF_NAMES in config:
         if isinstance(config[CONF_NAMES], dict):
             device_names = config[CONF_NAMES]
 
-    if owhost:
-        # We have an owserver on a remote(or local) host/port
+    # We have an owserver on a remote(or local) host/port
+    if conf_type == CONF_TYPE_OWSERVER:
         _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -166,7 +190,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         sensor_key = f"wetness_{s_id}"
                 sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
-                devs.append(
+                entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
                         device_file,
@@ -175,25 +199,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     )
                 )
 
-    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:  # pragma: no cover
-        # We have a raw GPIO ow sensor on a Pi
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        _LOGGER.debug("Initializing using SysBus %s", base_dir)
-        for device_family in DEVICE_SENSORS:
-            for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
-                sensor_id = os.path.split(device_folder)[1]
-                device_file = os.path.join(device_folder, "w1_slave")
-                devs.append(
-                    OneWireDirect(
-                        device_names.get(sensor_id, sensor_id),
-                        device_file,
-                        "temperature",
-                    )
+    # We have a raw GPIO ow sensor on a Pi
+    elif conf_type == CONF_TYPE_SYSBUS:
+        _LOGGER.debug("Initializing using SysBus")
+        for p1sensor in Pi1Wire().find_all_sensors():
+            family = p1sensor.mac_address[:2]
+            sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
+            if family not in DEVICE_SUPPORT_SYSBUS:
+                _LOGGER.warning(
+                    "Ignoring unknown family (%s) of sensor found for device: %s",
+                    family,
+                    sensor_id,
                 )
+                continue
 
+            device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
+            entities.append(
+                OneWireDirect(
+                    device_names.get(sensor_id, sensor_id),
+                    device_file,
+                    "temperature",
+                    p1sensor,
+                )
+            )
+        if not entities:
+            _LOGGER.error(
+                "No onewire sensor found. Check if dtoverlay=w1-gpio "
+                "is in your /boot/config.txt. "
+                "Check the mount_dir parameter if it's defined"
+            )
+
+    # We have an owfs mounted
     else:  # pragma: no cover
-        # We have an owfs mounted
         # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
@@ -208,7 +245,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     device_file = os.path.join(
                         os.path.split(family_file_path)[0], sensor_value
                     )
-                    devs.append(
+                    entities.append(
                         OneWireOWFS(
                             device_names.get(sensor_id, sensor_id),
                             device_file,
@@ -216,15 +253,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         )
                     )
 
-    if devs == []:
-        _LOGGER.error(
-            "No onewire sensor found. Check if dtoverlay=w1-gpio "
-            "is in your /boot/config.txt. "
-            "Check the mount_dir parameter if it's defined"
-        )
-        return
-
-    add_entities(devs, True)
+    return entities
 
 
 class OneWire(Entity):
@@ -237,14 +266,6 @@ class OneWire(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
         self._value_raw = None
-
-    def _read_value_raw(self):  # pragma: no cover
-        """Read the value as it is returned by the sensor."""
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        with open(self._device_file) as ds_device_file:
-            lines = ds_device_file.readlines()
-        return lines
 
     @property
     def name(self):
@@ -303,25 +324,27 @@ class OneWireProxy(OneWire):
         self._state = value
 
 
-class OneWireDirect(OneWire):  # pragma: no cover
-    """Implementation of a 1-Wire sensor directly connected to RPI GPIO.
+class OneWireDirect(OneWire):
+    """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
-    This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-    https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-    """
+    def __init__(self, name, device_file, sensor_type, owsensor):
+        """Initialize the sensor."""
+        super().__init__(name, device_file, sensor_type)
+        self._owsensor = owsensor
 
     def update(self):
         """Get the latest data from the device."""
         value = None
-        lines = self._read_value_raw()
-        while lines[0].strip()[-3:] != "YES":
-            time.sleep(0.2)
-            lines = self._read_value_raw()
-        equals_pos = lines[1].find("t=")
-        if equals_pos != -1:
-            value_string = lines[1][equals_pos + 2 :]
-            value = round(float(value_string) / 1000.0, 1)
-            self._value_raw = float(value_string)
+        try:
+            self._value_raw = self._owsensor.get_temperature()
+            value = round(float(self._value_raw), 1)
+        except (
+            FileNotFoundError,
+            InvalidCRCException,
+            NotFoundSensorException,
+            UnsupportResponseException,
+        ) as ex:
+            _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
         self._state = value
 
 
@@ -331,6 +354,12 @@ class OneWireOWFS(OneWire):  # pragma: no cover
     This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
     https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
     """
+
+    def _read_value_raw(self):
+        """Read the value as it is returned by the sensor."""
+        with open(self._device_file) as ds_device_file:
+            lines = ds_device_file.readlines()
+        return lines
 
     def update(self):
         """Get the latest data from the device."""
