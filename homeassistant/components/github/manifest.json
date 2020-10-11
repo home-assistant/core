@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/github",
   "requirements": [
-    "aiogithubapi==1.1.2"
+    "aiogithubapi==2.0.0"
   ],
   "ssdp": [],
   "zeroconf": [],
