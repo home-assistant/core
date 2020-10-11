@@ -7,7 +7,7 @@
       },
       "mode": {
         "title": "PlayStation 4",
-        "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
+        "description": "Select mode for configuration. The [%key:common::config_flow::data::ip%] field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
         "data": {
           "mode": "Config Mode",
           "ip_address": "[%key:common::config_flow::data::ip%] (Leave empty if using Auto Discovery)."
@@ -27,8 +27,8 @@
     "error": {
       "credential_timeout": "Credential service timed out. Press submit to restart.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
-      "no_ipaddress": "Enter the IP Address of the PlayStation 4 you would like to configure."
+      "login_failed": "Failed to pair to PlayStation 4. Verify [%key:common::config_flow::data::pin%] is correct.",
+      "no_ipaddress": "Enter the [%key:common::config_flow::data::ip%] of the PlayStation 4 you would like to configure."
     },
     "abort": {
       "credential_error": "Error fetching credentials.",
