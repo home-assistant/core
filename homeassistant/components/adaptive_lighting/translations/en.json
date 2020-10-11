@@ -6,12 +6,12 @@
         "title": "Choose a name for the Adaptive Lighting",
         "description": "Every instance can contain multiple lights!",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "Name"
         }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "Device is already configured"
     }
   },
   "options": {

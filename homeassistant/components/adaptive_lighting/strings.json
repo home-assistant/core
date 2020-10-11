@@ -6,7 +6,7 @@
         "title": "Choose a name for the Adaptive Lighting",
         "description": "Every instance can contain multiple lights!",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "Name"
         }
       }
     },
