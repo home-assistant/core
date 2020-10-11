@@ -139,7 +139,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
                 # If list is empty then all devices are configured.
                 if not self.device_list:
-                    return self.async_abort(reason="devices_configured")
+                    return self.async_abort(reason="already_configured")
 
         # Login to PS4 with user data.
         if user_input is not None:
@@ -154,7 +154,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             )
 
             if is_ready is False:
-                errors["base"] = "not_ready"
+                errors["base"] = "cannot_connect"
             elif is_login is False:
                 errors["base"] = "login_failed"
             else:
