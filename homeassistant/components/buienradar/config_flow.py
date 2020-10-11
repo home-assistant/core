@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_CAMERA,
     CONF_COUNTRY,
+    CONF_DIMENSION,
     CONF_SENSOR,
     CONF_WEATHER,
     DOMAIN,
@@ -26,9 +27,14 @@ def configured_instances(hass):
     """Return a set of configured SimpliSafe instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
-        entries.append(
-            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
-        )
+        if entry.data.get(CONF_CAMERA):
+            entries.append(
+                f"{entry.data.get(CONF_DIMENSION)}-{entry.data.get(CONF_COUNTRY)}"
+            )
+        else:
+            entries.append(
+                f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
+            )
     return set(entries)
 
 
@@ -68,7 +74,9 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors,
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_create_buienradar_entry(self, input_data):
@@ -87,3 +95,21 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(title=name, data=data)
+
+    async def async_step_import(self, import_input=None):
+        """Import a config entry."""
+        if import_input[CONF_CAMERA]:
+            if (
+                f"{import_input[CONF_DIMENSION]}-{import_input[CONF_COUNTRY]}"
+                in configured_instances(self.hass)
+            ):
+                return self.async_abort(reason="already_configured")
+        elif (
+            f"{import_input[CONF_LATITUDE]}-{import_input[CONF_LONGITUDE]}"
+            in configured_instances(self.hass)
+        ):
+            return self.async_abort(reason="already_configured")
+
+        name = import_input[CONF_NAME]
+
+        return self.async_create_entry(title=name, data=import_input)
