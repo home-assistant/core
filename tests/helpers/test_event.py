@@ -1987,6 +1987,60 @@ async def test_track_template_with_time_default(hass):
     info.async_remove()
 
 
+async def test_track_template_with_time_that_leaves_scope(hass):
+    """Test tracking template with time."""
+
+    hass.states.async_set("binary_sensor.washing_machine", "on")
+    specific_runs = []
+    template_complex = Template(
+        """
+        {% if states.binary_sensor.washing_machine.state == "on" %}
+            {{ now() }}
+        {% else %}
+            {{ states.binary_sensor.washing_machine.last_updated }}
+        {% endif %}
+    """,
+        hass,
+    )
+
+    def specific_run_callback(event, updates):
+        specific_runs.append(updates.pop().result)
+
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
+    )
+    await hass.async_block_till_done()
+
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": True,
+    }
+
+    hass.states.async_set("binary_sensor.washing_machine", "off")
+    await hass.async_block_till_done()
+
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": False,
+    }
+
+    hass.states.async_set("binary_sensor.washing_machine", "on")
+    await hass.async_block_till_done()
+
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": True,
+    }
+
+    info.async_remove()
+
+
 async def test_async_track_template_result_multiple_templates_mixing_listeners(hass):
     """Test tracking multiple templates with mixing listener types."""
 
