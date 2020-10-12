@@ -1,6 +1,7 @@
 """Helper to gather system info."""
 import os
 import platform
+from datetime import datetime
 from typing import Any, Dict
 
 from homeassistant.const import __version__ as current_version
@@ -8,6 +9,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_virtual_env
 
 from .typing import HomeAssistantType
+
+DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 @bind_hass
@@ -22,6 +25,7 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict[str, Any]:
         "python_version": platform.python_version(),
         "docker": False,
         "arch": platform.machine(),
+        "date_time": datetime.now().strftime(DATE_STR_FORMAT),
         "timezone": str(hass.config.time_zone),
         "os_name": platform.system(),
         "os_version": platform.release(),
