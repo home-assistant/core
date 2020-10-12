@@ -48,10 +48,9 @@ class FritzBoxPhonebook:
         number = re.sub(r"[^\d\+]", "", str(number))
         if self.number_dict is None:
             return "unknown"
-        try:
+
+        if number in self.number_dict:
             return self.number_dict[number]
-        except KeyError:
-            pass
 
         if not self.prefixes:
             return "unknown"
