@@ -48,7 +48,7 @@ def add_new_entities(coordinator, async_add_entities, tracked):
         tracked.add(mac)
 
     if new_tracked:
-        async_add_entities(new_tracked, True)
+        async_add_entities(new_tracked)
 
 
 @callback
@@ -67,7 +67,7 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
                 tracked.add(entity.unique_id)
 
     if missing:
-        async_add_entities(missing, True)
+        async_add_entities(missing)
 
 
 class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
