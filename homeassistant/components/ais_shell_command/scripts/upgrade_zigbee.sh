@@ -43,14 +43,19 @@ echo "Done!"
 # 7z x -mmt=2 -o/data/data/pl.sviete.dom/files/home/zigbee2mqtt ~/zigbee.zip -y
 
 # the configuration.yaml should be
-# homeassistant: true
-# permit_join: false
-# mqtt:
-#   base_topic: zigbee2mqtt
-#   server: 'mqtt://localhost'
-# serial:
-#   port: /dev/ttyACM0
-# advanced:
-#   log_level: info
-#   log_output:
-#     - console
+#homeassistant: true
+#permit_join: false
+#mqtt:
+#  base_topic: zigbee2mqtt
+#  server: 'mqtt://localhost'
+#serial:
+#  port: /dev/ttyACM0
+#advanced:
+#  log_level: info
+#  log_output:
+#    - console
+#frontend:
+#  port: 8099
+#experimental:
+#  new_api: true
+

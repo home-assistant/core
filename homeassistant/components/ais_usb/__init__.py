@@ -356,7 +356,7 @@ def _lsusb():
         r"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
     )
     if ais_global.has_root():
-        df = subprocess.check_output("su -c lsusb")
+        df = subprocess.check_output("su -c lsusb", shell=True)  # nosec
     else:
         df = subprocess.check_output("lsusb")
     devices = []
