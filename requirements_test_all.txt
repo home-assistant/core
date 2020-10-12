@@ -600,7 +600,7 @@ pyMetno==0.8.1
 pyRFXtrx==0.26
 
 # homeassistant.components.tibber
-pyTibber==0.15.3
+pyTibber==0.15.7
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
