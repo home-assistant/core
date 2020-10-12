@@ -18,8 +18,7 @@
                     "port": "Port",
                     "prefixes": "Prefixes (comma separated list)",
                     "username": "Username"
-                },
-                "description": "Enter your AVM FRITZ!Box call monitor information."
+                }
             }
         }
     }
