@@ -1,7 +1,6 @@
 """Test the Advantage Air Initialization."""
 
-from homeassistant.components.advantage_air.const import DOMAIN
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY
 
 from tests.components.advantage_air import (
     TEST_SYSTEM_DATA,
@@ -19,7 +18,7 @@ async def test_async_setup_entry(hass, aioclient_mock):
     )
 
     entry = await add_mock_config(hass)
-
+    assert entry.state == ENTRY_STATE_LOADED
 
 
 async def test_async_setup_entry_failure(hass, aioclient_mock):
@@ -30,4 +29,5 @@ async def test_async_setup_entry_failure(hass, aioclient_mock):
         exc=SyntaxError,
     )
 
-    await add_mock_config(hass)
+    entry = await add_mock_config(hass)
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
