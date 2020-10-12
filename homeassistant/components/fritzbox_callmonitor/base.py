@@ -52,14 +52,16 @@ class FritzBoxPhonebook:
             return self.number_dict[number]
         except KeyError:
             pass
-        if self.prefixes:
-            for prefix in self.prefixes:
-                try:
-                    return self.number_dict[prefix + number]
-                except KeyError:
-                    pass
-                try:
-                    return self.number_dict[prefix + number.lstrip("0")]
-                except KeyError:
-                    pass
-        return "unknown"
+
+        if not self.prefixes:
+            return "unknown"
+
+        for prefix in self.prefixes:
+            try:
+                return self.number_dict[prefix + number]
+            except KeyError:
+                pass
+            try:
+                return self.number_dict[prefix + number.lstrip("0")]
+            except KeyError:
+                pass
