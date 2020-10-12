@@ -24,7 +24,7 @@ from homeassistant.util.dt import utcnow
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
-from .handler import HassIO, HassioAPIError, api_valid
+from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 
@@ -137,65 +137,65 @@ async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
 
 
 @bind_hass
-async def async_install_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Install add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/install"
-    api_call = api_valid(hassio.send_command)
-    await api_call(command)
+    return await hassio.send_command(command)
 
 
 @bind_hass
-async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Uninstall add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/uninstall"
-    api_call = api_valid(hassio.send_command)
-    await api_call(command)
+    return await hassio.send_command(command)
 
 
 @bind_hass
-async def async_start_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Start add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/start"
-    api_call = api_valid(hassio.send_command)
-    await api_call(command)
+    return await hassio.send_command(command)
 
 
 @bind_hass
-async def async_stop_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Stop add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/stop"
-    api_call = api_valid(hassio.send_command)
-    await api_call(command)
+    return await hassio.send_command(command)
 
 
 @bind_hass
+@api_data
 async def async_set_addon_options(
     hass: HomeAssistantType, slug: str, options: dict
-) -> None:
+) -> dict:
     """Set add-on options.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/options"
-    api_call = api_valid(hassio.send_command)
-    await api_call(command, payload=options)
+    return await hassio.send_command(command, payload=options)
 
 
 @callback
