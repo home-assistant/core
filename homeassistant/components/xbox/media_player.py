@@ -114,7 +114,10 @@ class XboxMediaPlayer(MediaPlayerEntity):
         """Title of current playing media."""
         if not self._app_details:
             return None
-        return self._app_details.localized_properties[0].short_title
+        return (
+            self._app_details.localized_properties[0].product_title
+            or self._app_details.localized_properties[0].short_title
+        )
 
     @property
     def media_image_url(self):
@@ -182,7 +185,10 @@ class XboxMediaPlayer(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.client.smartglass.mute(self._console.id)
+        if mute:
+            await self.client.smartglass.mute(self._console.id)
+        else:
+            await self.client.smartglass.unmute(self._console.id)
 
     async def async_volume_up(self):
         """Turn volume up for media player."""
@@ -227,9 +233,13 @@ class XboxMediaPlayer(MediaPlayerEntity):
 
 
 def _find_media_image(images=List[Image]) -> Optional[Image]:
-    purpose_order = ["FeaturePromotionalSquareArt", "Logo", "BoxArt"]
+    purpose_order = ["FeaturePromotionalSquareArt", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:
-            if image.image_purpose == purpose and image.width >= 300:
+            if (
+                image.image_purpose == purpose
+                and image.width == image.height
+                and image.width >= 300
+            ):
                 return image
     return None
