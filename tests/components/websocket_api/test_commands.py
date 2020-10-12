@@ -421,7 +421,7 @@ async def test_render_template_renders_template(hass, websocket_client):
             "all": False,
             "domains": [],
             "entities": ["light.test"],
-            "time_patterns": [],
+            "time": False,
         },
     }
 
@@ -436,7 +436,7 @@ async def test_render_template_renders_template(hass, websocket_client):
             "all": False,
             "domains": [],
             "entities": ["light.test"],
-            "time_patterns": [],
+            "time": False,
         },
     }
 
@@ -470,7 +470,7 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
             "all": False,
             "domains": [],
             "entities": ["light.test"],
-            "time_patterns": [],
+            "time": False,
         },
     }
 
@@ -485,7 +485,7 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
             "all": False,
             "domains": [],
             "entities": ["light.test"],
-            "time_patterns": [],
+            "time": False,
         },
     }
 
@@ -577,7 +577,7 @@ async def test_render_template_with_delayed_error(hass, websocket_client, caplog
             "all": False,
             "domains": [],
             "entities": ["sensor.test"],
-            "time_patterns": [],
+            "time": False,
         },
     }
 
