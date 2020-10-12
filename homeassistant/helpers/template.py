@@ -3,7 +3,6 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import json
@@ -75,23 +74,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 }
 
 DEFAULT_RATE_LIMIT = timedelta(minutes=1)
-
-
-@dataclass
-class TrackTimePattern:
-    """Class for keeping track of a time pattern the can be used with async_track_time_change.
-
-    hour: Hour to match
-    minute: Minute to match
-    second: Second to match
-    """
-
-    hour: Optional[Any]
-    minute: Optional[Any]
-    second: Optional[Any]
-
-
-DEFAULT_TIME_PATTERN = TrackTimePattern("*", "*", 0)
 
 
 @bind_hass
@@ -220,12 +202,11 @@ class RenderInfo:
         self.domains_lifecycle = set()
         self.entities = set()
         self.rate_limit = None
-        self.time_pattern = None
         self.has_time = False
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> time_pattern={self.time_pattern}> has_time={self.has_time}"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> has_time={self.has_time}"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
@@ -279,9 +260,6 @@ class RenderInfo:
             self.filter = self._filter_domains_and_entities
         else:
             self.filter = _false
-
-        if self.has_time and self.time_pattern is None:
-            self.time_pattern = DEFAULT_TIME_PATTERN
 
 
 class Template:
