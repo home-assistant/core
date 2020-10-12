@@ -1,7 +1,5 @@
 """Test the Advantage Air Initialization."""
 
-from advantage_air import ApiError
-
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -33,7 +31,7 @@ async def test_async_setup_entry_failure(hass, aioclient_mock):
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
-        exc=ApiError("TestError"),
+        exc=SyntaxError,
     )
 
     await add_mock_config(hass)

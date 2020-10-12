@@ -148,3 +148,29 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+
+
+async def test_climate_async_failed_update(hass, aioclient_mock):
+    """Test climate setup."""
+
+    aioclient_mock.get(
+        TEST_SYSTEM_URL,
+        text=TEST_SYSTEM_DATA,
+    )
+    aioclient_mock.get(
+        TEST_SET_URL,
+        exc=SyntaxError,
+    )
+    await add_mock_config(hass)
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ["climate.ac_one"], ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[-1][0] == "GET"
+    assert aioclient_mock.mock_calls[-1][1].path == "/setAircon"

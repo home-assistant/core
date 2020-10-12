@@ -1,7 +1,5 @@
 """Test the Advantage Air config flow."""
 
-from advantage_air import ApiError
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.advantage_air.const import DOMAIN
 
@@ -51,7 +49,7 @@ async def test_form_cannot_connect(hass, aioclient_mock):
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
-        exc=ApiError("TestError"),
+        exc=SyntaxError,
     )
 
     result = await hass.config_entries.flow.async_init(
