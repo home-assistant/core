@@ -163,7 +163,7 @@ class XboxMediaPlayer(MediaPlayerEntity):
                         app_id, id_type
                     )
                 )
-                if catalog_result and len(catalog_result.products):
+                if catalog_result and len(catalog_result.products) > 0:
                     self._app_details = catalog_result.products[0]
                 else:
                     self._app_details = None
