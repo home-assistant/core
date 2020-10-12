@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Profiili seaded on v\u00e4rskendatud.",
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+        },
+        "error": {
+            "already_configured_account": "Konto on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "reauth": {
+                "description": "Withingi andmete jsaamiseks tuleb kasutaja {profile} taastuvastada.",
+                "title": "Taastuvasta profiil"
+            }
+        }
+    }
+}

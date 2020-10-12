@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "confirm": {
+                "title": ""
+            }
+        }
+    }
+}

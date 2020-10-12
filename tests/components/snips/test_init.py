@@ -402,7 +402,7 @@ async def test_intent_special_slots(hass, mqtt_mock):
     assert len(calls) == 1
     assert calls[0].domain == "light"
     assert calls[0].service == "turn_on"
-    assert calls[0].data["confidenceScore"] == "0.85"
+    assert calls[0].data["confidenceScore"] == 0.85
     assert calls[0].data["site_id"] == "default"
 
 

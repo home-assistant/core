@@ -3,6 +3,7 @@ from datetime import datetime
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorEntity,
 )
@@ -16,7 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
     "ding": ["Ding", ["doorbots", "authorized_doorbots"], DEVICE_CLASS_OCCUPANCY],
-    "motion": ["Motion", ["doorbots", "authorized_doorbots", "stickup_cams"], "motion"],
+    "motion": [
+        "Motion",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        DEVICE_CLASS_MOTION,
+    ],
 }
 
 

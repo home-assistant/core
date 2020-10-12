@@ -5,6 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -209,13 +211,28 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
+        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
         ha_forecast = []
         for met_item in met_forecast:
+            if not set(met_item).issuperset(required_keys):
+                continue
             ha_item = {
                 k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
             }
-            ha_item[ATTR_FORECAST_CONDITION] = format_condition(
-                ha_item[ATTR_FORECAST_CONDITION]
-            )
+            if ha_item.get(ATTR_FORECAST_CONDITION):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                    ha_item[ATTR_FORECAST_CONDITION]
+                )
             ha_forecast.append(ha_item)
         return ha_forecast
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Met.no",
+            "model": "Forecast",
+            "default_name": "Forecast",
+            "entry_type": "service",
+        }

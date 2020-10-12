@@ -7,6 +7,7 @@
             "already_paired": "\uc774 \uc561\uc138\uc11c\ub9ac\ub294 \uc774\ubbf8 \ub2e4\ub978 \uae30\uae30\uc640 \ud398\uc5b4\ub9c1\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4. \uc561\uc138\uc11c\ub9ac\ub97c \uc7ac\uc124\uc815\ud558\uace0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
             "ignored_model": "\uc774 \ubaa8\ub378\uc5d0 \ub300\ud55c HomeKit \uc9c0\uc6d0\uc740 \ub354 \ub9ce\uc740 \uae30\ub2a5\uc744 \uc81c\uacf5\ud558\ub294 \uae30\ubcf8 \uad6c\uc131\uc694\uc18c\ub85c \uc778\ud574 \ucc28\ub2e8\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "invalid_config_entry": "\uc774 \uae30\uae30\ub294 \ud398\uc5b4\ub9c1 \ud560 \uc900\ube44\uac00 \ub418\uc5c8\uc9c0\ub9cc Home Assistant \uc5d0 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \ucda9\ub3cc\ud558\ub294 \uad6c\uc131\uc694\uc18c\uac00 \uc788\uc2b5\ub2c8\ub2e4. \uba3c\uc800 \ud574\ub2f9 \uad6c\uc131\uc694\uc18c\ub97c \uc81c\uac70\ud574\uc8fc\uc138\uc694.",
+            "invalid_properties": "\uc7a5\uce58\uc5d0\uc11c\uc120\uc5b8\ud55c \uc798\ubabb\ub41c \uc18d\uc131\uc785\ub2c8\ub2e4.",
             "no_devices": "\ud398\uc5b4\ub9c1\uc774 \ud544\uc694\ud55c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "error": {
@@ -46,6 +47,26 @@
                 "description": "\ud398\uc5b4\ub9c1 \ud560 \uae30\uae30\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
                 "title": "HomeKit \uc561\uc138\uc11c\ub9ac \ud398\uc5b4\ub9c1\ud558\uae30"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "\ubc84\ud2bc 1",
+            "button10": "\ubc84\ud2bc 10",
+            "button2": "\ubc84\ud2bc 2",
+            "button3": "\ubc84\ud2bc 3",
+            "button4": "\ubc84\ud2bc 4",
+            "button5": "\ubc84\ud2bc 5",
+            "button6": "\ubc84\ud2bc 6",
+            "button7": "\ubc84\ud2bc 7",
+            "button8": "\ubc84\ud2bc 8",
+            "button9": "\ubc84\ud2bc 9",
+            "doorbell": "\ucd08\uc778\uc885"
+        },
+        "trigger_type": {
+            "double_press": "\" {subtype} \"\uc744 \ub450\ubc88 \ub204\ub984",
+            "long_press": "\" {subtype} \"\uc744 \uae38\uac8c \ub204\ub984",
+            "single_press": "\"{subtype}\" \uc744 \ud55c\ubc88 \ub204\ub984"
         }
     },
     "title": "HomeKit \ucee8\ud2b8\ub864\ub7ec"

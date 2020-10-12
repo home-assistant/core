@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "host_ip": "",
-                    "name": "Nimi"
+                    "name": "Nimi",
+                    "upnp_bind_multicast": "Seo multicast (jah/ei)"
                 }
             }
         }

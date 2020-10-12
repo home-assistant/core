@@ -123,7 +123,7 @@ class TestRestSwitchSetup:
                     CONF_NAME: "foo",
                     CONF_RESOURCE: "http://localhost",
                     rest.CONF_STATE_RESOURCE: "http://localhost/state",
-                    CONF_HEADERS: {"Content-type": "application/json"},
+                    CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
                     rest.CONF_BODY_ON: "custom on text",
                     rest.CONF_BODY_OFF: "custom off text",
                 }
@@ -143,7 +143,7 @@ class TestRestSwitch:
         self.method = "post"
         self.resource = "http://localhost/"
         self.state_resource = self.resource
-        self.headers = {"Content-type": "application/json"}
+        self.headers = {"Content-type": CONTENT_TYPE_JSON}
         self.auth = None
         self.body_on = Template("on", self.hass)
         self.body_off = Template("off", self.hass)

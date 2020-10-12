@@ -1,12 +1,11 @@
 """Offer time listening automation rules."""
 from datetime import datetime
 from functools import partial
-import logging
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_AT, CONF_PLATFORM
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -16,8 +15,6 @@ from homeassistant.helpers.event import (
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
@@ -37,12 +34,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     entities = {}
     removes = []
+    job = HassJob(action)
 
     @callback
     def time_automation_listener(description, now):
         """Listen for time changes and calls action."""
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {"trigger": {"platform": "time", "now": now, "description": description}},
         )
 

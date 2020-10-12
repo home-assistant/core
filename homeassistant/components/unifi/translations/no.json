@@ -16,7 +16,7 @@
                     "port": "",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
-                    "verify_ssl": "Kontroller bruker riktig sertifikat"
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Sett opp UniFi kontroller"
             }
@@ -60,7 +60,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"
+                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter",
+                    "allow_uptime_sensors": "Oppetidssensorer for nettverksklienter"
                 },
                 "description": "Konfigurer statistikk sensorer",
                 "title": "UniFi-alternativ 3/3"

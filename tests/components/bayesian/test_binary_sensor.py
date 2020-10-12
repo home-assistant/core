@@ -9,7 +9,14 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_RELOAD, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_RELOAD,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component, setup_component
 
 from tests.async_mock import patch
@@ -686,3 +693,79 @@ async def test_reload(hass):
 
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
+
+
+async def test_template_triggers(hass):
+    """Test sensor with template triggers."""
+    hass.states.async_set("input_boolean.test", STATE_OFF)
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "template",
+                    "value_template": "{{ states.input_boolean.test.state }}",
+                    "prob_given_true": 1999.9,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == STATE_OFF
+
+    events = []
+    hass.helpers.event.async_track_state_change_event(
+        "binary_sensor.test_binary", callback(lambda event: events.append(event))
+    )
+
+    context = Context()
+    hass.states.async_set("input_boolean.test", STATE_ON, context=context)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert events[0].context == context
+
+
+async def test_state_triggers(hass):
+    """Test sensor with state triggers."""
+    hass.states.async_set("sensor.test_monitored", STATE_OFF)
+
+    config = {
+        "binary_sensor": {
+            "name": "Test_Binary",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_monitored",
+                    "to_state": "off",
+                    "prob_given_true": 999.9,
+                    "prob_given_false": 999.4,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        }
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test_binary").state == STATE_OFF
+
+    events = []
+    hass.helpers.event.async_track_state_change_event(
+        "binary_sensor.test_binary", callback(lambda event: events.append(event))
+    )
+
+    context = Context()
+    hass.states.async_set("sensor.test_monitored", STATE_ON, context=context)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert events[0].context == context

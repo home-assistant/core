@@ -34,15 +34,18 @@ async def async_setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
 
     hass.data.setdefault(DOMAIN, {})
-    sh_conf = config.get(DOMAIN)
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=sh_conf,
+    if DOMAIN not in config:
+        return True
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
         )
-    )
 
     return True
 

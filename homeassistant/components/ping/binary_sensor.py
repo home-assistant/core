@@ -143,6 +143,7 @@ class PingDataICMPLib(PingData):
                 icmp_ping,
                 self._ip_address,
                 count=self._count,
+                timeout=1,
                 id=async_get_next_ping_id(self.hass),
             )
         )
@@ -213,7 +214,8 @@ class PingDataSubProcess(PingData):
                     out_error,
                 )
 
-            if pinger.returncode != 0:
+            if pinger.returncode > 1:
+                # returncode of 1 means the host is unreachable
                 _LOGGER.exception(
                     "Error running command: `%s`, return code: %s",
                     " ".join(self._ping_cmd),

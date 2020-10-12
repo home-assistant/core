@@ -15,6 +15,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
                     "ip_address": "Direcci\u00f3n IP"
                 },
                 "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 descubrimiento para encontrar dispositivos."

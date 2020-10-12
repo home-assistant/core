@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
+            "device": {
+                "data": {
+                    "host": "Vali avastatud ONVIF seade"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

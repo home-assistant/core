@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "title": "Vyberte adresu p\u0159ipojen\u00ed"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Vyberte za\u0159\u00edzen\u00ed"
+                },
+                "title": "Za\u0159\u00edzen\u00ed"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            },
+            "user": {
+                "data": {
+                    "type": "Typ p\u0159ipojen\u00ed"
+                },
+                "title": "Vyberte typ p\u0159ipojen\u00ed"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete nastavit",
+                    "remove_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete odstranit"
+                },
+                "title": "Mo\u017enosti Rfxtrx"
+            },
+            "set_device_options": {
+                "data": {
+                    "replace_device": "Vyberte za\u0159\u00edzen\u00ed, kter\u00e9 chcete vym\u011bnit"
+                },
+                "title": "Nastaven\u00ed mo\u017enost\u00ed za\u0159\u00edzen\u00ed"
+            }
+        }
+    },
+    "title": "Rfxtrx"
+}

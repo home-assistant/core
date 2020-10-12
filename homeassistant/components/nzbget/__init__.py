@@ -37,7 +37,7 @@ from .coordinator import NZBGetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     {

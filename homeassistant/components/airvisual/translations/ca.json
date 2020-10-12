@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquestes coordenades o Node/Pro ID ja estan registrades."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat."
         },
         "error": {
-            "general_error": "S'ha produ\u00eft un error desconegut.",
-            "invalid_api_key": "Clau API proporiconada no v\u00e0lida.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "general_error": "Error inesperat",
+            "invalid_api_key": "Clau API inv\u00e0lida",
             "unable_to_connect": "No s'ha pogut connectar a la unitat Node/Pro."
         },
         "step": {

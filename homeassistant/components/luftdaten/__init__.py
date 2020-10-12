@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
+    PRESSURE_PA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -44,8 +45,8 @@ TOPIC_UPDATE = f"{DOMAIN}_data_update"
 SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
     SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", "Pa"],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", "Pa"],
+    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
+    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
     SENSOR_PM10: [
         "PM10",
         "mdi:thought-bubble",

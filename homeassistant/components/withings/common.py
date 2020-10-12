@@ -29,6 +29,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
+    HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
@@ -54,7 +55,7 @@ from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    "^401,.*",
+    f"^{HTTP_UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
@@ -810,7 +811,28 @@ class DataManager:
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
-            return self._api.sleep_get_summary(lastupdate=yesterday_noon)
+            return self._api.sleep_get_summary(
+                lastupdate=yesterday_noon,
+                data_fields=[
+                    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
+                    GetSleepSummaryField.DEEP_SLEEP_DURATION,
+                    GetSleepSummaryField.DURATION_TO_SLEEP,
+                    GetSleepSummaryField.DURATION_TO_WAKEUP,
+                    GetSleepSummaryField.HR_AVERAGE,
+                    GetSleepSummaryField.HR_MAX,
+                    GetSleepSummaryField.HR_MIN,
+                    GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+                    GetSleepSummaryField.REM_SLEEP_DURATION,
+                    GetSleepSummaryField.RR_AVERAGE,
+                    GetSleepSummaryField.RR_MAX,
+                    GetSleepSummaryField.RR_MIN,
+                    GetSleepSummaryField.SLEEP_SCORE,
+                    GetSleepSummaryField.SNORING,
+                    GetSleepSummaryField.SNORING_EPISODE_COUNT,
+                    GetSleepSummaryField.WAKEUP_COUNT,
+                    GetSleepSummaryField.WAKEUP_DURATION,
+                ],
+            )
 
         response = await self._hass.async_add_executor_job(get_sleep_summary)
 

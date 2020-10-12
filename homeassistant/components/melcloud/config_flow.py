@@ -1,6 +1,5 @@
 """Config flow for the MELCloud platform."""
 import asyncio
-import logging
 from typing import Optional
 
 from aiohttp import ClientError, ClientResponseError
@@ -9,11 +8,15 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME, HTTP_FORBIDDEN
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    HTTP_FORBIDDEN,
+    HTTP_UNAUTHORIZED,
+)
 
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,7 +60,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
                 )
         except ClientResponseError as err:
-            if err.status == 401 or err.status == HTTP_FORBIDDEN:
+            if err.status == HTTP_UNAUTHORIZED or err.status == HTTP_FORBIDDEN:
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
         except (asyncio.TimeoutError, ClientError):

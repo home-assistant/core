@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "connection_timeout": "\u010casov\u00fd limit p\u0159i p\u0159ipojen\u00ed k tomuto hostiteli vypr\u0161el"
+        },
         "step": {
             "user": {
                 "data": {

@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
@@ -38,11 +39,11 @@ DEFAULT_DELAY = 0
 ATTR_DELAY = "delay"
 
 DEVICE_CLASS_MAP = {
-    "Motion": "motion",
-    "Line Crossing": "motion",
-    "Field Detection": "motion",
+    "Motion": DEVICE_CLASS_MOTION,
+    "Line Crossing": DEVICE_CLASS_MOTION,
+    "Field Detection": DEVICE_CLASS_MOTION,
     "Video Loss": None,
-    "Tamper Detection": "motion",
+    "Tamper Detection": DEVICE_CLASS_MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
@@ -51,15 +52,15 @@ DEVICE_CLASS_MAP = {
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
-    "PIR Alarm": "motion",
-    "Face Detection": "motion",
-    "Scene Change Detection": "motion",
+    "PIR Alarm": DEVICE_CLASS_MOTION,
+    "Face Detection": DEVICE_CLASS_MOTION,
+    "Scene Change Detection": DEVICE_CLASS_MOTION,
     "I/O": None,
-    "Unattended Baggage": "motion",
-    "Attended Baggage": "motion",
+    "Unattended Baggage": DEVICE_CLASS_MOTION,
+    "Attended Baggage": DEVICE_CLASS_MOTION,
     "Recording Failure": None,
-    "Exiting Region": "motion",
-    "Entering Region": "motion",
+    "Exiting Region": DEVICE_CLASS_MOTION,
+    "Entering Region": DEVICE_CLASS_MOTION,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -254,8 +255,7 @@ class HikvisionBinarySensor(BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr[ATTR_LAST_TRIP_TIME] = self._sensor_last_update()
+        attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 
         if self._delay != 0:
             attr[ATTR_DELAY] = self._delay

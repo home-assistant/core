@@ -2,7 +2,6 @@
 import asyncio
 from collections import Counter
 import itertools
-import logging
 from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
@@ -36,7 +35,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State
+from homeassistant.core import CoreState, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -46,8 +45,6 @@ from . import GroupEntity
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Group"
 
@@ -111,6 +108,11 @@ class LightGroup(GroupEntity, light.LightEntity):
                 self.hass, self._entity_ids, async_state_changed_listener
             )
         )
+
+        if self.hass.state == CoreState.running:
+            await self.async_update()
+            return
+
         await super().async_added_to_hass()
 
     @property

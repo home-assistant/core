@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
@@ -24,7 +25,7 @@ CLIMATE_BINARY_TYPES = {
 }
 
 CAMERA_BINARY_TYPES = {
-    "motion_detected": "motion",
+    "motion_detected": DEVICE_CLASS_MOTION,
     "sound_detected": DEVICE_CLASS_SOUND,
     "person_detected": DEVICE_CLASS_OCCUPANCY,
 }
@@ -158,7 +159,7 @@ class NestActivityZoneSensor(NestBinarySensor):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     def update(self):
         """Retrieve latest state."""

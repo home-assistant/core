@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -21,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
     "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    "motion": ["Motion", "motion", "device:sensor:motion"],
+    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
@@ -253,7 +254,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
             _LOGGER.debug(
                 "Skipping heartbeat of the motion sensor. "
                 "It can introduce an incorrect state because of a firmware "
-                "bug (https://github.com/home-assistant/home-assistant/pull/"
+                "bug (https://github.com/home-assistant/core/pull/"
                 "11631#issuecomment-357507744)"
             )
             return
@@ -352,7 +353,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
             "Water Leak Sensor",
             xiaomi_hub,
             data_key,
-            "moisture",
+            DEVICE_CLASS_MOISTURE,
             config_entry,
         )
 

@@ -62,9 +62,12 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, hass, server_config, known_server_id=None, options=None):
+    def __init__(
+        self, hass, server_config, known_server_id=None, options=None, entry_id=None
+    ):
         """Initialize a Plex server instance."""
         self.hass = hass
+        self.entry_id = entry_id
         self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
@@ -270,6 +273,12 @@ class PlexServer:
             devices, sessions, plextv_clients = await self.hass.async_add_executor_job(
                 self._fetch_platform_data
             )
+        except plexapi.exceptions.Unauthorized:
+            _LOGGER.debug(
+                "Token has expired for '%s', reloading integration", self.friendly_name
+            )
+            await self.hass.config_entries.async_reload(self.entry_id)
+            return
         except (
             plexapi.exceptions.BadRequest,
             requests.exceptions.RequestException,

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel."
+        },
+        "error": {
+            "no_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+        }
+    }
+}

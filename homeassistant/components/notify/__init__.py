@@ -114,7 +114,7 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        await self.hass.async_add_job(partial(self.send_message, message, **kwargs))  # type: ignore
+        await self.hass.async_add_executor_job(partial(self.send_message, message, **kwargs))  # type: ignore
 
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
@@ -238,7 +238,7 @@ async def async_setup(hass, config):
                     hass, p_config, discovery_info
                 )
             elif hasattr(platform, "get_service"):
-                notify_service = await hass.async_add_job(
+                notify_service = await hass.async_add_executor_job(
                     platform.get_service, hass, p_config, discovery_info
                 )
             else:

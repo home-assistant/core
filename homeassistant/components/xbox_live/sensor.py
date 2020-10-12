@@ -106,9 +106,7 @@ class XboxSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {}
-        attributes["gamerscore"] = self._gamerscore
-        attributes["tier"] = self._tier
+        attributes = {"gamerscore": self._gamerscore, "tier": self._tier}
 
         for device in self._presence:
             for title in device["titles"]:

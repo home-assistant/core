@@ -149,7 +149,7 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         return_value=zconf,
     ):
         await async_setup_component(
-            hass, "cast", {"cast": {"media_player": {"host": info.host}}}
+            hass, "cast", {"cast": {"media_player": {"uuid": info.uuid}}}
         )
         await hass.async_block_till_done()
 
@@ -236,7 +236,7 @@ async def test_create_cast_device_with_uuid(hass):
 
 async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
-    cast_group1 = get_fake_chromecast_info(host="host1", port=8009)
+    cast_group1 = get_fake_chromecast_info(host="host1", port=8009, uuid=FakeUUID)
     cast_group2 = get_fake_chromecast_info(
         host="host2", port=8009, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
     )
@@ -244,7 +244,7 @@ async def test_replay_past_chromecasts(hass):
     zconf_2 = get_fake_zconf(host="host2", port=8009)
 
     discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"host": "host1"}
+        hass, config={"uuid": FakeUUID}
     )
 
     with patch(
@@ -266,39 +266,9 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev1.call_count == 1
 
     add_dev2 = Mock()
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, None)
+    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2)
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
-
-
-async def test_manual_cast_chromecasts_host(hass):
-    """Test only wanted casts are added for manual configuration."""
-    cast_1 = get_fake_chromecast_info(host="configured_host")
-    cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
-    zconf_1 = get_fake_zconf(host="configured_host")
-    zconf_2 = get_fake_zconf(host="other_host")
-
-    # Manual configuration of media player with host "configured_host"
-    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"host": "configured_host"}
-    )
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ):
-        discover_cast("service2", cast_2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 0
-
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ):
-        discover_cast("service1", cast_1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 1
 
 
 async def test_manual_cast_chromecasts_uuid(hass):
@@ -729,7 +699,7 @@ async def test_entry_setup_no_config(hass: HomeAssistantType):
 async def test_entry_setup_single_config(hass: HomeAssistantType):
     """Test setting up entry and having a single config option."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
+        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
     )
     await hass.async_block_till_done()
 
@@ -739,13 +709,13 @@ async def test_entry_setup_single_config(hass: HomeAssistantType):
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"host": "bla"}
+    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
 
 
 async def test_entry_setup_list_config(hass: HomeAssistantType):
     """Test setting up entry and having multiple config options."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": [{"host": "bla"}, {"host": "blu"}]}}
+        hass, "cast", {"cast": {"media_player": [{"uuid": "bla"}, {"uuid": "blu"}]}}
     )
     await hass.async_block_till_done()
 
@@ -755,14 +725,14 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 2
-    assert mock_setup.mock_calls[0][1][1] == {"host": "bla"}
-    assert mock_setup.mock_calls[1][1][1] == {"host": "blu"}
+    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
+    assert mock_setup.mock_calls[1][1][1] == {"uuid": "blu"}
 
 
 async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
     """Test failed setting up entry will raise PlatformNotReady."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"host": "bla"}}}
+        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
     )
     await hass.async_block_till_done()
 
@@ -774,4 +744,4 @@ async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
             await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"host": "bla"}
+    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}

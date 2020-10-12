@@ -203,7 +203,6 @@ class GeoJsonLocationEvent(GeolocationEvent):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        if self._external_id:
-            attributes[ATTR_EXTERNAL_ID] = self._external_id
-        return attributes
+        if not self._external_id:
+            return {}
+        return {ATTR_EXTERNAL_ID: self._external_id}

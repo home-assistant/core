@@ -5,7 +5,18 @@
                 "data": {
                     "password": "Passwort",
                     "username": "E-Mail Adresse"
-                }
+                },
+                "title": "Kachel konfigurieren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Inaktive Kacheln anzeigen"
+                },
+                "title": "Kachel konfigurieren"
             }
         }
     }

@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "configure": "Nakonfigurovat",
-            "configured": "Nakonfigurov\u00e1no"
+            "configure": "Nastavit",
+            "configured": "Nastaveno"
         }
     },
     "title": "Konfigur\u00e1tor"

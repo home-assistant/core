@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "user_already_configured": "Konto on juba seadistatud"
+        },
+        "error": {
+            "unexpected": "Ootamatu t\u00f5rge Life360 serveriga suhtlemisel",
+            "user_already_configured": "Konto on juba seadistatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

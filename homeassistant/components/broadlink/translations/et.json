@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "not_supported": "Seadet ei toetata",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Sobimatu hostinimi v\u00f5i IP-aadress",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "{name} ( {model} asukohas {host} )",
+        "step": {
+            "finish": {
+                "data": {
+                    "name": "Nimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "timeout": "Ajal\u00f5pp"
+                },
+                "title": "\u00dchendu seadmega"
+            }
+        }
+    }
+}

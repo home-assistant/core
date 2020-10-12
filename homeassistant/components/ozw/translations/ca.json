@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
-            "one_instance_allowed": "La integraci\u00f3 nom\u00e9s admet una inst\u00e0ncia Z-Wave"
+            "one_instance_allowed": "La integraci\u00f3 nom\u00e9s admet una inst\u00e0ncia Z-Wave",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "user": {

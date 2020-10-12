@@ -1,6 +1,4 @@
 """Support for displaying the current CPU speed."""
-import logging
-
 from cpuinfo import cpuinfo
 import voluptuous as vol
 
@@ -8,8 +6,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = "brand"
 ATTR_HZ = "ghz_advertised"
