@@ -752,15 +752,15 @@ class _TrackTemplateResultInfo:
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
+            self._info[template] = info = template.async_render_to_info(variables)
 
-            self._info[template] = template.async_render_to_info(variables)
-            if self._info[template].exception:
+            if info.exception:
                 if raise_on_template_error:
-                    raise self._info[template].exception
+                    raise info.exception
                 _LOGGER.error(
                     "Error while processing template: %s",
                     track_template_.template,
-                    exc_info=self._info[template].exception,
+                    exc_info=info.exception,
                 )
 
         self._track_state_changes = async_track_state_change_filtered(
@@ -852,9 +852,7 @@ class _TrackTemplateResultInfo:
         if event:
             info = self._info[template]
 
-            if not self._rate_limit.async_has_timer(
-                template
-            ) and not _event_triggers_rerender(event, info):
+            if not _event_triggers_rerender(event, info):
                 return False
 
             if self._rate_limit.async_schedule_action(
@@ -873,10 +871,12 @@ class _TrackTemplateResultInfo:
             )
 
         self._rate_limit.async_triggered(template, now)
-        self._info[template] = template.async_render_to_info(track_template_.variables)
+        self._info[template] = info = template.async_render_to_info(
+            track_template_.variables
+        )
 
         try:
-            result: Union[str, TemplateError] = self._info[template].result()
+            result: Union[str, TemplateError] = info.result()
         except TemplateError as ex:
             result = ex
 
