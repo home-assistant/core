@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Timeout generating authorize URL.",
-            "missing_configuration": "The component is not configured. Please follow the documentation."
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "create_entry": {
             "default": "Successfully authenticated"
