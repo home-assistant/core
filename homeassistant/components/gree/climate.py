@@ -239,7 +239,9 @@ class GreeClimateDevice(ClimateEntity):
         if ATTR_TEMPERATURE in kwargs:
             temperature = kwargs[ATTR_TEMPERATURE]
             _LOGGER.debug(
-                "Setting temperature to %d for %s", temperature, self._name,
+                "Setting temperature to %d for %s",
+                temperature,
+                self._name,
             )
 
             if temperature:
@@ -272,7 +274,9 @@ class GreeClimateDevice(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         _LOGGER.debug(
-            "Setting HVAC mode to %s for device %s", hvac_mode, self._name,
+            "Setting HVAC mode to %s for device %s",
+            hvac_mode,
+            self._name,
         )
 
         if hvac_mode == HVAC_MODE_OFF:
@@ -308,7 +312,9 @@ class GreeClimateDevice(ClimateEntity):
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         _LOGGER.debug(
-            "Setting preset mode to %s for device %s", preset_mode, self._name,
+            "Setting preset mode to %s for device %s",
+            preset_mode,
+            self._name,
         )
 
         if preset_mode not in PRESET_MODES:
@@ -377,7 +383,9 @@ class GreeClimateDevice(ClimateEntity):
             return
 
         _LOGGER.debug(
-            "Setting swing mode to %s for device %s", swing_mode, self._name,
+            "Setting swing mode to %s for device %s",
+            swing_mode,
+            self._name,
         )
 
         self._device.horizontal_swing = HorizontalSwing.Center
