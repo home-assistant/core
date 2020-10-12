@@ -4,17 +4,9 @@ from advantage_air import ApiError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.advantage_air.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from tests.async_mock import patch
-from tests.common import load_fixture
-
-TEST_SYSTEM_DATA = load_fixture("advantage_air/getSystemData.json")
-
-USER_INPUT = {
-    CONF_IP_ADDRESS: "1.2.3.4",
-    CONF_PORT: 2025,
-}
+from tests.components.advantage_air import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
 
 
 async def test_form(hass, aioclient_mock):
@@ -32,7 +24,7 @@ async def test_form(hass, aioclient_mock):
     assert result["errors"] == {}
 
     aioclient_mock.get(
-        f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData",
+        TEST_SYSTEM_URL,
         text=TEST_SYSTEM_DATA,
     )
 
@@ -58,7 +50,7 @@ async def test_form_cannot_connect(hass, aioclient_mock):
     """Test we handle cannot connect error."""
 
     aioclient_mock.get(
-        f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData",
+        TEST_SYSTEM_URL,
         exc=ApiError("TestError"),
     )
 
