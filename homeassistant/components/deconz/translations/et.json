@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L\u00fc\u00fcs on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "no_bridges": "DeCONZ l\u00fc\u00fcse ei leitud",
             "no_hardware_available": "DeCONZi raadio riistvara puudub",
             "one_instance_only": "Komponent toetab ainult \u00fchte deCONZ-i sidumist"
@@ -13,6 +14,11 @@
             "link": {
                 "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Minge deCONZ Settings - > Gateway - > Advanced\n 2. Vajutage nuppu \"Authenticate app\"",
                 "title": "\u00dchenda deCONZ-iga"
+            },
+            "manual_input": {
+                "data": {
+                    "host": ""
+                }
             }
         }
     },

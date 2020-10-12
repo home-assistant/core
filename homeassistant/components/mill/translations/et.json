@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Konto on juba seadistatud"
         },
+        "error": {
+            "connection_error": "\u00dchendamine nurjus"
+        },
         "step": {
             "user": {
                 "data": {

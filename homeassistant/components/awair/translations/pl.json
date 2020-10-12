@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
             "no_devices": "Nie znaleziono urz\u0105dze\u0144 w sieci",
-            "no_devices_found": "[%key::common::config_flow::abort::no_devices_found%]",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
