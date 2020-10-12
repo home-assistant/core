@@ -85,7 +85,7 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     json = await resp.json()
     assert json == {
         "one": "Hello world",
-        "two": {"error": "object of type 'datetime.datetime' has no len()"},
+        "two": {"error": "TypeError: object of type 'datetime.datetime' has no len()"},
         "three": {
             "error": "TemplateSyntaxError: expected token 'end of print statement', got 'integer'"
         },
