@@ -19,7 +19,7 @@ from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_send_magic_packet():
     """Mock magic packet."""
     with patch("wakeonlan.send_magic_packet"):
