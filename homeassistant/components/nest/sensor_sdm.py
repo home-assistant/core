@@ -33,7 +33,7 @@ async def async_setup_sdm_entry(
     # Fetch initial data so we have data when entities subscribe.
 
     entities = []
-    for (device_id, device) in device_manager.devices.items():
+    for device in device_manager.devices.values():
         if TemperatureTrait.NAME in device.traits:
             entities.append(TemperatureSensor(device))
         if HumidityTrait.NAME in device.traits:
