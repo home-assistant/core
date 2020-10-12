@@ -28,8 +28,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["media_player"]
 
 
@@ -67,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         aiohttp_client.async_get_clientsession(hass), session
     )
 
-    # If using an aiohttp-based API lib
     hass.data[DOMAIN][entry.entry_id] = XboxLiveClient(auth)
 
     for component in PLATFORMS:
