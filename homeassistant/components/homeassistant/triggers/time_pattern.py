@@ -12,13 +12,43 @@ CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"
 
+
+class TimePattern:
+    """Validate a time pattern value.
+
+    :raises Invalid: If the value has a wrong format or is outside the range.
+    """
+
+    def __init__(self, maximum):
+        """Initialize time pattern."""
+        self.maximum = maximum
+
+    def __call__(self, value):
+        """Validate input."""
+        try:
+            if value == "*":
+                return value
+
+            if isinstance(value, str) and value.startswith("/"):
+                number = int(value[1:])
+            else:
+                value = number = int(value)
+
+            if not (0 <= number <= self.maximum):
+                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+        except ValueError as err:
+            raise vol.Invalid("invalid time_pattern value") from err
+
+        return value
+
+
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
-            CONF_HOURS: cv.TimePattern(maximum=cv.TIME_PATTERN_HOURS_MAX),
-            CONF_MINUTES: cv.TimePattern(maximum=cv.TIME_PATTERN_MINUTES_MAX),
-            CONF_SECONDS: cv.TimePattern(maximum=cv.TIME_PATTERN_SECONDS_MAX),
+            CONF_HOURS: TimePattern(maximum=23),
+            CONF_MINUTES: TimePattern(maximum=59),
+            CONF_SECONDS: TimePattern(maximum=59),
         }
     ),
     cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES, CONF_SECONDS),
