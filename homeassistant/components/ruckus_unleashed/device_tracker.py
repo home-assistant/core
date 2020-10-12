@@ -43,7 +43,7 @@ def add_new_entities(coordinator, async_add_entities, tracked):
     """Add new tracker entities from the router."""
     new_tracked = []
 
-    for mac in coordinator.data[CLIENTS].keys():
+    for mac in coordinator.data[CLIENTS]:
         if mac in tracked:
             continue
 
