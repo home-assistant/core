@@ -1,53 +1,76 @@
 """Test the Advantage Air config flow."""
 
-from homeassistant import data_entry_flow
-from homeassistant.components.advantage_air import config_flow
+from advantage_air import ApiError
+
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from tests.components.advantage_air import api_response
+from tests.async_mock import patch
+from tests.common import load_fixture
+
+TEST_SYSTEM_DATA = load_fixture("advantage_air/getSystemData.json")
+
+USER_INPUT = {
+    CONF_IP_ADDRESS: "1.2.3.4",
+    CONF_PORT: 2025,
+}
 
 
-async def test_form(hass):
+async def test_form(hass, aioclient_mock):
     """Test that form shows up."""
-    flow = config_flow.AdvantageAirConfigFlow()
-    result = await flow.async_step_user(user_input=None)
+    with patch(
+        "homeassistant.components.advantage_air.async_setup", return_value=True
+    ) as mock_setup:
+        await setup.async_setup_component(hass, DOMAIN, {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    aioclient_mock.get(
+        f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData",
+        text=TEST_SYSTEM_DATA,
+    )
+
+    with patch(
+        "homeassistant.components.advantage_air.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "testname"
+    assert result2["data"] == USER_INPUT
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_success(hass, aiohttp_raw_server, aiohttp_unused_port):
-    """Test that the setup can fully complete."""
-
-    port = aiohttp_unused_port()
-    await aiohttp_raw_server(api_response, port=port)
-
-    user_input = {
-        CONF_IP_ADDRESS: "127.0.0.1",
-        CONF_PORT: port,
-    }
-
-    flow = config_flow.AdvantageAirConfigFlow()
-    result = await flow.async_step_user(user_input=user_input)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "testname"
-    assert result["data"][CONF_IP_ADDRESS] == user_input[CONF_IP_ADDRESS]
-    assert result["data"][CONF_PORT] == user_input[CONF_PORT]
-
-
-async def test_form_cannot_connect(hass, aiohttp_unused_port):
+async def test_form_cannot_connect(hass, aioclient_mock):
     """Test we handle cannot connect error."""
 
-    port = aiohttp_unused_port()
+    aioclient_mock.get(
+        f"http://{USER_INPUT[CONF_IP_ADDRESS]}:{USER_INPUT[CONF_PORT]}/getSystemData",
+        exc=ApiError("TestError"),
+    )
 
-    flow = config_flow.AdvantageAirConfigFlow()
-    flow.hass = hass
-    user_input = {
-        CONF_IP_ADDRESS: "127.0.0.1",
-        CONF_PORT: port,
-    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
 
-    result = await flow.async_step_user(user_input=user_input)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert len(aioclient_mock.mock_calls) == 1
