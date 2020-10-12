@@ -166,7 +166,7 @@ class ModbusCoilSwitch(ModbusBaseSwitch):
 
         self._available = True
         # bits[0] select the lowest bit in result,
-        # is_on for a binary_sensor is true if the bit are 1
+        # is_on for a binary_sensor is true if the bit is 1
         # The other bits are not considered.
         return bool(result.bits[0] & 1)
 
