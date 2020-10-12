@@ -11,7 +11,7 @@ effect:
       description: Intensity of the effect
       example: 100
     palette:
-      description: Color palette for the effect
+      description: Name or ID of the WLED light palette.
       example: "Tiamat"
     speed:
       description: Speed of the effect. Number between 0 (slow) and 255 (fast).
