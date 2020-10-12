@@ -161,15 +161,13 @@ class SignalUpdateCallback(EventCallback):
 
     def handle_event(self, event_message: EventMessage):
         """Process an incoming EventMessage."""
-        _LOGGER.debug(f"Update {event_message.event_id} @ {event_message.timestamp}")
+        _LOGGER.debug("Update %s @ %s", event_message.event_id, event_message.timestamp)
         traits = event_message.resource_update_traits
         if traits:
-            for (name, trait) in traits.items():
-                _LOGGER.debug(f"Trait update {name}: {trait._data}")
+            _LOGGER.debug("Trait update %s", traits.keys())
         events = event_message.resource_update_events
         if events:
-            for (name, event) in events.items():
-                _LOGGER.debug(f"Event Update {name}: {event.event_id}")
+            _LOGGER.debug("Event Update %s", events.keys())
 
         if not event_message.resource_update_traits:
             # Note: Currently ignoring events like camera motion
