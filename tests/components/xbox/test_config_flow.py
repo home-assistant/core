@@ -28,7 +28,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
+        f"&state={state}&scope=Xboxlive.signin+Xboxlive.offline_access"
     )
 
     client = await aiohttp_client(hass.http.app)

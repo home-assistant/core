@@ -27,12 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 
 from .const import APP_LEGACY_MAP, DOMAIN, HOME_LEGACY_PRODUCT_ID
 
@@ -118,14 +113,14 @@ class XboxMediaPlayer(MediaPlayerEntity):
     def media_title(self):
         """Title of current playing media."""
         if not self._app_details:
-        	return None
+            return None
         return self._app_details.localized_properties[0].short_title
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if not self._app_details:
-        	return None
+            return None
         image = _find_media_image(self._app_details.localized_properties[0].images)
 
         if not image:
