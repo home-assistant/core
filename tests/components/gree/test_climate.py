@@ -43,8 +43,8 @@ from homeassistant.components.gree.climate import (
 )
 from homeassistant.components.gree.const import (
     DOMAIN as GREE_DOMAIN,
-    FAN_MEDIUMHIGH,
-    FAN_MEDIUMLOW,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -577,7 +577,8 @@ async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
 
 
 @pytest.mark.parametrize(
-    "fan_mode", (FAN_AUTO, FAN_LOW, FAN_MEDIUMLOW, FAN_MEDIUM, FAN_MEDIUMHIGH, FAN_HIGH)
+    "fan_mode",
+    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
 async def test_send_fan_mode(hass, discovery, device, mock_now, fan_mode):
     """Test for sending fan mode command to the device."""
@@ -622,7 +623,8 @@ async def test_send_invalid_fan_mode(hass, discovery, device, mock_now):
 
 
 @pytest.mark.parametrize(
-    "fan_mode", (FAN_AUTO, FAN_LOW, FAN_MEDIUMLOW, FAN_MEDIUM, FAN_MEDIUMHIGH, FAN_HIGH)
+    "fan_mode",
+    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
 async def test_send_fan_mode_device_timeout(
     hass, discovery, device, mock_now, fan_mode
@@ -650,7 +652,8 @@ async def test_send_fan_mode_device_timeout(
 
 
 @pytest.mark.parametrize(
-    "fan_mode", (FAN_AUTO, FAN_LOW, FAN_MEDIUMLOW, FAN_MEDIUM, FAN_MEDIUMHIGH, FAN_HIGH)
+    "fan_mode",
+    (FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH),
 )
 async def test_update_fan_mode(hass, discovery, device, mock_now, fan_mode):
     """Test for updating fan mode from the device."""

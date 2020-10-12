@@ -4,8 +4,8 @@ DOMAIN = "gree"
 
 CONNECTION_NETWORK_MAC = "mac"
 
-FAN_MEDIUMLOW = "medium low"
-FAN_MEDIUMHIGH = "medium high"
+FAN_MEDIUM_LOW = "medium low"
+FAN_MEDIUM_HIGH = "medium high"
 
 MIN_TEMP = 16
 MAX_TEMP = 30

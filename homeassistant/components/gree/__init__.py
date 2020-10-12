@@ -37,13 +37,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for device_info in device_infos:
         try:
             device = await DeviceHelper.try_bind_device(device_info)
-            devices.append(device)
         except CannotConnect:
             _LOGGER.error("Unable to bind to gree device: %s", device_info)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unexpected error trying to bind to gree device: %s", device_info,
             )
+        else:
+            devices.append(device)
 
     for device in devices:
         _LOGGER.debug(

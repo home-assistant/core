@@ -45,12 +45,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
-    CONNECTION_NETWORK_MAC,
     DOMAIN,
-    FAN_MEDIUMHIGH,
-    FAN_MEDIUMLOW,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
     MAX_ERRORS,
     MAX_TEMP,
     MIN_TEMP,
@@ -82,9 +82,9 @@ PRESET_MODES = [
 FAN_MODES = {
     FanSpeed.Auto: FAN_AUTO,
     FanSpeed.Low: FAN_LOW,
-    FanSpeed.MediumLow: FAN_MEDIUMLOW,
+    FanSpeed.MediumLow: FAN_MEDIUM_LOW,
     FanSpeed.Medium: FAN_MEDIUM,
-    FanSpeed.MediumHigh: FAN_MEDIUMHIGH,
+    FanSpeed.MediumHigh: FAN_MEDIUM_HIGH,
     FanSpeed.High: FAN_HIGH,
 }
 FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
