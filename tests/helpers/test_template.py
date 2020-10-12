@@ -1629,6 +1629,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
     hass.states.async_set("binary_sensor.door", "open")
+    await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
 
@@ -2458,6 +2459,18 @@ async def test_lifecycle(hass):
     hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
     for i in range(2):
         hass.states.async_set(f"sensor.sensor{i}", "on")
+    hass.states.async_set("sensor.removed", "off")
+
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sun.sun", "below", {"elevation": 60, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "off")
+
+    hass.states.async_set("sensor.new", "off")
+    hass.states.async_remove("sensor.removed")
+
+    await hass.async_block_till_done()
 
     tmp = template.Template("{{ states | count }}", hass)
 
@@ -2465,6 +2478,8 @@ async def test_lifecycle(hass):
     assert info.all_states is False
     assert info.all_states_lifecycle is True
     assert info.rate_limit is None
+    assert info.has_time is False
+
     assert info.entities == set()
     assert info.domains == set()
     assert info.domains_lifecycle == set()
@@ -2624,7 +2639,6 @@ async def test_legacy_templates(hass):
     )
 
     await async_process_ha_core_config(hass, {"legacy_templates": True})
-
     assert (
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
