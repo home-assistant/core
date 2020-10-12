@@ -1627,7 +1627,7 @@ pyrepetier==3.0.5
 pyrisco==0.3.1
 
 # homeassistant.components.ruckus_unleashed
-pyruckus==0.9
+pyruckus==0.10
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
