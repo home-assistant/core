@@ -50,7 +50,7 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_DOMAIN] == "Camera":
                 return await self.async_step_camera()
-            
+
             return await self.async_step_weather()
 
         data_schema = vol.Schema(
