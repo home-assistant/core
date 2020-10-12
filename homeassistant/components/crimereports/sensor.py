@@ -1,7 +1,6 @@
 """Sensor for Crime Reports."""
 from collections import defaultdict
 from datetime import timedelta
-import logging
 
 import crimereports
 import voluptuous as vol
@@ -25,8 +24,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "crimereports"
 

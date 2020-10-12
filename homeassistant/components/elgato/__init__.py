@@ -1,6 +1,4 @@
 """Support for Elgato Key Lights."""
-import logging
-
 from elgato import Elgato, ElgatoConnectionError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -12,8 +10,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ELGATO_CLIENT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

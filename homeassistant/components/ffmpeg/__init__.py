@@ -1,5 +1,4 @@
 """Support for FFmpeg."""
-import logging
 import re
 
 from haffmpeg.tools import FFVersion
@@ -20,8 +19,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "ffmpeg"
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_START = "start"
 SERVICE_STOP = "stop"

@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud switches."""
-import logging
 from typing import Any, Dict
 
 from homematicip.aio.device import (
@@ -23,8 +22,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .generic_entity import ATTR_GROUP_MEMBER_UNREACHABLE
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

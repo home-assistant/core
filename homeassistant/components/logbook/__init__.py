@@ -2,7 +2,6 @@
 from datetime import timedelta
 from itertools import groupby
 import json
-import logging
 import re
 
 import sqlalchemy
@@ -52,8 +51,6 @@ ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MESSAGE = "message"
 
