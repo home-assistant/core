@@ -11,6 +11,7 @@ import pytz.tzinfo as pytzinfo
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
+NATIVE_UTC = dt.timezone.utc
 UTC = pytz.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
 
@@ -52,7 +53,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.utcnow().replace(tzinfo=UTC)
+    return dt.datetime.now(NATIVE_UTC)
 
 
 def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
