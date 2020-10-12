@@ -110,4 +110,4 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
-        self.async_schedule_update_ha_state(True)
+        await self.coordinator.async_refresh()

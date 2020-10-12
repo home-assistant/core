@@ -1,5 +1,5 @@
 """Test the SmartTub climate platform."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -78,7 +78,6 @@ async def test_thermostat(coordinator, spa):
     assert thermostat.current_temperature == 38
     assert thermostat.target_temperature == 39
 
-    with patch.object(thermostat, "async_schedule_update_ha_state") as mock:
-        await thermostat.async_set_temperature(**{ATTR_TEMPERATURE: 30})
-        spa.set_temperature.assert_called_with(30)
-        mock.assert_called_with(True)
+    await thermostat.async_set_temperature(**{ATTR_TEMPERATURE: 30})
+    spa.set_temperature.assert_called_with(30)
+    coordinator.async_refresh.assert_called_once()
