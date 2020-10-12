@@ -10,6 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
+from homeassistant.core import ServiceCall
 
 from . import config_flow  # noqa: F401
 from .const import (
@@ -29,6 +30,7 @@ from .const import (
     GROUPS,
     KEY_API,
     PLATFORMS,
+    SERVICE_PING,
 )
 
 FACTORY = "tradfri_factory"
@@ -146,6 +148,18 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    async def async_ping_service(call: ServiceCall):
+        """Handle Tradfri Ping service calls."""
+        try:
+            gateway_info = await api(gateway.get_gateway_info())
+        except RequestError as err:
+            await factory.shutdown()
+            raise ConfigEntryNotReady
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_PING, async_ping_service, schema=vol.Schema({})
+    )
 
     return True
 
