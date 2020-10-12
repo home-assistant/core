@@ -28,18 +28,22 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
+def supported(event):
+    """Return whether an event supports light."""
+    return (
+        isinstance(event.device, rfxtrxmod.LightingDevice)
+        and event.device.known_to_be_dimmable
+    )
+
+
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and event.device.known_to_be_dimmable
-        )
 
     # Add switch from config file
     entities = []

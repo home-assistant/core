@@ -11,8 +11,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -55,10 +55,10 @@ SENSOR_GAS = "gas"
 SENSOR_AQ = "airquality"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", UNIT_PERCENTAGE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
     SENSOR_GAS: ["Gas Resistance", "Ohms"],
-    SENSOR_AQ: ["Air Quality", UNIT_PERCENTAGE],
+    SENSOR_AQ: ["Air Quality", PERCENTAGE],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS, SENSOR_AQ]
 OVERSAMPLING_VALUES = {0, 1, 2, 4, 8, 16}

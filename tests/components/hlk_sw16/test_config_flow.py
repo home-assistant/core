@@ -70,10 +70,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.hlk_sw16.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
+        "homeassistant.components.hlk_sw16.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "create_entry"
@@ -98,7 +100,10 @@ async def test_form(hass):
     assert result3["type"] == "form"
     assert result3["errors"] == {}
 
-    result4 = await hass.config_entries.flow.async_configure(result3["flow_id"], conf,)
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        conf,
+    )
 
     assert result4["type"] == "form"
     assert result4["errors"] == {"base": "already_configured"}
@@ -127,10 +132,12 @@ async def test_import(hass):
     ), patch(
         "homeassistant.components.hlk_sw16.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
+        "homeassistant.components.hlk_sw16.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "create_entry"
@@ -162,7 +169,8 @@ async def test_form_invalid_data(hass):
         return_value=mock_hlk_sw16_connection,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "form"
@@ -186,7 +194,8 @@ async def test_form_cannot_connect(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "form"

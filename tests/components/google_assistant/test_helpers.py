@@ -27,7 +27,8 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     hass.states.async_set("light.ceiling_lights", "off")
     hass.config.api = Mock(port=1234, use_ssl=True)
     await async_process_ha_core_config(
-        hass, {"external_url": "https://hostname:1234"},
+        hass,
+        {"external_url": "https://hostname:1234"},
     )
 
     hass.http = Mock(server_port=1234)
@@ -227,7 +228,8 @@ async def test_report_state_all(agents):
 
 
 @pytest.mark.parametrize(
-    "agents, result", [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
+    "agents, result",
+    [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
 )
 async def test_sync_entities_all(agents, result):
     """Test sync entities ."""

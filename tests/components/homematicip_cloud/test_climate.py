@@ -382,7 +382,8 @@ async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_fact
     entity_name = "Vorzimmer"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Heizkörperthermostat2"], test_groups=[entity_name],
+        test_devices=["Heizkörperthermostat2"],
+        test_groups=[entity_name],
     )
     ha_state, hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model

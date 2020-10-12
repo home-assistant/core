@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    CAST_APP_ID_HOMEASSISTANT,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -287,7 +288,10 @@ class CameraStreamTrait(_Trait):
         url = await self.hass.components.camera.async_request_stream(
             self.state.entity_id, "hls"
         )
-        self.stream_info = {"cameraStreamAccessUrl": f"{get_url(self.hass)}{url}"}
+        self.stream_info = {
+            "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
+        }
 
 
 @register_trait
@@ -315,6 +319,8 @@ class OnOffTrait(_Trait):
 
     def sync_attributes(self):
         """Return OnOff attributes for a sync request."""
+        if self.state.attributes.get(ATTR_ASSUMED_STATE, False):
+            return {"commandOnlyOnOff": True}
         return {}
 
     def query_attributes(self):
@@ -1541,6 +1547,7 @@ class OpenCloseTrait(_Trait):
         response = {}
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
+            response["discreteOnlyOpenClose"] = True
         return response
 
     def query_attributes(self):
@@ -1715,7 +1722,7 @@ class VolumeTrait(_Trait):
                 svc = media_player.SERVICE_VOLUME_DOWN
                 relative = -relative
 
-            for i in range(relative):
+            for _ in range(relative):
                 await self.hass.services.async_call(
                     media_player.DOMAIN,
                     svc,

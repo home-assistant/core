@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import STATE_UNKNOWN, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "battery_state",
-                "unit_of_measurement": UNIT_PERCENTAGE,
+                "unit_of_measurement": PERCENTAGE,
             },
         },
     )
@@ -41,7 +41,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
 
     assert entity.attributes["device_class"] == "battery"
     assert entity.attributes["icon"] == "mdi:battery"
-    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert entity.attributes["unit_of_measurement"] == PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
@@ -110,7 +110,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
             "state": 100,
             "type": "sensor",
             "unique_id": "battery_state",
-            "unit_of_measurement": UNIT_PERCENTAGE,
+            "unit_of_measurement": PERCENTAGE,
         },
     }
 
@@ -122,14 +122,14 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert reg_json == {"success": True}
     await hass.async_block_till_done()
 
-    assert "Re-register existing sensor" not in caplog.text
+    assert "Re-register" not in caplog.text
 
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
 
     assert entity.attributes["device_class"] == "battery"
     assert entity.attributes["icon"] == "mdi:battery"
-    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert entity.attributes["unit_of_measurement"] == PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
@@ -143,14 +143,14 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client, ca
     assert dupe_reg_json == {"success": True}
     await hass.async_block_till_done()
 
-    assert "Re-register existing sensor" in caplog.text
+    assert "Re-register" in caplog.text
 
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
 
     assert entity.attributes["device_class"] == "battery"
     assert entity.attributes["icon"] == "mdi:battery"
-    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert entity.attributes["unit_of_measurement"] == PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"

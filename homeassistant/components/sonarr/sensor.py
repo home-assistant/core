@@ -1,7 +1,7 @@
 """Support for Sonarr sensors."""
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
 import voluptuous as vol
@@ -236,7 +236,7 @@ class SonarrCommandsSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._commands)
 
@@ -287,7 +287,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> str:
         """Return the state of the sensor."""
         free = self._to_unit(self._total_free)
         return f"{free:.2f}"
@@ -329,7 +329,7 @@ class SonarrQueueSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._queue)
 
@@ -367,7 +367,7 @@ class SonarrSeriesSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._items)
 
@@ -426,7 +426,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> int:
         """Return the state of the sensor."""
         return len(self._upcoming)
 
@@ -438,7 +438,7 @@ class SonarrWantedSensor(SonarrSensor):
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
-        self._total = None
+        self._total: Optional[int] = None
 
         super().__init__(
             sonarr=sonarr,
@@ -485,6 +485,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> Optional[int]:
         """Return the state of the sensor."""
         return self._total

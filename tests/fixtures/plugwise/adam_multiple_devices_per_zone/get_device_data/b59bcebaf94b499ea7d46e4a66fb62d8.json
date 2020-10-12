@@ -1,0 +1,1 @@
+{"setpoint": 21.5, "temperature": 20.9, "battery": 0.34, "active_preset": "home", "presets": {"vacation": [15.0, 28.0], "asleep": [18.0, 24.0], "no_frost": [12.0, 30.0], "away": [17.0, 25.0], "home": [21.5, 22.0]}, "schedule_temperature": 21.5, "available_schedules": ["GF7  Woonkamer"], "selected_schedule": "GF7  Woonkamer", "last_used": "GF7  Woonkamer"}

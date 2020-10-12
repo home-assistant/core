@@ -35,14 +35,16 @@ def mock_responses(mock):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
     mock.get(
-        f"{base_url}getInstant?token={token}", text=load_fixture("efergy_instant.json"),
+        f"{base_url}getInstant?token={token}",
+        text=load_fixture("efergy_instant.json"),
     )
     mock.get(
         f"{base_url}getEnergy?token={token}&offset=300&period=day",
         text=load_fixture("efergy_energy.json"),
     )
     mock.get(
-        f"{base_url}getBudget?token={token}", text=load_fixture("efergy_budget.json"),
+        f"{base_url}getBudget?token={token}",
+        text=load_fixture("efergy_budget.json"),
     )
     mock.get(
         f"{base_url}getCost?token={token}&offset=300&period=day",

@@ -1,20 +1,16 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Only a single instance is necessary.",
-            "wrong_server_id": "Server id is not valid"
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+            "wrong_server_id": "Server ID is not valid"
         },
         "step": {
             "user": {
-                "description": "Are you sure you want to set up SpeedTest?",
-                "title": "Set up SpeedTest"
+                "description": "[%key:common::config_flow::description::confirm_setup%]"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Error retriving servers list"
-        },
         "step": {
             "init": {
                 "data": {

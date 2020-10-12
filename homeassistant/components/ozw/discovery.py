@@ -136,6 +136,7 @@ DISCOVERY_SCHEMAS = (
         const.DISC_GENERIC_DEVICE_CLASS: (const_ozw.GENERIC_TYPE_THERMOSTAT,),
         const.DISC_SPECIFIC_DEVICE_CLASS: (
             const_ozw.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+            const_ozw.SPECIFIC_TYPE_NOT_USED,
         ),
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {
@@ -344,12 +345,6 @@ def check_value_schema(value, schema):
         value.instance, schema[const.DISC_INSTANCE]
     ):
         return False
-    if const.DISC_SCHEMAS in schema:
-        found = False
-        for schema_item in schema[const.DISC_SCHEMAS]:
-            found = found or check_value_schema(value, schema_item)
-        if not found:
-            return False
 
     return True
 

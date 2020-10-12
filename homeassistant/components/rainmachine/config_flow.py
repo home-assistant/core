@@ -69,7 +69,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ssl=user_input.get(CONF_SSL, True),
             )
         except RainMachineError:
-            return await self._show_form({CONF_PASSWORD: "invalid_credentials"})
+            return await self._show_form({CONF_PASSWORD: "invalid_auth"})
 
         # Unfortunately, RainMachine doesn't provide a way to refresh the
         # access token without using the IP address and password, so we have to

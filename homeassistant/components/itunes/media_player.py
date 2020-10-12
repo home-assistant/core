@@ -1,6 +1,4 @@
 """Support for interfacing to iTunes API."""
-import logging
-
 import requests
 import voluptuous as vol
 
@@ -32,8 +30,6 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "iTunes"
 DEFAULT_PORT = 8181
@@ -388,7 +384,7 @@ class ItunesDevice(MediaPlayerEntity):
 
     def media_next_track(self):
         """Send media_next command to media player."""
-        response = self.client.next()
+        response = self.client.next()  # pylint: disable=not-callable
         self.update_state(response)
 
     def media_previous_track(self):

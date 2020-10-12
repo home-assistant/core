@@ -3,7 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_CONNECTION_LOST,
@@ -69,6 +69,13 @@ EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
+
+SUPPORTED_PLATFORMS = (
+    "alarm_control_panel",
+    "binary_sensor",
+    "lock",
+    "sensor",
+)
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
@@ -238,7 +245,7 @@ async def async_setup_entry(hass, config_entry):
         return False
     except SimplipyError as err:
         LOGGER.error("Config entry failed: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
@@ -246,9 +253,9 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for component in ("alarm_control_panel", "lock"):
+    for platform in SUPPORTED_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     @callback
@@ -349,18 +356,20 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in ("alarm_control_panel", "lock")
-    ]
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SUPPORTED_PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
+        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
+        remove_listener()
 
-    await asyncio.gather(*tasks)
-
-    hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-    remove_listener()
-
-    return True
+    return unload_ok
 
 
 async def async_update_options(hass, config_entry):
@@ -517,7 +526,7 @@ class SimpliSafe:
 
         async def update_system(system):
             """Update a system."""
-            await system.update()
+            await system.update(cached=False)
             self._async_process_new_notifications(system)
             LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
@@ -555,11 +564,18 @@ class SimpliSafe:
                     LOGGER.error("Error while using stored refresh token: %s", err)
                     return
 
+            if isinstance(result, EndpointUnavailable):
+                # In case the user attempt an action not allowed in their current plan,
+                # we merely log that message at INFO level (so the user is aware,
+                # but not spammed with ERROR messages that they cannot change):
+                LOGGER.info(result)
+                return
+
             if isinstance(result, SimplipyError):
                 LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
-            if isinstance(result, Exception):  # pylint: disable=broad-except
+            if isinstance(result, Exception):
                 LOGGER.error("Unknown error while updating: %s", result)
                 return
 

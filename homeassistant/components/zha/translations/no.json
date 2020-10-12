@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Kun en konfigurasjon av ZHA er tillatt."
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Kan ikke koble til ZHA-enhet."
+            "cannot_connect": "Tilkobling mislyktes."
         },
         "step": {
             "pick_radio": {
@@ -65,6 +65,7 @@
             "device_dropped": "Enhet droppet",
             "device_flipped": "Enheten snudd \"{subtype}\"",
             "device_knocked": "Enheten sl\u00e5tt \"{subtype}\"",
+            "device_offline": "Enheten er frakoblet",
             "device_rotated": "Enheten roterte \"{subtype}\"",
             "device_shaken": "Enhet er ristet",
             "device_slid": "Enheten skled \"{subtype}\"",

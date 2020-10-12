@@ -26,7 +26,9 @@ from . import api, config_flow
 from .const import (
     AUTH,
     CONF_CLOUDHOOK_URL,
+    DATA_CAMERAS,
     DATA_DEVICE_IDS,
+    DATA_EVENTS,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_PERSONS,
@@ -62,6 +64,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN][DATA_DEVICE_IDS] = {}
     hass.data[DOMAIN][DATA_SCHEDULES] = {}
     hass.data[DOMAIN][DATA_HOMES] = {}
+    hass.data[DOMAIN][DATA_EVENTS] = {}
+    hass.data[DOMAIN][DATA_CAMERAS] = {}
 
     if DOMAIN not in config:
         return True
@@ -83,8 +87,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Netatmo from a config entry."""
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
 
     # Set unique id if non was set (migration)

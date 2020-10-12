@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -36,8 +37,16 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
+from .media_browser import browse_media
 
 LIVE_TV_SECTION = "-4"
+PLAYLISTS_BROWSE_PAYLOAD = {
+    "title": "Playlists",
+    "media_content_id": "all",
+    "media_content_type": "playlists",
+    "can_play": False,
+    "can_expand": True,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -489,9 +498,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
                 | SUPPORT_VOLUME_MUTE
+                | SUPPORT_BROWSE_MEDIA
             )
 
-        return SUPPORT_PLAY_MEDIA
+        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -587,15 +597,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        attr = {
+        return {
             "media_content_rating": self._media_content_rating,
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
             "player_source": self.player_source,
         }
-
-        return attr
 
     @property
     def device_info(self):
@@ -611,3 +619,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
         }
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.entity_id,
+            self.plex_server,
+            media_content_type,
+            media_content_id,
+        )

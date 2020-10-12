@@ -20,7 +20,7 @@ SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DURATION): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        vol.Required(ATTR_DURATION): cv.positive_float,
     }
 )
 
@@ -45,7 +45,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = zone_config.get(CONF_FRIENDLY_NAME)
             devices.append(
                 RainBirdSwitch(
-                    controller, zone, time, name if name else f"Sprinkler {zone}",
+                    controller,
+                    zone,
+                    time,
+                    name if name else f"Sprinkler {zone}",
                 )
             )
 

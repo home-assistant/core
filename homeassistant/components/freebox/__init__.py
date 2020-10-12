@@ -50,7 +50,9 @@ async def async_setup(hass, config):
     for freebox_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=freebox_conf,
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=freebox_conf,
             )
         )
 

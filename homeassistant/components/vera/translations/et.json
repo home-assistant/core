@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller on juba seadistatud"
+        }
+    }
+}

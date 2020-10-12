@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plex-i server on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "reauth_successful": "Taastuvastamine oli edukas",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "host_or_token": "Pead esitama v\u00e4hemalt \u00fche hosti v\u00f5i ligip\u00e4\u00e4suloa"
+        },
+        "flow_title": "",
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                }
+            }
+        }
+    }
+}

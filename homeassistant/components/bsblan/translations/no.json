@@ -4,6 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes.",
             "connection_error": "Kunne ikke koble til BSB-Lan-enheten."
         },
         "flow_title": "BSB-Lan: {name}",

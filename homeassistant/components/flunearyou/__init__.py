@@ -52,8 +52,8 @@ def async_get_api_category(sensor_type):
                 if sensor[0] == sensor_type
             )
         )
-    except StopIteration:
-        raise ValueError(f"Can't find category sensor type: {sensor_type}")
+    except StopIteration as err:
+        raise ValueError(f"Can't find category sensor type: {sensor_type}") from err
 
 
 async def async_setup(hass, config):
@@ -184,7 +184,9 @@ class FluNearYouData:
         # If this is the first registration we have, start a time interval:
         if not self._async_cancel_time_interval_listener:
             self._async_cancel_time_interval_listener = async_track_time_interval(
-                self._hass, self._async_update_listener_action, DEFAULT_SCAN_INTERVAL,
+                self._hass,
+                self._async_update_listener_action,
+                DEFAULT_SCAN_INTERVAL,
             )
 
         api_category = async_get_api_category(sensor_type)

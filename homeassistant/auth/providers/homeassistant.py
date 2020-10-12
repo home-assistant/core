@@ -30,6 +30,16 @@ def _disallow_id(conf: Dict[str, Any]) -> Dict[str, Any]:
 CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
 
 
+@callback
+def async_get_provider(hass: HomeAssistant) -> "HassAuthProvider":
+    """Get the provider."""
+    for prv in hass.auth.auth_providers:
+        if prv.type == "homeassistant":
+            return cast(HassAuthProvider, prv)
+
+    raise RuntimeError("Provider not found")
+
+
 class InvalidAuth(HomeAssistantError):
     """Raised when we encounter invalid authentication."""
 
@@ -234,6 +244,35 @@ class HassAuthProvider(AuthProvider):
         await self.hass.async_add_executor_job(
             self.data.validate_login, username, password
         )
+
+    async def async_add_auth(self, username: str, password: str) -> None:
+        """Call add_auth on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        await self.hass.async_add_executor_job(self.data.add_auth, username, password)
+        await self.data.async_save()
+
+    async def async_remove_auth(self, username: str) -> None:
+        """Call remove_auth on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        self.data.async_remove_auth(username)
+        await self.data.async_save()
+
+    async def async_change_password(self, username: str, new_password: str) -> None:
+        """Call change_password on data."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
+        await self.hass.async_add_executor_job(
+            self.data.change_password, username, new_password
+        )
+        await self.data.async_save()
 
     async def async_get_or_create_credentials(
         self, flow_result: Dict[str, str]

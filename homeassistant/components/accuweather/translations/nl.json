@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                }
+            }
+        }
+    }
+}

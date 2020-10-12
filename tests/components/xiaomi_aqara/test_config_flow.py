@@ -88,7 +88,8 @@ async def test_config_flow_user_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+        result["flow_id"],
+        {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
     )
 
     assert result["type"] == "form"
@@ -96,7 +97,8 @@ async def test_config_flow_user_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -129,7 +131,8 @@ async def test_config_flow_user_multiple_success(hass):
         return_value=mock_gateway_discovery,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+            result["flow_id"],
+            {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
         )
 
     assert result["type"] == "form"
@@ -137,7 +140,8 @@ async def test_config_flow_user_multiple_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"select_ip": TEST_HOST_2},
+        result["flow_id"],
+        {"select_ip": TEST_HOST_2},
     )
 
     assert result["type"] == "form"
@@ -145,7 +149,8 @@ async def test_config_flow_user_multiple_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -172,7 +177,8 @@ async def test_config_flow_user_no_key_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+        result["flow_id"],
+        {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
     )
 
     assert result["type"] == "form"
@@ -180,7 +186,8 @@ async def test_config_flow_user_no_key_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -226,7 +233,8 @@ async def test_config_flow_user_host_mac_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"
@@ -259,7 +267,8 @@ async def test_config_flow_user_discovery_error(hass):
         return_value=mock_gateway_discovery,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+            result["flow_id"],
+            {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
         )
 
     assert result["type"] == "form"
@@ -284,7 +293,8 @@ async def test_config_flow_user_invalid_interface(hass):
         return_value=mock_gateway_discovery,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+            result["flow_id"],
+            {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
         )
 
     assert result["type"] == "form"
@@ -369,7 +379,8 @@ async def test_config_flow_user_invalid_key(hass):
         return_value=mock_gateway_discovery,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+            result["flow_id"],
+            {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
         )
 
     assert result["type"] == "form"
@@ -377,7 +388,8 @@ async def test_config_flow_user_invalid_key(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "form"
@@ -402,7 +414,8 @@ async def test_zeroconf_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
+        result["flow_id"],
+        {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE},
     )
 
     assert result["type"] == "form"
@@ -410,7 +423,8 @@ async def test_zeroconf_success(hass):
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+        result["flow_id"],
+        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
     )
 
     assert result["type"] == "create_entry"

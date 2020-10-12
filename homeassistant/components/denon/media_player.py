@@ -111,10 +111,18 @@ class DenonDevice(MediaPlayerEntity):
         if nsfrn:
             self._name = nsfrn
 
-        # SSFUN - Configured sources with names
+        # SSFUN - Configured sources with (optional) names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            source, configured_name = line[len("SSFUN") :].split(" ", 1)
+            ssfun = line[len("SSFUN") :].split(" ", 1)
+
+            source = ssfun[0]
+            if len(ssfun) == 2 and ssfun[1]:
+                configured_name = ssfun[1]
+            else:
+                # No name configured, reusing the source name
+                configured_name = source
+
             self._source_list[configured_name] = source
 
         # SSSOD - Deleted sources

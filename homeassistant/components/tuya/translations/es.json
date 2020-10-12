@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
             "conn_error": "No se pudo conectar",
-            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
-            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida"
+            "auth_failed": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "flow_title": "Configuraci\u00f3n Tuya",
         "step": {

@@ -4,11 +4,12 @@ import asyncio
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import requests
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
@@ -24,6 +25,7 @@ from .const import (
     ATTR_TILT,
     ATTR_ZOOM,
     CONF_RTSP_TRANSPORT,
+    CONF_SNAPSHOT_AUTH,
     CONTINUOUS_MOVE,
     DIR_DOWN,
     DIR_LEFT,
@@ -79,6 +81,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT
         )
+        self._basic_auth = (
+            device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
+            == HTTP_BASIC_AUTHENTICATION
+        )
         self._stream_uri = None
         self._snapshot_uri = None
 
@@ -115,7 +121,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         if self.device.capabilities.snapshot:
             auth = None
             if self.device.username and self.device.password:
-                auth = HTTPDigestAuth(self.device.username, self.device.password)
+                if self._basic_auth:
+                    auth = HTTPBasicAuth(self.device.username, self.device.password)
+                else:
+                    auth = HTTPDigestAuth(self.device.username, self.device.password)
 
             def fetch():
                 """Read image from a URL."""

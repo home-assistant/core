@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "connection_error": "Nelze se p\u0159ipojit k Azure DevOps."
+        },
+        "flow_title": "Azure DevOps: {project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Osobn\u00ed p\u0159\u00edstupov\u00fd token (PAT)"
+                }
+            },
+            "user": {
+                "data": {
+                    "organization": "Organizace",
+                    "personal_access_token": "Osobn\u00ed p\u0159\u00edstupov\u00fd token (PAT)",
+                    "project": "Projekt"
+                },
+                "title": "P\u0159idejte projekt Azure DevOps"
+            }
+        }
+    },
+    "title": "Azure DevOps"
+}

@@ -129,7 +129,11 @@ class MikrotikData:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
         data = self.command(MIKROTIK_SERVICES[cmd])
-        return data[0].get(param) if data else None
+        return (
+            data[0].get(param)  # pylint: disable=unsubscriptable-object
+            if data
+            else None
+        )
 
     def get_hub_details(self):
         """Get Hub info."""
@@ -229,7 +233,7 @@ class MikrotikData:
         data = self.command(cmd, params)
         if data is not None:
             status = 0
-            for result in data:
+            for result in data:  # pylint: disable=not-an-iterable
                 if "status" in result:
                     status += 1
             if status == len(data):
@@ -253,7 +257,7 @@ class MikrotikData:
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            raise CannotConnect
+            raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -367,8 +371,8 @@ class MikrotikHub:
             api = await self.hass.async_add_executor_job(
                 get_api, self.hass, self.config_entry.data
             )
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as api_error:
+            raise ConfigEntryNotReady from api_error
         except LoginError:
             return False
 
@@ -401,7 +405,10 @@ def get_api(hass, entry):
 
     try:
         api = librouteros.connect(
-            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs,
+            entry[CONF_HOST],
+            entry[CONF_USERNAME],
+            entry[CONF_PASSWORD],
+            **kwargs,
         )
         _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api
@@ -412,5 +419,5 @@ def get_api(hass, entry):
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
-            raise LoginError
-        raise CannotConnect
+            raise LoginError from api_error
+        raise CannotConnect from api_error

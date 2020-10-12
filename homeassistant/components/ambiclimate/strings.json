@@ -14,8 +14,8 @@
       "follow_link": "Please follow the link and authenticate before pressing Submit"
     },
     "abort": {
-      "already_setup": "The Ambiclimate account is configured.",
-      "no_config": "You need to configure Ambiclimate before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/ambiclimate/).",
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth2_missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "access_token": "Unknown error generating an access token."
     }
   }

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress"
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN kood"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

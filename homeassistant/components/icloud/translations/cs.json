@@ -1,11 +1,40 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje k iCloud"
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "D\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed"
+                },
+                "description": "Vyberte sv\u00e9 d\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed",
+                "title": "D\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed iCloud"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",
-                    "username": "E-mail"
-                }
+                    "username": "E-mail",
+                    "with_family": "S rodinou"
+                },
+                "description": "Zadejte sv\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+                "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje k iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Ov\u011b\u0159ovac\u00ed k\u00f3d"
+                },
+                "title": "Ov\u011b\u0159ovac\u00ed k\u00f3d iCloudu"
             }
         }
     }

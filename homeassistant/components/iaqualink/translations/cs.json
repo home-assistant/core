@@ -1,11 +1,19 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "connection_failure": "Nelze se p\u0159ipojit k iAqualink. Zkontrolujte sv\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no a heslo."
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "title": "P\u0159ipojen\u00ed k iAqualink"
             }
         }
     }

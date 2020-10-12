@@ -103,7 +103,9 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, BSH_POWER_STATE, BSH_POWER_ON,
+                self.device.appliance.set_setting,
+                BSH_POWER_STATE,
+                BSH_POWER_ON,
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on device: %s", err)

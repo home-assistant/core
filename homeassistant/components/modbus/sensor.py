@@ -37,6 +37,7 @@ from .const import (
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
     DEFAULT_HUB,
+    DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
 
@@ -58,8 +59,8 @@ def number(value: Any) -> Union[int, float]:
     try:
         value = float(value)
         return value
-    except (TypeError, ValueError):
-        raise vol.Invalid(f"invalid number {value}")
+    except (TypeError, ValueError) as err:
+        raise vol.Invalid(f"invalid number {value}") from err
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -99,21 +100,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
-    data_types = {
-        DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-        DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-        DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-    }
 
     for register in config[CONF_REGISTERS]:
-        structure = ">i"
         if register[CONF_DATA_TYPE] == DATA_TYPE_STRING:
             structure = str(register[CONF_COUNT] * 2) + "s"
         elif register[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
-                structure = (
-                    f">{data_types[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
-                )
+                structure = f">{DEFAULT_STRUCT_FORMAT[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
             except KeyError:
                 _LOGGER.error(
                     "Unable to detect data type for %s sensor, try a custom type",

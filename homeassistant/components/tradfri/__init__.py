@@ -1,5 +1,5 @@
 """Support for IKEA Tradfri."""
-import logging
+import asyncio
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -24,13 +24,15 @@ from .const import (
     CONF_KEY,
     CONFIG_FILE,
     DEFAULT_ALLOW_TRADFRI_GROUPS,
+    DEVICES,
     DOMAIN,
+    GROUPS,
     KEY_API,
-    KEY_GATEWAY,
-    TRADFRI_DEVICE_TYPES,
+    PLATFORMS,
 )
 
-_LOGGER = logging.getLogger(__name__)
+FACTORY = "tradfri_factory"
+LISTENERS = "tradfri_listeners"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -95,8 +97,10 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
+    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    listeners = tradfri_data[LISTENERS] = []
 
-    factory = APIFactory(
+    factory = await APIFactory.init(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
@@ -106,19 +110,25 @@ async def async_setup_entry(hass, entry):
         """Close connection when hass stops."""
         await factory.shutdown()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    listeners.append(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop))
 
     api = factory.request
     gateway = Gateway()
 
     try:
         gateway_info = await api(gateway.get_gateway_info())
-    except RequestError:
+        devices_commands = await api(gateway.get_devices())
+        devices = await api(devices_commands)
+        groups_commands = await api(gateway.get_groups())
+        groups = await api(groups_commands)
+    except RequestError as err:
         await factory.shutdown()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
-    hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
+    tradfri_data[KEY_API] = api
+    tradfri_data[FACTORY] = factory
+    tradfri_data[DEVICES] = devices
+    tradfri_data[GROUPS] = groups
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
     dev_reg.async_get_or_create(
@@ -132,9 +142,30 @@ async def async_setup_entry(hass, entry):
         sw_version=gateway_info.firmware_version,
     )
 
-    for device in TRADFRI_DEVICE_TYPES:
+    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, device)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
+        factory = tradfri_data[FACTORY]
+        await factory.shutdown()
+        # unsubscribe listeners
+        for listener in tradfri_data[LISTENERS]:
+            listener()
+
+    return unload_ok

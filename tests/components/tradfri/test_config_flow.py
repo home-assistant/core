@@ -272,7 +272,10 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
 
 async def test_discovery_updates_unique_id(hass):
     """Test a duplicate discovery host aborts and updates existing entry."""
-    entry = MockConfigEntry(domain="tradfri", data={"host": "some-host"},)
+    entry = MockConfigEntry(
+        domain="tradfri",
+        data={"host": "some-host"},
+    )
     entry.add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(

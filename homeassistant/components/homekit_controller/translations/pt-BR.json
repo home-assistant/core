@@ -20,6 +20,12 @@
         },
         "flow_title": "Acess\u00f3rio HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "title": "O dispositivo est\u00e1 pareando com outro controlador"
+            },
+            "max_tries_error": {
+                "title": "Quantidade de tentativas de autentica\u00e7\u00e3o excedido"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "C\u00f3digo de pareamento"

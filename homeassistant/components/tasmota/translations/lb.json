@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_discovery_topic": "Ong\u00ebltege discovery topic prefix."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Discovery topic prefix"
+                },
+                "description": "F\u00ebll Tasmota Konfiguratioun aus.",
+                "title": "Tasmota"
+            }
+        }
+    }
+}

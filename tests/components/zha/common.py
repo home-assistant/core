@@ -108,6 +108,7 @@ class FakeDevice:
         if node_desc is None:
             node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
         self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
+        self.neighbors = []
 
 
 FakeDevice.add_to_group = zigpy_dev.add_to_group

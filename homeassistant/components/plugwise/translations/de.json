@@ -4,6 +4,7 @@
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {

@@ -1,21 +1,19 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
-from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import BASE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"
-SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -146,7 +144,9 @@ class SmappeeActuator(SwitchEntity):
         return None
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this switch."""
         if self._actuator_type == "INFINITY_OUTPUT_MODULE":
             return (

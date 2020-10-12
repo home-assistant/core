@@ -1,8 +1,9 @@
 {
     "config": {
         "error": {
-            "authorization_error": "Error d'autoritzaci\u00f3. Comproveu les vostres credencials.",
-            "connection_error": "No s'ha pogut connectar a OVO Energy."
+            "already_configured": "El compte ja ha estat configurat",
+            "authorization_error": "Error d'autoritzaci\u00f3. Comprova les teves credencials.",
+            "connection_error": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {
@@ -11,7 +12,7 @@
                     "username": "Nom d'usuari"
                 },
                 "description": "Configura una inst\u00e0ncia OVO Energy per accedir al consum energ\u00e8tic.",
-                "title": "Afegir OVO Energy"
+                "title": "Afegeix compte d'OVO Energy"
             }
         }
     }

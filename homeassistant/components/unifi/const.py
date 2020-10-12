@@ -12,6 +12,7 @@ CONF_SITE_ID = "site"
 UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
 CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
+CONF_ALLOW_UPTIME_SENSORS = "allow_uptime_sensors"
 CONF_BLOCK_CLIENT = "block_client"
 CONF_DETECTION_TIME = "detection_time"
 CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"
@@ -22,6 +23,7 @@ CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_SSID_FILTER = "ssid_filter"
 
 DEFAULT_ALLOW_BANDWIDTH_SENSORS = False
+DEFAULT_ALLOW_UPTIME_SENSORS = False
 DEFAULT_IGNORE_WIRED_BUG = False
 DEFAULT_POE_CLIENTS = True
 DEFAULT_TRACK_CLIENTS = True

@@ -1,16 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest dispositiu ja ha estat afegit a Home Assistant"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "connection_error": "No s'ha pogut connectar, torna-ho a provar",
-            "unauthorized": "L'emparellament s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "connection_error": "Ha fallat la connexi\u00f3",
+            "unauthorized": "La vinculaci\u00f3 s'ha denegat, comprova si hi ha una sol\u00b7licitud d'autenticaci\u00f3 al dispositiu"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Correu electr\u00f2nic (opcional)",
+                    "email": "Correu electr\u00f2nic",
                     "host": "Amfitri\u00f3",
                     "port": "Port"
                 },

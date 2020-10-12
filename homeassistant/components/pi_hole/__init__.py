@@ -18,8 +18,11 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_LOCATION,
@@ -85,19 +88,24 @@ async def async_setup_entry(hass, entry):
     try:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
-            host, hass.loop, session, location=location, tls=use_tls, api_token=api_key,
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            api_token=api_key,
         )
         await api.get_data()
     except HoleError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     async def async_update_data():
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
         except HoleError as err:
-            raise UpdateFailed(f"Failed to communicating with API: {err}")
+            raise UpdateFailed(f"Failed to communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -145,21 +153,15 @@ def _async_platforms(entry):
     return platforms
 
 
-class PiHoleEntity(Entity):
+class PiHoleEntity(CoordinatorEntity):
     """Representation of a Pi-hole entity."""
 
     def __init__(self, api, coordinator, name, server_unique_id):
         """Initialize a Pi-hole entity."""
+        super().__init__(coordinator)
         self.api = api
-        self.coordinator = coordinator
         self._name = name
         self._server_unique_id = server_unique_id
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
     @property
     def icon(self):
@@ -174,17 +176,3 @@ class PiHoleEntity(Entity):
             "name": self._name,
             "manufacturer": "Pi-hole",
         }
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    async def async_update(self):
-        """Get the latest data from the Pi-hole API."""
-        await self.coordinator.async_request_refresh()

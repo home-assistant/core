@@ -16,8 +16,8 @@
     },
     "state": {
         "_": {
-            "locked": "zamkni\u0119ty",
-            "unlocked": "otwarty"
+            "locked": "Zablokowany",
+            "unlocked": "Odblokowanie"
         }
     },
     "title": "Zamek"

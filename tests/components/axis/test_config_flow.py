@@ -68,7 +68,8 @@ async def test_manual_configuration_update_configuration(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True,
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
         "axis.vapix.session_request", new=vapix_session_request
     ):
@@ -138,11 +139,11 @@ async def test_flow_fails_faulty_credentials(hass):
             },
         )
 
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_device_unavailable(hass):
-    """Test that config flow fails on device unavailable."""
+async def test_flow_fails_cannot_connect(hass):
+    """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": "user"}
     )
@@ -164,17 +165,19 @@ async def test_flow_fails_device_unavailable(hass):
             },
         )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
+        domain=AXIS_DOMAIN,
+        data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
     )
     entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
+        domain=AXIS_DOMAIN,
+        data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
     )
     entry2.add_to_hass(hass)
 
@@ -289,7 +292,8 @@ async def test_zeroconf_flow_updated_configuration(hass):
     }
 
     with patch(
-        "homeassistant.components.axis.async_setup_entry", return_value=True,
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry, patch(
         "axis.vapix.session_request", new=vapix_session_request
     ):
@@ -359,7 +363,8 @@ async def test_option_flow(hass):
     }
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_STREAM_PROFILE: "profile_1"},
+        result["flow_id"],
+        user_input={CONF_STREAM_PROFILE: "profile_1"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

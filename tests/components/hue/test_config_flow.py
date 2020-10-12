@@ -115,7 +115,8 @@ async def test_manual_flow_works(hass, aioclient_mock):
     )
 
     with patch(
-        "aiohue.Bridge", return_value=bridge,
+        "aiohue.Bridge",
+        return_value=bridge,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "2.2.2.2"}
@@ -148,7 +149,8 @@ async def test_manual_flow_bridge_exist(hass, aioclient_mock):
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hue.config_flow.discover_nupnp", return_value=[],
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}
@@ -162,7 +164,8 @@ async def test_manual_flow_bridge_exist(hass, aioclient_mock):
     )
 
     with patch(
-        "aiohue.Bridge", return_value=bridge,
+        "aiohue.Bridge",
+        return_value=bridge,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "2.2.2.2"}
@@ -293,7 +296,9 @@ async def test_flow_link_timeout(hass):
 
 async def test_flow_link_unknown_error(hass):
     """Test if a unknown error happened during the linking processes."""
-    mock_bridge = get_mock_bridge(mock_create_user=AsyncMock(side_effect=OSError),)
+    mock_bridge = get_mock_bridge(
+        mock_create_user=AsyncMock(side_effect=OSError),
+    )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         return_value=[mock_bridge],
@@ -481,7 +486,9 @@ async def test_bridge_ssdp_already_configured(hass):
 async def test_import_with_no_config(hass):
     """Test importing a host without an existing config file."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "import"}, data={"host": "0.0.0.0"},
+        const.DOMAIN,
+        context={"source": "import"},
+        data={"host": "0.0.0.0"},
     )
 
     assert result["type"] == "form"
@@ -496,12 +503,16 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     all existing entries that either have same IP or same bridge_id.
     """
     orig_entry = MockConfigEntry(
-        domain="hue", data={"host": "0.0.0.0", "username": "aaaa"}, unique_id="id-1234",
+        domain="hue",
+        data={"host": "0.0.0.0", "username": "aaaa"},
+        unique_id="id-1234",
     )
     orig_entry.add_to_hass(hass)
 
     MockConfigEntry(
-        domain="hue", data={"host": "1.2.3.4", "username": "bbbb"}, unique_id="id-5678",
+        domain="hue",
+        data={"host": "1.2.3.4", "username": "bbbb"},
+        unique_id="id-5678",
     ).add_to_hass(hass)
 
     assert len(hass.config_entries.async_entries("hue")) == 2
@@ -511,7 +522,8 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     )
 
     with patch(
-        "aiohue.Bridge", return_value=bridge,
+        "aiohue.Bridge",
+        return_value=bridge,
     ):
         result = await hass.config_entries.flow.async_init(
             "hue", data={"host": "2.2.2.2"}, context={"source": "import"}
@@ -614,7 +626,9 @@ async def test_ssdp_discovery_update_configuration(hass):
 async def test_options_flow(hass):
     """Test options config flow."""
     entry = MockConfigEntry(
-        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"},
+        domain="hue",
+        unique_id="aabbccddeeff",
+        data={"host": "0.0.0.0"},
     )
     entry.add_to_hass(hass)
 

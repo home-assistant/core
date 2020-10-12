@@ -332,7 +332,10 @@ class ThermostatChannel(ZigbeeChannel):
         if not isinstance(res, list):
             # assume default response
             self.debug(
-                "attr reporting for '%s' on '%s': %s", attrs, self.name, res,
+                "attr reporting for '%s' on '%s': %s",
+                attrs,
+                self.name,
+                res,
             )
             return
         if res[0].status == Status.SUCCESS and len(res) == 1:

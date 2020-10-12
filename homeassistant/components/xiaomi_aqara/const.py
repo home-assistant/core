@@ -6,6 +6,7 @@ GATEWAYS_KEY = "gateways"
 LISTENER_KEY = "listener"
 
 ZEROCONF_GATEWAY = "lumi-gateway"
+ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 CONF_INTERFACE = "interface"
 CONF_PROTOCOL = "protocol"
@@ -35,10 +36,12 @@ BATTERY_MODELS = [
     "sensor_86sw1",
     "sensor_86sw1.aq1",
     "remote.b186acn01",
+    "remote.b186acn02",
     "86sw2",
     "sensor_86sw2",
     "sensor_86sw2.aq1",
     "remote.b286acn01",
+    "remote.b286acn02",
     "cube",
     "sensor_cube",
     "sensor_cube.aqgl01",
@@ -52,4 +55,10 @@ BATTERY_MODELS = [
     "curtain.hagl04",
     "lock.aq1",
     "lock.acn02",
+]
+
+POWER_MODELS = [
+    "86plug",
+    "ctrl_86plug",
+    "ctrl_86plug.aq1",
 ]

@@ -12,7 +12,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     entities = [
         TeslaLock(
-            device, hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
+            device,
+            hass.data[TESLA_DOMAIN][config_entry.entry_id]["coordinator"],
         )
         for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["lock"]
     ]

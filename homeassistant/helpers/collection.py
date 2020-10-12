@@ -353,7 +353,13 @@ class StorageCollectionWebsocket:
         return f"{self.model_name}_id"
 
     @callback
-    def async_setup(self, hass: HomeAssistant, *, create_list: bool = True) -> None:
+    def async_setup(
+        self,
+        hass: HomeAssistant,
+        *,
+        create_list: bool = True,
+        create_create: bool = True,
+    ) -> None:
         """Set up the websocket commands."""
         if create_list:
             websocket_api.async_register_command(
@@ -365,19 +371,20 @@ class StorageCollectionWebsocket:
                 ),
             )
 
-        websocket_api.async_register_command(
-            hass,
-            f"{self.api_prefix}/create",
-            websocket_api.require_admin(
-                websocket_api.async_response(self.ws_create_item)
-            ),
-            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                {
-                    **self.create_schema,
-                    vol.Required("type"): f"{self.api_prefix}/create",
-                }
-            ),
-        )
+        if create_create:
+            websocket_api.async_register_command(
+                hass,
+                f"{self.api_prefix}/create",
+                websocket_api.require_admin(
+                    websocket_api.async_response(self.ws_create_item)
+                ),
+                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                    {
+                        **self.create_schema,
+                        vol.Required("type"): f"{self.api_prefix}/create",
+                    }
+                ),
+            )
 
         websocket_api.async_register_command(
             hass,

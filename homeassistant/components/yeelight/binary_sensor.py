@@ -3,38 +3,34 @@ import logging
 from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_UPDATED, DATA_YEELIGHT
+from . import DATA_CONFIG_ENTRIES, DATA_DEVICE, DATA_UPDATED, DOMAIN, YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Yeelight sensors."""
-    if not discovery_info:
-        return
-
-    device = hass.data[DATA_YEELIGHT][discovery_info["host"]]
-
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Yeelight from a config entry."""
+    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
-        add_entities([YeelightNightlightModeSensor(device)])
+        async_add_entities([YeelightNightlightModeSensor(device)])
 
 
-class YeelightNightlightModeSensor(BinarySensorEntity):
+class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
     """Representation of a Yeelight nightlight mode sensor."""
-
-    def __init__(self, device):
-        """Initialize nightlight mode sensor."""
-        self._device = device
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                DATA_UPDATED.format(self._device.ipaddr),
+                DATA_UPDATED.format(self._device.host),
                 self.async_write_ha_state,
             )
         )
@@ -48,16 +44,6 @@ class YeelightNightlightModeSensor(BinarySensorEntity):
             return unique + "-nightlight_sensor"
 
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return if bulb is available."""
-        return self._device.available
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

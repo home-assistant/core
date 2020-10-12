@@ -12,10 +12,11 @@ def async_describe_events(hass, async_describe_event):
     @callback
     def async_describe_logbook_event(event):
         """Describe the logbook event."""
+        data = event.data
         return {
-            "name": event.data.get(ATTR_NAME),
+            "name": data.get(ATTR_NAME),
             "message": "started",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
+            "entity_id": data.get(ATTR_ENTITY_ID),
         }
 
     async_describe_event(DOMAIN, EVENT_SCRIPT_STARTED, async_describe_logbook_event)

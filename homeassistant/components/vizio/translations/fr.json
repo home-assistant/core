@@ -7,8 +7,9 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "complete_pairing_failed": "Impossible de terminer l'appairage. Assurez-vous que le code PIN que vous avez fourni est correct, que le t\u00e9l\u00e9viseur est toujours aliment\u00e9 et connect\u00e9 au r\u00e9seau avant de tenter \u00e0 nouveau.",
-            "host_exists": "H\u00f4te d\u00e9j\u00e0 configur\u00e9.",
-            "name_exists": "Nom d\u00e9j\u00e0 configur\u00e9."
+            "existing_config_entry_found": "Une entr\u00e9e de configuration existante Appareil VIZIO Smartcast avec le m\u00eame num\u00e9ro de s\u00e9rie a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e. Vous devez supprimer l'entr\u00e9e existante pour configurer celle-ci.",
+            "host_exists": "Appareil VIZIO Smartcast d\u00e9j\u00e0 configur\u00e9 avec l'h\u00f4te sp\u00e9cifi\u00e9",
+            "name_exists": "L'appareil VIZIO SmartCast avec le nom sp\u00e9cifi\u00e9 est d\u00e9j\u00e0 configur\u00e9."
         },
         "step": {
             "pair_tv": {
@@ -19,21 +20,22 @@
                 "title": "Processus de couplage complet"
             },
             "pairing_complete": {
-                "description": "Votre appareil Vizio SmartCast est maintenant connect\u00e9 \u00e0 Home Assistant.",
+                "description": "Votre Appareil VIZIO Smartcast est maintenant connect\u00e9 \u00e0 Home Assistant.",
                 "title": "Appairage termin\u00e9"
             },
             "pairing_complete_import": {
+                "description": "Votre Appareil VIZIO Smartcast est maintenant connect\u00e9 \u00e0 Home Assistant.\n\nVotre Jeton d'acc\u00e8s est '**{access_token}**'.",
                 "title": "Appairage termin\u00e9"
             },
             "user": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",
                     "device_class": "Type d'appareil",
-                    "host": "<H\u00f4te/IP>:<Port>",
+                    "host": "H\u00f4te",
                     "name": "Nom"
                 },
                 "description": "Un jeton d'acc\u00e8s n'est n\u00e9cessaire que pour les t\u00e9l\u00e9viseurs. Si vous configurez un t\u00e9l\u00e9viseur et que vous n'avez pas encore de jeton d'acc\u00e8s, laissez-le vide pour passer par un processus de couplage.",
-                "title": "Configurer le client Vizio SmartCast"
+                "title": "Appareil VIZIO Smartcast"
             }
         }
     },

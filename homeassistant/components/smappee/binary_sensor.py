@@ -1,9 +1,12 @@
 """Support for monitoring a Smappee appliance binary sensor."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PRESENCE,
+    BinarySensorEntity,
+)
 
-from .const import BASE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,7 +16,7 @@ PRESENCE_PREFIX = "Presence"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smappee binary sensor."""
-    smappee_base = hass.data[DOMAIN][BASE]
+    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -29,7 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 )
 
-        entities.append(SmappeePresence(smappee_base, service_location))
+        if not smappee_base.smappee.local_polling:
+            # presence value only available in cloud env
+            entities.append(SmappeePresence(smappee_base, service_location))
 
     async_add_entities(entities, True)
 
@@ -56,15 +61,17 @@ class SmappeePresence(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "presence"
+        return DEVICE_CLASS_PRESENCE
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-"
-            f"presence"
+            f"{DEVICE_CLASS_PRESENCE}"
         )
 
     @property
@@ -140,7 +147,9 @@ class SmappeeAppliance(BinarySensorEntity):
         return icon_mapping.get(self._appliance_type)
 
     @property
-    def unique_id(self,):
+    def unique_id(
+        self,
+    ):
         """Return the unique ID for this binary sensor."""
         return (
             f"{self._service_location.device_serial_number}-"

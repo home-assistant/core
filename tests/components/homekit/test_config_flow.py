@@ -45,7 +45,8 @@ async def test_user_form(hass):
         return_value=12345,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"auto_start": True, "include_domains": ["light"]},
+            result["flow_id"],
+            {"auto_start": True, "include_domains": ["light"]},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -54,9 +55,13 @@ async def test_user_form(hass):
     with patch(
         "homeassistant.components.homekit.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry", return_value=True,
+        "homeassistant.components.homekit.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"][:11] == "HASS Bridge"
@@ -98,7 +103,8 @@ async def test_import(hass):
     with patch(
         "homeassistant.components.homekit.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry", return_value=True,
+        "homeassistant.components.homekit.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -142,14 +148,16 @@ async def test_options_flow_advanced(hass):
     assert result["step_id"] == "exclude"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"exclude_entities": ["climate.old"]},
+        result["flow_id"],
+        user_input={"exclude_entities": ["climate.old"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "advanced"
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"], user_input={"auto_start": True, "safe_mode": True},
+            result2["flow_id"],
+            user_input={"auto_start": True, "safe_mode": True},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -182,21 +190,24 @@ async def test_options_flow_basic(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+        result["flow_id"],
+        user_input={"include_domains": ["fan", "vacuum", "climate"]},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "exclude"
 
     result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"exclude_entities": ["climate.old"]},
+        result["flow_id"],
+        user_input={"exclude_entities": ["climate.old"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "advanced"
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"], user_input={"safe_mode": True},
+            result2["flow_id"],
+            user_input={"safe_mode": True},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -248,7 +259,8 @@ async def test_options_flow_with_cameras(hass):
     assert result2["step_id"] == "cameras"
 
     result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"], user_input={"camera_copy": ["camera.native_h264"]},
+        result2["flow_id"],
+        user_input={"camera_copy": ["camera.native_h264"]},
     )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -256,7 +268,8 @@ async def test_options_flow_with_cameras(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"], user_input={"safe_mode": True},
+            result3["flow_id"],
+            user_input={"safe_mode": True},
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -297,7 +310,8 @@ async def test_options_flow_with_cameras(hass):
     assert result2["step_id"] == "cameras"
 
     result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"], user_input={"camera_copy": []},
+        result2["flow_id"],
+        user_input={"camera_copy": []},
     )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -305,7 +319,8 @@ async def test_options_flow_with_cameras(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"], user_input={"safe_mode": True},
+            result3["flow_id"],
+            user_input={"safe_mode": True},
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -356,6 +371,7 @@ async def test_options_flow_blocked_when_from_yaml(hass):
 
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={},
+            result["flow_id"],
+            user_input={},
         )
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

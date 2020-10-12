@@ -1,0 +1,9 @@
+set_zone_moisture_percent:
+  description: Set the moisture percentage of a zone or group of zones.
+  fields:
+    entity_id:
+      description: Name of the zone entity. Can also be a group of zones. [Required]
+      example: "switch.front_yard"
+    percent:
+      description: Set the desired zone moisture percentage from 0 to 100. [Required]
+      example: 50

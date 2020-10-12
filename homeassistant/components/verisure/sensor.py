@@ -1,7 +1,7 @@
 """Support for Verisure sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub
@@ -130,7 +130,7 @@ class VerisureHygrometer(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     # pylint: disable=no-self-use
     def update(self):

@@ -64,11 +64,11 @@ class RealTimeDataEndpoint:
         try:
             api_response = await self.api.get_data()
             self.ready.set()
-        except InverterError:
+        except InverterError as err:
             if now is not None:
                 self.ready.clear()
                 return
-            raise PlatformNotReady
+            raise PlatformNotReady from err
         data = api_response.data
         for sensor in self.sensors:
             if sensor.key in data:

@@ -414,8 +414,9 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
-    assert ("Could not render availability_template template") in caplog.text
-    assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+    assert "TemplateError" in caplog.text
+    assert "x" in caplog.text
 
 
 # End of template tests #
@@ -661,7 +662,7 @@ def _verify(
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
-    assert state.state == expected_state
+    assert state.state == str(expected_state)
     assert attributes.get(ATTR_SPEED) == expected_speed
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction

@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} on kodus",
+            "is_not_home": "{entity_name} on eemal"
+        }
+    },
     "state": {
         "_": {
             "home": "Kodus",

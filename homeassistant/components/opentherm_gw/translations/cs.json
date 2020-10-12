@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Br\u00e1na je ji\u017e nastavena",
+            "id_exists": "ID br\u00e1ny ji\u017e existuje"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "id": "ID",
+                    "name": "Jm\u00e9no"
+                },
+                "title": "Br\u00e1na OpenTherm"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Teplota podlahy",
+                    "precision": "P\u0159esnost"
+                },
+                "description": "Mo\u017enosti br\u00e1ny OpenTherm"
+            }
+        }
+    }
+}

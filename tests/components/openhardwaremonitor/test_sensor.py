@@ -41,8 +41,15 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
         assert len(entities) == 38
 
         state = self.hass.states.get(
-            "sensor.test_pc_intel_core_i7_7700_clocks_bus_speed"
+            "sensor.test_pc_intel_core_i7_7700_temperatures_cpu_core_1"
         )
 
         assert state is not None
-        assert state.state == "100"
+        assert state.state == "31.0"
+
+        state = self.hass.states.get(
+            "sensor.test_pc_intel_core_i7_7700_temperatures_cpu_core_2"
+        )
+
+        assert state is not None
+        assert state.state == "30.0"

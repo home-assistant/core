@@ -2,8 +2,10 @@
     "config": {
         "abort": {
             "already_setup": "\u00c8 possibile configurare un solo account Almond.",
-            "cannot_connect": "Impossibile connettersi al server Almond.",
-            "missing_configuration": "Si prega di controllare la documentazione su come impostare Almond."
+            "cannot_connect": "Impossibile connettersi",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "step": {
             "hassio_confirm": {
@@ -11,7 +13,7 @@
                 "title": "Almond tramite il componente aggiuntivo di Hass.io"
             },
             "pick_implementation": {
-                "title": "Seleziona metodo di autenticazione"
+                "title": "Scegli il metodo di autenticazione"
             }
         }
     }

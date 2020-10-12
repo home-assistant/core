@@ -39,7 +39,7 @@ NOTIFICATION_AUTH_TITLE = "Apple TV Authentication"
 NOTIFICATION_SCAN_ID = "apple_tv_scan_notification"
 NOTIFICATION_SCAN_TITLE = "Apple TV Scan"
 
-T = TypeVar("T")  # pylint: disable=invalid-name
+T = TypeVar("T")
 
 
 # This version of ensure_list interprets an empty dict as no value

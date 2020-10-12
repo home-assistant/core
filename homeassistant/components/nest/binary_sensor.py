@@ -2,14 +2,20 @@
 from itertools import chain
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_SOUND,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from . import CONF_BINARY_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-BINARY_TYPES = {"online": "connectivity"}
+BINARY_TYPES = {"online": DEVICE_CLASS_CONNECTIVITY}
 
 CLIMATE_BINARY_TYPES = {
     "fan": None,
@@ -19,9 +25,9 @@ CLIMATE_BINARY_TYPES = {
 }
 
 CAMERA_BINARY_TYPES = {
-    "motion_detected": "motion",
-    "sound_detected": "sound",
-    "person_detected": "occupancy",
+    "motion_detected": DEVICE_CLASS_MOTION,
+    "sound_detected": DEVICE_CLASS_SOUND,
+    "person_detected": DEVICE_CLASS_OCCUPANCY,
 }
 
 STRUCTURE_BINARY_TYPES = {"away": None}
@@ -153,7 +159,7 @@ class NestActivityZoneSensor(NestBinarySensor):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     def update(self):
         """Retrieve latest state."""

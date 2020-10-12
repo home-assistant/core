@@ -3,7 +3,7 @@ import logging
 
 from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_ROTARY, TYPE_ZLL_SWITCH
 
-from homeassistant.const import CONF_EVENT, CONF_ID
+from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -13,7 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HUE_EVENT = "hue_event"
 CONF_LAST_UPDATED = "last_updated"
-CONF_UNIQUE_ID = "unique_id"
 
 EVENT_NAME_FORMAT = "{}"
 

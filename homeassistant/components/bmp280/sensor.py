@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)",
                 error.args[0],
             )
-            raise PlatformNotReady()
+            raise PlatformNotReady() from error
         _LOGGER.error(error)
         return
     # use custom name if there's any

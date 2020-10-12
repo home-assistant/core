@@ -43,8 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     except AccountError:
         return False
-    except SessionError:
-        raise ConfigEntryNotReady
+    except SessionError as error:
+        raise ConfigEntryNotReady from error
 
     if not entry.options:
         hass.config_entries.async_update_entry(
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return await hass.async_add_executor_job(dexcom.get_current_glucose_reading)
         except SessionError as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: DataUpdateCoordinator(

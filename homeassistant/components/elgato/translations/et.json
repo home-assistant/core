@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "Elgato Key Light seadmega \u00fchenduse loomine nurjus."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "Elgato Key Light seadmega \u00fchenduse loomine nurjus."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

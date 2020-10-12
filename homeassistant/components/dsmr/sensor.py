@@ -1,5 +1,6 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
+from asyncio import CancelledError
 from functools import partial
 import logging
 
@@ -9,6 +10,7 @@ import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -18,25 +20,25 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
+    CONF_DSMR_VERSION,
+    CONF_PRECISION,
+    CONF_RECONNECT_INTERVAL,
+    DATA_TASK,
+    DEFAULT_DSMR_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_PRECISION,
+    DEFAULT_RECONNECT_INTERVAL,
+    DOMAIN,
+    ICON_GAS,
+    ICON_POWER,
+    ICON_POWER_FAILURE,
+    ICON_SWELL_SAG,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DSMR_VERSION = "dsmr_version"
-CONF_RECONNECT_INTERVAL = "reconnect_interval"
-CONF_PRECISION = "precision"
-
-DEFAULT_DSMR_VERSION = "2.2"
-DEFAULT_PORT = "/dev/ttyUSB0"
-DEFAULT_PRECISION = 3
-
-DOMAIN = "dsmr"
-
-ICON_GAS = "mdi:fire"
-ICON_POWER = "mdi:flash"
-ICON_POWER_FAILURE = "mdi:flash-off"
-ICON_SWELL_SAG = "mdi:pulse"
-
-RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -45,16 +47,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
             cv.string, vol.In(["5B", "5", "4", "2.2"])
         ),
-        vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
+        vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
     }
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the platform into a config entry."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
+
+    config = entry.data
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -141,30 +156,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
-            except (
-                serial.serialutil.SerialException,
-                ConnectionRefusedError,
-                TimeoutError,
-            ):
-                # Log any error while establishing connection and drop to retry
-                # connection wait
-                _LOGGER.exception("Error connecting to DSMR")
-                transport = None
 
-            if transport:
-                # Register listener to close transport on HA shutdown
-                stop_listener = hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, transport.close
-                )
+                if transport:
+                    # Register listener to close transport on HA shutdown
+                    stop_listener = hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, transport.close
+                    )
 
-                # Wait for reader to close
-                await protocol.wait_closed()
+                    # Wait for reader to close
+                    await protocol.wait_closed()
 
-            if hass.state != CoreState.stopping:
                 # Unexpected disconnect
                 if transport:
                     # remove listener
                     stop_listener()
+
+                transport = None
+                protocol = None
 
                 # Reflect disconnect state in devices state by setting an
                 # empty telegram resulting in `unknown` states
@@ -173,8 +181,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 # throttle reconnect attempts
                 await asyncio.sleep(config[CONF_RECONNECT_INTERVAL])
 
+            except (serial.serialutil.SerialException, OSError):
+                # Log any error while establishing connection and drop to retry
+                # connection wait
+                _LOGGER.exception("Error connecting to DSMR")
+                transport = None
+                protocol = None
+            except CancelledError:
+                if stop_listener:
+                    stop_listener()
+
+                if transport:
+                    transport.close()
+
+                if protocol:
+                    await protocol.wait_closed()
+
+                return
+
     # Can't be hass.async_add_job because job runs forever
-    hass.loop.create_task(connect_and_reconnect())
+    task = asyncio.create_task(connect_and_reconnect())
+
+    # Save the task to be able to cancel it when unloading
+    hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
 class DSMREntity(Entity):

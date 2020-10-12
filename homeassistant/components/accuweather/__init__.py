@@ -127,6 +127,6 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             InvalidApiKeyError,
             RequestsExceededError,
         ) as error:
-            raise UpdateFailed(error)
+            raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %s", self.accuweather.requests_remaining)
         return {**current, **{ATTR_FORECAST: forecast}}

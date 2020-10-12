@@ -9,6 +9,7 @@ import zigpy_cc.zigbee.application
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
+import zigpy_znp.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
@@ -34,6 +35,7 @@ ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE_IEEE = "device_ieee"
 ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINTS = "endpoints"
+ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
 ATTR_IN_CLUSTERS = "in_clusters"
@@ -45,6 +47,7 @@ ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_MEMBERS = "members"
 ATTR_MODEL = "model"
 ATTR_NAME = "name"
+ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
@@ -169,6 +172,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
+    )
     ezsp = (
         "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
@@ -178,7 +185,7 @@ class RadioType(enum.Enum):
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
-        "TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        "Legacy TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
         zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = (
@@ -274,7 +281,6 @@ SIGNAL_REMOVE = "remove"
 SIGNAL_SET_LEVEL = "set_level"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_UPDATE_DEVICE = "{}_zha_update_device"
-SIGNAL_REMOVE_GROUP = "remove_group"
 SIGNAL_GROUP_ENTITY_REMOVED = "group_entity_removed"
 SIGNAL_GROUP_MEMBERSHIP_CHANGE = "group_membership_change"
 

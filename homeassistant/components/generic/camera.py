@@ -26,6 +26,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +62,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a generic IP Camera."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     async_add_entities([GenericCamera(hass, config)])
 
 

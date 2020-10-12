@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "CoolMasterNet'iga \u00fchenduse loomine nurjus. Palun kontrolli hosti andmeid."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

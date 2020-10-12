@@ -68,7 +68,9 @@ def async_create_clientsession(
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
-        connector=connector, headers={USER_AGENT: SERVER_SOFTWARE}, **kwargs,
+        connector=connector,
+        headers={USER_AGENT: SERVER_SOFTWARE},
+        **kwargs,
     )
 
     clientsession.close = warn_use(  # type: ignore

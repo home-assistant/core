@@ -20,7 +20,8 @@ async def test_climate_thermostat_run(hass):
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
     with patch(
-        "homeassistant.components.nuheat.nuheat.NuHeat", return_value=mock_nuheat,
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
@@ -50,7 +51,8 @@ async def test_climate_thermostat_schedule_hold_unavailable(hass):
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
     with patch(
-        "homeassistant.components.nuheat.nuheat.NuHeat", return_value=mock_nuheat,
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
@@ -77,7 +79,8 @@ async def test_climate_thermostat_schedule_hold_available(hass):
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
     with patch(
-        "homeassistant.components.nuheat.nuheat.NuHeat", return_value=mock_nuheat,
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
@@ -108,7 +111,8 @@ async def test_climate_thermostat_schedule_temporary_hold(hass):
     mock_nuheat = _get_mock_nuheat(get_thermostat=mock_thermostat)
 
     with patch(
-        "homeassistant.components.nuheat.nuheat.NuHeat", return_value=mock_nuheat,
+        "homeassistant.components.nuheat.nuheat.NuHeat",
+        return_value=mock_nuheat,
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()

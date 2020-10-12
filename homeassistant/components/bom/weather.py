@@ -54,7 +54,9 @@ class BOMWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self.bom_data.get_reading("weather")
+        return self.bom_data.get_reading("weather") or self.bom_data.get_reading(
+            "cloud"
+        )
 
     # Now implement the WeatherEntity interface
 

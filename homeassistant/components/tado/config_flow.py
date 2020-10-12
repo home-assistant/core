@@ -30,14 +30,14 @@ async def validate_input(hass: core.HomeAssistant, data):
             Tado, data[CONF_USERNAME], data[CONF_PASSWORD]
         )
         tado_me = await hass.async_add_executor_job(tado.getMe)
-    except KeyError:
-        raise InvalidAuth
-    except RuntimeError:
-        raise CannotConnect
+    except KeyError as ex:
+        raise InvalidAuth from ex
+    except RuntimeError as ex:
+        raise CannotConnect from ex
     except requests.exceptions.HTTPError as ex:
         if ex.response.status_code > 400 and ex.response.status_code < 500:
-            raise InvalidAuth
-        raise CannotConnect
+            raise InvalidAuth from ex
+        raise CannotConnect from ex
 
     if "homes" not in tado_me or len(tado_me["homes"]) == 0:
         raise NoHomes

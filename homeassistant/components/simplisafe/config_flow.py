@@ -49,7 +49,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         return await API.login_via_credentials(
-            self._username, self._password, client_id=client_id, session=websession,
+            self._username,
+            self._password,
+            client_id=client_id,
+            session=websession,
         )
 
     async def _async_login_during_step(self, *, step_id, form_schema):
@@ -69,7 +72,9 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id=step_id, data_schema=form_schema, errors=errors,
+                step_id=step_id,
+                data_schema=form_schema,
+                errors=errors,
             )
 
         return await self.async_step_finish(
@@ -169,7 +174,8 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_CODE, default=self.config_entry.options.get(CONF_CODE),
+                        CONF_CODE,
+                        default=self.config_entry.options.get(CONF_CODE),
                     ): str
                 }
             ),

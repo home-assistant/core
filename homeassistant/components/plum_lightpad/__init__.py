@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Plum cloud: %s", ex)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = plum

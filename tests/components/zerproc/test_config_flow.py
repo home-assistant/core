@@ -22,9 +22,13 @@ async def test_flow_success(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Zerproc"
@@ -50,9 +54,13 @@ async def test_flow_no_devices_found(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
@@ -76,9 +84,13 @@ async def test_flow_exceptions_caught(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"

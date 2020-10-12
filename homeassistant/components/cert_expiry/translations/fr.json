@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Le nom d'h\u00f4te du certificat",
+                    "host": "H\u00f4te",
                     "name": "Le nom du certificat",
-                    "port": "Le port du certificat"
+                    "port": "Port"
                 },
                 "title": "D\u00e9finir le certificat \u00e0 tester"
             }

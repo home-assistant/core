@@ -66,12 +66,13 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
+from ipaddress import ip_address
+
 from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import data_entry_flow
-from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import (
     log_invalid_auth,
     process_success_login,
@@ -79,7 +80,11 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.const import (
+    HTTP_BAD_REQUEST,
+    HTTP_METHOD_NOT_ALLOWED,
+    HTTP_NOT_FOUND,
+)
 
 from . import indieauth
 
@@ -152,7 +157,7 @@ class LoginFlowIndexView(HomeAssistantView):
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
-        return web.Response(status=405)
+        return web.Response(status=HTTP_METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
         vol.Schema(
@@ -183,7 +188,7 @@ class LoginFlowIndexView(HomeAssistantView):
             result = await self._flow_mgr.async_init(
                 handler,
                 context={
-                    "ip_address": request[KEY_REAL_IP],
+                    "ip_address": ip_address(request.remote),
                     "credential_only": data.get("type") == "link_user",
                 },
             )
@@ -231,7 +236,7 @@ class LoginFlowResourceView(HomeAssistantView):
             for flow in self._flow_mgr.async_progress():
                 if flow["flow_id"] == flow_id and flow["context"][
                     "ip_address"
-                ] != request.get(KEY_REAL_IP):
+                ] != ip_address(request.remote):
                     return self.json_message("IP address changed", HTTP_BAD_REQUEST)
 
             result = await self._flow_mgr.async_configure(flow_id, data)

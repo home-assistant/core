@@ -98,7 +98,7 @@ def _fetch_isy_configuration(
             webroot=webroot,
         )
     except ValueError as err:
-        raise InvalidAuth(err.args[0])
+        raise InvalidAuth(err.args[0]) from err
 
     return Configuration(log=_LOGGER, xml=isy_conn.get_config())
 

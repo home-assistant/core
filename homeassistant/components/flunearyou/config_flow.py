@@ -53,8 +53,6 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except FluNearYouError as err:
             LOGGER.error("Error while configuring integration: %s", err)
-            return self.async_show_form(
-                step_id="user", errors={"base": "general_error"}
-            )
+            return self.async_show_form(step_id="user", errors={"base": "unknown"})
 
         return self.async_create_entry(title=unique_id, data=user_input)

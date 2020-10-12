@@ -26,7 +26,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -37,6 +36,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -98,7 +98,7 @@ PLATFORM_SCHEMA_TEMPLATE = (
 
 
 async def async_setup_entity_template(
-    config, async_add_entities, config_entry, discovery_data
+    hass, config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
     async_add_entities([MqttLightTemplate(config, config_entry, discovery_data)])

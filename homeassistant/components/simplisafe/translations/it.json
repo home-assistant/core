@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso.",
-            "reauth_successful": "SimpliSafe riautenticato correttamente."
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",

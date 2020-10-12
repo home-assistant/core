@@ -294,10 +294,10 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        await super().async_initialize(from_cache)
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=True)
         if state is not None:
             self._state = bool(state)
-        await super().async_initialize(from_cache)
 
     async def async_update(self):
         """Initialize channel."""

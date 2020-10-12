@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Selle aadressiga ElkM1 on juba seadistatud",
+            "already_configured": "Selle eesliitega ElkM1 on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

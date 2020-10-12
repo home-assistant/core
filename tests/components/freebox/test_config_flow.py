@@ -139,7 +139,7 @@ async def test_on_link_failed(hass):
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "connection_failed"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
         "homeassistant.components.freebox.router.Freepybox.open",

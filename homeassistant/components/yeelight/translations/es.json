@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "no_devices_found": "No se encontraron dispositivos en la red"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "ip_address": "Direcci\u00f3n IP"
+                },
+                "description": "Si dejas la direcci\u00f3n IP vac\u00eda, se usar\u00e1 descubrimiento para encontrar dispositivos."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Modelo (opcional)",
+                    "nightlight_switch": "Usar interruptor de luz nocturna",
+                    "save_on_change": "Guardar estado al cambiar",
+                    "transition": "Tiempo de transici\u00f3n (ms)",
+                    "use_music_mode": "Activar el Modo M\u00fasica"
+                },
+                "description": "Si dejas el modelo vac\u00edo, se detectar\u00e1 autom\u00e1ticamente."
+            }
+        }
+    },
+    "title": "Yeelight"
+}

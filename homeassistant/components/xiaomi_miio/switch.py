@@ -57,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
                 "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -95,7 +96,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
@@ -139,10 +140,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3"]:
+    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
         plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
@@ -233,11 +234,6 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
 
     @property
     def unique_id(self):

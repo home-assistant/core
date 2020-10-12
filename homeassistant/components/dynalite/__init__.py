@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
@@ -19,6 +19,9 @@ from .const import (
     ACTIVE_INIT,
     ACTIVE_OFF,
     ACTIVE_ON,
+    ATTR_AREA,
+    ATTR_CHANNEL,
+    ATTR_HOST,
     CONF_ACTIVE,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
@@ -30,6 +33,7 @@ from .const import (
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
+    CONF_LEVEL,
     CONF_NO_DEFAULT,
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
@@ -46,6 +50,8 @@ from .const import (
     DOMAIN,
     ENTITY_PLATFORMS,
     LOGGER,
+    SERVICE_REQUEST_AREA_PRESET,
+    SERVICE_REQUEST_CHANNEL_LEVEL,
 )
 
 
@@ -70,7 +76,11 @@ CHANNEL_DATA_SCHEMA = vol.Schema(
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
 
 PRESET_DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_LEVEL): vol.Coerce(float),
+    }
 )
 
 PRESET_SCHEMA = vol.Schema({num_string: vol.Any(PRESET_DATA_SCHEMA, None)})
@@ -197,6 +207,49 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
                 data=bridge_conf,
             )
         )
+
+    async def dynalite_service(service_call: ServiceCall):
+        data = service_call.data
+        host = data.get(ATTR_HOST, "")
+        bridges = []
+        for cur_bridge in hass.data[DOMAIN].values():
+            if not host or cur_bridge.host == host:
+                bridges.append(cur_bridge)
+        LOGGER.debug("Selected bridged for service call: %s", bridges)
+        if service_call.service == SERVICE_REQUEST_AREA_PRESET:
+            bridge_attr = "request_area_preset"
+        elif service_call.service == SERVICE_REQUEST_CHANNEL_LEVEL:
+            bridge_attr = "request_channel_level"
+        for bridge in bridges:
+            getattr(bridge.dynalite_devices, bridge_attr)(
+                data[ATTR_AREA], data.get(ATTR_CHANNEL)
+            )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REQUEST_AREA_PRESET,
+        dynalite_service,
+        vol.Schema(
+            {
+                vol.Optional(ATTR_HOST): cv.string,
+                vol.Required(ATTR_AREA): int,
+                vol.Optional(ATTR_CHANNEL): int,
+            }
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REQUEST_CHANNEL_LEVEL,
+        dynalite_service,
+        vol.Schema(
+            {
+                vol.Optional(ATTR_HOST): cv.string,
+                vol.Required(ATTR_AREA): int,
+                vol.Required(ATTR_CHANNEL): int,
+            }
+        ),
+    )
 
     return True
 

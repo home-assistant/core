@@ -1,8 +1,14 @@
 """The tests for the notify smtp platform."""
+from os import path
 import re
 import unittest
 
+from homeassistant import config as hass_config
+import homeassistant.components.notify as notify
+from homeassistant.components.smtp import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
+from homeassistant.const import SERVICE_RELOAD
+from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 from tests.common import get_test_home_assistant
@@ -85,3 +91,51 @@ class TestNotifySmtp(unittest.TestCase):
             "Test msg", data={"html": html, "images": ["test.jpg"]}
         )
         assert "Content-Type: multipart/related" in msg
+
+
+async def test_reload_notify(hass):
+    """Verify we can reload the notify service."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+    ):
+        assert await async_setup_component(
+            hass,
+            notify.DOMAIN,
+            {
+                notify.DOMAIN: [
+                    {
+                        "name": DOMAIN,
+                        "platform": DOMAIN,
+                        "recipient": "test@example.com",
+                        "sender": "test@example.com",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "smtp/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
+        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
+                }
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Asukoht"
+                }
+            }
+        }
+    }
+}

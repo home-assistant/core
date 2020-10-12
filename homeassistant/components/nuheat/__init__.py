@@ -81,8 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await hass.async_add_executor_job(api.authenticate)
-    except requests.exceptions.Timeout:
-        raise ConfigEntryNotReady
+    except requests.exceptions.Timeout as ex:
+        raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
         if (
             ex.response.status_code > HTTP_BAD_REQUEST
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ):
             _LOGGER.error("Failed to login to nuheat: %s", ex)
             return False
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False

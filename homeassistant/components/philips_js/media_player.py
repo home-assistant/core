@@ -5,9 +5,17 @@ import logging
 from haphilipsjs import PhilipsTV
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    BrowseMedia,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_CHANNEL,
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_CHANNELS,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
@@ -18,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -40,6 +49,7 @@ SUPPORT_PHILIPS_JS = (
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_PLAY_MEDIA
+    | SUPPORT_BROWSE_MEDIA
 )
 
 CONF_ON_ACTION = "turn_on_action"
@@ -77,7 +87,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     turn_on_action = config.get(CONF_ON_ACTION)
 
     tvapi = PhilipsTV(host, api_version)
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    domain = __name__.split(".")[-2]
+    on_script = Script(hass, turn_on_action, name, domain) if turn_on_action else None
 
     add_entities([PhilipsTVMediaPlayer(tvapi, name, on_script)])
 
@@ -145,38 +156,28 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
     @property
     def source(self):
         """Return the current input source."""
-        if self.media_content_type == MEDIA_TYPE_CHANNEL:
-            name = self._channels.get(self._tv.channel_id)
-            prefix = PREFIX_CHANNEL
-        else:
-            name = self._sources.get(self._tv.source_id)
-            prefix = PREFIX_SOURCE
-
-        if name is None:
-            return None
-        return prefix + PREFIX_SEPARATOR + name
+        return self._sources.get(self._tv.source_id)
 
     @property
     def source_list(self):
         """List of available input sources."""
-        complete = []
-        for source in self._sources.values():
-            complete.append(PREFIX_SOURCE + PREFIX_SEPARATOR + source)
-        for channel in self._channels.values():
-            complete.append(PREFIX_CHANNEL + PREFIX_SEPARATOR + channel)
-        return complete
+        return list(self._sources.values())
 
     def select_source(self, source):
         """Set the input source."""
         data = source.split(PREFIX_SEPARATOR, 1)
-        if data[0] == PREFIX_SOURCE:
+        if data[0] == PREFIX_SOURCE:  # Legacy way to set source
             source_id = _inverted(self._sources).get(data[1])
             if source_id:
                 self._tv.setSource(source_id)
-        elif data[0] == PREFIX_CHANNEL:
+        elif data[0] == PREFIX_CHANNEL:  # Legacy way to set channel
             channel_id = _inverted(self._channels).get(data[1])
             if channel_id:
                 self._tv.setChannel(channel_id)
+        else:
+            source_id = _inverted(self._sources).get(source)
+            if source_id:
+                self._tv.setSource(source_id)
         self._update_soon(DELAY_ACTION_DEFAULT)
 
     @property
@@ -279,6 +280,33 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         else:
             _LOGGER.error("Unsupported media type <%s>", media_type)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_id not in (None, ""):
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+
+        return BrowseMedia(
+            title="Channels",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type=MEDIA_TYPE_CHANNELS,
+            can_play=False,
+            can_expand=True,
+            children=[
+                BrowseMedia(
+                    title=channel,
+                    media_class=MEDIA_CLASS_CHANNEL,
+                    media_content_id=channel,
+                    media_content_type=MEDIA_TYPE_CHANNEL,
+                    can_play=True,
+                    can_expand=False,
+                )
+                for channel in self._channels.values()
+            ],
+        )
 
     def update(self):
         """Get the latest data and update device state."""

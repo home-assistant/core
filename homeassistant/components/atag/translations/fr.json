@@ -12,7 +12,7 @@
                 "data": {
                     "email": "Courriel (facultatif)",
                     "host": "Nom d'h\u00f4te ou adresse IP",
-                    "port": "Port (10000)"
+                    "port": "Port"
                 },
                 "title": "Se connecter \u00e0 l'appareil"
             }

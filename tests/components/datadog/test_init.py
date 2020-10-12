@@ -161,7 +161,10 @@ class TestDatadog(unittest.TestCase):
                 )
 
             assert mock_client.gauge.call_args == mock.call(
-                "ha.sensor", out, sample_rate=1, tags=[f"entity:{state.entity_id}"],
+                "ha.sensor",
+                out,
+                sample_rate=1,
+                tags=[f"entity:{state.entity_id}"],
             )
 
             mock_client.gauge.reset_mock()

@@ -120,7 +120,7 @@ async def async_setup_entry(hass, config_entry):
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Abode: %s", str(ex))
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     for platform in ABODE_PLATFORMS:
         hass.async_create_task(

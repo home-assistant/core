@@ -78,6 +78,8 @@ async def setup_comp(hass, config_count):
     with assert_setup_component(count, DOMAIN):
         await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
@@ -492,6 +494,7 @@ async def test_is_opening_closing(hass, setup_comp):
     await hass.services.async_call(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
+    await hass.async_block_till_done()
 
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING

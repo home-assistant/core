@@ -26,7 +26,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 import homeassistant.util.dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
@@ -215,6 +219,29 @@ def _build_text_msg(message):
     return MIMEText(message)
 
 
+def _attach_file(atch_name, content_id):
+    """Create a message attachment."""
+    try:
+        with open(atch_name, "rb") as attachment_file:
+            file_bytes = attachment_file.read()
+    except FileNotFoundError:
+        _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
+        return None
+
+    try:
+        attachment = MIMEImage(file_bytes)
+    except TypeError:
+        _LOGGER.warning(
+            "Attachment %s has an unknown MIME type. " "Falling back to file",
+            atch_name,
+        )
+        attachment = MIMEApplication(file_bytes, Name=atch_name)
+        attachment["Content-Disposition"] = "attachment; " 'filename="%s"' % atch_name
+
+    attachment.add_header("Content-ID", f"<{content_id}>")
+    return attachment
+
+
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
     _LOGGER.debug("Building multipart email with embedded attachment(s)")
@@ -228,26 +255,9 @@ def _build_multipart_msg(message, images):
     for atch_num, atch_name in enumerate(images):
         cid = f"image{atch_num}"
         body_text.append(f'<img src="cid:{cid}"><br>')
-        try:
-            with open(atch_name, "rb") as attachment_file:
-                file_bytes = attachment_file.read()
-                try:
-                    attachment = MIMEImage(file_bytes)
-                    msg.attach(attachment)
-                    attachment.add_header("Content-ID", f"<{cid}>")
-                except TypeError:
-                    _LOGGER.warning(
-                        "Attachment %s has an unknown MIME type. "
-                        "Falling back to file",
-                        atch_name,
-                    )
-                    attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment["Content-Disposition"] = (
-                        "attachment; " 'filename="%s"' % atch_name
-                    )
-                    msg.attach(attachment)
-        except FileNotFoundError:
-            _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
+        attachment = _attach_file(atch_name, cid)
+        if attachment:
+            msg.attach(attachment)
 
     body_html = MIMEText("".join(body_text), "html")
     msg_alt.attach(body_html)
@@ -263,15 +273,9 @@ def _build_html_msg(text, html, images):
     alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
     msg.attach(alternative)
 
-    for atch_num, atch_name in enumerate(images):
+    for atch_name in images:
         name = os.path.basename(atch_name)
-        try:
-            with open(atch_name, "rb") as attachment_file:
-                attachment = MIMEImage(attachment_file.read(), filename=name)
+        attachment = _attach_file(atch_name, name)
+        if attachment:
             msg.attach(attachment)
-            attachment.add_header("Content-ID", f"<{name}>")
-        except FileNotFoundError:
-            _LOGGER.warning(
-                "Attachment %s [#%s] not found. Skipping", atch_name, atch_num
-            )
     return msg

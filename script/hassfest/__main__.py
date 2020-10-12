@@ -11,6 +11,8 @@ from . import (
     dependencies,
     json,
     manifest,
+    mqtt,
+    requirements,
     services,
     ssdp,
     translations,
@@ -24,6 +26,7 @@ INTEGRATION_PLUGINS = [
     config_flow,
     dependencies,
     manifest,
+    mqtt,
     services,
     ssdp,
     translations,
@@ -55,6 +58,11 @@ def get_config() -> Config:
         type=valid_integration_path,
         help="Validate a single integration",
     )
+    parser.add_argument(
+        "--requirements",
+        action="store_true",
+        help="Validate requirements",
+    )
     parsed = parser.parse_args()
 
     if parsed.action is None:
@@ -75,6 +83,7 @@ def get_config() -> Config:
         root=pathlib.Path(".").absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
+        requirements=parsed.requirements,
     )
 
 
@@ -86,7 +95,10 @@ def main():
         print(err)
         return 1
 
-    plugins = INTEGRATION_PLUGINS
+    plugins = [*INTEGRATION_PLUGINS]
+
+    if config.requirements:
+        plugins.append(requirements)
 
     if config.specific_integrations:
         integrations = {}
@@ -104,6 +116,8 @@ def main():
         try:
             start = monotonic()
             print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
+            if plugin is requirements and not config.specific_integrations:
+                print()
             plugin.validate(integrations, config)
             print(" done in {:.2f}s".format(monotonic() - start))
         except RuntimeError as err:

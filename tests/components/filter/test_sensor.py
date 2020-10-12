@@ -1,8 +1,11 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
+from os import path
 import unittest
 
+from homeassistant import config as hass_config
 from homeassistant.components.filter.sensor import (
+    DOMAIN,
     LowPassFilter,
     OutlierFilter,
     RangeFilter,
@@ -10,8 +13,9 @@ from homeassistant.components.filter.sensor import (
     TimeSMAFilter,
     TimeThrottleFilter,
 )
+from homeassistant.const import SERVICE_RELOAD
 import homeassistant.core as ha
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
@@ -307,3 +311,58 @@ class TestFilterSensor(unittest.TestCase):
         for state in self.values:
             filtered = filt.filter_state(state)
         assert 21.5 == filtered.state
+
+
+async def test_reload(hass):
+    """Verify we can reload filter sensors."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    hass.states.async_set("sensor.test_monitored", 12345)
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "filter",
+                "name": "test",
+                "entity_id": "sensor.test_monitored",
+                "filters": [
+                    {"filter": "outlier", "window_size": 10, "radius": 4.0},
+                    {"filter": "lowpass", "time_constant": 10, "precision": 2},
+                    {"filter": "throttle", "window_size": 1},
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test")
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "filter/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("sensor.test") is None
+    assert hass.states.get("sensor.filtered_realistic_humidity")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

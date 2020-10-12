@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Konto on juba seadistatud"
+        },
+        "error": {
+            "account_error": "Tuvastamine nurjus",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "session_error": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "M\u00f5\u00f5t\u00fchik"
+                }
+            }
+        }
+    }
+}

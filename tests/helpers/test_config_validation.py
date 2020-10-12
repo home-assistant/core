@@ -443,6 +443,29 @@ def test_template():
         schema(value)
 
 
+def test_dynamic_template():
+    """Test dynamic template validator."""
+    schema = vol.Schema(cv.dynamic_template)
+
+    for value in (
+        None,
+        1,
+        "{{ partial_print }",
+        "{% if True %}Hello",
+        ["test"],
+        "just a string",
+    ):
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    options = (
+        "{{ beer }}",
+        "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
+    )
+    for value in options:
+        schema(value)
+
+
 def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
@@ -545,6 +568,27 @@ def test_multi_select_in_serializer():
     assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
         "type": "multi_select",
         "options": {"paulus": "Paulus"},
+    }
+
+
+def test_boolean_in_serializer():
+    """Test boolean with custom_serializer."""
+    assert cv.custom_serializer(cv.boolean) == {
+        "type": "boolean",
+    }
+
+
+def test_string_in_serializer():
+    """Test string with custom_serializer."""
+    assert cv.custom_serializer(cv.string) == {
+        "type": "string",
+    }
+
+
+def test_positive_time_period_dict_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.positive_time_period_dict) == {
+        "type": "positive_time_period_dict",
     }
 
 
@@ -1092,3 +1136,24 @@ def test_script(caplog):
             cv.script_action(data)
 
         assert msg in str(excinfo.value)
+
+
+def test_whitespace():
+    """Test whitespace validation."""
+    schema = vol.Schema(cv.whitespace)
+
+    for value in (
+        None,
+        "" "T",
+        "negative",
+        "lock",
+        "tr  ue",
+        [],
+        [1, 2],
+        {"one": "two"},
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("  ", "   "):
+        assert schema(value)

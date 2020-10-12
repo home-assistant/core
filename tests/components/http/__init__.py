@@ -1,9 +1,5 @@
 """Tests for the HTTP component."""
-from ipaddress import ip_address
-
 from aiohttp import web
-
-from homeassistant.components.http.const import KEY_REAL_IP
 
 # Relic from the past. Kept here so we can run negative tests.
 HTTP_HEADER_HA_AUTH = "X-HA-access"
@@ -25,7 +21,7 @@ def mock_real_ip(app):
         """Mock Real IP middleware."""
         nonlocal ip_to_mock
 
-        request[KEY_REAL_IP] = ip_address(ip_to_mock)
+        request = request.clone(remote=ip_to_mock)
 
         return await handler(request)
 

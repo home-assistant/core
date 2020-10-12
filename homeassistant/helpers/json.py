@@ -10,7 +10,6 @@ _LOGGER = logging.getLogger(__name__)
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
-    # pylint: disable=method-hidden
     def default(self, o: Any) -> Any:
         """Convert Home Assistant objects.
 

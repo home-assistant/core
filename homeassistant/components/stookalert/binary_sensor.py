@@ -5,7 +5,11 @@ import logging
 import stookalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
@@ -13,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"
-DEFAULT_DEVICE_CLASS = "safety"
+DEFAULT_DEVICE_CLASS = DEVICE_CLASS_SAFETY
 DEFAULT_NAME = "Stookalert"
 ATTRIBUTION = "Data provided by rivm.nl"
 PROVINCES = [

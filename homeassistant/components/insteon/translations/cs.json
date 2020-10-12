@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "select_single": "Vyberte jednu mo\u017enost."
+        },
+        "step": {
+            "hub1": {
+                "data": {
+                    "host": "IP adresa rozbo\u010dova\u010de"
+                }
+            },
+            "hub2": {
+                "data": {
+                    "host": "IP adresa rozbo\u010dova\u010de",
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            },
+            "hubv1": {
+                "data": {
+                    "host": "IP adresa",
+                    "port": "Port"
+                }
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            },
+            "init": {
+                "description": "Vyberte typ modemu Insteon.",
+                "title": "Insteon"
+            },
+            "plm": {
+                "data": {
+                    "device": "Cesta k USB za\u0159\u00edzen\u00ed"
+                }
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Typ modemu."
+                },
+                "title": "Insteon"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Nelze se p\u0159ipojit k modemu Insteon"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "select_single": "Vyberte jednu mo\u017enost."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Adresa za\u0159\u00edzen\u00ed (tj. 1a2b3c)",
+                    "cat": "Kategorie za\u0159\u00edzen\u00ed (tj. 0x10)"
+                },
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "platform": "Platforma"
+                },
+                "title": "Insteon"
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP adresa",
+                    "password": "Heslo",
+                    "port": "Port",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_x10": "P\u0159idejte za\u0159\u00edzen\u00ed X10.",
+                    "remove_x10": "Odeberte za\u0159\u00edzen\u00ed X10."
+                },
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "title": "Insteon"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Vyberte adresu za\u0159\u00edzen\u00ed, kter\u00e9 chcete odebrat"
+                },
+                "description": "Odeberte za\u0159\u00edzen\u00ed X10",
+                "title": "Insteon"
+            }
+        }
+    }
+}

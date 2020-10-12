@@ -8,9 +8,9 @@ from homeassistant.components.mold_indicator.sensor import (
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 
@@ -30,7 +30,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.addCleanup(self.tear_down_cleanup)
 
@@ -56,7 +56,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
         assert moldind
-        assert UNIT_PERCENTAGE == moldind.attributes.get("unit_of_measurement")
+        assert PERCENTAGE == moldind.attributes.get("unit_of_measurement")
 
     def test_invalidcalib(self):
         """Test invalid sensor values."""
@@ -67,7 +67,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "0", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
 
         assert setup_component(
@@ -101,7 +101,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
             "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
         )
         self.hass.states.set(
-            "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "-1", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
 
         assert setup_component(
@@ -128,7 +128,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set(
-            "test.indoorhumidity", "A", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "A", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -232,7 +232,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.states.set(
             "test.indoorhumidity",
             STATE_UNKNOWN,
-            {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE},
+            {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE},
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -242,7 +242,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
         self.hass.states.set(
-            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         moldind = self.hass.states.get("sensor.mold_indicator")
@@ -289,7 +289,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert self.hass.states.get("sensor.mold_indicator").state == "57"
 
         self.hass.states.set(
-            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            "test.indoorhumidity", "20", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
         assert self.hass.states.get("sensor.mold_indicator").state == "23"

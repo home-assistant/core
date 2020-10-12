@@ -165,7 +165,10 @@ async def test_brightness_support(hass: core.HomeAssistant):
 async def test_brightness_not_supported(hass: core.HomeAssistant):
     """Tests that a non-dimmable light should not support the brightness feature."""
     await setup_platform(
-        hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id",
+        hass,
+        LIGHT_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
     )
 
     state = hass.states.get("light.name_1")

@@ -8,7 +8,8 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -19,10 +20,10 @@
       "public_weather": {
         "data": {
           "area_name": "Name of the area",
-          "lat_ne": "Latitude North-East corner",
-          "lon_ne": "Longitude North-East corner",
-          "lat_sw": "Latitude South-West corner",
-          "lon_sw": "Longitude South-West corner",
+          "lat_ne": "[%key:common::config_flow::data::latitude%] North-East corner",
+          "lon_ne": "[%key:common::config_flow::data::longitude%] North-East corner",
+          "lat_sw": "[%key:common::config_flow::data::latitude%] South-West corner",
+          "lon_sw": "[%key:common::config_flow::data::longitude%] South-West corner",
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },

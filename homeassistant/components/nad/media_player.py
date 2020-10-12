@@ -66,11 +66,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
     if config.get(CONF_TYPE) in ("RS232", "Telnet"):
         add_entities(
-            [NAD(config)], True,
+            [NAD(config)],
+            True,
         )
     else:
         add_entities(
-            [NADtcp(config)], True,
+            [NADtcp(config)],
+            True,
         )
 
 
