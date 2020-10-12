@@ -1175,18 +1175,16 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
                 == AirhumidifierMiotOperationMode.Low
             ):
                 return SPEED_LOW
-            elif (
+            if (
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
                 == AirhumidifierMiotOperationMode.Mid
             ):
                 return SPEED_MEDIUM
-            elif (
+            if (
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
                 == AirhumidifierMiotOperationMode.High
             ):
                 return SPEED_HIGH
-            else:
-                return None
 
         return None
 
