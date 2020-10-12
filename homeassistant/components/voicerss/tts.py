@@ -81,6 +81,30 @@ SUPPORT_LANGUAGES = [
 
 SUPPORT_CODECS = ["mp3", "wav", "aac", "ogg", "caf"]
 
+SUPPORT_RATE = [
+    "-10",
+    "-9",
+    "-8",
+    "-7",
+    "-6",
+    "-5",
+    "-4",
+    "-3",
+    "-2",
+    "-1",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+]
+
 SUPPORT_FORMATS = [
     "8khz_8bit_mono",
     "8khz_8bit_stereo",
@@ -138,10 +162,13 @@ SUPPORT_FORMATS = [
 
 CONF_CODEC = "codec"
 CONF_FORMAT = "format"
+CONF_VOICE = "voice"
+CONF_RATE = "speed"
 
 DEFAULT_LANG = "en-us"
 DEFAULT_CODEC = "mp3"
 DEFAULT_FORMAT = "8khz_8bit_mono"
+DEFAULT_RATE = "0"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -150,6 +177,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODECS),
         vol.Optional(CONF_FORMAT, default=DEFAULT_FORMAT): vol.In(SUPPORT_FORMATS),
+        vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.In(SUPPORT_RATE),
+        vol.Optional(CONF_VOICE, default="unconfigured"): cv.string,
     }
 )
 
@@ -169,12 +198,23 @@ class VoiceRSSProvider(Provider):
         self._lang = conf[CONF_LANG]
         self.name = "VoiceRSS"
 
-        self._form_data = {
-            "key": conf[CONF_API_KEY],
-            "hl": conf[CONF_LANG],
-            "c": (conf[CONF_CODEC]).upper(),
-            "f": conf[CONF_FORMAT],
-        }
+        if conf[CONF_VOICE] != "unconfigured":
+            self._form_data = {
+                "key": conf[CONF_API_KEY],
+                "hl": conf[CONF_LANG],
+                "v": conf[CONF_VOICE],
+                "r": conf[CONF_RATE],
+                "c": (conf[CONF_CODEC]).upper(),
+                "f": conf[CONF_FORMAT],
+            }
+        else:
+            self._form_data = {
+                "key": conf[CONF_API_KEY],
+                "hl": conf[CONF_LANG],
+                "r": conf[CONF_RATE],
+                "c": (conf[CONF_CODEC]).upper(),
+                "f": conf[CONF_FORMAT],
+            }
 
     @property
     def default_language(self):
