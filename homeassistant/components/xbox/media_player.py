@@ -32,7 +32,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNKNOWN,
 )
 
 from .const import APP_LEGACY_MAP, DOMAIN, HOME_LEGACY_PRODUCT_ID
@@ -57,7 +56,7 @@ XBOX_STATE_MAP = {
     PowerState.SystemUpdate: STATE_OFF,
     PowerState.ConnectedStandby: STATE_OFF,
     PowerState.Off: STATE_OFF,
-    PowerState.Unknown: STATE_UNKNOWN,
+    PowerState.Unknown: None,
 }
 
 
@@ -118,24 +117,24 @@ class XboxMediaPlayer(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._app_details:
-            return self._app_details.localized_properties[0].short_title
-        return None
+        if not self._app_details:
+        	return None
+        return self._app_details.localized_properties[0].short_title
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._app_details:
-            image = _find_media_image(self._app_details.localized_properties[0].images)
+        if not self._app_details:
+        	return None
+        image = _find_media_image(self._app_details.localized_properties[0].images)
 
-            if not image:
-                return None
+        if not image:
+            return None
 
-            url = image.uri
-            if url[0] == "/":
-                url = f"http:{url}"
-            return url
-        return None
+        url = image.uri
+        if url[0] == "/":
+            url = f"http:{url}"
+        return url
 
     @property
     def media_image_remotely_accessible(self) -> bool:
@@ -163,7 +162,7 @@ class XboxMediaPlayer(MediaPlayerEntity):
                         app_id, id_type
                     )
                 )
-                if catalog_result and len(catalog_result.products) > 0:
+                if catalog_result and catalog_result.products:
                     self._app_details = catalog_result.products[0]
                 else:
                     self._app_details = None
