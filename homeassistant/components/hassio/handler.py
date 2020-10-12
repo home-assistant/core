@@ -36,7 +36,7 @@ def _api_bool(funct):
     return _wrapper
 
 
-def _api_data(funct):
+def api_data(funct):
     """Return data of an api."""
 
     async def _wrapper(*argv, **kwargs):
@@ -79,7 +79,7 @@ class HassIO:
         """
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
-    @_api_data
+    @api_data
     def get_info(self):
         """Return generic Supervisor information.
 
@@ -87,7 +87,7 @@ class HassIO:
         """
         return self.send_command("/info", method="get")
 
-    @_api_data
+    @api_data
     def get_host_info(self):
         """Return data for Host.
 
@@ -95,7 +95,7 @@ class HassIO:
         """
         return self.send_command("/host/info", method="get")
 
-    @_api_data
+    @api_data
     def get_core_info(self):
         """Return data for Home Asssistant Core.
 
@@ -103,7 +103,7 @@ class HassIO:
         """
         return self.send_command("/core/info", method="get")
 
-    @_api_data
+    @api_data
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
@@ -111,7 +111,7 @@ class HassIO:
         """
         return self.send_command(f"/addons/{addon}/info", method="get")
 
-    @_api_data
+    @api_data
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
@@ -135,7 +135,7 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
-    @_api_data
+    @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
@@ -143,7 +143,7 @@ class HassIO:
         """
         return self.send_command("/discovery", method="get")
 
-    @_api_data
+    @api_data
     def get_discovery_message(self, uuid):
         """Return a single discovery data message.
 
