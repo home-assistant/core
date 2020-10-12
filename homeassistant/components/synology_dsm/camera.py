@@ -2,12 +2,13 @@
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.camera import SynoCamera
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynologyDSMEntity
+from . import SynoApi, SynologyDSMEntity
 from .const import (
     DOMAIN,
     ENTITY_CLASS,
@@ -40,7 +41,7 @@ async def async_setup_entry(
 class SynoDSMCamera(SynologyDSMEntity, Camera):
     """Representation a Synology camera."""
 
-    def __init__(self, api, camera):
+    def __init__(self, api: SynoApi, camera: SynoCamera):
         """Initialize a Synology camera."""
         super().__init__(
             api,
@@ -70,6 +71,11 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
         }
 
     @property
+    def available(self) -> bool:
+        """Return the availability of the camera."""
+        return self._camera.is_enabled
+
+    @property
     def supported_features(self) -> int:
         """Return supported features of this camera."""
         return SUPPORT_STREAM
@@ -86,10 +92,14 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
 
     def camera_image(self) -> bytes:
         """Return bytes of camera image."""
+        if not self.available:
+            return None
         return self._api.surveillance_station.get_camera_image(self._camera.id)
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
+        if not self.available:
+            return None
         return self._camera.live_view.rtsp
 
     def enable_motion_detection(self):
