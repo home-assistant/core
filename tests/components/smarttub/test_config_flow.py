@@ -1,5 +1,5 @@
 """Test the smarttub config flow."""
-import pytest
+from smarttub import LoginFailed
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.smarttub.const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -9,19 +9,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_controller():
-    """Mock the controller."""
-    with patch(
-        "homeassistant.components.smarttub.config_flow.SmartTubController",
-        autospec=True,
-    ) as controller_class_mock:
-        controller_mock = controller_class_mock.return_value
-        controller_mock.get_account_id.return_value = "account-id1"
-        yield controller_mock
-
-
-async def test_form(hass, mock_controller):
+async def test_form(hass, smarttub_api):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -49,16 +37,15 @@ async def test_form(hass, mock_controller):
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
-    mock_controller.get_account_id.assert_called()
 
 
-async def test_form_invalid_auth(hass, mock_controller):
+async def test_form_invalid_auth(hass, smarttub_api):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_controller.get_account_id.return_value = None
+    smarttub_api.login.side_effect = LoginFailed
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -69,7 +56,7 @@ async def test_form_invalid_auth(hass, mock_controller):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_options(hass, mock_controller, config_data):
+async def test_form_options(hass, config_data):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

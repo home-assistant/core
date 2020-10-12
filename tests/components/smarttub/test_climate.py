@@ -1,8 +1,6 @@
 """Test the SmartTub climate platform."""
 from unittest.mock import Mock
 
-import pytest
-
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -17,32 +15,24 @@ from homeassistant.components.smarttub.const import (
     DEFAULT_MIN_TEMP,
     DOMAIN,
     SMARTTUB_CONTROLLER,
+    UNSUB_UPDATE_LISTENER,
 )
-from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from tests.async_mock import create_autospec
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="controller")
-async def mock_controller(hass, coordinator):
-    """Mock the controller for testing."""
-
-    controller = create_autospec(SmartTubController, instance=True)
-    controller.coordinator = coordinator
-    return controller
-
-
-async def test_async_setup_entry(hass, controller, spa):
+async def test_async_setup_entry(hass, controller):
     """Test async_setup_entry."""
 
     entry = MockConfigEntry(unique_id="ceid1")
     async_add_entities = Mock()
     hass.data[DOMAIN] = {
-        entry.unique_id: {SMARTTUB_CONTROLLER: controller},
+        entry.unique_id: {
+            SMARTTUB_CONTROLLER: controller,
+            UNSUB_UPDATE_LISTENER: lambda: None,
+        },
     }
-    controller.spas = [spa]
 
     ret = await async_setup_entry(hass, entry, async_add_entities)
 
@@ -53,22 +43,22 @@ async def test_async_setup_entry(hass, controller, spa):
 async def test_thermostat(coordinator, spa):
     """Test the thermostat entity."""
 
-    coordinator.data = {
-        spa.id: {
-            "status": {
-                "heater": "ON",
-                "water": {
-                    "temperature": 38,
-                },
-                "setTemperature": 39,
-            }
-        }
+    spa.get_status.return_value = {
+        "heater": "ON",
+        "water": {
+            "temperature": 38,
+        },
+        "setTemperature": 39,
     }
     thermostat = SmartTubThermostat(coordinator, spa)
+
     assert thermostat.temperature_unit == TEMP_CELSIUS
     assert thermostat.hvac_action == CURRENT_HVAC_HEAT
-    coordinator.data[spa.id]["status"]["heater"] = "OFF"
+
+    spa.get_status.return_value["heater"] = "OFF"
+    await coordinator.async_refresh()
     assert thermostat.hvac_action == CURRENT_HVAC_IDLE
+
     assert thermostat.hvac_modes
     assert thermostat.hvac_mode
     await thermostat.async_set_hvac_mode(HVAC_MODE_HEAT)
@@ -78,6 +68,8 @@ async def test_thermostat(coordinator, spa):
     assert thermostat.current_temperature == 38
     assert thermostat.target_temperature == 39
 
+    spa.get_status.reset_mock()
     await thermostat.async_set_temperature(**{ATTR_TEMPERATURE: 30})
     spa.set_temperature.assert_called_with(30)
-    coordinator.async_refresh.assert_called_once()
+
+    spa.get_status.assert_called()

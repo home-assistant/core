@@ -6,45 +6,6 @@ import smarttub
 from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.async_mock import create_autospec, patch
-
-
-@pytest.fixture(name="account")
-def mock_account(spa):
-    """Mock a SmartTub.Account."""
-
-    mock_account = create_autospec(smarttub.Account, instance=True)
-    mock_account.id = "mockaccount1"
-    mock_account.get_spas.return_value = [spa]
-    return mock_account
-
-
-@pytest.fixture(name="smarttub_api")
-def mock_api(account):
-    """Mock the SmartTub API."""
-
-    with patch(
-        "homeassistant.components.smarttub.controller.SmartTub",
-        autospec=True,
-    ) as api_class_mock:
-        api_mock = api_class_mock.return_value
-        api_mock.get_account.return_value = account
-        yield api_mock
-
-
-@pytest.fixture(name="controller")
-async def make_controller(hass, smarttub_api, config_entry):
-    """Instantiate the controller for testing."""
-
-    controller = SmartTubController(hass)
-    assert len(controller.spas) == 0
-
-    ret = await controller.async_setup_entry(config_entry)
-    assert ret is True
-    assert len(controller.spas) > 0
-
-    return controller
-
 
 async def test_unload(controller, config_entry):
     """Test async_unload_entry."""
