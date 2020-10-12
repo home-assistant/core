@@ -1,7 +1,6 @@
 """Classes to help gather user submissions."""
 import abc
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional, cast
 import uuid
 
@@ -9,8 +8,6 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-
-_LOGGER = logging.getLogger(__name__)
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"

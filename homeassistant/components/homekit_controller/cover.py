@@ -1,6 +1,4 @@
 """Support for Homekit covers."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.cover import (
@@ -21,8 +19,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 STATE_STOPPED = "stopped"
-
-_LOGGER = logging.getLogger(__name__)
 
 CURRENT_GARAGE_STATE_MAP = {
     0: STATE_OPEN,

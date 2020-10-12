@@ -1,5 +1,4 @@
 """Support for AquaLogic sensors."""
-import logging
 
 import voluptuous as vol
 
@@ -16,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, UPDATE_TOPIC
-
-_LOGGER = logging.getLogger(__name__)
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]

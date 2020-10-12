@@ -1,12 +1,8 @@
 """Support for August sensors."""
-import logging
-
 from homeassistant.const import CURRENCY_CENT, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_LOADZONE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
