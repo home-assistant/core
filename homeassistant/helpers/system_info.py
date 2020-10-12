@@ -1,7 +1,7 @@
 """Helper to gather system info."""
+from datetime import datetime
 import os
 import platform
-from datetime import datetime
 from typing import Any, Dict
 
 from homeassistant.const import __version__ as current_version
