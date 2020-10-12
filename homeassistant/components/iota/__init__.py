@@ -1,6 +1,5 @@
 """Support for IOTA wallets."""
 from datetime import timedelta
-import logging
 
 from iota import Iota
 import voluptuous as vol
@@ -8,8 +7,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_IRI = "iri"
 CONF_TESTNET = "testnet"

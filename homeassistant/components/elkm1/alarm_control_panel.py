@@ -1,6 +1,4 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
-import logging
-
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 from elkm1_lib.util import username
 import voluptuous as vol
@@ -64,8 +62,6 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("line2", default=""): cv.string,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

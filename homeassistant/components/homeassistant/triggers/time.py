@@ -1,7 +1,6 @@
 """Offer time listening automation rules."""
 from datetime import datetime
 from functools import partial
-import logging
 
 import voluptuous as vol
 
@@ -16,8 +15,6 @@ from homeassistant.helpers.event import (
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
