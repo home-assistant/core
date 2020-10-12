@@ -20,10 +20,6 @@ async def test_async_setup_entry(hass, aioclient_mock):
 
     entry = await add_mock_config(hass)
 
-    assert isinstance(
-        hass.data[DOMAIN][entry.entry_id]["coordinator"], DataUpdateCoordinator
-    )
-    assert callable(hass.data[DOMAIN][entry.entry_id]["async_change"])
 
 
 async def test_async_setup_entry_failure(hass, aioclient_mock):
