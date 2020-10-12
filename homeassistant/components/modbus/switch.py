@@ -7,7 +7,7 @@ from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -130,7 +130,7 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
         return self._available
 
 
-class ModbusCoilSwitch(ModbusBaseSwitch):
+class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus coil switch."""
 
     def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
@@ -181,7 +181,7 @@ class ModbusCoilSwitch(ModbusBaseSwitch):
         self._available = True
 
 
-class ModbusRegisterSwitch(ModbusBaseSwitch):
+class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus register switch."""
 
     def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
