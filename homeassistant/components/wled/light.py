@@ -67,6 +67,7 @@ async def async_setup_entry(
             vol.Optional(ATTR_INTENSITY): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=255)
             ),
+            vol.Optional(ATTR_PALETTE): vol.Any(cv.positive_int, cv.string),
             vol.Optional(ATTR_REVERSE): cv.boolean,
             vol.Optional(ATTR_SPEED): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=255)
@@ -350,6 +351,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         self,
         effect: Optional[Union[int, str]] = None,
         intensity: Optional[int] = None,
+        palette: Optional[Union[int, str]] = None,
         reverse: Optional[bool] = None,
         speed: Optional[int] = None,
     ) -> None:
@@ -361,6 +363,9 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
 
         if intensity is not None:
             data[ATTR_INTENSITY] = intensity
+
+        if palette is not None:
+            data[ATTR_PALETTE] = palette
 
         if reverse is not None:
             data[ATTR_REVERSE] = reverse
