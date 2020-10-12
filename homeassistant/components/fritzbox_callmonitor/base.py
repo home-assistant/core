@@ -22,7 +22,8 @@ class FritzBoxPhonebook:
         self.number_dict = None
         self.prefixes = prefixes
 
-        # Establish a connection to the FRITZ!Box.
+    def init_phonebook(self):
+        """Establish a connection to the FRITZ!Box and check if phonebook_id is valid."""
         self.fph = FritzPhonebook(
             address=self.host, user=self.username, password=self.password
         )

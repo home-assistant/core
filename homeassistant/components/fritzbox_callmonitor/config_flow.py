@@ -31,7 +31,7 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
-RESULT_INVALID_AUTH = "inprefixid_auth"
+RESULT_INVALID_AUTH = "invalid_auth"
 RESULT_NO_DEVIES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
@@ -69,15 +69,17 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
+        phonebook = FritzBoxPhonebook(
+            host=self._host,
+            port=self._port,
+            username=self._username,
+            password=self._password,
+            phonebook_id=self._phonebook_id,
+            prefixes=self._prefixes,
+        )
+
         try:
-            FritzBoxPhonebook(
-                host=self._host,
-                port=self._port,
-                username=self._username,
-                password=self._password,
-                phonebook_id=self._phonebook_id,
-                prefixes=self._prefixes,
-            )
+            phonebook.init_phonebook()
             return RESULT_SUCCESS
         except FritzConnectionException:
             return RESULT_INVALID_AUTH
