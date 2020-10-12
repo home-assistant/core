@@ -48,12 +48,13 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
@@ -91,7 +92,7 @@ DEPRECATED_TURN_OFF_ACTIONS = {
     "shutdown": "System.Shutdown",
 }
 
-WEBSOCKET_WATCHDOG_INTERVAL = timedelta(minutes=3)
+WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -372,13 +373,22 @@ class KodiEntity(MediaPlayerEntity):
         if self._connection.connected:
             self._on_ws_connected()
 
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass,
-                self._async_connect_websocket_if_disconnected,
-                WEBSOCKET_WATCHDOG_INTERVAL,
+        def start_watchdog(event=None):
+            """Start websocket watchdog."""
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass,
+                    self._async_connect_websocket_if_disconnected,
+                    WEBSOCKET_WATCHDOG_INTERVAL,
+                )
             )
-        )
+
+        # If Home Assistant is already in a running state, start the watchdog
+        # immediately, else trigger it after Home Assistant has finished starting.
+        if self.hass.state == CoreState.running:
+            start_watchdog()
+        else:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
 
     @callback
     def _on_ws_connected(self):

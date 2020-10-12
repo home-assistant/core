@@ -57,8 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raw_version = (await kodi.get_application_properties(["version"]))["version"]
         version = f"{raw_version['major']}.{raw_version['minor']}"
     except CannotConnectError as error:
-        dr = await device_registry.async_get_registry(hass)
-        device = dr.async_get_device({(DOMAIN, entry.entry_id)}, [])
+        dev_reg = await device_registry.async_get_registry(hass)
+        device = dev_reg.async_get_device({(DOMAIN, entry.entry_id)}, [])
         if not device:
             raise ConfigEntryNotReady from error
         version = device.sw_version
