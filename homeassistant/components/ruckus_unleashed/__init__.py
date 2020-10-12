@@ -2,7 +2,6 @@
 import asyncio
 
 from pyruckus import Ruckus
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -11,8 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import COORDINATOR, DOMAIN, PLATFORMS, UNDO_UPDATE_LISTENERS
 from .coordinator import RuckusUnleashedDataUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
