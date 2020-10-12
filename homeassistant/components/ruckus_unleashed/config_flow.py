@@ -26,9 +26,18 @@ async def validate_input(hass: core.HomeAssistant, data):
     except ConnectionError as error:
         raise CannotConnect from error
 
-    mesh_name = ruckus.mesh_name()
+    mesh_name = await hass.async_add_executor_job(ruckus.mesh_name)
 
-    return {"title": mesh_name}
+    system_info = await hass.async_add_executor_job(ruckus.system_info)
+    try:
+        host_serial = system_info["System Overview"]["Serial Number"]
+    except KeyError as error:
+        raise CannotConnect from error
+
+    return {
+        "title": mesh_name,
+        "serial": host_serial,
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -51,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                await self.async_set_unique_id(info["serial"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
