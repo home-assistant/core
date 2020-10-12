@@ -3,13 +3,20 @@
 import unittest
 
 import homeassistant.components.remote as remote
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.remote import ATTR_COMMAND
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
-from tests.components.remote import common
 
 ENTITY_ID = "remote.remote_one"
+SERVICE_SEND_COMMAND = "send_command"
 
 
 class TestDemoRemote(unittest.TestCase):
@@ -32,22 +39,33 @@ class TestDemoRemote(unittest.TestCase):
 
     def test_methods(self):
         """Test if services call the entity methods as expected."""
-        common.turn_on(self.hass, entity_id=ENTITY_ID)
+        self.hass.services.call(
+            remote.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
 
-        common.turn_off(self.hass, entity_id=ENTITY_ID)
+        self.hass.services.call(
+            remote.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
         assert state.state == STATE_OFF
 
-        common.turn_on(self.hass, entity_id=ENTITY_ID)
+        self.hass.services.call(
+            remote.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
         assert state.state == STATE_ON
 
-        common.send_command(self.hass, "test", entity_id=ENTITY_ID)
+        data = {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_COMMAND: ["test"],
+        }
+
+        self.hass.services.call(remote.DOMAIN, SERVICE_SEND_COMMAND, data)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ID)
         assert state.attributes == {
