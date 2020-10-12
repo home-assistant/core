@@ -1,4 +1,11 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Lisaseade on selle kontrolleriga juba seadistatud.",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "invalid_properties": "Seade tagastas vigase oleku."
+        }
+    },
     "device_automation": {
         "trigger_subtype": {
             "button1": "Nupp 1",

@@ -19,7 +19,7 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "IP adresa/hostitel jednotky",
+                    "ip_address": "Hostitel",
                     "password": "Heslo"
                 },
                 "title": "Nastaven\u00ed AirVisual Node/Pro"

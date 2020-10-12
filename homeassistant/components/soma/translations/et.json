@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "connection_error": "SOMA Connect seadmega \u00fchenduse loomine nurjus."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "title": ""
+            }
         }
     }
 }
