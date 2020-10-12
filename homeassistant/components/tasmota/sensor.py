@@ -62,49 +62,49 @@ from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_DEVICE_CLASS_MAP = {
-    SENSOR_AMBIENT: DEVICE_CLASS_ILLUMINANCE,
-    SENSOR_APPARENT_POWERUSAGE: DEVICE_CLASS_POWER,
-    SENSOR_BATTERY: DEVICE_CLASS_BATTERY,
-    SENSOR_HUMIDITY: DEVICE_CLASS_HUMIDITY,
-    SENSOR_ILLUMINANCE: DEVICE_CLASS_ILLUMINANCE,
-    SENSOR_POWERUSAGE: DEVICE_CLASS_POWER,
-    SENSOR_PRESSURE: DEVICE_CLASS_PRESSURE,
-    SENSOR_PRESSUREATSEALEVEL: DEVICE_CLASS_PRESSURE,
-    SENSOR_REACTIVE_POWERUSAGE: DEVICE_CLASS_POWER,
-    SENSOR_TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    SENSOR_TODAY: DEVICE_CLASS_POWER,
-    SENSOR_TOTAL: DEVICE_CLASS_POWER,
-    SENSOR_YESTERDAY: DEVICE_CLASS_POWER,
-}
+DEVICE_CLASS = "device_class"
+ICON = "icon"
 
-SENSOR_ICON_MAP = {
-    SENSOR_CCT: "mdi:temperature-kelvin",
-    SENSOR_CO2: "mdi:molecule-co2",
-    SENSOR_COLOR_BLUE: "mdi:palette",
-    SENSOR_COLOR_GREEN: "mdi:palette",
-    SENSOR_COLOR_RED: "mdi:palette",
-    SENSOR_CURRENT: "mdi:alpha-a-circle-outline",
-    SENSOR_DEWPOINT: "mdi:weather-rainy",
-    SENSOR_DISTANCE: "mdi:leak",
-    SENSOR_ECO2: "mdi:molecule-co2",
-    SENSOR_FREQUENCY: "mdi:current-ac",
-    SENSOR_MOISTURE: "mdi:cup-water",
-    SENSOR_PB0_3: "mdi:flask",
-    SENSOR_PB0_5: "mdi:flask",
-    SENSOR_PB10: "mdi:flask",
-    SENSOR_PB1: "mdi:flask",
-    SENSOR_PB2_5: "mdi:flask",
-    SENSOR_PB5: "mdi:flask",
-    SENSOR_PM10: "mdi:air-filter",
-    SENSOR_PM1: "mdi:air-filter",
-    SENSOR_PM2_5: "mdi:air-filter",
-    SENSOR_POWERFACTOR: "mdi:alpha-f-circle-outline",
-    SENSOR_PROXIMITY: "mdi:ruler",
-    SENSOR_TOTAL_START_TIME: "mdi:progress-clock",
-    SENSOR_TVOC: "mdi:air-filter",
-    SENSOR_VOLTAGE: "mdi:alpha-v-circle-outline",
-    SENSOR_WEIGHT: "mdi:scale",
+SENSOR_DEVICE_CLASS_ICON_MAP = {
+    SENSOR_AMBIENT: (DEVICE_CLASS, DEVICE_CLASS_ILLUMINANCE),
+    SENSOR_APPARENT_POWERUSAGE: (DEVICE_CLASS, DEVICE_CLASS_POWER),
+    SENSOR_BATTERY: (DEVICE_CLASS, DEVICE_CLASS_BATTERY),
+    SENSOR_CCT: (ICON, "mdi:temperature-kelvin"),
+    SENSOR_CO2: (ICON, "mdi:molecule-co2"),
+    SENSOR_COLOR_BLUE: (ICON, "mdi:palette"),
+    SENSOR_COLOR_GREEN: (ICON, "mdi:palette"),
+    SENSOR_COLOR_RED: (ICON, "mdi:palette"),
+    SENSOR_CURRENT: (ICON, "mdi:alpha-a-circle-outline"),
+    SENSOR_DEWPOINT: (ICON, "mdi:weather-rainy"),
+    SENSOR_DISTANCE: (ICON, "mdi:leak"),
+    SENSOR_ECO2: (ICON, "mdi:molecule-co2"),
+    SENSOR_FREQUENCY: (ICON, "mdi:current-ac"),
+    SENSOR_HUMIDITY: (DEVICE_CLASS, DEVICE_CLASS_HUMIDITY),
+    SENSOR_ILLUMINANCE: (DEVICE_CLASS, DEVICE_CLASS_ILLUMINANCE),
+    SENSOR_MOISTURE: (ICON, "mdi:cup-water"),
+    SENSOR_PB0_3: (ICON, "mdi:flask"),
+    SENSOR_PB0_5: (ICON, "mdi:flask"),
+    SENSOR_PB10: (ICON, "mdi:flask"),
+    SENSOR_PB1: (ICON, "mdi:flask"),
+    SENSOR_PB2_5: (ICON, "mdi:flask"),
+    SENSOR_PB5: (ICON, "mdi:flask"),
+    SENSOR_PM10: (ICON, "mdi:air-filter"),
+    SENSOR_PM1: (ICON, "mdi:air-filter"),
+    SENSOR_PM2_5: (ICON, "mdi:air-filter"),
+    SENSOR_POWERFACTOR: (ICON, "mdi:alpha-f-circle-outline"),
+    SENSOR_POWERUSAGE: (DEVICE_CLASS, DEVICE_CLASS_POWER),
+    SENSOR_PRESSURE: (DEVICE_CLASS, DEVICE_CLASS_PRESSURE),
+    SENSOR_PRESSUREATSEALEVEL: (DEVICE_CLASS, DEVICE_CLASS_PRESSURE),
+    SENSOR_PROXIMITY: (ICON, "mdi:ruler"),
+    SENSOR_REACTIVE_POWERUSAGE: (DEVICE_CLASS, DEVICE_CLASS_POWER),
+    SENSOR_TEMPERATURE: (DEVICE_CLASS, DEVICE_CLASS_TEMPERATURE),
+    SENSOR_TODAY: (DEVICE_CLASS, DEVICE_CLASS_POWER),
+    SENSOR_TOTAL: (DEVICE_CLASS, DEVICE_CLASS_POWER),
+    SENSOR_TOTAL_START_TIME: (ICON, "mdi:progress-clock"),
+    SENSOR_TVOC: (ICON, "mdi:air-filter"),
+    SENSOR_VOLTAGE: (ICON, "mdi:alpha-v-circle-outline"),
+    SENSOR_WEIGHT: (ICON, "mdi:scale"),
+    SENSOR_YESTERDAY: (DEVICE_CLASS, DEVICE_CLASS_POWER),
 }
 
 
@@ -143,12 +143,14 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
     @property
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
-        return SENSOR_DEVICE_CLASS_MAP.get(self._tasmota_entity.quantity)
+        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(self._tasmota_entity.quantity)
+        return class_or_icon[1] if class_or_icon[0] == DEVICE_CLASS else None
 
     @property
     def icon(self):
         """Return the icon."""
-        return SENSOR_ICON_MAP.get(self._tasmota_entity.quantity)
+        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(self._tasmota_entity.quantity)
+        return class_or_icon[1] if class_or_icon[0] == ICON else None
 
     @property
     def state(self):
