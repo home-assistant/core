@@ -10,6 +10,7 @@ FLOWS = [
     "accuweather",
     "acmeda",
     "adguard",
+    "advantage_air",
     "agent_dvr",
     "airly",
     "airvisual",
