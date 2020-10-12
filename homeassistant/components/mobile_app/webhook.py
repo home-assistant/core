@@ -298,11 +298,9 @@ async def webhook_render_template(hass, config_entry, data):
     resp = {}
     for key, item in data.items():
         try:
-            tpl = template.Template(item[ATTR_TEMPLATE])
-            tpl.ensure_valid()
-            tpl.hass = hass
+            tpl = template.Template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-        except Exception as ex:  # pylint: disable=broad-except
+        except TemplateError as ex:
             resp[key] = {"error": str(ex)}
 
     return webhook_response(resp, registration=config_entry.data)
