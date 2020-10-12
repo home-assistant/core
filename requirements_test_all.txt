@@ -775,7 +775,7 @@ pyotp==2.3.0
 pyowm==2.10.0
 
 # homeassistant.components.point
-pypoint==1.1.2
+pypoint==2.0.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
