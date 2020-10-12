@@ -26,8 +26,8 @@ class DeviceHelper:
             device = Device(device_info)
             await device.bind()
             return device
-        except DeviceNotBoundError:
-            raise CannotConnect
+        except DeviceNotBoundError as exception:
+            raise CannotConnect from exception
 
     @staticmethod
     async def find_devices() -> List[DeviceInfo]:
