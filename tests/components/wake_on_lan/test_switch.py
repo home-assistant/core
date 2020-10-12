@@ -3,7 +3,6 @@ import platform
 import subprocess
 
 import pytest
-import wakeonlan
 
 import homeassistant.components.switch as switch
 from homeassistant.const import (
@@ -15,18 +14,15 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
 @pytest.fixture(autouse=True)
 def mock_send_magic_packet():
     """Mock magic packet."""
-    with patch("wakeonlan.send_magic_packet"):
-        yield
-
-
-send_magic_packet = Mock(return_value=None)
+    with patch("wakeonlan.send_magic_packet") as mock_send:
+        yield mock_send
 
 
 async def test_valid_hostname(hass):
@@ -102,7 +98,7 @@ async def test_valid_hostname_windows(hass):
     assert STATE_ON == state.state
 
 
-async def test_broadcast_config_ip_and_port(hass):
+async def test_broadcast_config_ip_and_port(hass, mock_send_magic_packet):
     """Test with broadcast address and broadcast port config."""
     mac = "00-01-02-03-04-05"
     broadcast_address = "255.255.255.255"
@@ -125,9 +121,7 @@ async def test_broadcast_config_ip_and_port(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", return_value=0):
+    with patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -136,12 +130,12 @@ async def test_broadcast_config_ip_and_port(hass):
             blocking=True,
         )
 
-        send_magic_packet.assert_called_with(
+        mock_send_magic_packet.assert_called_with(
             mac, ip_address=broadcast_address, port=port
         )
 
 
-async def test_broadcast_config_ip(hass):
+async def test_broadcast_config_ip(hass, mock_send_magic_packet):
     """Test with only broadcast address."""
 
     mac = "00-01-02-03-04-05"
@@ -163,9 +157,7 @@ async def test_broadcast_config_ip(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", return_value=0):
+    with patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -174,10 +166,10 @@ async def test_broadcast_config_ip(hass):
             blocking=True,
         )
 
-        send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
+        mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
 
-async def test_broadcast_config_port(hass):
+async def test_broadcast_config_port(hass, mock_send_magic_packet):
     """Test with only broadcast port config."""
 
     mac = "00-01-02-03-04-05"
@@ -193,9 +185,7 @@ async def test_broadcast_config_port(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", return_value=0):
+    with patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -204,7 +194,7 @@ async def test_broadcast_config_port(hass):
             blocking=True,
         )
 
-        send_magic_packet.assert_called_with(mac, port=port)
+        mock_send_magic_packet.assert_called_with(mac, port=port)
 
 
 async def test_off_script(hass):
