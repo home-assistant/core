@@ -85,7 +85,7 @@ class NelloLock(LockEntity):
         """Unlock the device."""
         if not self._nello_lock.open_door():
             _LOGGER.error("Failed to unlock")
-            
+
     def open(self, **kwargs):
         """Unlock the device."""
         if not self._nello_lock.open_door():
