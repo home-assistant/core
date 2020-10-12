@@ -970,8 +970,8 @@ class SonosEntity(MediaPlayerEntity):
             return REPEAT_MODE_ALL
         elif self._repeat == "ONE":
             return REPEAT_MODE_ONE
-
-        return REPEAT_MODE_OFF
+        else:
+            return REPEAT_MODE_OFF
 
     @property
     @soco_coordinator
