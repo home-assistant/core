@@ -151,7 +151,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
 
 
 async def test_climate_async_failed_update(hass, aioclient_mock):
-    """Test climate setup."""
+    """Test climate change failure."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
