@@ -37,6 +37,8 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
+    assert len(aioclient_mock.mock_calls) == 1
+
     # Test Main Climate Entity
     entity_id = "climate.ac_one"
     state = hass.states.get(entity_id)
@@ -56,6 +58,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_FAN_ONLY},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -67,6 +70,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_OFF},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 5
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -78,6 +82,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_OFF},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 7
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -89,6 +94,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 9
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -113,6 +119,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_FAN_ONLY},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 11
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -124,6 +131,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVAC_MODE_OFF},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 13
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
@@ -135,6 +143,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
         blocking=True,
     )
+    assert len(aioclient_mock.mock_calls) == 15
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     assert aioclient_mock.mock_calls[-1][0] == "GET"
