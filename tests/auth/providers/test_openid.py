@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.helpers.config_entry_oauth2_flow import _encode_jwt
 from homeassistant.setup import async_setup_component
 
@@ -55,11 +56,13 @@ CONST_ID_TOKEN = {
 async def openid_server_fixture(hass, aioclient_mock):
     """Mock openid server."""
     aioclient_mock.get(
-        CONST_DESCRIPTION_URI, json=CONST_DESCRIPTION,
+        CONST_DESCRIPTION_URI,
+        json=CONST_DESCRIPTION,
     )
 
     aioclient_mock.get(
-        CONST_JWKS_URI, json=CONST_JWKS,
+        CONST_JWKS_URI,
+        json=CONST_JWKS,
     )
 
     aioclient_mock.post(
@@ -73,6 +76,17 @@ async def openid_server_fixture(hass, aioclient_mock):
             ),
         },
     )
+
+
+@pytest.fixture(name="endpoints")
+async def endpoints_fixture(hass, current_request):
+    """Initialize the needed endpoints and redirects."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+
+    assert await async_setup_component(hass, "http", {})
 
 
 async def _run_external_flow(hass, manager, aiohttp_client):
@@ -97,12 +111,10 @@ async def _run_external_flow(hass, manager, aiohttp_client):
     return result["flow_id"]
 
 
-async def test_login_flow_validates_email(hass, aiohttp_client, openid_server):
+async def test_login_flow_validates_email(
+    hass, aiohttp_client, openid_server, endpoints
+):
     """Test login flow."""
-    assert await async_setup_component(hass, "http", {})
-
-    hass.config.external_url = "https://example.com"
-
     manager = await auth_manager_from_config(
         hass,
         [
@@ -126,12 +138,10 @@ async def test_login_flow_validates_email(hass, aiohttp_client, openid_server):
     assert result["data"]["email"] == CONST_EMAIL
 
 
-async def test_login_flow_validates_subject(hass, aiohttp_client, openid_server):
+async def test_login_flow_validates_subject(
+    hass, aiohttp_client, openid_server, endpoints
+):
     """Test login flow."""
-    assert await async_setup_component(hass, "http", {})
-
-    hass.config.external_url = "https://example.com"
-
     manager = await auth_manager_from_config(
         hass,
         [
@@ -155,12 +165,10 @@ async def test_login_flow_validates_subject(hass, aiohttp_client, openid_server)
     assert result["data"]["sub"] == CONST_SUBJECT
 
 
-async def test_login_flow_not_whitelisted(hass, aiohttp_client, openid_server):
+async def test_login_flow_not_whitelisted(
+    hass, aiohttp_client, openid_server, endpoints
+):
     """Test login flow."""
-    assert await async_setup_component(hass, "http", {})
-
-    hass.config.external_url = "https://example.com"
-
     manager = await auth_manager_from_config(
         hass,
         [

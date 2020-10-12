@@ -8,10 +8,10 @@ from aiohttp import ClientResponseError
 from aiohttp.client import ClientResponse
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2Implementation,
     LocalOAuth2Implementation,
     async_register_view,
 )
@@ -81,6 +81,49 @@ async def raise_for_status(response: ClientResponse) -> None:
 WANTED_SCOPES = {"openid", "email", "profile"}
 
 
+class OpenIdLocalOAuth2Implementation(LocalOAuth2Implementation):
+    """Local OAuth2 implementation for Toon."""
+
+    _nonce: Optional[str] = None
+    _scope: str
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client_id: str,
+        client_secret: str,
+        configuration: Dict[str, Any],
+    ):
+        """Initialize local auth implementation."""
+        super().__init__(
+            hass,
+            "auth",
+            client_id,
+            client_secret,
+            configuration["authorization_endpoint"],
+            configuration["token_endpoint"],
+            "login",
+        )
+
+        self._scope = " ".join(
+            sorted(WANTED_SCOPES.intersection(configuration["scopes_supported"]))
+        )
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return {"scope": self._scope, "nonce": self._nonce}
+
+    async def async_generate_authorize_url_with_nonce(
+        self, flow_id: str, nonce: str
+    ) -> str:
+        """Generate an authorize url with a given nonce."""
+        self._nonce = nonce
+        url = await self.async_generate_authorize_url(flow_id)
+        self._nonce = None
+        return url
+
+
 @AUTH_PROVIDERS.register("openid")
 class OpenIdAuthProvider(AuthProvider):
     """Auth provider using openid connect as the authentication source."""
@@ -89,7 +132,7 @@ class OpenIdAuthProvider(AuthProvider):
 
     _configuration: Dict[str, Any]
     _jwks: Dict[str, Any]
-    oauth2: AbstractOAuth2Implementation
+    _oauth2: OpenIdLocalOAuth2Implementation
 
     async def async_get_configuration(self) -> Dict[str, Any]:
         """Get discovery document for OpenID."""
@@ -107,15 +150,6 @@ class OpenIdAuthProvider(AuthProvider):
             data = await response.json()
         return cast(Dict[str, Any], data)
 
-    @property
-    def scope(self) -> str:
-        """Return scopes wanted from endpoint."""
-        return " ".join(
-            sorted(
-                WANTED_SCOPES.intersection(self._configuration["scopes_supported"])
-            )
-        )
-
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
 
@@ -125,23 +159,19 @@ class OpenIdAuthProvider(AuthProvider):
         if not hasattr(self, "_jwks"):
             self._jwks = await self.async_get_jwks()
 
-        self.oauth2 = LocalOAuth2Implementation(
+        self._oauth2 = OpenIdLocalOAuth2Implementation(
             self.hass,
-            "auth",
             self.config[CONF_CLIENT_ID],
             self.config[CONF_CLIENT_SECRET],
-            self._configuration["authorization_endpoint"],
-            self._configuration["token_endpoint"],
+            self._configuration,
         )
 
         async_register_view(self.hass)
 
         return OpenIdLoginFlow(self)
 
-    async def async_validate_token(
-        self, token: Dict[str, Any], nonce: str
-    ) -> Dict[str, Any]:
-        """Validate a token."""
+    def _decode_id_token(self, token: Dict[str, Any], nonce: str) -> Dict[str, Any]:
+        """Decode openid id_token."""
         from jose import jwt  # noqa: pylint: disable=import-outside-toplevel
 
         algorithms = self._configuration["id_token_signing_alg_values_supported"]
@@ -161,6 +191,11 @@ class OpenIdAuthProvider(AuthProvider):
         if id_token.get("nonce") != nonce:
             raise InvalidAuthError("Nonce mismatch in id_token")
 
+        return id_token
+
+    def _authorize_id_token(self, id_token: Dict[str, Any]) -> Dict[str, Any]:
+        """Authorize an id_token according to our internal database."""
+
         if id_token["sub"] in self.config.get(CONF_SUBJECTS, []):
             return id_token
 
@@ -172,6 +207,22 @@ class OpenIdAuthProvider(AuthProvider):
                 return id_token
 
         raise InvalidAuthError(f"Subject {id_token['sub']} is not allowed")
+
+    async def async_generate_authorize_url_with_nonce(
+        self, flow_id: str, nonce: str
+    ) -> str:
+        """Generate an authorize url with a given nonce."""
+        return await self._oauth2.async_generate_authorize_url_with_nonce(
+            flow_id, nonce
+        )
+
+    async def async_authorize_external_data(
+        self, external_data: str, nonce: str
+    ) -> Dict[str, Any]:
+        """Authorize external data."""
+        token = await self._oauth2.async_resolve_external_data(external_data)
+        id_token = self._decode_id_token(token, nonce)
+        return self._authorize_id_token(id_token)
 
     @property
     def support_mfa(self) -> bool:
@@ -217,7 +268,7 @@ class OpenIdLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     external_data: str
-    nonce: str
+    _nonce: str
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -235,9 +286,10 @@ class OpenIdLoginFlow(LoginFlow):
         if user_input:
             self.external_data = str(user_input)
             return self.async_external_step_done(next_step_id="authorize")
-        self.nonce = token_hex()
-        url = await provider.oauth2.async_generate_authorize_url(
-            self.flow_id, flow_type="login", nonce=self.nonce, scope=provider.scope
+
+        self._nonce = token_hex()
+        url = await provider.async_generate_authorize_url_with_nonce(
+            self.flow_id, self._nonce
         )
         return self.async_external_step(step_id="authenticate", url=url)
 
@@ -248,10 +300,9 @@ class OpenIdLoginFlow(LoginFlow):
 
         provider = cast(OpenIdAuthProvider, self._auth_provider)
         try:
-            token = await provider.oauth2.async_resolve_external_data(
-                self.external_data
+            result = await provider.async_authorize_external_data(
+                self.external_data, self._nonce
             )
-            result = await provider.async_validate_token(token, self.nonce)
         except InvalidAuthError as error:
             _LOGGER.error("Login failed: %s", str(error))
             return self.async_abort(reason="invalid_auth")

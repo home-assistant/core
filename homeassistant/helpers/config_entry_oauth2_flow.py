@@ -51,9 +51,6 @@ class AbstractOAuth2Implementation(ABC):
     async def async_generate_authorize_url(
         self,
         flow_id: str,
-        flow_type: Optional[str] = None,
-        nonce: Optional[str] = None,
-        scope: Optional[str] = None,
     ) -> str:
         """Generate a url for the user to authorize.
 
@@ -106,6 +103,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         client_secret: str,
         authorize_url: str,
         token_url: str,
+        flow_type: Optional[str] = None,
     ):
         """Initialize local auth implementation."""
         self.hass = hass
@@ -114,6 +112,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.client_secret = client_secret
         self.authorize_url = authorize_url
         self.token_url = token_url
+        self.flow_type = flow_type
 
     @property
     def name(self) -> str:
@@ -138,25 +137,22 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     async def async_generate_authorize_url(
         self,
         flow_id: str,
-        flow_type: Optional[str] = None,
-        nonce: Optional[str] = None,
-        scope: Optional[str] = None,
     ) -> str:
         """Generate a url for the user to authorize."""
-        query = {
-            "response_type": "code",
-            "client_id": self.client_id,
-            "redirect_uri": self.redirect_uri,
-            "state": _encode_jwt(
-                self.hass, {"flow_id": flow_id, "flow_type": flow_type}
-            ),
-        }
-        if scope:
-            query["scope"] = scope
-        if nonce:
-            query["nonce"] = nonce
-
-        return str(URL(self.authorize_url).with_query(query).update_query(self.extra_authorize_data))
+        return str(
+            URL(self.authorize_url)
+            .with_query(
+                {
+                    "response_type": "code",
+                    "client_id": self.client_id,
+                    "redirect_uri": self.redirect_uri,
+                    "state": _encode_jwt(
+                        self.hass, {"flow_id": flow_id, "flow_type": self.flow_type}
+                    ),
+                }
+            )
+            .update_query(self.extra_authorize_data)
+        )
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
