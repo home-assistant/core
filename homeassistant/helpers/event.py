@@ -851,7 +851,7 @@ class _TrackTemplateResultInfo:
     def _refresh(self, event: Optional[Event]) -> None:
         updates = []
         info_changed = False
-        now = dt_util.utcnow()
+        now = event.time_fired if event else dt_util.utcnow()
 
         for track_template_ in self._track_templates:
             update = self._render_template_if_ready(track_template_, now, event)
