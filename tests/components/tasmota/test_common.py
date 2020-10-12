@@ -50,7 +50,9 @@ DEFAULT_CONFIG = {
         "68": 0,  # Multi-channel PWM instead of a single light
         "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
         "80": 0,  # Blinds and shutters support
+        "82": 0,  # Reduce the CT range from 153..500 to 200.380
     },
+    "ty": 0,  # Tuya MCU
     "lt_st": 0,
     "ver": 1,
 }
