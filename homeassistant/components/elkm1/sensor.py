@@ -62,6 +62,16 @@ class ElkSensor(ElkAttachedEntity):
         """Return the state of the sensor."""
         return self._state
 
+    async def async_zone_bypass(self, code=None):
+        """Bypass zone."""
+        if isinstance(self, ElkZone):
+            self._element.bypass(code)
+
+    async def async_zone_trigger(self):
+        """Trigger zone."""
+        if isinstance(self, ElkZone):
+            self._element.trigger()
+
 
 class ElkCounter(ElkSensor):
     """Representation of an Elk-M1 Counter."""
@@ -226,11 +236,3 @@ class ElkZone(ElkSensor):
             self._state = pretty_const(
                 ZoneLogicalStatus(self._element.logical_status).name
             )
-
-    async def async_zone_bypass(self, code=None):
-        """Bypass zone."""
-        self._element.bypass(code)
-
-    async def async_zone_trigger(self):
-        """Trigger zone."""
-        self._element.trigger()
