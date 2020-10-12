@@ -111,7 +111,7 @@ class NestFlowHandler(
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if self.is_sdm_api():
-            return await super().async_step_init(user_input)
+            return None
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -142,7 +142,7 @@ class NestFlowHandler(
         deliver the authentication code.
         """
         if self.is_sdm_api():
-            return await super().async_step_link(user_input)
+            return None
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
 
@@ -184,8 +184,8 @@ class NestFlowHandler(
 
     async def async_step_import(self, info):
         """Import existing auth from Nest."""
-        if DATA_SDM in self.hass.data[DOMAIN]:
-            return await super().async_step_import(info)
+        if self.is_sdm_api():
+            return None
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
