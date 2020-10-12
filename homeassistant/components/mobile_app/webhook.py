@@ -300,7 +300,7 @@ async def webhook_render_template(hass, config_entry, data):
         try:
             tpl = template.Template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-        except TemplateError as ex:
+        except template.TemplateError as ex:
             resp[key] = {"error": str(ex)}
 
     return webhook_response(resp, registration=config_entry.data)
