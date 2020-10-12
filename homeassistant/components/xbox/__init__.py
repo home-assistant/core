@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["media_player"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

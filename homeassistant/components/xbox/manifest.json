@@ -1,6 +1,6 @@
 {
   "domain": "xbox",
-  "name": "xbox",
+  "name": "Xbox",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xbox",
   "requirements": ["xbox-webapi==2.0.2"],
