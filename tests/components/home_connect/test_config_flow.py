@@ -31,7 +31,9 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     result = await hass.config_entries.flow.async_init(
         "home_connect", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "flow_type": None}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
