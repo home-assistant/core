@@ -2,6 +2,7 @@
 import platform
 import subprocess
 
+import pytest
 import wakeonlan
 
 import homeassistant.components.switch as switch
@@ -17,28 +18,19 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
-TEST_STATE = None
+
+@pytest.fixture
+def mock_send_magic_packet():
+    """Mock magic packet."""
+    with patch("wakeonlan.send_magic_packet"):
+        yield
 
 
 send_magic_packet = Mock(return_value=None)
 
 
-def call(cmd, stdout, stderr):
-    """Return fake subprocess return codes."""
-    if cmd[5] == "validhostname" and TEST_STATE:
-        return 0
-    return 2
-
-
-def system():
-    """Fake system call to test the windows platform."""
-    return "Windows"
-
-
 async def test_valid_hostname(hass):
     """Test with valid hostname."""
-    global TEST_STATE
-    TEST_STATE = False
     assert await async_setup_component(
         hass,
         switch.DOMAIN,
@@ -55,11 +47,7 @@ async def test_valid_hostname(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    TEST_STATE = True
-
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    with patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -84,8 +72,6 @@ async def test_valid_hostname(hass):
 
 async def test_valid_hostname_windows(hass):
     """Test with valid hostname on windows."""
-    global TEST_STATE
-    TEST_STATE = False
     assert await async_setup_component(
         hass,
         switch.DOMAIN,
@@ -102,12 +88,8 @@ async def test_valid_hostname_windows(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    TEST_STATE = True
-
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call), patch.object(
-        platform, "system", new=system
+    with patch.object(subprocess, "call", return_value=0), patch.object(
+        platform, "system", return_value="Windows"
     ):
         await hass.services.async_call(
             switch.DOMAIN,
@@ -122,9 +104,6 @@ async def test_valid_hostname_windows(hass):
 
 async def test_broadcast_config_ip_and_port(hass):
     """Test with broadcast address and broadcast port config."""
-    global TEST_STATE
-    TEST_STATE = False
-
     mac = "00-01-02-03-04-05"
     broadcast_address = "255.255.255.255"
     port = 999
@@ -146,11 +125,9 @@ async def test_broadcast_config_ip_and_port(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    TEST_STATE = True
-
     with patch.object(
         wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    ), patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -188,7 +165,7 @@ async def test_broadcast_config_ip(hass):
 
     with patch.object(
         wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    ), patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -218,7 +195,7 @@ async def test_broadcast_config_port(hass):
 
     with patch.object(
         wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    ), patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -232,8 +209,6 @@ async def test_broadcast_config_port(hass):
 
 async def test_off_script(hass):
     """Test with turn off script."""
-    global TEST_STATE
-    TEST_STATE = False
 
     assert await async_setup_component(
         hass,
@@ -253,11 +228,7 @@ async def test_off_script(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    TEST_STATE = True
-
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    with patch.object(subprocess, "call", return_value=0):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -270,7 +241,7 @@ async def test_off_script(hass):
         assert STATE_ON == state.state
         assert len(calls) == 0
 
-        TEST_STATE = False
+    with patch.object(subprocess, "call", return_value=2):
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -286,8 +257,6 @@ async def test_off_script(hass):
 
 async def test_invalid_hostname_windows(hass):
     """Test with invalid hostname on windows."""
-    global TEST_STATE
-    TEST_STATE = False
 
     assert await async_setup_component(
         hass,
@@ -305,11 +274,7 @@ async def test_invalid_hostname_windows(hass):
     state = hass.states.get("switch.wake_on_lan")
     assert STATE_OFF == state.state
 
-    TEST_STATE = True
-
-    with patch.object(
-        wakeonlan, "send_magic_packet", new=send_magic_packet
-    ), patch.object(subprocess, "call", new=call):
+    with patch.object(subprocess, "call", return_value=2):
 
         await hass.services.async_call(
             switch.DOMAIN,
