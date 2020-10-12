@@ -198,23 +198,17 @@ class VoiceRSSProvider(Provider):
         self._lang = conf[CONF_LANG]
         self.name = "VoiceRSS"
 
+        self._form_data = {
+            "key": conf[CONF_API_KEY],
+            "hl": conf[CONF_LANG],
+            "c": (conf[CONF_CODEC]).upper(),
+            "f": conf[CONF_FORMAT],
+        }
+
         if conf[CONF_VOICE] != "unconfigured":
-            self._form_data = {
-                "key": conf[CONF_API_KEY],
-                "hl": conf[CONF_LANG],
-                "v": conf[CONF_VOICE],
-                "r": conf[CONF_RATE],
-                "c": (conf[CONF_CODEC]).upper(),
-                "f": conf[CONF_FORMAT],
-            }
-        else:
-            self._form_data = {
-                "key": conf[CONF_API_KEY],
-                "hl": conf[CONF_LANG],
-                "r": conf[CONF_RATE],
-                "c": (conf[CONF_CODEC]).upper(),
-                "f": conf[CONF_FORMAT],
-            }
+            self._form_data["v"] = conf[CONF_VOICE]
+        if conf[CONF_RATE] != "0":
+            self._form_data["r"] = conf[CONF_RATE]
 
     @property
     def default_language(self):
