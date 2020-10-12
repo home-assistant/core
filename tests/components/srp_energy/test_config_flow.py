@@ -4,6 +4,7 @@ from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -45,3 +46,18 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_integration_already_configured(hass):
+    """Test integration is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"

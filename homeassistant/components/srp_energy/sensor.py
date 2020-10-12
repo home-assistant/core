@@ -26,7 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SRP Energy Usage sensor."""
     # API object stored here by __init__.py
+    is_time_of_use = False
     api = hass.data[DOMAIN]
+    if entry and entry.data:
+        is_time_of_use = entry.data["is_tou"]
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -43,7 +46,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             end_date = datetime.now()
             with async_timeout.timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
-                    api.usage, start_date, end_date
+                    api.usage,
+                    start_date,
+                    end_date,
+                    is_time_of_use,
                 )
 
                 previous_daily_usage = 0.0
@@ -109,7 +115,7 @@ class SrpEntity(entity.Entity):
     @property
     def usage(self):
         """Return entity state."""
-        return self.coordinator.data
+        return "{0:.2f}".format(self.coordinator.data)
 
     @property
     def should_poll(self):
