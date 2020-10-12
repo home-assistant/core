@@ -12,15 +12,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up harmony activity switches."""
-    # TODO
-    _LOGGER.warn("Loading the switch for harmony")
-
     device = hass.data[DOMAIN][entry.entry_id]
     activities = device.activity_names
 
     switches = []
     for activity in activities:
-        switches.append(HarmonyActivitySwitch(activity, activity, device))
+        switches.append(HarmonyActivitySwitch(activity, device))
 
     async_add_entities(switches, True)
 
@@ -28,9 +25,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HarmonyActivitySwitch(SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, name, activity, device):
+    def __init__(self, activity, device):
         """Initialize HarmonyActivitySwitch class."""
-        self._name = name
         self._activity = activity
         self._device = device
         self._state = False
@@ -40,7 +36,7 @@ class HarmonyActivitySwitch(SwitchEntity):
     @property
     def name(self):
         """Return the Harmony activity's name."""
-        return self._name
+        return self._activity
 
     @property
     def unique_id(self):
