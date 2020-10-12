@@ -45,13 +45,11 @@ class SimplisafeFreezeSensor(SimpliSafeEntity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._sensor.serial)},
-            "manufacturer": "SimpliSafe",
-            "model": "Freeze Sensor",
-            "name": self._sensor.name,
-            "via_device": (DOMAIN, self._system.serial),
-        }
+        info = super().device_info
+        info["identifiers"] = {(DOMAIN, self._sensor.serial)}
+        info["model"] = "Freeze Sensor"
+        info["name"] = self._sensor.name
+        return info
 
     @property
     def unit_of_measurement(self):
