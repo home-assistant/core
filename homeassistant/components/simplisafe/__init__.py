@@ -526,7 +526,7 @@ class SimpliSafe:
 
         async def update_system(system):
             """Update a system."""
-            await system.update()
+            await system.update(cached=False)
             self._async_process_new_notifications(system)
             LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
