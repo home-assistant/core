@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # First we'll grab as many devices as we can find on the network
     # it's necessary to bind static devices anyway
-    _LOGGER.debug("Scanning network for Gree devices...")
+    _LOGGER.debug("Scanning network for Gree devices")
 
     try:
         for device_info in await DeviceHelper.find_devices():
