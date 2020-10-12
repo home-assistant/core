@@ -49,7 +49,8 @@ async def async_setup(hass, config):
         # Note that we'll get a "None" value for a successful call
         if None not in results:
             if skip_reload:
-                return await hue_activate_scene(call, skip_reload=False)
+                await hue_activate_scene(call, skip_reload=False)
+                return
             _LOGGER.warning(
                 "No bridge was able to activate " "scene %s in group %s",
                 scene_name,
