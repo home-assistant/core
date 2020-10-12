@@ -139,6 +139,9 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         flow_id: str,
     ) -> str:
         """Generate a url for the user to authorize."""
+        state = {"flow_id": flow_id}
+        if self.flow_type:
+            state["flow_type"] = self.flow_type
         return str(
             URL(self.authorize_url)
             .with_query(
@@ -146,9 +149,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                     "response_type": "code",
                     "client_id": self.client_id,
                     "redirect_uri": self.redirect_uri,
-                    "state": _encode_jwt(
-                        self.hass, {"flow_id": flow_id, "flow_type": self.flow_type}
-                    ),
+                    "state": _encode_jwt(self.hass, state),
                 }
             )
             .update_query(self.extra_authorize_data)
