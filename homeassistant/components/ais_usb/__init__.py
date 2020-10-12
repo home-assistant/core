@@ -355,7 +355,10 @@ def _lsusb():
     device_re = re.compile(
         r"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
     )
-    df = subprocess.check_output("lsusb")
+    if ais_global.has_root():
+        df = subprocess.check_output("su -c lsusb")
+    else:
+        df = subprocess.check_output("lsusb")
     devices = []
     for i in df.decode("utf-8").split("\n"):
         if i:
