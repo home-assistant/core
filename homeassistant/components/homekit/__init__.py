@@ -616,7 +616,8 @@ class HomeKit:
             dev_reg.async_remove_device(device_id)
 
     def _start(self, bridged_states):
-        from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+        # pylint: disable=unused-import, import-outside-toplevel
+        from . import (  # noqa: F401
             type_cameras,
             type_covers,
             type_fans,
@@ -636,7 +637,6 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
             self.driver.add_accessory(acc)
         else:
-            # pylint: disable=import-outside-toplevel
             from .accessories import HomeBridge
 
             self.bridge = HomeBridge(self.hass, self.driver, self._name)
