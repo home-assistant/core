@@ -331,7 +331,7 @@ class Template:
 
         try:
             render_result = compiled.render(kwargs)
-        except jinja2.TemplateError as err:
+        except Exception as err:  # pylint: disable=broad-except
             raise TemplateError(err) from err
 
         render_result = render_result.strip()
