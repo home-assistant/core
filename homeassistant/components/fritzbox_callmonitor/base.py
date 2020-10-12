@@ -21,6 +21,7 @@ class FritzBoxPhonebook:
         self.phonebook_dict = None
         self.number_dict = None
         self.prefixes = prefixes
+        self.fph = None
 
     def init_phonebook(self):
         """Establish a connection to the FRITZ!Box and check if phonebook_id is valid."""
