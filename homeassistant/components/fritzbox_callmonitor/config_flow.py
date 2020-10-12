@@ -31,7 +31,7 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
-RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_INVALID_AUTH = "inprefixid_auth"
 RESULT_NO_DEVIES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
@@ -112,10 +112,9 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._prefixes = user_input.get(CONF_PREFIXES)
 
             if self._prefixes and self._prefixes.strip():
-                self._prefixes = self._prefixes.split(",")
-
-                for i in range(len(self._prefixes)):
-                    self._prefixes[i] = self._prefixes[i].strip()
+                self._prefixes = [
+                    prefix.strip() for prefix in self._prefixes.split(",")
+                ]
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
