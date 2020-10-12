@@ -12,7 +12,7 @@
     "zigpy==0.26.0",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.6.2",
-    "zigpy-znp==0.2.1"
+    "zigpy-znp==0.2.2"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"]
 }
