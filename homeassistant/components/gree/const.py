@@ -2,8 +2,6 @@
 
 DOMAIN = "gree"
 
-CONNECTION_NETWORK_MAC = "mac"
-
 FAN_MEDIUM_LOW = "medium low"
 FAN_MEDIUM_HIGH = "medium high"
 
