@@ -817,6 +817,8 @@ class _TrackTemplateResultInfo:
                 now,
                 self._refresh,
                 event,
+                (track_template_,),
+                True,
             ):
                 return False
 
@@ -848,12 +850,29 @@ class _TrackTemplateResultInfo:
         return TrackTemplateResult(template, last_result, result)
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
+    def _refresh(
+        self,
+        event: Optional[Event],
+        track_templates: Optional[Iterable[TrackTemplate]] = None,
+        replayed: Optional[bool] = False,
+    ) -> None:
+        """Refresh the template.
+
+        The event is the state_changed event that caused the refresh
+        to be considered.
+
+        track_templates is an optional list of TrackTemplate objects
+        to refresh.  If not provided, all tracked templates will be
+        considered.
+
+        replayed is True if the event is being replayed because the
+        rate limit was hit.
+        """
         updates = []
         info_changed = False
-        now = event.time_fired if event else dt_util.utcnow()
+        now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        for track_template_ in self._track_templates:
+        for track_template_ in track_templates or self._track_templates:
             update = self._render_template_if_ready(track_template_, now, event)
             if not update:
                 continue
