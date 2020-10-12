@@ -1,14 +1,10 @@
 """Xbox Media Player Support."""
 import logging
-from typing import Optional
+import re
+from typing import List, Optional
 
 from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.models import (
-    AlternateIdType,
-    CatalogResponse,
-    Image,
-    Product,
-)
+from xbox.webapi.api.provider.catalog.models import AlternateIdType, Image, Product
 from xbox.webapi.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
@@ -20,6 +16,8 @@ from xbox.webapi.api.provider.smartglass.models import (
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_GAME,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -37,7 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from .const import DOMAIN, HOME_BIG_ID
+from .const import APP_LEGACY_MAP, DOMAIN, HOME_LEGACY_PRODUCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,14 +109,28 @@ class XboxMediaPlayer(MediaPlayerEntity):
         return active_support
 
     @property
+    def media_content_type(self):
+        """Media content type."""
+        if self._app_details and self._app_details.product_family == "Games":
+            return MEDIA_TYPE_GAME
+        return MEDIA_TYPE_APP
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        if self._app_details:
+            return self._app_details.localized_properties[0].short_title
+        return None
+
+    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self._app_details:
-            image: Image = next(
-                image
-                for image in self._app_details.localized_properties.images
-                if image.width >= 300 and image.image_purpose in ["Logo", "BoxArt"]
-            )
+            image = _find_media_image(self._app_details.localized_properties[0].images)
+
+            if not image:
+                return None
+
             url = image.uri
             if url[0] == "/":
                 url = f"http:{url}"
@@ -136,22 +148,33 @@ class XboxMediaPlayer(MediaPlayerEntity):
             await self.client.smartglass.get_console_status(self._console.id)
         )
 
-        catalog_result: CatalogResponse = None
-        if not status.focus_app_aumid:
-            catalog_result = await self.client.catalog.get_products([HOME_BIG_ID])
-        elif (
-            not self._console_status
-            or status.focus_app_aumid != self._console_status.focus_app_aumid
-        ):
-            catalog_result = await self.client.catalog.get_product_from_alternate_id(
-                status.focus_app_aumid.split("!")[0],
-                AlternateIdType.PACKAGE_FAMILY_NAME,
-            )
-
-        if catalog_result and len(catalog_result.products):
-            self._app_details = catalog_result.products[0]
+        if status.focus_app_aumid:
+            if (
+                not self._console_status
+                or status.focus_app_aumid != self._console_status.focus_app_aumid
+            ):
+                app_id = status.focus_app_aumid.split("!")[0]
+                id_type = AlternateIdType.PACKAGE_FAMILY_NAME
+                if app_id in APP_LEGACY_MAP:
+                    app_id = APP_LEGACY_MAP[app_id]
+                    id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+                catalog_result = (
+                    await self.client.catalog.get_product_from_alternate_id(
+                        app_id, id_type
+                    )
+                )
+                if catalog_result and len(catalog_result.products):
+                    self._app_details = catalog_result.products[0]
+                else:
+                    self._app_details = None
         else:
-            self._app_details = None
+            if self.media_title != "Home":
+                catalog_result = (
+                    await self.client.catalog.get_product_from_alternate_id(
+                        HOME_LEGACY_PRODUCT_ID, AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+                    )
+                )
+                self._app_details = catalog_result.products[0]
 
         self._console_status = status
 
@@ -190,3 +213,29 @@ class XboxMediaPlayer(MediaPlayerEntity):
     async def async_media_next_track(self):
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        # Turns "XboxOneX" into "Xbox One X" for display
+        matches = re.finditer(
+            ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
+            self._console.console_type,
+        )
+        model = " ".join([m.group(0) for m in matches])
+
+        return {
+            "identifiers": {(DOMAIN, self._console.id)},
+            "name": self.name,
+            "manufacturer": "Microsoft",
+            "model": model,
+        }
+
+
+def _find_media_image(images=List[Image]) -> Optional[Image]:
+    purpose_order = ["FeaturePromotionalSquareArt", "Logo", "BoxArt"]
+    for purpose in purpose_order:
+        for image in images:
+            if image.image_purpose == purpose and image.width >= 300:
+                return image
+    return None

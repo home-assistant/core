@@ -3,7 +3,7 @@
   "name": "Xbox",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xbox",
-  "requirements": ["xbox-webapi==2.0.2"],
+  "requirements": ["xbox-webapi==2.0.5"],
   "dependencies": ["http"],
   "codeowners": ["@hunterjm"]
 }
