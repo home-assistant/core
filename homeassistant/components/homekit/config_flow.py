@@ -1,5 +1,4 @@
 """Config flow for HomeKit integration."""
-import logging
 import random
 import string
 
@@ -35,8 +34,6 @@ from .const import (
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 from .util import find_next_available_port
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"

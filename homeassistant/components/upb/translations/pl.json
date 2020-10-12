@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "address_already_configured": "UPB PIM z takim adresem jest ju\u017c skonfigurowany",
-            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z UPB PIM, spr\u00f3buj ponownie.",

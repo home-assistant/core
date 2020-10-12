@@ -56,6 +56,9 @@ adext==0.3
 # homeassistant.components.adguard
 adguardhome==0.4.2
 
+# homeassistant.components.advantage_air
+advantage_air==0.2.1
+
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
 
@@ -207,7 +210,7 @@ bravia-tv==1.0.6
 broadlink==0.15.0
 
 # homeassistant.components.brother
-brother==0.1.17
+brother==0.1.18
 
 # homeassistant.components.bsblan
 bsblan==0.3.7
@@ -361,7 +364,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.0
 
 # homeassistant.components.tasmota
-hatasmota==0.0.10
+hatasmota==0.0.13
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -1106,7 +1109,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.1
+zigpy-znp==0.2.2
 
 # homeassistant.components.zha
 zigpy==0.26.0

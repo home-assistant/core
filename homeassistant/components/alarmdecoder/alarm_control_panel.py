@@ -1,6 +1,4 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -35,8 +33,6 @@ from .const import (
     OPTIONS_ARM,
     SIGNAL_PANEL_MESSAGE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
 

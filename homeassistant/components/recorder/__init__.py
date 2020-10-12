@@ -48,7 +48,7 @@ ATTR_REPACK = "repack"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
     }
 )
@@ -92,13 +92,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
                     vol.Optional(CONF_DB_URL): cv.string,
                     vol.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,

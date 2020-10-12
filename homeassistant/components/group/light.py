@@ -2,7 +2,6 @@
 import asyncio
 from collections import Counter
 import itertools
-import logging
 from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
@@ -46,8 +45,6 @@ from . import GroupEntity
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Group"
 

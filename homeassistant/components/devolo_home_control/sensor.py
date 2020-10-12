@@ -1,6 +1,4 @@
 """Platform for sensor integration."""
-import logging
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -14,8 +12,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_MAPPING = {
     "battery": DEVICE_CLASS_BATTERY,

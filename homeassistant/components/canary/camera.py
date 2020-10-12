@@ -1,7 +1,6 @@
 """Support for Canary camera."""
 import asyncio
 from datetime import timedelta
-import logging
 from typing import Callable, List
 
 from haffmpeg.camera import CameraMjpeg
@@ -27,8 +26,6 @@ from .const import (
     MANUFACTURER,
 )
 from .coordinator import CanaryDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 

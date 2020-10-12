@@ -1,6 +1,4 @@
 """Support for MyQ gateways."""
-import logging
-
 from pymyq.const import (
     DEVICE_FAMILY as MYQ_DEVICE_FAMILY,
     DEVICE_FAMILY_GATEWAY as MYQ_DEVICE_FAMILY_GATEWAY,
@@ -17,8 +15,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -1,6 +1,4 @@
 """Support for interfacing with an instance of getchannels.com."""
-import logging
-
 from pychannels import Channels
 import voluptuous as vol
 
@@ -30,8 +28,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"

@@ -15,9 +15,9 @@
             "edit": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "port": "Port",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Edycja informacji o po\u0142\u0105czeniu"
             },

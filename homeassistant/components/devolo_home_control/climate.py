@@ -1,5 +1,4 @@
 """Platform for climate integration."""
-import logging
 from typing import List, Optional
 
 from homeassistant.components.climate import (
@@ -15,8 +14,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

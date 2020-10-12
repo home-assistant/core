@@ -3,7 +3,7 @@
         "abort": {
             "auth_failed": "Viga tuvastamisel",
             "cannot_connect": "\u00dchendamine nurjus",
-            "conn_error": "\u00dchendamine eba\u00f5nnestus",
+            "conn_error": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
         },
@@ -20,7 +20,8 @@
                     "platform": "\u00c4pp kus teie konto registreeriti",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma Tuya konto andmed."
+                "description": "Sisestage oma Tuya konto andmed.",
+                "title": ""
             }
         }
     }

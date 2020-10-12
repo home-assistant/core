@@ -115,7 +115,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
     ),
-    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,

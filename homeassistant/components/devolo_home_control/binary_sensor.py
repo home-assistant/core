@@ -1,6 +1,4 @@
 """Platform for binary sensor integration."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_HEAT,
@@ -14,8 +12,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_MAPPING = {
     "Water alarm": DEVICE_CLASS_MOISTURE,
