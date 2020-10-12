@@ -4,6 +4,7 @@ import re
 from typing import List, Optional
 
 from xbox.webapi.api.client import XboxLiveClient
+from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Image, Product
 from xbox.webapi.api.provider.smartglass.models import (
     PlaybackState,
@@ -29,7 +30,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 
-from .const import APP_LEGACY_MAP, DOMAIN, HOME_LEGACY_PRODUCT_ID
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,9 +153,9 @@ class XboxMediaPlayer(MediaPlayerEntity):
             ):
                 app_id = status.focus_app_aumid.split("!")[0]
                 id_type = AlternateIdType.PACKAGE_FAMILY_NAME
-                if app_id in APP_LEGACY_MAP:
-                    app_id = APP_LEGACY_MAP[app_id]
+                if app_id in SYSTEM_PFN_ID_MAP:
                     id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+                    app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
                 catalog_result = (
                     await self.client.catalog.get_product_from_alternate_id(
                         app_id, id_type
@@ -166,9 +167,10 @@ class XboxMediaPlayer(MediaPlayerEntity):
                     self._app_details = None
         else:
             if self.media_title != "Home":
+                id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
                 catalog_result = (
                     await self.client.catalog.get_product_from_alternate_id(
-                        HOME_LEGACY_PRODUCT_ID, AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+                        HOME_APP_IDS[id_type], id_type
                     )
                 )
                 self._app_details = catalog_result.products[0]
