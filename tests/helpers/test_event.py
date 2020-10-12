@@ -957,7 +957,7 @@ async def test_track_template_result_complex(hass):
         "all": True,
         "domains": set(),
         "entities": set(),
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "light")
@@ -969,7 +969,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"light"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "lock")
@@ -980,7 +980,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"lock"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "all")
@@ -993,7 +993,7 @@ async def test_track_template_result_complex(hass):
         "all": True,
         "domains": set(),
         "entities": set(),
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "light")
@@ -1004,7 +1004,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"light"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("light.two", "on")
@@ -1017,7 +1017,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"light"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("light.three", "on")
@@ -1031,7 +1031,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"light"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "lock")
@@ -1042,7 +1042,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"lock"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "single_binary_sensor")
@@ -1053,7 +1053,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": set(),
         "entities": {"binary_sensor.single", "sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("binary_sensor.single", "binary_sensor_on")
@@ -1064,7 +1064,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": set(),
         "entities": {"binary_sensor.single", "sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.domain", "lock")
@@ -1075,7 +1075,7 @@ async def test_track_template_result_complex(hass):
         "all": False,
         "domains": {"lock"},
         "entities": {"sensor.domain"},
-        "time_patterns": [],
+        "time": False,
     }
 
 
@@ -1112,7 +1112,7 @@ async def test_track_template_result_with_wildcard(hass):
         "all": True,
         "domains": set(),
         "entities": set(),
-        "time_patterns": [],
+        "time": False,
     }
 
     assert "cover.office_drapes=closed" in specific_runs[0]
@@ -1162,7 +1162,7 @@ async def test_track_template_result_with_group(hass):
             "sensor.power_2",
             "sensor.power_3",
         },
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.power_1", 100.1)
@@ -1213,7 +1213,7 @@ async def test_track_template_result_and_conditional(hass):
         "all": False,
         "domains": set(),
         "entities": {"light.a"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("light.b", "on")
@@ -1228,7 +1228,7 @@ async def test_track_template_result_and_conditional(hass):
         "all": False,
         "domains": set(),
         "entities": {"light.a", "light.b"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("light.b", "off")
@@ -1239,7 +1239,7 @@ async def test_track_template_result_and_conditional(hass):
         "all": False,
         "domains": set(),
         "entities": {"light.a", "light.b"},
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("light.a", "off")
@@ -1317,7 +1317,7 @@ async def test_track_template_result_iterator(hass):
         "all": False,
         "domains": {"sensor"},
         "entities": set(),
-        "time_patterns": [],
+        "time": False,
     }
 
     hass.states.async_set("sensor.test", 6)
@@ -1939,7 +1939,7 @@ async def test_track_template_with_time(hass):
         "all": False,
         "domains": set(),
         "entities": {"switch.test"},
-        "time_patterns": [{"hour": "*", "minute": "*", "second": 0}],
+        "time": True,
     }
 
     await hass.async_block_till_done()
@@ -1969,7 +1969,7 @@ async def test_track_template_with_time_default(hass):
         "all": False,
         "domains": set(),
         "entities": set(),
-        "time_patterns": [{"hour": "*", "minute": "*", "second": 0}],
+        "time": True,
     }
 
     await hass.async_block_till_done()
@@ -2021,7 +2021,7 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(h
         "all": False,
         "domains": set(),
         "entities": {"switch.test"},
-        "time_patterns": [{"hour": "*", "minute": "*", "second": 0}],
+        "time": True,
     }
     hass.states.async_set("switch.test", "on")
     await hass.async_block_till_done()

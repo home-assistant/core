@@ -2643,15 +2643,3 @@ async def test_legacy_templates(hass):
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
     )
-
-
-async def test_template_with_now_has_default_time_pattern(hass):
-    """Test that a template with now has a time pattern tracker."""
-
-    info = render_to_info(hass, "{{ now() }}")
-    assert info.rate_limit is None
-    assert info.time_pattern == template.DEFAULT_TIME_PATTERN
-
-    info = render_to_info(hass, "{{ utcnow() }}")
-    assert info.rate_limit is None
-    assert info.time_pattern == template.DEFAULT_TIME_PATTERN
