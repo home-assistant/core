@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "no_devices_found": "[%key::common::config_flow::abort::no_devices_found%]",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "not_found": "W sieci nie znaleziono obs\u0142ugiwanego urz\u0105dzenia AVM FRITZ!Box.",
             "not_supported": "Po\u0142\u0105czony z AVM FRITZ! Box, ale nie jest w stanie kontrolowa\u0107 urz\u0105dze\u0144 Smart Home."
         },

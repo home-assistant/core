@@ -2,6 +2,18 @@
     "config": {
         "abort": {
             "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": "",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                }
+            }
         }
     }
 }

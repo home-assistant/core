@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
-            "already_in_progress": "[%key::common::config_flow::abort::already_in_progress%]",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_host": "[%key::common::config_flow::error::invalid_host%]",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
             "not_supported": "Urz\u0105dzenie nie jest obs\u0142ugiwane",
-            "unknown": "[%key::common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
-            "unknown": "[%key::common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "{name} ({model}, IP: {host})",
         "step": {
