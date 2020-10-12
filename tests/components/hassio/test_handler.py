@@ -3,27 +3,7 @@
 import aiohttp
 import pytest
 
-from homeassistant.components.hassio.handler import HassioAPIError, api_valid
-
-
-async def test_api_valid():
-    """Test the api_valid helper."""
-
-    async def api_command(result):
-        """Simulate an api command."""
-        return result
-
-    api_call = api_valid(api_command)
-
-    result = await api_call({"result": "ok", "message": "api call is ok"})
-
-    assert result["result"] == "ok"
-    assert result["message"] == "api call is ok"
-
-    with pytest.raises(HassioAPIError) as exc_info:
-        await api_call({"result": "error", "message": "api call is invalid"})
-
-    assert str(exc_info.value) == "api call is invalid"
+from homeassistant.components.hassio.handler import HassioAPIError
 
 
 async def test_api_ping(hassio_handler, aioclient_mock):
