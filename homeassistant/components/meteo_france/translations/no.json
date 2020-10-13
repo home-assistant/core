@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Byen er allerede konfigurert",
+            "already_configured": "Plasseringen er allerede konfigurert",
             "unknown": "Uventet feil"
         },
         "error": {
@@ -13,7 +13,7 @@
                     "city": "By"
                 },
                 "description": "Velg din by fra listen",
-                "title": "M\u00e9t\u00e9o-France"
+                "title": ""
             },
             "user": {
                 "data": {

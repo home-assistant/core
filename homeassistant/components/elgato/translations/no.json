@@ -9,7 +9,7 @@
             "cannot_connect": "Tilkobling mislyktes.",
             "connection_error": "Kunne ikke koble til Elgato Key Light-enheten."
         },
-        "flow_title": "Elgato Key Light: {serial_number}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

@@ -20,10 +20,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Navn p\u00e5 omr\u00e5det",
-                    "lat_ne": "Breddegrad nord-\u00f8st",
-                    "lat_sw": "Breddegrad s\u00f8r-vest",
-                    "lon_ne": "Lengdegrad nord-\u00f8st",
-                    "lon_sw": "Lengdegrad s\u00f8r-vest",
+                    "lat_ne": "Breddegrad Nord-\u00d8st hj\u00f8rne",
+                    "lat_sw": "Breddegrad S\u00f8r-Vest hj\u00f8rne",
+                    "lon_ne": "Lengdegrad Nord-\u00d8st hj\u00f8rne",
+                    "lon_sw": "Lengdegrad S\u00f8r-Vest hj\u00f8rne",
                     "mode": "Beregning",
                     "show_on_map": "Vis p\u00e5 kart"
                 },

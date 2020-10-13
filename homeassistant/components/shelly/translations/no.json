@@ -10,7 +10,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "",
         "step": {
             "confirm_discovery": {
                 "description": "Vil du konfigurere {model} p\u00e5 {host} ?\n\n F\u00f8r du setter opp, m\u00e5 den batteridrevne enheten vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
@@ -29,5 +29,5 @@
             }
         }
     },
-    "title": "Shelly"
+    "title": ""
 }

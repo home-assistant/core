@@ -20,7 +20,7 @@
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie.",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },
-        "flow_title": "Akcesoria HomeKit: {name}",
+        "flow_title": "{name} poprzez akcesorium HomeKit",
         "step": {
             "busy_error": {
                 "description": "Przerwij parowanie we wszystkich kontrolerach lub spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie wzn\u00f3w parowanie.",
@@ -34,8 +34,8 @@
                 "data": {
                     "pairing_code": "Kod parowania"
                 },
-                "description": "Wprowad\u017a kod parowania HomeKit, aby u\u017cy\u0107 tego akcesorium",
-                "title": "Sparuj z akcesorium HomeKit"
+                "description": "Kontroler HomeKit komunikuje si\u0119 z {name} poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wprowad\u017a kod parowania (w formacie XXX-XX-XXX), aby u\u017cy\u0107 tego akcesorium. Ten kod zazwyczaj znajduje si\u0119 na samym urz\u0105dzeniu lub w jego opakowaniu.",
+                "title": "Sparuj z urz\u0105dzeniem poprzez akcesorium HomeKit"
             },
             "protocol_error": {
                 "description": "Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i mo\u017ce wymaga\u0107 fizycznego lub wirtualnego naci\u015bni\u0119cia przycisku. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w trybie parowania lub spr\u00f3buj je ponownie uruchomi\u0107, a nast\u0119pnie wzn\u00f3w parowanie.",
@@ -49,8 +49,8 @@
                 "data": {
                     "device": "Urz\u0105dzenie"
                 },
-                "description": "Wybierz urz\u0105dzenie, kt\u00f3re chcesz sparowa\u0107",
-                "title": "Sparuj z akcesorium HomeKit"
+                "description": "Kontroler HomeKit komunikuje si\u0119 poprzez sie\u0107 lokaln\u0105 za pomoc\u0105 bezpiecznego, szyfrowanego po\u0142\u0105czenia bez oddzielnego kontrolera HomeKit lub iCloud. Wybierz urz\u0105dzenie, kt\u00f3re chcesz sparowa\u0107:",
+                "title": "Wyb\u00f3r urz\u0105dzenia"
             }
         }
     },
@@ -74,5 +74,5 @@
             "single_press": "\"{subtype}\" naci\u015bni\u0119ty"
         }
     },
-    "title": "Akcesorium HomeKit"
+    "title": "Kontroler HomeKit"
 }

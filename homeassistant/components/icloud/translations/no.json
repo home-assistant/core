@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert"
+            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert",
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
@@ -11,6 +12,13 @@
             "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Ditt tidligere angitte passord for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
+                "title": "iCloud-legitimasjon"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "P\u00e5litelig enhet"

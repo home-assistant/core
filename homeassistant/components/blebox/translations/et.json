@@ -6,14 +6,18 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "unknown": "Tundmatu viga"
+            "unknown": "Tundmatu viga",
+            "unsupported_version": "BleBoxi seadmel on vananenud p\u00fcsivara. Esmalt v\u00e4rskenda seda."
         },
         "flow_title": "BleBoxi seade: {name} ( {host} )",
         "step": {
             "user": {
                 "data": {
-                    "host": "IP aadress"
-                }
+                    "host": "IP aadress",
+                    "port": ""
+                },
+                "description": "Seadista oma BleBox sidumine Home Assistant-iga.",
+                "title": "Seadista BleBox seade"
             }
         }
     }

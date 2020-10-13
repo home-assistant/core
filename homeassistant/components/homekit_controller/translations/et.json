@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Lisaseade on selle kontrolleriga juba seadistatud.",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "already_paired": "See lisaseade on juba teise seadmega seotud. L\u00e4htesta lisaseade ja proovi uuesti.",
             "invalid_properties": "Seade tagastas vigase oleku."
         }
     },
