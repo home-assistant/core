@@ -56,6 +56,7 @@ SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
 SERVICE_ALARM_BYPASS = "alarm_bypass"
 SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ElkM1 alarm platform."""
     elk_data = hass.data[DOMAIN][config_entry.entry_id]
