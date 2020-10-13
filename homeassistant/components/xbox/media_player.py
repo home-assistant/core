@@ -19,9 +19,11 @@ from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
     MEDIA_TYPE_GAME,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -30,6 +32,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 
+from .browse_media import build_item_response
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +46,8 @@ SUPPORT_XBOX = (
     | SUPPORT_PAUSE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
+    | SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PLAY_MEDIA
 )
 
 XBOX_STATE_MAP = {
@@ -215,6 +220,25 @@ class XboxMediaPlayer(MediaPlayerEntity):
     async def async_media_next_track(self):
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await build_item_response(
+            self.client,
+            self._console.id,
+            self._console_status.is_tv_configured,
+            media_content_type,
+            media_content_id,
+        )
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Launch an app on the Xbox."""
+        if media_id == "Home":
+            await self.client.smartglass.go_home(self._console.id)
+        elif media_id == "TV":
+            await self.client.smartglass.show_tv_guide(self._console.id)
+        else:
+            await self.client.smartglass.launch_app(self._console.id, media_id)
 
     @property
     def device_info(self):
