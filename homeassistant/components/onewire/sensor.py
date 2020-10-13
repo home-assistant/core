@@ -302,9 +302,7 @@ class OneWireProxy(OneWire):
 
     def _read_value_ownet(self):
         """Read a value from the owserver."""
-        if self._owproxy:
-            return self._owproxy.read(self._device_file).decode().lstrip()
-        return None
+        return self._owproxy.read(self._device_file).decode().lstrip()
 
     def update(self):
         """Get the latest data from the device."""
