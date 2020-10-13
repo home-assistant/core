@@ -157,8 +157,8 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         phonebooks = []
 
-        for id in self._phonebook_ids:
-            phonebooks.append(await self._get_name_of_phonebook(id))
+        for phonebook_id in self._phonebook_ids:
+            phonebooks.append(await self._get_name_of_phonebook(phonebook_id))
 
         if user_input is not None:
             phonebook_name = user_input[CONF_PHONEBOOK]
