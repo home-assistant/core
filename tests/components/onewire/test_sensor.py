@@ -5,8 +5,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
-OWFS_MOUNT_DIR = "/mnt/OneWireTest"
-
 
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
@@ -24,14 +22,6 @@ async def test_setup_sysbus(hass):
             "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
         }
     }
-    with assert_setup_component(1, "sensor"):
-        assert await async_setup_component(hass, sensor.DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_setup_owfs(hass):
-    """Test setup with OWFS configuration."""
-    config = {"sensor": {"platform": "onewire", "mount_dir": OWFS_MOUNT_DIR}}
     with assert_setup_component(1, "sensor"):
         assert await async_setup_component(hass, sensor.DOMAIN, config)
     await hass.async_block_till_done()

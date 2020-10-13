@@ -145,7 +145,9 @@ def get_entities(config):
         conf_type = CONF_TYPE_OWSERVER
     elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
         conf_type = CONF_TYPE_SYSBUS
-    else:
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         conf_type = CONF_TYPE_OWFS
 
     entities = []
