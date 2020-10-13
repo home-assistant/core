@@ -138,7 +138,7 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(
+            return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
                 platform.setup_platform,  # type: ignore
                 hass,
