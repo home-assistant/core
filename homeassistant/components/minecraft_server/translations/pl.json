@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_service%]"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
             "cannot_connect": "B\u0142\u0105d po\u0142\u0105czenia z serwerem. Sprawd\u017a adres hosta i port i spr\u00f3buj ponownie. Upewnij si\u0119 tak\u017ce, \u017ce na serwerze dzia\u0142a Minecraft w wersji przynajmniej 1.7.",

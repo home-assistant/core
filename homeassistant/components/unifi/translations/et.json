@@ -13,6 +13,7 @@
                 "data": {
                     "host": "",
                     "password": "Salas\u00f5na",
+                    "port": "",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }

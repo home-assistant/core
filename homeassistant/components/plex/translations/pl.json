@@ -6,7 +6,7 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",
-            "unknown": "[%key::common::config_flow::error::unknown%]"
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "faulty_credentials": "Autoryzacja nie powiod\u0142a si\u0119, sprawd\u017a token",

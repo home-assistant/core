@@ -208,7 +208,7 @@ class LgTVDevice(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the media player."""
         if self._on_action_script:
-            self._on_action_script.run()
+            self._on_action_script.run(context=self._context)
 
     def volume_up(self):
         """Volume up the media player."""

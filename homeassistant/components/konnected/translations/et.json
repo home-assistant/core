@@ -14,7 +14,8 @@
             },
             "user": {
                 "data": {
-                    "host": "IP aadress"
+                    "host": "IP aadress",
+                    "port": ""
                 },
                 "description": "Palun sisesta oma Konnected Paneli hostiinfo."
             }

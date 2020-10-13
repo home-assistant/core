@@ -8,7 +8,7 @@
             "cannot_connect": "Tilkobling mislyktes.",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "",
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",
