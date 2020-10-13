@@ -33,10 +33,8 @@ def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
     with patch(
         "homeassistant.components.point.config_flow.PointSession"
     ) as PointSession:
-        PointSession.return_value.get_access_token = (
-            AsyncMock(
-                return_value={"access_token": "boo"}
-            )
+        PointSession.return_value.get_access_token = AsyncMock(
+            return_value={"access_token": "boo"}
         )
         PointSession.return_value.is_authorized = is_authorized
         PointSession.return_value.user = AsyncMock(
