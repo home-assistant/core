@@ -317,7 +317,7 @@ class EntityPlatform:
             )
         except Exception:
             self.logger.exception(
-                "Error adding adding entities for domain %s with platform %s",
+                "Error adding entities for domain %s with platform %s",
                 self.domain,
                 self.platform_name
             )
