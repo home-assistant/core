@@ -43,6 +43,13 @@ def disable_debounce():
         yield
 
 
+@pytest.fixture(autouse=True)
+def disable_status_sensor():
+    """Disable Tasmota status sensor."""
+    with patch("hatasmota.discovery.get_status_sensor_entities", return_value=[]):
+        yield
+
+
 async def setup_tasmota_helper(hass):
     """Set up Tasmota."""
     hass.config.components.add("tasmota")
