@@ -1,0 +1,15 @@
+name: hadolint
+on:
+  push:
+    branches:
+      - master
+      - dev
+      - rc
+  pull_request:
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: brpaz/hadolint-action@v1.1.0
