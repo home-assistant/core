@@ -7,7 +7,7 @@
       }
     },
     "create_entry": {
-      "default": "Successfully authenticated with Ambiclimate"
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "error": {
       "no_token": "Not authenticated with Ambiclimate",
