@@ -77,7 +77,7 @@ async def async_setup_entry(hass, config_entry):
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
         if name is not None:
-            data.async_add(name)
+            await data.async_add(name)
 
     async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
@@ -90,7 +90,7 @@ async def async_setup_entry(hass, config_entry):
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
-            data.async_update(item["id"], {"name": name, "complete": True})
+            await data.async_update(item["id"], {"name": name, "complete": True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
@@ -139,16 +139,14 @@ class ShoppingData:
         self.hass = hass
         self.items = []
 
-    @callback
-    def async_add(self, name):
+    async def async_add(self, name):
         """Add a shopping list item."""
         item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
         self.items.append(item)
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         return item
 
-    @callback
-    def async_update(self, item_id, info):
+    async def async_update(self, item_id, info):
         """Update a shopping list item."""
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
@@ -157,14 +155,13 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         return item
 
-    @callback
-    def async_clear_completed(self):
+    async def async_clear_completed(self):
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
 
     async def async_load(self):
         """Load items."""
@@ -203,7 +200,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
         data = await request.json()
 
         try:
-            item = request.app["hass"].data[DOMAIN].async_update(item_id, data)
+            item = await request.app["hass"].data[DOMAIN].async_update(item_id, data)
             request.app["hass"].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
@@ -221,7 +218,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
     async def post(self, request, data):
         """Create a new shopping list item."""
-        item = request.app["hass"].data[DOMAIN].async_add(data["name"])
+        item = await request.app["hass"].data[DOMAIN].async_add(data["name"])
         request.app["hass"].bus.async_fire(EVENT)
         return self.json(item)
 
@@ -232,11 +229,10 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     url = "/api/shopping_list/clear_completed"
     name = "api:shopping_list:clear_completed"
 
-    @callback
-    def post(self, request):
+    async def post(self, request):
         """Retrieve if API is running."""
         hass = request.app["hass"]
-        hass.data[DOMAIN].async_clear_completed()
+        await hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
         return self.json_message("Cleared completed items.")
 
@@ -249,10 +245,10 @@ def websocket_handle_items(hass, connection, msg):
     )
 
 
-@callback
-def websocket_handle_add(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
-    item = hass.data[DOMAIN].async_add(msg["name"])
+    item = await hass.data[DOMAIN].async_add(msg["name"])
     hass.bus.async_fire(EVENT, {"action": "add", "item": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
@@ -266,7 +262,7 @@ async def websocket_handle_update(hass, connection, msg):
     data = msg
 
     try:
-        item = hass.data[DOMAIN].async_update(item_id, data)
+        item = await hass.data[DOMAIN].async_update(item_id, data)
         hass.bus.async_fire(EVENT, {"action": "update", "item": item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
@@ -275,9 +271,9 @@ async def websocket_handle_update(hass, connection, msg):
         )
 
 
-@callback
-def websocket_handle_clear(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
-    hass.data[DOMAIN].async_clear_completed()
+    await hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))
