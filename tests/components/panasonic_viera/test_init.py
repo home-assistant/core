@@ -4,7 +4,6 @@ from homeassistant.components.panasonic_viera.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
-    ATTR_REMOTE,
     ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
