@@ -1,6 +1,5 @@
 """Test the xbox config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.xbox import config_flow
 from homeassistant.components.xbox.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -14,9 +13,6 @@ CLIENT_SECRET = "5678"
 async def test_abort_if_existing_entry(hass):
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    flow = config_flow.OAuth2FlowHandler()
-    flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
         "xbox", context={"source": config_entries.SOURCE_USER}
