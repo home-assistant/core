@@ -6,6 +6,7 @@ from pyairvisual.errors import InvalidKeyError, NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -36,6 +37,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
+        self._check_key_error_schema = None
+        self._check_key_error_step = None
         self._geo_id = None
         self._latitude = None
         self._longitude = None
@@ -107,36 +110,41 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
 
+        self._check_key_error_step = "geography"
+        self._check_key_error_schema = self.geography_schema
+        return await self.async_step_geography_finish(user_input)
+
+    async def async_step_geography_finish(self, user_input):
+        """Validate a Cloud API key."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
         cloud_api = CloudAPI(user_input[CONF_API_KEY], session=websession)
 
         # If this is the first (and only the first) time we've seen this API key, check
         # that it's valid:
-        checked_keys = self.hass.data.setdefault("airvisual_checked_api_keys", set())
-        check_keys_lock = self.hass.data.setdefault(
+        valid_keys = self.hass.data.setdefault("airvisual_checked_api_keys", set())
+        valid_keys_lock = self.hass.data.setdefault(
             "airvisual_checked_api_keys_lock", asyncio.Lock()
         )
 
-        async with check_keys_lock:
-            if user_input[CONF_API_KEY] not in checked_keys:
+        async with valid_keys_lock:
+            if user_input[CONF_API_KEY] not in valid_keys:
                 try:
                     await cloud_api.air_quality.nearest_city()
                 except InvalidKeyError:
                     return self.async_show_form(
-                        step_id="geography",
-                        data_schema=self.geography_schema,
+                        step_id=self._check_key_error_step,
+                        data_schema=self._check_key_error_schema,
                         errors={CONF_API_KEY: "invalid_api_key"},
                     )
 
-                checked_keys.add(user_input[CONF_API_KEY])
+                valid_keys.add(user_input[CONF_API_KEY])
 
-            return await self.async_step_geography_finish(user_input)
-
-    async def async_step_geography_finish(self, user_input=None):
-        """Handle the finalization of a Cloud API config entry."""
         existing_entry = await self.async_set_unique_id(self._geo_id)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            persistent_notification.async_dismiss(
+                self.hass, f"airvisual_reauth_{self._geo_id}"
+            )
             return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
@@ -178,6 +186,19 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data):
         """Handle configuration by re-auth."""
+        self._geo_id = async_get_geography_id(data)
+
+        persistent_notification.async_create(
+            self.hass,
+            (
+                f"AirVisual ({self._geo_id}) needs to be re-authenticated. "
+                "Please go to the [Integrations](/config/integrations) page to "
+                "re-configure it."
+            ),
+            "Re-authenticate AirVisual",
+            f"airvisual_reauth_{self._geo_id}",
+        )
+
         self._latitude = data[CONF_LATITUDE]
         self._longitude = data[CONF_LONGITUDE]
 
@@ -194,10 +215,11 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_API_KEY: user_input[CONF_API_KEY],
             CONF_LATITUDE: self._latitude,
             CONF_LONGITUDE: self._longitude,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
-        self._geo_id = async_get_geography_id(conf)
-
+        self._check_key_error_step = "reauth_confirm"
+        self._check_key_error_schema = self.api_key_data_schema
         return await self.async_step_geography_finish(conf)
 
     async def async_step_user(self, user_input=None):
