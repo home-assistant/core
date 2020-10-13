@@ -97,7 +97,7 @@ HTML = """
                 <h1>Intruder alert at apartment!!</h1>
               </div>
               <div>
-                <img alt="tests/testing_config/media/test.jpg" src="cid:tests/testing_config/media/test.jpg"/>
+                <img alt="tests/testing_config/notify/test.jpg" src="cid:tests/testing_config/notify/test.jpg"/>
               </div>
             </body>
         </html>"""
@@ -106,12 +106,12 @@ HTML = """
 EMAIL_DATA = [
     (
         "Test msg",
-        {"images": ["tests/testing_config/media/test.jpg"]},
+        {"images": ["tests/testing_config/notify/test.jpg"]},
         "Content-Type: multipart/related",
     ),
     (
         "Test msg",
-        {"html": HTML, "images": ["tests/testing_config/media/test.jpg"]},
+        {"html": HTML, "images": ["tests/testing_config/notify/test.jpg"]},
         "Content-Type: multipart/related",
     ),
     (
@@ -121,7 +121,7 @@ EMAIL_DATA = [
     ),
     (
         "Test msg",
-        {"html": HTML, "images": ["tests/testing_config/media/test.pdf"]},
+        {"html": HTML, "images": ["tests/testing_config/notify/test.pdf"]},
         "Content-Type: multipart/related",
     ),
 ]
