@@ -52,7 +52,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-from homeassistant.core import Context, Event, HomeAssistant, ServiceCall, State
+from homeassistant.core import (
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -166,6 +173,15 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
                 data[CONF_ADAPT_RGB_COLOR],
                 force=True,
             )
+
+
+@callback
+def _fire_manually_controlled_event(
+    hass: HomeAssistant, light: str, context: Context, is_async=True
+):
+    """Fire an event that 'light' is marked as manually_controlled."""
+    fire = hass.bus.async_fire if is_async else hass.bus.fire
+    fire(f"{DOMAIN}_manually_controlled", {ATTR_ENTITY_ID: light}, context=context)
 
 
 async def async_setup_entry(
@@ -1089,6 +1105,7 @@ class TurnOnOffListener:
             # Light was already on and 'light.turn_on' was not called by
             # the adaptive_lighting integration.
             manually_controlled = self.manually_controlled[light] = True
+            _fire_manually_controlled_event(self.hass, light, turn_on_event.context)
             _LOGGER.debug(
                 "'%s' was already on and 'light.turn_on' was not called by the"
                 " adaptive_lighting integration (context.id='%s'), the Adaptive"
@@ -1166,7 +1183,10 @@ class TurnOnOffListener:
                 # Only mark a light as significantly changing, changed==True `x`
                 # times in a row. We do this because sometimes a state changes
                 # happens only *after* a new update interval has already started.
-                self.manually_controlled[light] = changed
+                self.manually_controlled[light] = True
+                _fire_manually_controlled_event(
+                    self.hass, light, context, is_async=False
+                )
         else:
             if n_changes > 1:
                 _LOGGER.debug(
