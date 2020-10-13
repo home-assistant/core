@@ -352,7 +352,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==0.39.1
 
 # homeassistant.components.gree
-greeclimate==0.5.0
+greeclimate==0.9.0
 
 # homeassistant.components.griddy
 griddypower==0.1.0

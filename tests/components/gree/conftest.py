@@ -10,7 +10,7 @@ from tests.async_mock import AsyncMock, patch
 def discovery_fixture():
     """Patch the discovery service."""
     with patch(
-        "homeassistant.components.gree.bridge.GreeClimate.search_devices",
+        "homeassistant.components.gree.bridge.Discovery.search_devices",
         new_callable=AsyncMock,
         return_value=[build_device_info_mock()],
     ) as mock:
