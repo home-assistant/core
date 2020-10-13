@@ -1,7 +1,6 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from logging import getLogger
 
 import pytest
 
@@ -23,8 +22,6 @@ from tests.common import (
     mock_integration,
     mock_registry,
 )
-
-_LOGGER = getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -659,8 +656,6 @@ async def test_reauth_notification(hass):
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-        _LOGGER.error(result)
 
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_reconfigure")
