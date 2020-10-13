@@ -499,7 +499,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             "code_disarm_required": (self._code is not None),
             "state_topic": self._state_topic,
             "status_topic": self._status_topic,
-            "comand_topic": self._command_topic,
+            "command_topic": self._command_topic,
             "delay_times": self._delay_time_by_state,
             "arming_times": self._arming_time_by_state,
             "trigger_times": self._trigger_time_by_state,
