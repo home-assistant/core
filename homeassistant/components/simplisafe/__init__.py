@@ -16,7 +16,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
@@ -376,6 +376,7 @@ async def async_update_options(hass, config_entry):
     """Handle an options update."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
     simplisafe.options = config_entry.options
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class SimpliSafeWebsocket:
@@ -539,17 +540,24 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    LOGGER.error(
-                        "Token disconnected or invalid. Please re-auth the "
-                        "SimpliSafe integration in HASS"
-                    )
-                    self._hass.async_create_task(
-                        self._hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": "reauth"},
-                            data=self._config_entry.data,
+                    context = {
+                        "source": SOURCE_REAUTH,
+                        "unique_id": self._config_entry.unique_id,
+                    }
+
+                    matching_flows = [
+                        flow
+                        for flow in self._hass.config_entries.flow.async_progress()
+                        if flow["context"] == context
+                    ]
+
+                    if not matching_flows:
+                        self._hass.async_create_task(
+                            self._hass.config_entries.flow.async_init(
+                                DOMAIN, context=context, data=self._config_entry.data
+                            )
                         )
-                    )
+
                     return
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
