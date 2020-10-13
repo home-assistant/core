@@ -1,6 +1,7 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
+from logging import getLogger
 
 import pytest
 
@@ -22,6 +23,8 @@ from tests.common import (
     mock_integration,
     mock_registry,
 )
+
+_LOGGER = getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -622,6 +625,45 @@ async def test_discovery_notification(hass):
 
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
+
+
+async def test_reauth_notification(hass):
+    """Test that we create/dismiss a notification when source is reauth."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    with patch.dict(config_entries.HANDLERS):
+
+        class TestFlow(config_entries.ConfigFlow, domain="test"):
+            """Test flow."""
+
+            VERSION = 5
+
+            async def async_step_reauth(self, user_input):
+                """Test reauth step."""
+                return self.async_show_form(step_id="reauth_confirm")
+
+            async def async_step_reauth_confirm(self, user_input):
+                """Test reauth confirm step."""
+                return self.async_abort(reason="test")
+
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_REAUTH}
+        )
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
+        assert state is not None
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+        _LOGGER.error(result)
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
         assert state is None
 
 
