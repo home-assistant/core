@@ -6,7 +6,6 @@ from pyairvisual.errors import InvalidKeyError, NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -142,9 +141,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._geo_id)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
-            persistent_notification.async_dismiss(
-                self.hass, f"airvisual_reauth_{self._geo_id}"
-            )
             return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
@@ -187,18 +183,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data):
         """Handle configuration by re-auth."""
         self._geo_id = async_get_geography_id(data)
-
-        persistent_notification.async_create(
-            self.hass,
-            (
-                f"AirVisual ({self._geo_id}) needs to be re-authenticated. "
-                "Please go to the [Integrations](/config/integrations) page to "
-                "re-configure it."
-            ),
-            "Re-authenticate AirVisual",
-            f"airvisual_reauth_{self._geo_id}",
-        )
-
         self._latitude = data[CONF_LATITUDE]
         self._longitude = data[CONF_LONGITUDE]
 
