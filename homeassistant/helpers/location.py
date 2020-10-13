@@ -91,7 +91,7 @@ def find_coordinates(
     # Check if state is valid coordinate set
     try:
         # Import here, not at top-level to avoid circular import
-        import homeassistant.helpers.config_validation as cv
+        import homeassistant.helpers.config_validation as cv  # pylint: disable=import-outside-toplevel
 
         cv.gps(entity_state.state.split(","))
     except vol.Invalid:

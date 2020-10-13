@@ -763,7 +763,9 @@ def result_as_boolean(template_result: Optional[str]) -> bool:
     """
     try:
         # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import config_validation as cv
+        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+            config_validation as cv,
+        )
 
         return cv.boolean(template_result)
     except vol.Invalid:
