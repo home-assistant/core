@@ -315,6 +315,13 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
+        except Exception:
+            self.logger.exception(
+                "Error adding entities for domain %s with platform %s",
+                self.domain,
+                self.platform_name,
+            )
+            raise
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
