@@ -487,7 +487,7 @@ deluge-client==1.7.1
 denonavr==0.9.5
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.15.0
+devolo-home-control-api==0.15.1
 
 # homeassistant.components.directv
 directv==0.3.0
