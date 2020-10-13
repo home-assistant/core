@@ -99,7 +99,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
-            return
+            raise ValueError("Expected attribute %s", ATTR_TEMPERATURE)
 
         data = {"heatsetpoint": kwargs[ATTR_TEMPERATURE] * 100}
 
@@ -108,7 +108,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode not in HVAC_MODES:
-            return
+            raise ValueError("Unsupported mode %s", hvac_mode)
 
         data = {"mode": HVAC_MODES[hvac_mode]}
 
