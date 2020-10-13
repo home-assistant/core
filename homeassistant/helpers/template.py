@@ -32,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, location as loc_helper
+from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -762,6 +762,9 @@ def result_as_boolean(template_result: Optional[str]) -> bool:
 
     """
     try:
+        # Import here, not at top-level to avoid circular import
+        from homeassistant.helpers import config_validation as cv
+
         return cv.boolean(template_result)
     except vol.Invalid:
         return False
