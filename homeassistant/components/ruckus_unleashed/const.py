@@ -11,4 +11,7 @@ COORDINATOR = "coordinator"
 UNDO_UPDATE_LISTENERS = "undo_update_listeners"
 
 CLIENTS = "clients"
-CLIENTS_HOST_NAME = "Host Name"
+MESH_INFO = "mesh_info"
+
+RESPONSE_HOST_NAME = "Host Name"
+RESPONSE_MAC_ADDRESS = "MAC Address"

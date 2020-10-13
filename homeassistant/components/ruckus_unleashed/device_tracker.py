@@ -4,14 +4,15 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CLIENTS,
-    CLIENTS_HOST_NAME,
     COORDINATOR,
     DOMAIN,
+    RESPONSE_HOST_NAME,
     UNDO_UPDATE_LISTENERS,
 )
 
@@ -50,7 +51,7 @@ def add_new_entities(coordinator, async_add_entities, tracked):
 
         device = coordinator.data[CLIENTS][mac]
         new_tracked.append(
-            RuckusUnleashedDevice(coordinator, mac, device[CLIENTS_HOST_NAME])
+            RuckusUnleashedDevice(coordinator, mac, device[RESPONSE_HOST_NAME])
         )
         tracked.add(mac)
 
@@ -96,7 +97,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         """Return the name."""
         if self.is_connected:
             return (
-                self.coordinator.data[CLIENTS][self._mac][CLIENTS_HOST_NAME]
+                self.coordinator.data[CLIENTS][self._mac][RESPONSE_HOST_NAME]
                 or f"Ruckus {self._mac}"
             )
         return self._name
@@ -110,3 +111,17 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
     def source_type(self) -> str:
         """Return the source type."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def device_info(self) -> dict:
+        """Return the device information."""
+        return {
+            "name": self.name,
+            "connections": {
+                (CONNECTION_NETWORK_MAC, self._mac),
+            },
+            "via_device": (
+                CONNECTION_NETWORK_MAC,
+                self.coordinator.data[CLIENTS][self._mac]["Access Point"],
+            ),
+        }
