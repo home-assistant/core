@@ -10,11 +10,15 @@
         },
         "flow_title": "AVM FRITZ!Box call monitor: {name}",
         "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Phonebook"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "phonebook": "Phonebook",
                     "port": "Port",
                     "prefixes": "Prefixes (comma separated list)",
                     "username": "Username"

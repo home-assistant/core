@@ -178,7 +178,7 @@ class FritzBoxCallSensor(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "name": self._name,
+            "name": self._phonebook.fph.modelname,
             "identifiers": {(DOMAIN, self._host, self._phonebook_id)},
             "manufacturer": MANUFACTURER,
             "model": self._phonebook.fph.modelname,

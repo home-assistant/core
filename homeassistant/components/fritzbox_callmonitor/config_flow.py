@@ -1,5 +1,7 @@
 """Config flow for fritzbox_callmonitor."""
 
+from functools import partial
+
 from fritzconnection.core.exceptions import FritzConnectionException
 import requests
 import voluptuous as vol
@@ -18,6 +20,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_ATTR_NAME,
 )
 
 DATA_SCHEMA_USER = vol.Schema(
@@ -26,7 +29,6 @@ DATA_SCHEMA_USER = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): int,
         vol.Optional(CONF_PREFIXES): str,
     }
 )
@@ -50,13 +52,16 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._port = None
         self._username = None
         self._password = None
+        self._phonebook_name = None
         self._phonebook_id = None
+        self._phonebook_ids = None
+        self._phonebook = None
         self._prefixes = None
 
     def _get_entry(self):
         """Create and return an entry."""
         return self.async_create_entry(
-            title=self._name,
+            title=self._phonebook_name,
             data={
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
@@ -69,7 +74,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        phonebook = FritzBoxPhonebook(
+        self._phonebook = FritzBoxPhonebook(
             host=self._host,
             port=self._port,
             username=self._username,
@@ -79,14 +84,29 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            phonebook.init_phonebook()
+            self._phonebook.init_phonebook()
+            self._phonebook_ids = self._phonebook.get_phonebook_ids()
             return RESULT_SUCCESS
         except FritzConnectionException:
             return RESULT_INVALID_AUTH
         except requests.exceptions.ConnectionError:
             return RESULT_NO_DEVIES_FOUND
-        except ValueError:
-            return RESULT_NOT_SUPPORTED
+
+    def _is_already_configured(self, host, phonebook_id):
+        """Check if an entity with the same host and phonebook_id is already configured."""
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.data[CONF_HOST] == host
+                and entry.data[CONF_PHONEBOOK] == phonebook_id
+            ):
+                return True
+
+    async def _get_name_of_phonebook(self, phonebook_id):
+        """Return name of phonebook for given phonebook_id."""
+        phonebook_info = await self.hass.async_add_executor_job(
+            partial(self._phonebook.fph.phonebook_info, phonebook_id)
+        )
+        return phonebook_info[FRITZ_ATTR_NAME]
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -98,19 +118,11 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if (
-                    entry.data[CONF_HOST] == user_input[CONF_HOST]
-                    and entry.data[CONF_PHONEBOOK] == user_input[CONF_PHONEBOOK]
-                ):
-                    return self.async_abort(reason="already_configured")
-
             self._name = user_input[CONF_HOST]
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
-            self._phonebook_id = user_input[CONF_PHONEBOOK]
             self._prefixes = user_input.get(CONF_PREFIXES)
 
             if self._prefixes and self._prefixes.strip():
@@ -121,6 +133,17 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
+                if len(self._phonebook_ids) > 1:
+                    return await self.async_step_phonebook()
+
+                self._phonebook_id = DEFAULT_PHONEBOOK
+                self._phonebook_name = await self._get_name_of_phonebook(
+                    self._phonebook_id
+                )
+
+                if self._is_already_configured(self._host, self._phonebook_id):
+                    return self.async_abort(reason="already_configured")
+
                 return self._get_entry()
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
@@ -128,4 +151,30 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+        )
+
+    async def async_step_phonebook(self, user_input=None):
+        """Handle a flow to chose one of multiple available phonebooks."""
+        errors = {}
+        phonebooks = []
+
+        for id in self._phonebook_ids:
+            phonebooks.append(await self._get_name_of_phonebook(id))
+
+        if user_input is not None:
+            phonebook_name = user_input[CONF_PHONEBOOK]
+            phonebook_id = phonebooks.index(phonebook_name)
+
+            self._phonebook_name = phonebook_name
+            self._phonebook_id = phonebook_id
+
+            if self._is_already_configured(self._host, self._phonebook_id):
+                return self.async_abort(reason="already_configured")
+
+            return self._get_entry()
+
+        return self.async_show_form(
+            step_id="phonebook",
+            data_schema=vol.Schema({vol.Required(CONF_PHONEBOOK): vol.In(phonebooks)}),
+            errors=errors,
         )

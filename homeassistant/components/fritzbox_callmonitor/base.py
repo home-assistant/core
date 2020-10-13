@@ -26,13 +26,10 @@ class FritzBoxPhonebook:
     def init_phonebook(self):
         """Establish a connection to the FRITZ!Box and check if phonebook_id is valid."""
         self.fph = FritzPhonebook(
-            address=self.host, user=self.username, password=self.password
+            address=self.host,
+            user=self.username,
+            password=self.password,
         )
-
-        if self.phonebook_id not in self.fph.list_phonebooks:
-            raise ValueError("Phonebook with this ID not found.")
-
-        self.update_phonebook()
 
     @Throttle(MIN_TIME_PHONEBOOK_UPDATE)
     def update_phonebook(self):
@@ -44,6 +41,10 @@ class FritzBoxPhonebook:
             for nr in nrs
         }
         LOGGER.info("Fritz!Box phone book successfully updated")
+
+    def get_phonebook_ids(self):
+        """Return list of phonebook ids."""
+        return self.fph.phonebook_ids
 
     def get_name(self, number):
         """Return a name for a given phone number."""

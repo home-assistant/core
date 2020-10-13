@@ -23,6 +23,7 @@ async def async_setup_entry(hass, entry):
         prefixes=entry.data[CONF_PREFIXES],
     )
     await hass.async_add_executor_job(phonebook.init_phonebook)
+    await hass.async_add_executor_job(phonebook.update_phonebook)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = phonebook
