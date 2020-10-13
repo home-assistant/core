@@ -21,7 +21,8 @@ def discovery_fixture():
 def device_fixture():
     """Path the device search and bind."""
     with patch(
-        "homeassistant.components.gree.bridge.Device", return_value=build_device_mock(),
+        "homeassistant.components.gree.bridge.Device",
+        return_value=build_device_mock(),
     ) as mock:
         yield mock
 
