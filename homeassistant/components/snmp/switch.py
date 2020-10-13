@@ -1,5 +1,8 @@
 """Support for SNMP enabled switch."""
 import logging
+import re
+
+from pyasn1.error import PyAsn1Error
 
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
@@ -195,8 +198,36 @@ class SnmpSwitch(SwitchEntity):
         self._command_payload_off = command_payload_off or payload_off
 
         self._state = None
-        self._payload_on = payload_on
-        self._payload_off = payload_off
+
+        try:
+            self._payload_on_int = Integer(payload_on)
+        except PyAsn1Error:
+            self._payload_on_int = None
+
+        try:
+            self._payload_off_int = Integer(payload_off)
+        except PyAsn1Error:
+            self._payload_off_int = None
+
+        try:
+            self._payload_on_regex = re.compile(payload_on)
+        except:
+            self._payload_on_regex = None
+
+        try:
+            self._payload_off_regex = re.compile(payload_off)
+        except:
+            self._payload_off_regex = None
+
+        try:
+            self._payload_on = OctetString(payload_on)
+        except PyAsn1Error:
+            self._payload_on = None
+
+        try:
+            self._payload_off = OctetString(payload_off)
+        except PyAsn1Error:
+            self._payload_off = None
 
         if version == "3":
 
@@ -262,13 +293,25 @@ class SnmpSwitch(SwitchEntity):
             )
         else:
             for resrow in restable:
-                if resrow[-1] == self._payload_on:
+                if self._payload_on and resrow[-1] == self._payload_on:
                     self._state = True
-                elif resrow[-1] == Integer(self._payload_on):
+                elif self._payload_on_int and resrow[-1] == Integer(
+                    self._payload_on_int
+                ):
                     self._state = True
-                elif resrow[-1] == self._payload_off:
+                elif self._payload_on_regex and self._payload_on_regex.match(
+                    str(resrow[-1])
+                ):
+                    self._state = True
+                elif self._payload_off and resrow[-1] == self._payload_off:
                     self._state = False
-                elif resrow[-1] == Integer(self._payload_off):
+                elif self._payload_off_int and resrow[-1] == Integer(
+                    self._payload_off_int
+                ):
+                    self._state = False
+                elif self._payload_off_regex and self._payload_off_regex.match(
+                    str(resrow[-1])
+                ):
                     self._state = False
                 else:
                     self._state = None
