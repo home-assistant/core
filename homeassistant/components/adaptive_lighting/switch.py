@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import bisect
+from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
 import datetime
@@ -961,10 +962,16 @@ class TurnOnOffListener:
         self.sleep_tasks: Dict[str, asyncio.Task] = {}
         # Tracks which lights are manually controlled
         self.manually_controlled: Dict[str, bool] = {}
+        # Counts the number of times (in a row) a light had a changed state.
+        self.cnt_significant_changes: Dict[str, int] = defaultdict(int)
         # Track 'state_changed' events of self.lights resulting from this integration
         self.last_state_change: Dict[str, List[State]] = {}
         # Track last 'service_data' to 'light.turn_on' resulting from this integration
         self.last_service_data: Dict[str, Dict[str, Any]] = {}
+
+        # When a state is different `max_cnt_significant_changes` times in a row,
+        # mark it as manually_controlled.
+        self.max_cnt_significant_changes = 1
 
         self.remove_listener = self.hass.bus.async_listen(
             EVENT_CALL_SERVICE, self.turn_on_off_event_listener
@@ -979,6 +986,7 @@ class TurnOnOffListener:
             self.manually_controlled[light] = False
             self.last_state_change.pop(light, None)
             self.last_service_data.pop(light, None)
+            self.cnt_significant_changes[light] = 0
 
     async def turn_on_off_event_listener(self, event: Event) -> None:
         """Track 'light.turn_off' and 'light.turn_on' service calls."""
@@ -1151,7 +1159,24 @@ class TurnOnOffListener:
                     context.id,
                 )
 
-        self.manually_controlled[light] = changed
+        n_changes = self.cnt_significant_changes[light]
+        if changed:
+            self.cnt_significant_changes[light] += 1
+            if n_changes >= self.max_cnt_significant_changes:
+                # Only mark a light as significantly changing, changed==True `x`
+                # times in a row. We do this because sometimes a state changes
+                # happens only *after* a new update interval has already started.
+                self.manually_controlled[light] = changed
+        else:
+            if n_changes > 1:
+                _LOGGER.debug(
+                    "State of '%s' had 'cnt_significant_changes=%s' but the state"
+                    " changed to the expected settings now",
+                    light,
+                    n_changes,
+                )
+            self.cnt_significant_changes[light] = 0
+
         return changed
 
     async def maybe_cancel_adjusting(
