@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "device_fail": "Tundmatu viga",
+            "device_timeout": "\u00dchendamine nurjus",
+            "forbidden": "Tuvastamine nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "host": "",
+                    "password": "Salas\u00f5na"
+                }
+            }
+        }
+    }
+}

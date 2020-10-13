@@ -11,7 +11,7 @@
             "wrong_password": "Feil passord.",
             "wrong_server_type": "Forked-daapd integrasjon krever en gaffel-daapd server med versjon \"= 27.0."
         },
-        "flow_title": "forked-daapd-server: {name} ( {host} )",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

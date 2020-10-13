@@ -1,5 +1,4 @@
 """Support for IQVIA sensors."""
-import logging
 from statistics import mean
 
 import numpy as np
@@ -25,8 +24,6 @@ from homeassistant.const import ATTR_STATE
 from homeassistant.core import callback
 
 from .const import SENSORS
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
 ATTR_ALLERGEN_GENUS = "allergen_genus"

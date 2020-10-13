@@ -140,7 +140,6 @@ class Sensor(ZhaEntity):
         """Restore previous state."""
         self._state = last_state.state
 
-    @callback
     async def async_state_attr_provider(self):
         """Initialize device state attributes."""
         return {}

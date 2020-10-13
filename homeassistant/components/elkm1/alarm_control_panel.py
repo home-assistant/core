@@ -49,14 +49,12 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-
 SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
 SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
 SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
 SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
 SERVICE_ALARM_BYPASS = "alarm_bypass"
 SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ElkM1 alarm platform."""

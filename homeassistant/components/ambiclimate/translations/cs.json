@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured_account": "\u00da\u010det je ji\u017e nastaven",
+            "oauth2_missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+        },
         "error": {
             "follow_link": "N\u00e1sledujte odkaz a prove\u010fte ov\u011b\u0159en\u00ed p\u0159ed stisknut\u00edm tla\u010d\u00edtka Odeslat.",
             "no_token": "Nen\u00ed ov\u011b\u0159en s Ambiclimate"

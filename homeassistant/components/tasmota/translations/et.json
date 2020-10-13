@@ -3,8 +3,14 @@
         "abort": {
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
+        "error": {
+            "invalid_discovery_topic": "Sobimatu tuvastusteema eesliide."
+        },
         "step": {
             "config": {
+                "data": {
+                    "discovery_prefix": "Tuvastusteema eesliide"
+                },
                 "description": "Sisesta Tasmota konfiguratsioon.",
                 "title": "Tasmota"
             },

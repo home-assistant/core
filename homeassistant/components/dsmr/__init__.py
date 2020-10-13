@@ -1,14 +1,11 @@
 """The dsmr component."""
 import asyncio
 from asyncio import CancelledError
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_TASK, DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config: dict):

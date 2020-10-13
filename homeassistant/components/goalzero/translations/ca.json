@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_host": "L'amfitri\u00f3 proporcionat no \u00e9s v\u00e0lid",
+            "invalid_host": "Nom de l'amfitri\u00f3 o l'adre\u00e7a IP inv\u00e0lids",
             "unknown": "Error inesperat"
         },
         "step": {

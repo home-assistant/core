@@ -60,7 +60,7 @@
                     "zone_rfid": "RF Serial",
                     "zone_type": "Rodzaj strefy"
                 },
-                "description": "Wprowad\u017a szczeg\u00f3\u0142y dla strefy {zone_number} . Aby usun\u0105\u0107 stref\u0119 {zone_number}, pozostaw nazw\u0119 strefy pust\u0105.",
+                "description": "Wprowad\u017a szczeg\u00f3\u0142y dla strefy {zone_number}. Aby usun\u0105\u0107 stref\u0119 {zone_number}, pozostaw nazw\u0119 strefy pust\u0105.",
                 "title": "Konfiguracja AlarmDecoder"
             },
             "zone_select": {

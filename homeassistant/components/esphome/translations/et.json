@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_password": "Vale salas\u00f5na!"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

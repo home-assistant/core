@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_location%] lub ID Node/Pro jest ju\u017c zarejestrowane."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana lub ID Node/Pro jest ju\u017c zarejestrowane."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -13,8 +13,8 @@
             "geography": {
                 "data": {
                     "api_key": "Klucz API",
-                    "latitude": "[%key::common::config_flow::data::latitude%]",
-                    "longitude": "[%key::common::config_flow::data::longitude%]"
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
                 },
                 "description": "U\u017cyj interfejsu API chmury AirVisual do monitorowania lokalizacji geograficznej.",
                 "title": "Konfiguracja Geography"
@@ -33,7 +33,7 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Typ integracji"
                 },
-                "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",
+                "description": "Wybierz, kt\u00f3re dane AirVisual chcesz monitorowa\u0107.",
                 "title": "Konfiguracja AirVisual"
             }
         }

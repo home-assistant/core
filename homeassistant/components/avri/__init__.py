@@ -1,7 +1,6 @@
 """The avri component."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from avri.api import Avri
 
@@ -15,8 +14,6 @@ from .const import (
     CONF_ZIP_CODE,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 SCAN_INTERVAL = timedelta(hours=4)

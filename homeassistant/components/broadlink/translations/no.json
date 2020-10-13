@@ -10,9 +10,10 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name} ( {model} hos {host} )",
+        "flow_title": "{name} ({model} p\u00e5 {host})",
         "step": {
             "auth": {
                 "title": "Autentiser til enheten"

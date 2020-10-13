@@ -187,9 +187,7 @@ class VarAbs(LcnServiceCall):
             vol.Required(CONF_VARIABLE): vol.All(
                 vol.Upper, vol.In(VARIABLES + SETPOINTS)
             ),
-            vol.Optional(CONF_VALUE, default=0): vol.All(
-                vol.Coerce(int), vol.Range(min=0)
-            ),
+            vol.Optional(CONF_VALUE, default=0): cv.positive_int,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
                 vol.Upper, vol.In(VAR_UNITS)
             ),
@@ -281,7 +279,7 @@ class SendKeys(LcnServiceCall):
             vol.Optional(CONF_STATE, default="hit"): vol.All(
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
-            vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIME, default=0): cv.positive_int,
             vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
@@ -324,7 +322,7 @@ class LockKeys(LcnServiceCall):
                 vol.Upper, cv.matches_regex(r"^[A-D]$")
             ),
             vol.Required(CONF_STATE): is_key_lock_states_string,
-            vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIME, default=0): cv.positive_int,
             vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),

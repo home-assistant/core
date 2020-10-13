@@ -1286,7 +1286,6 @@ class MqttDiscoveryUpdate(Entity):
             else:
                 await self.async_remove()
 
-        @callback
         async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(

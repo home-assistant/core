@@ -13,6 +13,9 @@
                 },
                 "description": "\u8acb\u8f38\u5165 Tasmota \u8a2d\u5b9a\u3002",
                 "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Tasmota\uff1f"
             }
         }
     }

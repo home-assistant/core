@@ -122,6 +122,9 @@ adext==0.3
 # homeassistant.components.adguard
 adguardhome==0.4.2
 
+# homeassistant.components.advantage_air
+advantage_air==0.2.1
+
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
 
@@ -275,7 +278,7 @@ aqualogic==1.0
 arcam-fmj==0.5.3
 
 # homeassistant.components.arris_tg2492lg
-arris-tg2492lg==1.0.0
+arris-tg2492lg==1.1.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
@@ -386,7 +389,7 @@ bravia-tv==1.0.6
 broadlink==0.15.0
 
 # homeassistant.components.brother
-brother==0.1.17
+brother==0.1.18
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -696,7 +699,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==2.0
+greeneye_monitor==2.1
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
@@ -729,7 +732,7 @@ hass-nabucasa==0.37.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.10
+hatasmota==0.0.13
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -756,7 +759,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201001.1
+home-assistant-frontend==20201001.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -801,7 +804,7 @@ ibm-watson==4.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==1.1.3
+icmplib==1.2.2
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -1087,6 +1090,9 @@ pencompy==0.0.3
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
+# homeassistant.components.onewire
+pi1wire==0.1.0
+
 # homeassistant.components.pi4ioe5v9xxxx
 pi4ioe5v9xxxx==0.0.2
 
@@ -1198,6 +1204,9 @@ py-schluter==0.1.7
 
 # homeassistant.components.synology
 py-synology==0.2.0
+
+# homeassistant.components.zabbix
+py-zabbix==1.1.7
 
 # homeassistant.components.seventeentrack
 py17track==2.2.2
@@ -1620,6 +1629,9 @@ pyrepetier==3.0.5
 # homeassistant.components.risco
 pyrisco==0.3.1
 
+# homeassistant.components.ruckus_unleashed
+pyruckus==0.7
+
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.0
 
@@ -1877,9 +1889,6 @@ pywilight==0.0.65
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
 
-# homeassistant.components.zabbix
-pyzabbix==0.7.4
-
 # homeassistant.components.qrcode
 pyzbar==0.1.7
 
@@ -1893,7 +1902,7 @@ qnapstats==0.3.0
 quantum-gateway==0.0.5
 
 # homeassistant.components.rachio
-rachiopy==0.1.4
+rachiopy==1.0.3
 
 # homeassistant.components.radiotherm
 radiotherm==2.0.0
@@ -1987,7 +1996,7 @@ sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.8.0
+sense_energy==0.8.1
 
 # homeassistant.components.sentry
 sentry-sdk==0.18.0
@@ -2152,7 +2161,7 @@ temperusb==1.5.3
 # tensorflow==2.3.0
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.12
+tesla-powerwall==0.3.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.10.4
@@ -2301,7 +2310,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.yeelight
-yeelight==0.5.3
+yeelight==0.5.4
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
@@ -2337,7 +2346,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.6.2
 
 # homeassistant.components.zha
-zigpy-znp==0.2.1
+zigpy-znp==0.2.2
 
 # homeassistant.components.zha
 zigpy==0.26.0
