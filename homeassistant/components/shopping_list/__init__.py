@@ -245,6 +245,7 @@ def websocket_handle_items(hass, connection, msg):
     )
 
 
+@websocket_api.async_response
 async def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = await hass.data[DOMAIN].async_add(msg["name"])
@@ -270,6 +271,7 @@ async def websocket_handle_update(hass, connection, msg):
         )
 
 
+@websocket_api.async_response
 async def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     await hass.data[DOMAIN].async_clear_completed()
