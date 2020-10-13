@@ -13,14 +13,14 @@
             "invalid_code": "Nieprawid\u0142owy kod",
             "invalid_pin": "Nieprawid\u0142owy kod PIN",
             "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu.",
-            "unknown": "Nieznany b\u0142\u0105d sprawdzania poprawno\u015bci kodu"
+            "unknown": "[%key::common::config_flow::error::unknown%]"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Dostawca"
                 },
-                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Nest.",
+                "description": "Wybierz metod\u0119 uwierzytelniania",
                 "title": "Dostawca uwierzytelnienia"
             },
             "link": {

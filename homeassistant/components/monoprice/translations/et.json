@@ -6,6 +6,13 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": ""
+                }
+            }
         }
     }
 }

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus"
+        },
+        "flow_title": "Advantage Air-i seadistamine",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP aadress",
+                    "port": ""
+                },
+                "title": "\u00dchenda"
+            }
+        }
+    },
+    "title": ""
+}

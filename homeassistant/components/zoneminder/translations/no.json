@@ -15,7 +15,7 @@
             "connection_error": "Kunne ikke koble til en ZoneMinder-server.",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "ZoneMinder",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

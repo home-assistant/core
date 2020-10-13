@@ -27,6 +27,7 @@ async def async_setup_entry(
             if device.device_model_uid in [
                 "devolo.model.Thermostat:Valve",
                 "devolo.model.Room:Thermostat",
+                "devolo.model.Eurotronic:Spirit:Device",
             ]:
                 entities.append(
                     DevoloClimateDeviceEntity(
@@ -44,6 +45,21 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     @property
     def current_temperature(self) -> Optional[float]:
+        """Return the current temperature."""
+        if hasattr(self._device_instance, "multi_level_sensor_property"):
+            return next(
+                (
+                    multi_level_sensor.value
+                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
+                    if multi_level_sensor.sensor_type == "temperature"
+                ),
+                None,
+            )
+
+        return None
+
+    @property
+    def target_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return self._value
 
@@ -81,6 +97,9 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def temperature_unit(self) -> str:
         """Return the supported unit of temperature."""
         return TEMP_CELSIUS
+
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "host": "",
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 }
             }
         }

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Logi Circle konto."
+        }
+    }
+}

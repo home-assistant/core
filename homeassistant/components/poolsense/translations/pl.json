@@ -12,7 +12,7 @@
                     "email": "Adres e-mail",
                     "password": "Has\u0142o"
                 },
-                "description": "[%key::common::config_flow::description::confirm_setup%]",
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
                 "title": "PoolSense"
             }
         }
