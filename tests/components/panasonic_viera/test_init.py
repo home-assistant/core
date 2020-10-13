@@ -76,8 +76,6 @@ async def test_setup_entry_encrypted(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
-
         state = hass.states.get("media_player.panasonic_viera_tv")
 
         assert state
@@ -105,8 +103,6 @@ async def test_setup_entry_encrypted_missing_device_info(hass):
 
         assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
         assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
-
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
 
         state = hass.states.get("media_player.panasonic_viera_tv")
 
@@ -136,8 +132,6 @@ async def test_setup_entry_encrypted_missing_device_info_none(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] is None
         assert mock_entry.unique_id == MOCK_CONFIG_DATA[CONF_HOST]
 
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
-
         state = hass.states.get("media_player.panasonic_viera_tv")
 
         assert state
@@ -162,8 +156,6 @@ async def test_setup_entry_unencrypted(hass):
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
 
         state = hass.states.get("media_player.panasonic_viera_tv")
 
@@ -193,8 +185,6 @@ async def test_setup_entry_unencrypted_missing_device_info(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
         assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
-
         state = hass.states.get("media_player.panasonic_viera_tv")
 
         assert state
@@ -222,8 +212,6 @@ async def test_setup_entry_unencrypted_missing_device_info_none(hass):
 
         assert mock_entry.data[ATTR_DEVICE_INFO] is None
         assert mock_entry.unique_id == MOCK_CONFIG_DATA[CONF_HOST]
-
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
 
         state = hass.states.get("media_player.panasonic_viera_tv")
 

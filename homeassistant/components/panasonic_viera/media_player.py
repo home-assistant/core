@@ -78,14 +78,14 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device specific attributes."""
-        if self._device_info is not None:
-            return {
-                "name": self._name,
-                "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-                "manufacturer": self._device_info[ATTR_MANUFACTURER],
-                "model": self._device_info[ATTR_MODEL_NUMBER],
-            }
-        return None
+        if self._device_info is None:
+            return None
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
+            "manufacturer": self._device_info[ATTR_MANUFACTURER],
+            "model": self._device_info[ATTR_MODEL_NUMBER],
+        }
 
     @property
     def name(self):
