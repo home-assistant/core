@@ -1,6 +1,9 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
 from elkm1_lib.const import Max
+import voluptuous as vol
+
+from homeassistant.const import ATTR_CODE
 
 DOMAIN = "elkm1"
 
@@ -37,3 +40,7 @@ ELK_ELEMENTS = {
 ATTR_CHANGED_BY_KEYPAD = "changed_by_keypad"
 ATTR_CHANGED_BY_ID = "changed_by_id"
 ATTR_CHANGED_BY_TIME = "changed_by_time"
+
+ELK_USER_CODE_SERVICE_SCHEMA = {
+    vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999))
+}
