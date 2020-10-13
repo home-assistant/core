@@ -1,6 +1,8 @@
 """deCONZ fan platform tests."""
 from copy import deepcopy
 
+import pytest
+
 from homeassistant.components import deconz
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 import homeassistant.components.fan as fan
@@ -169,7 +171,7 @@ async def test_fans(hass):
 
     with patch.object(
         ceiling_fan_device, "_request", return_value=True
-    ) as set_callback:
+    ) as set_callback, pytest.raises(ValueError):
         await hass.services.async_call(
             fan.DOMAIN,
             fan.SERVICE_SET_SPEED,
@@ -177,7 +179,6 @@ async def test_fans(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_not_called()
 
     # Events with an unsupported speed gets converted to default speed "medium"
 
