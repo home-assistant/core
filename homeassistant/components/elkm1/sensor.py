@@ -8,6 +8,7 @@ from elkm1_lib.const import (
 from elkm1_lib.util import pretty_const, username
 
 from homeassistant.const import VOLT
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 
 from . import ElkAttachedEntity, create_elk_entities
@@ -64,13 +65,15 @@ class ElkSensor(ElkAttachedEntity):
 
     async def async_zone_bypass(self, code=None):
         """Bypass zone."""
-        if isinstance(self, ElkZone):
-            self._element.bypass(code)
+        if not isinstance(self, ElkZone):
+            raise HomeAssistantError("supported only on ElkM1 Zone sensors")
+        self._element.bypass(code)
 
     async def async_zone_trigger(self):
         """Trigger zone."""
-        if isinstance(self, ElkZone):
-            self._element.trigger()
+        if not isinstance(self, ElkZone):
+            raise HomeAssistantError("supported only on ElkM1 Zone sensors")
+        self._element.trigger()
 
 
 class ElkCounter(ElkSensor):
