@@ -88,7 +88,7 @@ def message():
     yield mailer
 
 
-html = """
+HTML = """
         <!DOCTYPE html>
         <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
             <head><meta charset="UTF-8"></head>
@@ -102,18 +102,18 @@ html = """
             </body>
         </html>"""
 
-email_data = [
-    ("Test msg"),
+EMAIL_DATA = [
+    ("Test msg", None),
     ("Test msg", {"images": ["tests/testing_config/media/test.jpg"]}),
-    ("Test msg", {"html": html, "images": ["tests/testing_config/media/test.jpg"]}),
-    ("Test msg", {"html": html, "images": ["test.jpg"]}),
-    ("Test msg", {"html": html, "images": ["tests/testing_config/media/test.pdf"]}),
+    ("Test msg", {"html": HTML, "images": ["tests/testing_config/media/test.jpg"]}),
+    ("Test msg", {"html": HTML, "images": ["test.jpg"]}),
+    ("Test msg", {"html": HTML, "images": ["tests/testing_config/media/test.pdf"]}),
 ]
 
 
 @pytest.mark.parametrize(
     "email_data",
-    [email_data[0], email_data[1], email_data[2], email_data[3], email_data[4]],
+    [EMAIL_DATA[0], EMAIL_DATA[1], EMAIL_DATA[2], EMAIL_DATA[3], EMAIL_DATA[4]],
     ids=[
         "Tests when sending text message",
         "Tests when sending text message and images.",
@@ -126,11 +126,7 @@ def test_send_message(email_data, hass, message):
     """Verify if we can send messages of all types correctly."""
     sample_email = "<mock@mock>"
     with patch("email.utils.make_msgid", return_value=sample_email):
-        if isinstance(email_data, tuple):
-            result = message.send_message(email_data[0], data=email_data[1])
-        elif isinstance(email_data, str):
-            result = message.send_message(email_data)
-
+        result = message.send_message(email_data[0], data=email_data[1])
         expected = (
             '^Content-Type: text/plain; charset="us-ascii"\n'
             "MIME-Version: 1.0\n"
@@ -144,7 +140,7 @@ def test_send_message(email_data, hass, message):
             "\n"
             "Test msg$"
         )
-        if isinstance(email_data, str):
+        if email_data[1] is None:
             assert re.search(expected, result)
-        elif isinstance(email_data, tuple):
+        else:
             assert "Content-Type: multipart/related" in result

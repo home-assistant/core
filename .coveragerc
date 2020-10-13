@@ -799,6 +799,7 @@ omit =
     homeassistant/components/smarthab/cover.py
     homeassistant/components/smarthab/light.py
     homeassistant/components/sms/*
+    homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
