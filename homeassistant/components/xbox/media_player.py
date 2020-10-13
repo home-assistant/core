@@ -65,6 +65,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Xbox media_player from a config entry."""
     client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]
     consoles: SmartglassConsoleList = await client.smartglass.get_console_list()
+    _LOGGER.debug(
+        "Found %d consoles: %s",
+        len(consoles.result),
+        consoles.dict(),
+    )
     async_add_entities(
         [XboxMediaPlayer(client, console) for console in consoles.result], True
     )
@@ -149,6 +154,12 @@ class XboxMediaPlayer(MediaPlayerEntity):
         """Update Xbox state."""
         status: SmartglassConsoleStatus = (
             await self.client.smartglass.get_console_status(self._console.id)
+        )
+
+        _LOGGER.debug(
+            "%s status: %s",
+            self._console.name,
+            status.dict(),
         )
 
         if status.focus_app_aumid:
