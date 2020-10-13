@@ -477,7 +477,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
                 payload = json.loads(msg.payload)
                 action = payload.get("action")
                 code = payload.get("code")
-            except:
+            except ValueError:
                 _LOGGER.error("Received non-JSON payload! That mode is deprecated.")
                 action = msg.payload
                 code = self._code
