@@ -11,6 +11,7 @@
         "error": {
             "internal_error": "Intern\u00ed chyba ov\u011b\u0159en\u00ed k\u00f3du",
             "invalid_code": "Neplatn\u00fd k\u00f3d",
+            "invalid_pin": "Neplatn\u00fd PIN k\u00f3d",
             "timeout": "\u010casov\u00fd limit ov\u011b\u0159ov\u00e1n\u00ed k\u00f3du vypr\u0161el",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },

@@ -10,7 +10,8 @@
         "step": {
             "auth": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 }
             },
             "device": {
@@ -20,7 +21,8 @@
             },
             "manual_input": {
                 "data": {
-                    "host": ""
+                    "host": "",
+                    "port": ""
                 }
             }
         }

@@ -8,7 +8,7 @@
             "connect_error": "Tilkobling mislyktes.",
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
-        "flow_title": "Xiaomi Miio: {navn}",
+        "flow_title": "",
         "step": {
             "gateway": {
                 "data": {

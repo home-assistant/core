@@ -8,8 +8,8 @@
             "user": {
                 "data": {
                     "elevation": "Wysoko\u015b\u0107",
-                    "latitude": "[%key::common::config_flow::data::latitude%]",
-                    "longitude": "[%key::common::config_flow::data::longitude%]",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa"
                 },
                 "description": "Instytut Meteorologiczny",

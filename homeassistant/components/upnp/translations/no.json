@@ -14,7 +14,7 @@
             "two": "to",
             "zero": "ingen"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "\u00d8nsker du \u00e5 sette opp denne UPnP/IGD-enheten?"

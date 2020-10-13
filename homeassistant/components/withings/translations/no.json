@@ -13,7 +13,7 @@
             "already_configured_account": "Kontoen er allerede konfigurert",
             "profile_exists": "Brukerprofilen er allerede konfigurert. Oppgi et unikt profilnavn."
         },
-        "flow_title": "Withings: {profil}",
+        "flow_title": "",
         "step": {
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"

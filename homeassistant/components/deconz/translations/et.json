@@ -17,7 +17,8 @@
             },
             "manual_input": {
                 "data": {
-                    "host": ""
+                    "host": "",
+                    "port": ""
                 }
             }
         }

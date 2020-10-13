@@ -14,6 +14,7 @@
             "manual_setup": {
                 "data": {
                     "host": "",
+                    "port": "",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }
