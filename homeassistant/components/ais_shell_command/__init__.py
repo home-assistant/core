@@ -6,6 +6,7 @@ https://home-assistant.io/components/shell_command/
 """
 import asyncio
 import logging
+import multiprocessing
 import os
 import platform
 
@@ -741,7 +742,7 @@ async def _disable_irda_remote(hass, call):
 
 
 async def _set_scaling_governor(hass, call):
-    if not ais_global.has_root():
+    if not ais_global.has_root() or multiprocessing.cpu_count() > 5:
         return
     # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
     scaling_available_governors = ["hotplug", "interactive", "performance"]
