@@ -93,7 +93,7 @@ async def test_config_reauth_profile(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "configuration_updated"
 
     entries = hass.config_entries.async_entries(const.DOMAIN)
     assert entries
