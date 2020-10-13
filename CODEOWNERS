@@ -499,6 +499,7 @@ homeassistant/components/wled/* @frenck
 homeassistant/components/wolflink/* @adamkrol93
 homeassistant/components/workday/* @fabaff
 homeassistant/components/worldclock/* @fabaff
+homeassistant/components/xbox/* @hunterjm
 homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xfinity/* @cisasteelersfan
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
@@ -511,7 +512,7 @@ homeassistant/components/yeelight/* @rytilahti @zewelor @shenxn
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
-homeassistant/components/zeroconf/* @Kane610
+homeassistant/components/zeroconf/* @bdraco
 homeassistant/components/zerproc/* @emlove
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zodiac/* @JulienTant
