@@ -153,7 +153,7 @@ class PairedSensorManager:
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""
-        LOGGER.info("Adding paired sensor: %s", uid)
+        LOGGER.debug("Adding paired sensor: %s", uid)
 
         self._paired_uids.add(uid)
 
@@ -202,7 +202,7 @@ class PairedSensorManager:
 
     async def async_unpair_sensor(self, uid: str) -> None:
         """Remove a paired sensor coordinator."""
-        LOGGER.info("Removing paired sensor: %s", uid)
+        LOGGER.debug("Removing paired sensor: %s", uid)
 
         # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
@@ -305,7 +305,6 @@ class PairedSensorEntity(GuardianEntity):
 
     async def async_added_to_hass(self) -> None:
         """Perform tasks when the entity is added."""
-        await super().async_added_to_hass()
         self._async_update_from_latest_data()
 
 
