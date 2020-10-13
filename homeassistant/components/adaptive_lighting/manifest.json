@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/adaptive_lighting",
   "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@basnijholt", "@claytonjn"],
+  "codeowners": ["@basnijholt"],
   "requirements": []
 }
