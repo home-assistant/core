@@ -2,6 +2,7 @@
 import asyncio
 import binascii
 from collections import OrderedDict
+import copy
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -304,6 +305,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         config[CONF_DEVICE_ID] = device_id
 
         data = entry.data.copy()
+        data[CONF_DEVICES] = copy.deepcopy(entry.data[CONF_DEVICES])
         event_code = binascii.hexlify(event.data).decode("ASCII")
         data[CONF_DEVICES][event_code] = config
         hass.config_entries.async_update_entry(entry=entry, data=data)
