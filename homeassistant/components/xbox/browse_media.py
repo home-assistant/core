@@ -102,11 +102,7 @@ async def build_item_response(
             )
 
         content_types = sorted(
-            {
-                app.content_type
-                for app in apps.result
-                if app.content_type in TYPE_MAP
-            }
+            {app.content_type for app in apps.result if app.content_type in TYPE_MAP}
         )
         for c_type in content_types:
             library_info.children.append(
