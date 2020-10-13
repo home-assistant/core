@@ -14,7 +14,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
-    ATTR_CODE,
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -28,26 +27,13 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import (
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-    SERVICE_ALARM_ARM_NIGHT_INSTANT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISPLAY_MESSAGE,
-    ElkAttachedEntity,
-    create_elk_entities,
-)
+from . import ElkAttachedEntity, create_elk_entities
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
     ATTR_CHANGED_BY_TIME,
     DOMAIN,
-)
-
-ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
-    }
+    ELK_USER_CODE_SERVICE_SCHEMA,
 )
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
@@ -62,6 +48,13 @@ DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("line2", default=""): cv.string,
     }
 )
+
+SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
+SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
+SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
+SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
+SERVICE_ALARM_BYPASS = "alarm_bypass"
+SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -85,23 +78,33 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_vacation",
     )
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME_INSTANT,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_home_instant",
     )
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT_INSTANT,
-        ELK_ALARM_SERVICE_SCHEMA,
+        ELK_USER_CODE_SERVICE_SCHEMA,
         "async_alarm_arm_night_instant",
     )
     platform.async_register_entity_service(
         SERVICE_ALARM_DISPLAY_MESSAGE,
         DISPLAY_MESSAGE_SERVICE_SCHEMA,
         "async_display_message",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_CLEAR_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_clear_bypass",
     )
 
 
@@ -261,3 +264,11 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     async def async_display_message(self, clear, beep, timeout, line1, line2):
         """Display a message on all keypads for the area."""
         self._element.display_message(clear, beep, timeout, line1, line2)
+
+    async def async_bypass(self, code=None):
+        """Bypass all zones in area."""
+        self._element.bypass(code)
+
+    async def async_clear_bypass(self, code=None):
+        """Clear bypass for all zones in area."""
+        self._element.clear_bypass(code)

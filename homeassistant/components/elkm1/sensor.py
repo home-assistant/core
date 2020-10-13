@@ -8,10 +8,14 @@ from elkm1_lib.const import (
 from elkm1_lib.util import pretty_const, username
 
 from homeassistant.const import VOLT
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 
 from . import ElkAttachedEntity, create_elk_entities
-from .const import DOMAIN
+from .const import DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
 
+SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
+SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPATURE = -40
 
 
@@ -26,6 +30,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
     async_add_entities(entities, True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SENSOR_ZONE_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_zone_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SENSOR_ZONE_TRIGGER,
+        {},
+        "async_zone_trigger",
+    )
 
 
 def temperature_to_state(temperature, undefined_temperature):
@@ -45,6 +62,18 @@ class ElkSensor(ElkAttachedEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    async def async_zone_bypass(self, code=None):
+        """Bypass zone."""
+        if not isinstance(self, ElkZone):
+            raise HomeAssistantError("supported only on ElkM1 Zone sensors")
+        self._element.bypass(code)
+
+    async def async_zone_trigger(self):
+        """Trigger zone."""
+        if not isinstance(self, ElkZone):
+            raise HomeAssistantError("supported only on ElkM1 Zone sensors")
+        self._element.trigger()
 
 
 class ElkCounter(ElkSensor):
@@ -180,7 +209,6 @@ class ElkZone(ElkSensor):
         ).name.lower()
         attrs["definition"] = ZoneType(self._element.definition).name.lower()
         attrs["area"] = self._element.area + 1
-        attrs["bypassed"] = self._element.bypassed
         attrs["triggered_alarm"] = self._element.triggered_alarm
         return attrs
 
