@@ -319,7 +319,7 @@ class EntityPlatform:
             self.logger.exception(
                 "Error adding entities for domain %s with platform %s",
                 self.domain,
-                self.platform_name
+                self.platform_name,
             )
             raise
 
