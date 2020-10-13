@@ -43,9 +43,13 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
         self.zone_key = zone_key
 
     @property
+    def _zone(self):
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
+
+    @property
     def name(self):
         """Return the name."""
-        return f'{self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]["name"]}'
+        return f'{self._zone["name"]}'
 
     @property
     def unique_id(self):
@@ -65,12 +69,7 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if vent is fully closed."""
-        return (
-            self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-                "state"
-            ]
-            == ADVANTAGE_AIR_STATE_CLOSE
-        )
+        return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
 
     @property
     def is_opening(self):
@@ -85,26 +84,14 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return vents current position as a percentage."""
-        if (
-            self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-                "state"
-            ]
-            == ADVANTAGE_AIR_STATE_OPEN
-        ):
-            return self.coordinator.data["aircons"][self.ac_key]["zones"][
-                self.zone_key
-            ]["value"]
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return self._zone["value"]
         return 0
 
     @property
     def icon(self):
         """Return vent icon."""
-        if (
-            self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-                "state"
-            ]
-            == ADVANTAGE_AIR_STATE_OPEN
-        ):
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return "mdi:fan"
         return "mdi:fan-off"
 
