@@ -3,9 +3,7 @@ import logging
 import re
 
 import numpy as np
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,16 +14,16 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    CONF_COMPENSATION,
+    CONF_DATAPOINTS,
     CONF_DEGREE,
     CONF_PRECISION,
-    DEFAULT_DEGREE,
-    DEFAULT_NAME,
-    DEFAULT_PRECISION,
+    DATA_COMPENSATION,
+    DOMAIN,
     MATCH_DATAPOINT,
 )
 
@@ -34,55 +32,30 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ATTRIBUTE = "attribute"
 ATTR_COEFFICIENTS = "coefficients"
 
-CONF_DATAPOINTS = "data_points"
-
-
-def datapoints_greater_than_degree(value: dict) -> dict:
-    """Validate data point list is greater than polynomial degrees."""
-    if not len(value[CONF_DATAPOINTS]) > value[CONF_DEGREE]:
-        raise vol.Invalid(
-            f"{CONF_DATAPOINTS} must have at least {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
-        )
-
-    return value
-
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_DATAPOINTS): vol.All(
-                cv.ensure_list(cv.matches_regex(MATCH_DATAPOINT)),
-            ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_ATTRIBUTE): cv.string,
-            vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
-            vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
-                vol.Coerce(int),
-                vol.Range(min=1, max=7),
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        }
-    ),
-    datapoints_greater_than_degree,
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Compensation sensor."""
+    if discovery_info is None:
+        _LOGGER.error("This platform is only available through discovery")
+        return
 
-    compensation = CompensationSensor(
-        hass,
-        config[CONF_ENTITY_ID],
-        config.get(CONF_NAME),
-        config.get(CONF_ATTRIBUTE),
-        config[CONF_PRECISION],
-        config[CONF_DEGREE],
-        config[CONF_DATAPOINTS],
-        config.get(CONF_UNIT_OF_MEASUREMENT),
+    compensation = discovery_info.get(CONF_COMPENSATION)
+    conf = hass.data[DATA_COMPENSATION][compensation]
+
+    async_add_entities(
+        [
+            CompensationSensor(
+                hass,
+                conf[CONF_ENTITY_ID],
+                conf.get(CONF_NAME),
+                conf.get(CONF_ATTRIBUTE),
+                conf[CONF_PRECISION],
+                conf[CONF_DEGREE],
+                conf[CONF_DATAPOINTS],
+                conf.get(CONF_UNIT_OF_MEASUREMENT),
+            )
+        ]
     )
-
-    async_add_entities([compensation], True)
 
 
 class CompensationSensor(Entity):

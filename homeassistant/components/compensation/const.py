@@ -1,12 +1,14 @@
 """Compensation constants."""
-
 DOMAIN = "compensation"
-PLATFORM = "sensor"
 
 SENSOR = "compensation"
 
+CONF_COMPENSATION = "compensation"
+CONF_DATAPOINTS = "data_points"
 CONF_DEGREE = "degree"
 CONF_PRECISION = "precision"
+
+DATA_COMPENSATION = "compensation_data"
 
 DEFAULT_NAME = "Compensation"
 DEFAULT_DEGREE = 1
