@@ -72,16 +72,6 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
         return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
 
     @property
-    def is_opening(self):
-        """Platform is unaware of opening state."""
-        return False
-
-    @property
-    def is_closing(self):
-        """Platform is unaware of closing state."""
-        return False
-
-    @property
     def current_cover_position(self):
         """Return vents current position as a percentage."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
