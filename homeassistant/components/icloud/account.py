@@ -129,11 +129,9 @@ class IcloudAccount:
                 "unique_id": self._config_entry.unique_id,
             }
             if not any(
-                [
-                    flow
-                    for flow in self.hass.config_entries.flow.async_progress()
-                    if flow["context"] == context
-                ]
+                flow
+                for flow in self.hass.config_entries.flow.async_progress()
+                if flow["context"] == context
             ):
                 self.hass.add_job(
                     self.hass.config_entries.flow.async_init(
