@@ -504,7 +504,7 @@ class CastDevice(MediaPlayerEntity):
             hass_url = get_url(self.hass, prefer_external=True)
             media_id = f"{hass_url}{media_id}"
 
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
