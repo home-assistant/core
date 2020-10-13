@@ -114,32 +114,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_PTZ, SERVICE_PTZ_SCHEMA, "async_perform_ptz"
     )
 
-    config = {CONF_NAME: config_entry.title, **config_entry.data}
-
     camera = FoscamCamera(
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_USERNAME],
+        config_entry.data[CONF_PASSWORD],
         verbose=False,
     )
 
-    async_add_entities([HassFoscamCamera(camera, config, config_entry.unique_id)])
+    async_add_entities([HassFoscamCamera(camera, config_entry)])
 
 
 class HassFoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera, config, unique_id):
+    def __init__(self, camera, config_entry):
         """Initialize a Foscam camera."""
         super().__init__()
 
         self._foscam_session = camera
-        self._name = config[CONF_NAME]
-        self._username = config[CONF_USERNAME]
-        self._password = config[CONF_PASSWORD]
-        self._stream = config[CONF_STREAM]
-        self._unique_id = unique_id
+        self._name = config_entry.title
+        self._username = config_entry.data[CONF_USERNAME]
+        self._password = config_entry.data[CONF_PASSWORD]
+        self._stream = config_entry.data[CONF_STREAM]
+        self._unique_id = config_entry.unique_id
         self._rtsp_port = None
         self._motion_status = False
 
