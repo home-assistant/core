@@ -2,10 +2,9 @@
 import logging
 from typing import List
 
-from greeclimate.device import Device
-from greeclimate.device_info import DeviceInfo
+from greeclimate.device import Device, DeviceInfo
+from greeclimate.discovery import Discovery
 from greeclimate.exceptions import DeviceNotBoundError
-from greeclimate.gree_climate import GreeClimate
 
 from homeassistant import exceptions
 
@@ -22,18 +21,18 @@ class DeviceHelper:
         Note the you must bind with the device very quickly after it is discovered, or the
         process may not be completed correctly, raising a `CannotConnect` error.
         """
+        device = Device(device_info)
         try:
-            device = Device(device_info)
             await device.bind()
-            return device
         except DeviceNotBoundError as exception:
             raise CannotConnect from exception
+        else:
+            return device
 
     @staticmethod
     async def find_devices() -> List[DeviceInfo]:
         """Gather a list of device infos from the local network."""
-        gree = GreeClimate()
-        return await gree.search_devices()
+        return await Discovery.search_devices()
 
 
 class CannotConnect(exceptions.HomeAssistantError):
