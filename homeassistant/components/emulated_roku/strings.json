@@ -5,10 +5,10 @@
     "step": {
       "user": {
         "data": {
-          "advertise_ip": "Advertise IP",
-          "advertise_port": "Advertise port",
-          "host_ip": "Host IP",
-          "listen_port": "Listen port",
+          "advertise_ip": "Advertise [%key:common::config_flow::data::ip%]",
+          "advertise_port": "Advertise [%key:common::config_flow::data::port%]",
+          "host_ip": "Host [%key:common::config_flow::data::ip%]",
+          "listen_port": "Listen [%key:common::config_flow::data::port%]",
           "name": "[%key:common::config_flow::data::name%]",
           "upnp_bind_multicast": "Bind multicast (True/False)"
         },
