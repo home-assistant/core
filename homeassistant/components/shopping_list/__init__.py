@@ -144,7 +144,7 @@ class ShoppingData:
         """Add a shopping list item."""
         item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
         self.items.append(item)
-        self.hass.async_add_job(self.save)
+        self.hass.async_add_executor_job(self.save)
         return item
 
     @callback
@@ -157,14 +157,14 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
-        self.hass.async_add_job(self.save)
+        self.hass.async_add_executor_job(self.save)
         return item
 
     @callback
     def async_clear_completed(self):
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
-        self.hass.async_add_job(self.save)
+        self.hass.async_add_executor_job(self.save)
 
     async def async_load(self):
         """Load items."""
