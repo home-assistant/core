@@ -22,3 +22,12 @@ apply:
     turn_on_lights:
       description: "Turn on the lights that are off, default: false"
       example: false
+not_manually_controlled:
+  description: Mark a light as not being 'manually_controlled'.
+  fields:
+    entity_id:
+      description: entity_id of the Adaptive Lighting switch.
+      example: switch.adaptive_lighting_default
+    lights:
+      description: entity_id(s) of lights.
+      example: light.bedroom_ceiling

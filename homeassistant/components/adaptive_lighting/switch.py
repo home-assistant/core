@@ -104,6 +104,7 @@ from .const import (
     EXTRA_VALIDATION,
     ICON,
     SERVICE_APPLY,
+    SERVICE_NOT_MANUALLY_CONTROLLED,
     SUN_EVENT_MIDNIGHT,
     SUN_EVENT_NOON,
     TURNING_OFF_DELAY,
@@ -175,13 +176,21 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
             )
 
 
+async def handle_not_manually_controlled(
+    switch: AdaptiveSwitch, service_call: ServiceCall
+):
+    """Remove lights from the 'manually_controlled' list."""
+    all_lights = _expand_light_groups(switch.hass, service_call.data[CONF_LIGHTS])
+    switch.turn_on_off_listener.reset(*all_lights)
+
+
 @callback
 def _fire_manually_controlled_event(
     hass: HomeAssistant, light: str, context: Context, is_async=True
 ):
     """Fire an event that 'light' is marked as manually_controlled."""
     fire = hass.bus.async_fire if is_async else hass.bus.fire
-    fire(f"{DOMAIN}_manually_controlled", {ATTR_ENTITY_ID: light}, context=context)
+    fire(f"{DOMAIN}.manually_controlled", {ATTR_ENTITY_ID: light}, context=context)
 
 
 async def async_setup_entry(
@@ -218,6 +227,12 @@ async def async_setup_entry(
             vol.Optional(CONF_TURN_ON_LIGHTS, default=False): cv.boolean,
         },
         handle_apply,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_NOT_MANUALLY_CONTROLLED,
+        {vol.Required(CONF_LIGHTS): cv.entity_ids},
+        handle_not_manually_controlled,
     )
 
 
