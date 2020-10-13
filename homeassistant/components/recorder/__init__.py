@@ -404,7 +404,11 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
                     if dbstate.entity_id in self._old_states:
-                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
+                        old_state = self._old_states.pop(dbstate.entity_id)
+                        if old_state.state_id:
+                            dbstate.old_state_id = old_state.state_id
+                        else:
+                            dbstate.old_state = old_state
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
