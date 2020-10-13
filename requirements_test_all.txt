@@ -443,6 +443,9 @@ konnected==1.2.0
 # homeassistant.components.dyson
 libpurecool==0.6.4
 
+# homeassistant.components.foscam
+libpyfoscam==1.0
+
 # homeassistant.components.mikrotik
 librouteros==3.0.0
 
