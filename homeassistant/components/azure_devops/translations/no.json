@@ -9,14 +9,14 @@
             "connection_error": "Kunne ikke koble til Azure DevOps.",
             "project_error": "Kunne ikke f\u00e5 prosjektinformasjon."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "",
         "step": {
             "reauth": {
                 "data": {
                     "personal_access_token": "Token for personlig tilgang (PAT)"
                 },
                 "description": "Autentiseringen mislyktes for {project_url} . Vennligst skriv inn gjeldende legitimasjon.",
-                "title": "reautentisering"
+                "title": "Reautorisasjon"
             },
             "user": {
                 "data": {
@@ -29,5 +29,5 @@
             }
         }
     },
-    "title": "Azure DevOps"
+    "title": ""
 }

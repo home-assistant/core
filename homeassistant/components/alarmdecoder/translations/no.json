@@ -16,7 +16,7 @@
                     "device_baudrate": "Baud-hastighet for enhet",
                     "device_path": "Bane til enheten",
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Konfigurer tilkoblingsinnstillinger"
             },

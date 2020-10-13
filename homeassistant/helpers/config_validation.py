@@ -531,7 +531,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        template_value.ensure_valid()
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
@@ -549,7 +549,7 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
-        template_value.ensure_valid()
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex

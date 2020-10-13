@@ -6,12 +6,14 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
+            "login": "Viga sisselogimisel: kontrolli palun oma kasutajanime ja salas\u00f5na",
             "unknown": "Tundmatu viga"
         },
         "step": {
             "link": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 },
                 "title": ""
             },

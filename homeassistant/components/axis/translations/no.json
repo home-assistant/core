@@ -14,7 +14,7 @@
             "faulty_credentials": "Ugyldig brukerlegitimasjon",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "Akse-enhet: {Name} ({Host})",
+        "flow_title": "Axis enhet: {name} ({host})",
         "step": {
             "user": {
                 "data": {
