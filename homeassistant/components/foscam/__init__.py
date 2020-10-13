@@ -3,11 +3,6 @@ import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-
-from .const import DOMAIN
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.118")
 
 PLATFORMS = ["camera"]
 
