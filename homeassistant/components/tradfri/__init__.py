@@ -159,7 +159,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             await api(gateway.get_gateway_info())
         except RequestError:
             _LOGGER.error("Keep-alive failed")
-            await factory.shutdown()
 
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
