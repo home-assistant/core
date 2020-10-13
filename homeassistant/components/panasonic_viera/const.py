@@ -12,4 +12,10 @@ DEFAULT_PORT = 55000
 
 ATTR_REMOTE = "remote"
 
+ATTR_DEVICE_INFO = "device_info"
+ATTR_FRIENDLY_NAME = "friendlyName"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL_NUMBER = "modelNumber"
+ATTR_UDN = "UDN"
+
 ERROR_INVALID_PIN_CODE = "invalid_pin_code"
