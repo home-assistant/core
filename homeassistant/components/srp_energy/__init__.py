@@ -10,12 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
-# import voluptuous as vol
-
-
-# import homeassistant.helpers.config_validation as cv
-
-
 _LOGGER = logging.getLogger(__name__)
 
 

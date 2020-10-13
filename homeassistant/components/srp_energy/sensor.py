@@ -5,7 +5,7 @@ import logging
 import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers import entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -13,7 +13,6 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ENERGY_KWH,
     ICON,
     MIN_TIME_BETWEEN_UPDATES,
     SENSOR_NAME,
@@ -84,7 +83,7 @@ class SrpEntity(entity.Entity):
         self._name = SENSOR_NAME
         self.type = SENSOR_TYPE
         self.coordinator = coordinator
-        self._unit_of_measurement = ENERGY_KWH
+        self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._state = None
 
     @property
@@ -115,7 +114,7 @@ class SrpEntity(entity.Entity):
     @property
     def usage(self):
         """Return entity state."""
-        return "{0:.2f}".format(self.coordinator.data)
+        return f"{self.coordinator.data:.2f}"
 
     @property
     def should_poll(self):

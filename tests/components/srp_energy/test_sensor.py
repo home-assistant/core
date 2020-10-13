@@ -3,13 +3,12 @@ from homeassistant.components.srp_energy.const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ENERGY_KWH,
     ICON,
     SENSOR_NAME,
     SENSOR_TYPE,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 
 from tests.async_mock import MagicMock
 
@@ -90,7 +89,7 @@ async def test_srp_entity(hass):
     assert srp_entity.name == f"{DEFAULT_NAME} {SENSOR_NAME}"
     assert srp_entity.unique_id == SENSOR_TYPE
     assert srp_entity.state is None
-    assert srp_entity.unit_of_measurement == ENERGY_KWH
+    assert srp_entity.unit_of_measurement == ENERGY_KILO_WATT_HOUR
     assert srp_entity.icon == ICON
     assert srp_entity.usage == "2.00"
     assert srp_entity.should_poll is False

@@ -11,36 +11,6 @@ from .const import CONF_IS_TOU, DEFAULT_NAME, DOMAIN  # pylint:disable=unused-im
 
 _LOGGER = logging.getLogger(__name__)
 
-# DATA_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_ID): str,
-#         vol.Required(CONF_USERNAME): str,
-#         vol.Required(CONF_PASSWORD): str,
-#         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-#     }
-# )
-
-
-# async def validate_input(hass: core.HomeAssistant, data):
-#     """Validate the user input allows us to connect.
-
-#     Data has the keys from DATA_SCHEMA with values provided by the user.
-#     """
-#     try:
-#         srp_client = SrpEnergyClient(
-#             data[CONF_ID], data[CONF_USERNAME], data[CONF_PASSWORD]
-#         )
-
-#         is_valid = await hass.async_add_executor_job(srp_client.validate)
-
-#         if is_valid:
-#             return True
-
-#         raise InvalidAuth
-
-#     except ValueError as err:
-# raise CannotConnect from err
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SRP Energy."""
