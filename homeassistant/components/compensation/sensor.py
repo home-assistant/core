@@ -23,7 +23,6 @@ from .const import (
     CONF_DEGREE,
     CONF_PRECISION,
     DATA_COMPENSATION,
-    DOMAIN,
     MATCH_DATAPOINT,
 )
 
