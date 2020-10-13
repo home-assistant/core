@@ -12,13 +12,15 @@
         "step": {
             "confirm": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 }
             },
             "user": {
                 "data": {
                     "host": "",
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 }
             }
         }

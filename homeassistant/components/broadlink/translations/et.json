@@ -4,6 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress",
             "not_supported": "Seadet ei toetata",
             "unknown": "Tundmatu viga"
         },

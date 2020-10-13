@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "[VOID] oppsett",
+        "step": {
+            "user": {
+                "data": {
+                    "port": ""
+                },
+                "title": "Koble til"
+            }
+        }
+    },
+    "title": ""
+}

@@ -5,7 +5,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "import_failed": {

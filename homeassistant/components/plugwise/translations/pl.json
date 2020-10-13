@@ -4,8 +4,8 @@
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key::common::config_flow::error::invalid_auth%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "Smile: {name}",
@@ -17,7 +17,7 @@
                     "password": "Identyfikator Smile",
                     "port": "Port"
                 },
-                "description": "Szczeg\u00f3\u0142y",
+                "description": "Wybierz produkt:",
                 "title": "Wybierz typ Plugwise"
             },
             "user_gateway": {
@@ -27,7 +27,7 @@
                     "port": "Port"
                 },
                 "description": "Wprowad\u017a:",
-                "title": "Po\u0142\u0105cz si\u0119 ze Smile"
+                "title": "Po\u0142\u0105czenie ze Smile"
             }
         }
     },
