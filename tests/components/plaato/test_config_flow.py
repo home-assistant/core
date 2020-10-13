@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.plaato import config_flow
 from homeassistant.components.plaato.const import (
     CONF_CLOUDHOOK,
@@ -21,8 +21,12 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.common import MockConfigEntry
+
 BASE_URL = "http://example.com"
 WEBHOOK_ID = "webhook_id"
+UNIQUE_ID = "plaato_unique_id"
+CONF_UPDATE_INTERVAL = "update_interval"
 
 
 @pytest.fixture(name="webhook_id")
@@ -30,6 +34,8 @@ def mock_webhook_id():
     """Mock webhook_id."""
     with patch(
         "homeassistant.components.webhook.async_generate_id", return_value=WEBHOOK_ID
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url", return_value="hook_id"
     ):
         yield
 
@@ -37,7 +43,8 @@ def mock_webhook_id():
 async def init_config_flow(hass):
     """Init a configuration flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": BASE_URL},
+        hass,
+        {"external_url": BASE_URL},
     )
     flow = config_flow.PlaatoConfigFlow()
     flow.hass = hass
@@ -92,9 +99,19 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
     flow = await init_config_flow(hass)
     flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
 
-    result = await flow.async_step_validate(
-        user_input={CONF_USE_WEBHOOK: True, CONF_TOKEN: ""}
-    )
+    async def return_async_value(val):
+        return val
+
+    hass.config.components.add("cloud")
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=return_async_value("https://hooks.nabu.casa/ABCD"),
+    ):
+        result = await flow.async_step_validate(
+            user_input={CONF_USE_WEBHOOK: True, CONF_TOKEN: ""}
+        )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "webhook"
@@ -118,9 +135,10 @@ async def test_show_config_form_validate_token(hass):
     flow.context = {}
     flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
 
-    result = await flow.async_step_validate(
-        user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: "token"}
-    )
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+        result = await flow.async_step_validate(
+            user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: "token"}
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == PlaatoDeviceType.Airlock.name
@@ -146,6 +164,34 @@ async def test_show_config_form_validate_no_device(hass):
     assert result["reason"] == "no_device"
 
 
+async def test_show_config_form_validate_no_auth_token(hass, webhook_id):
+    """Test show configuration form."""
+
+    flow = await init_config_flow(hass)
+
+    # Using Airlock
+    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
+    result = await flow.async_step_validate(
+        user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: None}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "validate"
+    assert len(flow._errors) == 1
+    assert flow._errors["base"] == "no_api_method"
+
+    # Using Keg
+    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Keg}
+    result = await flow.async_step_validate(
+        user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: None}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "validate"
+    assert len(flow._errors) == 1
+    assert flow._errors["base"] == "no_api_method"
+
+
 async def test_show_config_form_webhook(hass):
     """Test show configuration form."""
 
@@ -169,66 +215,42 @@ async def test_show_config_form_webhook(hass):
         CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
     }
 
-    # with patch(
-    #     "homeassistant.components.plaato.async_setup", return_value=True
-    # ) as mock_setup, patch(
-    #     "homeassistant.components.plaato.async_setup_entry", return_value=True,
-    # ) as mock_setup_entry:
-    #     MockConfigEntry(domain=DOMAIN, unique_id="token",
-    #                     data={}).add_to_hass(
-    #         hass
-    #     )
-    #
-    #     result2 = await hass.config_entries.flow.async_configure(
-    #         result["flow_id"],
-    #         {
-    #             CONF_TOKEN: "token",
-    #             CONF_USE_WEBHOOK: False,
-    #             CONF_WEBHOOK_ID: None,
-    #             CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
-    #         },
-    #     )
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NAME",
+        data={},
+        options={CONF_UPDATE_INTERVAL: 5},
+    )
+
+    flow = await init_config_flow(hass)
+    flow.context = {}
+    options_flow = flow.async_get_options_flow(entry)
+
+    result = await options_flow.async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    result = await options_flow.async_step_user({CONF_UPDATE_INTERVAL: 10})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_UPDATE_INTERVAL] == 10
 
 
-# async def test_form_source_user(hass):
-#     """Test we get the form."""
-#     await setup.async_setup_component(hass, "persistent_notification", {})
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
-#     assert result["type"] == "form"
-#     assert result["errors"] == {}
-#
-#     with patch(
-#         "homeassistant.components.plaato.config_flow.PlaatoDeviceType",
-#         return_value=True,
-#     ), patch(
-#         "homeassistant.components.plaato.async_setup", return_value=True
-#     ) as mock_setup, patch(
-#         "homeassistant.components.plaato.async_setup_entry", return_value=True,
-#     ) as mock_setup_entry:
-#         result2 = await hass.config_entries.flow.async_configure(
-#             result["flow_id"],
-#             {
-#                 "host": "1.1.1.1",
-#                 "username": "test-username",
-#                 "password": "test-password",
-#             },
-#         )
-#
-#     assert result2["type"] == "create_entry"
-#     assert result2["title"] == "Name of the device"
-#     assert result2["data"] == {
-#         "host": "1.1.1.1",
-#         "username": "test-username",
-#         "password": "test-password",
-#     }
-#     await hass.async_block_till_done()
-#     assert len(mock_setup.mock_calls) == 1
-#     assert len(mock_setup_entry.mock_calls) == 1
-#
-#
-# def _mock_plaato_device_side_effect(site_info=None):
-#     powerwall_mock = MagicMock(PlaatoDeviceType)
-#     powerwall_mock.get_site_info = Mock(side_effect=site_info)
-#     return powerwall_mock
+async def test_options_webhook(hass, webhook_id):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NAME",
+        data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
+        options={CONF_UPDATE_INTERVAL: 5},
+    )
+
+    flow = await init_config_flow(hass)
+    flow.context = {}
+    options_flow = flow.async_get_options_flow(entry)
+
+    result = await options_flow.async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "webhook"
+    assert result["description_placeholders"] == {"webhook_url": ""}

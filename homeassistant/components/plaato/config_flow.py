@@ -108,10 +108,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors["base"] = "no_api_method"
             return await self._show_api_method_form(device_type)
 
-        if not auth_token:
-            self._errors["base"] = "no_auth_token"
-            return await self._show_api_method_form(device_type)
-
         return await self._async_step_create_entry()
 
     async def async_step_device_type(self, user_input=None):
