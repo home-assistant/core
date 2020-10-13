@@ -1,7 +1,7 @@
 """The fritzbox_callmonitor integration."""
 import asyncio
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .base import FritzBoxPhonebook
 from .const import CONF_PHONEBOOK, CONF_PREFIXES, DOMAIN, PLATFORMS
@@ -16,7 +16,6 @@ async def async_setup_entry(hass, entry):
     """Set up the fritzbox_callmonitor platforms."""
     phonebook = FritzBoxPhonebook(
         host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         phonebook_id=entry.data[CONF_PHONEBOOK],

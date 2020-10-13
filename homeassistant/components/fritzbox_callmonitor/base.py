@@ -11,12 +11,11 @@ from .const import LOGGER, MIN_TIME_PHONEBOOK_UPDATE
 class FritzBoxPhonebook:
     """This connects to a FritzBox router and downloads its phone book."""
 
-    def __init__(self, host, port, username, password, phonebook_id, prefixes):
+    def __init__(self, host, username, password, phonebook_id, prefixes):
         """Initialize the class."""
         self.host = host
         self.username = username
         self.password = password
-        self.port = port
         self.phonebook_id = phonebook_id
         self.phonebook_dict = None
         self.number_dict = None

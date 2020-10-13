@@ -76,7 +76,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect and check auth."""
         self._phonebook = FritzBoxPhonebook(
             host=self._host,
-            port=self._port,
             username=self._username,
             password=self._password,
             phonebook_id=self._phonebook_id,
