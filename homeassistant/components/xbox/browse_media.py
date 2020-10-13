@@ -105,13 +105,13 @@ async def build_item_response(
             {
                 app.content_type
                 for app in apps.result
-                if app.content_type in TYPE_MAP.keys()
+                if app.content_type in TYPE_MAP
             }
         )
         for c_type in content_types:
             library_info.children.append(
                 BrowseMedia(
-                    media_class=TYPE_MAP[c_type]["class"],
+                    media_class=MEDIA_CLASS_DIRECTORY,
                     media_content_id=c_type,
                     media_content_type=TYPE_MAP[c_type]["type"],
                     title=f"{c_type}s",
@@ -138,7 +138,7 @@ async def build_item_response(
     }
 
     return BrowseMedia(
-        media_class=TYPE_MAP[media_content_id]["class"],
+        media_class=MEDIA_CLASS_DIRECTORY,
         media_content_id=media_content_id,
         media_content_type=media_content_type,
         title=f"{media_content_id}s",
