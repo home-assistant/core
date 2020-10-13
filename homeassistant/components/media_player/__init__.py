@@ -658,7 +658,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_set_repeat(self, repeat):
         """Set repeat mode."""
-        await self.hass.async_add_job(self.set_repeat, repeat)
+        await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
     # No need to overwrite these.
     @property
