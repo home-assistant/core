@@ -473,10 +473,14 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         async def message_received(msg):
             """Run when new MQTT message has been received."""
-            _LOGGER.info("Received MQTT Message %s", msg)
-            payload = json.loads(msg.payload)
-            action = payload.get("action")
-            code = payload.get("code")
+            try:
+                payload = json.loads(msg.payload)
+                action = payload.get("action")
+                code = payload.get("code")
+            except:
+                _LOGGER.error("Received non-JSON payload! That mode is deprecated.")
+                action = msg.payload
+                code = self._code
             if action == self._payload_disarm:
                 await self.async_alarm_disarm(code)
             elif action == self._payload_arm_home:
