@@ -180,7 +180,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Store existing entry data so it can be used later and set unique ID
         # so existing config entry can be updated
         if not self._existing_entry:
-            await self.async_set_unique_id(user_input.pop("unique_id"))
             self._existing_entry = user_input.copy()
             self._description_placeholders = {"username": user_input[CONF_USERNAME]}
             user_input = None

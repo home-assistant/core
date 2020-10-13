@@ -124,17 +124,25 @@ class IcloudAccount:
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
-
-            self.hass.add_job(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data={
-                        **self._config_entry.data,
-                        "unique_id": self._config_entry.unique_id,
-                    },
+            context = {
+                "source": SOURCE_REAUTH,
+                "unique_id": self._config_entry.unique_id,
+            }
+            if not any(
+                [
+                    flow
+                    for flow in self.hass.config_entries.flow.async_progress()
+                    if flow["context"] == context
+                ]
+            ):
+                self.hass.add_job(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context=context,
+                        data=self._config_entry.data,
+                    )
                 )
-            )
+
             return
 
         try:
