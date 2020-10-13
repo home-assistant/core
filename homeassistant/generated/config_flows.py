@@ -217,6 +217,7 @@ FLOWS = [
     "withings",
     "wled",
     "wolflink",
+    "xbox",
     "xiaomi_aqara",
     "xiaomi_miio",
     "yeelight",

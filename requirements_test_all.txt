@@ -1077,6 +1077,9 @@ wled==0.4.4
 # homeassistant.components.wolflink
 wolf_smartset==0.1.6
 
+# homeassistant.components.xbox
+xbox-webapi==2.0.7
+
 # homeassistant.components.bluesound
 # homeassistant.components.rest
 # homeassistant.components.startca
