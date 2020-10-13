@@ -38,7 +38,7 @@ TYPE_MAP = {
 async def build_item_response(
     client: XboxLiveClient,
     device_id: str,
-    tv: bool,
+    tv_configured: bool,
     media_content_type: str,
     media_content_id: str,
 ) -> Optional[BrowseMedia]:
@@ -79,7 +79,7 @@ async def build_item_response(
         )
 
         # Add TV if configured
-        if tv:
+        if tv_configured:
             tv_catalog: CatalogResponse = (
                 await client.catalog.get_product_from_alternate_id(
                     SYSTEM_PFN_ID_MAP["Microsoft.Xbox.LiveTV_8wekyb3d8bbwe"][id_type],
