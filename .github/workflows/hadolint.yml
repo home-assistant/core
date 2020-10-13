@@ -8,8 +8,9 @@ on:
       - dev
       - rc
   pull_request:
+
 jobs:
-  golangci:
+  hadolint:
     name: lint
     runs-on: ubuntu-latest
     steps:
