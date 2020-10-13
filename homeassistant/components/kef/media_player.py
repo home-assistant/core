@@ -1,6 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
 
-import asyncio
 from datetime import timedelta
 from functools import partial
 import ipaddress
@@ -164,7 +163,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         dtype = type(options[0])  # int or float
         platform.async_register_entity_service(
             name,
-            {vol.Required(option): vol.All(vol.Coerce(dtype), vol.In(options))},
+            {
+                vol.Required(option): vol.All(
+                    vol.Coerce(float), vol.Coerce(dtype), vol.In(options)
+                )
+            },
             f"set_{which}",
         )
 
@@ -365,17 +368,16 @@ class KefMediaPlayer(MediaPlayerEntity):
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
-        (mode, *rest) = await asyncio.gather(
-            self._speaker.get_mode(),
-            self._speaker.get_desk_db(),
-            self._speaker.get_wall_db(),
-            self._speaker.get_treble_db(),
-            self._speaker.get_high_hz(),
-            self._speaker.get_low_hz(),
-            self._speaker.get_sub_db(),
+        mode = await self._speaker.get_mode()
+        self._dsp = dict(
+            desk_db=await self._speaker.get_desk_db(),
+            wall_db=await self._speaker.get_wall_db(),
+            treble_db=await self._speaker.get_treble_db(),
+            high_hz=await self._speaker.get_high_hz(),
+            low_hz=await self._speaker.get_low_hz(),
+            sub_db=await self._speaker.get_sub_db(),
+            **mode._asdict(),
         )
-        keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
-        self._dsp = dict(zip(keys, rest), **mode._asdict())
 
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""
