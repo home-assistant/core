@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.onewire.const import DEFAULT_OWSERVER_PORT, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, PRESSURE_CBAR, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -153,14 +153,14 @@ MOCK_DEVICE_SENSORS = {
                 "unique_id": "/EF.111111111112/moisture/sensor.2",
                 "injected_value": b"    43.123",
                 "result": "43.1",
-                "unit": "cb",
+                "unit": PRESSURE_CBAR,
             },
             {
                 "entity_id": "sensor.ef_111111111112_moisture_3",
                 "unique_id": "/EF.111111111112/moisture/sensor.3",
                 "injected_value": b"    44.123",
                 "result": "44.1",
-                "unit": "cb",
+                "unit": PRESSURE_CBAR,
             },
         ],
     },
