@@ -461,3 +461,10 @@ def test_duplicate_key(caplog):
     with patch_yaml_files(files):
         load_yaml_config_file(YAML_CONFIG_FILE)
     assert "contains duplicate key" in caplog.text
+
+
+def test_no_recursive_secrets(caplog):
+    files = {YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}
+    with patch_yaml_files(files):
+        load_yaml_config_file(YAML_CONFIG_FILE)
+    assert "attempt to load secret from within secrets file" in caplog.text
