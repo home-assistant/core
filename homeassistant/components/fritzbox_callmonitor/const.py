@@ -15,7 +15,6 @@ FRITZ_STATE_DISCONNECT = "DISCONNECT"
 ICON_PHONE = "mdi:phone"
 
 ATTR_PREFIXES = "prefixes"
-ATTR_PHONEBOOK_ID = "phonebook_id"
 ATTR_PHONEBOOK_NAME = "phonebook_name"
 ATTR_PHONEBOOK_URL = "phonebook_url"
 

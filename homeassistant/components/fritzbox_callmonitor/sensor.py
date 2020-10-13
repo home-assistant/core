@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTR_PHONEBOOK_ID,
     ATTR_PHONEBOOK_NAME,
     ATTR_PHONEBOOK_URL,
     ATTR_PREFIXES,
@@ -171,7 +170,6 @@ class FritzBoxCallSensor(Entity):
             self._attributes[ATTR_PHONEBOOK_NAME] = self._phonebook_name
         if self._phonebook_url:
             self._attributes[ATTR_PHONEBOOK_URL] = self._phonebook_url
-        self._attributes[ATTR_PHONEBOOK_ID] = self._phonebook_id
         return self._attributes
 
     @property
