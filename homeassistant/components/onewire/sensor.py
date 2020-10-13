@@ -3,12 +3,7 @@ from glob import glob
 import logging
 import os
 
-from pi1wire import (
-    InvalidCRCException,
-    NotFoundSensorException,
-    Pi1Wire,
-    UnsupportResponseException,
-)
+from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
@@ -343,7 +338,6 @@ class OneWireDirect(OneWire):
         except (
             FileNotFoundError,
             InvalidCRCException,
-            NotFoundSensorException,
             UnsupportResponseException,
         ) as ex:
             _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
