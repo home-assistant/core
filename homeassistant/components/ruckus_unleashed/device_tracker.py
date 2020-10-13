@@ -2,13 +2,18 @@
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CLIENTS, COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENERS
+from .const import (
+    CLIENTS,
+    CLIENTS_HOST_NAME,
+    COORDINATOR,
+    DOMAIN,
+    UNDO_UPDATE_LISTENERS,
+)
 
 
 async def async_setup_entry(
@@ -44,7 +49,9 @@ def add_new_entities(coordinator, async_add_entities, tracked):
             continue
 
         device = coordinator.data[CLIENTS][mac]
-        new_tracked.append(RuckusUnleashedDevice(coordinator, mac, device[CONF_NAME]))
+        new_tracked.append(
+            RuckusUnleashedDevice(coordinator, mac, device[CLIENTS_HOST_NAME])
+        )
         tracked.add(mac)
 
     if new_tracked:
@@ -89,7 +96,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         """Return the name."""
         if self.is_connected:
             return (
-                self.coordinator.data[CLIENTS][self._mac][CONF_NAME]
+                self.coordinator.data[CLIENTS][self._mac][CLIENTS_HOST_NAME]
                 or f"Ruckus {self._mac}"
             )
         return self._name

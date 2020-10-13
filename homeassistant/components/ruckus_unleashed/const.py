@@ -11,3 +11,4 @@ COORDINATOR = "coordinator"
 UNDO_UPDATE_LISTENERS = "undo_update_listeners"
 
 CLIENTS = "clients"
+CLIENTS_HOST_NAME = "Host Name"
