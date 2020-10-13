@@ -4,7 +4,6 @@ import logging
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .bridge import CannotConnect, DeviceHelper
 from .const import DOMAIN
@@ -28,11 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # it's necessary to bind static devices anyway
     _LOGGER.debug("Scanning network for Gree devices")
 
-    try:
-        for device_info in await DeviceHelper.find_devices():
-            device_infos.append(device_info)
-    except Exception as exception:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady from exception
+    for device_info in await DeviceHelper.find_devices():
+        device_infos.append(device_info)
 
     for device_info in device_infos:
         try:
