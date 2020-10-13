@@ -282,7 +282,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
         # Only geography-based entries have options:
-        config_entry.add_update_listener(async_update_options)
+        config_entry.add_update_listener(async_reload_entry)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
@@ -376,7 +376,7 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def async_update_options(hass, config_entry):
+async def async_reload_entry(hass, config_entry):
     """Handle an options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
