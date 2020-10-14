@@ -331,10 +331,6 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
-            elif self.type == "min_temp":
-                self._state = data["min_temp"]
-            elif self.type == "max_temp":
-                self._state = data["max_temp"]
             elif self.type == "windangle_value":
                 self._state = fix_angle(data["WindAngle"])
             elif self.type == "windangle":
