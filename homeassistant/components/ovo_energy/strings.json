@@ -3,7 +3,7 @@
         "error": {
             "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
             "authorization_error": "Authorization error. Check your credentials.",
-            "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {
             "user": {
