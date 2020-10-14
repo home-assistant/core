@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
 
 from .const import DOMAIN as TASMOTA_DOMAIN
-from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW, clear_discovery_hash
+from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,17 +20,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_discover(tasmota_entity, discovery_hash):
         """Discover and add a Tasmota binary sensor."""
-        try:
-            async_add_entities(
-                [
-                    TasmotaBinarySensor(
-                        tasmota_entity=tasmota_entity, discovery_hash=discovery_hash
-                    )
-                ]
-            )
-        except Exception:
-            clear_discovery_hash(hass, discovery_hash)
-            raise
+        async_add_entities(
+            [
+                TasmotaBinarySensor(
+                    tasmota_entity=tasmota_entity, discovery_hash=discovery_hash
+                )
+            ]
+        )
 
     async_dispatcher_connect(
         hass,
@@ -65,7 +61,7 @@ class TasmotaBinarySensor(
 
     @callback
     def state_updated(self, state, **kwargs):
-        """Handle new MQTT state messages."""
+        """Handle state updates."""
         self._state = state
 
         if self._delay_listener is not None:

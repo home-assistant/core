@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Valitud n\u00f5usolek on juba seadistatud.",
+            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
+            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+        }
+    }
+}

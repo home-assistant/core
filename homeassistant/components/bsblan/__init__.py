@@ -1,6 +1,5 @@
 """The BSB-Lan integration."""
 from datetime import timedelta
-import logging
 
 from bsblan import BSBLan, BSBLanConnectionError
 
@@ -15,8 +14,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_PASSKEY, DATA_BSBLAN_CLIENT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -21,9 +21,9 @@
             "hub2": {
                 "data": {
                     "host": "Adres IP Huba",
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "port": "Numer portu IP",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Konfiguracja Huba Insteon \u2014 wersja 2.",
                 "title": "Hub Insteon \u2014 wersja 2"
@@ -93,7 +93,7 @@
             },
             "add_x10": {
                 "data": {
-                    "housecode": "Housecode (a - p)",
+                    "housecode": "Housecode (a \u2014 p)",
                     "platform": "Platforma",
                     "steps": "Kroki \u015bciemniacza (tylko dla urz\u0105dze\u0144 o\u015bwietleniowych, domy\u015blnie 22)",
                     "unitcode": "Unitcode (1\u201316)"
@@ -108,7 +108,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany, musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
                 "title": "Insteon"
             },
             "init": {

@@ -2,14 +2,18 @@
     "config": {
         "abort": {
             "auth_fail": "Benotzernumm oder Passwuert inkorrekt",
-            "connection_error": "Feeler beim verbannen mam ZoneMinder Server."
+            "cannot_connect": "Feeler beim verbannen",
+            "connection_error": "Feeler beim verbannen mam ZoneMinder Server.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "create_entry": {
             "default": "Zoneminder Server dob\u00e4igesat."
         },
         "error": {
             "auth_fail": "Benotzernumm oder Passwuert inkorrekt",
-            "connection_error": "Feeler beim verbannen mam ZoneMinder Server."
+            "cannot_connect": "Feeler beim verbannen",
+            "connection_error": "Feeler beim verbannen mam ZoneMinder Server.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "flow_title": "ZoneMinder",
         "step": {
@@ -19,7 +23,7 @@
                     "password": "Passwuert",
                     "path": "ZM Pad",
                     "path_zms": "ZMS Pad",
-                    "ssl": "Benotz SSL fir d'Verbindung mat ZoneMinder",
+                    "ssl": "Benotz een SSL Zertifikat",
                     "username": "Benotzernumm",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },

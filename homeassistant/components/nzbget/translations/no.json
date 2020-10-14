@@ -8,14 +8,14 @@
             "cannot_connect": "Tilkobling mislyktes.",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"

@@ -1,7 +1,4 @@
 """Support for UK Met Office weather service."""
-
-import logging
-
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -26,8 +23,6 @@ from .const import (
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_UPDATE = "last_update"
 ATTR_SENSOR_ID = "sensor_id"

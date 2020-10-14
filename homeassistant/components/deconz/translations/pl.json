@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mostek jest ju\u017c skonfigurowany",
-            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
             "not_deconz_bridge": "To nie jest mostek deCONZ",

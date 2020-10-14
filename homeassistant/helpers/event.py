@@ -1095,6 +1095,7 @@ def async_track_time_interval(
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
+    interval_listener_job = None
 
     job = HassJob(action)
 
@@ -1106,14 +1107,19 @@ def async_track_time_interval(
     def interval_listener(now: datetime) -> None:
         """Handle elapsed intervals."""
         nonlocal remove
-        remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
+        nonlocal interval_listener_job
+
+        remove = async_track_point_in_utc_time(
+            hass, interval_listener_job, next_interval()  # type: ignore
+        )
         hass.async_run_hass_job(job, now)
 
-    remove = async_track_point_in_utc_time(hass, interval_listener, next_interval())
+    interval_listener_job = HassJob(interval_listener)
+    remove = async_track_point_in_utc_time(hass, interval_listener_job, next_interval())
 
     def remove_listener() -> None:
         """Remove interval listener."""
-        remove()
+        remove()  # type: ignore
 
     return remove_listener
 
@@ -1126,7 +1132,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    action: Callable[..., None] = attr.ib()
+    job: HassJob = attr.ib()
     event: str = attr.ib()
     offset: Optional[timedelta] = attr.ib()
     _unsub_sun: Optional[CALLBACK_TYPE] = attr.ib(default=None)
@@ -1170,7 +1176,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_job(self.action)
+        self.hass.async_run_hass_job(self.job)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -1187,7 +1193,7 @@ def async_track_sunrise(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunrise daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNRISE, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNRISE, offset)
     listener.async_attach()
     return listener.async_detach
 
@@ -1201,7 +1207,7 @@ def async_track_sunset(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunset daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNSET, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNSET, offset)
     listener.async_attach()
     return listener.async_detach
 

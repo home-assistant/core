@@ -1,6 +1,4 @@
 """Tests for the Synology DSM config flow."""
-import logging
-
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
@@ -38,9 +36,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 HOST = "nas.meontheinternet.com"
 SERIAL = "mySerial"

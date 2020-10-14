@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "Jm\u00e9no ji\u017e existuje"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                }
+            }
+        }
+    },
+    "title": "Emulovan\u00e9 Roku"
+}

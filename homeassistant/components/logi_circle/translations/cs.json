@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+        },
+        "error": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "step": {
+            "auth": {
+                "description": "Postupujte podle n\u00ed\u017ee uveden\u00e9ho odkazu a **P\u0159ijm\u011bte** p\u0159\u00edstup k \u00fa\u010dtu Logi Circle, pot\u00e9 se vra\u0165te zp\u011bt a stiskn\u011bte n\u00ed\u017ee **Odeslat**. \n\n[Odkaz]({authorization_url})"
+            }
+        }
+    }
+}

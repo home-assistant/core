@@ -7,7 +7,7 @@
         },
         "step": {
             "user": {
-                "description": "Er du sikker p\u00e5 at du vil konfigurere SpeedTest?",
+                "description": "Vil du starte oppsettet?",
                 "title": "Konfigurere SpeedTest"
             }
         }

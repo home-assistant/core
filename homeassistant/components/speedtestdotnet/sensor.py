@@ -1,6 +1,4 @@
 """Support for Speedtest.net internet speed testing sensor."""
-import logging
-
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -18,8 +16,6 @@ from .const import (
     ICON,
     SENSOR_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

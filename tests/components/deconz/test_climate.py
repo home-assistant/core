@@ -1,6 +1,8 @@
 """deCONZ climate platform tests."""
 from copy import deepcopy
 
+import pytest
+
 from homeassistant.components import deconz
 import homeassistant.components.climate as climate
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
@@ -155,6 +157,18 @@ async def test_climate_devices(hass):
             "put", "/sensors/1/config", json={"mode": "off"}
         )
 
+    # Service set HVAC mode to unsupported value
+
+    with patch.object(
+        thermostat_device, "_request", return_value=True
+    ) as set_callback, pytest.raises(ValueError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            climate.SERVICE_SET_HVAC_MODE,
+            {"entity_id": "climate.thermostat", "hvac_mode": "cool"},
+            blocking=True,
+        )
+
     # Service set temperature to 20
 
     with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
@@ -166,6 +180,22 @@ async def test_climate_devices(hass):
         )
         set_callback.assert_called_with(
             "put", "/sensors/1/config", json={"heatsetpoint": 2000.0}
+        )
+
+    # Service set temperature without providing temperature attribute
+
+    with patch.object(
+        thermostat_device, "_request", return_value=True
+    ) as set_callback, pytest.raises(ValueError):
+        await hass.services.async_call(
+            climate.DOMAIN,
+            climate.SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.thermostat",
+                "target_temp_high": 30,
+                "target_temp_low": 10,
+            },
+            blocking=True,
         )
 
     await hass.config_entries.async_unload(config_entry.entry_id)

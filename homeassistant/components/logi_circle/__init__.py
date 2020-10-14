@@ -1,6 +1,5 @@
 """Support for Logi Circle devices."""
 import asyncio
-import logging
 
 from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
@@ -39,7 +38,6 @@ from .const import (
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 15  # seconds
 
 SERVICE_SET_CONFIG = "set_config"

@@ -10,9 +10,16 @@
         },
         "flow_title": "Drukarka Samsung SyncThru: {name}",
         "step": {
+            "confirm": {
+                "data": {
+                    "name": "Nazwa",
+                    "url": "Adres URL interfejsu internetowego"
+                }
+            },
             "user": {
                 "data": {
-                    "name": "Nazwa"
+                    "name": "Nazwa",
+                    "url": "Adres URL interfejsu internetowego"
                 }
             }
         }

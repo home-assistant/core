@@ -1,4 +1,20 @@
 {
+    "config": {
+        "abort": {
+            "port_name_in_use": "Er is al een bridge met dezelfde naam of poort geconfigureerd."
+        },
+        "step": {
+            "pairing": {
+                "title": "Koppel HomeKit Bridge"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Automatisch starten (uitschakelen als u Z-Wave of een ander vertraagd startsysteem gebruikt)"
+                },
+                "title": "Activeer HomeKit Bridge"
+            }
+        }
+    },
     "options": {
         "step": {
             "advanced": {
@@ -15,7 +31,11 @@
                 "data": {
                     "include_domains": "Op te nemen domeinen"
                 }
+            },
+            "yaml": {
+                "title": "Pas de HomeKit Bridge-opties aan"
             }
         }
-    }
+    },
+    "title": "HomeKit Bridge"
 }

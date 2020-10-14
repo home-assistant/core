@@ -1,5 +1,6 @@
 """Support for Huawei LTE sensors."""
 
+from bisect import bisect
 import logging
 import re
 from typing import Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union
@@ -7,18 +8,21 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, U
 import attr
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_URL,
     DATA_BYTES,
     DATA_RATE_BYTES_PER_SECOND,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import HomeAssistantType, StateType
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -66,11 +70,11 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
     (KEY_DEVICE_SIGNAL, "dl_mcs"): SensorMeta(name="Downlink MCS"),
     (KEY_DEVICE_SIGNAL, "dlbandwidth"): SensorMeta(
         name="Downlink bandwidth",
-        icon=lambda x: (x is None or x < 8)
-        and "mdi:speedometer-slow"
-        or x < 15
-        and "mdi:speedometer-medium"
-        or "mdi:speedometer",
+        icon=lambda x: (
+            "mdi:speedometer-slow",
+            "mdi:speedometer-medium",
+            "mdi:speedometer",
+        )[bisect((8, 15), x if x is not None else -1000)],
     ),
     (KEY_DEVICE_SIGNAL, "earfcn"): SensorMeta(name="EARFCN"),
     (KEY_DEVICE_SIGNAL, "lac"): SensorMeta(name="LAC", icon="mdi:map-marker"),
@@ -86,11 +90,11 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
     (KEY_DEVICE_SIGNAL, "ul_mcs"): SensorMeta(name="Uplink MCS"),
     (KEY_DEVICE_SIGNAL, "ulbandwidth"): SensorMeta(
         name="Uplink bandwidth",
-        icon=lambda x: (x is None or x < 8)
-        and "mdi:speedometer-slow"
-        or x < 15
-        and "mdi:speedometer-medium"
-        or "mdi:speedometer",
+        icon=lambda x: (
+            "mdi:speedometer-slow",
+            "mdi:speedometer-medium",
+            "mdi:speedometer",
+        )[bisect((8, 15), x if x is not None else -1000)],
     ),
     (KEY_DEVICE_SIGNAL, "mode"): SensorMeta(
         name="Mode",
@@ -101,77 +105,71 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
         name="RSRQ",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrq.php
-        icon=lambda x: (x is None or x < -11)
-        and "mdi:signal-cellular-outline"
-        or x < -8
-        and "mdi:signal-cellular-1"
-        or x < -5
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-11, -8, -5), x if x is not None else -1000)],
         enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rsrp"): SensorMeta(
         name="RSRP",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrp.php
-        icon=lambda x: (x is None or x < -110)
-        and "mdi:signal-cellular-outline"
-        or x < -95
-        and "mdi:signal-cellular-1"
-        or x < -80
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-110, -95, -80), x if x is not None else -1000)],
         enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rssi"): SensorMeta(
         name="RSSI",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # https://eyesaas.com/wi-fi-signal-strength/
-        icon=lambda x: (x is None or x < -80)
-        and "mdi:signal-cellular-outline"
-        or x < -70
-        and "mdi:signal-cellular-1"
-        or x < -60
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-80, -70, -60), x if x is not None else -1000)],
         enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "sinr"): SensorMeta(
         name="SINR",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/sinr.php
-        icon=lambda x: (x is None or x < 0)
-        and "mdi:signal-cellular-outline"
-        or x < 5
-        and "mdi:signal-cellular-1"
-        or x < 10
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((0, 5, 10), x if x is not None else -1000)],
         enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rscp"): SensorMeta(
         name="RSCP",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # https://wiki.teltonika.lt/view/RSCP
-        icon=lambda x: (x is None or x < -95)
-        and "mdi:signal-cellular-outline"
-        or x < -85
-        and "mdi:signal-cellular-1"
-        or x < -75
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-95, -85, -75), x if x is not None else -1000)],
     ),
     (KEY_DEVICE_SIGNAL, "ecio"): SensorMeta(
         name="EC/IO",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         # https://wiki.teltonika.lt/view/EC/IO
-        icon=lambda x: (x is None or x < -20)
-        and "mdi:signal-cellular-outline"
-        or x < -10
-        and "mdi:signal-cellular-1"
-        or x < -6
-        and "mdi:signal-cellular-2"
-        or "mdi:signal-cellular-3",
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-20, -10, -6), x if x is not None else -1000)],
     ),
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(
@@ -193,8 +191,14 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
     ),
     KEY_MONITORING_STATUS: SensorMeta(
         include=re.compile(
-            r"^(currentwifiuser|(primary|secondary).*dns)$", re.IGNORECASE
+            r"^(batterypercent|currentwifiuser|(primary|secondary).*dns)$",
+            re.IGNORECASE,
         )
+    ),
+    (KEY_MONITORING_STATUS, "BatteryPercent"): SensorMeta(
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        unit=PERCENTAGE,
     ),
     (KEY_MONITORING_STATUS, "CurrentWifiUser"): SensorMeta(
         name="WiFi clients connected", icon="mdi:wifi"
@@ -322,7 +326,11 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     sensors: List[Entity] = []
@@ -346,7 +354,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-def format_default(value):
+def format_default(value: StateType) -> Tuple[StateType, Optional[str]]:
     """Format value."""
     unit = None
     if value is not None:
@@ -426,12 +434,11 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
             value = self.router.data[self.key][self.item]
         except KeyError:
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
-            self._available = False
-            return
-        self._available = True
+            value = None
 
         formatter = self.meta.formatter
         if not callable(formatter):
             formatter = format_default
 
         self._state, self._unit = formatter(value)
+        self._available = value is not None

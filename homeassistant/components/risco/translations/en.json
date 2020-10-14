@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Require pin code to arm",
-                    "code_disarm_required": "Require pin code to disarm",
+                    "code_arm_required": "Require PIN Code to arm",
+                    "code_disarm_required": "Require PIN Code to disarm",
                     "scan_interval": "How often to poll Risco (in seconds)"
                 },
                 "title": "Configure options"

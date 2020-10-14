@@ -201,7 +201,7 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):
     result = await flow.async_step_auth("")
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
-    assert result["errors"]["base"] == "auth_error"
+    assert result["errors"]["base"] == "invalid_auth"
 
 
 async def test_not_pick_host_if_only_one(hass, mock_tellduslive):

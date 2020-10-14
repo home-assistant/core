@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "title": ""
+            }
+        }
+    }
+}

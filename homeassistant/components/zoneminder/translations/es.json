@@ -23,7 +23,7 @@
                     "password": "Contrase\u00f1a",
                     "path": "Ruta ZM",
                     "path_zms": "Ruta ZMS",
-                    "ssl": "Usar SSL para conexiones a ZoneMinder",
+                    "ssl": "Utiliza un certificado SSL",
                     "username": "Usuario",
                     "verify_ssl": "Verificar certificado SSL"
                 },

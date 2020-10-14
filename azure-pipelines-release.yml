@@ -115,10 +115,10 @@ stages:
         docker run --rm --privileged \
           -v ~/.docker:/root/.docker \
           -v /run/docker.sock:/run/docker.sock:rw \
+          -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
           --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
-          -r https://github.com/home-assistant/hassio-homeassistant \
-          -t machine --docker-hub homeassistant
+          -t /data --docker-hub homeassistant
       displayName: 'Build Release'
 
 - stage: 'Publish'

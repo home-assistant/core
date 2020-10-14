@@ -22,7 +22,7 @@
             },
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 Kodi (\"{name}\") do Home Assistant?",
-                "title": "Wykryto urz\u0105dzenia Kodi"
+                "title": "Wykryto urz\u0105dzenie Kodi"
             },
             "host": {
                 "data": {
@@ -50,8 +50,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_off": "{entity_name} zosta\u0142 poproszony o wy\u0142\u0105czenie",
-            "turn_on": "{entity_name} zosta\u0142 poproszony o w\u0142\u0105czenie"
+            "turn_off": "{entity_name} zostanie poproszony o wy\u0142\u0105czenie",
+            "turn_on": "{entity_name} zostanie poproszony o w\u0142\u0105czenie"
         }
     }
 }

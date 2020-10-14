@@ -1,3 +1,23 @@
+alarm_bypass:
+  description: Bypass all zones for the area.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to bypass.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to authorize the bypass of the alarm control panel.
+      example: 4242
+
+alarm_clear_bypass:
+  description: Remove bypass on all zones for the area.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to clear bypass.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to authorize the bypass clear of the alarm control panel.
+      example: 4242
+
 alarm_arm_home_instant:
   description: Arm the ElkM1 in home instant mode.
   fields:
@@ -63,3 +83,20 @@ speak_word:
     number:
       description: Word number to speak.
       example: 142
+
+sensor_zone_bypass:
+  description: Bypass zone.
+  fields:
+    entity_id:
+      description: Name of zone to bypass.
+      example: "sensor.window42"
+    code:
+      description: An code to authorize the bypass of the zone.
+      example: 4242
+
+sensor_zone_trigger:
+  description: Trigger zone.
+  fields:
+    entity_id:
+      description: Name of zone to trigger.
+      example: "sensor.motion42"
