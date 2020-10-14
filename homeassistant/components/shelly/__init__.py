@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
-from .const import DOMAIN
+from .const import COAP_CONTEXT, DOMAIN
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -39,12 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
     )
-    if not hass.data[DOMAIN].get("coap_context"):
+    if not hass.data[DOMAIN].get(COAP_CONTEXT):
         coap_context = hass.data[DOMAIN][
-            "coap_context"
+            COAP_CONTEXT
         ] = await aiocoap.Context.create_client_context()
     else:
-        coap_context = hass.data[DOMAIN]["coap_context"]
+        coap_context = hass.data[DOMAIN][COAP_CONTEXT]
     try:
         async with async_timeout.timeout(10):
             device = await aioshelly.Device.create(
@@ -129,6 +129,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
+            await self.hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
@@ -149,6 +150,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if len(hass.data[DOMAIN]) == 1:
-            await hass.data[DOMAIN].pop("coap_context").shutdown()
+            await hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
     return unload_ok
