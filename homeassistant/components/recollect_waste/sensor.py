@@ -87,7 +87,9 @@ class RecollectWasteSensor(Entity):
     def update(self):
         """Update device state."""
         try:
-            pickup_event_array = self.client.get_pickup_events(date.today(),date.today() + timedelta(weeks=4))
+            pickup_event_array = self.client.get_pickup_events(
+                date.today(), date.today() + timedelta(weeks=4)
+            )
             pickup_event = pickup_event_array[0]
             next_pickup_event = pickup_event_array[1]
             next_date = str(next_pickup_event.event_date)
