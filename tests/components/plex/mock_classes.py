@@ -212,6 +212,10 @@ class MockPlexServer:
         """Mock the clients method."""
         return self._clients
 
+    def createToken(self):
+        """Mock the createToken method."""
+        return "temporary_token"
+
     def sessions(self):
         """Mock the sessions method."""
         return self._sessions

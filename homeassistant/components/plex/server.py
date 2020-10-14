@@ -36,7 +36,6 @@ from .const import (
     DOMAIN,
     GDM_SCANNER,
     PLAYER_SOURCE,
-    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -88,7 +87,7 @@ class PlexServer:
         self._owner_username = None
         self._plextv_clients = None
         self._plextv_client_timestamp = 0
-        self._plextv_device_cache = {}
+        self._client_device_cache = {}
         self._use_plex_tv = self._token is not None
         self._version = None
         self.async_update_platforms = Debouncer(
@@ -292,9 +291,10 @@ class PlexServer:
             )
             return
 
-        async_dispatcher_send(self.hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
-
         def process_device(source, device):
+            if device is None:
+                return
+
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
             available_clients[device.machineIdentifier].setdefault(
@@ -327,19 +327,33 @@ class PlexServer:
         for device in devices:
             process_device("PMS", device)
 
-        def connect_to_client(baseurl):
+        def connect_to_client(source, baseurl, machine_identifier, name="Unknown"):
             """Connect to a Plex client and return a PlexClient instance."""
-            return PlexClient(
-                server=self._plex_server, baseurl=baseurl, token=self._token
-            )
+            try:
+                client = PlexClient(
+                    server=self._plex_server,
+                    baseurl=baseurl,
+                    token=self._plex_server.createToken(),
+                )
+            except requests.exceptions.ConnectionError:
+                _LOGGER.error(
+                    "Direct client connection failed, will try again: %s (%s)",
+                    name,
+                    baseurl,
+                )
+            except Unauthorized:
+                _LOGGER.error(
+                    "Direct client connection unauthorized, ignoring: %s (%s)",
+                    name,
+                    baseurl,
+                )
+                self._client_device_cache[machine_identifier] = None
+            else:
+                self._client_device_cache[client.machineIdentifier] = client
+                process_device(source, client)
 
         def connect_to_resource(resource):
             """Connect to a plex.tv resource and return a Plex client."""
-            client_id = resource.clientIdentifier
-            if client_id in self._plextv_device_cache:
-                return self._plextv_device_cache[client_id]
-
-            client = None
             try:
                 client = resource.connect(timeout=3)
                 _LOGGER.debug("plex.tv resource connection successful: %s", client)
@@ -347,33 +361,33 @@ class PlexServer:
                 _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
+                self._client_device_cache[client.machineIdentifier] = client
+                process_device("plex.tv", client)
 
-            self._plextv_device_cache[client_id] = client
-            return client
-
-        for gdm_client in self.hass.data[DOMAIN][GDM_SCANNER].entries:
-            machine_identifier = gdm_client["data"]["Resource-Identifier"]
-            if machine_identifier not in available_clients:
-                baseurl = f"http://{gdm_client['from'][0]}:{gdm_client['data']['Port']}"
-                name = gdm_client["data"]["Name"]
-                try:
-                    device = await self.hass.async_add_executor_job(
-                        connect_to_client, baseurl
+        def connect_new_clients():
+            """Create connections to newly discovered clients."""
+            for gdm_entry in self.hass.data[DOMAIN][GDM_SCANNER].entries:
+                machine_identifier = gdm_entry["data"]["Resource-Identifier"]
+                if machine_identifier in self._client_device_cache:
+                    client = self._client_device_cache[machine_identifier]
+                    if client is not None:
+                        process_device("GDM", client)
+                elif machine_identifier not in available_clients:
+                    baseurl = (
+                        f"http://{gdm_entry['from'][0]}:{gdm_entry['data']['Port']}"
                     )
-                except requests.exceptions.ConnectionError:
-                    _LOGGER.error(
-                        "GDM client connection failed: %s (%s)", name, baseurl
-                    )
-                else:
-                    process_device("GDM", device)
+                    name = gdm_entry["data"]["Name"]
+                    connect_to_client("GDM", baseurl, machine_identifier, name)
 
-        for plextv_client in plextv_clients:
-            if plextv_client.clientIdentifier not in available_clients:
-                device = await self.hass.async_add_executor_job(
-                    connect_to_resource, plextv_client
-                )
-                if device:
-                    process_device("plex.tv", device)
+            for plextv_client in plextv_clients:
+                if plextv_client.clientIdentifier in self._client_device_cache:
+                    client = self._client_device_cache[plextv_client.clientIdentifier]
+                    if client is not None:
+                        process_device("plex.tv", client)
+                elif plextv_client.clientIdentifier not in available_clients:
+                    connect_to_resource(plextv_client)
+
+        await self.hass.async_add_executor_job(connect_new_clients)
 
         for session in sessions:
             if session.TYPE == "photo":
@@ -413,7 +427,7 @@ class PlexServer:
         for client_id in idle_clients:
             self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
-            self._plextv_device_cache.pop(client_id, None)
+            self._client_device_cache.pop(client_id, None)
 
         if new_entity_configs:
             async_dispatcher_send(

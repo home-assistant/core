@@ -21,11 +21,9 @@ from homeassistant.components.plex.const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     DOMAIN,
-    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     SERVERS,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update
@@ -131,9 +129,6 @@ async def test_network_error_during_refresh(
 async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
     """Test connection failure to a GDM discovered client."""
     mock_plex_server = await setup_plex_server(disable_gdm=False)
-
-    # Multiple debouncers with cooldowns involved, easier to trigger manually
-    async_dispatcher_send(hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
 
     with patch(
         "homeassistant.components.plex.server.PlexClient", side_effect=ConnectionError

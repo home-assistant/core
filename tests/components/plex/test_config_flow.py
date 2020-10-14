@@ -17,7 +17,6 @@ from homeassistant.components.plex.const import (
     CONF_USE_EPISODE_ART,
     DOMAIN,
     MANUAL_SETUP_STRING,
-    PLEX_GDM_CLIENT_SCAN_SIGNAL,
     PLEX_SERVER_CONFIG,
     SERVERS,
 )
@@ -35,7 +34,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .helpers import trigger_plex_update
@@ -443,9 +441,6 @@ async def test_option_flow_new_users_available(
     entry.options = OPTIONS_OWNER_ONLY
 
     mock_plex_server = await setup_plex_server(config_entry=entry, disable_gdm=False)
-
-    # Multiple debouncers with cooldowns involved, easier to trigger manually
-    async_dispatcher_send(hass, PLEX_GDM_CLIENT_SCAN_SIGNAL)
 
     with patch("homeassistant.components.plex.server.PlexClient", new=MockPlexClient):
         trigger_plex_update(mock_websocket)
