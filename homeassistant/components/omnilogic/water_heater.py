@@ -195,7 +195,7 @@ class OmniLogicHeaterControl(OmniLogicEntity, WaterHeaterEntity):
 
 
 WATER_HEATER_TYPES = {
-    (6, "Heater"): [
+    (6, "Heaters"): [
         {
             "entity_classes": {"enable": OmniLogicHeaterControl},
             "name": "Heater",

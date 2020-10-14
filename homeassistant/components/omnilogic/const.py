@@ -20,7 +20,7 @@ PUMP_TYPES = {
 ALL_ITEM_KINDS = {
     "BOWS",
     "Filter",
-    "Heater",
+    "Heaters",
     "Chlorinator",
     "CSAD",
     "Lights",

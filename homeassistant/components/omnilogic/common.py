@@ -104,7 +104,7 @@ class OmniLogicEntity(CoordinatorEntity):
         if bow_id is not None:
             unique_id = f"{unique_id}_{coordinator.data[bow_id]['systemId']}"
 
-            if kind != "Heater":
+            if kind != "Heaters":
                 entity_friendly_name = (
                     f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
                 )

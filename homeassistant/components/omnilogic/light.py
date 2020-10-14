@@ -80,6 +80,10 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
 
         self._state_key = state_key
         self._wait_for_state_change = False
+        if coordinator.data[item_id]["V2"] == "yes":
+            self._version = 2
+        else:
+            self._version = 1
 
     @property
     def is_on(self):
@@ -95,7 +99,10 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the supported light effects."""
-        return list(LightEffect.__members__)
+        if self._version == 2:
+            return list(LightEffect.__members__)
+        else:
+            return list(LightEffect.__members__)[:17]
 
     @property
     def supported_features(self):

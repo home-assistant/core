@@ -159,7 +159,7 @@ BINARY_SENSOR_TYPES = {
             ],
         },
     ],
-    (6, "Heater"): [
+    (6, "Heaters"): [
         {
             "entity_classes": {"Alarms": OmniLogicAlarmSensor},
             "name": "Heater Alarm",
