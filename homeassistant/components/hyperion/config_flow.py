@@ -8,7 +8,14 @@ from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_BASE,
+    CONF_HOST,
+    CONF_ID,
+    CONF_PORT,
+    CONF_TOKEN,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -273,11 +280,11 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Get final confirmation before entry creation."""
         if user_input is None:
-            return self._show_confirm_form()
+            return await self._show_confirm_form()
 
         # TODO: Consider the implications of this title.
         return self.async_create_entry(
-            title="Hyperion %s" % self.context["unique_id"], data=self._data
+            title=self.context[CONF_UNIQUE_ID], data=self._data
         )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:

@@ -1,25 +1,42 @@
 """Tests for the Hyperion integration."""
+import logging
+
 from asynctest import CoroutineMock, call, patch
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
+from homeassistant.components.hyperion.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.setup import async_setup_component
 
 from . import (
+    TEST_CONFIG_ENTRY_ID,
     TEST_ENTITY_ID,
     TEST_HOST,
     TEST_NAME,
     TEST_PORT,
     TEST_PRIORITY,
+    TEST_SERVER_ID,
     create_mock_client,
 )
+
+from tests.common import MockConfigEntry
+
+# TODO Add test for unloading.
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def call_registered_callback(client, key, *args, **kwargs):
@@ -33,9 +50,9 @@ async def setup_entity(hass, client=None):
     with patch("hyperion.client.HyperionClient", return_value=client):
         assert await async_setup_component(
             hass,
-            DOMAIN,
+            LIGHT_DOMAIN,
             {
-                DOMAIN: {
+                LIGHT_DOMAIN: {
                     "platform": "hyperion",
                     "name": TEST_NAME,
                     "host": TEST_HOST,
@@ -61,6 +78,72 @@ async def test_setup_platform_not_ready(hass):
 
     await setup_entity(hass, client=client)
     assert hass.states.get(TEST_ENTITY_ID) is None
+
+
+async def test_setup_entry(hass):
+    """Test setting up via a config entry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        entry_id=TEST_CONFIG_ENTRY_ID,
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+        },
+        title=f"Hyperion {TEST_SERVER_ID}",
+        unique_id=TEST_SERVER_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    master_client = create_mock_client()
+    master_client.instances = [
+        {"friendly_name": "Test instance 1", "instance": 0, "running": True},
+        {"friendly_name": "Test instance 2", "instance": 1, "running": True},
+    ]
+
+    entity_client = create_mock_client()
+    entity_client.instances = master_client.instances
+
+    with patch(
+        "hyperion.client.HyperionClient",
+        side_effect=[master_client, entity_client, entity_client],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert master_client == hass.data[DOMAIN][TEST_CONFIG_ENTRY_ID]
+    assert hass.states.get("light.test_instance_1") is not None
+    assert hass.states.get("light.test_instance_2") is not None
+
+    # Inject a new instances update.
+    assert master_client.set_callbacks.called
+    instance_callback = master_client.set_callbacks.call_args[0][0][
+        f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}"
+    ]
+    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+        await instance_callback(
+            {
+                const.KEY_SUCCESS: True,
+                const.KEY_DATA: [
+                    {
+                        "friendly_name": "Test instance 2",
+                        "instance": 1,
+                        "running": True,
+                    },
+                    {
+                        "friendly_name": "Test instance 3",
+                        "instance": 2,
+                        "running": True,
+                    },
+                ],
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_instance_1") is None
+    assert hass.states.get("light.test_instance_2") is not None
+    assert hass.states.get("light.test_instance_3") is not None
 
 
 async def test_light_basic_properies(hass):
@@ -91,7 +174,7 @@ async def test_light_async_turn_on(hass):
     # On (=), 100% (=), solid (=), [255,255,255] (=)
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
 
     assert client.async_send_set_color.call_args == call(
@@ -108,7 +191,7 @@ async def test_light_async_turn_on(hass):
     client.async_send_set_color = AsyncMock(return_value=True)
     client.async_send_set_adjustment = AsyncMock(return_value=True)
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: brightness},
         blocking=True,
@@ -136,7 +219,7 @@ async def test_light_async_turn_on(hass):
     hs_color = (180.0, 100.0)
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_HS_COLOR: hs_color},
         blocking=True,
@@ -167,7 +250,7 @@ async def test_light_async_turn_on(hass):
     client.async_send_set_adjustment = AsyncMock(return_value=True)
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: brightness},
         blocking=True,
@@ -193,7 +276,7 @@ async def test_light_async_turn_on(hass):
     client.async_send_clear = AsyncMock(return_value=True)
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_EFFECT: effect},
         blocking=True,
@@ -240,7 +323,7 @@ async def test_light_async_turn_on(hass):
     client.async_send_set_effect = AsyncMock(return_value=True)
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_EFFECT: effect},
         blocking=True,
@@ -272,7 +355,7 @@ async def test_light_async_turn_on(hass):
     client.async_send_set_effect = AsyncMock(return_value=True)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
 
     assert not client.async_send_clear.called
@@ -286,7 +369,7 @@ async def test_light_async_turn_off(hass):
 
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
 
     assert client.async_send_set_component.call_args == call(
@@ -304,7 +387,7 @@ async def test_light_async_turn_off(hass):
     call_registered_callback(client, "client-update", {"loaded-state": False})
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
     )
 
     assert not client.async_send_set_component.called

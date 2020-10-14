@@ -24,7 +24,7 @@
         "title": "Accept new token in Hyperion UI"
       },
       "confirm": {
-        "description": "Do you want to add this Hyperion Ambilight to Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**Instance:** {instance_name} ({instance})\n**ID**: {id}",
+        "description": "Do you want to add this Hyperion Ambilight to Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
         "title": "Confirm addition of Hyperion Ambilight device"
       }
     },

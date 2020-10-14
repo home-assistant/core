@@ -16,11 +16,12 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 
 from . import (
+    TEST_CONFIG_ENTRY_ID,
     TEST_HOST,
     TEST_HYPERION_URL,
-    TEST_ID,
     TEST_INSTANCE,
     TEST_PORT,
+    TEST_SERVER_ID,
     TEST_TOKEN,
     create_mock_client,
 )
@@ -35,6 +36,8 @@ TEST_HOST_PORT = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
+
+# TODO: Test with an entity in the entity registry that uses an OLD style unique_id.
 
 TEST_AUTH_REQUIRED_RESP = {
     "command": "authorize-tokenRequired",
@@ -74,9 +77,10 @@ TEST_ZEROCONF_SERVICE_INFO = {
 async def _create_mock_entry(hass):
     """Add a test Hyperion entity to hass."""
     entry = MockConfigEntry(
+        entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
-        unique_id=TEST_ID,
-        title=TEST_ID,
+        unique_id=TEST_SERVER_ID,
+        title=TEST_SERVER_ID,
         data={
             "host": TEST_HOST,
             "port": TEST_PORT,
@@ -173,7 +177,7 @@ async def test_user_noauth_flow_success(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == "Hyperion %s" % TEST_ID
+    assert result["title"] == TEST_SERVER_ID
     assert result["data"] == {
         **TEST_HOST_PORT,
     }
@@ -231,7 +235,7 @@ async def test_auth_static_token(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == "Hyperion %s" % TEST_ID
+    assert result["title"] == TEST_SERVER_ID
     assert result["data"] == {
         **TEST_HOST_PORT,
         CONF_TOKEN: TEST_TOKEN,
@@ -363,7 +367,7 @@ async def test_auth_create_token_success(hass):
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["handler"] == DOMAIN
-        assert result["title"] == "Hyperion %s" % TEST_ID
+        assert result["title"] == TEST_SERVER_ID
         assert result["data"] == {
             **TEST_HOST_PORT,
             CONF_TOKEN: TEST_TOKEN,
@@ -386,7 +390,7 @@ async def test_zeroconf_success(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == "Hyperion %s" % TEST_ID
+    assert result["title"] == TEST_SERVER_ID
     assert result["data"] == {
         CONF_HOST: TEST_IP_ADDRESS,
         CONF_PORT: TEST_PORT,
