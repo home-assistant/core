@@ -246,7 +246,10 @@ class PlaatoCoordinator(DataUpdateCoordinator):
         self.platforms = []
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self):
@@ -258,4 +261,4 @@ class PlaatoCoordinator(DataUpdateCoordinator):
             )
             return data
         except Exception as exception:
-            raise UpdateFailed(exception)
+            raise UpdateFailed from exception

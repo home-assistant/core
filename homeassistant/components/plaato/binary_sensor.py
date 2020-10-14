@@ -28,7 +28,9 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         if coordinator.data is not None:
             async_add_devices(
                 PlaatoBinarySensor(
-                    hass.data[DOMAIN][config_entry.entry_id], sensor_type, coordinator,
+                    hass.data[DOMAIN][config_entry.entry_id],
+                    sensor_type,
+                    coordinator,
                 )
                 for sensor_type in coordinator.data.binary_sensors.keys()
             )
