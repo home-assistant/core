@@ -139,9 +139,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "OWFS implementation does not conform to policy regarding 3rd-party libraries, and will no longer be updated. Please migrate to OWServer implementation."
         )
         config[CONF_TYPE] = CONF_TYPE_OWFS
-        devs = get_entities(config)
-        add_entities(devs, True)
-        return
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
