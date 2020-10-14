@@ -1,5 +1,7 @@
 """Tests for the Advantage Air component."""
 
+import json
+
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
@@ -31,3 +33,8 @@ async def add_mock_config(hass):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
+
+
+def get_query_json(url):
+    """Parse an Advantage Air url query string."""
+    return json.loads(url.query["json"])
