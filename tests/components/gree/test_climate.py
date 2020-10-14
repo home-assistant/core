@@ -90,43 +90,38 @@ async def test_discovery_called_once(hass, discovery, device):
 
 async def test_discovery_setup(hass, discovery, device):
     """Test setup of platform."""
-    with patch(
-        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
-    ) as add_entities:
-        MockDevice1 = build_device_mock(
-            name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
-        )
-        MockDevice2 = build_device_mock(
-            name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
-        )
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
+    MockDevice2 = build_device_mock(
+        name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
+    )
 
-        discovery.return_value = [MockDevice1.device_info, MockDevice2.device_info]
-        device.side_effect = [MockDevice1, MockDevice2]
+    discovery.return_value = [MockDevice1.device_info, MockDevice2.device_info]
+    device.side_effect = [MockDevice1, MockDevice2]
 
-        await async_setup_gree(hass)
-        await hass.async_block_till_done()
-        assert discovery.call_count == 1
-        assert add_entities.call_count == 2
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+    assert discovery.call_count == 1
+    
+    assert len(hass.states.async_all(DOMAIN)) == 2
 
 
 async def test_discovery_setup_connection_error(hass, discovery, device):
     """Test gree integration is setup."""
-    with patch(
-        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
-    ) as add_entities:
-        MockDevice1 = build_device_mock(name="fake-device-1")
-        MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice1 = build_device_mock(name="fake-device-1")
+    MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
 
-        MockDevice2 = build_device_mock(name="fake-device-2")
-        MockDevice2.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice2 = build_device_mock(name="fake-device-2")
+    MockDevice2.bind = AsyncMock(side_effect=DeviceNotBoundError)
 
-        device.side_effect = [MockDevice1, MockDevice2]
+    device.side_effect = [MockDevice1, MockDevice2]
 
-        await async_setup_gree(hass)
-        await hass.async_block_till_done()
-        assert discovery.call_count == 1
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+    assert discovery.call_count == 1
 
-        add_entities.call_count == 0
+    assert not hass.states.async_all(DOMAIN)
 
 
 async def test_update_connection_failure(hass, discovery, device, mock_now):
@@ -425,12 +420,13 @@ async def test_send_invalid_preset_mode(hass, discovery, device, mock_now):
         async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "invalid"},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "invalid"},
+            blocking=True,
+        )
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -610,12 +606,13 @@ async def test_send_invalid_fan_mode(hass, discovery, device, mock_now):
         async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "invalid"},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "invalid"},
+            blocking=True,
+        )
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -704,12 +701,13 @@ async def test_send_invalid_swing_mode(hass, discovery, device, mock_now):
         async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "invalid"},
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "invalid"},
+            blocking=True,
+        )
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
