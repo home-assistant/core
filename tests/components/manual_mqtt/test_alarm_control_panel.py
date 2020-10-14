@@ -1616,6 +1616,43 @@ async def test_disarm_pending_with_code_via_command_topic(hass, mqtt_mock):
     assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
 
 
+async def test_disarm_pending_with_old_mqtt_command_api(hass, mqtt_mock):
+    """Test disarming pending alarm with deprecated command topic."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "manual_mqtt",
+                "name": "test",
+                "arming_time": 1,
+                "code": "12345678",
+                "state_topic": "alarm/state",
+                "command_topic": "alarm/command",
+                "payload_disarm": "DISARM",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
+
+    await common.async_alarm_trigger(hass)
+    await hass.async_block_till_done()
+
+    assert STATE_ALARM_PENDING == hass.states.get(entity_id).state
+
+    # Now that we're pending, receive a command to disarm
+    async_fire_mqtt_message(
+        hass, "alarm/command", 'DISARM'
+    )
+    await hass.async_block_till_done()
+
+    assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
+
+
 async def test_state_changes_are_published_to_mqtt(hass, mqtt_mock):
     """Test publishing of MQTT messages when state changes."""
     assert await async_setup_component(
