@@ -38,6 +38,11 @@ MIME_TYPE_MAP = {
     "screenshots": "image/png",
 }
 
+MEDIA_CLASS_MAP = {
+    "gameclips": MEDIA_CLASS_VIDEO,
+    "screenshots": MEDIA_CLASS_IMAGE,
+}
+
 
 async def async_get_media_source(hass: HomeAssistantType):
     """Set up Xbox media source."""
@@ -200,9 +205,7 @@ class XboxSource(MediaSource):
             can_play=False,
             can_expand=True,
             children=[_build_media_item(title, category, item) for item in items],
-            children_media_class=MEDIA_CLASS_VIDEO
-            if kind == "gameclips"
-            else MEDIA_CLASS_IMAGE,
+            children_media_class=MEDIA_CLASS_MAP[kind],
             thumbnail=thumbnail,
         )
 
@@ -258,9 +261,7 @@ def _build_categories(title):
                     title=f"{owner.title()} {kind.title()}",
                     can_play=False,
                     can_expand=True,
-                    children_media_class=MEDIA_CLASS_VIDEO
-                    if kind == "gameclips"
-                    else MEDIA_CLASS_IMAGE,
+                    children_media_class=MEDIA_CLASS_MAP[kind],
                 )
             )
 
