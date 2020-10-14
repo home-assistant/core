@@ -93,19 +93,18 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     """Test that sysbus config entry works correctly."""
     entity_registry = mock_registry(hass)
 
+    glob_result = [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
     read_side_effect = []
     expected_sensors = MOCK_DEVICE_SENSORS[device_id]["sensors"]
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
 
     with patch(
-        "homeassistant.components.onewire.sensor.Pi1Wire"
-    ) as mock_pi1wire, patch("pi1wire.OneWire") as mock_owsensor:
-        type(mock_owsensor).mac_address = PropertyMock(
-            return_value=device_id.replace("-", "")
-        )
-        mock_owsensor.get_temperature.side_effect = read_side_effect
-        mock_pi1wire.return_value.find_all_sensors.return_value = [mock_owsensor]
+        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=True
+    ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
+        "pi1wire.OneWire.get_temperature",
+        side_effect=read_side_effect,
+    ):
         assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_CONFIG)
         await hass.async_block_till_done()
 
