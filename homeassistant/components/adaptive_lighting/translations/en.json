@@ -35,9 +35,9 @@
           "sleep_brightness": "sleep_brightness, in %",
           "sleep_color_temp": "sleep_color_temp, in Kelvin",
           "sunrise_offset": "sunrise_offset, in +/- seconds",
-          "sunrise_time": "sunrise_time, in 'HH:MM:SS' format",
+          "sunrise_time": "sunrise_time, in 'HH:MM:SS' format (if 'None', it uses the actual sunrise time at your location)",
           "sunset_offset": "sunset_offset, in +/- seconds",
-          "sunset_time": "sunset_time, in 'HH:MM:SS' format",
+          "sunset_time": "sunset_time, in 'HH:MM:SS' format (if 'None', it uses the actual sunset time at your location)",
           "take_over_control": "take_over_control, if anything but Adaptive Lighting calls 'light.turn_on' when a light is already on, stop adapting that light until it (or the switch) toggles off -> on.",
           "detect_non_ha_changes": "detect_non_ha_changes, detects all >5% changes made to the lights (also outside of HA), requires 'take_over_control' to be enabled (calls 'homeassistant.update_entity' every 'interval'!)",
           "transition": "transition, in seconds"

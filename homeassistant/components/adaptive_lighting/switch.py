@@ -85,6 +85,7 @@ from .const import (
     CONF_INITIAL_TRANSITION,
     CONF_INTERVAL,
     CONF_LIGHTS,
+    CONF_MANUALLY_CONTROLLED,
     CONF_MAX_BRIGHTNESS,
     CONF_MAX_COLOR_TEMP,
     CONF_MIN_BRIGHTNESS,
@@ -104,7 +105,7 @@ from .const import (
     EXTRA_VALIDATION,
     ICON,
     SERVICE_APPLY,
-    SERVICE_NOT_MANUALLY_CONTROLLED,
+    SERVICE_SET_MANUALLY_CONTROLLED,
     SUN_EVENT_MIDNIGHT,
     SUN_EVENT_NOON,
     TURNING_OFF_DELAY,
@@ -176,12 +177,25 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
             )
 
 
-async def handle_not_manually_controlled(
+async def handle_set_manually_controlled(
     switch: AdaptiveSwitch, service_call: ServiceCall
 ):
     """Remove lights from the 'manually_controlled' list."""
     all_lights = _expand_light_groups(switch.hass, service_call.data[CONF_LIGHTS])
-    switch.turn_on_off_listener.reset(*all_lights)
+    _LOGGER.debug(
+        "Called 'adaptive_lighting.set_manually_controlled' service with '%s'",
+        service_call.data,
+    )
+    if service_call.data[CONF_MANUALLY_CONTROLLED]:
+        for light in all_lights:
+            switch.turn_on_off_listener.manually_controlled[light] = True
+            _fire_manually_controlled_event(switch.hass, light, service_call.context)
+    else:
+        switch.turn_on_off_listener.reset(*all_lights)
+        # pylint: disable=protected-access
+        await switch._adapt_lights(
+            all_lights, switch._initial_transition, True, service_call.context
+        )
 
 
 @callback
@@ -230,9 +244,12 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_NOT_MANUALLY_CONTROLLED,
-        {vol.Required(CONF_LIGHTS): cv.entity_ids},
-        handle_not_manually_controlled,
+        SERVICE_SET_MANUALLY_CONTROLLED,
+        {
+            vol.Required(CONF_LIGHTS): cv.entity_ids,
+            vol.Optional(CONF_MANUALLY_CONTROLLED, default=True): cv.boolean,
+        },
+        handle_set_manually_controlled,
     )
 
 
@@ -639,6 +656,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             service_data[ATTR_COLOR_TEMP] = color_temp_mired
         elif "color" in features and adapt_rgb_color:
             service_data[ATTR_RGB_COLOR] = self._settings["rgb_color"]
+
         context = context or self.create_context("adapt_lights")
         if (
             self._take_over_control
