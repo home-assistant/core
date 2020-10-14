@@ -14,6 +14,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     VOLT,
 )
@@ -87,7 +88,7 @@ SENSOR_TYPES = {
     "humidity_hih5030": ["humidity", PERCENTAGE],
     "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
-    "pressure": ["pressure", "mb"],
+    "pressure": ["pressure", PRESSURE_MBAR],
     "illuminance": ["illuminance", LIGHT_LUX],
     "wetness_0": ["wetness", PERCENTAGE],
     "wetness_1": ["wetness", PERCENTAGE],
