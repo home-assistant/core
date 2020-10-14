@@ -33,7 +33,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Definere tavle"
             }

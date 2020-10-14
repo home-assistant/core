@@ -13,7 +13,7 @@
         "step": {
             "mfa": {
                 "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
-                "title": "SimpliSafe Multi-Factor Autentisering"
+                "title": "SimpliSafe flerfaktorautentisering"
             },
             "reauth_confirm": {
                 "data": {

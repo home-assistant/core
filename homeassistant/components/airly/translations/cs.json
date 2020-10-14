@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
         },
         "error": {
             "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"

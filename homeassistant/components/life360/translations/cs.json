@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "user_already_configured": "\u00da\u010det je ji\u017e nakonfigurov\u00e1n"
+            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+            "user_already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "error": {
-            "user_already_configured": "\u00da\u010det je ji\u017e nakonfigurov\u00e1n"
+            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+            "user_already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "step": {
             "user": {

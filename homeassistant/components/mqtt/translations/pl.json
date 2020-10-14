@@ -4,7 +4,7 @@
             "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "broker": {
@@ -52,15 +52,15 @@
         "error": {
             "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
             "bad_will": "Nieprawid\u0142owy temat \"will\".",
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "broker": {
                 "data": {
                     "broker": "Po\u015brednik",
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "port": "Port",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
             },

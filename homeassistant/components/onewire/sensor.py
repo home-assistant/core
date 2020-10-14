@@ -3,12 +3,7 @@ from glob import glob
 import logging
 import os
 
-from pi1wire import (
-    InvalidCRCException,
-    NotFoundSensorException,
-    Pi1Wire,
-    UnsupportResponseException,
-)
+from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
@@ -136,7 +131,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adjusted_config[CONF_TYPE] = CONF_TYPE_OWSERVER
     elif adjusted_config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
         adjusted_config[CONF_TYPE] = CONF_TYPE_SYSBUS
-    else:
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         adjusted_config[CONF_TYPE] = CONF_TYPE_OWFS
 
     devs = get_entities(adjusted_config)
@@ -238,7 +235,9 @@ def get_entities(config):
             )
 
     # We have an owfs mounted
-    else:
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
@@ -312,9 +311,7 @@ class OneWireProxy(OneWire):
 
     def _read_value_ownet(self):
         """Read a value from the owserver."""
-        if self._owproxy:
-            return self._owproxy.read(self._device_file).decode().lstrip()
-        return None
+        return self._owproxy.read(self._device_file).decode().lstrip()
 
     def update(self):
         """Get the latest data from the device."""
@@ -348,15 +345,18 @@ class OneWireDirect(OneWire):
         except (
             FileNotFoundError,
             InvalidCRCException,
-            NotFoundSensorException,
             UnsupportResponseException,
         ) as ex:
             _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
         self._state = value
 
 
-class OneWireOWFS(OneWire):
-    """Implementation of a 1-Wire sensor through owfs."""
+class OneWireOWFS(OneWire):  # pragma: no cover
+    """Implementation of a 1-Wire sensor through owfs.
+
+    This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+    https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+    """
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""

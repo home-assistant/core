@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten adres jest ju\u017c skonfigurowany"
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
             "invalid_country_code": "Nieznany dwuliterowy kod kraju.",

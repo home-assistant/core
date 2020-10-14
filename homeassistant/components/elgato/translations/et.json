@@ -8,6 +8,14 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "connection_error": "Elgato Key Light seadmega \u00fchenduse loomine nurjus."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                }
+            }
         }
     }
 }

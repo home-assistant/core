@@ -10,7 +10,9 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "ip_address": "Hostinimi v\u00f5i IP-aadress",
+                    "password": "Salas\u00f5na",
+                    "port": ""
                 }
             }
         }

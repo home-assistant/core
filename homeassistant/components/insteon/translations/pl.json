@@ -21,9 +21,9 @@
             "hub2": {
                 "data": {
                     "host": "Adres IP Huba",
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "port": "Numer portu IP",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Konfiguracja Huba Insteon \u2014 wersja 2.",
                 "title": "Hub Insteon \u2014 wersja 2"

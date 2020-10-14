@@ -1,6 +1,4 @@
 """Support for HomematicIP Cloud weather devices."""
-import logging
-
 from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -15,8 +13,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 HOME_WEATHER_CONDITION = {
     WeatherCondition.CLEAR: "sunny",

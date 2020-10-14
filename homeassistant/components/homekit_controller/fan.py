@@ -1,6 +1,4 @@
 """Support for Homekit fans."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.fan import (
@@ -18,8 +16,6 @@ from homeassistant.components.fan import (
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
 # its consistent with homeassistant.components.homekit.
