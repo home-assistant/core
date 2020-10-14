@@ -36,8 +36,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._check_key_error_schema = None
-        self._check_key_error_step = None
         self._geo_id = None
         self._latitude = None
         self._longitude = None
@@ -109,11 +107,11 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
 
-        self._check_key_error_step = "geography"
-        self._check_key_error_schema = self.geography_schema
-        return await self.async_step_geography_finish(user_input)
+        return await self.async_step_geography_finish(
+            user_input, "geography", self.geography_schema
+        )
 
-    async def async_step_geography_finish(self, user_input):
+    async def async_step_geography_finish(self, user_input, error_step, error_schema):
         """Validate a Cloud API key."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
         cloud_api = CloudAPI(user_input[CONF_API_KEY], session=websession)
@@ -131,8 +129,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await cloud_api.air_quality.nearest_city()
                 except InvalidKeyError:
                     return self.async_show_form(
-                        step_id=self._check_key_error_step,
-                        data_schema=self._check_key_error_schema,
+                        step_id=error_step,
+                        data_schema=error_schema,
                         errors={CONF_API_KEY: "invalid_api_key"},
                     )
 
@@ -202,9 +200,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
-        self._check_key_error_step = "reauth_confirm"
-        self._check_key_error_schema = self.api_key_data_schema
-        return await self.async_step_geography_finish(conf)
+        return await self.async_step_geography_finish(
+            conf, "reauth_confirm", self.api_key_data_schema
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""

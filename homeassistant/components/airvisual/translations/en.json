@@ -31,7 +31,6 @@
                 "data": {
                     "api_key": "API Key"
                 },
-                "description": "Input a valid AirVisual Cloud API key.",
                 "title": "Re-authenticate AirVisual"
             },
             "user": {
