@@ -698,6 +698,9 @@ gpiozero==1.5.1
 # homeassistant.components.gpsd
 gps3==0.33.3
 
+# homeassistant.components.gree
+greeclimate==0.9.0
+
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
 
@@ -1025,7 +1028,7 @@ objgraph==3.4.1
 oemthermostat==1.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.0
+omnilogic==0.4.2
 
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7

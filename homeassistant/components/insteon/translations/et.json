@@ -41,6 +41,9 @@
                 "title": ""
             },
             "plm": {
+                "data": {
+                    "device": "USB seadme rada"
+                },
                 "title": ""
             },
             "user": {

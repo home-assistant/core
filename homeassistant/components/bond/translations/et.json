@@ -14,7 +14,8 @@
             "confirm": {
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
-                }
+                },
+                "description": "Kas soovid seadistada teenuse {bond_id} ?"
             },
             "user": {
                 "data": {
