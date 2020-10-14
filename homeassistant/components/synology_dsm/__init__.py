@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -264,7 +265,10 @@ class SynoApi:
         self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
-        await self.async_update()
+        try:
+            await self.async_update()
+        except Exception:  # pylint: disable=broad-except
+            raise ConfigEntryNotReady
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass,
