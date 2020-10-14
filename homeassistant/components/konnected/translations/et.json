@@ -26,6 +26,16 @@
             "bad_host": "Sobimatu API hosti alistamise URL"
         },
         "step": {
+            "options_binary": {
+                "data": {
+                    "name": "Nimi (valikuline)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nimi (valikuline)"
+                }
+            },
             "options_io": {
                 "description": "Avastati {model} kohas {host}. Vali iga allpool oleva I/O baaskonfiguratsioon \u2013 s\u00f5ltuvalt I/O-st v\u00f5ib see lubada binaarsensoreid (avatud/suletud), digitaalseid andureid (dht ja ds18b20) v\u00f5i vahetatavaid v\u00e4ljundeid. Saad konfigureerida \u00fcksikasjalikke suvandeid j\u00e4rgmistes etappides."
             },
@@ -33,6 +43,11 @@
                 "data": {
                     "api_host": "Alista API hosti URL (valikuline)",
                     "override_api_host": "Alista Home Assistanti API hostipaneeli vaikimisi URL"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Nimi (valikuline)"
                 }
             }
         }
