@@ -240,22 +240,21 @@ async def async_setup_entry(hass, config_entry):
             try:
                 return await api_coro
             except (InvalidKeyError, KeyExpiredError):
-                context = {
-                    "source": SOURCE_REAUTH,
-                    "unique_id": config_entry.unique_id,
-                }
-
                 matching_flows = [
                     flow
                     for flow in hass.config_entries.flow.async_progress()
-                    if flow["context"] == context
+                    if flow["context"]["source"] == SOURCE_REAUTH
+                    and flow["context"]["unique_id"] == config_entry.unique_id
                 ]
 
                 if not matching_flows:
                     hass.async_create_task(
                         hass.config_entries.flow.async_init(
                             DOMAIN,
-                            context=context,
+                            context={
+                                "source": SOURCE_REAUTH,
+                                "unique_id": config_entry.unique_id,
+                            },
                             data=config_entry.data,
                         )
                     )
