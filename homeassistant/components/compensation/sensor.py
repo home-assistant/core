@@ -19,8 +19,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     CONF_COMPENSATION,
-    CONF_DATAPOINTS,
-    CONF_DEGREE,
+    CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
     MATCH_DATAPOINT,
@@ -49,8 +48,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 conf.get(CONF_NAME),
                 conf.get(CONF_ATTRIBUTE),
                 conf[CONF_PRECISION],
-                conf[CONF_DEGREE],
-                conf[CONF_DATAPOINTS],
+                conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),
             )
         ]
@@ -67,8 +65,7 @@ class CompensationSensor(Entity):
         name,
         attribute,
         precision,
-        degree,
-        datapoints,
+        polynomial,
         unit_of_measurement,
     ):
         """Initialize the Compensation sensor."""
@@ -77,18 +74,8 @@ class CompensationSensor(Entity):
         self._precision = precision
         self._attribute = attribute
         self._unit_of_measurement = unit_of_measurement
-
-        self._points = []
-        for datapoint in datapoints:
-            match = re.match(MATCH_DATAPOINT, datapoint)
-            # we should always have x and y if the regex validation passed.
-            x_value, y_value = [float(v) for v in match.groups()]
-            self._points.append((x_value, y_value))
-
-        x_values, y_values = zip(*self._points)
-        self._coefficients = np.polyfit(x_values, y_values, degree)
-        self._poly = np.poly1d(self._coefficients)
-
+        self._poly = polynomial
+        self._coefficients = polynomial.coefficients.tolist()
         self._state = STATE_UNKNOWN
 
         @callback
@@ -152,7 +139,7 @@ class CompensationSensor(Entity):
         """Return the state attributes of the sensor."""
         ret = {
             ATTR_ENTITY_ID: self._entity_id,
-            ATTR_COEFFICIENTS: self._coefficients.tolist(),
+            ATTR_COEFFICIENTS: self._coefficients,
         }
         if self._attribute:
             ret[ATTR_ATTRIBUTE] = self._attribute

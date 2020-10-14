@@ -1,9 +1,6 @@
 """The tests for the integration sensor platform."""
-from homeassistant.components.compensation.sensor import (
-    ATTR_COEFFICIENTS,
-    CONF_PRECISION,
-    DOMAIN,
-)
+from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
+from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
