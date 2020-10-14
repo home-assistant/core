@@ -27,7 +27,8 @@
             "user": {
                 "data": {
                     "host": "",
-                    "port": ""
+                    "port": "",
+                    "ssl": "Kasutab SSL serti"
                 }
             },
             "ws_port": {
