@@ -1148,7 +1148,15 @@ class StateMachine:
         if context is None:
             context = Context()
 
-        state = State(entity_id, new_state, attributes, last_changed, None, context)
+        state = State(
+            entity_id,
+            new_state,
+            attributes,
+            last_changed,
+            None,
+            context,
+            old_state is None,
+        )
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
