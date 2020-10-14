@@ -129,7 +129,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
-            await self.hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
+        await self.hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
