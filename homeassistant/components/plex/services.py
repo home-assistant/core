@@ -121,39 +121,6 @@ def get_plex_server(hass, plex_server_name=None):
     plex_servers = hass.data[DOMAIN][SERVERS].values()
 
     if plex_server_name:
-        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
-        if not plex_server:
-            _LOGGER.error(
-                "Requested Plex server '%s' not found in %s",
-                plex_server_name,
-                [x.friendly_name for x in plex_servers],
-            )
-            return None
-    elif len(plex_servers) == 1:
-        return next(iter(plex_servers))
-
-    _LOGGER.error(
-        "Multiple Plex servers configured and no selection made: %s",
-        [x.friendly_name for x in plex_servers],
-    )
-    return None
-
-
-def play_media_on_other(hass, service_call):
-    """Play Plex media on a capable non-Plex media_player."""
-    entity_id = service_call.data[ATTR_ENTITY_ID]
-    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
-    content = json.loads(content_id)
-
-    entity_source = entity_sources(hass).get(entity_id)
-    if not entity_source:
-        _LOGGER.warning("Entity not found: %s", entity_id)
-        return
-
-    plex_server_name = content.get("plex_server")
-
-    plex_servers = hass.data[DOMAIN][SERVERS].values()
-    if plex_server_name:
         plex_server = next(
             (x for x in plex_servers if x.friendly_name == plex_server_name), None
         )
@@ -163,23 +130,68 @@ def play_media_on_other(hass, service_call):
                 plex_server_name,
                 [x.friendly_name for x in plex_servers],
             )
-            return
-    else:
+            return None
+    elif len(plex_servers) == 1:
         plex_server = next(iter(plex_servers))
-        if len(plex_servers) > 1:
-            _LOGGER.debug(
-                "Multiple Plex servers available, using '%s'", plex_server.friendly_name
-            )
+    else:
+        _LOGGER.warning(
+            "Multiple Plex servers configured and no selection made: %s",
+            [x.friendly_name for x in plex_servers],
+        )
+        return None
+
+    return plex_server
+
+
+def lookup_plex_media(hass, content_type, content_id):
+    """Look up Plex media using media_player.play_media service payloads."""
+    content = json.loads(content_id)
+
+    if isinstance(content, int):
+        content = {"plex_key": content}
+        content_type = DOMAIN
+
+    plex_server_name = content.pop("plex_server", None)
+    shuffle = content.pop("shuffle", 0)
+
+    plex_server = get_plex_server(hass, plex_server_name=plex_server_name)
+    if not plex_server:
+        return (None, None)
+
+    media = plex_server.lookup_media(content_type, **content)
+    if media is None:
+        _LOGGER.error("Media could not be found: %s", content)
+        return (None, None)
+
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    return (playqueue, plex_server)
+
+
+def play_media_on_other(hass, service_call):
+    """Play Plex media on a capable non-Plex media_player."""
+    entity_id = service_call.data[ATTR_ENTITY_ID]
+    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
+    content_type = service_call.data[ATTR_MEDIA_CONTENT_TYPE]
+
+    entity_source = entity_sources(hass).get(entity_id)
+    if not entity_source:
+        _LOGGER.warning("Entity not found: %s", entity_id)
+        return
 
     domain = entity_source[CONF_DOMAIN]
+    if domain not in [SONOS_DOMAIN]:
+        _LOGGER.error("%s is not a supported integration [%s]", domain, entity_id)
+        return
+
+    media, plex_server = lookup_plex_media(hass, content_type, content_id)
+    if media is None:
+        return
 
     if domain == SONOS_DOMAIN:
-        play_media_on_sonos(hass, entity_id, content, plex_server)
-    else:
-        _LOGGER.warning("%s is not a supported integration [%s]", domain, entity_id)
+        play_media_on_sonos(hass, entity_id, media, plex_server)
 
 
-def play_media_on_sonos(hass, entity_id, content, plex_server):
+def play_media_on_sonos(hass, entity_id, media, plex_server):
     """Play Plex media on a linked Sonos device."""
     sonos = hass.components.sonos
     try:
@@ -187,12 +199,6 @@ def play_media_on_sonos(hass, entity_id, content, plex_server):
     except HomeAssistantError as err:
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
-
-    if isinstance(content, int):
-        content = {"plex_key": content}
-        content_type = DOMAIN
-    else:
-        content_type = "music"
 
     try:
         sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
@@ -209,12 +215,5 @@ def play_media_on_sonos(hass, entity_id, content, plex_server):
         )
         return
 
-    shuffle = content.pop("shuffle", 0)
-    media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        _LOGGER.error("Media could not be found: %s", content)
-        return
-
     _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
-    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
-    sonos_speaker.playMedia(playqueue)
+    sonos_speaker.playMedia(media)
