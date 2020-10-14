@@ -115,7 +115,7 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Change vent position."""
-        position = round(kwargs.get(ATTR_POSITION) / 5) * 5
+        position = round(kwargs[ATTR_POSITION] / 5) * 5
         if position == 0:
             await self.async_change(
                 {
