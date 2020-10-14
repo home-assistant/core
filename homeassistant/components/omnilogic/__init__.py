@@ -15,7 +15,7 @@ from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "binary_sensor", "water_heater", "light", "switch"]
+PLATFORMS = ["sensor", "water_heater", "light", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

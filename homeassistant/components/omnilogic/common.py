@@ -66,7 +66,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
                 data[current_id] = item
 
             for kind in ALL_ITEM_KINDS:
-                if kind in item:
+                if kind in item:    
                     data = get_item_data(item[kind], kind, current_id, data)
 
             return data

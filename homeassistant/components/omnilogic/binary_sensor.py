@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         id_len = len(item_id)
         item_kind = item_id[-2]
         entity_settings = BINARY_SENSOR_TYPES.get((id_len, item_kind))
-
+        
         if not entity_settings:
             continue
 
@@ -95,12 +95,9 @@ class OmniLogicAlarmSensor(OmnilogicSensor, BinarySensorEntity):
         alarms = len(self.coordinator.data[self._item_id][self._state_key]) > 0
 
         if alarms:
-            self._attrs["alarm"] = self.coordinator.data[self._item_id][
-                self._state_key
-            ][0]["Message"]
-            self._attrs["alarm_comment"] = self.coordinator.data[self._item_id][
-                self._state_key
-            ][0].get("Comment")
+            _LOGGER.error(f"coord_data: {str(self.coordinator.data[self._item_id])}")
+            self._attrs["alarm"] = self.coordinator.data[self._item_id]["Message"]
+            self._attrs["alarm_comment"] = self.coordinator.data[self._item_id].get("Comment")
         else:
             self._attrs["alarm"] = "None"
             self._attrs["alarm_comment"] = ""
@@ -109,94 +106,14 @@ class OmniLogicAlarmSensor(OmnilogicSensor, BinarySensorEntity):
 
 
 BINARY_SENSOR_TYPES = {
-    (6, "Filter"): [
+    (4, "Alarms"): [
         {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
+            "entity_classes": {"Severity": OmniLogicAlarmSensor},
             "name": "Alarm",
             "kind": "alarm",
             "device_class": None,
             "icon": "mdi:alarm-light",
             "guard_condition": [],
-        },
-    ],
-    (6, "Pumps"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Pump Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [],
-        },
-    ],
-    (6, "Chlorinator"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [
-                {
-                    "Shared-Type": "BOW_SHARED_EQUIPMENT",
-                    "status": "0",
-                },
-                {
-                    "operatingMode": "2",
-                },
-            ],
-        },
-    ],
-    (6, "CSAD"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "CSAD Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [
-                {"ph": "", "orp": ""},
-            ],
-        },
-    ],
-    (6, "Heaters"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Heater Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [],
-        },
-    ],
-    (6, "Lights"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [],
-        },
-    ],
-    (6, "Relays"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [],
-        },
-    ],
-    (4, "Relays"): [
-        {
-            "entity_classes": {"Alarms": OmniLogicAlarmSensor},
-            "name": "Alarm",
-            "kind": "alarm",
-            "device_class": None,
-            "icon": "mdi:alarm-light",
-            "guard_condition": [],
-        },
-    ],
+        }
+    ]
 }
