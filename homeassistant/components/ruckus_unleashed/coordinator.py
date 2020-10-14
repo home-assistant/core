@@ -29,11 +29,16 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
+    async def _fetch_clients(self) -> dict:
+        """Fetch clients from the API and format them."""
+        clients = await self.hass.async_add_executor_job(
+            self.ruckus.current_active_clients
+        )
+        return {e["Mac Address"]: e for e in clients["current_active_clients"][CLIENTS]}
+
     async def _async_update_data(self) -> dict:
         """Fetch Ruckus Unleashed data."""
         try:
-            return {
-                CLIENTS: await self.hass.async_add_executor_job(self.ruckus.clients)
-            }
+            return {CLIENTS: await self._fetch_clients()}
         except (AuthenticationError, ConnectionError) as error:
             raise UpdateFailed(error) from error
