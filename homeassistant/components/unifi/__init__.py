@@ -54,10 +54,9 @@ async def async_setup_entry(hass, config_entry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, controller.mac)},
-        manufacturer=ATTR_MANUFACTURER,
-        model="UniFi Controller",
-        name="UniFi Controller",
-        # sw_version=config.raw['swversion'],
+        default_manufacturer=ATTR_MANUFACTURER,
+        default_model="UniFi Controller",
+        default_name="UniFi Controller",
     )
 
     return True
