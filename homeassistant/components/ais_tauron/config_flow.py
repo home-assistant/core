@@ -17,13 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_tauron_connectoin(hass):
     """Return a set of the configured supla hosts."""
-    return set(
+    return {
         entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AisTauronFlowHandler(config_entries.ConfigFlow):
+class AisTauronFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """AIS TAURON config flow."""
 
     VERSION = 1

@@ -1,10 +1,13 @@
 """Config flow to configure the AIS Spotify Service component."""
 
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.components.http.view import HomeAssistantView
-import aiohttp
 import logging
+
+import aiohttp
+
+from homeassistant import config_entries
+from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.core import callback
+
 from .const import DOMAIN
 
 G_SPOTIFY_AUTH_URL = None
@@ -22,7 +25,7 @@ def setUrl(url):
 @callback
 def configured_service(hass):
     """Return a set of the configured hosts."""
-    return set("spotify" for entry in hass.config_entries.async_entries(DOMAIN))
+    return {"spotify" for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
 class AuthorizationCallbackView(HomeAssistantView):
@@ -66,8 +69,7 @@ class AuthorizationCallbackView(HomeAssistantView):
         )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SpotifyFlowHandler(config_entries.ConfigFlow):
+class SpotifyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Spotify config flow."""
 
     VERSION = 1

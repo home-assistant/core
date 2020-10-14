@@ -12,8 +12,6 @@ from homeassistant.core import callback
 
 from .const import CONF_OAUTH_JSON, DOMAIN
 
-aisCloudWS = None
-
 _LOGGER = logging.getLogger(__name__)
 DRIVE_NAME_INPUT = None
 DRIVE_TYPE_INPUT = None
@@ -28,8 +26,7 @@ def configured_google_homes(hass):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class DriveFlowHandler(config_entries.ConfigFlow):
+class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Drive config flow."""
 
     VERSION = 1
@@ -37,8 +34,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize google home configuration flow."""
-        global aisCloudWS
-        aisCloudWS = ais_cloud.AisCloudWS(self.hass)
+        pass
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -70,7 +66,8 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
             if errors == {}:
                 try:
-                    ws_ret = aisCloudWS.gh_ais_add_device(oauth_json)
+                    ais_cloud_ws = ais_cloud.AisCloudWS(self.hass)
+                    ws_ret = ais_cloud_ws.gh_ais_add_device(oauth_json)
                     response = ws_ret.json()
                     AUTH_URL = response["message"]
                 except Exception as e:
@@ -95,7 +92,8 @@ class DriveFlowHandler(config_entries.ConfigFlow):
         data_schema = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
         if user_input is not None and CONF_ACCESS_TOKEN in user_input:
             # save token
-            ws_ret = aisCloudWS.gh_ais_add_token(user_input[CONF_ACCESS_TOKEN])
+            ais_cloud_ws = ais_cloud.AisCloudWS(self.hass)
+            ws_ret = ais_cloud_ws.gh_ais_add_token(user_input[CONF_ACCESS_TOKEN])
             try:
                 response = ws_ret.json()
                 ret = response["message"]

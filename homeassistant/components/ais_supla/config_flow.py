@@ -24,8 +24,7 @@ def configured_supla_hosts(hass):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AisSuplaFlowHandler(config_entries.ConfigFlow):
+class AisSuplaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """AIS Supla config flow."""
 
     VERSION = 1

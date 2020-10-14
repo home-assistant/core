@@ -1,17 +1,19 @@
 """Config flow to configure the AIS Drive Service component."""
 
-import voluptuous as vol
-import logging
 import asyncio
+import logging
 import time
+
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_TYPE,
     CONF_EMAIL,
-    CONF_PASSWORD,
     CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_TYPE,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -29,13 +31,12 @@ G_DRIVE_CREATION_TIME_CALL = None
 @callback
 def configured_drivers(hass):
     """Return a set of configured Drives instances."""
-    return set(
+    return {
         entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class DriveFlowHandler(config_entries.ConfigFlow):
+class DriveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Drive config flow."""
 
     VERSION = 1
@@ -59,10 +60,10 @@ class DriveFlowHandler(config_entries.ConfigFlow):
     async def async_step_drive_name(self, user_input=None):
         """Handle a flow start."""
         from homeassistant.components.ais_drives_service import (
-            get_remotes_types_by_name,
             TYPE_DRIVE,
-            TYPE_MEGA,
             TYPE_FTP,
+            TYPE_MEGA,
+            get_remotes_types_by_name,
         )
 
         global DRIVE_NAME_INPUT, DRIVE_TYPE_INPUT, AUTH_URL
