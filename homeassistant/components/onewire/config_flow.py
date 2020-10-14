@@ -127,7 +127,9 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 f"{CONF_TYPE_OWFS}:{platform_config[CONF_MOUNT_DIR]}"
             )
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(
+                updates=platform_config, reload_on_update=True
+            )
             return self.async_create_entry(
                 title=platform_config[CONF_MOUNT_DIR], data=platform_config
             )
