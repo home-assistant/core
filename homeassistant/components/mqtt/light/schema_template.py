@@ -192,7 +192,7 @@ class MqttLightTemplate(
             self._brightness = None
 
         if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            self._color_temp = 255
+            self._color_temp = 153
         else:
             self._color_temp = None
 

@@ -200,7 +200,7 @@ class MqttLightJson(
 
         color_temp = config[CONF_COLOR_TEMP]
         if color_temp:
-            self._color_temp = 150
+            self._color_temp = 153
         else:
             self._color_temp = None
 

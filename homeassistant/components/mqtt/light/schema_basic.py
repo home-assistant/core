@@ -412,7 +412,7 @@ class MqttLight(
                 "msg_callback": color_temp_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._color_temp = 150
+            self._color_temp = 153
         if (
             self._optimistic_color_temp
             and last_state
@@ -420,7 +420,7 @@ class MqttLight(
         ):
             self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
         elif self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
-            self._color_temp = 150
+            self._color_temp = 153
         else:
             self._color_temp = None
 
