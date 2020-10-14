@@ -58,7 +58,7 @@ ais_bookmarks:
 #
 ais_audiobooks_service:
 #
-ais_spotify_service:
+# ais_spotify_service:
 ais_wifi_service:
 
 #
