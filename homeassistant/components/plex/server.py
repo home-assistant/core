@@ -292,9 +292,6 @@ class PlexServer:
             return
 
         def process_device(source, device):
-            if device is None:
-                return
-
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
             available_clients[device.machineIdentifier].setdefault(
