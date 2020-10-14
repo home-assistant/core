@@ -2,7 +2,7 @@
 import copy
 import json
 
-from hatasmota.binary_sensor import TasmotaSwitchTriggerConfig
+from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
 
 import homeassistant.components.automation as automation
