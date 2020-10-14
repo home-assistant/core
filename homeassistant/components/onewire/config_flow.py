@@ -109,19 +109,12 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, platform_config):
-        _LOGGER.warning("Attempting import of config entry %s", platform_config)
-        adjusted_config = {}
-        if platform_config.get(CONF_HOST):
-            adjusted_config[CONF_TYPE] = CONF_TYPE_OWSERVER
-            adjusted_config[CONF_HOST] = platform_config[CONF_HOST]
-            adjusted_config[CONF_PORT] = platform_config[CONF_PORT]
-            return await self.async_step_owserver(adjusted_config)
-        elif platform_config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
-            adjusted_config[CONF_TYPE] = CONF_TYPE_SYSBUS
-            adjusted_config[CONF_MOUNT_DIR] = platform_config[CONF_MOUNT_DIR]
-            return await self.async_step_mount_dir(adjusted_config)
-        else:
-            adjusted_config[CONF_TYPE] = CONF_TYPE_OWSERVER
-            adjusted_config[CONF_HOST] = DEFAULT_OWSERVER_HOST
-            adjusted_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
-            return await self.async_step_owserver(adjusted_config)
+        """Handle import configuration from YAML."""
+        _LOGGER.info("Importing old config entry %s", platform_config)
+        # OWServer
+        if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:
+            return await self.async_step_owserver(platform_config)
+
+        # SysBus
+        if platform_config[CONF_TYPE] == CONF_TYPE_SYSBUS:
+            return await self.async_step_mount_dir(platform_config)

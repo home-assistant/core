@@ -1,5 +1,5 @@
 """Tests for 1-Wire devices connected on SysBus."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import pytest
