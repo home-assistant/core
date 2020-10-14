@@ -40,8 +40,8 @@ ATTR_TURN_ON_OFF_LISTENER = "turn_on_off_listener"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 NONE_STR = "None"
 
-SERVICE_SET_MANUALLY_CONTROLLED = "set_manually_controlled"
-CONF_MANUALLY_CONTROLLED = "manually_controlled"
+SERVICE_SET_MANUAL_CONTROL = "set_manual_control"
+CONF_MANUAL_CONTROL = "manual_control"
 SERVICE_APPLY = "apply"
 CONF_TURN_ON_LIGHTS = "turn_on_lights"
 

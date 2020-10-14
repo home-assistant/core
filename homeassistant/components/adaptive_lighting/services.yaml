@@ -22,14 +22,14 @@ apply:
     turn_on_lights:
       description: "Turn on the lights that are off, default: false"
       example: false
-set_manually_controlled:
-  description: Mark a light as (not) being 'manually_controlled'.
+set_manual_control:
+  description: Mark whether a light is 'manually controlled'.
   fields:
     entity_id:
       description: entity_id of the Adaptive Lighting switch.
       example: switch.adaptive_lighting_default
-    manually_controlled:
-      description: "Whether to add ('true') or remove ('false') the light from the 'manually_controlled' list, default: true"
+    manual_control:
+      description: "Whether to add ('true') or remove ('false') the light from the 'manual_control' list, default: true"
       example: true
     lights:
       description: entity_id(s) of lights.

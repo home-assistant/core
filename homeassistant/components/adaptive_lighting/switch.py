@@ -85,7 +85,7 @@ from .const import (
     CONF_INITIAL_TRANSITION,
     CONF_INTERVAL,
     CONF_LIGHTS,
-    CONF_MANUALLY_CONTROLLED,
+    CONF_MANUAL_CONTROL,
     CONF_MAX_BRIGHTNESS,
     CONF_MAX_COLOR_TEMP,
     CONF_MIN_BRIGHTNESS,
@@ -105,7 +105,7 @@ from .const import (
     EXTRA_VALIDATION,
     ICON,
     SERVICE_APPLY,
-    SERVICE_SET_MANUALLY_CONTROLLED,
+    SERVICE_SET_MANUAL_CONTROL,
     SUN_EVENT_MIDNIGHT,
     SUN_EVENT_NOON,
     TURNING_OFF_DELAY,
@@ -177,18 +177,16 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
             )
 
 
-async def handle_set_manually_controlled(
-    switch: AdaptiveSwitch, service_call: ServiceCall
-):
-    """Remove lights from the 'manually_controlled' list."""
+async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: ServiceCall):
+    """Set or unset lights as 'manually controlled'."""
     all_lights = _expand_light_groups(switch.hass, service_call.data[CONF_LIGHTS])
     _LOGGER.debug(
-        "Called 'adaptive_lighting.set_manually_controlled' service with '%s'",
+        "Called 'adaptive_lighting.set_manual_control' service with '%s'",
         service_call.data,
     )
-    if service_call.data[CONF_MANUALLY_CONTROLLED]:
+    if service_call.data[CONF_MANUAL_CONTROL]:
         for light in all_lights:
-            switch.turn_on_off_listener.manually_controlled[light] = True
+            switch.turn_on_off_listener.manual_control[light] = True
             _fire_manual_control_event(switch.hass, light, service_call.context)
     else:
         switch.turn_on_off_listener.reset(*all_lights)
@@ -205,10 +203,8 @@ async def handle_set_manually_controlled(
 def _fire_manual_control_event(
     hass: HomeAssistant, light: str, context: Context, is_async=True
 ):
-    """Fire an event that 'light' is marked as manually_controlled."""
+    """Fire an event that 'light' is marked as manual_control."""
     fire = hass.bus.async_fire if is_async else hass.bus.fire
-    # Calling the event_type='manually_controlled' would be better, but
-    # event_type has a 32 character limit.
     fire(f"{DOMAIN}.manual_control", {ATTR_ENTITY_ID: light}, context=context)
 
 
@@ -249,12 +245,12 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_MANUALLY_CONTROLLED,
+        SERVICE_SET_MANUAL_CONTROL,
         {
             vol.Required(CONF_LIGHTS): cv.entity_ids,
-            vol.Optional(CONF_MANUALLY_CONTROLLED, default=True): cv.boolean,
+            vol.Optional(CONF_MANUAL_CONTROL, default=True): cv.boolean,
         },
-        handle_set_manually_controlled,
+        handle_set_manual_control,
     )
 
 
@@ -564,12 +560,12 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         """Return the attributes of the switch."""
         if not self.is_on:
             return {key: None for key in self._settings}
-        manually_controlled = [
+        manual_control = [
             light
             for light in self._lights
-            if self.turn_on_off_listener.manually_controlled.get(light)
+            if self.turn_on_off_listener.manual_control.get(light)
         ]
-        return dict(self._settings, manually_controlled=manually_controlled)
+        return dict(self._settings, manual_control=manual_control)
 
     def create_context(self, which: str = "default") -> Context:
         """Create a context that identifies this Adaptive Lighting instance."""
@@ -778,7 +774,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 entity_id,
                 event.context.id,
             )
-            self.turn_on_off_listener.reset(entity_id, reset_manually_controlled=False)
+            self.turn_on_off_listener.reset(entity_id, reset_manual_control=False)
             # Tracks 'off' → 'on' state changes
             self._off_to_on_event[entity_id] = event
             lock = self._locks.get(entity_id)
@@ -1018,7 +1014,7 @@ class TurnOnOffListener:
         # Keep 'asyncio.sleep' tasks that can be cancelled by 'light.turn_on' events
         self.sleep_tasks: Dict[str, asyncio.Task] = {}
         # Tracks which lights are manually controlled
-        self.manually_controlled: Dict[str, bool] = {}
+        self.manual_control: Dict[str, bool] = {}
         # Counts the number of times (in a row) a light had a changed state.
         self.cnt_significant_changes: Dict[str, int] = defaultdict(int)
         # Track 'state_changed' events of self.lights resulting from this integration
@@ -1028,7 +1024,7 @@ class TurnOnOffListener:
 
         # When a state is different `max_cnt_significant_changes` times in a row,
         # mark it as manually_controlled.
-        self.max_cnt_significant_changes = 1
+        self.max_cnt_significant_changes = 2
 
         self.remove_listener = self.hass.bus.async_listen(
             EVENT_CALL_SERVICE, self.turn_on_off_event_listener
@@ -1037,11 +1033,11 @@ class TurnOnOffListener:
             EVENT_STATE_CHANGED, self.state_changed_event_listener
         )
 
-    def reset(self, *lights, reset_manually_controlled=True) -> None:
-        """Reset the 'manually_controlled' status of the lights."""
+    def reset(self, *lights, reset_manual_control=True) -> None:
+        """Reset the 'manual_control' status of the lights."""
         for light in lights:
-            if reset_manually_controlled:
-                self.manually_controlled[light] = False
+            if reset_manual_control:
+                self.manual_control[light] = False
             self.last_state_change.pop(light, None)
             self.last_service_data.pop(light, None)
             self.cnt_significant_changes[light] = 0
@@ -1132,9 +1128,9 @@ class TurnOnOffListener:
         light: str,
         force: bool,
     ) -> bool:
-        """Check if the light has been 'on' and is now manually being adjusted."""
-        manually_controlled = self.manually_controlled.setdefault(light, False)
-        if manually_controlled:
+        """Check if the light has been 'on' and is now manually controlled."""
+        manual_control = self.manual_control.setdefault(light, False)
+        if manual_control:
             # Manually controlled until light is turned on and off
             return True
 
@@ -1146,7 +1142,7 @@ class TurnOnOffListener:
         ):
             # Light was already on and 'light.turn_on' was not called by
             # the adaptive_lighting integration.
-            manually_controlled = self.manually_controlled[light] = True
+            manual_control = self.manual_control[light] = True
             _fire_manual_control_event(self.hass, light, turn_on_event.context)
             _LOGGER.debug(
                 "'%s' was already on and 'light.turn_on' was not called by the"
@@ -1156,7 +1152,7 @@ class TurnOnOffListener:
                 light,
                 turn_on_event.context.id,
             )
-        return manually_controlled
+        return manual_control
 
     async def significant_change(
         self,
@@ -1170,7 +1166,7 @@ class TurnOnOffListener:
 
         This method will detect changes that were made to the light without
         calling 'light.turn_on', so outside of Home Assistant. If a change is
-        detected, we mark the light as 'manually_controlled' until the light
+        detected, we mark the light as 'manually controlled' until the light
         or switch is turned 'off' and 'on' again.
         """
         if light not in self.last_state_change:
@@ -1225,7 +1221,7 @@ class TurnOnOffListener:
                 # Only mark a light as significantly changing, if changed==True
                 # N times in a row. We do this because sometimes a state changes
                 # happens only *after* a new update interval has already started.
-                self.manually_controlled[light] = True
+                self.manual_control[light] = True
                 _fire_manual_control_event(self.hass, light, context, is_async=False)
         else:
             if n_changes > 1:
