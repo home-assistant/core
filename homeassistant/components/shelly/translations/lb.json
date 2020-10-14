@@ -13,7 +13,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Soll de {model} um {host} konfigur\u00e9iert ginn?"
+                "description": "Soll de {model} um {host} konfigur\u00e9iert ginn?\n\nVirum ariichten muss dat Batterie bedriwwen Ger\u00e4t aktiv\u00e9iert ginn andeems de Kn\u00e4ppchen um Apparat gedr\u00e9ckt g\u00ebtt."
             },
             "credentials": {
                 "data": {

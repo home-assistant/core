@@ -1,6 +1,5 @@
 """Config flow for the MELCloud platform."""
 import asyncio
-import logging
 from typing import Optional
 
 from aiohttp import ClientError, ClientResponseError
@@ -18,8 +17,6 @@ from homeassistant.const import (
 )
 
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

@@ -9,6 +9,7 @@ from homeassistant.components.tasmota.const import (
     DOMAIN,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 
@@ -22,6 +23,13 @@ def device_reg(hass):
 def entity_reg(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
+
+
+@pytest.fixture(autouse=True)
+def disable_debounce():
+    """Set MQTT debounce timer to zero."""
+    with patch("hatasmota.mqtt.DEBOUNCE_TIMEOUT", 0):
+        yield
 
 
 async def setup_tasmota_helper(hass):

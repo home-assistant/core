@@ -138,7 +138,7 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(
+            return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
                 platform.setup_platform,  # type: ignore
                 hass,
@@ -315,6 +315,13 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
+        except Exception:
+            self.logger.exception(
+                "Error adding entities for domain %s with platform %s",
+                self.domain,
+                self.platform_name,
+            )
+            raise
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()

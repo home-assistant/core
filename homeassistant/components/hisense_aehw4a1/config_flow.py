@@ -1,14 +1,10 @@
 """Config flow for Hisense AEH-W4A1 integration."""
-import logging
-
 from pyaehw4a1.aehw4a1 import AehW4a1
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass):

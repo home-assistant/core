@@ -1,7 +1,6 @@
 """Support for Apache Kafka."""
 from datetime import datetime
 import json
-import logging
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -19,8 +18,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import ssl as ssl_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "apache_kafka"
 

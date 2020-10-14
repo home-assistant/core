@@ -48,7 +48,7 @@ ATTR_REPACK = "repack"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
     }
 )
@@ -92,13 +92,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
                     vol.Optional(CONF_DB_URL): cv.string,
                     vol.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
@@ -393,6 +391,7 @@ class Recorder(threading.Thread):
                     dbevent = Events.from_event(event, event_data="{}")
                 else:
                     dbevent = Events.from_event(event)
+                dbevent.created = event.time_fired
                 self.event_session.add(dbevent)
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
@@ -405,10 +404,15 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
                     if dbstate.entity_id in self._old_states:
-                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
+                        old_state = self._old_states.pop(dbstate.entity_id)
+                        if old_state.state_id:
+                            dbstate.old_state_id = old_state.state_id
+                        else:
+                            dbstate.old_state = old_state
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
+                    dbstate.created = event.time_fired
                     self.event_session.add(dbstate)
                     if has_new_state:
                         self._old_states[dbstate.entity_id] = dbstate
@@ -506,7 +510,8 @@ class Recorder(threading.Thread):
                 for dbstate in self._pending_expunge:
                     # Expunge the state so its not expired
                     # until we use it later for dbstate.old_state
-                    self.event_session.expunge(dbstate)
+                    if dbstate in self.event_session:
+                        self.event_session.expunge(dbstate)
                 self._pending_expunge = []
             self.event_session.commit()
         except Exception as err:

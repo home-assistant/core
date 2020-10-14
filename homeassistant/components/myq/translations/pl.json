@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "MyQ jest ju\u017c skonfigurowane."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },

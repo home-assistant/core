@@ -225,3 +225,14 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
                 )
             ha_forecast.append(ha_item)
         return ha_forecast
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Met.no",
+            "model": "Forecast",
+            "default_name": "Forecast",
+            "entry_type": "service",
+        }

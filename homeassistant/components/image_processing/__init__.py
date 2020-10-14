@@ -109,7 +109,7 @@ class ImageProcessingEntity(Entity):
 
     async def async_process_image(self, image):
         """Process image."""
-        return await self.hass.async_add_job(self.process_image, image)
+        return await self.hass.async_add_executor_job(self.process_image, image)
 
     async def async_update(self):
         """Update image and process it.

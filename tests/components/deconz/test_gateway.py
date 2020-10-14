@@ -90,11 +90,12 @@ async def test_gateway_setup(hass):
         assert forward_entry_setup.mock_calls[0][1] == (config_entry, "binary_sensor")
         assert forward_entry_setup.mock_calls[1][1] == (config_entry, "climate")
         assert forward_entry_setup.mock_calls[2][1] == (config_entry, "cover")
-        assert forward_entry_setup.mock_calls[3][1] == (config_entry, "light")
-        assert forward_entry_setup.mock_calls[4][1] == (config_entry, "lock")
-        assert forward_entry_setup.mock_calls[5][1] == (config_entry, "scene")
-        assert forward_entry_setup.mock_calls[6][1] == (config_entry, "sensor")
-        assert forward_entry_setup.mock_calls[7][1] == (config_entry, "switch")
+        assert forward_entry_setup.mock_calls[3][1] == (config_entry, "fan")
+        assert forward_entry_setup.mock_calls[4][1] == (config_entry, "light")
+        assert forward_entry_setup.mock_calls[5][1] == (config_entry, "lock")
+        assert forward_entry_setup.mock_calls[6][1] == (config_entry, "scene")
+        assert forward_entry_setup.mock_calls[7][1] == (config_entry, "sensor")
+        assert forward_entry_setup.mock_calls[8][1] == (config_entry, "switch")
 
 
 async def test_gateway_retry(hass):

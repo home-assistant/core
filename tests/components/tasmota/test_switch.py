@@ -10,6 +10,7 @@ from .test_common import (
     DEFAULT_CONFIG,
     help_test_availability,
     help_test_availability_discovery_update,
+    help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
@@ -121,6 +122,18 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config["rl"][0] = 1
     await help_test_availability_discovery_update(
         hass, mqtt_mock, switch.DOMAIN, config
+    )
+
+
+async def test_availability_poll_state(
+    hass, mqtt_client_mock, mqtt_mock, setup_tasmota
+):
+    """Test polling after MQTT connection (re)established."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    poll_topic = "tasmota_49A3BC/cmnd/STATE"
+    await help_test_availability_poll_state(
+        hass, mqtt_client_mock, mqtt_mock, switch.DOMAIN, config, poll_topic, ""
     )
 
 

@@ -1,6 +1,4 @@
 """Support for Homekit switches."""
-import logging
-
 from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     InUseValues,
@@ -13,8 +11,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 OUTLET_IN_USE = "outlet_in_use"
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_IN_USE = "in_use"
 ATTR_IS_CONFIGURED = "is_configured"

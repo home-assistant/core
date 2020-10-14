@@ -136,7 +136,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
-                if c in SENSOR_TYPES
+                if c.lower() in SENSOR_TYPES
             ]
             for condition in conditions:
                 if f"{condition}_value" in SENSOR_TYPES:
@@ -159,7 +159,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    @callback
     async def add_public_entities(update=True):
         """Retrieve Netatmo public weather entities."""
         entities = {

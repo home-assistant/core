@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Disse koordinatene eller Node / Pro ID er allerede registrert."
+            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
@@ -21,7 +21,7 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Enhetens IP-adresse / vertsnavn",
+                    "ip_address": "Vert",
                     "password": "Passord"
                 },
                 "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",

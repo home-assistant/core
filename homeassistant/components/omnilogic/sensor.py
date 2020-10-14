@@ -119,7 +119,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         state = sensor_data
 
         if self._unit_type == "Metric":
-            hayward_state = round((hayward_state - 32) * 5 / 9, 1)
+            hayward_state = round((int(hayward_state) - 32) * 5 / 9, 1)
             hayward_unit_of_measure = TEMP_CELSIUS
 
         if int(sensor_data) == -1:
@@ -175,7 +175,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         unit_of_measurement = self._unit
 
         if self._unit_type == "Metric":
-            salt_return = round(salt_return / 1000, 2)
+            salt_return = round(int(salt_return) / 1000, 2)
             unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
 
         self._unit = unit_of_measurement
@@ -279,7 +279,7 @@ SENSOR_TYPES = {
             "icon": "mdi:speedometer",
             "unit": PERCENTAGE,
             "guard_condition": [
-                {"Type": "FMT_SINGLE_SPEED"},
+                {"Filter-Type": "FMT_SINGLE_SPEED"},
             ],
         },
     ],

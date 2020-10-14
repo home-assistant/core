@@ -13,6 +13,9 @@
                 },
                 "description": "Please enter the Tasmota configuration.",
                 "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Do you want to set up Tasmota?"
             }
         }
     }
