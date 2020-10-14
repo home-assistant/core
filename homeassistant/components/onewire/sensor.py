@@ -14,7 +14,6 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_CBAR,
     TEMP_CELSIUS,
     VOLT,
 )
@@ -29,6 +28,7 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    PRESSURE_CBAR,
 )
 
 _LOGGER = logging.getLogger(__name__)

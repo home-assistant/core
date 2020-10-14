@@ -4,9 +4,13 @@ from unittest.mock import patch
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
-from homeassistant.components.onewire.const import DEFAULT_OWSERVER_PORT, DOMAIN
+from homeassistant.components.onewire.const import (
+    DEFAULT_OWSERVER_PORT,
+    DOMAIN,
+    PRESSURE_CBAR,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import PERCENTAGE, PRESSURE_CBAR, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
