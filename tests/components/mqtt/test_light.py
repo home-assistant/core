@@ -291,7 +291,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 150
+    assert state.attributes.get("color_temp") == 153
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (0, 0)
     assert state.attributes.get("white_value") == 255
@@ -388,7 +388,7 @@ async def test_invalid_state_via_topic(hass, mqtt_mock, caplog):
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 150
+    assert state.attributes.get("color_temp") == 153
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (0, 0)
     assert state.attributes.get("white_value") == 255
@@ -407,7 +407,7 @@ async def test_invalid_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
     assert "Ignoring empty color temp message" in caplog.text
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 150
+    assert light_state.attributes["color_temp"] == 153
 
     async_fire_mqtt_message(hass, "test_light_rgb/effect/status", "")
     assert "Ignoring empty effect message" in caplog.text
@@ -895,7 +895,7 @@ async def test_show_color_temp_only_if_command_topic(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 150
+    assert state.attributes.get("color_temp") == 153
 
 
 async def test_show_effect_only_if_command_topic(hass, mqtt_mock):
