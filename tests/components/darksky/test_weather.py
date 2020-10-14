@@ -7,7 +7,7 @@ from requests.exceptions import ConnectionError
 import requests_mock
 
 from homeassistant.components import weather
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.async_mock import patch
@@ -52,16 +52,16 @@ class TestDarkSky(unittest.TestCase):
         state = self.hass.states.get("weather.test")
         assert state.state == "sunny"
 
-    @patch("forecastio.load_forecast", side_effect=ConnectionError())
-    def test_failed_setup(self, mock_load_forecast):
-        """Test to ensure that a network error does not break component state."""
 
-        assert setup_component(
-            self.hass,
+async def test_failed_setup(hass):
+    """Test to ensure that a network error does not break component state."""
+    with patch("forecastio.load_forecast", side_effect=ConnectionError()):
+        assert await async_setup_component(
+            hass,
             weather.DOMAIN,
             {"weather": {"name": "test", "platform": "darksky", "api_key": "foo"}},
         )
-        self.hass.block_till_done()
+        await hass.async_block_till_done()
 
-        state = self.hass.states.get("weather.test")
-        assert state.state == "unavailable"
+    state = hass.states.get("weather.test")
+    assert state.state == "unavailable"
