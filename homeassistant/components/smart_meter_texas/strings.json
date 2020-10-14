@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Provide your username and password for Smart Meter Texas.",
+        "description": "Provide your [%key:common::config_flow::data::username%] and [%key:common::config_flow::data::password%] for [%key:component::smart_meter_texas::title%]",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
