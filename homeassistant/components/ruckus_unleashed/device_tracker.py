@@ -1,4 +1,6 @@
 """Support for Ruckus Unleashed devices."""
+from typing import Optional
+
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -113,13 +115,14 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> Optional[dict]:
         """Return the device information."""
-        return {
-            "name": self.name,
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "via_device": (
-                CONNECTION_NETWORK_MAC,
-                self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
-            ),
-        }
+        if self.is_connected:
+            return {
+                "name": self.name,
+                "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+                "via_device": (
+                    CONNECTION_NETWORK_MAC,
+                    self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
+                ),
+            }
