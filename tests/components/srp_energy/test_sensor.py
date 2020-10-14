@@ -12,15 +12,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 
 from tests.async_mock import MagicMock
 
-# async def test_sensor(hass):
-#     """Test a successful setup entry."""
-#     await init_integration(hass)
-
-#     state = hass.states.get("srp_energy.sensor")
-#     assert state is not None
-#     assert state.state != STATE_UNAVAILABLE
-#     assert state.state == "14"
-
 
 async def test_async_setup_entry(hass):
     """Test the sensor."""

@@ -37,9 +37,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-
             # Fetch srp_energy data
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
@@ -65,7 +62,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER,
         name="sensor",
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
 

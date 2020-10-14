@@ -1,6 +1,4 @@
 """Tests for the SRP Energy integration."""
-from copy import deepcopy
-
 from homeassistant import config_entries
 from homeassistant.components import srp_energy
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -29,7 +27,6 @@ async def init_integration(
     usage=None,
 ):
     """Set up the srp_energy integration in Home Assistant."""
-
     if not config:
         config = ENTRY_CONFIG
 
@@ -39,9 +36,9 @@ async def init_integration(
     config_entry = MockConfigEntry(
         domain=srp_energy.DOMAIN,
         source=source,
-        data=deepcopy(config),
+        data=config,
         connection_class=config_entries.CONN_CLASS_CLOUD_POLL,
-        options=deepcopy(options),
+        options=options,
         entry_id=entry_id,
     )
 
