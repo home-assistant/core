@@ -1,5 +1,6 @@
 """Ruckus Unleashed DataUpdateCoordinator."""
 from datetime import timedelta
+import logging
 
 from pyruckus import Ruckus
 from pyruckus.exceptions import AuthenticationError
@@ -7,7 +8,9 @@ from pyruckus.exceptions import AuthenticationError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, CLIENTS, DOMAIN, SCAN_INTERVAL
+from .const import CLIENTS, DOMAIN, SCAN_INTERVAL
+
+_LOGGER = logging.getLogger(__package__)
 
 
 class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):

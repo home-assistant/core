@@ -1,4 +1,6 @@
 """Config flow for Ruckus Unleashed integration."""
+import logging
+
 from pyruckus import Ruckus
 from pyruckus.exceptions import AuthenticationError
 import voluptuous as vol
@@ -6,7 +8,9 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import _LOGGER, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
+
+_LOGGER = logging.getLogger(__package__)
 
 DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 
