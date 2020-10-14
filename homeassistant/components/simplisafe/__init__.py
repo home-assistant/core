@@ -374,8 +374,6 @@ async def async_unload_entry(hass, entry):
 
 async def async_update_options(hass, config_entry):
     """Handle an options update."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
-    simplisafe.options = config_entry.options
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -540,21 +538,22 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    context = {
-                        "source": SOURCE_REAUTH,
-                        "unique_id": self._config_entry.unique_id,
-                    }
-
                     matching_flows = [
                         flow
                         for flow in self._hass.config_entries.flow.async_progress()
-                        if flow["context"] == context
+                        if flow["context"]["source"] == SOURCE_REAUTH
+                        and flow["context"]["unique_id"] == self._config_entry.unique_id
                     ]
 
                     if not matching_flows:
                         self._hass.async_create_task(
                             self._hass.config_entries.flow.async_init(
-                                DOMAIN, context=context, data=self._config_entry.data
+                                DOMAIN,
+                                context={
+                                    "source": SOURCE_REAUTH,
+                                    "unique_id": self._config_entry.unique_id,
+                                },
+                                data=self._config_entry.data,
                             )
                         )
 
