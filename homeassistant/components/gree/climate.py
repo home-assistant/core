@@ -262,6 +262,9 @@ class GreeClimateEntity(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
+        if hvac_mode not in self.hvac_modes:
+            raise ValueError(f"Invalid hvac_mode: {hvac_mode}")
+
         _LOGGER.debug(
             "Setting HVAC mode to %s for device %s",
             hvac_mode,
@@ -301,15 +304,14 @@ class GreeClimateEntity(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
+        if preset_mode not in PRESET_MODES:
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+
         _LOGGER.debug(
             "Setting preset mode to %s for device %s",
             preset_mode,
             self._name,
         )
-
-        if preset_mode not in PRESET_MODES:
-            _LOGGER.warning("Received and invalid preset mode: %s", preset_mode)
-            return
 
         self._device.steady_heat = False
         self._device.power_save = False
@@ -341,8 +343,7 @@ class GreeClimateEntity(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES_REVERSE:
-            _LOGGER.warning("Received and invalid fan mode: %s", fan_mode)
-            return
+            raise ValueError(f"Invalid fan mode: {fan_mode}")
 
         self._device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
         await self._push_state_update()
@@ -369,8 +370,7 @@ class GreeClimateEntity(ClimateEntity):
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         if swing_mode not in SWING_MODES:
-            _LOGGER.warning("Received and invalid swing mode: %s", swing_mode)
-            return
+            raise ValueError(f"Invalid swing mode: {swing_mode}")
 
         _LOGGER.debug(
             "Setting swing mode to %s for device %s",
