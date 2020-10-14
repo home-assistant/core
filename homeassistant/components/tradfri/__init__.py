@@ -155,6 +155,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
 
     async def async_keep_alive(now):
+        if hass.is_stopping:
+            return
+
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
