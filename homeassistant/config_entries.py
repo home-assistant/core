@@ -572,7 +572,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             self.hass.components.persistent_notification.async_create(
                 title="Devices require reconfiguration",
                 message=(
-                    "At least one of your devices requires reconfiguration to "
+                    "At least one of your integrations requires reconfiguration to "
                     "continue functioning. [Check it out](/config/integrations)"
                 ),
                 notification_id=RECONFIGURE_NOTIFICATION_ID,
