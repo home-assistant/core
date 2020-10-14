@@ -37,27 +37,35 @@ NON_EXPANDABLE_ITEM_TYPES = [
     "play-playlist",
 ]
 
+PLAYLISTS_URI_PREFIX = "playlists"
+ARTISTS_URI_PREFIX = "artists://"
+ALBUMS_URI_PREFIX = "albums://"
+GENRES_URI_PREFIX = "genres://"
+RADIO_URI_PREFIX = "radio"
+LAST_100_URI_PREFIX = "Last_100"
+FAVOURITES_URI = "favourites"
+
 
 def _item_to_children_media_class(item, info=None):
     if info and "album" in info and "artist" in info:
         return MEDIA_CLASS_TRACK
-    if item["uri"].startswith("playlists"):
+    if item["uri"].startswith(PLAYLISTS_URI_PREFIX):
         return MEDIA_CLASS_PLAYLIST
-    if item["uri"].startswith("artists://"):
-        if len(item["uri"]) > 10:
+    if item["uri"].startswith(ARTISTS_URI_PREFIX):
+        if len(item["uri"]) > len(ARTISTS_URI_PREFIX):
             return MEDIA_CLASS_ALBUM
         return MEDIA_CLASS_ARTIST
-    if item["uri"].startswith("albums://"):
-        if len(item["uri"]) > 9:
+    if item["uri"].startswith(ALBUMS_URI_PREFIX):
+        if len(item["uri"]) > len(ALBUMS_URI_PREFIX):
             return MEDIA_CLASS_TRACK
         return MEDIA_CLASS_ALBUM
-    if item["uri"].startswith("genres://"):
-        if len(item["uri"]) > 9:
+    if item["uri"].startswith(GENRES_URI_PREFIX):
+        if len(item["uri"]) > len(GENRES_URI_PREFIX):
             return MEDIA_CLASS_ALBUM
         return MEDIA_CLASS_GENRE
-    if item["uri"].startswith("Last_100") or item["uri"] == "favourites":
+    if item["uri"].startswith(LAST_100_URI_PREFIX) or item["uri"] == FAVOURITES_URI:
         return MEDIA_CLASS_TRACK
-    if item["uri"].startswith("radio"):
+    if item["uri"].startswith(RADIO_URI_PREFIX):
         return MEDIA_CLASS_CHANNEL
     return MEDIA_CLASS_DIRECTORY
 
@@ -71,7 +79,9 @@ def _item_to_media_class(item, parent_item=None):
         return MEDIA_CLASS_TRACK
     if item.get("artist"):
         return MEDIA_CLASS_ALBUM
-    if item["uri"].startswith("artists://") and len(item["uri"]) > 10:
+    if item["uri"].startswith(ARTISTS_URI_PREFIX) and len(item["uri"]) > len(
+        ARTISTS_URI_PREFIX
+    ):
         return MEDIA_CLASS_ARTIST
     if parent_item:
         return _item_to_children_media_class(parent_item)
