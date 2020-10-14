@@ -152,7 +152,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
         """Fetch the latest console status."""
         new_data: Dict[str, XboxData] = {}
         for console in self.consoles.result:
-            current_state: Optional[XboxData] = self.data.get(console.id, None)
+            current_state: Optional[XboxData] = self.data.get(console.id)
             status: SmartglassConsoleStatus = (
                 await self.client.smartglass.get_console_status(console.id)
             )
