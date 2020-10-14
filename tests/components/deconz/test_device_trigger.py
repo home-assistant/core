@@ -21,7 +21,7 @@ SENSORS = {
         "etag": "1b355c0b6d2af28febd7ca9165881952",
         "manufacturername": "IKEA of Sweden",
         "mode": 1,
-        "modelid": "TRÅDFRI on/off switch",
+        "modelid": "TRADFRI on/off switch",
         "name": "TRÅDFRI on/off switch ",
         "state": {"buttonevent": 2002, "lastupdated": "2019-09-07T07:39:39"},
         "swversion": "1.4.018",
