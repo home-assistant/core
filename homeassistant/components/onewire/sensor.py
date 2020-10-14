@@ -157,8 +157,8 @@ def get_entities(config):
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
-        owhost = config.get[CONF_HOST]
-        owport = config.get[CONF_PORT]
+        owhost = config[CONF_HOST]
+        owport = config[CONF_PORT]
 
         _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
@@ -168,7 +168,7 @@ def get_entities(config):
             _LOGGER.error(
                 "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
-            devices = []
+            return entities
         for device in devices:
             _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
