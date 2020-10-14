@@ -13,14 +13,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Gree Climate component."""
-    hass.data[DOMAIN] = {"devices": {}, "pending": {}}
+    hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Gree Climate from a config entry."""
-
-    device_infos = []
     devices = []
 
     # First we'll grab as many devices as we can find on the network
@@ -28,23 +26,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Scanning network for Gree devices")
 
     for device_info in await DeviceHelper.find_devices():
-        device_infos.append(device_info)
-
-    for device_info in device_infos:
         try:
             device = await DeviceHelper.try_bind_device(device_info)
         except CannotConnect:
             _LOGGER.error("Unable to bind to gree device: %s", device_info)
-        else:
-            devices.append(device)
+            continue
 
-    for device in devices:
         _LOGGER.debug(
             "Adding Gree device at %s:%i (%s)",
             device.device_info.ip,
             device.device_info.port,
             device.device_info.name,
         )
+        devices.append(device)
 
     hass.data[DOMAIN]["devices"] = devices
     hass.data[DOMAIN]["pending"] = devices
@@ -62,9 +56,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        if "devices" in hass.data[DOMAIN]:
-            hass.data[DOMAIN].pop("devices")
-        if "pending" in hass.data[DOMAIN]:
-            hass.data[DOMAIN].pop("pending")
+        hass.data[DOMAIN].pop("devices", None)
+        hass.data[DOMAIN].pop("pending", None)
 
     return unload_ok
