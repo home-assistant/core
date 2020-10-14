@@ -1,6 +1,5 @@
 """Support for SNMP enabled switch."""
 import logging
-import re
 
 from pyasn1.error import PyAsn1Error
 
@@ -30,6 +29,7 @@ from pysnmp.proto.rfc1902 import (
     TimeTicks,
     Unsigned32,
 )
+import re
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -211,12 +211,12 @@ class SnmpSwitch(SwitchEntity):
 
         try:
             self._payload_on_regex = re.compile(payload_on)
-        except:
+        except re.error:
             self._payload_on_regex = None
 
         try:
             self._payload_off_regex = re.compile(payload_off)
-        except:
+        except re.error:
             self._payload_off_regex = None
 
         try:
