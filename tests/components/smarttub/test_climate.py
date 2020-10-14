@@ -2,14 +2,21 @@
 from unittest.mock import Mock
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_HEAT,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.smarttub.climate import (
-    SmartTubThermostat,
-    async_setup_entry,
-)
+from homeassistant.components.smarttub.climate import async_setup_entry
 from homeassistant.components.smarttub.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
@@ -17,7 +24,11 @@ from homeassistant.components.smarttub.const import (
     SMARTTUB_CONTROLLER,
     UNSUB_UPDATE_LISTENER,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -40,7 +51,7 @@ async def test_async_setup_entry(hass, controller):
     async_add_entities.assert_called()
 
 
-async def test_thermostat(coordinator, spa):
+async def test_thermostat(coordinator, spa, hass, config_entry):
     """Test the thermostat entity."""
 
     spa.get_status.return_value = {
@@ -50,26 +61,42 @@ async def test_thermostat(coordinator, spa):
         },
         "setTemperature": 39,
     }
-    thermostat = SmartTubThermostat(coordinator, spa)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert thermostat.temperature_unit == TEMP_CELSIUS
-    assert thermostat.hvac_action == CURRENT_HVAC_HEAT
+    entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
     spa.get_status.return_value["heater"] = "OFF"
-    await coordinator.async_refresh()
-    assert thermostat.hvac_action == CURRENT_HVAC_IDLE
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    state = hass.states.get(entity_id)
 
-    assert thermostat.hvac_modes
-    assert thermostat.hvac_mode
-    await thermostat.async_set_hvac_mode(HVAC_MODE_HEAT)
-    assert thermostat.min_temp == DEFAULT_MIN_TEMP
-    assert thermostat.max_temp == DEFAULT_MAX_TEMP
-    assert thermostat.supported_features
-    assert thermostat.current_temperature == 38
-    assert thermostat.target_temperature == 39
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
-    spa.get_status.reset_mock()
-    await thermostat.async_set_temperature(**{ATTR_TEMPERATURE: 30})
-    spa.set_temperature.assert_called_with(30)
+    assert set(state.attributes[ATTR_HVAC_MODES]) == {HVAC_MODE_HEAT}
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 38
+    assert state.attributes[ATTR_TEMPERATURE] == 39
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
 
-    spa.get_status.assert_called()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 37},
+        blocking=True,
+    )
+    spa.set_temperature.assert_called_with(37)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    # does nothing
