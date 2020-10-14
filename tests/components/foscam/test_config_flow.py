@@ -173,6 +173,32 @@ async def test_user_already_configured(hass):
         assert result["reason"] == "already_configured"
 
 
+async def test_user_unknown_exception(hass):
+    """Test we handle unknown exceptions from user input."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.foscam.config_flow.FoscamCamera",
+    ) as mock_foscam_camera:
+        mock_foscam_camera.side_effect = Exception("test")
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}
+
+
 async def test_import_user_valid(hass):
     """Test valid config from import."""
     with patch(
@@ -309,3 +335,24 @@ async def test_import_already_configured(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_import_unknown_exception(hass):
+    """Test we handle unknown exceptions from import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.foscam.config_flow.FoscamCamera",
+    ) as mock_foscam_camera:
+        mock_foscam_camera.side_effect = Exception("test")
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=VALID_CONFIG,
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"
