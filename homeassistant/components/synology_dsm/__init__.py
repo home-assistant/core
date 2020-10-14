@@ -267,8 +267,8 @@ class SynoApi:
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         try:
             await self.async_update()
-        except Exception:  # pylint: disable=broad-except
-            raise ConfigEntryNotReady
+        except Exception as err:  # pylint: disable=broad-except
+            raise ConfigEntryNotReady from err
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass,
