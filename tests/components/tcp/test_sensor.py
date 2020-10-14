@@ -1,7 +1,7 @@
 """The tests for the TCP sensor platform."""
 from copy import copy
 import socket
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -36,11 +36,16 @@ KEYS_AND_DEFAULTS = {
     tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE,
 }
 
+socket_test_value = "test_value"
+
 
 @pytest.fixture
 def mock_socket():
     """Pytest fixture for socket."""
     with patch("socket.socket") as mock_socket:
+        mock_socket.return_value.__enter__.return_value.recv.return_value = (
+            socket_test_value.encode()
+        )
         yield mock_socket
 
 
@@ -60,13 +65,13 @@ def mock_update():
 
 async def test_setup_platform_valid_config(hass, mock_update):
     """Check a valid configuration and call add_entities with sensor."""
-    with assert_setup_component(0, "sensor"):
-        assert await async_setup_component(hass, "sensor", TEST_CONFIG)
+    config = copy(TEST_CONFIG["sensor"])
+    del config[tcp.CONF_VALUE_TEMPLATE]
 
-    add_entities = Mock()
-    tcp.setup_platform(None, TEST_CONFIG["sensor"], add_entities)
-    assert add_entities.called
-    assert isinstance(add_entities.call_args[0][0][0], tcp.TcpSensor)
+    with assert_setup_component(1, "sensor"):
+        assert await async_setup_component(hass, "sensor", {"sensor": config})
+        await hass.async_block_till_done()
+        assert "sensor." + config[tcp.CONF_NAME] in hass.states.async_entity_ids()
 
 
 async def test_setup_platform_invalid_config(hass):
@@ -242,34 +247,24 @@ def test_update_calls_select_with_timeout(hass, mock_select, mock_socket):
 
 def test_update_receives_packet_and_sets_as_state(hass, mock_select, mock_socket):
     """Test the response from the socket and set it as the state."""
-    test_value = "test_value"
-    mock_socket = mock_socket().__enter__()
-    mock_socket.recv.return_value = test_value.encode()
     config = copy(TEST_CONFIG["sensor"])
     del config[tcp.CONF_VALUE_TEMPLATE]
     sensor = tcp.TcpSensor(hass, config)
-    assert sensor._state == test_value
+    print(sensor._state)
+    assert sensor._state == socket_test_value
 
 
 def test_update_renders_value_in_template(hass, mock_select, mock_socket):
     """Render the value in the provided template."""
-    test_value = "test_value"
-    with patch("socket.socket") as mock_socket:
-        mock_socket = mock_socket().__enter__()
-        mock_socket.recv.return_value = test_value.encode()
-        config = copy(TEST_CONFIG["sensor"])
-        config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ value }} {{ 1+1 }}")
-        sensor = tcp.TcpSensor(hass, config)
-        assert sensor._state == "%s 2" % test_value
+    config = copy(TEST_CONFIG["sensor"])
+    config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ value }} {{ 1+1 }}")
+    sensor = tcp.TcpSensor(hass, config)
+    assert sensor._state == "%s 2" % socket_test_value
 
 
-def test_update_returns_if_template_render_fails(hass, mock_select):
+def test_update_returns_if_template_render_fails(hass, mock_select, mock_socket):
     """Return None if rendering the template fails."""
-    test_value = "test_value"
-    with patch("socket.socket") as mock_socket:
-        mock_socket = mock_socket().__enter__()
-        mock_socket.recv.return_value = test_value.encode()
-        config = copy(TEST_CONFIG["sensor"])
-        config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ this won't work")
-        sensor = tcp.TcpSensor(hass, config)
-        assert sensor.update() is None
+    config = copy(TEST_CONFIG["sensor"])
+    config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ this won't work")
+    sensor = tcp.TcpSensor(hass, config)
+    assert sensor.update() is None
