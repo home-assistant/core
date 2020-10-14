@@ -570,7 +570,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             )
         elif source == SOURCE_REAUTH:
             self.hass.components.persistent_notification.async_create(
-                title="Devices require reconfiguration",
+                title="Integration requires reconfiguration",
                 message=(
                     "At least one of your integrations requires reconfiguration to "
                     "continue functioning. [Check it out](/config/integrations)"
