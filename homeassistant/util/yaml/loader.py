@@ -270,7 +270,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     secret_filename = os.path.join(secret_path, SECRET_YAML)
     if secret_filename == loader.name:
         _LOGGER.error("secrets.yaml: attempt to load secret from within secrets file")
-        return None
+        return ""
     while True:
         secrets = _load_secret_yaml(secret_path)
 
