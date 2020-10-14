@@ -1,5 +1,7 @@
 """Test the Advantage Air Cover Platform."""
 
+from json import loads
+
 from homeassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OPEN,
@@ -20,7 +22,6 @@ from tests.components.advantage_air import (
     TEST_SYSTEM_DATA,
     TEST_SYSTEM_URL,
     add_mock_config,
-    get_query_json,
 )
 
 
@@ -63,8 +64,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    json = get_query_json(aioclient_mock.mock_calls[-2][1])
-    assert json["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -77,9 +78,9 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 5
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    json = get_query_json(aioclient_mock.mock_calls[-2][1])
-    assert json["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert json["ac2"]["zones"]["z01"]["value"] == 100
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+    assert data["ac2"]["zones"]["z01"]["value"] == 100
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -92,8 +93,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 7
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    json = get_query_json(aioclient_mock.mock_calls[-2][1])
-    assert json["ac2"]["zones"]["z01"]["value"] == 50
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["value"] == 50
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -106,7 +107,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 9
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    json = get_query_json(aioclient_mock.mock_calls[-2][1])
-    assert json["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
