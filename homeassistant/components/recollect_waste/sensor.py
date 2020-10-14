@@ -1,6 +1,5 @@
 """Support for Recollect Waste curbside collection pickup."""
-from datetime import timedelta
-from datetime import date
+from datetime import date, timedelta
 import logging
 
 import recollect_waste
