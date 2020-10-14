@@ -285,7 +285,7 @@ class FritzBoxCallMonitor:
                 "with": line[4],
                 "device": line[3],
                 "accepted": isotime,
-                "with_name": self._sensor.number_to_name(att["with"]),
+                "with_name": self._sensor.number_to_name(line[4]),
             }
             self._sensor.set_attributes(att)
         elif line[1] == FRITZ_STATE_DISCONNECT:
