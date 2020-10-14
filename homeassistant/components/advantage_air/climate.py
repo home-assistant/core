@@ -6,7 +6,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -59,16 +58,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     instance = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for ac_key in instance["coordinator"].data["aircons"]:
+    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirAC(instance, ac_key))
-        for zone_key in instance["coordinator"].data["aircons"][ac_key]["zones"]:
+        for zone_key, zone in ac_device["zones"].items():
             # Only add zone climate control when zone is in temperature control
-            if (
-                instance["coordinator"].data["aircons"][ac_key]["zones"][zone_key][
-                    "type"
-                ]
-                != 0
-            ):
+            if zone["type"] != 0:
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
@@ -155,7 +149,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def fan_mode(self):
         """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"], FAN_OFF)
+        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
     @property
     def fan_modes(self):
