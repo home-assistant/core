@@ -1021,7 +1021,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         assert self.hass
-        if not self._async_in_progress():
+        if not any(
+            ent["context"]["source"] == SOURCE_REAUTH
+            for ent in self.hass.config_entries.flow.async_progress()
+            if ent["flow_id"] != self.flow_id
+        ):
             self.hass.components.persistent_notification.async_dismiss(
                 RECONFIGURE_NOTIFICATION_ID
             )
