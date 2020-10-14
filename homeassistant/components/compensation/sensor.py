@@ -14,12 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import (
-    CONF_COMPENSATION,
-    CONF_POLYNOMIAL,
-    CONF_PRECISION,
-    DATA_COMPENSATION,
-)
+from .const import CONF_COMPENSATION, CONF_POLYNOMIAL, CONF_PRECISION, DATA_COMPENSATION
 
 _LOGGER = logging.getLogger(__name__)
 
