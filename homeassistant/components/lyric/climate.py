@@ -1,4 +1,4 @@
-"""Support for Honeywell Lyric sensors."""
+"""Support for Honeywell Lyric climate platform."""
 import logging
 from typing import List, Optional
 

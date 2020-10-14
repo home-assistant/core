@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "sensor"]
+PLATFORMS = ["climate"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -169,7 +169,7 @@ class LyricEntity(CoordinatorEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
+        """Return the unique ID for this entity."""
         return self._key
 
     @property
