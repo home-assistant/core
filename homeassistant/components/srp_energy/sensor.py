@@ -95,7 +95,9 @@ class SrpEntity(entity.Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return f"{self._state:.2f}"
+        if self._state:
+            return f"{self._state:.2f}"
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -110,7 +112,9 @@ class SrpEntity(entity.Entity):
     @property
     def usage(self):
         """Return entity state."""
-        return f"{self.coordinator.data:.2f}"
+        if self.coordinator.data:
+            return f"{self.coordinator.data:.2f}"
+        return None
 
     @property
     def should_poll(self):
