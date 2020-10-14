@@ -1023,7 +1023,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         assert self.hass
 
         # Remove reauth notification if no reauth flows are in progress
-        if not any(
+        if self.source == SOURCE_REAUTH and not any(
             ent["context"]["source"] == SOURCE_REAUTH
             for ent in self.hass.config_entries.flow.async_progress()
             if ent["flow_id"] != self.flow_id
