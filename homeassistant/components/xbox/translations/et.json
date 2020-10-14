@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
             "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
-            "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
+            "single_instance_allowed": "Seade on juba lisatud. Lubatud on ainult \u00fcks seadistamine."
         },
         "create_entry": {
-            "default": "Tuvastamine \u00f5nnestus"
+            "default": "Edukalt tuvastatud"
         },
         "step": {
             "pick_implementation": {

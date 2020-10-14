@@ -11,7 +11,8 @@
         "step": {
             "gateway": {
                 "data": {
-                    "host": "IP aadress"
+                    "host": "IP aadress",
+                    "token": "API string"
                 },
                 "title": "Loo \u00fchendus Xiaomi l\u00fc\u00fcsiga"
             },

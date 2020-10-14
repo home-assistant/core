@@ -10,7 +10,10 @@
             "user": {
                 "data": {
                     "host": "",
+                    "name": "Nimi",
                     "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "ssl": "Kasutab SSL serti",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
