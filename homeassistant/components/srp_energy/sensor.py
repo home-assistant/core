@@ -95,7 +95,7 @@ class SrpEntity(entity.Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return f"{self._state:.2f}"
 
     @property
     def unit_of_measurement(self):
