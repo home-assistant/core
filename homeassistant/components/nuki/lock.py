@@ -1,45 +1,30 @@
 """Nuki.io lock platform."""
+
 from abc import ABC, abstractmethod
-from datetime import timedelta
 import logging
 
-from pynuki import NukiBridge
-from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-from . import DOMAIN
+from . import NukiEntity
+from .const import (
+    ATTR_BATTERY_CRITICAL,
+    ATTR_NUKI_ID,
+    ATTR_UNLATCH,
+    DATA_COORDINATOR,
+    DATA_LOCKS,
+    DATA_OPENERS,
+    DOMAIN,
+    ERROR_STATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 20
-
-ATTR_BATTERY_CRITICAL = "battery_critical"
-ATTR_NUKI_ID = "nuki_id"
-ATTR_UNLATCH = "unlatch"
-
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-
-NUKI_DATA = "nuki"
-
 SERVICE_LOCK_N_GO = "lock_n_go"
-
-ERROR_STATES = (0, 254, 255)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TOKEN): cv.string,
-    }
-)
-
 LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -48,47 +33,45 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Nuki lock platform."""
-    bridge = NukiBridge(
-        config[CONF_HOST],
-        config[CONF_TOKEN],
-        config[CONF_PORT],
-        True,
-        DEFAULT_TIMEOUT,
-    )
+    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data[DATA_COORDINATOR]
 
-    devices = [NukiLockEntity(lock) for lock in bridge.locks]
+    entities = [
+        NukiLockEntity(coordinator, lock)
+        for lock in hass.data[DOMAIN][entry.entry_id][DATA_LOCKS]
+    ]
 
     def service_handler(service):
         """Service handler for nuki services."""
         entity_ids = extract_entity_ids(hass, service)
         unlatch = service.data[ATTR_UNLATCH]
 
-        for lock in devices:
+        for lock in entities:
             if lock.entity_id not in entity_ids:
                 continue
             lock.lock_n_go(unlatch=unlatch)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_LOCK_N_GO,
         service_handler,
         schema=LOCK_N_GO_SERVICE_SCHEMA,
     )
 
-    devices.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
+    entities.extend(
+        [
+            NukiOpenerEntity(coordinator, opener)
+            for opener in hass.data[DOMAIN][entry.entry_id][DATA_OPENERS]
+        ]
+    )
 
-    add_entities(devices)
+    async_add_entities(entities)
 
 
-class NukiDeviceEntity(LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     """Representation of a Nuki device."""
-
-    def __init__(self, nuki_device):
-        """Initialize the lock."""
-        self._nuki_device = nuki_device
-        self._available = nuki_device.state not in ERROR_STATES
 
     @property
     def name(self):
@@ -122,22 +105,7 @@ class NukiDeviceEntity(LockEntity, ABC):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
-
-    def update(self):
-        """Update the nuki lock properties."""
-        for level in (False, True):
-            try:
-                self._nuki_device.update(aggressive=level)
-            except RequestException:
-                _LOGGER.warning("Network issues detect with %s", self.name)
-                self._available = False
-                continue
-
-            # If in error state, we force an update and repoll data
-            self._available = self._nuki_device.state not in ERROR_STATES
-            if self._available:
-                break
+        return self._nuki_device.state not in ERROR_STATES
 
     @abstractmethod
     def lock(self, **kwargs):
@@ -159,6 +127,11 @@ class NukiLockEntity(NukiDeviceEntity):
     def is_locked(self):
         """Return true if lock is locked."""
         return self._nuki_device.is_locked
+
+    @property
+    def is_door_sensor_activated(self):
+        """Return true if door sensor is present and activated."""
+        return self._nuki_device.is_door_sensor_activated
 
     def lock(self, **kwargs):
         """Lock the device."""
