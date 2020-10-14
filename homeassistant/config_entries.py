@@ -1021,6 +1021,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         assert self.hass
+
+        # Remove reauth notification if no reauth flows are in progress
         if not any(
             ent["context"]["source"] == SOURCE_REAUTH
             for ent in self.hass.config_entries.flow.async_progress()
