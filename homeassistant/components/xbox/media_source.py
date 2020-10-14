@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import logging
 from typing import List, Tuple
 
+# pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import FieldsTemplate, Image
@@ -94,7 +95,7 @@ class XboxSource(MediaSource):
             return await self._build_game_library()
 
         if not category:
-            return self._build_categories(title)
+            return _build_categories(title)
 
         return await self._build_media_items(title, category)
 
@@ -125,67 +126,9 @@ class XboxSource(MediaSource):
             title="Xbox Game Media",
             can_play=False,
             can_expand=True,
-            children=[self._build_game_item(game, images) for game in games.values()],
+            children=[_build_game_item(game, images) for game in games.values()],
             children_media_class=MEDIA_CLASS_GAME,
         )
-
-    def _build_game_item(self, item: InstalledPackage, images: List[Image]):
-        """Build individual game."""
-        thumbnail = ""
-        image = _find_media_image(images.get(item.one_store_product_id, []))
-        if image is not None:
-            thumbnail = image.uri
-            if thumbnail[0] == "/":
-                thumbnail = f"https:{thumbnail}"
-
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=f"{item.title_id}#{item.name}#{thumbnail}",
-            media_class=MEDIA_CLASS_GAME,
-            media_content_type=None,
-            title=item.name,
-            can_play=False,
-            can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
-            thumbnail=thumbnail,
-        )
-
-    def _build_categories(self, title):
-        """Build base categories for Xbox media."""
-        _, name, thumbnail = title.split("#", 2)
-        base = BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=f"{title}",
-            media_class=MEDIA_CLASS_GAME,
-            media_content_type=None,
-            title=name,
-            can_play=False,
-            can_expand=True,
-            children=[],
-            children_media_class=MEDIA_CLASS_DIRECTORY,
-            thumbnail=thumbnail,
-        )
-
-        owners = ["my", "community"]
-        kinds = ["gameclips", "screenshots"]
-        for owner in owners:
-            for kind in kinds:
-                base.children.append(
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"{title}~~{owner}#{kind}",
-                        media_class=MEDIA_CLASS_DIRECTORY,
-                        media_content_type=None,
-                        title=f"{owner.title()} {kind.title()}",
-                        can_play=False,
-                        can_expand=True,
-                        children_media_class=MEDIA_CLASS_VIDEO
-                        if kind == "gameclips"
-                        else MEDIA_CLASS_IMAGE,
-                    )
-                )
-
-        return base
 
     async def _build_media_items(self, title, category):
         """Fetch requested gameclip/screenshot media."""
@@ -256,23 +199,84 @@ class XboxSource(MediaSource):
             title=f"{owner.title()} {kind.title()}",
             can_play=False,
             can_expand=True,
-            children=[self._build_media_item(title, category, item) for item in items],
+            children=[_build_media_item(title, category, item) for item in items],
             children_media_class=MEDIA_CLASS_VIDEO
             if kind == "gameclips"
             else MEDIA_CLASS_IMAGE,
             thumbnail=thumbnail,
         )
 
-    def _build_media_item(self, title: str, category: str, item: XboxMediaItem):
-        """Build individual media item."""
-        _, kind = category.split("#", 1)
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=f"{title}~~{category}~~{item.uri}",
-            media_class=item.media_class,
-            media_content_type=MIME_TYPE_MAP[kind],
-            title=item.caption,
-            can_play=True,
-            can_expand=False,
-            thumbnail=item.thumbnail,
-        )
+
+def _build_game_item(item: InstalledPackage, images: List[Image]):
+    """Build individual game."""
+    thumbnail = ""
+    image = _find_media_image(images.get(item.one_store_product_id, []))
+    if image is not None:
+        thumbnail = image.uri
+        if thumbnail[0] == "/":
+            thumbnail = f"https:{thumbnail}"
+
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=f"{item.title_id}#{item.name}#{thumbnail}",
+        media_class=MEDIA_CLASS_GAME,
+        media_content_type=None,
+        title=item.name,
+        can_play=False,
+        can_expand=True,
+        children_media_class=MEDIA_CLASS_DIRECTORY,
+        thumbnail=thumbnail,
+    )
+
+
+def _build_categories(title):
+    """Build base categories for Xbox media."""
+    _, name, thumbnail = title.split("#", 2)
+    base = BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=f"{title}",
+        media_class=MEDIA_CLASS_GAME,
+        media_content_type=None,
+        title=name,
+        can_play=False,
+        can_expand=True,
+        children=[],
+        children_media_class=MEDIA_CLASS_DIRECTORY,
+        thumbnail=thumbnail,
+    )
+
+    owners = ["my", "community"]
+    kinds = ["gameclips", "screenshots"]
+    for owner in owners:
+        for kind in kinds:
+            base.children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{title}~~{owner}#{kind}",
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_type=None,
+                    title=f"{owner.title()} {kind.title()}",
+                    can_play=False,
+                    can_expand=True,
+                    children_media_class=MEDIA_CLASS_VIDEO
+                    if kind == "gameclips"
+                    else MEDIA_CLASS_IMAGE,
+                )
+            )
+
+    return base
+
+
+def _build_media_item(title: str, category: str, item: XboxMediaItem):
+    """Build individual media item."""
+    _, kind = category.split("#", 1)
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=f"{title}~~{category}~~{item.uri}",
+        media_class=item.media_class,
+        media_content_type=MIME_TYPE_MAP[kind],
+        title=item.caption,
+        can_play=True,
+        can_expand=False,
+        thumbnail=item.thumbnail,
+    )
