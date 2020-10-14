@@ -1,5 +1,4 @@
 """Support for interface with a Gree climate systems."""
-import asyncio
 from datetime import timedelta
 import logging
 from typing import List
@@ -13,7 +12,7 @@ from greeclimate.device import (
 )
 from greeclimate.exceptions import DeviceTimeoutError
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -197,7 +196,7 @@ class GreeClimateEntity(ClimateEntity):
         """Return device specific attributes."""
         return {
             "name": self._name,
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._mac)},
             "manufacturer": "Gree",
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
         }
