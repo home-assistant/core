@@ -63,8 +63,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
 
-MOCK_CONFIG = {}
-
 
 @pytest.fixture
 def mock_now():
