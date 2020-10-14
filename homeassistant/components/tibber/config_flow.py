@@ -48,7 +48,7 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except asyncio.TimeoutError:
                 errors[CONF_ACCESS_TOKEN] = "timeout"
             except aiohttp.ClientError:
-                errors[CONF_ACCESS_TOKEN] = "connection_error"
+                errors[CONF_ACCESS_TOKEN] = "cannot_connect"
             except tibber.InvalidLogin:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
 
