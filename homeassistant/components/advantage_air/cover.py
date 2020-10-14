@@ -74,13 +74,6 @@ class AdvantageAirZoneVent(CoordinatorEntity, CoverEntity):
         return 0
 
     @property
-    def icon(self):
-        """Return vent icon."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return "mdi:fan"
-        return "mdi:fan-off"
-
-    @property
     def device_info(self):
         """Return parent device information."""
         return {
