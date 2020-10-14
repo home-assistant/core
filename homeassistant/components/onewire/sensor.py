@@ -8,6 +8,7 @@ from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -24,11 +25,11 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     CONF_MOUNT_DIR,
     CONF_NAMES,
-    CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,18 +127,11 @@ def hb_info_from_type(dev_type="std"):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Old way of setting up 1-Wire platform."""
-    adjusted_config = config
-    if adjusted_config.get(CONF_HOST):
-        adjusted_config[CONF_TYPE] = CONF_TYPE_OWSERVER
-    elif adjusted_config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
-        adjusted_config[CONF_TYPE] = CONF_TYPE_SYSBUS
-    else:  # pragma: no cover
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        adjusted_config[CONF_TYPE] = CONF_TYPE_OWFS
-
-    devs = get_entities(adjusted_config)
-    add_entities(devs, True)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
