@@ -4,7 +4,6 @@ import re
 import warnings
 
 import numpy as np
-from numpy.linalg import LinAlgError
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -99,17 +98,20 @@ async def async_setup(hass, config):
             # try to catch 3 possible errors
             try:
                 coefficients = np.polyfit(x_values, y_values, degree)
-            except (ValueError, LinAlgError, FloatingPointError) as e:
+            except FloatingPointError as error:
                 _LOGGER.error(
-                    "Setup of %s.%s encountered an error, %s.", DOMAIN, compensation, e
+                    "Setup of %s.%s encountered an error, %s.",
+                    DOMAIN,
+                    compensation,
+                    error,
                 )
             # raise any warnings
             for warning in all_warnings:
                 _LOGGER.warning(
-                    "Setup of %s.%s encountered a warning, %s",
+                    "Setup of %s.%s encountered a warning, %s.",
                     DOMAIN,
                     compensation,
-                    warning.message.lower(),
+                    str(warning.message).lower(),
                 )
 
         if coefficients is not None:

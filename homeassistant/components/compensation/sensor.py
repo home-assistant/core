@@ -1,8 +1,5 @@
 """Support for compensation sensor."""
 import logging
-import re
-
-import numpy as np
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,7 +19,6 @@ from .const import (
     CONF_POLYNOMIAL,
     CONF_PRECISION,
     DATA_COMPENSATION,
-    MATCH_DATAPOINT,
 )
 
 _LOGGER = logging.getLogger(__name__)
