@@ -1,4 +1,4 @@
-"""Support for MQTT discovery."""
+"""Support for Tasmota device discovery."""
 import asyncio
 import logging
 
@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_PLATFORMS = [
     "binary_sensor",
+    "light",
     "switch",
 ]
 
@@ -46,7 +47,7 @@ def set_discovery_hash(hass, discovery_hash):
 async def async_start(
     hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt
 ) -> bool:
-    """Start MQTT Discovery."""
+    """Start Tasmota device discovery."""
 
     async def _load_platform(platform):
         """Load a Tasmota platform if not already done."""
