@@ -72,9 +72,9 @@ class AdvantageAirTimeTo(CoordinatorEntity):
     @property
     def icon(self):
         """Return a representative icon of the timer."""
-        return ["mdi:timer-off-outline", "mdi:timer-outline"][
-            self._ac[f"countDownTo{self.time_period}"] > 0
-        ]
+        if self._ac[f"countDownTo{self.time_period}"] > 0:
+            return "mdi:timer-outline"
+        return "mdi:timer-off-outline"
 
     @property
     def device_info(self):
@@ -124,9 +124,7 @@ class AdvantageAirZoneVent(CoordinatorEntity):
     def state(self):
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return self.coordinator.data["aircons"][self.ac_key]["zones"][
-                self.zone_key
-            ]["value"]
+            return self._zone["value"]
         return 0
 
     @property
@@ -137,9 +135,9 @@ class AdvantageAirZoneVent(CoordinatorEntity):
     @property
     def icon(self):
         """Return a representative icon."""
-        return ["mdi:fan-off", "mdi:fan"][
-            self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN
-        ]
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return "mdi:fan"
+        return "mdi:fan-off"
 
     @property
     def device_info(self):
