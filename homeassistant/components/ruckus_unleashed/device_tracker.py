@@ -126,3 +126,4 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
                     self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
                 ),
             }
+        return None
