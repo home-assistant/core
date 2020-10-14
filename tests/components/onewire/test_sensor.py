@@ -35,7 +35,7 @@ async def test_setup_owserver(hass):
     await hass.async_block_till_done()
 
 
-async def test_setup_owserverwithport(hass):
+async def test_setup_owserver_with_port(hass):
     """Test setup with OWServer configuration."""
     config = {"sensor": {"platform": "onewire", "host": "localhost", "port": "1234"}}
     with assert_setup_component(1, "sensor"):
