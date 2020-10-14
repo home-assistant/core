@@ -17,7 +17,7 @@ PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass, config):
-    """Set up the srp_energy component."""
+    """Old way of setting up the srp_energy component."""
     return True
 
 
@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     account_id = entry.data.get(CONF_ID)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
+    hass.data[DOMAIN] = None
 
     try:
         srp_energy_client = SrpEnergyClient(account_id, username, password)
@@ -46,10 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
     # unload srp client
     hass.data[DOMAIN] = None
-
     # Remove config entry
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    hass.data.pop(DOMAIN)
 
     return True

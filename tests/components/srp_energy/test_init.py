@@ -1,44 +1,26 @@
 """Tests for Srp Energy component Init."""
 from homeassistant.components import srp_energy
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
-
-MOCK_ENTRY = MockConfigEntry(
-    domain=srp_energy.DOMAIN,
-    data={
-        CONF_NAME: "Test",
-        CONF_ID: "1",
-        CONF_USERNAME: "abba",
-        CONF_PASSWORD: "ana",
-    },
-)
+from tests.components.srp_energy import init_integration
 
 
-async def test_setup_with_config(hass):
-    """Test that we import the config and setup the integration."""
-    config = {
-        srp_energy.DOMAIN: {
-            CONF_NAME: "Test",
-            CONF_ID: "1",
-            CONF_USERNAME: "abba",
-            CONF_PASSWORD: "ana",
-        }
-    }
-    mock_form = {
-        CONF_NAME: "Test",
-        CONF_ID: "1",
-        CONF_USERNAME: "abba",
-        CONF_PASSWORD: "ana",
-    }
+async def test_setup_entry(hass):
+    """Test setup entry fails if deCONZ is not available."""
+    config_entry = await init_integration(hass)
+    assert config_entry.state == "loaded"
+    assert hass.data[srp_energy.DOMAIN]
 
-    # Setup config first
-    with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
-        await hass.config_entries.flow.async_init(
-            srp_energy.DOMAIN, context={"source": "user"}, data=mock_form
-        )
 
-    with patch("homeassistant.components.srp_energy.SrpEnergyClient"):
-        assert await async_setup_component(hass, srp_energy.DOMAIN, config)
+async def test_unload_entry(hass):
+    """Test being able to unload an entry."""
+    config_entry = await init_integration(hass)
+    assert hass.data[srp_energy.DOMAIN]
+
+    assert await srp_energy.async_unload_entry(hass, config_entry)
+    assert not hass.data[srp_energy.DOMAIN]
+
+
+async def test_async_setup_entry_with_exception(hass):
+    """Test exception when SrpClient can't load."""
+    await init_integration(hass, side_effect=Exception())
+    assert not hass.data[srp_energy.DOMAIN]

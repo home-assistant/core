@@ -1,61 +1,103 @@
 """Test the SRP Energy config flow."""
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+
+from . import ENTRY_CONFIG, init_integration
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
     """Test user config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    # First get the form
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "user"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient"
-    ), patch(
-        "homeassistant.components.srp_energy.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.srp_energy.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+    # Fill submit form data for config entry
+    with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
+
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_NAME: "Test",
-                CONF_ID: "1",
-                CONF_USERNAME: "abba",
-                CONF_PASSWORD: "ana",
-            },
+            user_input=ENTRY_CONFIG,
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Test"
-    assert result2["data"] == {
-        CONF_NAME: "Test",
-        CONF_ID: "1",
-        CONF_USERNAME: "abba",
-        CONF_PASSWORD: "ana",
-        CONF_IS_TOU: False,
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert result["type"] == "create_entry"
+        assert result["title"] == "Test"
+        assert result["data"][CONF_IS_TOU] is False
+
+
+async def test_form_invalid_auth(hass):
+    """Test user config with invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    with patch(
+        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient.validate",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+        assert result["errors"]["base"] == "invalid_auth"
+
+
+async def test_form_value_error(hass):
+    """Test user config that throws a value error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    with patch(
+        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient",
+        side_effect=ValueError(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+        assert result["errors"]["base"] == "invalid_account"
+
+
+async def test_form_unknown_exception(hass):
+    """Test user config that throws an unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    with patch(
+        "homeassistant.components.srp_energy.config_flow.SrpEnergyClient",
+        side_effect=Exception(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+        assert result["errors"]["base"] == "unknown"
+
+
+async def test_config(hass):
+    """Test handling of configuration imported."""
+    with patch("homeassistant.components.srp_energy.config_flow.SrpEnergyClient"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=ENTRY_CONFIG,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_integration_already_configured(hass):
     """Test integration is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={},
-    )
-    entry.add_to_hass(hass)
+    await init_integration(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
