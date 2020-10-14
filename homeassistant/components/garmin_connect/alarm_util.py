@@ -37,7 +37,6 @@ def calculate_next_active_alarms(alarms):
                 alarm = midnight + timedelta(minutes=alarm_time)
                 if alarm < datetime.now():
                     alarm += timedelta(days=1)
-                active_alarms.append(alarm.isoformat())
             else:
                 start_of_week = datetime.combine(
                     date.today() - timedelta(days=datetime.today().isoweekday() % 7),
@@ -47,5 +46,5 @@ def calculate_next_active_alarms(alarms):
                 alarm = start_of_week + timedelta(minutes=alarm_time, days=days_to_add)
                 if alarm < datetime.now():
                     alarm += timedelta(days=7)
-                active_alarms.append(alarm.isoformat())
-    return sorted(active_alarms) if len(active_alarms) > 0 else None
+            active_alarms.append(alarm.isoformat())
+    return sorted(active_alarms) if active_alarms else None
