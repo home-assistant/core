@@ -1645,9 +1645,7 @@ async def test_disarm_pending_with_old_mqtt_command_api(hass, mqtt_mock):
     assert STATE_ALARM_PENDING == hass.states.get(entity_id).state
 
     # Now that we're pending, receive a command to disarm
-    async_fire_mqtt_message(
-        hass, "alarm/command", 'DISARM'
-    )
+    async_fire_mqtt_message(hass, "alarm/command", "DISARM")
     await hass.async_block_till_done()
 
     assert STATE_ALARM_DISARMED == hass.states.get(entity_id).state
