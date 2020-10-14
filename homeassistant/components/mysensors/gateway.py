@@ -129,7 +129,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
         )
     else:
         try:
-            is_serial_port(device)
+            await hass.async_add_executor_job(is_serial_port, device)
             gateway = mysensors.AsyncSerialGateway(
                 device,
                 baud=baud_rate,
