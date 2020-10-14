@@ -60,8 +60,13 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     @property
     def target_temperature(self) -> Optional[float]:
-        """Return the current temperature."""
+        """Return the target temperature."""
         return self._value
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the precision of the target temperature."""
+        return PRECISION_HALVES
 
     @property
     def hvac_mode(self) -> str:
@@ -82,11 +87,6 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def max_temp(self) -> float:
         """Return the maximum set temperature value."""
         return self._multi_level_switch_property.max
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the set temperature."""
-        return PRECISION_HALVES
 
     @property
     def supported_features(self):
