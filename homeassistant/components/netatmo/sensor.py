@@ -59,8 +59,6 @@ SENSOR_TYPES = {
     "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
     "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
-    "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     "windangle": ["Direction", None, "mdi:compass-outline", None],
     "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None],
     "windstrength": [
