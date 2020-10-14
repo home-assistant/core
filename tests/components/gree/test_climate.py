@@ -101,7 +101,6 @@ async def test_discovery_setup(hass, discovery, device):
     await async_setup_gree(hass)
     await hass.async_block_till_done()
     assert discovery.call_count == 1
-    
     assert len(hass.states.async_all(DOMAIN)) == 2
 
 
