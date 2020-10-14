@@ -117,8 +117,6 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         active_support = SUPPORT_XBOX
         if self.state not in [STATE_PLAYING, STATE_PAUSED]:
             active_support &= ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
-        if not self.data.status.is_tv_configured:
-            active_support &= ~SUPPORT_VOLUME_MUTE & ~SUPPORT_VOLUME_STEP
         return active_support
 
     @property
@@ -231,7 +229,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
         return {
             "identifiers": {(DOMAIN, self._console.id)},
-            "name": self.name,
+            "name": self._console.name,
             "manufacturer": "Microsoft",
             "model": model,
         }

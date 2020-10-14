@@ -1,5 +1,6 @@
 """Xbox Remote support."""
 import asyncio
+import re
 from typing import Any, Iterable
 
 from xbox.webapi.api.client import XboxLiveClient
@@ -92,3 +93,20 @@ class XboxRemote(CoordinatorEntity, RemoteEntity):
                         self._console.id, single_command
                     )
                 await asyncio.sleep(delay)
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        # Turns "XboxOneX" into "Xbox One X" for display
+        matches = re.finditer(
+            ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
+            self._console.console_type,
+        )
+        model = " ".join([m.group(0) for m in matches])
+
+        return {
+            "identifiers": {(DOMAIN, self._console.id)},
+            "name": self._console.name,
+            "manufacturer": "Microsoft",
+            "model": model,
+        }
