@@ -1,11 +1,11 @@
 """Tests for the Gree Integration."""
 
-from homeassistant.components import gree
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_setup_simple(hass):
@@ -25,12 +25,14 @@ async def test_unload_config_entry(hass):
 
     with patch(
         "homeassistant.components.gree.climate.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as climate_setup:
         assert await async_setup_component(hass, GREE_DOMAIN, {})
         await hass.async_block_till_done()
 
         assert len(climate_setup.mock_calls) == 1
-        assert GREE_DOMAIN in hass.data
+        assert entry.state == ENTRY_STATE_LOADED
 
-    assert await gree.async_unload_entry(hass, entry)
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state == ENTRY_STATE_NOT_LOADED
