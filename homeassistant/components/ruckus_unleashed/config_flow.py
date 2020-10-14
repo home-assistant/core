@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     system_info = await hass.async_add_executor_job(ruckus.system_info)
     try:
-        host_serial = system_info["System Overview"]["Serial Number"]
+        host_serial = system_info[API_SYSTEM_OVERVIEW][API_SERIAL]
     except KeyError as error:
         raise CannotConnect from error
 

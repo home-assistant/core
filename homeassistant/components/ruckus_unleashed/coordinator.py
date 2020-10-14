@@ -8,7 +8,13 @@ from pyruckus.exceptions import AuthenticationError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CLIENTS, DOMAIN, SCAN_INTERVAL
+from .const import (
+    API_CLIENTS,
+    API_CURRENT_ACTIVE_CLIENTS,
+    API_MAC,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -34,11 +40,11 @@ class RuckusUnleashedDataUpdateCoordinator(DataUpdateCoordinator):
         clients = await self.hass.async_add_executor_job(
             self.ruckus.current_active_clients
         )
-        return {e["Mac Address"]: e for e in clients["current_active_clients"][CLIENTS]}
+        return {e[API_MAC]: e for e in clients[API_CURRENT_ACTIVE_CLIENTS][API_CLIENTS]}
 
     async def _async_update_data(self) -> dict:
         """Fetch Ruckus Unleashed data."""
         try:
-            return {CLIENTS: await self._fetch_clients()}
+            return {API_CLIENTS: await self._fetch_clients()}
         except (AuthenticationError, ConnectionError) as error:
             raise UpdateFailed(error) from error

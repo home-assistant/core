@@ -3,11 +3,21 @@ DOMAIN = "ruckus_unleashed"
 PLATFORMS = ["device_tracker"]
 SCAN_INTERVAL = 180
 
+MANUFACTURER = "Ruckus"
+
 COORDINATOR = "coordinator"
 UNDO_UPDATE_LISTENERS = "undo_update_listeners"
 
-CLIENTS = "clients"
-MESH_INFO = "mesh_info"
-
-RESPONSE_HOST_NAME = "Host Name"
-RESPONSE_MAC_ADDRESS = "MAC Address"
+API_CLIENTS = "clients"
+API_NAME = "host_name"
+API_MAC = "mac_address"
+API_IP = "user_ip"
+API_SYSTEM_OVERVIEW = "system_overview"
+API_SERIAL = "serial_number"
+API_DEVICE_NAME = "device_name"
+API_MODEL = "model"
+API_VERSION = "version"
+API_AP = "ap"
+API_ID = "id"
+API_CURRENT_ACTIVE_CLIENTS = "current_active_clients"
+API_ACCESS_POINT = "access_point"

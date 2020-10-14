@@ -11,10 +11,17 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
+    API_AP,
+    API_DEVICE_NAME,
+    API_ID,
+    API_MAC,
+    API_MODEL,
+    API_SYSTEM_OVERVIEW,
+    API_VERSION,
     COORDINATOR,
     DOMAIN,
+    MANUFACTURER,
     PLATFORMS,
-    RESPONSE_MAC_ADDRESS,
     UNDO_UPDATE_LISTENERS,
 )
 from .coordinator import RuckusUnleashedDataUpdateCoordinator
@@ -48,19 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     registry = await device_registry.async_get_registry(hass)
     ap_info = await hass.async_add_executor_job(ruckus.ap_info)
-    for device in ap_info["AP"]["ID"].values():
+    for device in ap_info[API_AP][API_ID].values():
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={
-                (CONNECTION_NETWORK_MAC, device[RESPONSE_MAC_ADDRESS]),
-            },
-            identifiers={
-                (CONNECTION_NETWORK_MAC, device[RESPONSE_MAC_ADDRESS]),
-            },
-            manufacturer="Ruckus",
-            name=device["Device Name"],
-            model=device["Model"],
-            sw_version=system_info["System Overview"]["Version"],
+            connections={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            identifiers={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            manufacturer=MANUFACTURER,
+            name=device[API_DEVICE_NAME],
+            model=device[API_MODEL],
+            sw_version=system_info[API_SYSTEM_OVERVIEW][API_VERSION],
         )
 
     hass.data[DOMAIN][entry.entry_id] = {

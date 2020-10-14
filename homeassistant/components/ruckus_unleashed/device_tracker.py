@@ -9,10 +9,12 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CLIENTS,
+    API_ACCESS_POINT,
+    API_CLIENTS,
+    API_NAME,
     COORDINATOR,
     DOMAIN,
-    RESPONSE_HOST_NAME,
+    MANUFACTURER,
     UNDO_UPDATE_LISTENERS,
 )
 
@@ -45,14 +47,12 @@ def add_new_entities(coordinator, async_add_entities, tracked):
     """Add new tracker entities from the router."""
     new_tracked = []
 
-    for mac in coordinator.data[CLIENTS]:
+    for mac in coordinator.data[API_CLIENTS]:
         if mac in tracked:
             continue
 
-        device = coordinator.data[CLIENTS][mac]
-        new_tracked.append(
-            RuckusUnleashedDevice(coordinator, mac, device[RESPONSE_HOST_NAME])
-        )
+        device = coordinator.data[API_CLIENTS][mac]
+        new_tracked.append(RuckusUnleashedDevice(coordinator, mac, device[API_NAME]))
         tracked.add(mac)
 
     if new_tracked:
@@ -66,7 +66,7 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
 
     for entity in registry.entities.values():
         if entity.config_entry_id == entry.entry_id and entity.platform == DOMAIN:
-            if entity.unique_id not in coordinator.data[CLIENTS]:
+            if entity.unique_id not in coordinator.data[API_CLIENTS]:
                 missing.append(
                     RuckusUnleashedDevice(
                         coordinator, entity.unique_id, entity.original_name
@@ -97,15 +97,15 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         """Return the name."""
         if self.is_connected:
             return (
-                self.coordinator.data[CLIENTS][self._mac][RESPONSE_HOST_NAME]
-                or f"Ruckus {self._mac}"
+                self.coordinator.data[API_CLIENTS][self._mac][API_NAME]
+                or f"{MANUFACTURER} {self._mac}"
             )
         return self._name
 
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return self._mac in self.coordinator.data[CLIENTS]
+        return self._mac in self.coordinator.data[API_CLIENTS]
 
     @property
     def source_type(self) -> str:
@@ -117,11 +117,9 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         """Return the device information."""
         return {
             "name": self.name,
-            "connections": {
-                (CONNECTION_NETWORK_MAC, self._mac),
-            },
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "via_device": (
                 CONNECTION_NETWORK_MAC,
-                self.coordinator.data[CLIENTS][self._mac]["Access Point"],
+                self.coordinator.data[API_CLIENTS][self._mac][API_ACCESS_POINT],
             ),
         }
