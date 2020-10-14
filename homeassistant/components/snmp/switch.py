@@ -1,8 +1,8 @@
 """Support for SNMP enabled switch."""
 import logging
+import re
 
 from pyasn1.error import PyAsn1Error
-
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -29,7 +29,6 @@ from pysnmp.proto.rfc1902 import (
     TimeTicks,
     Unsigned32,
 )
-import re
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
