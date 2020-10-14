@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "scan_error": "Error scanning for bluetooth devices"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Device"
+                },
+                "description": "These bluetooth devices have been discovered nearby",
+                "title": "Select your light"
+            }
+        }
+    },
+    "title": "Kuler Sky"
+}
