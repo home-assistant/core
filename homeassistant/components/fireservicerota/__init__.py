@@ -66,7 +66,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class FSRDataUpdateCoordinator(Entity):
+class FSRDataUpdateCoordinator:
     """Getting the latest data from fireservicerota."""
 
     def __init__(self, hass, entry):
