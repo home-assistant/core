@@ -200,7 +200,7 @@ class ZigbeeChannel(LogMixin):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        if self._ch_pool.skip_configuration:
+        if not from_cache and self._ch_pool.skip_configuration:
             self._status = ChannelStatus.INITIALIZED
             return
 
