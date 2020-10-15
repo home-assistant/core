@@ -64,6 +64,7 @@ class TriggerInstance:
         event_config = event_trigger.TRIGGER_SCHEMA(event_config)
         if self.remove:
             self.remove()
+        # Note: No lock needed, event_trigger.async_attach_trigger is an synchronous function
         self.remove = await event_trigger.async_attach_trigger(
             self.trigger.hass,
             event_config,
@@ -173,19 +174,22 @@ async def async_setup_trigger(hass, tasmota_trigger, config_entry, discovery_has
                 device_trigger.detach_trigger()
                 clear_discovery_hash(hass, discovery_hash)
                 remove_update_signal()
-        else:
-            # Non-empty trigger_config: Update trigger
-            _LOGGER.debug("Updating trigger: %s", discovery_hash)
-            device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
-            if not device_trigger.tasmota_trigger.config_same(trigger_config):
-                device_trigger.tasmota_trigger.config_update(trigger_config)
-                await device_trigger.update_tasmota_trigger(
-                    trigger_config, remove_update_signal
-                )
-                await device_trigger.arm_tasmota_trigger()
-            else:
-                # Unchanged payload: Ignore to avoid unnecessary unsubscribe / subscribe
-                _LOGGER.debug("Ignoring unchanged update for: %s", discovery_hash)
+            return
+
+        device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+        if device_trigger.tasmota_trigger.config_same(trigger_config):
+            # Unchanged payload: Ignore to avoid unnecessary unsubscribe / subscribe
+            _LOGGER.debug("Ignoring unchanged update for: %s", discovery_hash)
+            return
+
+        # Non-empty, changed trigger_config: Update trigger
+        _LOGGER.debug("Updating trigger: %s", discovery_hash)
+        device_trigger.tasmota_trigger.config_update(trigger_config)
+        await device_trigger.update_tasmota_trigger(
+            trigger_config, remove_update_signal
+        )
+        await device_trigger.arm_tasmota_trigger()
+        return
 
     remove_update_signal = async_dispatcher_connect(
         hass, TASMOTA_DISCOVERY_ENTITY_UPDATED.format(*discovery_hash), discovery_update
