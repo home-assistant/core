@@ -13,6 +13,9 @@
                     "host": ""
                 },
                 "description": "Smappee kohaliku sidumise algatamiseks sisestage hostinimi"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovid lisada Home Assistanti Smappee seadme seerianumbriga \" {serial_number} \"?"
             }
         }
     }

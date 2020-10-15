@@ -22,7 +22,7 @@
             },
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 Kodi (\"{name}\") do Home Assistant?",
-                "title": "Wykryto urz\u0105dzenie Kodi"
+                "title": "Wykryte urz\u0105dzenia Kodi"
             },
             "host": {
                 "data": {

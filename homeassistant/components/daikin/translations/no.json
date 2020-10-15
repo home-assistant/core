@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "device_fail": "Uventet feil",
-            "device_timeout": "Tilkobling mislyktes.",
+            "device_timeout": "Tilkobling mislyktes",
             "forbidden": "Ugyldig godkjenning",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"

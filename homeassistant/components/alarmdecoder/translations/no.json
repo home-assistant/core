@@ -7,8 +7,8 @@
             "default": "Vellykket koblet til AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
-            "service_unavailable": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes",
+            "service_unavailable": "Tilkobling mislyktes"
         },
         "step": {
             "protocol": {
@@ -16,7 +16,7 @@
                     "device_baudrate": "Baud-hastighet for enhet",
                     "device_path": "Bane til enheten",
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Konfigurer tilkoblingsinnstillinger"
             },

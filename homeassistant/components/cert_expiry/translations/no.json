@@ -14,7 +14,7 @@
                 "data": {
                     "host": "Vert",
                     "name": "Sertifikatets navn",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Definer sertifikatet som skal testes"
             }

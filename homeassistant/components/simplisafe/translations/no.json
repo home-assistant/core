@@ -26,7 +26,7 @@
                 "data": {
                     "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
                 "title": "Fyll ut informasjonen din."
             }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja",
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
             "external_setup": "Punkt pomy\u015blnie skonfigurowany.",
