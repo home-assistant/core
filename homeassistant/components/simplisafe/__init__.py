@@ -620,7 +620,8 @@ class SimpliSafeEntity(CoordinatorEntity):
     def available(self):
         """Return whether the entity is available."""
         # We can easily detect if the V3 system is offline, but no simple check exists
-        # for the V2 system. Therefore, we mark the entity as available if:
+        # for the V2 system. Therefore, assuming the coordinator hasn't failed, we mark
+        # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
         return (
