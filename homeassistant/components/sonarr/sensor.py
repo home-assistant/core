@@ -8,24 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    DATA_BYTES,
-    DATA_EXABYTES,
-    DATA_GIGABYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_PETABYTES,
-    DATA_TERABYTES,
-    DATA_YOTTABYTES,
-    DATA_ZETTABYTES,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import DATA_GIGABYTES
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -33,34 +16,13 @@ import homeassistant.util.dt as dt_util
 
 from . import SonarrEntity
 from .const import (
-    CONF_BASE_PATH,
-    CONF_DAYS,
-    CONF_INCLUDED,
-    CONF_UNIT,
     CONF_UPCOMING_DAYS,
-    CONF_URLBASE,
     CONF_WANTED_MAX_ITEMS,
     DATA_SONARR,
-    DEFAULT_BASE_PATH,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-BYTE_SIZES = [
-    DATA_BYTES,
-    DATA_KILOBYTES,
-    DATA_MEGABYTES,
-    DATA_GIGABYTES,
-    DATA_TERABYTES,
-    DATA_PETABYTES,
-    DATA_EXABYTES,
-    DATA_ZETTABYTES,
-    DATA_YOTTABYTES,
-]
 
 
 async def async_setup_entry(
