@@ -6,17 +6,24 @@ from elkm1_lib.const import (
     ZoneType,
 )
 from elkm1_lib.util import pretty_const, username
+import voluptuous as vol
 
 from homeassistant.const import VOLT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 
 from . import ElkAttachedEntity, create_elk_entities
-from .const import DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
+from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
 
+SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
+SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
 SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPATURE = -40
+
+ELK_SET_COUNTER_SERVICE_SCHEMA = {
+    vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -33,6 +40,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
+    platform.async_register_entity_service(
+        SERVICE_SENSOR_COUNTER_REFRESH,
+        {},
+        "async_counter_refresh",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SENSOR_COUNTER_SET,
+        ELK_SET_COUNTER_SERVICE_SCHEMA,
+        "async_counter_set",
+    )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_BYPASS,
         ELK_USER_CODE_SERVICE_SCHEMA,
@@ -62,6 +79,18 @@ class ElkSensor(ElkAttachedEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    async def async_counter_refresh(self):
+        """Refresh the value of a counter from the panel."""
+        if not isinstance(self, ElkCounter):
+            raise HomeAssistantError("supported only on ElkM1 Counter sensors")
+        self._element.get()
+
+    async def async_counter_set(self, value=None):
+        """Set the value of a counter on the panel."""
+        if not isinstance(self, ElkCounter):
+            raise HomeAssistantError("supported only on ElkM1 Counter sensors")
+        self._element.set(value)
 
     async def async_zone_bypass(self, code=None):
         """Bypass zone."""
