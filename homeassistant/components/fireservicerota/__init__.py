@@ -25,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_COMPONENTS = {SENSOR_DOMAIN}
+SUPPORTED_PLATFORMS = {SENSOR_DOMAIN}
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
