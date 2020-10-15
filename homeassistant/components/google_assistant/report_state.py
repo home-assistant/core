@@ -50,7 +50,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
                     return
             except SmartHomeError:
                 # Happens if old state could not be serialized.
-                # In that case thet data is different and should be
+                # In that case the data is different and should be
                 # reported.
                 pass
 
