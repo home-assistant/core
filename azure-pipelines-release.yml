@@ -118,7 +118,7 @@ stages:
           -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
           --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
-          -t /data --docker-hub homeassistant
+          -t /data/machine --docker-hub homeassistant
       displayName: 'Build Release'
 
 - stage: 'Publish'
