@@ -71,7 +71,6 @@ ATTR_PREVIOUS_STATE = "previous_state"
 ATTR_NEXT_STATE = "next_state"
 ATTR_STATE_DURATION = "state_duration"
 
-
 def _state_validator(config):
     """Validate the state."""
     config = copy.deepcopy(config)
