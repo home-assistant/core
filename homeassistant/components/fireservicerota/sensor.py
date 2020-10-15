@@ -17,12 +17,10 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
-    data = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
-    entry_id = entry.entry_id
-    unique_id = entry.unique_id
+    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [IncidentsSensor(data, entry_id, unique_id, "Incidents", "mdi:fire-truck")],
+        [IncidentsSensor(coordinator, entry)],
         True,
     )
 
@@ -30,13 +28,12 @@ async def async_setup_entry(
 class IncidentsSensor(RestoreEntity, Entity):
     """Representation of FireServiceRota incidents sensor."""
 
-    def __init__(self, data, entry_id, unique_id, name, icon):
+    def __init__(self, coordinator, entry):
         """Initialize."""
-        self._data = data
-        self._entry_id = entry_id
-        self._unique_id = unique_id
-        self._name = name
-        self._icon = icon
+        self._coordinator = coordinator
+        self._entry_id = entry.entry_id
+        self._unique_id = entry.unique_id
+        self._name = "Incidents"
 
         self._state = None
         self._state_attributes = {}
@@ -49,7 +46,7 @@ class IncidentsSensor(RestoreEntity, Entity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        return self._icon
+        return "mdi:fire-truck"
 
     @property
     def state(self) -> str:
@@ -103,7 +100,7 @@ class IncidentsSensor(RestoreEntity, Entity):
             self._state = state.state
             self._state_attributes = state.attributes
 
-        self.async_on_remove(self._data.stop_listener)
+        self.async_on_remove(self._coordinator.stop_listener)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -128,8 +125,8 @@ class IncidentsSensor(RestoreEntity, Entity):
             return
 
         try:
-            self._state = self._data.incident_data["body"]
-            self._state_attributes = self._data.incident_data
+            self._state = self._coordinator.incident_data["body"]
+            self._state_attributes = self._coordinator.incident_data
         except (KeyError, TypeError):
             pass
 
