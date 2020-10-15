@@ -78,6 +78,8 @@ DISCOVERY_SOURCES = (
     SOURCE_UNIGNORE,
 )
 
+RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
+
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
 CONN_CLASS_CLOUD_PUSH = "cloud_push"
@@ -566,6 +568,15 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 ),
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
+        elif source == SOURCE_REAUTH:
+            self.hass.components.persistent_notification.async_create(
+                title="Integration requires reconfiguration",
+                message=(
+                    "At least one of your integrations requires reconfiguration to "
+                    "continue functioning. [Check it out](/config/integrations)"
+                ),
+                notification_id=RECONFIGURE_NOTIFICATION_ID,
+            )
 
 
 class ConfigEntries:
@@ -1003,6 +1014,27 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Handle a flow initialized by discovery."""
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
+
+    @callback
+    def async_abort(
+        self, *, reason: str, description_placeholders: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Abort the config flow."""
+        assert self.hass
+
+        # Remove reauth notification if no reauth flows are in progress
+        if self.source == SOURCE_REAUTH and not any(
+            ent["context"]["source"] == SOURCE_REAUTH
+            for ent in self.hass.config_entries.flow.async_progress()
+            if ent["flow_id"] != self.flow_id
+        ):
+            self.hass.components.persistent_notification.async_dismiss(
+                RECONFIGURE_NOTIFICATION_ID
+            )
+
+        return super().async_abort(
+            reason=reason, description_placeholders=description_placeholders
+        )
 
     async_step_hassio = async_step_discovery
     async_step_homekit = async_step_discovery

@@ -236,6 +236,9 @@ def async_track_state_change_event(
     care about the state change events so we can
     do a fast dict lookup to route events.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
@@ -263,8 +266,6 @@ def async_track_state_change_event(
 
     job = HassJob(action)
 
-    entity_ids = _async_string_to_lower_list(entity_ids)
-
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
 
@@ -280,6 +281,11 @@ def async_track_state_change_event(
         )
 
     return remove_listener
+
+
+@callback
+def _remove_empty_listener() -> None:
+    """Remove a listener that does nothing."""
 
 
 @callback
@@ -314,6 +320,9 @@ def async_track_entity_registry_updated_event(
 
     Similar to async_track_state_change_event.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
 
@@ -341,8 +350,6 @@ def async_track_entity_registry_updated_event(
         )
 
     job = HassJob(action)
-
-    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
@@ -388,6 +395,9 @@ def async_track_state_added_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is added to domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
 
@@ -406,8 +416,6 @@ def async_track_state_added_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
@@ -433,6 +441,9 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is removed from domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
 
@@ -451,8 +462,6 @@ def async_track_state_removed_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
@@ -749,15 +758,15 @@ class _TrackTemplateResultInfo:
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
+            self._info[template] = info = template.async_render_to_info(variables)
 
-            self._info[template] = template.async_render_to_info(variables)
-            if self._info[template].exception:
+            if info.exception:
                 if raise_on_template_error:
-                    raise self._info[template].exception
+                    raise info.exception
                 _LOGGER.error(
                     "Error while processing template: %s",
                     track_template_.template,
-                    exc_info=self._info[template].exception,
+                    exc_info=info.exception,
                 )
 
         self._track_state_changes = async_track_state_change_filtered(
@@ -808,9 +817,7 @@ class _TrackTemplateResultInfo:
         if event:
             info = self._info[template]
 
-            if not self._rate_limit.async_has_timer(
-                template
-            ) and not _event_triggers_rerender(event, info):
+            if not _event_triggers_rerender(event, info):
                 return False
 
             if self._rate_limit.async_schedule_action(
@@ -819,6 +826,8 @@ class _TrackTemplateResultInfo:
                 now,
                 self._refresh,
                 event,
+                (track_template_,),
+                True,
             ):
                 return False
 
@@ -829,10 +838,12 @@ class _TrackTemplateResultInfo:
             )
 
         self._rate_limit.async_triggered(template, now)
-        self._info[template] = template.async_render_to_info(track_template_.variables)
+        self._info[template] = info = template.async_render_to_info(
+            track_template_.variables
+        )
 
         try:
-            result: Union[str, TemplateError] = self._info[template].result()
+            result: Union[str, TemplateError] = info.result()
         except TemplateError as ex:
             result = ex
 
@@ -848,12 +859,29 @@ class _TrackTemplateResultInfo:
         return TrackTemplateResult(template, last_result, result)
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
+    def _refresh(
+        self,
+        event: Optional[Event],
+        track_templates: Optional[Iterable[TrackTemplate]] = None,
+        replayed: Optional[bool] = False,
+    ) -> None:
+        """Refresh the template.
+
+        The event is the state_changed event that caused the refresh
+        to be considered.
+
+        track_templates is an optional list of TrackTemplate objects
+        to refresh.  If not provided, all tracked templates will be
+        considered.
+
+        replayed is True if the event is being replayed because the
+        rate limit was hit.
+        """
         updates = []
         info_changed = False
-        now = dt_util.utcnow()
+        now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        for track_template_ in self._track_templates:
+        for track_template_ in track_templates or self._track_templates:
             update = self._render_template_if_ready(track_template_, now, event)
             if not update:
                 continue
@@ -1132,7 +1160,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    action: Callable[..., None] = attr.ib()
+    job: HassJob = attr.ib()
     event: str = attr.ib()
     offset: Optional[timedelta] = attr.ib()
     _unsub_sun: Optional[CALLBACK_TYPE] = attr.ib(default=None)
@@ -1176,7 +1204,7 @@ class SunListener:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
-        self.hass.async_run_job(self.action)
+        self.hass.async_run_hass_job(self.job)
 
     @callback
     def _handle_config_event(self, _event: Any) -> None:
@@ -1193,7 +1221,7 @@ def async_track_sunrise(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunrise daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNRISE, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNRISE, offset)
     listener.async_attach()
     return listener.async_detach
 
@@ -1207,7 +1235,7 @@ def async_track_sunset(
     hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunset daily."""
-    listener = SunListener(hass, action, SUN_EVENT_SUNSET, offset)
+    listener = SunListener(hass, HassJob(action), SUN_EVENT_SUNSET, offset)
     listener.async_attach()
     return listener.async_detach
 

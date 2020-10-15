@@ -35,6 +35,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -76,6 +77,7 @@ from .const import (
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
@@ -88,6 +90,7 @@ from .const import (
     ATTR_SOUND_MODE_LIST,
     DOMAIN,
     MEDIA_CLASS_DIRECTORY,
+    REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
@@ -99,6 +102,7 @@ from .const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -167,6 +171,7 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_SOUND_MODE,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_REPEAT,
 ]
 
 
@@ -323,6 +328,13 @@ async def async_setup(hass, config):
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
+    )
+
+    component.async_register_entity_service(
+        SERVICE_REPEAT_SET,
+        {vol.Required(ATTR_MEDIA_REPEAT): vol.In(REPEAT_MODES)},
+        "async_set_repeat",
+        [SUPPORT_REPEAT_SET],
     )
 
     return True
@@ -509,6 +521,11 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
+    def repeat(self):
+        """Return current repeat mode."""
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
@@ -634,6 +651,14 @@ class MediaPlayerEntity(Entity):
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
+
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        raise NotImplementedError()
+
+    async def async_set_repeat(self, repeat):
+        """Set repeat mode."""
+        await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
     # No need to overwrite these.
     @property

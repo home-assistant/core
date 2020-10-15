@@ -1,6 +1,4 @@
 """Config flow to configure the Azure DevOps integration."""
-import logging
-
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
@@ -13,8 +11,6 @@ from homeassistant.components.azure_devops.const import (  # pylint:disable=unus
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigFlow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):

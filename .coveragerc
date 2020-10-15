@@ -609,8 +609,6 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
-    homeassistant/components/onewire/const.py
-    homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
@@ -782,7 +780,9 @@ omit =
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
+    homeassistant/components/simplisafe/binary_sensor.py
     homeassistant/components/simplisafe/lock.py
+    homeassistant/components/simplisafe/sensor.py
     homeassistant/components/simulated/sensor.py
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/*
@@ -980,6 +980,7 @@ omit =
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/__init__.py
+    homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
@@ -1000,6 +1001,12 @@ omit =
     homeassistant/components/worldtidesinfo/sensor.py
     homeassistant/components/worxlandroid/sensor.py
     homeassistant/components/x10/light.py
+    homeassistant/components/xbox/__init__.py
+    homeassistant/components/xbox/api.py
+    homeassistant/components/xbox/browse_media.py
+    homeassistant/components/xbox/media_player.py
+    homeassistant/components/xbox/media_source.py
+    homeassistant/components/xbox/remote.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
     homeassistant/components/xfinity/device_tracker.py

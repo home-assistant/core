@@ -213,6 +213,10 @@ class RenderInfo:
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
 
+    def _filter_entities(self, entity_id: str) -> bool:
+        """Template should re-render if the entity state changes when we match specific entities."""
+        return entity_id in self.entities
+
     def _filter_lifecycle_domains(self, entity_id: str) -> bool:
         """Template should re-render if the entity is added or removed with domains watched."""
         return split_entity_id(entity_id)[0] in self.domains_lifecycle
@@ -255,14 +259,25 @@ class RenderInfo:
         if self.all_states:
             return
 
-        if self.entities or self.domains:
+        if self.domains:
             self.filter = self._filter_domains_and_entities
+        elif self.entities:
+            self.filter = self._filter_entities
         else:
             self.filter = _false
 
 
 class Template:
     """Class to hold a template and manage caching and rendering."""
+
+    __slots__ = (
+        "__weakref__",
+        "template",
+        "hass",
+        "is_static",
+        "_compiled_code",
+        "_compiled",
+    )
 
     def __init__(self, template, hass=None):
         """Instantiate a template."""
@@ -331,7 +346,7 @@ class Template:
 
         try:
             render_result = compiled.render(kwargs)
-        except jinja2.TemplateError as err:
+        except Exception as err:  # pylint: disable=broad-except
             raise TemplateError(err) from err
 
         render_result = render_result.strip()

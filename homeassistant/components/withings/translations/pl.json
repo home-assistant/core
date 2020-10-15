@@ -22,7 +22,7 @@
                 "data": {
                     "profile": "Nazwa profilu"
                 },
-                "description": "Kt\u00f3ry profil wybra\u0142e\u015b na stronie Withings? Wa\u017cne jest, aby profile si\u0119 zgadza\u0142y, w przeciwnym razie dane zostan\u0105 b\u0142\u0119dnie oznaczone.",
+                "description": "Podaj unikaln\u0105 nazw\u0119 profilu. Zwykle jest to nazwa profilu wybranego w poprzednim kroku.",
                 "title": "Profil u\u017cytkownika"
             },
             "reauth": {

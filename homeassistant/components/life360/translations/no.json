@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_credentials": "Ugyldig legitimasjon",
-            "user_already_configured": "Konto er allerede konfigurert"
+            "user_already_configured": "Kontoen er allerede konfigurert"
         },
         "create_entry": {
             "default": "For \u00e5 angi avanserte alternativer, se [Life360 dokumentasjon]({docs_url})."

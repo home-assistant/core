@@ -4,7 +4,7 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kan ikke koble til Abode.",
             "identifier_exists": "Kontoen er allerede registrert.",
             "invalid_auth": "Ugyldig godkjenning",
@@ -14,7 +14,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
                 "title": "Fyll ut innloggingsinformasjonen for Abode"
             }

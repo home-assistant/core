@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas alustan seadistamist?"
+            }
+        }
+    }
+}

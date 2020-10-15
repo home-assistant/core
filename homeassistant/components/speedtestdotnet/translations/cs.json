@@ -3,11 +3,11 @@
         "abort": {
             "one_instance_allowed": "Povolena je pouze jedna instance.",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
-            "wrong_server_id": "Id serveru nen\u00ed platn\u00e9."
+            "wrong_server_id": "ID serveru nen\u00ed platn\u00e9."
         },
         "step": {
             "user": {
-                "description": "Opravdu chcete nastavit SpeedTest?",
+                "description": "Chcete za\u010d\u00edt nastavovat?",
                 "title": "Nastavit SpeedTest"
             }
         }

@@ -1,4 +1,4 @@
-"""Support for MQTT discovery."""
+"""Support for Tasmota device discovery."""
 import asyncio
 import logging
 
@@ -11,7 +11,9 @@ from hatasmota.discovery import (
     unique_id_from_hash,
 )
 
+import homeassistant.components.sensor as sensor
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -20,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_PLATFORMS = [
     "binary_sensor",
+    "light",
     "switch",
 ]
 
@@ -44,7 +47,7 @@ def set_discovery_hash(hass, discovery_hash):
 async def async_start(
     hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt
 ) -> bool:
-    """Start MQTT Discovery."""
+    """Start Tasmota device discovery."""
 
     async def _load_platform(platform):
         """Load a Tasmota platform if not already done."""
@@ -117,8 +120,38 @@ async def async_start(
             for (tasmota_entity_config, discovery_hash) in tasmota_entities:
                 await _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
+    async def async_sensors_discovered(sensors, mac):
+        """Handle discovery of (additional) sensors."""
+        platform = sensor.DOMAIN
+        await _load_platform(platform)
+
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device = device_registry.async_get_device(set(), {("mac", mac)})
+
+        if device is None:
+            _LOGGER.warning("Got sensors for unknown device mac: %s", mac)
+            return
+
+        orphaned_entities = {
+            entry.unique_id
+            for entry in async_entries_for_device(entity_registry, device.id)
+            if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
+        }
+        for (tasmota_sensor_config, discovery_hash) in sensors:
+            if tasmota_sensor_config:
+                orphaned_entities.discard(tasmota_sensor_config.unique_id)
+            await _discover_entity(tasmota_sensor_config, discovery_hash, platform)
+        for unique_id in orphaned_entities:
+            entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
+            if entity_id:
+                _LOGGER.debug("Removing entity: %s %s", platform, entity_id)
+                entity_registry.async_remove(entity_id)
+
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     tasmota_discovery = TasmotaDiscovery(discovery_topic, tasmota_mqtt)
-    await tasmota_discovery.start_discovery(async_device_discovered, None)
+    await tasmota_discovery.start_discovery(
+        async_device_discovered, async_sensors_discovered
+    )

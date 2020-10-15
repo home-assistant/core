@@ -273,7 +273,7 @@ async def test_step_reauth(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality"):
+    ), patch("pyairvisual.air_quality.AirQuality.nearest_city", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_API_KEY: "defgh67890"}
         )

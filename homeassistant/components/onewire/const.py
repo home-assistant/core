@@ -13,6 +13,8 @@ DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 
 DOMAIN = "onewire"
 
+PRESSURE_CBAR = "cbar"
+
 SUPPORTED_PLATFORMS = [
     SENSOR_DOMAIN,
 ]

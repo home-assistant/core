@@ -3,12 +3,7 @@ from glob import glob
 import logging
 import os
 
-from pi1wire import (
-    InvalidCRCException,
-    NotFoundSensorException,
-    Pi1Wire,
-    UnsupportResponseException,
-)
+from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
@@ -19,6 +14,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     VOLT,
 )
@@ -33,6 +29,7 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    PRESSURE_CBAR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,16 +88,16 @@ SENSOR_TYPES = {
     "humidity_hih5030": ["humidity", PERCENTAGE],
     "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
-    "pressure": ["pressure", "mb"],
+    "pressure": ["pressure", PRESSURE_MBAR],
     "illuminance": ["illuminance", LIGHT_LUX],
     "wetness_0": ["wetness", PERCENTAGE],
     "wetness_1": ["wetness", PERCENTAGE],
     "wetness_2": ["wetness", PERCENTAGE],
     "wetness_3": ["wetness", PERCENTAGE],
-    "moisture_0": ["moisture", "cb"],
-    "moisture_1": ["moisture", "cb"],
-    "moisture_2": ["moisture", "cb"],
-    "moisture_3": ["moisture", "cb"],
+    "moisture_0": ["moisture", PRESSURE_CBAR],
+    "moisture_1": ["moisture", PRESSURE_CBAR],
+    "moisture_2": ["moisture", PRESSURE_CBAR],
+    "moisture_3": ["moisture", PRESSURE_CBAR],
     "counter_a": ["counter", "count"],
     "counter_b": ["counter", "count"],
     "HobbyBoard": ["none", "none"],
@@ -145,7 +142,9 @@ def get_entities(config):
         conf_type = CONF_TYPE_OWSERVER
     elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
         conf_type = CONF_TYPE_SYSBUS
-    else:
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         conf_type = CONF_TYPE_OWFS
 
     entities = []
@@ -230,7 +229,9 @@ def get_entities(config):
             )
 
     # We have an owfs mounted
-    else:
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
@@ -303,9 +304,7 @@ class OneWireProxy(OneWire):
 
     def _read_value_ownet(self):
         """Read a value from the owserver."""
-        if self._owproxy:
-            return self._owproxy.read(self._device_file).decode().lstrip()
-        return None
+        return self._owproxy.read(self._device_file).decode().lstrip()
 
     def update(self):
         """Get the latest data from the device."""
@@ -339,15 +338,18 @@ class OneWireDirect(OneWire):
         except (
             FileNotFoundError,
             InvalidCRCException,
-            NotFoundSensorException,
             UnsupportResponseException,
         ) as ex:
             _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
         self._state = value
 
 
-class OneWireOWFS(OneWire):
-    """Implementation of a 1-Wire sensor through owfs."""
+class OneWireOWFS(OneWire):  # pragma: no cover
+    """Implementation of a 1-Wire sensor through owfs.
+
+    This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+    https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+    """
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""

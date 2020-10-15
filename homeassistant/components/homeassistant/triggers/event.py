@@ -1,6 +1,4 @@
 """Offer event listening automation rules."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -12,8 +10,6 @@ from homeassistant.helpers import config_validation as cv
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
 CONF_EVENT_CONTEXT = "context"
-
-_LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(
     {

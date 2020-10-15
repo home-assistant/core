@@ -44,7 +44,7 @@
             },
             "init": {
                 "data": {
-                    "include_domains": "Wykluczone domeny"
+                    "include_domains": "Domeny do uwzgl\u0119dnienia"
                 },
                 "description": "Encje w \"uwzgl\u0119dnionych domenach\" zostan\u0105 po\u0142\u0105czone z HomeKit. B\u0119dziesz m\u00f3g\u0142 wybra\u0107, kt\u00f3re encje maj\u0105 zosta\u0107 wykluczone z tej listy na nast\u0119pnym ekranie.",
                 "title": "Domeny do uwzgl\u0119dnienia."

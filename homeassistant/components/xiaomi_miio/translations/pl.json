@@ -17,11 +17,11 @@
                     "token": "Token API"
                 },
                 "description": "B\u0119dziesz potrzebowa\u0107 tokenu API (32 znaki), odwied\u017a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token, aby uzyska\u0107 instrukcje. Zauwa\u017c i\u017c jest to inny token ni\u017c w integracji Xiaomi Aqara .",
-                "title": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi"
+                "title": "Po\u0142\u0105czenie z bramk\u0105 Xiaomi"
             },
             "user": {
                 "data": {
-                    "gateway": "Po\u0142\u0105cz si\u0119 z bramk\u0105 Xiaomi"
+                    "gateway": "Po\u0142\u0105czenie z bramk\u0105 Xiaomi"
                 },
                 "description": "Wybierz urz\u0105dzenie, z kt\u00f3rym chcesz si\u0119 po\u0142\u0105czy\u0107.",
                 "title": "Xiaomi Miio"
