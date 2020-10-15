@@ -27,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized, UnknownUser
-
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.service import async_extract_entity_ids
 
