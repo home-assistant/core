@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
     )
-    if not hass.data[DOMAIN].get(COAP_CONTEXT):
+    if COAP_CONTEXT not in hass.data[DOMAIN]:
         coap_context = hass.data[DOMAIN][
             COAP_CONTEXT
         ] = await aiocoap.Context.create_client_context()
@@ -129,7 +129,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
-        if self.hass.data[DOMAIN].get(COAP_CONTEXT):
+        if COAP_CONTEXT in self.hass.data[DOMAIN]:
             await self.hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
     async def _handle_ha_stop(self, _):
