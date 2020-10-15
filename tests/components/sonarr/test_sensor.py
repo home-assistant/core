@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-from tests.components.sonarr import mock_connection, setup_integration,
+from tests.components.sonarr import mock_connection, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
