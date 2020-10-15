@@ -28,12 +28,9 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized, UnknownUser
 
-# from homeassistant.helpers import discovery
-# import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.service import async_extract_entity_ids
 
-# from .sensor import SENSORS
 from .amcrest_checker import AmcrestChecker
 from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS
 from .camera import CAMERA_SERVICES
@@ -57,12 +54,6 @@ from .const import (
     SERVICE_EVENT,
 )
 from .helpers import service_signal
-
-# import voluptuous as vol
-
-
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
