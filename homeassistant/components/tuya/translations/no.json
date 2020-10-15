@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "auth_failed": "Ugyldig godkjenning",
-            "cannot_connect": "Tilkobling mislyktes.",
-            "conn_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
+            "conn_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },

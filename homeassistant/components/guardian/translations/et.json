@@ -12,6 +12,9 @@
                     "ip_address": "IP aadress",
                     "port": ""
                 }
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovid seadistada seda Guardian'i seadet?"
             }
         }
     },

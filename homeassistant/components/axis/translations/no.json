@@ -9,7 +9,7 @@
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "device_unavailable": "Enheten er ikke tilgjengelig",
             "faulty_credentials": "Ugyldig brukerlegitimasjon",
             "invalid_auth": "Ugyldig godkjenning"
@@ -20,7 +20,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Sett opp Axis enhet"

@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "select_single": "Velg ett alternativ."
         },
         "step": {
@@ -31,7 +31,7 @@
             "hubv1": {
                 "data": {
                     "host": "IP adresse",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Konfigurer Insteon Hub versjon 1 (f\u00f8r 2014).",
                 "title": "Insteon Hub versjon 1"
@@ -40,7 +40,7 @@
                 "data": {
                     "host": "IP adresse",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "description": "Konfigurer Insteon Hub versjon 2.",
@@ -77,7 +77,7 @@
             "cannot_connect": "Kan ikke koble til Insteon-modemet"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "input_error": "Ugyldige oppf\u00f8ringer, vennligst sjekk verdiene dine.",
             "select_single": "Velg ett alternativ."
         },
@@ -105,7 +105,7 @@
                 "data": {
                     "host": "IP adresse",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen.",

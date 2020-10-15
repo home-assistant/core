@@ -6,7 +6,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
         "flow_title": "",
@@ -17,10 +17,10 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API N\u00f8kkel",
+                    "api_key": "API-n\u00f8kkel",
                     "base_path": "Bane til API",
                     "host": "Vert",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },

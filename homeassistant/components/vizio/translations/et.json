@@ -25,5 +25,14 @@
                 "title": ""
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "include_or_exclude": "Kas kaasata v\u00f5i v\u00e4listada rakendused?"
+                }
+            }
+        }
     }
 }
