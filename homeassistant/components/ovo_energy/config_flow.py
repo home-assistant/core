@@ -34,7 +34,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
             except aiohttp.ClientError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             else:
                 if authenticated:
                     await self.async_set_unique_id(user_input[CONF_USERNAME])

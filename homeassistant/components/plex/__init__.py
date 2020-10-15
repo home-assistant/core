@@ -1,10 +1,12 @@
 """Support to embed Plex."""
 import asyncio
 import functools
+from functools import partial
 import json
 import logging
 
 import plexapi.exceptions
+from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
@@ -33,6 +35,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -43,6 +46,8 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    GDM_DEBOUNCER,
+    GDM_SCANNER,
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
@@ -66,6 +71,16 @@ async def async_setup(hass, config):
     )
 
     await async_setup_services(hass)
+
+    gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
+
+    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=10,
+        immediate=True,
+        function=partial(gdm.scan, scan_for_clients=True),
+    ).async_call
 
     return True
 
@@ -143,10 +158,14 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
+    async def async_update_plex():
+        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
+        await plex_server.async_update_platforms()
+
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.async_update_platforms,
+        async_update_plex,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)

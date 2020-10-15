@@ -210,15 +210,22 @@ async def test_flow_discovered_devices(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
+        with patch(
+            "homeassistant.components.onvif.async_setup", return_value=True
+        ) as mock_setup, patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ) as mock_setup_entry:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_USERNAME: USERNAME,
+                    config_flow.CONF_PASSWORD: PASSWORD,
+                },
+            )
 
-        await hass.async_block_till_done()
+            await hass.async_block_till_done()
+            assert len(mock_setup.mock_calls) == 1
+            assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == f"{URN} - {MAC}"
@@ -377,15 +384,22 @@ async def test_flow_manual_entry(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                config_flow.CONF_USERNAME: USERNAME,
-                config_flow.CONF_PASSWORD: PASSWORD,
-            },
-        )
+        with patch(
+            "homeassistant.components.onvif.async_setup", return_value=True
+        ) as mock_setup, patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ) as mock_setup_entry:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_USERNAME: USERNAME,
+                    config_flow.CONF_PASSWORD: PASSWORD,
+                },
+            )
 
-        await hass.async_block_till_done()
+            await hass.async_block_till_done()
+            assert len(mock_setup.mock_calls) == 1
+            assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
@@ -404,7 +418,11 @@ async def test_flow_import_no_mac(hass):
         "homeassistant.components.onvif.config_flow.get_device"
     ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device:
+    ) as mock_device, patch(
+        "homeassistant.components.onvif.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onvif.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         setup_mock_onvif_camera(mock_onvif_camera, with_interfaces=False)
         setup_mock_device(mock_device)
 
@@ -421,6 +439,8 @@ async def test_flow_import_no_mac(hass):
         )
 
         await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == f"{NAME} - {SERIAL_NUMBER}"
@@ -531,7 +551,7 @@ async def test_flow_import_onvif_auth_error(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"]["base"] == "connection_failed"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_option_flow(hass):

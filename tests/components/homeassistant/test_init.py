@@ -269,7 +269,7 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
         "homeassistant.core.ServiceRegistry.async_call",
         return_value=None,
     ) as mock_call:
-        await service.func(service_call)
+        await service.job.target(service_call)
 
     assert mock_call.call_count == 2
     assert mock_call.call_args_list[0][0] == (

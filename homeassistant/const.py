@@ -7,7 +7,7 @@ __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = ""
+REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_ALLOWLIST_EXTERNAL_URLS = "allowlist_external_urls"
 CONF_API_KEY = "api_key"
+CONF_API_TOKEN = "api_token"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
@@ -112,6 +113,7 @@ CONF_INCLUDE = "include"
 CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
+CONF_LEGACY_TEMPLATES = "legacy_templates"
 CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
@@ -530,6 +532,7 @@ SERVICE_MEDIA_STOP = "media_stop"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
+SERVICE_REPEAT_SET = "repeat_set"
 SERVICE_SHUFFLE_SET = "shuffle_set"
 
 SERVICE_ALARM_DISARM = "alarm_disarm"

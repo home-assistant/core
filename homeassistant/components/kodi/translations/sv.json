@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "host": {
+                "data": {
+                    "ssl": "Anslut med SSL"
+                }
+            }
+        }
+    }
+}

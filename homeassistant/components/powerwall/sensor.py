@@ -1,7 +1,7 @@
 """Support for August sensors."""
 import logging
 
-from tesla_powerwall import MeterType, convert_to_kw
+from tesla_powerwall import MeterType
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
@@ -85,7 +85,7 @@ class PowerWallChargeSensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in percentage."""
-        return self.coordinator.data[POWERWALL_API_CHARGE]
+        return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
 
 class PowerWallEnergySensor(PowerWallEntity):
@@ -131,18 +131,18 @@ class PowerWallEnergySensor(PowerWallEntity):
         """Get the current value in kW."""
         return (
             self.coordinator.data[POWERWALL_API_METERS]
-            .get(self._meter)
+            .get_meter(self._meter)
             .get_power(precision=3)
         )
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        meter = self.coordinator.data[POWERWALL_API_METERS].get(self._meter)
+        meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         return {
             ATTR_FREQUENCY: round(meter.frequency, 1),
-            ATTR_ENERGY_EXPORTED: convert_to_kw(meter.energy_exported),
-            ATTR_ENERGY_IMPORTED: convert_to_kw(meter.energy_imported),
-            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.instant_average_voltage, 1),
+            ATTR_ENERGY_EXPORTED: meter.get_energy_exported(),
+            ATTR_ENERGY_IMPORTED: meter.get_energy_imported(),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.avarage_voltage, 1),
             ATTR_IS_ACTIVE: meter.is_active(),
         }

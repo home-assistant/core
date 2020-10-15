@@ -104,9 +104,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
-        attr = {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
-
-        return attr
+        return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 
     def process_plates(self, plates, vehicles):
         """Send event with new plates and store data."""

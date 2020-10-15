@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wsp\u00f3\u0142rz\u0119dne s\u0105 ju\u017c zarejestrowane."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
             "identifier_exists": "Wsp\u00f3\u0142rz\u0119dne s\u0105 ju\u017c zarejestrowane.",

@@ -1,10 +1,7 @@
 """Demo camera platform that has a fake camera."""
-import logging
 from pathlib import Path
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -39,14 +36,6 @@ class DemoCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Demo camera doesn't need poll.
-
-        Need explicitly call async_write_ha_state() after state changed.
-        """
-        return False
 
     @property
     def supported_features(self):

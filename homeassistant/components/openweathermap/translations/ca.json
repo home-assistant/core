@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servei ja est\u00e0 configurat per a aquestes coordenades."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
             "auth": "La clau API no \u00e9s correcta.",

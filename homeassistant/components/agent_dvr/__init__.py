@@ -1,6 +1,5 @@
 """Support for Agent."""
 import asyncio
-import logging
 
 from agent import AgentError
 from agent.a import Agent
@@ -13,8 +12,6 @@ from .const import CONNECTION, DOMAIN as AGENT_DOMAIN, SERVER_URL
 
 ATTRIBUTION = "ispyconnect.com"
 DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
-
-_LOGGER = logging.getLogger(__name__)
 
 FORWARDS = ["alarm_control_panel", "camera"]
 

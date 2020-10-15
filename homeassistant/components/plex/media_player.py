@@ -597,15 +597,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        attr = {
+        return {
             "media_content_rating": self._media_content_rating,
             "session_username": self.username,
             "media_library_name": self._app_name,
             "summary": self.media_summary,
             "player_source": self.player_source,
         }
-
-        return attr
 
     @property
     def device_info(self):

@@ -3,7 +3,7 @@
   "name": "MQTT",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mqtt",
-  "requirements": ["paho-mqtt==1.5.1"],
+  "requirements": ["paho-mqtt==1.5.0"],
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core", "@emontnemery"]
 }

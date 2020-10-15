@@ -2,6 +2,7 @@
 import asyncio
 import binascii
 from collections import OrderedDict
+import copy
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -237,7 +238,7 @@ def _create_rfx(config):
 
 def _get_device_lookup(devices):
     """Get a lookup structure for devices."""
-    lookup = dict()
+    lookup = {}
     for event_code, event_config in devices.items():
         event = get_rfx_object(event_code)
         if event is None:
@@ -304,6 +305,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         config[CONF_DEVICE_ID] = device_id
 
         data = entry.data.copy()
+        data[CONF_DEVICES] = copy.deepcopy(entry.data[CONF_DEVICES])
         event_code = binascii.hexlify(event.data).decode("ASCII")
         data[CONF_DEVICES][event_code] = config
         hass.config_entries.async_update_entry(entry=entry, data=data)

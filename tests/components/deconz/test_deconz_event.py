@@ -2,6 +2,7 @@
 from copy import deepcopy
 
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -55,7 +56,8 @@ async def test_deconz_events(hass):
     """Test successful creation of deconz events."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 3
     assert len(gateway.events) == 5
@@ -112,7 +114,7 @@ async def test_deconz_events(hass):
         "xy": [0.5982, 0.3897],
     }
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
     assert len(gateway.events) == 0

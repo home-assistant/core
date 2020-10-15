@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Konto on juba seadistatud",
+            "connection_error": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Lisa OVO Energy konto"
+            }
+        }
+    }
+}

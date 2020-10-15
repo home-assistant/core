@@ -201,10 +201,7 @@ async def test_get_states(hass, websocket_client):
 
     states = []
     for state in hass.states.async_all():
-        state = state.as_dict()
-        state["last_changed"] = state["last_changed"].isoformat()
-        state["last_updated"] = state["last_updated"].isoformat()
-        states.append(state)
+        states.append(state.as_dict())
 
     assert msg["result"] == states
 
@@ -477,6 +474,41 @@ async def test_render_template_with_error(hass, websocket_client, caplog):
     """Test a template with an error."""
     await websocket_client.send_json(
         {"id": 5, "type": "render_template", "template": "{{ my_unknown_var() + 1 }}"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_with_timeout_and_error(hass, websocket_client, caplog):
+    """Test a template with an error with a timeout."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "{{ now() | rando }}",
+            "timeout": 5,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_error_in_template_code(hass, websocket_client, caplog):
+    """Test a template that will throw in template.py."""
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": "{{ now() | random }}"}
     )
 
     msg = await websocket_client.receive_json()

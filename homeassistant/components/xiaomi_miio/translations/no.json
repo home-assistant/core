@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyt for denne Xiaomi Miio-enheten p\u00e5g\u00e5r allerede."
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
         },
         "error": {
-            "connect_error": "Tilkobling mislyktes.",
+            "connect_error": "Tilkobling mislyktes",
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
-        "flow_title": "Xiaomi Miio: {navn}",
+        "flow_title": "",
         "step": {
             "gateway": {
                 "data": {

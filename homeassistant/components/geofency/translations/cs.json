@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
         "create_entry": {
             "default": "Chcete-li odes\u00edlat ud\u00e1losti do aplikace Home Assistant, mus\u00edte v aplikaci Geofency nastavit funkci webhook. \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}` \n - Metoda: POST \n\n Dal\u0161\u00ed informace viz [dokumentace]({docs_url})."
         },

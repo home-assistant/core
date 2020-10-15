@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from homeassistant.components import deconz
 import homeassistant.components.cover as cover
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -73,7 +74,8 @@ async def test_cover(hass):
     """Test that all supported cover entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(COVERS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 5
     assert hass.states.get("cover.level_controllable_cover").state == "open"
@@ -161,6 +163,6 @@ async def test_cover(hass):
     assert deconz_old_brightness_cover.state == "closed"
     assert deconz_old_brightness_cover.attributes["current_position"] == 0
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0

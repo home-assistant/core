@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
-            "reauth_successful": "SimpliSafe gjenautentisering er vellykket."
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
             "identifier_exists": "Konto er allerede registrert",
@@ -13,7 +13,7 @@
         "step": {
             "mfa": {
                 "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
-                "title": "SimpliSafe Multi-Factor Autentisering"
+                "title": "SimpliSafe flerfaktorautentisering"
             },
             "reauth_confirm": {
                 "data": {
@@ -26,7 +26,7 @@
                 "data": {
                     "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
                 "title": "Fyll ut informasjonen din."
             }

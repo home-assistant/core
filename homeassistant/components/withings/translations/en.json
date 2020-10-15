@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Configuration updated for profile.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
-            "missing_configuration": "The Withings integration is not configured. Please follow the documentation.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
         },
         "create_entry": {
             "default": "Successfully authenticated with Withings."
         },
         "error": {
-            "profile_exists": "User profile is already configured. Please provide a unique profile name."
+            "already_configured": "Account is already configured"
         },
         "flow_title": "Withings: {profile}",
         "step": {
@@ -26,7 +26,7 @@
             },
             "reauth": {
                 "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
-                "title": "Re-authenticate Profile"
+                "title": "Reauthenticate Integration"
             }
         }
     }
