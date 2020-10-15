@@ -1,4 +1,4 @@
-"""Support for Amcrest IP cameras amcrest checker"""
+"""Support for Amcrest IP cameras amcrest checker."""
 from datetime import timedelta
 import logging
 import threading
@@ -50,7 +50,7 @@ class AmcrestChecker(Http):
         return self._wrap_event_flag
 
     def _start_recovery(self):
-        """Start Recovery after offline period"""
+        """Start Recovery after offline period."""
         self._wrap_event_flag.clear()
         dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
         self._unsub_recheck = track_time_interval(
