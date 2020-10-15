@@ -62,55 +62,6 @@ BYTE_SIZES = [
     DATA_YOTTABYTES,
 ]
 
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = DATA_GIGABYTES
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_INCLUDED, invalidation_version="0.112"),
-    cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.112"),
-    cv.deprecated(CONF_UNIT, invalidation_version="0.112"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-            vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-            vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.ensure_list,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-            vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
-        }
-    ),
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: Callable[[List[Entity], bool], None],
-    discovery_info: Any = None,
-) -> None:
-    """Import the platform into a config entry."""
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
-        return True
-
-    config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}{DEFAULT_BASE_PATH}"
-    config[CONF_UPCOMING_DAYS] = int(config[CONF_DAYS])
-    config[CONF_VERIFY_SSL] = False
-
-    del config[CONF_DAYS]
-    del config[CONF_INCLUDED]
-    del config[CONF_MONITORED_CONDITIONS]
-    del config[CONF_URLBASE]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistantType,
