@@ -8,11 +8,15 @@
             "invalid_auth": "Tuvastamise viga",
             "invalid_password": "Vale salas\u00f5na!"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
                     "password": "Salas\u00f5na"
                 }
+            },
+            "discovery_confirm": {
+                "description": "Kas soovid lisada ESPHome'i s\u00f5lme '{name}' Home Assistant-ile?"
             },
             "user": {
                 "data": {

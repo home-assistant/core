@@ -14,7 +14,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Kas soovid seadistada {name}?"
             },
             "user": {
                 "data": {

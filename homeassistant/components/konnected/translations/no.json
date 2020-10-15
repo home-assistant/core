@@ -7,7 +7,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "confirm": {
@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "host": "IP adresse",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }

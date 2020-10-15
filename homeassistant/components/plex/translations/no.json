@@ -20,7 +20,7 @@
             "manual_setup": {
                 "data": {
                     "host": "Vert",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
