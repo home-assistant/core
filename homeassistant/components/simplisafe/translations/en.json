@@ -20,7 +20,7 @@
                     "password": "Password"
                 },
                 "description": "Your access token has expired or been revoked. Enter your password to re-link your account.",
-                "title": "Re-link SimpliSafe Account"
+                "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {

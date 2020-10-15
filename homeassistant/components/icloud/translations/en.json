@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
@@ -17,7 +16,7 @@
                     "password": "Password"
                 },
                 "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
-                "title": "iCloud credentials"
+                "title": "Reauthenticate Integration"
             },
             "trusted_device": {
                 "data": {
