@@ -135,36 +135,17 @@ async def async_setup(
 
     async def async_instances_to_entities(
         platform: entity_platform.EntityPlatform,
-        server_id: str,
-        host: str,
-        port: int,
-        name: Optional[str],
-        token: Optional[str],
-        priority: int,
         response: Dict[str, Any],
     ):
         if not response or const.KEY_DATA not in response:
             return
         return await async_instances_to_entities_raw(
             platform,
-            server_id,
-            host,
-            port,
-            name,
-            token,
-            priority,
             response[const.KEY_DATA],
         )
 
-    # TODO: Curry instead of passing all of this shite in again.
     async def async_instances_to_entities_raw(
         platform: entity_platform.EntityPlatform,
-        server_id: str,
-        host: str,
-        port: int,
-        name: Optional[str],
-        token: Optional[str],
-        priority: int,
         instances: Dict[str, Any],
     ):
         registry = await async_get_registry(hass)
@@ -185,9 +166,7 @@ async def async_setup(
             desired_instance_ids.add(instance_id)
             unique_id = get_hyperion_unique_id(server_id, instance_id)
             entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
-            if (
-                entity_id is not None and entity_id in platform.entities
-            ):  # hass.states.get(entity_id) is not None:
+            if entity_id is not None and entity_id in platform.entities:
                 continue
             await asyncio.sleep(0)
 
@@ -226,28 +205,16 @@ async def async_setup(
         raise PlatformNotReady
     hass.data[DOMAIN][entry_id] = hyperion_client
 
-    async_instances_callback = partial(
-        async_instances_to_entities,
-        entity_platform.current_platform.get(),
-        server_id,
-        host,
-        port,
-        name,
-        token,
-        priority,
+    hyperion_client.set_callbacks(
+        {
+            f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}": partial(
+                async_instances_to_entities, entity_platform.current_platform.get()
+            )
+        }
     )
 
-    hyperion_client.set_callbacks(
-        {f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}": async_instances_callback}
-    )
     await async_instances_to_entities_raw(
         entity_platform.current_platform.get(),
-        server_id,
-        host,
-        port,
-        name,
-        token,
-        priority,
         hyperion_client.instances,
     )
 
