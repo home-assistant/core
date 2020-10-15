@@ -1002,6 +1002,7 @@ omit =
     homeassistant/components/x10/light.py
     homeassistant/components/xbox/__init__.py
     homeassistant/components/xbox/api.py
+    homeassistant/components/xbox/binary_sensor.py
     homeassistant/components/xbox/browse_media.py
     homeassistant/components/xbox/media_player.py
     homeassistant/components/xbox/media_source.py
