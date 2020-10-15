@@ -4,7 +4,10 @@ import logging
 from asynctest import CoroutineMock, call, patch
 from hyperion import const
 
-from homeassistant.components.hyperion import light as hyperion_light
+from homeassistant.components.hyperion import (
+    async_unload_entry,
+    light as hyperion_light,
+)
 from homeassistant.components.hyperion.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -39,8 +42,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-# TODO Add test for unloading.
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +94,12 @@ async def _setup_entity_config_entry(hass, client=None):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    return config_entry
+
 
 async def test_setup_yaml(hass):
     """Test setting up the component via YAML-style config."""
-    await _setup_entity_yaml(hass, client=create_mock_client())
+    await _setup_entity_yaml(hass)
     assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
 
 
@@ -569,3 +572,18 @@ async def test_full_state_loaded_on_start(hass):
     assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
     assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
     assert entity_state.attributes["hs_color"] == (180.0, 100.0)
+
+
+async def test_unload_entry(hass):
+    """Test unload."""
+    assert DOMAIN not in hass.data
+
+    entry = await _setup_entity_config_entry(hass)
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+    client = hass.data[DOMAIN][entry.entry_id]
+    assert client.async_client_connect.called
+    assert not client.async_client_disconnect.called
+
+    assert await async_unload_entry(hass, entry)
+    assert client.async_client_disconnect.called
+    assert DOMAIN not in hass.data
