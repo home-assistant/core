@@ -16,10 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_API_URL, description={"suggested_value": "http://<ip>:8088"}
+            CONF_API_URL, description={"suggested_value": "http://<IP>:8088"}
         ): str,
         vol.Required(
-            CONF_WS_URL, description={"suggested_value": "ws://<ip>:8088/ws/spc"}
+            CONF_WS_URL, description={"suggested_value": "ws://<IP>:8088/ws/spc"}
         ): str,
     }
 )
