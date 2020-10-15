@@ -6,6 +6,7 @@ from Plugwise_Smile.Smile import Smile
 
 from homeassistant.components import plugwise
 from homeassistant.components.plugwise import DOMAIN
+from homeassistant.components.plugwise.gateway import SERVICE_DELETE
 from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
@@ -75,3 +76,17 @@ async def test_async_setup_entry_fail(hass):
     await async_setup_component(hass, "plugwise", config)
     await hass.async_block_till_done()
     assert not await plugwise.async_setup_entry(hass, entry)
+
+
+async def test_async_notification_delete(hass, mock_smile_adam):
+    """Test notification delete on climate Smile."""
+    await async_init_integration(hass, mock_smile_adam)
+
+    await hass.services.async_call(DOMAIN, SERVICE_DELETE)
+
+
+async def test_async_notification_delete_failure(hass, mock_smile_anna):
+    """Test notification delete on cliamte Smile."""
+    await async_init_integration(hass, mock_smile_anna)
+
+    await hass.services.async_call(DOMAIN, SERVICE_DELETE)

@@ -75,6 +75,8 @@ def mock_smile_adam():
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -90,6 +92,9 @@ def mock_smile_adam():
             return_value=True
         )
         smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
+            return_value=True
+        )
+        smile_mock.return_value.delete_notification.side_effect = AsyncMock(
             return_value=True
         )
 
@@ -118,6 +123,8 @@ def mock_smile_anna():
         smile_mock.return_value.smile_type = "thermostat"
         smile_mock.return_value.smile_hostname = "smile98765"
 
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(
             return_value=True
@@ -135,6 +142,8 @@ def mock_smile_anna():
         smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
             return_value=True
         )
+
+        smile_mock.return_value.delete_notification.side_effect = Smile.PlugwiseError
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"
@@ -160,6 +169,8 @@ def mock_smile_p1():
         smile_mock.return_value.smile_version = "3.3.9"
         smile_mock.return_value.smile_type = "power"
         smile_mock.return_value.smile_hostname = "smile98765"
+
+        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
 
         smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
         smile_mock.return_value.full_update_device.side_effect = AsyncMock(

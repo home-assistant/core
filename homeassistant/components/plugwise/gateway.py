@@ -135,7 +135,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
-    async def async_delete_notification():
+    async def async_delete_notification(self):
         """Service: delete the Plugwise Notification."""
         try:
             await api.delete_notification()
