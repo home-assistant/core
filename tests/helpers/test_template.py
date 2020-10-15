@@ -2539,6 +2539,16 @@ async def test_lights(hass):
         assert f"sensor{i}" in info.result()
 
 
+async def test_template_errors(hass):
+    """Test template rendering wraps exceptions with TemplateError."""
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ now() | rando }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ now() | random }}", hass).async_render()
+
+
 async def test_state_attributes(hass):
     """Test state attributes."""
     hass.states.async_set("sensor.test", "23")
