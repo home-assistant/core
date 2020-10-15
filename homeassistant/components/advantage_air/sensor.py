@@ -5,7 +5,7 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN
+from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
@@ -15,7 +15,7 @@ ADVANTAGE_AIR_SERVICE_SET_TIME_TO = "set_time_to"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir sensor platform."""
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
@@ -62,7 +62,9 @@ class AdvantageAirSensor(CoordinatorEntity):
     def device_info(self):
         """Return parent device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "identifiers": {
+                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
+            },
             "name": self.coordinator.data["system"]["name"],
             "manufacturer": "Advantage Air",
             "model": self.coordinator.data["system"]["sysType"],
