@@ -9,7 +9,7 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from . import CONF_API_URL, CONF_WS_URL, DOMAIN
+from . import CONF_API_URL, CONF_WS_URL, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
