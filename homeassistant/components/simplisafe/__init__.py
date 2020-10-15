@@ -16,7 +16,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
@@ -349,7 +349,7 @@ async def async_setup_entry(hass, config_entry):
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    config_entry.add_update_listener(async_update_options)
+    config_entry.add_update_listener(async_reload_entry)
 
     return True
 
@@ -372,10 +372,9 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def async_update_options(hass, config_entry):
+async def async_reload_entry(hass, config_entry):
     """Handle an options update."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
-    simplisafe.options = config_entry.options
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class SimpliSafeWebsocket:
@@ -440,11 +439,10 @@ class SimpliSafe:
     def __init__(self, hass, api, config_entry):
         """Initialize."""
         self._api = api
-        self._config_entry = config_entry
         self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
-        self.options = config_entry.options or {}
+        self.config_entry = config_entry
         self.initial_event_to_use = {}
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
@@ -496,7 +494,7 @@ class SimpliSafe:
 
             self._hass.async_create_task(
                 async_register_base_station(
-                    self._hass, system, self._config_entry.entry_id
+                    self._hass, system, self.config_entry.entry_id
                 )
             )
 
@@ -516,7 +514,7 @@ class SimpliSafe:
             await self.async_update()
 
         self._hass.data[DOMAIN][DATA_LISTENER][
-            self._config_entry.entry_id
+            self.config_entry.entry_id
         ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
 
         await self.async_update()
@@ -539,17 +537,26 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    LOGGER.error(
-                        "Token disconnected or invalid. Please re-auth the "
-                        "SimpliSafe integration in HASS"
-                    )
-                    self._hass.async_create_task(
-                        self._hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": "reauth"},
-                            data=self._config_entry.data,
+                    matching_flows = [
+                        flow
+                        for flow in self._hass.config_entries.flow.async_progress()
+                        if flow["context"].get("source") == SOURCE_REAUTH
+                        and flow["context"].get("unique_id")
+                        == self.config_entry.unique_id
+                    ]
+
+                    if not matching_flows:
+                        self._hass.async_create_task(
+                            self._hass.config_entries.flow.async_init(
+                                DOMAIN,
+                                context={
+                                    "source": SOURCE_REAUTH,
+                                    "unique_id": self.config_entry.unique_id,
+                                },
+                                data=self.config_entry.data,
+                            )
                         )
-                    )
+
                     return
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
@@ -557,7 +564,7 @@ class SimpliSafe:
 
                 try:
                     await self._api.refresh_access_token(
-                        self._config_entry.data[CONF_TOKEN]
+                        self.config_entry.data[CONF_TOKEN]
                     )
                     return
                 except SimplipyError as err:
@@ -579,9 +586,9 @@ class SimpliSafe:
                 LOGGER.error("Unknown error while updating: %s", result)
                 return
 
-        if self._api.refresh_token != self._config_entry.data[CONF_TOKEN]:
+        if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
             _async_save_refresh_token(
-                self._hass, self._config_entry, self._api.refresh_token
+                self._hass, self.config_entry, self._api.refresh_token
             )
 
         # If we've reached this point using an emergency refresh token, we're in the
