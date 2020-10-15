@@ -9,12 +9,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    CONF_SENSOR_PTZ_PRESET,
+    CONF_SENSOR_SDCARD,
     DATA_AMCREST,
     DEVICES,
     SENSOR_SCAN_INTERVAL_SECS,
     SERVICE_UPDATE,
-    CONF_SENSOR_PTZ_PRESET,
-    CONF_SENSOR_SDCARD,
 )
 from .helpers import log_update_error, service_signal
 

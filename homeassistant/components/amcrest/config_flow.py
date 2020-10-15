@@ -1,6 +1,8 @@
 """Config flow to configure Amcrest devices."""
 
 import logging
+
+from amcrest import AmcrestError, LoginError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,39 +18,36 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-
 import homeassistant.helpers.config_validation as cv
 
+from .amcrest_checker import AmcrestChecker
 from .const import (
-    DEVICES,
-    DOMAIN,
-    CONF_EVENTS,
-    CONF_STREAM_SOURCE,
-    DEFAULT_STREAM_SOURCE,
-    STREAM_SOURCE_LIST,
-    CONF_FFMPEG_ARGUMENTS,
-    DEFAULT_FFMPEG_ARGUMENTS,
-    CONF_RESOLUTION,
-    RESOLUTION_LIST,
-    DEFAULT_RESOLUTION,
     AUTHENTICATION_LIST,
-    DEFAULT_AUTHENTICATION,
-    CONF_CONTROL_LIGHT,
-    DEFAULT_CONTROL_LIGHT,
-    DEFAULT_SCAN_INTERVAL,
     CONF_BINARY_SENSOR_AUDIO_DETECTED,
     CONF_BINARY_SENSOR_AUDIO_DETECTED_POLLED,
     CONF_BINARY_SENSOR_MOTION_DETECTED,
     CONF_BINARY_SENSOR_MOTION_DETECTED_POLLED,
     CONF_BINARY_SENSOR_ONLINE,
+    CONF_CONTROL_LIGHT,
+    CONF_EVENTS,
+    CONF_FFMPEG_ARGUMENTS,
+    CONF_RESOLUTION,
     CONF_SENSOR_PTZ_PRESET,
     CONF_SENSOR_SDCARD,
-    DEFAULT_PORT,
+    CONF_STREAM_SOURCE,
+    DEFAULT_AUTHENTICATION,
+    DEFAULT_CONTROL_LIGHT,
+    DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RESOLUTION,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_STREAM_SOURCE,
+    DEVICES,
+    DOMAIN,
+    RESOLUTION_LIST,
+    STREAM_SOURCE_LIST,
 )
-
-from .amcrest_checker import AmcrestChecker
-from amcrest import AmcrestError, LoginError
 
 _LOGGER = logging.getLogger(__name__)
 
