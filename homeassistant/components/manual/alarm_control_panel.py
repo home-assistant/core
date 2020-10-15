@@ -404,7 +404,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             return {
                 ATTR_PREVIOUS_STATE: self._previous_state,
                 ATTR_NEXT_STATE: self._state,
-                ATTR_STATE_DURATION: state_duration.total_seconds()
+                ATTR_STATE_DURATION: state_duration.total_seconds(),
             }
         return {}
 
