@@ -269,6 +269,9 @@ class FlowHandler:
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
+        if not self.context:
+            return False
+
         return self.context.get("show_advanced_options", False)
 
     @callback
