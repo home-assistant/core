@@ -19,7 +19,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -325,29 +325,21 @@ async def async_wait_for_elk_to_sync(elk, timeout):
 
 
 def _create_elk_services(hass):
-    def _speak_word_service(service):
+    def _getelk(service):
         prefix = service.data["prefix"]
         elk = _find_elk_by_prefix(hass, prefix)
         if elk is None:
-            _LOGGER.error("No elk m1 with prefix for speak_word: '%s'", prefix)
-            return
-        elk.panel.speak_word(service.data["number"])
+            raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
+        return elk
+
+    def _speak_word_service(service):
+        _getelk(service).panel.speak_word(service.data["number"])
 
     def _speak_phrase_service(service):
-        prefix = service.data["prefix"]
-        elk = _find_elk_by_prefix(hass, prefix)
-        if elk is None:
-            _LOGGER.error("No elk m1 with prefix for speak_phrase: '%s'", prefix)
-            return
-        elk.panel.speak_phrase(service.data["number"])
+        _getelk(service).panel.speak_phrase(service.data["number"])
 
     def _set_time_service(service):
-        prefix = service.data["prefix"]
-        elk = _find_elk_by_prefix(hass, prefix)
-        if elk is None:
-            _LOGGER.error("No ElkM1 with prefix for set_time: '%s'", prefix)
-            return
-        elk.panel.set_time(dt_util.now())
+        _getelk(service).panel.set_time(dt_util.now())
 
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
