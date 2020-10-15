@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_API, SIGNAL_UPDATE_ALARM
+from . import DATA_KEY, SIGNAL_UPDATE_ALARM, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,21 +39,21 @@ def _get_alarm_state(area):
     return mode_to_state.get(area.mode)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SPC alarm control panel platform."""
-    if discovery_info is None:
-        return
-    api = hass.data[DATA_API]
-    async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up platform."""
+    client = hass.data[DATA_KEY][entry.entry_id]
+    async_add_entities(
+        [SpcAlarm(area=area, client=client) for area in client.areas.values()]
+    )
 
 
 class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
-    def __init__(self, area, api):
+    def __init__(self, area, client):
         """Initialize the SPC alarm panel."""
         self._area = area
-        self._api = api
+        self._client = client
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
@@ -64,6 +64,22 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
                 self._update_callback,
             )
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique identifier of the device."""
+        serial = self._client.info["sn"]
+        return f"{serial}-{self._area.id}"
+
+    @property
+    def device_info(self):
+        """Provide device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self._area.name,
+            "manufacturer": "Vanderbilt",
+            "model": f"SPC {self._client.info['variant']}",
+        }
 
     @callback
     def _update_callback(self):
@@ -98,19 +114,19 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
 
-        await self._api.change_mode(area=self._area, new_mode=AreaMode.UNSET)
+        await self._client.change_mode(area=self._area, new_mode=AreaMode.UNSET)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
 
-        await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
+        await self._client.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm home command."""
 
-        await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
+        await self._client.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
 
-        await self._api.change_mode(area=self._area, new_mode=AreaMode.FULL_SET)
+        await self._client.change_mode(area=self._area, new_mode=AreaMode.FULL_SET)

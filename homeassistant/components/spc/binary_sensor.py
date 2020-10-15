@@ -7,12 +7,13 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_POWER,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_API, SIGNAL_UPDATE_SENSOR
+from . import DATA_KEY, SIGNAL_UPDATE_SENSOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +27,13 @@ def _get_device_class(zone_type):
     }.get(zone_type)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SPC binary sensor."""
-    if discovery_info is None:
-        return
-    api = hass.data[DATA_API]
+    client = hass.data[DATA_KEY][entry.entry_id]
     async_add_entities(
         [
-            SpcBinarySensor(zone)
-            for zone in api.zones.values()
+            SpcBinarySensor(zone, client)
+            for zone in client.zones.values()
             if _get_device_class(zone.type)
         ]
     )
@@ -43,9 +42,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SpcBinarySensor(BinarySensorEntity):
     """Representation of a sensor based on a SPC zone."""
 
-    def __init__(self, zone):
+    def __init__(self, zone, client):
         """Initialize the sensor device."""
         self._zone = zone
+        self._client = client
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
@@ -56,6 +56,25 @@ class SpcBinarySensor(BinarySensorEntity):
                 self._update_callback,
             )
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique identifier of the device."""
+        serial = self._client.info["sn"]
+        return f"{serial}-{self._zone.area.id}-{self._zone.id}"
+
+    @property
+    def device_info(self):
+        """Provide device info."""
+        serial = self._client.info["sn"]
+        owner_device_id = f"{serial}-{self._zone.area.id}"
+
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self._zone.name,
+            "model": "SPC alarm zone",
+            "via_device": (DOMAIN, owner_device_id),
+        }
 
     @callback
     def _update_callback(self):
