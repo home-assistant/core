@@ -114,6 +114,13 @@ def hass(loop, hass_storage, request):
         # See https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_exception_handler
         if "exception" in context:
             exceptions.append(context["exception"])
+        else:
+            exceptions.append(
+                Exception(
+                    "Received exception handler without exception, but with message: %s"
+                    % context["message"]
+                )
+            )
         orig_exception_handler(loop, context)
 
     exceptions = []
