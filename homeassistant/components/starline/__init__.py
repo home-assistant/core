@@ -50,10 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_set_scan_interval(call):
         """Set scan interval."""
         options = dict(config_entry.options)
-        if call.service == SERVICE_SET_SCAN_INTERVAL:
-            options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
-        elif call.service == SERVICE_SET_SCAN_OBD_INTERVAL:
-            options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
+        options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
+        hass.config_entries.async_update_entry(entry=config_entry, options=options)
+
+    async def async_set_scan_obd_interval(call):
+        """Set OBD info scan interval."""
+        options = dict(config_entry.options)
+        options[CONF_SCAN_OBD_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
         hass.config_entries.async_update_entry(entry=config_entry, options=options)
 
     async def async_update(call=None):
@@ -77,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCAN_OBD_INTERVAL,
-        async_set_scan_interval,
+        async_set_scan_obd_interval,
         schema=vol.Schema(
             {
                 vol.Required(CONF_SCAN_INTERVAL): vol.All(
