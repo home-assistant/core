@@ -25,6 +25,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_KEY,
+    ATTR_KEY_NAME,
+    ATTR_KEYPAD_ID,
     BARE_TEMP_CELSIUS,
     BARE_TEMP_FAHRENHEIT,
     CONF_AREA,
@@ -41,6 +44,7 @@ from .const import (
     CONF_ZONE,
     DOMAIN,
     ELK_ELEMENTS,
+    EVENT_ELKM1_KEYPAD_KEY_PRESSED,
 )
 
 SYNC_TIMEOUT = 120
@@ -59,6 +63,12 @@ SUPPORTED_DOMAINS = [
 SPEAK_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
+        vol.Optional("prefix", default=""): cv.string,
+    }
+)
+
+SET_TIME_SERVICE_SCHEMA = vol.Schema(
+    {
         vol.Optional("prefix", default=""): cv.string,
     }
 )
@@ -221,6 +231,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     elk.connect()
 
+    def _element_changed(element, changeset):
+        keypress = changeset.get("last_keypress")
+        if keypress is None:
+            return
+
+        hass.bus.async_fire(
+            EVENT_ELKM1_KEYPAD_KEY_PRESSED,
+            {
+                ATTR_KEYPAD_ID: element.index + 1,
+                ATTR_KEY_NAME: keypress[0],
+                ATTR_KEY: keypress[1],
+            },
+        )
+
+    for keypad in elk.keypads:
+        keypad.add_callback(_element_changed)
+
     if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT):
         _LOGGER.error(
             "Timed out after %d seconds while trying to sync with ElkM1 at %s",
@@ -313,11 +340,22 @@ def _create_elk_services(hass):
             return
         elk.panel.speak_phrase(service.data["number"])
 
+    def _set_time_service(service):
+        prefix = service.data["prefix"]
+        elk = _find_elk_by_prefix(hass, prefix)
+        if elk is None:
+            _LOGGER.error("No ElkM1 with prefix for set_time: '%s'", prefix)
+            return
+        elk.panel.set_time()
+
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, "speak_phrase", _speak_phrase_service, SPEAK_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "set_time", _set_time_service, SET_TIME_SERVICE_SCHEMA
     )
 
 
