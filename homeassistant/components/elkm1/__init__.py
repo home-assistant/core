@@ -245,7 +245,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             },
         )
 
-    for keypad in elk.keypads:
+    for keypad in elk.keypads:  # pylint: disable=no-member
         keypad.add_callback(_element_changed)
 
     if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT):
