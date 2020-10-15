@@ -121,7 +121,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
                 if (integration_path / check).exists():
                     integration.add_error(
                         "coverage",
-                        f"coveragerc incorrectly set up to ignore coverage for {check}",
+                        f"{check} must not be ignored by the .coveragerc file",
                     )
 
     if not not_found:
