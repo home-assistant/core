@@ -3,8 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.errors import (
-    # EndpointUnavailable,
+from simplipy.errors import (  # EndpointUnavailable,
     InvalidCredentialsError,
     PendingAuthorizationError,
     SimplipyError,
@@ -45,10 +44,8 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.helpers.update_coordinator import (
-    # CoordinatorEntity,
+from homeassistant.helpers.update_coordinator import (  # CoordinatorEntity,; UpdateFailed,
     DataUpdateCoordinator,
-    # UpdateFailed,
 )
 
 from .const import (
@@ -156,9 +153,11 @@ def _async_save_refresh_token(hass, config_entry, token):
 
 
 async def async_get_client_id(hass):
-    """Get a client ID (based on the HASS unique ID) for the SimpliSafe API."""
+    """Get a client ID (based on the HASS unique ID) for the SimpliSafe API.
+
+    Note that SimpliSafe requires full, "dashed" versions of UUIDs.
+    """
     hass_id = await hass.helpers.instance_id.async_get()
-    # SimpliSafe requires full, "dashed" versions of UUIDs:
     return str(UUID(hass_id))
 
 
