@@ -7,13 +7,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir motion platform."""
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     if "aircons" in instance["coordinator"].data:
         entities = []
@@ -50,7 +50,9 @@ class AdvantageAirBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def device_info(self):
         """Return parent device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "identifiers": {
+                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
+            },
             "name": self.coordinator.data["system"]["name"],
             "manufacturer": "Advantage Air",
             "model": self.coordinator.data["system"]["sysType"],
