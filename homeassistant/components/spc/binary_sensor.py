@@ -6,14 +6,14 @@ from pyspcwebgw.const import ZoneInput, ZoneType
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_KEY, SIGNAL_UPDATE_SENSOR, DOMAIN
+from . import DATA_KEY, DOMAIN, SIGNAL_UPDATE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 

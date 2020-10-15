@@ -4,12 +4,12 @@ import logging
 from pyspcwebgw import SpcWebGateway
 import voluptuous as vol
 
-from homeassistant.helpers import aiohttp_client
+from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant import exceptions
+from homeassistant.helpers import aiohttp_client
 
-from . import DOMAIN, CONF_API_URL, CONF_WS_URL
+from . import CONF_API_URL, CONF_WS_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

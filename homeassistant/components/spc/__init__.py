@@ -8,7 +8,6 @@ from pyspcwebgw.zone import Zone
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_WS_URL = "ws_url"

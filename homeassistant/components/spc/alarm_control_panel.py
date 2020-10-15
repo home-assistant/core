@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_KEY, SIGNAL_UPDATE_ALARM, DOMAIN
+from . import DATA_KEY, DOMAIN, SIGNAL_UPDATE_ALARM
 
 _LOGGER = logging.getLogger(__name__)
 
