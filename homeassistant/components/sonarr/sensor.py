@@ -165,7 +165,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    def _to_unit(self, value):
+    def _to_unit(value):
         """Return a value converted to unit of measurement."""
         return value / 1024 ** 3
 
