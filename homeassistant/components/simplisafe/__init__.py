@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -424,13 +425,17 @@ class SimpliSafeWebsocket:
             },
         )
 
-    async def async_websocket_connect(self):
+    async def async_connect(self):
         """Register handlers and connect to the websocket."""
         self._websocket.on_connect(self._on_connect)
         self._websocket.on_disconnect(self._on_disconnect)
         self._websocket.on_event(self._on_event)
 
         await self._websocket.async_connect()
+
+    async def async_disconnect(self):
+        """Disconnect from the websocket."""
+        await self._websocket.async_disconnect()
 
 
 class SimpliSafe:
@@ -486,7 +491,10 @@ class SimpliSafe:
 
     async def async_init(self):
         """Initialize the data class."""
-        asyncio.create_task(self.websocket.async_websocket_connect())
+        asyncio.create_task(self.websocket.async_connect())
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.websocket.async_disconnect
+        )
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():
