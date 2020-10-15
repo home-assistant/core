@@ -4,6 +4,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -26,7 +27,7 @@ async def async_setup_entry(
     )
 
 
-class IncidentsSensor(RestoreEntity):
+class IncidentsSensor(RestoreEntity, Entity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(self, data, entry_id, unique_id, name, icon):
@@ -36,10 +37,6 @@ class IncidentsSensor(RestoreEntity):
         self._unique_id = unique_id
         self._name = name
         self._icon = icon
-
-        self._enabled_default = True
-        self._available = True
-        self._device_class = None
 
         self._state = None
         self._state_attributes = {}
@@ -96,21 +93,6 @@ class IncidentsSensor(RestoreEntity):
 
             attr[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attr
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return self._device_class
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
