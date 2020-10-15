@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
 
     async def async_set_scan_interval(call):
-        """Service for set scan interval."""
+        """Set scan interval."""
         options = dict(config_entry.options)
         if call.service == SERVICE_SET_SCAN_INTERVAL:
             options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.config_entries.async_update_entry(entry=config_entry, options=options)
 
     async def async_update(call=None):
-        """Service for update all data."""
+        """Update all data."""
         await account.update()
         await account.update_obd()
 
