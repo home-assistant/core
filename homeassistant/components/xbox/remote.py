@@ -19,7 +19,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import XboxData, XboxUpdateCoordinator
+from . import ConsoleData, XboxUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -61,9 +61,9 @@ class XboxRemote(CoordinatorEntity, RemoteEntity):
         return self._console.id
 
     @property
-    def data(self) -> XboxData:
+    def data(self) -> ConsoleData:
         """Return coordinator data for this console."""
-        return self.coordinator.data[self._console.id]
+        return self.coordinator.data.consoles[self._console.id]
 
     @property
     def is_on(self):
