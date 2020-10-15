@@ -38,10 +38,7 @@ class XboxBinarySensorEntity(XboxBaseSensorEntity, BinarySensorEntity):
         if not self.coordinator.last_update_success:
             return False
 
-        try:
-            return getattr(self.data, self.attribute)
-        except AttributeError:
-            return False
+        return getattr(self.data, self.attribute, False)
 
 
 @callback
@@ -79,9 +76,9 @@ async def async_remove_entities(
     current: Dict[str, XboxBinarySensorEntity],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
+    registry = await async_get_entity_registry(coordinator.hass)
     entities = current[xuid]
     for entity in entities:
-        registry = await async_get_entity_registry(coordinator.hass)
         if entity.entity_id in registry.entities:
             registry.async_remove(entity.entity_id)
     del current[xuid]
