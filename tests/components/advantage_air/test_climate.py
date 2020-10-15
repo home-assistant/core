@@ -56,6 +56,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert state.state == HVAC_MODE_FAN_ONLY
     assert state.attributes.get("min_temp") == 16
     assert state.attributes.get("max_temp") == 32
+    assert state.attributes.get("temperature") == 24
     assert state.attributes.get("current_temperature") is None
 
     entry = registry.async_get(entity_id)
@@ -125,8 +126,8 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert state
     assert state.attributes.get("min_temp") == 16
     assert state.attributes.get("max_temp") == 32
-    assert state.attributes.get("measuredTemp") == 25
-    assert state.attributes.get("setTemp") == 24
+    assert state.attributes.get("temperature") == 24
+    assert state.attributes.get("current_temperature") == 25
 
     entry = registry.async_get(entity_id)
     assert entry
