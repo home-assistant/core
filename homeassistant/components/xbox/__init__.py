@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player", "remote", "binary_sensor"]
+PLATFORMS = ["media_player", "remote", "binary_sensor", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -121,6 +121,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         # Unsub from coordinator updates
+        hass.data[DOMAIN][entry.entry_id]["sensor_unsub"]()
         hass.data[DOMAIN][entry.entry_id]["binary_sensor_unsub"]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -143,12 +144,12 @@ class PresenceData:
     gamertag: str
     display_pic: str
     online: bool
+    status: str
     in_party: bool
     in_game: bool
     in_multiplayer: bool
     gamer_score: str
-    presence_text: str
-    tenure: str
+    gold_tenure: Optional[str]
     account_tier: str
 
 
@@ -265,11 +266,11 @@ def _build_presence_data(person: Person) -> PresenceData:
         gamertag=person.gamertag,
         display_pic=person.display_pic_raw,
         online=person.presence_state == "Online",
+        status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
         in_game=active_app and active_app.is_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
-        presence_text=person.presence_text,
-        tenure=person.detail.tenure,
+        gold_tenure=person.detail.tenure,
         account_tier=person.detail.account_tier,
     )
