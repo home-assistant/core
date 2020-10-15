@@ -1,6 +1,5 @@
 """Support for Amcrest IP cameras."""
 import asyncio
-#from datetime import timedelta
 from functools import partial
 import logging
 
@@ -32,15 +31,10 @@ from .const import (
     DEVICES,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
-    #STREAM_SOURCE_LIST,
 )
 from .helpers import log_update_error, service_signal
 
 _LOGGER = logging.getLogger(__name__)
-
-# SCAN_INTERVAL = timedelta(seconds=15)
-
-# STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
 
 _SRV_EN_REC = "enable_recording"
 _SRV_DS_REC = "disable_recording"
@@ -117,7 +111,6 @@ CAMERA_SERVICES = {
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
-# async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an Amcrest IP Camera."""
     if config_entry is None:

@@ -1,11 +1,11 @@
 """Support for Amcrest IP cameras."""
-from datetime import timedelta
 import logging
 import threading
 
 import aiohttp
-from amcrest import AmcrestError, LoginError
-import voluptuous as vol
+from amcrest import AmcrestError
+
+# import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.auth.permissions.const import POLICY_CONTROL
@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
@@ -28,25 +27,23 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.exceptions import Unauthorized, UnknownUser
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+
+# from homeassistant.helpers import discovery
+# import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant import config_entries
-from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS, check_binary_sensors
+from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS
 from .camera import CAMERA_SERVICES
 from .const import (
     CAMERAS,
-    COMM_RETRIES,
-    COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
     SENSOR_EVENT_CODE,
     SERVICE_EVENT,
-    SERVICE_UPDATE,
     DEFAULT_FFMPEG_ARGUMENTS,
     CONF_STREAM_SOURCE,
     DEFAULT_STREAM_SOURCE,
@@ -60,7 +57,8 @@ from .const import (
     DEFAULT_PORT,
 )
 from .helpers import service_signal
-from .sensor import SENSORS
+
+# from .sensor import SENSORS
 from .amcrest_checker import AmcrestChecker
 
 _LOGGER = logging.getLogger(__name__)
@@ -199,7 +197,6 @@ async def async_setup_entry(hass, config_entry):
     event_codes["events"] = []
 
     if binary_sensors:
-        # _LOGGER.debug("Inizialize Platform binary_sensor")
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, BINARY_SENSOR)
         )

@@ -38,11 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
 _ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
-# BINARY_SENSOR_AUDIO_DETECTED = "audio_detected"
-# BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
-# BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
-# BINARY_SENSOR_MOTION_DETECTED_POLLED = "motion_detected_polled"
-# BINARY_SENSOR_ONLINE = "online"
 BINARY_POLLED_SENSORS = [
     CONF_BINARY_SENSOR_AUDIO_DETECTED_POLLED,
     CONF_BINARY_SENSOR_MOTION_DETECTED_POLLED,
@@ -78,7 +73,6 @@ def check_binary_sensors(value):
     return value
 
 
-# async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a binary sensor for an Amcrest IP Camera."""
     if config_entry is None:
@@ -99,7 +93,6 @@ class AmcrestBinarySensor(BinarySensorEntity):
     """Binary sensor for Amcrest camera."""
 
     def __init__(self, name, device, sensor_type):
-        _LOGGER.debug("Inizialize binary_sensor sensor_type: %s", sensor_type)
         """Initialize entity."""
         self._name = f"{name} {BINARY_SENSORS[sensor_type][SENSOR_NAME]}"
         self._signal_name = name

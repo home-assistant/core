@@ -3,7 +3,7 @@ from amcrest import AmcrestError, Http, LoginError
 import threading
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
 from .const import (
@@ -52,6 +52,7 @@ class AmcrestChecker(Http):
         return self._wrap_event_flag
 
     def _start_recovery(self):
+        """Start Recovery"""
         self._wrap_event_flag.clear()
         dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
         self._unsub_recheck = track_time_interval(

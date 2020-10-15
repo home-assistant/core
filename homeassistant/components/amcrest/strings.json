@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "bad_config_file": "Bad data from configuration file",
+            "link_local_address": "Link local addresses are not supported",
+            "not_amcrest_device": "Discovered device not an Amcrest device"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Config flow for device is already in progress.",
+            "device_unavailable": "Device is not available",
+            "faulty_credentials": "Bad user credentials"
+        },
+        "flow_title": "Amcrest device: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Set up Amcrest device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_source": "Select stream source to use",
+                    "ffmpeg_arguments": "Select stream ffmpeg arguments to use",
+                    "resolution": "Select stream resolution to use",
+                    "authentication": "Select stream authentication to use",
+                    "control_light": "Enable light when stream is active",
+                    "scan_interval": "Defines the update interval of the sensor in seconds",
+                    "binary_sensors": "Binary Sensors to display in the frontend",
+                    "sensors": "Sensors to display in the frontend",
+                    "events": "List of events to capture. Separated by comma. Use 'All' to intercept all events"
+                },
+                "title": "Amcrest device options"
+            }
+        }
+    }
+}
