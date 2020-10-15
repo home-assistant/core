@@ -61,3 +61,20 @@ def setup_plex_server(hass, entry, mock_plex_account, mock_websocket):
 async def mock_plex_server(entry, setup_plex_server):
     """Init from a config entry and return a mocked PlexServer instance."""
     return await setup_plex_server(config_entry=entry)
+
+
+@pytest.fixture
+async def entity_sources():
+    """Return a static dict for entity_services calls."""
+    entity_sources_dict = {
+        "media_player.sonos_kitchen": {
+            "domain": "sonos",
+            "source": "config_entry",
+            "config_entry": "12345",
+        }
+    }
+    with patch(
+        "homeassistant.components.plex.services.entity_sources",
+        return_value=entity_sources_dict,
+    ) as sources:
+        yield sources

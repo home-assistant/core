@@ -1,5 +1,5 @@
 """Tests for Plex player playback methods/services."""
-from plexapi.exceptions import NotFound
+from plexapi.exceptions import BadRequest, NotFound
 
 from homeassistant.components.demo import DOMAIN as DEMO_DOMAIN
 from homeassistant.components.media_player.const import (
@@ -17,13 +17,41 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .const import DEFAULT_OPTIONS, SECOND_DATA
-
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
 
 
-async def test_sonos_playback(hass, mock_plex_server):
+async def test_sonos_no_plex_pass(hass, mock_plex_server, entity_sources, caplog):
+    """Test playing media on a Sonos speaker without a Plex Pass."""
+    server_id = mock_plex_server.machineIdentifier
+    loaded_server = hass.data[DOMAIN][SERVERS][server_id]
+
+    with patch.object(
+        hass.components.sonos,
+        "get_coordinator_name",
+        return_value="media_player.sonos_kitchen",
+    ), patch.object(
+        loaded_server.account, "sonos_speaker", side_effect=BadRequest
+    ), patch(
+        "plexapi.playqueue.PlayQueue.create"
+    ):
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ON_SONOS,
+            {
+                ATTR_ENTITY_ID: "media_player.sonos_kitchen",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}',
+            },
+            True,
+        )
+
+    assert (
+        f"Plex server '{loaded_server.friendly_name}' does not have an active Plex Pass"
+        in caplog.text
+    )
+
+
+async def test_sonos_playback(hass, mock_plex_server, entity_sources):
     """Test playing media on a Sonos speaker."""
     server_id = mock_plex_server.machineIdentifier
     loaded_server = hass.data[DOMAIN][SERVERS][server_id]
@@ -31,7 +59,7 @@ async def test_sonos_playback(hass, mock_plex_server):
     # Test Sonos integration lookup failure
     with patch.object(
         hass.components.sonos, "get_coordinator_name", side_effect=HomeAssistantError
-    ):
+    ), patch("plexapi.playqueue.PlayQueue.create"):
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ON_SONOS,
@@ -118,6 +146,8 @@ async def test_sonos_playback(hass, mock_plex_server):
         hass.components.sonos,
         "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
+    ), patch(
+        "plexapi.playqueue.PlayQueue.create"
     ):
         assert await hass.services.async_call(
             DOMAIN,
@@ -154,31 +184,16 @@ async def test_playback_to_unsupported_integration(hass, caplog, setup_plex_serv
     assert f"{DEMO_DOMAIN} is not a supported integration" in caplog.text
 
 
-async def test_playback_on_other_multiple_servers(hass, caplog, setup_plex_server):
-    """Test playing media on other integrations with multiple servers."""
-    assert await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
-    await hass.async_block_till_done()
-
-    second_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=SECOND_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=SECOND_DATA["server_id"],
-    )
-
-    await setup_plex_server()
-    await setup_plex_server(config_entry=second_entry)
-
+async def test_playback_unknown_entity(hass, mock_plex_server, caplog):
+    """Test playback on an unknown entity."""
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_PLAY_ON_OTHER,
         {
-            ATTR_ENTITY_ID: "media_player.bedroom",
+            ATTR_ENTITY_ID: "media_player.unknown",
             ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
             ATTR_MEDIA_CONTENT_ID: '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}',
         },
         True,
     )
-    assert "Multiple Plex servers available" in caplog.text
+    assert "Entity not found:" in caplog.text
