@@ -17,7 +17,7 @@ PRESENCE_ATTRIBUTES = ["online", "in_party", "in_game", "in_multiplayer"]
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
-    """Set up mysq covers."""
+    """Set up Xbox Live friends."""
     coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         "coordinator"
     ]
@@ -33,7 +33,7 @@ class XboxBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Xbox presence state."""
 
     def __init__(self, coordinator: XboxUpdateCoordinator, xuid: str, attribute: str):
-        """Initialize with API object, device id."""
+        """Initialize Xbox binary sensor."""
         super().__init__(coordinator)
         self.xuid = xuid
         self.attribute = attribute
@@ -133,7 +133,7 @@ async def async_remove_entities(
     coordinator: XboxUpdateCoordinator,
     current: Dict[str, XboxBinarySensorEntity],
 ) -> None:
-    """Remove WLED segment light from Home Assistant."""
+    """Remove friend sensors from Home Assistant."""
     entities = current[xuid]
     for entity in entities:
         await entity.async_remove()
