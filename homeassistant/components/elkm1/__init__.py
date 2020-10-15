@@ -23,6 +23,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_KEY,
@@ -346,7 +347,7 @@ def _create_elk_services(hass):
         if elk is None:
             _LOGGER.error("No ElkM1 with prefix for set_time: '%s'", prefix)
             return
-        elk.panel.set_time()
+        elk.panel.set_time(dt_util.now())
 
     hass.services.async_register(
         DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
