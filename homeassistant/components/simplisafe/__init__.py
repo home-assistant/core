@@ -597,6 +597,14 @@ class SimpliSafeEntity(Entity):
             ATTR_SYSTEM_ID: system.system_id,
         }
 
+        self._device_info = {
+            "identifiers": {(DOMAIN, self._system.system_id)},
+            "manufacturer": "SimpliSafe",
+            "model": self._system.version,
+            "name": self._name,
+            "via_device": (DOMAIN, self._system.serial),
+        }
+
     @property
     def available(self):
         """Return whether the entity is available."""
@@ -610,13 +618,7 @@ class SimpliSafeEntity(Entity):
     @property
     def device_info(self):
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._system.system_id)},
-            "manufacturer": "SimpliSafe",
-            "model": self._system.version,
-            "name": self._name,
-            "via_device": (DOMAIN, self._system.serial),
-        }
+        return self._device_info
 
     @property
     def device_state_attributes(self):
@@ -720,4 +722,3 @@ class SimpliSafeEntity(Entity):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
-        raise NotImplementedError()
