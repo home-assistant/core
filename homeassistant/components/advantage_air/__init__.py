@@ -94,9 +94,9 @@ class AdvantageAirEntity(CoordinatorEntity):
 
     @property
     def _zone(self):
-        if self.zone_key:
-            return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
-        return None
+        if not self.zone_key:
+            return None
+        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def device_info(self):
