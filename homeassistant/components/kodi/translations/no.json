@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -27,7 +27,7 @@
             "host": {
                 "data": {
                     "host": "Vert",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Koble til via SSL"
                 },
                 "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
@@ -35,14 +35,14 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat"
                 },
                 "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
             },
             "ws_port": {
                 "data": {
-                    "ws_port": ""
+                    "ws_port": "Port"
                 },
                 "description": "WebSocket-porten (noen ganger kalt TCP-port i Kodi). For \u00e5 koble til over WebSocket, m\u00e5 du aktivere \"Tillat programmer ... for \u00e5 kontrollere Kodi\" i System/Innstillinger/Nettverk/Tjenester. Hvis WebSocket ikke er aktivert, fjerner du porten og lar den st\u00e5 tom."
             }

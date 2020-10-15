@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"

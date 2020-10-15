@@ -7,16 +7,34 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Seadme raadio t\u00fc\u00fcp"
+                },
+                "description": "Vali oma Zigbee raadio t\u00fc\u00fcp",
+                "title": "Seadme raadio t\u00fc\u00fcp"
+            },
             "port_config": {
+                "data": {
+                    "baudrate": "pordi kiirus",
+                    "flow_control": "andmevoo juhtimine",
+                    "path": "Jadaseadme tee"
+                },
+                "description": "Sisesta pordispetsiifilised seaded",
                 "title": "Seaded"
             },
             "user": {
+                "data": {
+                    "path": "Jadaseadme tee"
+                },
+                "description": "Vali Zigbee raadio jadaport",
                 "title": ""
             }
         }
     },
     "device_automation": {
         "action_type": {
+            "squawk": "Pr\u00e4\u00e4ksata",
             "warn": "Hoiata"
         },
         "trigger_subtype": {

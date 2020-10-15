@@ -20,7 +20,7 @@
             "user": {
                 "data": {
                     "authorization_code": "Godkjenningskode (kreves for manuell godkjenning)",
-                    "email": "E-postadresse",
+                    "email": "E-post",
                     "password": "Passord"
                 },
                 "description": "Tom",

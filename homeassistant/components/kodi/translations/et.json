@@ -18,6 +18,9 @@
                     "username": "Kasutajanimi"
                 }
             },
+            "discovery_confirm": {
+                "description": "Kas soovid lisada Kodi {name} Home Assistanti?"
+            },
             "host": {
                 "data": {
                     "host": "",

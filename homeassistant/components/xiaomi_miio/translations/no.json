@@ -5,7 +5,7 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede"
         },
         "error": {
-            "connect_error": "Tilkobling mislyktes.",
+            "connect_error": "Tilkobling mislyktes",
             "no_device_selected": "Ingen enhet valgt, vennligst velg en enhet."
         },
         "flow_title": "",

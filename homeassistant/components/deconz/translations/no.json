@@ -25,7 +25,7 @@
             "manual_input": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 }
             },
             "user": {
