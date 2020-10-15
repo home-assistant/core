@@ -74,12 +74,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_reauth(
         self, data: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
