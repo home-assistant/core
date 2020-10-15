@@ -53,9 +53,7 @@ async def test_event_listener(hass, mock_dump, mock_requests):
 
     valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0, "foo": "foo"}
     for in_, out in valid.items():
-        state = MagicMock(
-            state=in_, domain="fake", object_id="entity", attributes={}
-        )
+        state = MagicMock(state=in_, domain="fake", object_id="entity", attributes={})
         event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [
             {
@@ -72,7 +70,5 @@ async def test_event_listener(hass, mock_dump, mock_requests):
         }
         handler_method(event)
         assert mock_post.call_count == 1
-        assert mock_post.call_args == call(
-            payload["host"], data=payload, timeout=10
-        )
+        assert mock_post.call_args == call(payload["host"], data=payload, timeout=10)
         mock_post.reset_mock()
