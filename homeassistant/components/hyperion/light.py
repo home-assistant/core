@@ -47,8 +47,7 @@ CONF_EFFECT_LIST = "effect_list"
 # showing a solid color. This is the same method used by WLED.
 KEY_EFFECT_SOLID = "Solid"
 
-# TODO: Test this.
-KEY_ENTRY_ID_PLATFORM = "PLATFORM"
+KEY_ENTRY_ID_YAML = "YAML"
 
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
@@ -99,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up Hyperion platform.."""
     await async_setup(
         hass,
-        KEY_ENTRY_ID_PLATFORM,
+        KEY_ENTRY_ID_YAML,
         async_add_entities,
         config.get(CONF_HOST),
         config.get(CONF_PORT),

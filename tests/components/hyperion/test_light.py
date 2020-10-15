@@ -99,15 +99,16 @@ async def _setup_entity_config_entry(hass, client=None):
 
 async def test_setup_yaml(hass):
     """Test setting up the component via YAML-style config."""
-    await _setup_entity_yaml(hass)
+    client = create_mock_client()
+    await _setup_entity_yaml(hass, client=client)
     assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
+    assert hass.data[DOMAIN][hyperion_light.KEY_ENTRY_ID_YAML] == client
 
 
 async def test_setup_yaml_not_ready(hass):
     """Test the component not being ready."""
     client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
+    client.async_client_connect = CoroutineMock(return_value=False)
     await _setup_entity_yaml(hass, client=client)
     assert hass.states.get(TEST_YAML_ENTITY_ID) is None
 
@@ -122,7 +123,6 @@ async def test_setup_config_entry_not_ready(hass):
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
-
     await _setup_entity_config_entry(hass, client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
