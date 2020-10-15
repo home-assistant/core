@@ -202,11 +202,6 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         return ZONE_HVAC_MODES
 
     @property
-    def device_state_attributes(self):
-        """Return additional attributes about Zone."""
-        return self._zone
-
-    @property
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_TARGET_TEMPERATURE
