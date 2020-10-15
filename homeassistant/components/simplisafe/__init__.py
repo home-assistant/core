@@ -578,7 +578,6 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         super().__init__(simplisafe.coordinator)
-
         self._name = name
         self._online = True
         self._simplisafe = simplisafe
