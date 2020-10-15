@@ -19,24 +19,22 @@ _LOGGER = logging.getLogger(__package__)
 DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
     try:
-        ruckus = await hass.async_add_executor_job(
-            Ruckus, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
+        ruckus = Ruckus(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     except AuthenticationError as error:
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error
 
-    mesh_name = await hass.async_add_executor_job(ruckus.mesh_name)
+    mesh_name = ruckus.mesh_name()
 
-    system_info = await hass.async_add_executor_job(ruckus.system_info)
+    system_info = ruckus.system_info()
     try:
         host_serial = system_info[API_SYSTEM_OVERVIEW][API_SERIAL]
     except KeyError as error:
@@ -59,7 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
