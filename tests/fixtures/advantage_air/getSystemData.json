@@ -3,7 +3,7 @@
         "ac1": {
             "info": {
                 "climateControlModeIsRunning": false,
-                "countDownToOff": 0,
+                "countDownToOff": 10,
                 "countDownToOn": 0,
                 "fan": "high",
                 "filterCleanStatus": 0,
@@ -39,7 +39,7 @@
                     "motionConfig": 2,
                     "name": "Zone closed with Sensor",
                     "number": 1,
-                    "rssi": 50,
+                    "rssi": 10,
                     "setTemp": 24,
                     "state": "close",
                     "type": 1,
@@ -51,7 +51,7 @@
             "info": {
                 "climateControlModeIsRunning": false,
                 "countDownToOff": 0,
-                "countDownToOn": 0,
+                "countDownToOn": 20,
                 "fan": "low",
                 "filterCleanStatus": 1,
                 "freshAirStatus": "none",

@@ -9,6 +9,7 @@ from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
+ADVANTAGE_AIR_SERVICE_SET_TIME_TO = "set_time_to"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -31,7 +32,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        "set_time_to", {vol.Required("minutes"): cv.positive_int}, "set_time_to"
+        ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
+        {vol.Required("minutes"): cv.positive_int},
+        "set_time_to",
     )
 
 
@@ -89,11 +92,10 @@ class AdvantageAirTimeTo(CoordinatorEntity):
 
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
-        if ADVANTAGE_AIR_SET_COUNTDOWN_VALUE in kwargs:
-            value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
-            await self.async_change(
-                {self.ac_key: {"info": {f"countDownTo{self.time_period}": value}}}
-            )
+        value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
+        await self.async_change(
+            {self.ac_key: {"info": {f"countDownTo{self.time_period}": value}}}
+        )
 
 
 class AdvantageAirZoneVent(CoordinatorEntity):
@@ -118,7 +120,7 @@ class AdvantageAirZoneVent(CoordinatorEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-sensor:vent'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-vent'
 
     @property
     def state(self):
@@ -158,7 +160,6 @@ class AdvantageAirZoneSignal(CoordinatorEntity):
         """Initialize the Advantage Air Zone wireless signal sensor."""
         super().__init__(instance["coordinator"])
         self.async_change = instance["async_change"]
-        self.device = instance["device"]
         self.ac_key = ac_key
         self.zone_key = zone_key
 
