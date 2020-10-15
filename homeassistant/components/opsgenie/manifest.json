@@ -1,0 +1,7 @@
+{
+  "domain": "opsgenie",
+  "name": "Opsgenie",
+  "documentation": "https://www.home-assistant.io/integrations/opsgenie",
+  "requirements": ["opsgenie-sdk==2.0.3"],
+  "codeowners": []
+}
