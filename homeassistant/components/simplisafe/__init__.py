@@ -493,7 +493,7 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=system.system_id,
+            name=self.config_entry.data[CONF_USERNAME],
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )
@@ -624,8 +624,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         # for the V2 system. Therefore, we mark the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        system_offline = self._system.version == 3 and self._system.offline
-        return not system_offline and self._online
+        return (
+            self.coordinator.last_update_success
+            and not (self._system.version == 3 and self._system.offline)
+            and self._online
+        )
 
     @property
     def device_info(self):
@@ -677,46 +680,43 @@ class SimpliSafeEntity(CoordinatorEntity):
 
         self.async_update_from_websocket_event(event)
 
+    @callback
+    def _handle_coordinator_update(self):
+        """Update the entity with new REST API data."""
+        self.async_update_from_rest_api()
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_websocket_update(self, event):
+        """Update the entity with new websocket data."""
+        # Ignore this event if it belongs to a system other than this one:
+        if event.system_id != self._system.system_id:
+            return
+
+        # Ignore this event if this entity hasn't expressed interest in its type:
+        if event.event_type not in self.websocket_events_to_listen_for:
+            return
+
+        # Ignore this event if it belongs to a entity with a different serial
+        # number from this one's:
+        if (
+            event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+            and event.sensor_serial != self._serial
+        ):
+            return
+
+        self._async_internal_update_from_websocket_event(event)
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def rest_api_update():
-            """Update the entity with new REST API data."""
-            self.async_update_from_rest_api()
-            self.async_write_ha_state()
-
-        self.async_on_remove(
-            self._simplisafe.coordinator.async_add_listener(rest_api_update)
-        )
-
-        @callback
-        def websocket_update(event):
-            """Update the entity with new websocket data."""
-            # Ignore this event if it belongs to a system other than this one:
-            if event.system_id != self._system.system_id:
-                return
-
-            # Ignore this event if this entity hasn't expressed interest in its type:
-            if event.event_type not in self.websocket_events_to_listen_for:
-                return
-
-            # Ignore this event if it belongs to a entity with a different serial
-            # number from this one's:
-            if (
-                event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
-                and event.sensor_serial != self._serial
-            ):
-                return
-
-            self._async_internal_update_from_websocket_event(event)
-            self.async_write_ha_state()
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 TOPIC_UPDATE_WEBSOCKET.format(self._system.system_id),
-                websocket_update,
+                self._handle_websocket_update,
             )
         )
 
