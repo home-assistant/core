@@ -33,7 +33,6 @@ class IncidentsSensor(RestoreEntity, Entity):
         self._coordinator = coordinator
         self._entry_id = entry.entry_id
         self._unique_id = entry.unique_id
-        self._name = "Incidents"
 
         self._state = None
         self._state_attributes = {}
@@ -41,7 +40,7 @@ class IncidentsSensor(RestoreEntity, Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return self._name
+        return "Incidents"
 
     @property
     def icon(self) -> str:
@@ -56,7 +55,7 @@ class IncidentsSensor(RestoreEntity, Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{self._unique_id}_{self._name}"
+        return f"{self._unique_id}_Incidents"
 
     @property
     def device_state_attributes(self) -> object:
