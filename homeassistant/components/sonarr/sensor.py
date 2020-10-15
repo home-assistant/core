@@ -165,10 +165,6 @@ class SonarrDiskspaceSensor(SonarrSensor):
             enabled_default=False,
         )
 
-    def _to_unit(value):
-        """Return a value converted to unit of measurement."""
-        return value / 1024 ** 3
-
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
@@ -182,8 +178,8 @@ class SonarrDiskspaceSensor(SonarrSensor):
         attrs = {}
 
         for disk in self._disks:
-            free = self._to_unit(disk.free)
-            total = self._to_unit(disk.total)
+            free = disk.free / 1024 ** 3
+            total = disk.total / 1024 ** 3
             usage = free / total * 100
 
             attrs[
@@ -195,7 +191,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        free = self._to_unit(self._total_free)
+        free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
 
 
