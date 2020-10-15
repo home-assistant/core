@@ -78,7 +78,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities([MinMaxSensor(entity_ids, name, sensor_type, round_digits)])
-    return True
 
 
 def calc_min(sensor_values):
