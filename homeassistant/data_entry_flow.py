@@ -261,6 +261,9 @@ class FlowHandler:
     @property
     def source(self) -> Optional[str]:
         """Source that initialized the flow."""
+        if not self.context:
+            return None
+
         return self.context.get("source", None)
 
     @property
