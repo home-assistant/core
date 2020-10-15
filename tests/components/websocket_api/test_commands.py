@@ -488,6 +488,41 @@ async def test_render_template_with_error(hass, websocket_client, caplog):
     assert "TemplateError" not in caplog.text
 
 
+async def test_render_template_with_timeout_and_error(hass, websocket_client, caplog):
+    """Test a template with an error with a timeout."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": "{{ now() | rando }}",
+            "timeout": 5,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_error_in_template_code(hass, websocket_client, caplog):
+    """Test a template that will throw in template.py."""
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": "{{ now() | random }}"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+
+    assert "TemplateError" not in caplog.text
+
+
 async def test_render_template_with_delayed_error(hass, websocket_client, caplog):
     """Test a template with an error that only happens after a state change."""
     hass.states.async_set("sensor.test", "on")

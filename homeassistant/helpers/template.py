@@ -330,7 +330,7 @@ class Template:
 
         try:
             return compiled.render(kwargs).strip()
-        except jinja2.TemplateError as err:
+        except Exception as err:  # pylint: disable=broad-except
             raise TemplateError(err) from err
 
     async def async_render_will_timeout(
