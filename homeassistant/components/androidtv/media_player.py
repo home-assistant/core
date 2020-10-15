@@ -412,7 +412,7 @@ class ADBDevice(MediaPlayerEntity):
         }
 
         # Make sure that apps overridden via the `apps` parameter are reflected
-        # in `self._app_name_to_id
+        # in `self._app_name_to_id`
         for key, value in apps.items():
             self._app_name_to_id[value] = key
 
