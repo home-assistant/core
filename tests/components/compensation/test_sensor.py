@@ -1,9 +1,19 @@
 """The tests for the integration sensor platform."""
+import unittest
+
+import pytest
+
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN
 from homeassistant.components.compensation.sensor import ATTR_COEFFICIENTS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, EVENT_HOMEASSISTANT_START
-from homeassistant.setup import async_setup_component
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN,
+)
+from homeassistant.setup import async_prepare_setup_platform, async_setup_component
+
+from tests.common import logging
 
 
 async def test_linear_state(hass):
@@ -45,6 +55,14 @@ async def test_linear_state(hass):
     coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
     assert coefs == [1.0, 1.0]
 
+    hass.states.async_set(entity_id, "foo", {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.compensation")
+    assert state is not None
+
+    assert state.state == STATE_UNKNOWN
+
 
 async def test_linear_state_from_attribute(hass):
     """Test compensation sensor state that pulls from attribute."""
@@ -80,6 +98,14 @@ async def test_linear_state_from_attribute(hass):
 
     coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
     assert coefs == [1.0, 1.0]
+
+    hass.states.async_set(entity_id, 3, {"value": "bar"})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.compensation")
+    assert state is not None
+
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_quadratic_state(hass):
@@ -126,3 +152,58 @@ async def test_quadratic_state(hass):
     assert state is not None
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 3.327
+
+
+async def test_numpy_errors(hass, caplog):
+    """Tests bad data points."""
+    config = {
+        "compensation": {
+            "test": {
+                "name": "compensation",
+                "entity_id": "sensor.uncompensated",
+                "data_points": [
+                    "1.0 -> 1.0",
+                    "1.0 -> 1.0",
+                ],
+            },
+            "test2": {
+                "name": "compensation2",
+                "entity_id": "sensor.uncompensated",
+                "data_points": [
+                    "0.0 -> 1.0",
+                    "0.0 -> 1.0",
+                ],
+            },
+        }
+    }
+    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    assert "polyfit may be poorly conditioned" in caplog.text
+
+    assert "invalid value encountered in true_divide" in caplog.text
+
+
+async def test_datapoints_greater_than_degree(hass, caplog):
+    """Tests bad data points."""
+    config = {
+        "compensation": {
+            "test": {
+                "name": "compensation",
+                "entity_id": "sensor.uncompensated",
+                "data_points": [
+                    "1.0 -> 2.0",
+                    "2.0 -> 3.0",
+                ],
+                "degree": 2,
+            },
+        }
+    }
+    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+    assert "data_points must have at least 3 data_points" in caplog.text

@@ -74,8 +74,6 @@ async def async_setup(hass, config):
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
 
-    np.seterr(all="raise")
-
     for compensation, conf in config.get(DOMAIN).items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
 
@@ -93,26 +91,25 @@ async def async_setup(hass, config):
 
         # try to get valid coefficients for a polynomial
         coefficients = None
-        with warnings.catch_warnings(record=True) as all_warnings:
-            warnings.simplefilter("always")
-            # try to catch 3 possible errors
-            try:
-                coefficients = np.polyfit(x_values, y_values, degree)
-            except FloatingPointError as error:
-                _LOGGER.error(
-                    "Setup of %s.%s encountered an error, %s.",
-                    DOMAIN,
-                    compensation,
-                    error,
-                )
-            # raise any warnings
-            for warning in all_warnings:
-                _LOGGER.warning(
-                    "Setup of %s.%s encountered a warning, %s.",
-                    DOMAIN,
-                    compensation,
-                    str(warning.message).lower(),
-                )
+        with np.errstate(all="raise"):
+            with warnings.catch_warnings(record=True) as all_warnings:
+                warnings.simplefilter("always")
+                # try to catch 3 possible errors
+                try:
+                    coefficients = np.polyfit(x_values, y_values, degree)
+                except FloatingPointError as error:
+                    _LOGGER.error(
+                        "Setup of %s encountered an error, %s.",
+                        compensation,
+                        error,
+                    )
+                # raise any warnings
+                for warning in all_warnings:
+                    _LOGGER.warning(
+                        "Setup of %s encountered a warning, %s.",
+                        compensation,
+                        str(warning.message).lower(),
+                    )
 
         if coefficients is not None:
             data = {
