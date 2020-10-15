@@ -29,18 +29,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up the SPC component."""
 
-    await async_setup_internal(hass, entry)
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-
-    return True
-
-
-async def async_setup_internal(hass, entry):
-    """Connect the API client."""
     config = entry.data
 
     async def async_update_callback(spc_object):
@@ -66,6 +54,11 @@ async def async_setup_internal(hass, entry):
     if not await client.async_load_parameters():
         _LOGGER.error("Failed to load area/zone information from SPC")
         return False
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     # Start listening for incoming events over websocket.
     client.start()
