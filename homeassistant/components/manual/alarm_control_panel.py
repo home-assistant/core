@@ -69,6 +69,7 @@ SUPPORTED_ARMING_STATES = [
 
 ATTR_PREVIOUS_STATE = "previous_state"
 ATTR_NEXT_STATE = "next_state"
+ATTR_STATE_DURATION = "state_duration"
 
 
 def _state_validator(config):
@@ -395,9 +396,15 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
+            state_duration = (
+                self._pending_time(self._previous_state)
+                if self.state == STATE_ALARM_PENDING
+                else self._arming_time(self._state)
+            )
             return {
                 ATTR_PREVIOUS_STATE: self._previous_state,
                 ATTR_NEXT_STATE: self._state,
+                ATTR_STATE_DURATION: state_duration.total_seconds()
             }
         return {}
 
