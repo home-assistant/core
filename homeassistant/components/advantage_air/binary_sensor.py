@@ -26,18 +26,40 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities)
 
 
-class AdvantageAirZoneFilter(CoordinatorEntity, BinarySensorEntity):
-    """AdvantageAir Filter."""
+class AdvantageAirBinarySensor(CoordinatorEntity, BinarySensorEntity):
+    """Parent class for Binary Sensor entities."""
 
-    def __init__(self, instance, ac_key):
-        """Initialize the Advantage Air Zone Filter."""
+    def __init__(self, instance, ac_key, zone_key=None):
+        """Initialize common aspects of an Advantage Air sensor."""
         super().__init__(instance["coordinator"])
         self.async_change = instance["async_change"]
         self.ac_key = ac_key
+        self.zone_key = zone_key
 
     @property
     def _ac(self):
         return self.coordinator.data["aircons"][self.ac_key]["info"]
+
+    @property
+    def _zone(self):
+        if self.zone_key:
+            return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
+        return None
+
+    @property
+    def device_info(self):
+        """Return parent device information."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "name": self.coordinator.data["system"]["name"],
+            "manufacturer": "Advantage Air",
+            "model": self.coordinator.data["system"]["sysType"],
+            "sw_version": self.coordinator.data["system"]["myAppRev"],
+        }
+
+
+class AdvantageAirZoneFilter(AdvantageAirBinarySensor):
+    """AdvantageAir Filter."""
 
     @property
     def name(self):
@@ -59,31 +81,9 @@ class AdvantageAirZoneFilter(CoordinatorEntity, BinarySensorEntity):
         """Return if filter needs cleaning."""
         return self._ac["filterCleanStatus"]
 
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
 
-
-class AdvantageAirZoneMotion(CoordinatorEntity, BinarySensorEntity):
+class AdvantageAirZoneMotion(AdvantageAirBinarySensor):
     """AdvantageAir Zone Motion."""
-
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone Motion sensor."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _zone(self):
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def name(self):
@@ -108,19 +108,4 @@ class AdvantageAirZoneMotion(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return additional motion configuration."""
-        return {
-            "motionConfig": self.coordinator.data["aircons"][self.ac_key]["zones"][
-                self.zone_key
-            ]["motionConfig"]
-        }
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
+        return {"motionConfig": self._zone["motionConfig"]}
