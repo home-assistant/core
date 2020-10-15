@@ -101,7 +101,6 @@ class SmartTubController:
                 manufacturer=spa.brand,
                 name=get_spa_name(spa),
                 model=spa.model,
-                # sw_version=config.swversion,
             )
             self._spa_devices[spa.id] = device
 
