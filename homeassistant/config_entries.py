@@ -1043,6 +1043,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         """
         flow = cast(OptionsFlow, flow)
 
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return result
+
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)

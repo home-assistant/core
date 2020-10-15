@@ -779,10 +779,43 @@ async def test_entry_options(hass, manager):
 
     flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    await manager.options.async_finish_flow(flow, {"data": {"second": True}})
+    await manager.options.async_finish_flow(
+        flow,
+        {"data": {"second": True}, "type": data_entry_flow.RESULT_TYPE_CREATE_ENTRY},
+    )
 
     assert entry.data == {"first": True}
     assert entry.options == {"second": True}
+
+
+async def test_entry_options_abort(hass, manager):
+    """Test that we can abort options flow."""
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_manager(manager)
+
+    class TestFlow:
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                """Test options flow handler."""
+
+            return OptionsFlowHandler()
+
+    config_entries.HANDLERS["test"] = TestFlow()
+    flow = await manager.options.async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+    assert await manager.options.async_finish_flow(
+        flow, {"type": data_entry_flow.RESULT_TYPE_ABORT, "reason": "test"}
+    )
 
 
 async def test_entry_setup_succeed(hass, manager):
