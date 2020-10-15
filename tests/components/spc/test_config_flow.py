@@ -3,11 +3,8 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.spc import DOMAIN, CONF_API_URL, CONF_WS_URL
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.components.spc import CONF_API_URL, CONF_WS_URL, DOMAIN
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.async_mock import AsyncMock, patch
 
