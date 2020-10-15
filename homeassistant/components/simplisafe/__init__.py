@@ -541,8 +541,8 @@ class SimpliSafe:
                     matching_flows = [
                         flow
                         for flow in self._hass.config_entries.flow.async_progress()
-                        if flow["context"]["source"] == SOURCE_REAUTH
-                        and flow["context"]["unique_id"] == self._config_entry.unique_id
+                        if flow["context"].get("source") == SOURCE_REAUTH
+                        and flow["context"].get("unique_id") == self._config_entry.unique_id
                     ]
 
                     if not matching_flows:
