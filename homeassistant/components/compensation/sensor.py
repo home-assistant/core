@@ -24,26 +24,23 @@ ATTR_COEFFICIENTS = "coefficients"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Compensation sensor."""
-    if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
-        return
+    if discovery_info is not None:
+        compensation = discovery_info.get(CONF_COMPENSATION)
+        conf = hass.data[DATA_COMPENSATION][compensation]
 
-    compensation = discovery_info.get(CONF_COMPENSATION)
-    conf = hass.data[DATA_COMPENSATION][compensation]
-
-    async_add_entities(
-        [
-            CompensationSensor(
-                hass,
-                conf[CONF_ENTITY_ID],
-                conf.get(CONF_NAME),
-                conf.get(CONF_ATTRIBUTE),
-                conf[CONF_PRECISION],
-                conf[CONF_POLYNOMIAL],
-                conf.get(CONF_UNIT_OF_MEASUREMENT),
-            )
-        ]
-    )
+        async_add_entities(
+            [
+                CompensationSensor(
+                    hass,
+                    conf[CONF_ENTITY_ID],
+                    conf.get(CONF_NAME),
+                    conf.get(CONF_ATTRIBUTE),
+                    conf[CONF_PRECISION],
+                    conf[CONF_POLYNOMIAL],
+                    conf.get(CONF_UNIT_OF_MEASUREMENT),
+                )
+            ]
+        )
 
 
 class CompensationSensor(Entity):
