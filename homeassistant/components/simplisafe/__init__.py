@@ -3,11 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
-from simplipy.errors import (  # EndpointUnavailable,
-    InvalidCredentialsError,
-    PendingAuthorizationError,
-    SimplipyError,
-)
+from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_CONNECTION_LOST,
@@ -39,13 +35,14 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.helpers.update_coordinator import (  # CoordinatorEntity,; UpdateFailed,
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -66,7 +63,6 @@ from .const import (
 )
 
 DATA_LISTENER = "listener"
-TOPIC_UPDATE_REST_API = "simplisafe_update_rest_api_{0}"
 TOPIC_UPDATE_WEBSOCKET = "simplisafe_update_websocket_{0}"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
@@ -413,12 +409,11 @@ class SimpliSafe:
     def __init__(self, hass, api, config_entry):
         """Initialize."""
         self._api = api
-        self._api_lock = asyncio.Lock()
-        self._coordinators = {}
         self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
         self.config_entry = config_entry
+        self.coordinator = None
         self.initial_event_to_use = {}
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
@@ -495,109 +490,95 @@ class SimpliSafe:
                 _LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
-            async def async_update_system():
-                """Get updated system data from the SimpliSafe REST API.
+        self.coordinator = DataUpdateCoordinator(
+            self._hass,
+            LOGGER,
+            name=system.system_id,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_method=self.async_update,
+        )
 
-                Because SimpliSafe isn't too friendly with concurrent tasks, we use an
-                asyncio.Lock() to queue everything.
-                """
-                async with self._api_lock:
-                    try:
-                        return await self.async_get_system_data(system.system_id)
-                    except (InvalidCredentialsError, PendingAuthorizationError):
-                        pass
+    async def async_update(self):
+        """Get updated data from SimpliSafe."""
 
-            self._coordinators[system.system_id] = DataUpdateCoordinator(
-                self._hass,
-                LOGGER,
-                name=system.system_id,
-                update_interval=DEFAULT_SCAN_INTERVAL,
-                update_method=self.async_update,
+        async def async_update_system(system):
+            """Update a system."""
+            await system.update(cached=False)
+            self._async_process_new_notifications(system)
+
+        tasks = [async_update_system(system) for system in self.systems.values()]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for result in results:
+            if isinstance(result, InvalidCredentialsError):
+                if self._emergency_refresh_token_used:
+                    matching_flows = [
+                        flow
+                        for flow in self._hass.config_entries.flow.async_progress()
+                        if flow["context"].get("source") == SOURCE_REAUTH
+                        and flow["context"].get("unique_id")
+                        == self.config_entry.unique_id
+                    ]
+
+                    if not matching_flows:
+                        self._hass.async_create_task(
+                            self._hass.config_entries.flow.async_init(
+                                DOMAIN,
+                                context={
+                                    "source": SOURCE_REAUTH,
+                                    "unique_id": self.config_entry.unique_id,
+                                },
+                                data=self.config_entry.data,
+                            )
+                        )
+
+                    raise UpdateFailed
+
+                LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+                self._emergency_refresh_token_used = True
+
+                try:
+                    await self._api.refresh_access_token(
+                        self.config_entry.data[CONF_TOKEN]
+                    )
+                    return
+                except SimplipyError as err:
+                    LOGGER.error("Error while using stored refresh token: %s", err)
+                    raise UpdateFailed
+
+            if isinstance(result, EndpointUnavailable):
+                # In case the user attempt an action not allowed in their current plan,
+                # we merely log that message at INFO level (so the user is aware,
+                # but not spammed with ERROR messages that they cannot change):
+                LOGGER.info(result)
+                raise UpdateFailed
+
+            if isinstance(result, SimplipyError):
+                LOGGER.error("SimpliSafe error while updating: %s", result)
+                raise UpdateFailed
+
+            if isinstance(result, Exception):
+                LOGGER.error("Unknown error while updating: %s", result)
+                raise UpdateFailed
+
+        if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
+            _async_save_refresh_token(
+                self._hass, self.config_entry, self._api.refresh_token
             )
 
-    # async def async_update(self):
-    #     """Get updated data from SimpliSafe."""
-
-    #     async def update_system(system):
-    #         """Update a system."""
-    #         await system.update(cached=False)
-    #         self._async_process_new_notifications(system)
-    #         LOGGER.debug('Updated REST API data for "%s"', system.address)
-    #         async_dispatcher_send(
-    #             self._hass, TOPIC_UPDATE_REST_API.format(system.system_id)
-    #         )
-
-    #     tasks = [update_system(system) for system in self.systems.values()]
-
-    #     results = await asyncio.gather(*tasks, return_exceptions=True)
-    #     for result in results:
-    #         if isinstance(result, InvalidCredentialsError):
-    #             if self._emergency_refresh_token_used:
-    #                matching_flows = [
-    #                    flow
-    #                    for flow in self._hass.config_entries.flow.async_progress()
-    #                    if flow["context"].get("source") == SOURCE_REAUTH
-    #                    and flow["context"].get("unique_id")
-    #                    == self._config_entry.unique_id
-    #                ]
-
-    #                if not matching_flows:
-    #                    self._hass.async_create_task(
-    #                        self._hass.config_entries.flow.async_init(
-    #                            DOMAIN,
-    #                            context={
-    #                                "source": SOURCE_REAUTH,
-    #                                "unique_id": self._config_entry.unique_id,
-    #                            },
-    #                            data=self._config_entry.data,
-    #                        )
-    #                    )
-
-    #                return
-    #
-    #             LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
-    #             self._emergency_refresh_token_used = True
-
-    #             try:
-    #                 await self._api.refresh_access_token(
-    #                     self._config_entry.data[CONF_TOKEN]
-    #                 )
-    #                 return
-    #             except SimplipyError as err:
-    #                 LOGGER.error("Error while using stored refresh token: %s", err)
-    #                 return
-
-    #         if isinstance(result, EndpointUnavailable):
-    #             # In case the user attempt an action not allowed in their current plan,
-    #             # we merely log that message at INFO level (so the user is aware,
-    #             # but not spammed with ERROR messages that they cannot change):
-    #             LOGGER.info(result)
-    #             return
-
-    #         if isinstance(result, SimplipyError):
-    #             LOGGER.error("SimpliSafe error while updating: %s", result)
-    #             return
-
-    #         if isinstance(result, Exception):
-    #             LOGGER.error("Unknown error while updating: %s", result)
-    #             return
-
-    #     if self._api.refresh_token != self._config_entry.data[CONF_TOKEN]:
-    #         _async_save_refresh_token(
-    #             self._hass, self._config_entry, self._api.refresh_token
-    #         )
-
-    #     # If we've reached this point using an emergency refresh token, we're in the
-    #     # clear and we can discard it:
-    #     if self._emergency_refresh_token_used:
-    #         self._emergency_refresh_token_used = False
+        # If we've reached this point using an emergency refresh token, we're in the
+        # clear and we can discard it:
+        if self._emergency_refresh_token_used:
+            self._emergency_refresh_token_used = False
 
 
-class SimpliSafeEntity(Entity):
+class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
 
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
+        super().__init__(simplisafe.coordinator)
+
         self._name = name
         self._online = True
         self._simplisafe = simplisafe
@@ -706,11 +687,7 @@ class SimpliSafeEntity(Entity):
             self.async_write_ha_state()
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                TOPIC_UPDATE_REST_API.format(self._system.system_id),
-                rest_api_update,
-            )
+            self._simplisafe.coordinator.async_add_listener(rest_api_update)
         )
 
         @callback
