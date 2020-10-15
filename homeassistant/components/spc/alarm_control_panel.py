@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_KEY, DOMAIN, SIGNAL_UPDATE_ALARM
+from . import DOMAIN, SIGNAL_UPDATE_ALARM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def _get_alarm_state(area):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up platform."""
-    client = hass.data[DATA_KEY][entry.entry_id]
+    client = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [SpcAlarm(area=area, client=client) for area in client.areas.values()]
     )

@@ -14,7 +14,6 @@ CONF_WS_URL = "ws_url"
 CONF_API_URL = "api_url"
 
 DOMAIN = "spc"
-DATA_KEY = "spc"
 
 SIGNAL_UPDATE_ALARM = "spc_update_alarm_{}"
 SIGNAL_UPDATE_SENSOR = "spc_update_sensor_{}"
@@ -37,7 +36,7 @@ async def async_setup_entry(hass, entry):
         elif isinstance(spc_object, Zone):
             async_dispatcher_send(hass, SIGNAL_UPDATE_SENSOR.format(spc_object.id))
 
-    hass.data.setdefault(DATA_KEY, {})
+    hass.data.setdefault(DOMAIN, {})
 
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -49,7 +48,7 @@ async def async_setup_entry(hass, entry):
         async_callback=async_update_callback,
     )
 
-    hass.data[DATA_KEY][entry.entry_id] = client
+    hass.data[DOMAIN][entry.entry_id] = client
 
     if not await client.async_load_parameters():
         _LOGGER.error("Failed to load area/zone information from SPC")
