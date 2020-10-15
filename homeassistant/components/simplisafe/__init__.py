@@ -542,7 +542,7 @@ class SimpliSafe:
                         for flow in self._hass.config_entries.flow.async_progress()
                         if flow["context"].get("source") == SOURCE_REAUTH
                         and flow["context"].get("unique_id")
-                        == self._config_entry.unique_id
+                        == self.config_entry.unique_id
                     ]
 
                     if not matching_flows:
@@ -551,9 +551,9 @@ class SimpliSafe:
                                 DOMAIN,
                                 context={
                                     "source": SOURCE_REAUTH,
-                                    "unique_id": self._config_entry.unique_id,
+                                    "unique_id": self.config_entry.unique_id,
                                 },
-                                data=self._config_entry.data,
+                                data=self.config_entry.data,
                             )
                         )
 
