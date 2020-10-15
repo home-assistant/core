@@ -6,21 +6,15 @@ from typing import Any, Callable, Dict, List, Optional
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import SonarrEntity
-from .const import (
-    CONF_UPCOMING_DAYS,
-    CONF_WANTED_MAX_ITEMS,
-    DATA_SONARR,
-    DOMAIN,
-)
+from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
