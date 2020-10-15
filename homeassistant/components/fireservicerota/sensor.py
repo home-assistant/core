@@ -128,4 +128,4 @@ class IncidentsSensor(RestoreEntity, Entity):
         except (KeyError, TypeError):
             pass
 
-        _LOGGER.debug("Entity '%s' state set to: %s", self._name, self._state)
+        _LOGGER.debug("Entity 'Incidents' state set to: %s", self._state)
