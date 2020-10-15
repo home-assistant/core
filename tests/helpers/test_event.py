@@ -486,6 +486,19 @@ async def test_async_track_state_change_event(hass):
     unsub_throws()
 
 
+async def test_async_track_state_change_event_with_empty_list(hass):
+    """Test async_track_state_change_event passing an empty list of entities."""
+    unsub_single = async_track_state_change_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_state_change_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
+
+
 async def test_async_track_state_added_domain(hass):
     """Test async_track_state_added_domain."""
     single_entity_id_tracker = []
@@ -566,6 +579,32 @@ async def test_async_track_state_added_domain(hass):
 
     unsub_multi()
     unsub_throws()
+
+
+async def test_async_track_state_added_domain_with_empty_list(hass):
+    """Test async_track_state_added_domain passing an empty list of domains."""
+    unsub_single = async_track_state_added_domain(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_state_added_domain(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
+
+
+async def test_async_track_state_removed_domain_with_empty_list(hass):
+    """Test async_track_state_removed_domain passing an empty list of domains."""
+    unsub_single = async_track_state_removed_domain(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_state_removed_domain(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
 
 
 async def test_async_track_state_removed_domain(hass):
@@ -2876,3 +2915,16 @@ async def test_async_track_entity_registry_updated_event_with_a_callback_that_th
     unsub2()
 
     assert event_data[0] == {"action": "create", "entity_id": "switch.puppy_feeder"}
+
+
+async def test_async_track_entity_registry_updated_event_with_empty_list(hass):
+    """Test async_track_entity_registry_updated_event passing an empty list of entities."""
+    unsub_single = hass.helpers.event.async_track_entity_registry_updated_event(
+        [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = hass.helpers.event.async_track_entity_registry_updated_event(
+        [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
