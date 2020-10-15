@@ -77,16 +77,15 @@ class IncidentsSensor(RestoreEntity, Entity):
                 if data.get(value):
                     attr[value] = data[value]
 
-            try:
+            if "address" in data:
                 for address_value in (
                     "latitude",
                     "longitude",
                     "address_type",
                     "formatted_address",
                 ):
-                    attr[address_value] = data.get("address").get(address_value)
-            except (KeyError, AttributeError):
-                pass
+                    if "address_value" in data["address]":
+                        attr[address_value] = data.["address"][address_value]
 
             attr[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attr
