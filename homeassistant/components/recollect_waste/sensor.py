@@ -89,6 +89,9 @@ class RecollectWasteSensor(Entity):
             pickup_event_array = self.client.get_pickup_events(
                 date.today(), date.today() + timedelta(weeks=4)
             )
+        except recollect_waste.RecollectWasteException as ex:
+            _LOGGER.error("Recollect Waste platform error. %s", ex)
+        else:
             pickup_event = pickup_event_array[0]
             next_pickup_event = pickup_event_array[1]
             next_date = str(next_pickup_event.event_date)
@@ -101,5 +104,3 @@ class RecollectWasteSensor(Entity):
                     ATTR_NEXT_PICKUP_DATE: next_date,
                 }
             )
-        except recollect_waste.RecollectWasteException as ex:
-            _LOGGER.error("Recollect Waste platform error. %s", ex)
