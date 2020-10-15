@@ -4,7 +4,6 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
@@ -168,7 +167,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
     def _to_unit(self, value):
         """Return a value converted to unit of measurement."""
-        return value / 1024 ** BYTE_SIZES.index(self._unit_of_measurement)
+        return value / 1024 ** 3
 
     @sonarr_exception_handler
     async def async_update(self) -> None:
