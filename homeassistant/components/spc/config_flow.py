@@ -31,6 +31,10 @@ class SpcConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}

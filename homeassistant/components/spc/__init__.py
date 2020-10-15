@@ -4,8 +4,11 @@ import logging
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.zone import Zone
+import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,9 +22,37 @@ SIGNAL_UPDATE_ALARM = "spc_update_alarm_{}"
 SIGNAL_UPDATE_SENSOR = "spc_update_sensor_{}"
 PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.deprecated(CONF_WS_URL),
+                cv.deprecated(CONF_API_URL),
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 
 async def async_setup(hass, config):
-    """Old way to set up SPC devices."""
+    """Old way to set up SPC, import config."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_API_URL: conf[CONF_API_URL],
+                CONF_WS_URL: conf[CONF_WS_URL],
+            },
+        )
+    )
+
     return True
 
 
