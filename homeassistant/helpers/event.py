@@ -236,6 +236,9 @@ def async_track_state_change_event(
     care about the state change events so we can
     do a fast dict lookup to route events.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
@@ -263,8 +266,6 @@ def async_track_state_change_event(
 
     job = HassJob(action)
 
-    entity_ids = _async_string_to_lower_list(entity_ids)
-
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
 
@@ -280,6 +281,11 @@ def async_track_state_change_event(
         )
 
     return remove_listener
+
+
+@callback
+def _remove_empty_listener() -> None:
+    """Remove a listener that does nothing."""
 
 
 @callback
@@ -314,6 +320,9 @@ def async_track_entity_registry_updated_event(
 
     Similar to async_track_state_change_event.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
 
@@ -341,8 +350,6 @@ def async_track_entity_registry_updated_event(
         )
 
     job = HassJob(action)
-
-    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
@@ -388,6 +395,9 @@ def async_track_state_added_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is added to domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
 
@@ -406,8 +416,6 @@ def async_track_state_added_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
@@ -433,6 +441,9 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is removed from domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
 
@@ -451,8 +462,6 @@ def async_track_state_removed_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
