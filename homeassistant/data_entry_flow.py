@@ -261,7 +261,7 @@ class FlowHandler:
     @property
     def source(self) -> Optional[str]:
         """Source that initialized the flow."""
-        if not self.context:
+        if not hasattr(self, "context"):
             return None
 
         return self.context.get("source", None)
@@ -269,7 +269,7 @@ class FlowHandler:
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        if not self.context:
+        if not hasattr(self, "context"):
             return False
 
         return self.context.get("show_advanced_options", False)
