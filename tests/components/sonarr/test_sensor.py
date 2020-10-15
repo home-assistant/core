@@ -4,7 +4,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sonarr.const import CONF_BASE_PATH, DOMAIN
+from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
