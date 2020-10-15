@@ -38,19 +38,45 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AdvantageAirTimeTo(CoordinatorEntity):
-    """Representation of Advantage Air timer control."""
+class AdvantageAirSensor(CoordinatorEntity):
+    """Parent class for Sensor entities."""
 
-    def __init__(self, instance, ac_key, time_period):
-        """Initialize the Advantage Air timer control."""
+    def __init__(self, instance, ac_key, zone_key=None):
+        """Initialize common aspects of an Advantage Air sensor."""
         super().__init__(instance["coordinator"])
         self.async_change = instance["async_change"]
         self.ac_key = ac_key
-        self.time_period = time_period
+        self.zone_key = zone_key
 
     @property
     def _ac(self):
         return self.coordinator.data["aircons"][self.ac_key]["info"]
+
+    @property
+    def _zone(self):
+        if self.zone_key:
+            return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
+        return None
+
+    @property
+    def device_info(self):
+        """Return parent device information."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            "name": self.coordinator.data["system"]["name"],
+            "manufacturer": "Advantage Air",
+            "model": self.coordinator.data["system"]["sysType"],
+            "sw_version": self.coordinator.data["system"]["myAppRev"],
+        }
+
+
+class AdvantageAirTimeTo(AdvantageAirSensor):
+    """Representation of Advantage Air timer control."""
+
+    def __init__(self, instance, ac_key, time_period):
+        """Initialize the Advantage Air timer control."""
+        super().__init__(instance, ac_key)
+        self.time_period = time_period
 
     @property
     def name(self):
@@ -79,17 +105,6 @@ class AdvantageAirTimeTo(CoordinatorEntity):
             return "mdi:timer-outline"
         return "mdi:timer-off-outline"
 
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
-
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
@@ -98,19 +113,8 @@ class AdvantageAirTimeTo(CoordinatorEntity):
         )
 
 
-class AdvantageAirZoneVent(CoordinatorEntity):
+class AdvantageAirZoneVent(AdvantageAirSensor):
     """Representation of Advantage Air Zone Vent Sensor."""
-
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone Vent Sensor."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _zone(self):
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def name(self):
@@ -141,31 +145,9 @@ class AdvantageAirZoneVent(CoordinatorEntity):
             return "mdi:fan"
         return "mdi:fan-off"
 
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
 
-
-class AdvantageAirZoneSignal(CoordinatorEntity):
+class AdvantageAirZoneSignal(AdvantageAirSensor):
     """Representation of Advantage Air Zone wireless signal sensor."""
-
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone wireless signal sensor."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _zone(self):
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def name(self):
@@ -199,14 +181,3 @@ class AdvantageAirZoneSignal(CoordinatorEntity):
         if self._zone["rssi"] >= 20:
             return "mdi:wifi-strength-1"
         return "mdi:wifi-strength-outline"
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
