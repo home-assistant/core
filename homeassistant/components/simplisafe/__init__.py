@@ -487,7 +487,7 @@ class SimpliSafe:
                     system.system_id
                 ] = await system.get_latest_event()
             except SimplipyError as err:
-                _LOGGER.error("Error while fetching initial event: %s", err)
+                LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
         self.coordinator = DataUpdateCoordinator(
