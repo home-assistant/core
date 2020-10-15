@@ -31,20 +31,6 @@ async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
     assert int(state.state) == 34
 
 
-async def test_adam_as_smt_climate_sensor_entities(hass, mock_smile_adam):
-    """Test creation of climate related sensor entities without being single master thermostat."""
-    mock_smile_adam.return_value.single_master_thermostat.side_effect = Mock(
-        return_value=True
-    )
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state == ENTRY_STATE_LOADED
-
-    state = hass.states.get("sensor.adam_outdoor_temperature")
-    assert float(state.state) == 7.81
-
-    state = hass.states.get("sensor.cv_pomp_electricity_consumed")
-
-
 async def test_anna_as_smt_climate_sensor_entities(hass, mock_smile_anna):
     """Test creation of climate related sensor entities."""
     entry = await async_init_integration(hass, mock_smile_anna)
@@ -62,9 +48,7 @@ async def test_anna_as_smt_climate_sensor_entities(hass, mock_smile_anna):
 
 async def test_anna_climate_sensor_entities(hass, mock_smile_anna):
     """Test creation of climate related sensor entities as single master thermostat."""
-    mock_smile_anna.return_value.single_master_thermostat.side_effect = Mock(
-        return_value=False
-    )
+    mock_smile_anna.single_master_thermostat.side_effect = Mock(return_value=False)
     entry = await async_init_integration(hass, mock_smile_anna)
     assert entry.state == ENTRY_STATE_LOADED
 

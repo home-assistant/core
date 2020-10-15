@@ -123,7 +123,7 @@ def mock_smile_anna():
             return_value=True
         )
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=False
+            return_value=True
         )
         smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
             return_value=True
