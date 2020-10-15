@@ -410,6 +410,12 @@ class ADBDevice(MediaPlayerEntity):
         self._app_name_to_id = {
             value: key for key, value in self._app_id_to_name.items() if value
         }
+
+        # Make sure that apps overridden via the `apps` parameter are reflected
+        # in `self._app_name_to_id
+        for key, value in apps.items():
+            self._app_name_to_id[value] = key
+
         self._get_sources = get_sources
         self._keys = KEYS
 
