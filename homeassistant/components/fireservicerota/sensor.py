@@ -84,8 +84,8 @@ class IncidentsSensor(RestoreEntity, Entity):
                     "address_type",
                     "formatted_address",
                 ):
-                    if "address_value" in data["address]":
-                        attr[address_value] = data.["address"][address_value]
+                    if address_value in data["address"]:
+                        attr[address_value] = data["address"][address_value]
 
             attr[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attr
