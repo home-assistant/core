@@ -23,12 +23,18 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
-    TEST_ENTITY_ID,
+    TEST_ENTITY_ID_1,
+    TEST_ENTITY_ID_2,
+    TEST_ENTITY_ID_3,
     TEST_HOST,
-    TEST_NAME,
+    TEST_INSTANCE_1,
+    TEST_INSTANCE_2,
+    TEST_INSTANCE_3,
     TEST_PORT,
     TEST_PRIORITY,
     TEST_SERVER_ID,
+    TEST_YAML_ENTITY_ID,
+    TEST_YAML_NAME,
     create_mock_client,
 )
 
@@ -39,12 +45,12 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-def call_registered_callback(client, key, *args, **kwargs):
+def _call_registered_callback(client, key, *args, **kwargs):
     """Call a Hyperion entity callback that was registered with the client."""
     return client.set_callbacks.call_args[0][0][key](*args, **kwargs)
 
 
-async def setup_entity(hass, client=None):
+async def _setup_entity_yaml(hass, client=None):
     """Add a test Hyperion entity to hass."""
     client = client or create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
@@ -54,7 +60,7 @@ async def setup_entity(hass, client=None):
             {
                 LIGHT_DOMAIN: {
                     "platform": "hyperion",
-                    "name": TEST_NAME,
+                    "name": TEST_YAML_NAME,
                     "host": TEST_HOST,
                     "port": TEST_PORT,
                     "priority": TEST_PRIORITY,
@@ -64,24 +70,8 @@ async def setup_entity(hass, client=None):
         await hass.async_block_till_done()
 
 
-async def test_setup_platform(hass):
-    """Test setting up the platform."""
-    client = create_mock_client()
-    await setup_entity(hass, client=client)
-    assert hass.states.get(TEST_ENTITY_ID) is not None
-
-
-async def test_setup_platform_not_ready(hass):
-    """Test the platform not being ready."""
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
-    await setup_entity(hass, client=client)
-    assert hass.states.get(TEST_ENTITY_ID) is None
-
-
-async def test_setup_entry(hass):
-    """Test setting up via a config entry."""
+async def _setup_entity_config_entry(hass, client=None):
+    """Add a test Hyperion entity to hass."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     config_entry = MockConfigEntry(
@@ -96,11 +86,60 @@ async def test_setup_entry(hass):
     )
     config_entry.add_to_hass(hass)
 
+    client = client or create_mock_client()
+    client.instances = [TEST_INSTANCE_1]
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_setup_yaml(hass):
+    """Test setting up the component via YAML-style config."""
+    await _setup_entity_yaml(hass, client=create_mock_client())
+    assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
+
+
+async def test_setup_yaml_not_ready(hass):
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_client_connect = AsyncMock(return_value=False)
+
+    await _setup_entity_yaml(hass, client=client)
+    assert hass.states.get(TEST_YAML_ENTITY_ID) is None
+
+
+async def test_setup_config_entry(hass):
+    """Test setting up the component via config entries."""
+    await _setup_entity_config_entry(hass, client=create_mock_client())
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+
+
+async def test_setup_config_entry_not_ready(hass):
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_client_connect = CoroutineMock(return_value=False)
+
+    await _setup_entity_config_entry(hass, client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+
+
+async def test_setup_config_entry_dynamic_instances(hass):
+    """Test dynamic changes in the omstamce configuration."""
+    config_entry = MockConfigEntry(
+        entry_id=TEST_CONFIG_ENTRY_ID,
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+        },
+        title=f"Hyperion {TEST_SERVER_ID}",
+        unique_id=TEST_SERVER_ID,
+    )
+    config_entry.add_to_hass(hass)
+
     master_client = create_mock_client()
-    master_client.instances = [
-        {"friendly_name": "Test instance 1", "instance": 0, "running": True},
-        {"friendly_name": "Test instance 2", "instance": 1, "running": True},
-    ]
+    master_client.instances = [TEST_INSTANCE_1, TEST_INSTANCE_2]
 
     entity_client = create_mock_client()
     entity_client.instances = master_client.instances
@@ -113,10 +152,10 @@ async def test_setup_entry(hass):
         await hass.async_block_till_done()
 
     assert master_client == hass.data[DOMAIN][TEST_CONFIG_ENTRY_ID]
-    assert hass.states.get("light.test_instance_1") is not None
-    assert hass.states.get("light.test_instance_2") is not None
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+    assert hass.states.get(TEST_ENTITY_ID_2) is not None
 
-    # Inject a new instances update.
+    # Inject a new instances update (remove instance 1, add instance 3)
     assert master_client.set_callbacks.called
     instance_callback = master_client.set_callbacks.call_args[0][0][
         f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}"
@@ -125,33 +164,54 @@ async def test_setup_entry(hass):
         await instance_callback(
             {
                 const.KEY_SUCCESS: True,
+                const.KEY_DATA: [TEST_INSTANCE_2, TEST_INSTANCE_3],
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+    assert hass.states.get(TEST_ENTITY_ID_2) is not None
+    assert hass.states.get(TEST_ENTITY_ID_3) is not None
+
+    # Inject a new instances update (re-add instance 1, but not running)
+    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+        await instance_callback(
+            {
+                const.KEY_SUCCESS: True,
                 const.KEY_DATA: [
-                    {
-                        "friendly_name": "Test instance 2",
-                        "instance": 1,
-                        "running": True,
-                    },
-                    {
-                        "friendly_name": "Test instance 3",
-                        "instance": 2,
-                        "running": True,
-                    },
+                    {**TEST_INSTANCE_1, "running": False},
+                    TEST_INSTANCE_2,
+                    TEST_INSTANCE_3,
                 ],
             }
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("light.test_instance_1") is None
-    assert hass.states.get("light.test_instance_2") is not None
-    assert hass.states.get("light.test_instance_3") is not None
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+    assert hass.states.get(TEST_ENTITY_ID_2) is not None
+    assert hass.states.get(TEST_ENTITY_ID_3) is not None
+
+    # Inject a new instances update (re-add instance 1, running)
+    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+        await instance_callback(
+            {
+                const.KEY_SUCCESS: True,
+                const.KEY_DATA: [TEST_INSTANCE_1, TEST_INSTANCE_2, TEST_INSTANCE_3],
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+    assert hass.states.get(TEST_ENTITY_ID_2) is not None
+    assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
 async def test_light_basic_properies(hass):
     """Test the basic properties."""
     client = create_mock_client()
-    await setup_entity(hass, client=client)
+    await _setup_entity_config_entry(hass, client=client)
 
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "on"
     assert entity_state.attributes["brightness"] == 255
     assert entity_state.attributes["hs_color"] == (0.0, 0.0)
@@ -169,12 +229,12 @@ async def test_light_basic_properies(hass):
 async def test_light_async_turn_on(hass):
     """Test turning the light on."""
     client = create_mock_client()
-    await setup_entity(hass, client=client)
+    await _setup_entity_config_entry(hass, client=client)
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
     client.async_send_set_color = AsyncMock(return_value=True)
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
     )
 
     assert client.async_send_set_color.call_args == call(
@@ -193,7 +253,7 @@ async def test_light_async_turn_on(hass):
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: brightness},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
         blocking=True,
     )
 
@@ -210,8 +270,8 @@ async def test_light_async_turn_on(hass):
 
     # Simulate a state callback from Hyperion.
     client.adjustment = [{const.KEY_BRIGHTNESS: 50}]
-    call_registered_callback(client, "adjustment-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "adjustment-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "on"
     assert entity_state.attributes["brightness"] == brightness
 
@@ -221,7 +281,7 @@ async def test_light_async_turn_on(hass):
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_HS_COLOR: hs_color},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: hs_color},
         blocking=True,
     )
 
@@ -239,8 +299,8 @@ async def test_light_async_turn_on(hass):
         const.KEY_VALUE: {const.KEY_RGB: (0, 255, 255)},
     }
 
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["hs_color"] == hs_color
     assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
 
@@ -252,7 +312,7 @@ async def test_light_async_turn_on(hass):
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: brightness},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
         blocking=True,
     )
 
@@ -267,8 +327,8 @@ async def test_light_async_turn_on(hass):
         }
     )
     client.adjustment = [{const.KEY_BRIGHTNESS: 100}]
-    call_registered_callback(client, "adjustment-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "adjustment-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["brightness"] == brightness
 
     # On (=), 100% (=), V4L (!), [0,255,255] (=)
@@ -278,7 +338,7 @@ async def test_light_async_turn_on(hass):
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_EFFECT: effect},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: effect},
         blocking=True,
     )
 
@@ -312,8 +372,8 @@ async def test_light_async_turn_on(hass):
         ),
     ]
     client.visible_priority = {const.KEY_COMPONENTID: effect}
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
     assert entity_state.attributes["effect"] == effect
 
@@ -325,7 +385,7 @@ async def test_light_async_turn_on(hass):
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_EFFECT: effect},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: effect},
         blocking=True,
     )
 
@@ -343,19 +403,19 @@ async def test_light_async_turn_on(hass):
         const.KEY_COMPONENTID: const.KEY_COMPONENTID_EFFECT,
         const.KEY_OWNER: effect,
     }
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EFFECT
     assert entity_state.attributes["effect"] == effect
 
     # No calls if disconnected.
     client.has_loaded_state = False
-    call_registered_callback(client, "client-update", {"loaded-state": False})
-    client.async_send_clear = AsyncMock(return_value=True)
-    client.async_send_set_effect = AsyncMock(return_value=True)
+    _call_registered_callback(client, "client-update", {"loaded-state": False})
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_effect = CoroutineMock(return_value=True)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
     )
 
     assert not client.async_send_clear.called
@@ -365,11 +425,14 @@ async def test_light_async_turn_on(hass):
 async def test_light_async_turn_off(hass):
     """Test turning the light off."""
     client = create_mock_client()
-    await setup_entity(hass, client=client)
+    await _setup_entity_config_entry(hass, client=client)
 
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
     )
 
     assert client.async_send_set_component.call_args == call(
@@ -383,11 +446,14 @@ async def test_light_async_turn_off(hass):
 
     # No calls if no state loaded.
     client.has_loaded_state = False
-    client.async_send_set_component = AsyncMock(return_value=True)
-    call_registered_callback(client, "client-update", {"loaded-state": False})
+    client.async_send_set_component = CoroutineMock(return_value=True)
+    _call_registered_callback(client, "client-update", {"loaded-state": False})
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: TEST_ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
     )
 
     assert not client.async_send_set_component.called
@@ -396,38 +462,38 @@ async def test_light_async_turn_off(hass):
 async def test_light_async_updates_from_hyperion_client(hass):
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
-    await setup_entity(hass, client=client)
+    await _setup_entity_config_entry(hass, client=client)
 
     # Bright change gets accepted.
     brightness = 10
     client.adjustment = [{const.KEY_BRIGHTNESS: brightness}]
-    call_registered_callback(client, "adjustment-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "adjustment-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["brightness"] == round(255 * (brightness / 100.0))
 
     # Broken brightness value is ignored.
     bad_brightness = -200
     client.adjustment = [{const.KEY_BRIGHTNESS: bad_brightness}]
-    call_registered_callback(client, "adjustment-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "adjustment-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["brightness"] == round(255 * (brightness / 100.0))
 
     # Update components.
     client.is_on.return_value = True
-    call_registered_callback(client, "components-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "components-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "on"
 
     client.is_on.return_value = False
-    call_registered_callback(client, "components-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "components-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "off"
 
     # Update priorities (V4L)
     client.is_on.return_value = True
     client.visible_priority = {const.KEY_COMPONENTID: const.KEY_COMPONENTID_V4L}
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
     assert entity_state.attributes["hs_color"] == (0.0, 0.0)
     assert entity_state.attributes["effect"] == const.KEY_COMPONENTID_V4L
@@ -439,8 +505,8 @@ async def test_light_async_updates_from_hyperion_client(hass):
         const.KEY_OWNER: effect,
     }
 
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["effect"] == effect
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EFFECT
     assert entity_state.attributes["hs_color"] == (0.0, 0.0)
@@ -452,8 +518,8 @@ async def test_light_async_updates_from_hyperion_client(hass):
         const.KEY_VALUE: {const.KEY_RGB: rgb},
     }
 
-    call_registered_callback(client, "priorities-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
     assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
     assert entity_state.attributes["hs_color"] == (180.0, 100.0)
@@ -461,8 +527,8 @@ async def test_light_async_updates_from_hyperion_client(hass):
     # Update effect list
     effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
     client.effects = effects
-    call_registered_callback(client, "effects-update")
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "effects-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.attributes["effect_list"] == [
         effect[const.KEY_NAME] for effect in effects
     ] + const.KEY_COMPONENTID_EXTERNAL_SOURCES + [hyperion_light.KEY_EFFECT_SOLID]
@@ -471,14 +537,14 @@ async def test_light_async_updates_from_hyperion_client(hass):
 
     # Turn on late, check state, disconnect, ensure it cannot be turned off.
     client.has_loaded_state = False
-    call_registered_callback(client, "client-update", {"loaded-state": False})
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "client-update", {"loaded-state": False})
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "unavailable"
 
     # Update connection status (e.g. re-connection)
     client.has_loaded_state = True
-    call_registered_callback(client, "client-update", {"loaded-state": True})
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    _call_registered_callback(client, "client-update", {"loaded-state": True})
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "on"
 
 
@@ -495,9 +561,9 @@ async def test_full_state_loaded_on_start(hass):
     }
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
 
-    await setup_entity(hass, client=client)
+    await _setup_entity_config_entry(hass, client=client)
 
-    entity_state = hass.states.get(TEST_ENTITY_ID)
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
 
     assert entity_state.attributes["brightness"] == round(255 * (brightness / 100.0))
     assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
