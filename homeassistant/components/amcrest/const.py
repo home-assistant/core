@@ -1,4 +1,6 @@
 """Constants for amcrest component."""
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION
+
 DOMAIN = "amcrest"
 DATA_AMCREST = DOMAIN
 CAMERAS = "cameras"
@@ -17,3 +19,54 @@ SERVICE_UPDATE = "update"
 SENSOR_DEVICE_CLASS = "class"
 SENSOR_EVENT_CODE = "code"
 SENSOR_NAME = "name"
+
+CONF_EVENTS = "events"
+DEFAULT_NAME = "Amcrest Camera"
+
+CONF_STREAM_SOURCE = "stream_source"
+STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
+DEFAULT_STREAM_SOURCE = "snapshot"
+
+CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
+DEFAULT_FFMPEG_ARGUMENTS = "-pred 1"
+
+CONF_RESOLUTION = "resolution"
+RESOLUTION_LIST = ["high", "low"]
+DEFAULT_RESOLUTION = "high"
+
+AUTHENTICATION_LIST = [HTTP_BASIC_AUTHENTICATION, "None"]
+DEFAULT_AUTHENTICATION = HTTP_BASIC_AUTHENTICATION
+
+CONF_CONTROL_LIGHT = "control_light"
+DEFAULT_CONTROL_LIGHT = True
+
+DEFAULT_SCAN_INTERVAL = 10
+DEFAULT_PORT = 80
+
+CONF_BINARY_SENSOR_AUDIO_DETECTED = "audio_detected"
+CONF_BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
+CONF_BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
+CONF_BINARY_SENSOR_MOTION_DETECTED_POLLED = "motion_detected_polled"
+CONF_BINARY_SENSOR_ONLINE = "online"
+
+CONF_SENSOR_PTZ_PRESET = "ptz_preset"
+CONF_SENSOR_SDCARD = "sdcard"
+
+DAHUA_OUI = {
+    "E0508B",
+    "C0395A",
+    "BC325F",
+    "B44C3B",
+    "A0BD1D",
+    "9C1463",
+    "9002A9",
+    "74C929",
+    "6C1C71",
+    "4C11BF",
+    "3CEF8C",
+    "38AF29",
+    "24526A",
+    "14A78B",
+    "08EDED",
+}
+AMCREST_OUI = {"9C8ECD"}

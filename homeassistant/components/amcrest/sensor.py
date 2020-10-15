@@ -8,33 +8,37 @@ from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
+from .const import (
+    DATA_AMCREST,
+    DEVICES,
+    SENSOR_SCAN_INTERVAL_SECS,
+    SERVICE_UPDATE,
+    CONF_SENSOR_PTZ_PRESET,
+    CONF_SENSOR_SDCARD,
+)
 from .helpers import log_update_error, service_signal
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
 
-SENSOR_PTZ_PRESET = "ptz_preset"
-SENSOR_SDCARD = "sdcard"
-# Sensor types are defined like: Name, units, icon
 SENSORS = {
-    SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
-    SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
+    CONF_SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
+    CONF_SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for an Amcrest IP Camera."""
-    if discovery_info is None:
+    if config_entry is None:
         return
 
-    name = discovery_info[CONF_NAME]
+    name = config_entry.data[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
     async_add_entities(
         [
             AmcrestSensor(name, device, sensor_type)
-            for sensor_type in discovery_info[CONF_SENSORS]
+            for sensor_type in config_entry.options.get(CONF_SENSORS)
         ],
         True,
     )
@@ -92,10 +96,10 @@ class AmcrestSensor(Entity):
         _LOGGER.debug("Updating %s sensor", self._name)
 
         try:
-            if self._sensor_type == SENSOR_PTZ_PRESET:
+            if self._sensor_type == CONF_SENSOR_PTZ_PRESET:
                 self._state = self._api.ptz_presets_count
 
-            elif self._sensor_type == SENSOR_SDCARD:
+            elif self._sensor_type == CONF_SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
                     self._attrs[
