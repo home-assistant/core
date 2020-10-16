@@ -113,9 +113,8 @@ async def test_gateway_setup_fails(hass):
     with patch(
         "homeassistant.components.deconz.gateway.get_gateway", side_effect=Exception
     ):
-        config_entry = await setup_deconz_integration(hass)
-        gateway = get_gateway_from_config_entry(hass, config_entry)
-        assert gateway is None
+        await setup_deconz_integration(hass)
+    assert not hass.data[deconz.DOMAIN]
 
 
 async def test_connection_status_signalling(hass):
