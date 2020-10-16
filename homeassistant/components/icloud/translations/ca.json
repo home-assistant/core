@@ -17,7 +17,7 @@
                     "password": "Contrasenya"
                 },
                 "description": "La contrasenya introdu\u00efda anteriorment per a {username} ja no funciona. Actualitza la contrasenya per continuar utilitzant aquesta integraci\u00f3.",
-                "title": "Credencials d'iCloud"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "trusted_device": {
                 "data": {

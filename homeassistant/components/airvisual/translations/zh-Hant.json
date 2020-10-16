@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Node/Pro ID \u5df2\u8a3b\u518a\u6216\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+            "already_configured": "Node/Pro ID \u5df2\u8a3b\u518a\u6216\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -26,6 +27,12 @@
                 },
                 "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u8a2d\u5099\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u8a2d\u5099 UI \u7372\u5f97\u3002",
                 "title": "\u8a2d\u5b9a AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470"
+                },
+                "title": "\u91cd\u65b0\u8a8d\u8b49 AirVisual"
             },
             "user": {
                 "data": {
