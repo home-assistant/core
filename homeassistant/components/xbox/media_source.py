@@ -1,4 +1,4 @@
-"""Netatmo Media Source Implementation."""
+"""Xbox Media Source Implementation."""
 from dataclasses import dataclass
 import logging
 from typing import List, Tuple
@@ -78,7 +78,7 @@ class XboxSource(MediaSource):
     name: str = "Xbox Game Media"
 
     def __init__(self, hass: HomeAssistantType, client: XboxLiveClient):
-        """Initialize Netatmo source."""
+        """Initialize Xbox source."""
         super().__init__(DOMAIN)
 
         self.hass: HomeAssistantType = hass
