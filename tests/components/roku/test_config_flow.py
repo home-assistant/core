@@ -30,7 +30,7 @@ async def test_duplicate_error(
 
     user_input = {CONF_HOST: HOST}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=user_input
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
