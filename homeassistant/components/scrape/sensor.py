@@ -148,3 +148,7 @@ class ScrapeSensor(Entity):
             )
         else:
             self._state = value
+
+    async def async_will_remove_from_hass(self):
+        """Shutdown the session."""
+        await self.rest.async_remove()

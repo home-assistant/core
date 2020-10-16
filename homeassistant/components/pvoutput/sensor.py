@@ -53,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     verify_ssl = DEFAULT_VERIFY_SSL
     headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
 
-    rest = RestData(hass, method, _ENDPOINT, auth, headers, payload, verify_ssl)
+    rest = RestData(method, _ENDPOINT, auth, headers, payload, verify_ssl)
     await rest.async_update()
 
     if rest.data is None:
@@ -120,3 +120,7 @@ class PvoutputSensor(Entity):
         except TypeError:
             self.pvcoutput = None
             _LOGGER.error("Unable to fetch data from PVOutput. %s", self.rest.data)
+
+    async def async_will_remove_from_hass(self):
+        """Shutdown the session."""
+        await self.rest.async_remove()
