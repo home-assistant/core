@@ -12,7 +12,7 @@
             }
         },
         "error": {
-            "invalid_credentials": "Ongeldige authenticatie."
+            "invalid_auth": "Ongeldige authenticatie."
         },
         "abort": {
             "already_configured": "Dit account is al geconfigureerd"

@@ -12,7 +12,7 @@
             }
         },
         "error": {
-            "invalid_credentials": "Invalid credentials."
+            "invalid_auth": "Invalid authentication."
         },
         "abort": {
             "already_configured": "Account is already configured"
