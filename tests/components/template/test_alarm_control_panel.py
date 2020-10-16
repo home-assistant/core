@@ -6,6 +6,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -75,6 +76,12 @@ async def test_template_state_text(hass):
 
     state = hass.states.get("alarm_control_panel.test_template_panel")
     assert state.state == STATE_ALARM_ARMED_NIGHT
+
+    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_ARMING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == STATE_ALARM_ARMING
 
     hass.states.async_set("alarm_control_panel.test", STATE_ALARM_DISARMED)
     await hass.async_block_till_done()
