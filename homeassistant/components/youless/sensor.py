@@ -152,10 +152,12 @@ class CurrentPowerSensor(YoulessBaseSensor):
 class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
-    def __init__(self, gateway: YoulessAPI, device: str, type: str):
+    def __init__(self, gateway: YoulessAPI, device: str, dev_type: str):
         """Instantiate a delivery meter sensor."""
-        super().__init__(gateway, device, f"Delivery meter {type}", f"delivery_{type}")
-        self._type = type
+        super().__init__(
+            gateway, device, f"Delivery meter {dev_type}", f"delivery_{dev_type}"
+        )
+        self._type = dev_type
 
     @property
     def name(self) -> Optional[str]:
@@ -184,11 +186,13 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class PowerMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
-    def __init__(self, gateway: YoulessAPI, device: str, type: str):
+    def __init__(self, gateway: YoulessAPI, device: str, dev_type: str):
         """Instantiate a power meter sensor."""
-        super().__init__(gateway, device, f"Power meter {type}", f"power_{type}")
+        super().__init__(
+            gateway, device, f"Power meter {dev_type}", f"power_{dev_type}"
+        )
         self._device = device
-        self._type = type
+        self._type = dev_type
 
     @property
     def name(self) -> Optional[str]:

@@ -26,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up youless from a config entry."""
     try:
         hass.data[DOMAIN][entry.entry_id] = YoulessAPI(entry.data[CONF_HOST])
-    except URLError:
-        raise PlatformNotReady
+    except URLError as exception:
+        raise PlatformNotReady from exception
 
     for component in PLATFORMS:
         hass.async_create_task(
