@@ -540,7 +540,7 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         # Handle plex
-        elif media_id.startswith(PLEX_URI_SCHEME):
+        elif media_id and media_id.startswith(PLEX_URI_SCHEME):
             media_id = media_id[len(PLEX_URI_SCHEME) :]
             media, _ = lookup_plex_media(self.hass, media_type, media_id)
             if media is None:
