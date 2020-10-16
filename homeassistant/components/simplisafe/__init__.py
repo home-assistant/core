@@ -449,8 +449,13 @@ class SimpliSafe:
     async def async_init(self):
         """Initialize the data class."""
         asyncio.create_task(self.websocket.async_connect())
+
+        async def async_websocket_disconnect(_):
+            """Define an event handler to disconnect from the websocket."""
+            await self.websocket.async_disconnect()
+
         self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.websocket.async_disconnect()
+            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
         )
 
         self.systems = await self._api.get_systems()
