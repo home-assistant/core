@@ -33,18 +33,8 @@ def mock_storage(hass_storage):
 @pytest.fixture
 async def zwave_setup(hass):
     """Zwave setup."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-
+    await async_setup_component(hass, "zwave", {"zwave": {}})
     await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
 
 async def test_valid_device_config(hass, mock_openzwave):
@@ -190,12 +180,8 @@ async def test_setup_platform(hass, mock_openzwave):
     assert async_add_entities.mock_calls[0][1][0] == [mock_device]
 
 
-async def test_zwave_ready_wait(hass, mock_openzwave):
+async def test_zwave_ready_wait(hass, mock_openzwave, zwave_setup):
     """Test that zwave continues after waiting for network ready."""
-    # Initialize zwave
-    await async_setup_component(hass, "zwave", {"zwave": {}})
-    await hass.async_block_till_done()
-
     sleeps = []
 
     def utcnow():
@@ -841,24 +827,12 @@ async def test_network_complete_some_dead(hass, mock_openzwave):
 
 
 async def test_entity_discovery(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test the creation of a new entity."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -932,24 +906,12 @@ async def test_entity_discovery(
 
 
 async def test_entity_existing_values(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test the loading of already discovered values."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -998,24 +960,12 @@ async def test_entity_existing_values(
 
 
 async def test_node_schema_mismatch(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test node schema mismatch."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1046,24 +996,12 @@ async def test_node_schema_mismatch(
 
 
 async def test_entity_workaround_component(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test component workaround."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     node.manufacturer_id = "010f"
     node.product_type = "0b00"
@@ -1108,24 +1046,12 @@ async def test_entity_workaround_component(
 
 
 async def test_entity_workaround_ignore(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test ignore workaround."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1162,24 +1088,12 @@ async def test_entity_workaround_ignore(
 
 
 async def test_entity_config_ignore(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test ignore config."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1209,7 +1123,7 @@ async def test_entity_config_ignore(
 
 
 async def test_entity_config_ignore_with_registry(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test ignore config.
 
@@ -1218,18 +1132,6 @@ async def test_entity_config_ignore_with_registry(
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1265,24 +1167,12 @@ async def test_entity_config_ignore_with_registry(
 
 
 async def test_entity_platform_ignore(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test platform ignore device."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
@@ -1315,24 +1205,12 @@ async def test_entity_platform_ignore(
 
 
 async def test_config_polling_intensity(
-    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave
+    hass, mock_discovery, mock_import_module, mock_values, mock_openzwave, zwave_setup
 ):
     """Test polling intensity."""
     (node, value_class, mock_schema) = mock_values
 
     registry = mock_registry(hass)
-
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-            mock_receivers.append(receiver)
-
-    with patch("pydispatch.dispatcher.connect", new=mock_connect):
-        await async_setup_component(hass, "zwave", {"zwave": {}})
-        await hass.async_block_till_done()
-
-    assert len(mock_receivers) == 1
 
     entity_id = "mock_component.mock_node_mock_value"
     zwave_config = {"zwave": {}}
