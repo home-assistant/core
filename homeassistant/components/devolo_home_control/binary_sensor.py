@@ -82,6 +82,9 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
 
         self._value = self._binary_sensor_property.state
 
+        if element_uid.startswith("devolo.WarningBinaryFI:"):
+            self._enabled_default = False
+
     @property
     def is_on(self):
         """Return the state."""
