@@ -108,6 +108,8 @@ async def test_sonos_playback(hass, mock_plex_server):
         hass.components.sonos,
         "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
+    ), patch(
+        "plexapi.playqueue.PlayQueue.create"
     ):
         assert await hass.services.async_call(
             DOMAIN,
