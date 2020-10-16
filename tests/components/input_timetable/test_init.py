@@ -4,10 +4,12 @@ import datetime
 import pytest
 
 from homeassistant.components.input_timetable import (
+    ATTR_CONFIG,
     ATTR_STATE,
     ATTR_TIME,
     ATTR_TIMETABLE,
     DOMAIN,
+    SERVICE_RECONFIG,
     SERVICE_RELOAD,
     SERVICE_RESET,
     SERVICE_SET,
@@ -88,6 +90,16 @@ async def call_reset(hass, entity_id):
         DOMAIN,
         SERVICE_RESET,
         {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+
+async def call_reconfig(hass, entity_id, config):
+    """Override the timetable with the new list."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RECONFIG,
+        {ATTR_ENTITY_ID: entity_id, ATTR_CONFIG: config},
         blocking=True,
     )
 
@@ -228,6 +240,27 @@ async def test_reset(hass, caplog):
     assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 4
     await call_reset(hass, entity_id)
     assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 0
+
+
+async def test_reconfig(hass, caplog):
+    """Test reconfig method."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
+    entity_id = "input_timetable.test"
+    await call_set(hass, entity_id, "01:02:03", STATE_ON)
+    assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 1
+    await call_reconfig(
+        hass,
+        entity_id,
+        [
+            {ATTR_TIME: "07:08:09", ATTR_STATE: STATE_OFF},
+            {ATTR_TIME: "04:05:06", ATTR_STATE: STATE_ON},
+        ],
+    )
+    assert len(hass.states.get(entity_id).attributes[ATTR_TIMETABLE]) == 2
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_TIMETABLE][0][ATTR_TIME]
+        == "04:05:06"
+    )
 
 
 async def test_state(hass, caplog):

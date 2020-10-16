@@ -31,10 +31,12 @@ DOMAIN = "input_timetable"
 
 ATTR_TIME = "time"
 ATTR_TIMETABLE = "timetable"
+ATTR_CONFIG = "config"
 
 SERVICE_SET = "set"
 SERVICE_UNSET = "unset"
 SERVICE_RESET = "reset"
+SERVICE_RECONFIG = "reconfig"
 
 MIDNIGHT = datetime.time.fromisoformat("00:00:00")
 
@@ -76,6 +78,12 @@ SERVICE_UNSET_SCHEMA = vol.Schema(
 )
 SERVICE_RESET_SCHEMA = vol.Schema(
     {},
+    extra=vol.ALLOW_EXTRA,
+)
+SERVICE_RECONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG): vol.All(cv.ensure_list, [SERVICE_SET_SCHEMA]),
+    },
     extra=vol.ALLOW_EXTRA,
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -135,6 +143,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_RESET, SERVICE_RESET_SCHEMA, "async_reset"
+    )
+    component.async_register_entity_service(
+        SERVICE_RECONFIG, SERVICE_RECONFIG_SCHEMA, "async_reconfig"
     )
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
@@ -254,15 +265,15 @@ class InputTimeTable(RestoreEntity):
             for event in self._timetable
         ]
 
-    def _timetable_from_attribute(self, value):
+    def _timetable_from_attribute(self, timetable):
         self._timetable = [
             StateEvent(
-                datetime.time.fromisoformat(item[ATTR_TIME]).replace(
+                datetime.time.fromisoformat(event[ATTR_TIME]).replace(
                     microsecond=0, tzinfo=None
                 ),
-                StateType(item[ATTR_STATE]),
+                StateType(event[ATTR_STATE]),
             )
-            for item in value
+            for event in timetable
         ]
         self._sort_timetable()
 
@@ -293,6 +304,17 @@ class InputTimeTable(RestoreEntity):
     async def async_reset(self):
         """Remove all state changes."""
         self._timetable.clear()
+        self._update_state()
+
+    async def async_reconfig(self, config):
+        """Override the timetable with the new list."""
+        self._timetable = [
+            StateEvent(
+                event[ATTR_TIME].replace(microsecond=0, tzinfo=None), event[ATTR_STATE]
+            )
+            for event in config
+        ]
+        self._sort_timetable()
         self._update_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
