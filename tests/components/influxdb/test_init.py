@@ -61,10 +61,17 @@ def mock_client_fixture(request):
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
+
+    def v2_call(body, precision):
+        data = {"bucket": DEFAULT_BUCKET, "record": body}
+
+        if precision is not None:
+            data["write_precision"] = precision
+
+        return call(**data)
+
     if request.param == influxdb.API_VERSION_2:
-        return lambda body, precision=None: call(
-            bucket=DEFAULT_BUCKET, record=body, write_precision=precision
-        )
+        return lambda body, precision=None: v2_call(body, precision)
     # pylint: disable=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
