@@ -8,7 +8,7 @@ from youless_api.youless_sensor import YoulessSensor
 from homeassistant import core
 from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_DEVICE, DEVICE_CLASS_POWER
+from homeassistant.const import CONF_DEVICE, DEVICE_CLASS_POWER
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
@@ -70,11 +70,6 @@ class YoulessBaseSensor(Entity):
             return None
 
         return self.get_sensor.value
-
-    @property
-    def state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes."""
-        return {ATTR_FRIENDLY_NAME: self._friendly_name}
 
     @property
     def unique_id(self) -> Optional[str]:
