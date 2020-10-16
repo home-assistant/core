@@ -486,19 +486,6 @@ class CastDevice(MediaPlayerEntity):
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 
-        # Handle plex
-        if media_id.startswith(PLEX_URI_SCHEME):
-            media_id = media_id[len(PLEX_URI_SCHEME) :]
-            media, _ = await self.hass.async_add_executor_job(
-                lookup_plex_media, self.hass, media_type, media_id
-            )
-            if media is None:
-                return
-            controller = PlexController()
-            self._chromecast.register_handler(controller)
-            await self.hass.async_add_executor_job(controller.play_media, media)
-            return
-
         # If media ID is a relative URL, we serve it from HA.
         # Create a signed path.
         if media_id[0] == "/":
@@ -552,6 +539,15 @@ class CastDevice(MediaPlayerEntity):
                 quick_play(self._chromecast, app_name, app_data)
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
+        # Handle plex
+        elif media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            if media is None:
+                return
+            controller = PlexController()
+            self._chromecast.register_handler(controller)
+            controller.play_media(media)
         else:
             self._chromecast.media_controller.play_media(
                 media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
