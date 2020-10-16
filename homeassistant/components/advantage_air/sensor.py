@@ -1,9 +1,9 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
+from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
 
@@ -38,39 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AdvantageAirSensor(CoordinatorEntity):
-    """Parent class for Sensor entities."""
-
-    def __init__(self, instance, ac_key, zone_key=None):
-        """Initialize common aspects of an Advantage Air sensor."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _ac(self):
-        return self.coordinator.data["aircons"][self.ac_key]["info"]
-
-    @property
-    def _zone(self):
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {
-                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
-            },
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
-
-
-class AdvantageAirTimeTo(AdvantageAirSensor):
+class AdvantageAirTimeTo(AdvantageAirEntity):
     """Representation of Advantage Air timer control."""
 
     def __init__(self, instance, ac_key, time_period):
@@ -113,7 +81,7 @@ class AdvantageAirTimeTo(AdvantageAirSensor):
         )
 
 
-class AdvantageAirZoneVent(AdvantageAirSensor):
+class AdvantageAirZoneVent(AdvantageAirEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     @property
@@ -146,7 +114,7 @@ class AdvantageAirZoneVent(AdvantageAirSensor):
         return "mdi:fan-off"
 
 
-class AdvantageAirZoneSignal(AdvantageAirSensor):
+class AdvantageAirZoneSignal(AdvantageAirEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     @property
