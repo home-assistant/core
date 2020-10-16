@@ -40,7 +40,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if not await mill_data_connection.connect():
-            errors["connection_error"] = "connection_error"
+            errors["cannot_connect"] = "cannot_connect"
             return self.async_show_form(
                 step_id="user",
                 data_schema=DATA_SCHEMA,
