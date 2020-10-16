@@ -343,7 +343,12 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         def write_v2(json):
             """Write data to V2 influx."""
             try:
-                write_api.write(bucket=bucket, record=json, write_precision=precision)
+                if precision is not None:
+                    write_api.write(
+                        bucket=bucket, record=json, write_precision=precision
+                    )
+                else:
+                    write_api.write(bucket=bucket, record=json)
             except (urllib3.exceptions.HTTPError, OSError) as exc:
                 raise ConnectionError(CONNECTION_ERROR % exc) from exc
             except ApiException as exc:
