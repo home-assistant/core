@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aruba_instant",
   "requirements": [
-    "instantpy==0.0.2"
+    "instantpy==0.0.3"
   ],
   "ssdp": [],
   "zeroconf": [],

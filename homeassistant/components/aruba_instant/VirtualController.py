@@ -1,19 +1,22 @@
-from typing import Dict
+"""Instant Virtual Controller abstraction class for HA"""
+
+import logging
 
 from instantpy import InstantVC
 
-from .const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-
-# from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DOMAIN, TRACKED_CLIENTS
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class VirtualController:
     """
     Instantiate an InstantVC object.
     """
-
+    _LOGGER.debug("Intializing Aruba Instant Virtual Controller")
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         self.hass = hass
         self.vc_name = ""
@@ -30,9 +33,16 @@ class VirtualController:
             ssl_verify=entry.data.get("verify_ssl"),
         )
         self._logged_in = self._virtual_controller.logged_in
+        selected_clients = entry.data.get('clients')
+        try:
+            for client in selected_clients:
+                hass.data[DOMAIN][TRACKED_CLIENTS][self.entry_id].add(client)
+        except TypeError:
+            _LOGGER.debug("Client track list empty.  Will populate.")
 
     async def async_setup(self) -> [bool, ConnectionError]:
         """Set up an Aruba Instant Virtual Controller."""
+        _LOGGER.debug("Initial Virtual Controller login.")
         try:
             await self.hass.async_add_executor_job(self._virtual_controller.login)
         except ConnectionError:
@@ -42,9 +52,9 @@ class VirtualController:
 
     async def async_update_all(self) -> dict:
         """Update Instant VC clients and APs."""
+        _LOGGER.debug("Updating clients and APs.")
         self._clients = await self.async_update_clients()
         self._aps = await self.async_update_aps()
-        # async_dispatcher_send(self.hass, self.signal_device_update)
         return self._clients
 
     async def async_update_clients(self) -> dict:
@@ -54,33 +64,13 @@ class VirtualController:
         )
         return updates
 
-    async def async_update_clients_as_list(self) -> list:
-        """Update Instant VC clients as list."""
-        list_update = []
-        updates = await self.hass.async_add_executor_job(
-            self._virtual_controller.clients
-        )
-        for update in updates:
-            list_update.append(updates[update])
-        return updates
-
     async def async_update_aps(self) -> dict:
         """Update Instant VC APs."""
         updates = await self.hass.async_add_executor_job(self._virtual_controller.aps)
         return updates
 
     @property
-    def signal_device_update(self) -> str:
-        """Event specific per Instant VC entry to signal updates in devices."""
-        return f"{DOMAIN}-{self.host}-device-update"
-
-    @property
-    def signal_device_new(self) -> str:
-        """Event specific per Instant VC entry to signal new device."""
-        return f"{DOMAIN}-{self.host}-device-new"
-
-    @property
-    def clients(self) -> Dict:
+    def clients(self) -> dict:
         """Return list of connected clients."""
         return self._clients
 

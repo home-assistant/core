@@ -8,7 +8,25 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "Verify SSL"
+          "verify_ssl": "Verify SSL",
+          "scan_interval": "Scan Interval in Seconds (minimum 10)"
+        }
+      },
+      "track_clients": {
+        "data": {
+          "available_clients": "Select clients to track:",
+          "track_none": "Stop tracking all clients."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "available_clients": "Select clients to track:",
+          "tracked_clients": "Tracked Clients:",
+          "track_none": "Stop tracking all clients."
         }
       }
     },
