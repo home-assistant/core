@@ -7,7 +7,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.components.directv import MOCK_CONFIG, mock_connection, setup_integration
+from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # pylint: disable=redefined-outer-name
