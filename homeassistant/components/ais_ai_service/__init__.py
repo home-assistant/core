@@ -2915,6 +2915,7 @@ async def async_setup(hass, config):
         hass,
         INTENT_GET_TIME,
         [
+            "która",
             "która [jest] [teraz] godzina",
             "którą mamy godzinę",
             "jaki [jest] czas",
@@ -2935,6 +2936,7 @@ async def async_setup(hass, config):
         hass,
         INTENT_PLAY_RADIO,
         [
+            "Włącz radio",
             "Radio {item}",
             "Włącz radio {item}",
             "Graj radio {item}",
@@ -4161,11 +4163,15 @@ class PlayRadioIntent(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
-        station = item
         success = False
-        if not station:
-            message = "Nie wiem jaką stację chcesz włączyć."
+        station = None
+        try:
+            item = slots["item"]["value"]
+            station = item
+        except Exception:
+            pass
+        if station is None:
+            message = "Powiedz jaką stację mam włączyć"
         else:
             ws_resp = aisCloudWS.audio(
                 station, ais_global.G_AN_RADIO, intent_obj.text_input
