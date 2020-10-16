@@ -3,8 +3,14 @@ from statistics import mean
 
 import numpy as np
 
-from homeassistant.components.iqvia import (
+from homeassistant.const import ATTR_STATE
+from homeassistant.core import callback
+
+from . import IQVIAEntity
+from .const import (
+    DATA_COORDINATOR,
     DOMAIN,
+    SENSORS,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -17,12 +23,7 @@ from homeassistant.components.iqvia import (
     TYPE_DISEASE_FORECAST,
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
-    IQVIAEntity,
 )
-from homeassistant.const import ATTR_STATE
-from homeassistant.core import callback
-
-from .const import DATA_COORDINATOR, SENSORS
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
 ATTR_ALLERGEN_GENUS = "allergen_genus"
