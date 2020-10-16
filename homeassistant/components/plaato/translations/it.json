@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "Sei sicuro di voler configurare Plaato Airlock?",
+                "description": "Vuoi iniziare la configurazione?",
                 "title": "Configura il webhook di Plaato"
             }
         }

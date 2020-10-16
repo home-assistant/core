@@ -367,7 +367,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.0
 
 # homeassistant.components.tasmota
-hatasmota==0.0.15
+hatasmota==0.0.16
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -502,7 +502,7 @@ objgraph==3.4.1
 omnilogic==0.4.2
 
 # homeassistant.components.onvif
-onvif-zeep-async==0.5.0
+onvif-zeep-async==0.6.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -618,7 +618,7 @@ py_nextbusnext==0.1.4
 pyaehw4a1==0.3.9
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.2
+pyairvisual==5.0.3
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1049,6 +1049,9 @@ twilio==6.32.0
 # homeassistant.components.upb
 upb_lib==0.4.11
 
+# homeassistant.components.upcloud
+upcloud-api==0.4.5
+
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 url-normalize==1.4.1
@@ -1095,6 +1098,9 @@ xmltodict==0.12.0
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
+
+# homeassistant.components.onvif
+zeep[async]==3.4.0
 
 # homeassistant.components.zeroconf
 zeroconf==0.28.6

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert."
+            "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
+            "reauth_successful": "Reautentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -26,6 +27,12 @@
                 },
                 "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
                 "title": "Konfigurer en AirVisual Node / Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "title": "Autentiser AirVisual p\u00e5 nytt"
             },
             "user": {
                 "data": {

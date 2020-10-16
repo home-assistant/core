@@ -16,13 +16,13 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
-    CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -58,8 +58,6 @@ from .const import (
     LOGGER,
     VOLUMES,
 )
-
-CONF_ACCOUNTS = "accounts"
 
 DATA_LISTENER = "listener"
 TOPIC_UPDATE_REST_API = "simplisafe_update_rest_api_{0}"
@@ -137,26 +135,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
-ACCOUNT_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_ACCOUNTS): vol.All(
-                    cv.ensure_list, [ACCOUNT_CONFIG_SCHEMA]
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 
 @callback
@@ -188,28 +167,7 @@ async def async_register_base_station(hass, system, config_entry_id):
 
 async def async_setup(hass, config):
     """Set up the SimpliSafe component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LISTENER] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    for account in conf[CONF_ACCOUNTS]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: account[CONF_USERNAME],
-                    CONF_PASSWORD: account[CONF_PASSWORD],
-                    CONF_CODE: account.get(CONF_CODE),
-                },
-            )
-        )
-
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
     return True
 
 
@@ -424,13 +382,17 @@ class SimpliSafeWebsocket:
             },
         )
 
-    async def async_websocket_connect(self):
+    async def async_connect(self):
         """Register handlers and connect to the websocket."""
         self._websocket.on_connect(self._on_connect)
         self._websocket.on_disconnect(self._on_disconnect)
         self._websocket.on_event(self._on_event)
 
         await self._websocket.async_connect()
+
+    async def async_disconnect(self):
+        """Disconnect from the websocket."""
+        await self._websocket.async_disconnect()
 
 
 class SimpliSafe:
@@ -486,7 +448,15 @@ class SimpliSafe:
 
     async def async_init(self):
         """Initialize the data class."""
-        asyncio.create_task(self.websocket.async_websocket_connect())
+        asyncio.create_task(self.websocket.async_connect())
+
+        async def async_websocket_disconnect(_):
+            """Define an event handler to disconnect from the websocket."""
+            await self.websocket.async_disconnect()
+
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        )
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():

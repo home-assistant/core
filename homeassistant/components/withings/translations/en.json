@@ -28,7 +28,7 @@
             },
             "reauth": {
                 "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
-                "title": "Re-authenticate Profile"
+                "title": "Reauthenticate Integration"
             }
         }
     }

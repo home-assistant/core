@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
@@ -101,9 +100,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({}),
                 errors={},
             )
-
-        assert self.hass
-        persistent_notification.async_dismiss(self.hass, "sonarr_reauth")
 
         return await self.async_step_user()
 
