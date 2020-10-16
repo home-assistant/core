@@ -598,11 +598,11 @@ class SimpliSafeEntity(Entity):
         }
 
         self._device_info = {
-            "identifiers": {(DOMAIN, self._system.system_id)},
+            "identifiers": {(DOMAIN, system.system_id)},
             "manufacturer": "SimpliSafe",
-            "model": self._system.version,
-            "name": self._name,
-            "via_device": (DOMAIN, self._system.serial),
+            "model": system.version,
+            "name": name,
+            "via_device": (DOMAIN, system.serial),
         }
 
     @property
