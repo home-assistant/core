@@ -31,14 +31,7 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list, [vol.Schema({vol.Required(CONF_HOST): cv.string})]
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -48,17 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the Roku integration."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=entry_config,
-                )
-            )
-
     return True
 
 
