@@ -167,6 +167,9 @@ async def test_form_validate_invalid_auth(hass):
     with patch(
         "homeassistant.components.myio.config_flow.validate_input",
         side_effect=InvalidAuth,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
+        "invalid_auth",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -193,6 +196,9 @@ async def test_form_validate_cannot_connect(hass):
     with patch(
         "homeassistant.components.myio.config_flow.validate_input",
         side_effect=CannotConnect,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
+        "cannot_connect",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -219,6 +225,12 @@ async def test_form_validate_app_port_problem(hass):
     with patch(
         "homeassistant.components.myio.config_flow.validate_input",
         side_effect=AppPortProblem,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
+        "app_port_problem",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -237,7 +249,7 @@ async def test_form_validate_app_port_problem(hass):
 
 
 async def test_form_validate_already_configured(hass):
-    """Test we handle application port error."""
+    """Test we handle already configuration error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
