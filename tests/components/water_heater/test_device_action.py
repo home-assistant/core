@@ -1,8 +1,8 @@
 """The tests for Water Heater device actions."""
 import pytest
 
-from homeassistant.components.water_heater import DOMAIN
 import homeassistant.components.automation as automation
+from homeassistant.components.water_heater import DOMAIN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
