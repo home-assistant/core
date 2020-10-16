@@ -67,7 +67,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "project_error"
                 return errors
         except aiohttp.ClientError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return errors
         return None
 
