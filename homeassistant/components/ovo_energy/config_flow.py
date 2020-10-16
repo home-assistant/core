@@ -49,7 +49,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         },
                     )
 
-                errors["base"] = "authorization_error"
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
