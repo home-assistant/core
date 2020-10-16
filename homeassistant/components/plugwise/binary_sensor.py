@@ -128,7 +128,7 @@ class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
         self._icon = None
         self._attributes = {}
 
-        self._unique_id = f"{dev_id}-notification"
+        self._unique_id = f"{dev_id}-{binary_sensor}"
 
     @property
     def device_state_attributes(self):
