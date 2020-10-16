@@ -58,6 +58,11 @@ class IncidentsSensor(RestoreEntity, Entity):
         return f"{self._unique_id}_Incidents"
 
     @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
     def device_state_attributes(self) -> object:
         """Return available attributes for sensor."""
         attr = {}
@@ -104,18 +109,9 @@ class IncidentsSensor(RestoreEntity, Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
-                self.async_on_demand_update,
+                self.async_update,
             )
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_on_demand_update(self) -> None:
-        """Update state on demand."""
-        self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update using FireServiceRota data."""
@@ -125,6 +121,7 @@ class IncidentsSensor(RestoreEntity, Entity):
         try:
             self._state = self._coordinator.incident_data["body"]
             self._state_attributes = self._coordinator.incident_data
+            self.async_write_ha_state()
         except (KeyError, TypeError):
             pass
 
