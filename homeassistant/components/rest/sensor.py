@@ -298,7 +298,8 @@ class RestData:
 
     async def async_remove(self):
         """Destroy the http session on destroy."""
-        await self._async_client.aclose()
+        if self._async_client:
+            await self._async_client.aclose()
 
     def set_url(self, url):
         """Set url."""
