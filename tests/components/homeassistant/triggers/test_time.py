@@ -93,7 +93,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}"
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
     with patch(
         "homeassistant.util.dt.utcnow",
         return_value=dt_util.as_utc(time_that_will_not_match_right_away),
@@ -117,7 +117,10 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+    assert (
+        calls[0].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
+    )
 
     if has_date:
         trigger_dt += timedelta(days=1)
@@ -138,7 +141,10 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     await hass.async_block_till_done()
 
     assert len(calls) == 2
-    assert calls[1].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+    assert (
+        calls[1].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
+    )
 
 
 async def test_if_fires_using_multiple_at(hass, calls):
