@@ -28,9 +28,12 @@ class SimplisafeFreezeSensor(SimpliSafeEntity):
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._system = system
         self._sensor = sensor
         self._state = None
+
+        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._device_info["model"] = "Freeze Sensor"
+        self._device_info["name"] = sensor.name
 
     @property
     def device_class(self):
@@ -41,15 +44,6 @@ class SimplisafeFreezeSensor(SimpliSafeEntity):
     def unique_id(self):
         """Return unique ID of sensor."""
         return self._sensor.serial
-
-    @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        info = super().device_info
-        info["identifiers"] = {(DOMAIN, self._sensor.serial)}
-        info["model"] = "Freeze Sensor"
-        info["name"] = self._sensor.name
-        return info
 
     @property
     def unit_of_measurement(self):

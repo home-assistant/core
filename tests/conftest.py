@@ -109,7 +109,18 @@ def hass(loop, hass_storage, request):
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
-        exceptions.append(context["exception"])
+        # Most of these contexts will contain an exception, but not all.
+        # The docs note the key as "optional"
+        # See https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_exception_handler
+        if "exception" in context:
+            exceptions.append(context["exception"])
+        else:
+            exceptions.append(
+                Exception(
+                    "Received exception handler without exception, but with message: %s"
+                    % context["message"]
+                )
+            )
         orig_exception_handler(loop, context)
 
     exceptions = []

@@ -10,7 +10,12 @@ from homeassistant.components.tasmota.const import (
 )
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    async_mock_service,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 @pytest.fixture
@@ -23,6 +28,12 @@ def device_reg(hass):
 def entity_reg(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
+
+
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(autouse=True)

@@ -104,9 +104,6 @@ abodepy==1.1.0
 # homeassistant.components.accuweather
 accuweather==0.0.11
 
-# homeassistant.components.mcp23017
-adafruit-blinka==3.9.0
-
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
 
@@ -729,7 +726,7 @@ habitipy==0.2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.37.0
+hass-nabucasa==0.37.1
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
