@@ -317,6 +317,7 @@ class Climate(ClimateEntity):
             DeviceFanTrait.SetTimer(
                 self.device,
                 timer_mode=FAN_MODE_HASS_TO_SDM[fan_mode],
+                duration_seconds=15 * 60,
             )
 
     @property
