@@ -34,7 +34,7 @@ from .errors import AuthenticationRequired, CannotConnect
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN].get(config_entry.unique_id)
+    return hass.data[DOMAIN][config_entry.unique_id]
 
 
 class DeconzGateway:
@@ -191,9 +191,6 @@ class DeconzGateway:
         Causes for this is either discovery updating host address or config entry options changing.
         """
         gateway = get_gateway_from_config_entry(hass, entry)
-
-        if not gateway:
-            return
 
         if gateway.api.host != gateway.host:
             gateway.api.close()
