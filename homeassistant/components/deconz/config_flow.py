@@ -141,7 +141,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     api_key = await async_get_api_key(session, **self.deconz_config)
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
-                errors["base"] = "no_key"
+                errors["base"] = "invalid_api_key"
 
             else:
                 self.deconz_config[CONF_API_KEY] = api_key
