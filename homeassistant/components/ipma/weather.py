@@ -90,6 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
+    mode = config_entry.data[CONF_MODE]
 
     api = await async_get_api(hass)
     location = await async_get_location(hass, api, latitude, longitude)
@@ -100,8 +101,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Reject if new unique_id
         if any([mode in entity_entry.unique_id for mode in FORECAST_MODE]):
             return None
-
-        mode = entity_entry.data[CONF_MODE]
 
         new_unique_id = (
             f"{location.station_latitude}, {location.station_longitude}, {mode}"
