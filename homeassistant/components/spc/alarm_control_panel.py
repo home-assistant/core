@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_UPDATE_ALARM
+from . import DOMAIN as SPC_DOMAIN, SIGNAL_UPDATE_ALARM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def _get_alarm_state(area):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up platform."""
-    client = hass.data[DOMAIN][entry.entry_id]
+    client = hass.data[SPC_DOMAIN][entry.entry_id]
     async_add_entities(
         [SpcAlarm(area=area, client=client) for area in client.areas.values()]
     )
@@ -75,7 +75,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
     def device_info(self):
         """Provide device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(SPC_DOMAIN, self.unique_id)},
             "name": self._area.name,
             "manufacturer": "Vanderbilt",
             "model": f"SPC {self._client.info['variant']}",
