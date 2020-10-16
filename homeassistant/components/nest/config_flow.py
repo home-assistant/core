@@ -136,12 +136,12 @@ class NestFlowHandler(config_entries.ConfigFlow):
 
         config_path = info["nest_conf_path"]
 
-        if not await self.hass.async_add_job(os.path.isfile, config_path):
+        if not await self.hass.async_add_executor_job(os.path.isfile, config_path):
             self.flow_impl = DOMAIN
             return await self.async_step_link()
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        tokens = await self.hass.async_add_job(load_json, config_path)
+        tokens = await self.hass.async_add_executor_job(load_json, config_path)
 
         return self._entry_from_tokens(
             "Nest (import from configuration.yaml)", flow, tokens
