@@ -1,8 +1,11 @@
 """The tests for the KMtronic switch platform."""
+from datetime import timedelta
+
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_relay_on_off(hass, aioclient_mock):
@@ -49,3 +52,34 @@ async def test_relay_on_off(hass, aioclient_mock):
     await hass.async_block_till_done()
     state = hass.states.get("switch.relay1")
     assert state.state == "off"
+
+
+async def test_update(hass, aioclient_mock):
+    """Tests switch refreshes status periodically."""
+    now = dt_util.utcnow()
+    future = now + timedelta(minutes=10)
+
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="<response><relay0>0</relay0><relay1>0</relay1></response>",
+    )
+
+    MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+    ).add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "off"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="<response><relay0>1</relay0><relay1>1</relay1></response>",
+    )
+    async_fire_time_changed(hass, future)
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "on"
