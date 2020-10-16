@@ -125,7 +125,7 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-    
+
 
 class SonarrEntity(Entity):
     """Defines a base Sonarr entity."""
