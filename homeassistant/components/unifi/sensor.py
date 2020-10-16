@@ -17,10 +17,6 @@ TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Sensor platform doesn't support configuration through configuration.yaml."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for UniFi integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
