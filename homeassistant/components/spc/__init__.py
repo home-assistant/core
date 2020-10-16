@@ -7,6 +7,7 @@ from pyspcwebgw.zone import Zone
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -61,7 +62,8 @@ async def async_setup_entry(hass, entry):
 
     config = entry.data
 
-    async def async_update_callback(spc_object):
+    @callback
+    def async_update_callback(spc_object):
         if isinstance(spc_object, Area):
             async_dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
         elif isinstance(spc_object, Zone):
