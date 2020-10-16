@@ -18,7 +18,8 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_NAME): str, vol.Required(CONF_HOST):
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input using the API connector."""
     try:
-        YoulessAPI(data[CONF_HOST])
+        api = YoulessAPI(data[CONF_HOST])
+        await hass.async_add_executor_job(api.initialize)
     except HTTPError as exception:
         raise CannotConnect() from exception
     except URLError as exception:
