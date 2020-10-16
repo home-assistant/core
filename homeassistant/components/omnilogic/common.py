@@ -5,6 +5,7 @@ import logging
 
 from omnilogic import OmniLogicException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -19,6 +20,8 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     DOMAIN,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,12 +35,12 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         api: str,
         name: str,
+        config_entry: ConfigEntry,
         polling_interval: int,
-        ph_offset: float,
     ):
         """Initialize the global Omnilogic data updater."""
         self.api = api
-        self._ph_offset = ph_offset
+        self.config_entry = config_entry
 
         super().__init__(
             hass=hass,
@@ -55,6 +58,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error updating from OmniLogic: {error}") from error
 
         parsed_data = {}
+        self.update_interval = self.config_entry.options.get(CONF_SCAN_INTERVAL,DEFAULT_SCAN_INTERVAL)
 
         def get_item_data(item, item_kind, current_id, data):
             """Get data per kind of Omnilogic API item."""

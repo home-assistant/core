@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .common import OmniLogicUpdateCoordinator
-from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
+from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    polling_interval = 6
-    if CONF_SCAN_INTERVAL in conf:
-        polling_interval = conf[CONF_SCAN_INTERVAL]
-
-    ph_offset = 0
-    if "ph_offset" in conf:
-        ph_offset = conf["ph_offset"]
+    polling_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -59,8 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass=hass,
         api=api,
         name="Omnilogic",
+        config_entry=entry,
         polling_interval=polling_interval,
-        ph_offset=ph_offset
     )
     await coordinator.async_refresh()
 

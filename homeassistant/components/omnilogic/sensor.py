@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .const import COORDINATOR, DOMAIN, PUMP_TYPES, DEFAULT_PH_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -202,7 +202,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
 
         ph_state = self.coordinator.data[self._item_id][self._state_key]
-        ph_state = float(ph_state) + float(self._ph_offset)
+        ph_state = float(ph_state) + float(self.config_entry.options.get("ph_offset", DEFAULT_PH_OFFSET))
 
         if ph_state == 0:
             ph_state = None
