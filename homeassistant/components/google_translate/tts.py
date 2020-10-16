@@ -123,7 +123,9 @@ class GoogleProvider(Provider):
 
         data = b""
         for idx, part in enumerate(message_parts):
-            part_token = await self.hass.async_add_job(token.calculate_token, part)
+            part_token = await self.hass.async_add_executor_job(
+                token.calculate_token, part
+            )
 
             url_param = {
                 "ie": "UTF-8",
