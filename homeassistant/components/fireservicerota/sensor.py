@@ -111,7 +111,6 @@ class IncidentsSensor(RestoreEntity, Entity):
 
     async def async_update(self) -> None:
         """Update using FireServiceRota data."""
-
         if not self._coordinator.incident_data:
             return
 
