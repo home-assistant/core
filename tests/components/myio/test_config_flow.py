@@ -3,6 +3,7 @@ from asynctest import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.myio.config_flow import (
+    AlreadyConfigured,
     AppPortProblem,
     CannotConnect,
     InvalidAuth,
@@ -233,6 +234,27 @@ async def test_form_validate_app_port_problem(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "app_port"}
+
+
+async def test_form_validate_already_configured(hass):
+    """Test we handle application port error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.myio.config_flow.validate_input",
+        side_effect=AlreadyConfigured,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
+        return_value=False,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "already_configured"}
 
 
 async def test_form_already_configured(hass):
