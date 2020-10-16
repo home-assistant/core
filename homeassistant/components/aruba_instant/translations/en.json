@@ -17,7 +17,7 @@
                     "username": "Username",
                     "port": "Port",
                     "verify_ssl": "Verify SSL",
-                    "scan_interval": "Scan Interval in Seconds (minimum 10)"
+                    "scan_interval": "Scan Interval in Seconds"
                 }
             },
             "track_clients": {

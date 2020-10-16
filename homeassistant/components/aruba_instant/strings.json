@@ -9,7 +9,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "verify_ssl": "Verify SSL",
-          "scan_interval": "Scan Interval in Seconds (minimum 10)"
+          "scan_interval": "Scan Interval in Seconds"
         }
       },
       "track_clients": {
