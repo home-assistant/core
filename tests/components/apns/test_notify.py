@@ -11,7 +11,7 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, mock_open, patch
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 CONFIG = {
     notify.DOMAIN: {
@@ -305,11 +305,9 @@ async def test_send_when_disabled(mock_client, hass):
     assert not send.called
 
 
-# todo: I had a deadlock issue when making this an async function using the hass fixture
 @patch("homeassistant.components.apns.notify.APNsClient")
-def test_send_with_state(mock_client):
+async def test_send_with_state(mock_client, hass):
     """Test updating an existing device."""
-    hass = get_test_home_assistant()
     send = mock_client.return_value.send_notification
 
     yaml_file = {
@@ -321,8 +319,13 @@ def test_send_with_state(mock_client):
         "homeassistant.components.apns.notify.load_yaml_config_file",
         Mock(return_value=yaml_file),
     ), patch("os.path.isfile", Mock(return_value=True)):
-        notify_service = apns.ApnsNotificationService(
-            hass, "test_app", "testapp.appname", False, "test_app.pem"
+        notify_service = await hass.async_add_executor_job(
+            apns.ApnsNotificationService,
+            hass,
+            "test_app",
+            "testapp.appname",
+            False,
+            "test_app.pem",
         )
 
     notify_service.device_state_changed_listener(
@@ -341,8 +344,6 @@ def test_send_with_state(mock_client):
 
     assert "5678" == target
     assert "Hello" == payload.alert
-
-    hass.stop()
 
 
 @patch("homeassistant.components.apns.notify.APNsClient")
