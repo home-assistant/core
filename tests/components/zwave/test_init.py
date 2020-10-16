@@ -298,7 +298,7 @@ async def test_node_discovery(hass, mock_openzwave):
     assert len(mock_receivers) == 1
 
     node = MockNode(node_id=14)
-    hass.async_add_job(mock_receivers[0], node)
+    await hass.async_add_executor_job(mock_receivers[0], node)
     await hass.async_block_till_done()
 
     assert hass.states.get("zwave.mock_node").state == "unknown"
@@ -335,7 +335,7 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
     with patch("homeassistant.components.zwave.dt_util.utcnow", new=utcnow):
         with patch("asyncio.sleep", new=sleep):
             with patch.object(zwave, "_LOGGER") as mock_logger:
-                hass.async_add_job(mock_receivers[0], node)
+                await hass.async_add_executor_job(mock_receivers[0], node)
                 await hass.async_block_till_done()
 
                 assert len(sleeps) == const.NODE_READY_WAIT_SECS
@@ -367,7 +367,7 @@ async def test_node_ignored(hass, mock_openzwave):
     assert len(mock_receivers) == 1
 
     node = MockNode(node_id=14)
-    hass.async_add_job(mock_receivers[0], node)
+    await hass.async_add_executor_job(mock_receivers[0], node)
     await hass.async_block_till_done()
 
     assert hass.states.get("zwave.mock_node") is None
@@ -397,7 +397,7 @@ async def test_value_discovery(hass, mock_openzwave):
         type=const.TYPE_BOOL,
         genre=const.GENRE_USER,
     )
-    hass.async_add_job(mock_receivers[0], node, value)
+    await hass.async_add_executor_job(mock_receivers[0], node, value)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.mock_node_mock_value").state == "off"
@@ -421,7 +421,9 @@ async def test_value_entities(hass, mock_openzwave):
 
     assert mock_receivers
 
-    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_ALL_NODES_QUERIED])
+    await hass.async_add_executor_job(
+        mock_receivers[MockNetwork.SIGNAL_ALL_NODES_QUERIED]
+    )
     node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SENSOR_BINARY)
     zwave_network.nodes = {node.node_id: node}
     value = MockValue(
@@ -446,9 +448,15 @@ async def test_value_entities(hass, mock_openzwave):
     )
     node.values[value2.value_id] = value2
 
-    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_NODE_ADDED], node)
-    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value)
-    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value2)
+    await hass.async_add_executor_job(
+        mock_receivers[MockNetwork.SIGNAL_NODE_ADDED], node
+    )
+    await hass.async_add_executor_job(
+        mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value
+    )
+    await hass.async_add_executor_job(
+        mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value2
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.mock_node_mock_value").state == "off"
@@ -594,7 +602,7 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
         genre=const.GENRE_USER,
     )
 
-    hass.async_add_job(mock_receivers[0], node, thermostat_mode)
+    await hass.async_add_executor_job(mock_receivers[0], node, thermostat_mode)
     await hass.async_block_till_done()
 
     def mock_update(self):
@@ -603,7 +611,7 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
     with patch.object(
         zwave.node_entity.ZWaveBaseEntity, "maybe_schedule_update", new=mock_update
     ):
-        hass.async_add_job(mock_receivers[0], node, setpoint_heating)
+        await hass.async_add_executor_job(mock_receivers[0], node, setpoint_heating)
         await hass.async_block_till_done()
 
     assert (
@@ -628,7 +636,7 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
             genre=const.GENRE_USER,
             units="C",
         )
-        hass.async_add_job(mock_receivers[0], node, temperature)
+        await hass.async_add_executor_job(mock_receivers[0], node, temperature)
         await hass.async_block_till_done()
 
     assert (
@@ -670,7 +678,7 @@ async def test_value_discovery_legacy_thermostat(hass, mock_openzwave):
         genre=const.GENRE_USER,
     )
 
-    hass.async_add_job(mock_receivers[0], node, setpoint_heating)
+    await hass.async_add_executor_job(mock_receivers[0], node, setpoint_heating)
     await hass.async_block_till_done()
 
     assert (
@@ -703,7 +711,7 @@ async def test_power_schemes(hass, mock_openzwave):
         genre=const.GENRE_USER,
         type=const.TYPE_BOOL,
     )
-    await hass.async_add_job(mock_receivers[0], node, switch)
+    await hass.async_add_executor_job(mock_receivers[0], node, switch)
 
     await hass.async_block_till_done()
 
@@ -727,7 +735,7 @@ async def test_power_schemes(hass, mock_openzwave):
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             genre=const.GENRE_USER,  # to avoid exception
         )
-        await hass.async_add_job(mock_receivers[0], node, power)
+        await hass.async_add_executor_job(mock_receivers[0], node, power)
         await hass.async_block_till_done()
 
     assert (
@@ -757,7 +765,7 @@ async def test_network_ready(hass, mock_openzwave):
 
     hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE, listener)
 
-    hass.async_add_job(mock_receivers[0])
+    await hass.async_add_executor_job(mock_receivers[0])
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -784,7 +792,7 @@ async def test_network_complete(hass, mock_openzwave):
 
     hass.bus.async_listen(const.EVENT_NETWORK_READY, listener)
 
-    hass.async_add_job(mock_receivers[0])
+    await hass.async_add_executor_job(mock_receivers[0])
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -811,7 +819,7 @@ async def test_network_complete_some_dead(hass, mock_openzwave):
 
     hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE_SOME_DEAD, listener)
 
-    hass.async_add_job(mock_receivers[0])
+    await hass.async_add_executor_job(mock_receivers[0])
     await hass.async_block_till_done()
 
     assert len(events) == 1
