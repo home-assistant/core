@@ -7,7 +7,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    network,
+)
 
 from . import api, config_flow
 from .const import (
@@ -69,6 +73,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
             config[DOMAIN][CONF_CLIENT_SECRET],
             OAUTH2_AUTHORIZE_TEMPLATE.format(project_id),
             OAUTH2_TOKEN,
+            redirect_uri=network.get_url(
+                hass,
+                prefer_external=True,
+            )
+            + config_entry_oauth2_flow.AUTH_CALLBACK_PATH,
         ),
     )
 
