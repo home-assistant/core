@@ -752,9 +752,9 @@ class MqttLight(
             and ATTR_HS_COLOR not in kwargs
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
-            hs = self._hs if self._hs is not None else (0, 0)
+            hs_color = self._hs if self._hs is not None else (0, 0)
             rgb = color_util.color_hsv_to_RGB(
-                hs[0], hs[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
+                hs_color[0], hs_color[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
             )
             tpl = self._command_templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl:
