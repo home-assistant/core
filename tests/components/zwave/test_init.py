@@ -1933,7 +1933,7 @@ async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
     device = get_device(node=node, values=values, node_config={})
     device.hass = hass
     device.entity_id = "binary_sensor.mock_entity_id"
-    await hass.async_add_job(device.async_added_to_hass())
+    await device.async_added_to_hass()
     await hass.async_block_till_done()
 
     await hass.services.async_call(
