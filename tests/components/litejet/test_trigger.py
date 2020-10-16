@@ -73,7 +73,7 @@ async def simulate_press(hass, mock_lj, number):
         return_value=mock_lj.start_time + mock_lj.last_delta,
     ):
         if callback is not None:
-            await hass.async_add_job(callback)
+            await hass.async_add_executor_job(callback)
         await hass.async_block_till_done()
 
 
@@ -86,7 +86,7 @@ async def simulate_release(hass, mock_lj, number):
         return_value=mock_lj.start_time + mock_lj.last_delta,
     ):
         if callback is not None:
-            await hass.async_add_job(callback)
+            await hass.async_add_executor_job(callback)
         await hass.async_block_till_done()
 
 
