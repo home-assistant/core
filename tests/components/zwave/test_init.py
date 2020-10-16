@@ -31,20 +31,20 @@ def mock_storage(hass_storage):
 
 
 @pytest.fixture
-def zwave_setup(hass):
+async def zwave_setup(hass):
     """Zwave setup."""
+    mock_receivers = []
 
-    async def _zwave():
-        mock_receivers = []
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
 
-        def mock_connect(receiver, signal, *args, **kwargs):
-            if signal == MockNetwork.SIGNAL_VALUE_ADDED:
-                mock_receivers.append(receiver)
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        await async_setup_component(hass, "zwave", {"zwave": {}})
 
-        with patch("pydispatch.dispatcher.connect", new=mock_connect):
-            return await async_setup_component(hass, "zwave", {"zwave": {}})
+    await hass.async_block_till_done()
 
-    return _zwave
+    assert len(mock_receivers) == 1
 
 
 async def test_valid_device_config(hass, mock_openzwave):
@@ -1373,9 +1373,6 @@ async def test_device_config_glob_is_ordered():
 
 async def test_add_node(hass, mock_openzwave, zwave_setup):
     """Test zwave add_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1391,9 +1388,6 @@ async def test_add_node(hass, mock_openzwave, zwave_setup):
 
 async def test_add_node_secure(hass, mock_openzwave, zwave_setup):
     """Test zwave add_node_secure service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1409,9 +1403,6 @@ async def test_add_node_secure(hass, mock_openzwave, zwave_setup):
 
 async def test_remove_node(hass, mock_openzwave, zwave_setup):
     """Test zwave remove_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1426,9 +1417,6 @@ async def test_remove_node(hass, mock_openzwave, zwave_setup):
 
 async def test_cancel_command(hass, mock_openzwave, zwave_setup):
     """Test zwave cancel_command service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1443,9 +1431,6 @@ async def test_cancel_command(hass, mock_openzwave, zwave_setup):
 
 async def test_heal_network(hass, mock_openzwave, zwave_setup):
     """Test zwave heal_network service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1460,9 +1445,6 @@ async def test_heal_network(hass, mock_openzwave, zwave_setup):
 
 async def test_soft_reset(hass, mock_openzwave, zwave_setup):
     """Test zwave soft_reset service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1477,9 +1459,6 @@ async def test_soft_reset(hass, mock_openzwave, zwave_setup):
 
 async def test_test_network(hass, mock_openzwave, zwave_setup):
     """Test zwave test_network service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1494,9 +1473,6 @@ async def test_test_network(hass, mock_openzwave, zwave_setup):
 
 async def test_stop_network(hass, mock_openzwave, zwave_setup):
     """Test zwave stop_network service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1515,9 +1491,6 @@ async def test_stop_network(hass, mock_openzwave, zwave_setup):
 
 async def test_rename_node(hass, mock_openzwave, zwave_setup):
     """Test zwave rename_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1536,9 +1509,6 @@ async def test_rename_node(hass, mock_openzwave, zwave_setup):
 
 async def test_rename_value(hass, mock_openzwave, zwave_setup):
     """Test zwave rename_value service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1566,9 +1536,6 @@ async def test_rename_value(hass, mock_openzwave, zwave_setup):
 
 async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, successful set."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1599,9 +1566,6 @@ async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup):
 
 async def test_set_poll_intensity_enable_failed(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, failed set."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1632,9 +1596,6 @@ async def test_set_poll_intensity_enable_failed(hass, mock_openzwave, zwave_setu
 
 async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, successful disable."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1664,9 +1625,6 @@ async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup):
 
 async def test_set_poll_intensity_disable_failed(hass, mock_openzwave, zwave_setup):
     """Test zwave set_poll_intensity service, failed disable."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1697,9 +1655,6 @@ async def test_set_poll_intensity_disable_failed(hass, mock_openzwave, zwave_set
 
 async def test_remove_failed_node(hass, mock_openzwave, zwave_setup):
     """Test zwave remove_failed_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1718,9 +1673,6 @@ async def test_remove_failed_node(hass, mock_openzwave, zwave_setup):
 
 async def test_replace_failed_node(hass, mock_openzwave, zwave_setup):
     """Test zwave replace_failed_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1739,9 +1691,6 @@ async def test_replace_failed_node(hass, mock_openzwave, zwave_setup):
 
 async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
     """Test zwave set_config_parameter service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1892,9 +1841,6 @@ async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
 
 async def test_print_config_parameter(hass, mock_openzwave, zwave_setup):
     """Test zwave print_config_parameter service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1927,9 +1873,6 @@ async def test_print_config_parameter(hass, mock_openzwave, zwave_setup):
 
 async def test_print_node(hass, mock_openzwave, zwave_setup):
     """Test zwave print_node_parameter service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1948,9 +1891,6 @@ async def test_print_node(hass, mock_openzwave, zwave_setup):
 
 async def test_set_wakeup(hass, mock_openzwave, zwave_setup):
     """Test zwave set_wakeup service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1980,9 +1920,6 @@ async def test_set_wakeup(hass, mock_openzwave, zwave_setup):
 
 async def test_reset_node_meters(hass, mock_openzwave, zwave_setup):
     """Test zwave reset_node_meters service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2024,9 +1961,6 @@ async def test_reset_node_meters(hass, mock_openzwave, zwave_setup):
 
 async def test_add_association(hass, mock_openzwave, zwave_setup):
     """Test zwave change_association service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2067,9 +2001,6 @@ async def test_add_association(hass, mock_openzwave, zwave_setup):
 
 async def test_remove_association(hass, mock_openzwave, zwave_setup):
     """Test zwave change_association service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2110,9 +2041,6 @@ async def test_remove_association(hass, mock_openzwave, zwave_setup):
 
 async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_entity service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2150,9 +2078,6 @@ async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
 
 async def test_refresh_node(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2169,9 +2094,6 @@ async def test_refresh_node(hass, mock_openzwave, zwave_setup):
 
 async def test_set_node_value(hass, mock_openzwave, zwave_setup):
     """Test zwave set_node_value service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2201,9 +2123,6 @@ async def test_set_node_value_with_long_id_and_text_value(
     hass, mock_openzwave, zwave_setup
 ):
     """Test zwave set_node_value service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2235,9 +2154,6 @@ async def test_set_node_value_with_long_id_and_text_value(
 
 async def test_refresh_node_value(hass, mock_openzwave, zwave_setup):
     """Test zwave refresh_node_value service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2269,9 +2185,6 @@ async def test_refresh_node_value(hass, mock_openzwave, zwave_setup):
 
 async def test_heal_node(hass, mock_openzwave, zwave_setup):
     """Test zwave heal_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2288,9 +2201,6 @@ async def test_heal_node(hass, mock_openzwave, zwave_setup):
 
 async def test_test_node(hass, mock_openzwave, zwave_setup):
     """Test the zwave test_node service."""
-    assert await zwave_setup()
-    await hass.async_block_till_done()
-
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
