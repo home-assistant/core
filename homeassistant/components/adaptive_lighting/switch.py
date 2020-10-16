@@ -1058,9 +1058,10 @@ class TurnOnOffListener:
         if service == SERVICE_TURN_OFF:
             transition = service_data.get(ATTR_TRANSITION)
             _LOGGER.debug(
-                "Detected an 'light.turn_off('%s', transition=%s)' event",
+                "Detected an 'light.turn_off('%s', transition=%s)' event with context.id='%s'",
                 entity_ids,
                 transition,
+                event.context.id,
             )
             for eid in entity_ids:
                 self.turn_off_event[eid] = event
@@ -1110,9 +1111,10 @@ class TurnOnOffListener:
             # incorrect 'min_mireds' and 'max_mireds', which happens e.g., for
             # Philips Hue White GU10 Bluetooth lights).
             old_state: Optional[List[State]] = self.last_state_change.get(entity_id)
-            if old_state is None:
-                self.last_state_change[entity_id] = [new_state]
-            elif old_state[0].context.id == new_state.context.id:
+            if (
+                old_state is not None
+                and old_state[0].context.id == new_state.context.id
+            ):
                 # If there is already a state change event from this event (with this
                 # context) then append it to the already existing list.
                 _LOGGER.debug(
@@ -1122,6 +1124,8 @@ class TurnOnOffListener:
                     new_state.context.id,
                 )
                 self.last_state_change[entity_id].append(new_state)
+            else:
+                self.last_state_change[entity_id] = [new_state]
 
     def is_manually_controlled(
         self,
