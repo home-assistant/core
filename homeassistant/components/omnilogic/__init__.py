@@ -37,6 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if CONF_SCAN_INTERVAL in conf:
         polling_interval = conf[CONF_SCAN_INTERVAL]
 
+    ph_offset = 0
+    if "ph_offset" in conf:
+        ph_offset = conf["ph_offset"]
+
     session = aiohttp_client.async_get_clientsession(hass)
 
     api = OmniLogic(username, password, session)
@@ -56,6 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         api=api,
         name="Omnilogic",
         polling_interval=polling_interval,
+        ph_offset=ph_offset
     )
     await coordinator.async_refresh()
 

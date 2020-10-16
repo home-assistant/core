@@ -5,7 +5,13 @@ import time
 from omnilogic import LightEffect
 
 from homeassistant import core
-from homeassistant.components.light import ATTR_EFFECT, SUPPORT_EFFECT, LightEntity
+from homeassistant.components.light import (
+    ATTR_EFFECT, 
+    ATTR_BRIGHTNESS,
+    SUPPORT_EFFECT, 
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN
@@ -97,6 +103,11 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         return effect.name
 
     @property
+    def brightness(self):
+        """Return the brightness of the light."""
+        
+
+    @property
     def effect_list(self):
         """Return the supported light effects."""
         if self._version == 2:
@@ -107,7 +118,11 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     @property
     def supported_features(self):
         """Return the list of supported features of the light."""
-        return SUPPORT_EFFECT
+        supports = SUPPORT_EFFECT
+        if self._version == 2:
+            supports = supports | SUPPORT_BRIGHTNESS
+
+        return supports
 
     async def async_set_effect(self, effect):
         """Set the light show effect."""

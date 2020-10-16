@@ -90,6 +90,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL,
                         default=6,
                     ): int,
+                    vol.Optional(
+                        "ph_offset",
+                        default=0,
+                    ): float,
                 }
             ),
         )

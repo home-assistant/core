@@ -33,9 +33,11 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         api: str,
         name: str,
         polling_interval: int,
+        ph_offset: float,
     ):
         """Initialize the global Omnilogic data updater."""
         self.api = api
+        self._ph_offset = ph_offset
 
         super().__init__(
             hass=hass,
