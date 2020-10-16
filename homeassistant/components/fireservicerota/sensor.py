@@ -102,6 +102,7 @@ class IncidentsSensor(RestoreEntity, Entity):
         if state:
             self._state = state.state
             self._state_attributes = state.attributes
+            _LOGGER.debug("Restored entity 'Incidents' state to: %s", self._state)
 
         self.async_on_remove(self._coordinator.stop_listener)
 
@@ -118,11 +119,12 @@ class IncidentsSensor(RestoreEntity, Entity):
         if not self.enabled:
             return
 
-        try:
+        if not self._coordinator.incident_data:
+            return
+
+        if "body" in self._coordinator.incident_data:
             self._state = self._coordinator.incident_data["body"]
             self._state_attributes = self._coordinator.incident_data
             self.async_write_ha_state()
-        except (KeyError, TypeError):
-            pass
 
-        _LOGGER.debug("Entity 'Incidents' state set to: %s", self._state)
+            _LOGGER.debug("Entity 'Incidents' state set to: %s", self._state)
