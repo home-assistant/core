@@ -2,10 +2,10 @@
 from homeassistant.components.srp_energy.const import (
     ATTRIBUTION,
     DEFAULT_NAME,
-    DOMAIN,
     ICON,
     SENSOR_NAME,
     SENSOR_TYPE,
+    SRP_ENERGY_DOMAIN,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
 from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
@@ -27,7 +27,7 @@ async def test_async_setup_entry(hass):
             "password": "mypassword",
         }
     )
-    hass.data[DOMAIN] = fake_srp_energy_client
+    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
 
     await async_setup_entry(hass, fake_config, fake_async_add_entities)
 
@@ -46,7 +46,7 @@ async def test_async_setup_entry_timeout_error(hass):
             "password": "mypassword",
         }
     )
-    hass.data[DOMAIN] = fake_srp_energy_client
+    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
     fake_srp_energy_client.usage.side_effect = TimeoutError()
 
     await async_setup_entry(hass, fake_config, fake_async_add_entities)
@@ -69,7 +69,7 @@ async def test_async_setup_entry_connect_error(hass):
             "password": "mypassword",
         }
     )
-    hass.data[DOMAIN] = fake_srp_energy_client
+    hass.data[SRP_ENERGY_DOMAIN] = fake_srp_energy_client
     fake_srp_energy_client.usage.side_effect = ValueError()
 
     await async_setup_entry(hass, fake_config, fake_async_add_entities)
@@ -105,6 +105,14 @@ async def test_srp_entity_no_data(hass):
     fake_coordinator = MagicMock(data=False)
     srp_entity = SrpEntity(fake_coordinator)
     assert srp_entity.device_state_attributes is None
+
+
+async def test_srp_entity_no_coord_data(hass):
+    """Test the SrpEntity."""
+    fake_coordinator = MagicMock(data=False)
+    srp_entity = SrpEntity(fake_coordinator)
+
+    assert srp_entity.usage is None
 
 
 async def test_srp_entity_async_update(hass):

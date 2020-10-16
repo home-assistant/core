@@ -7,18 +7,22 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_IS_TOU, DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_IS_TOU,
+    DEFAULT_NAME,
+    SRP_ENERGY_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=SRP_ENERGY_DOMAIN):
     """Handle a config flow for SRP Energy."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    options = {
+    config = {
         vol.Required(CONF_ID): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -58,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(self.options), errors=errors
+            step_id="user", data_schema=vol.Schema(self.config), errors=errors
         )
 
     async def async_step_import(self, import_config):

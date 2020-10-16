@@ -1,7 +1,7 @@
 """Constants for the SRP Energy integration."""
 from datetime import timedelta
 
-DOMAIN = "srp_energy"
+SRP_ENERGY_DOMAIN = "srp_energy"
 DEFAULT_NAME = "SRP Energy"
 
 CONF_IS_TOU = "is_tou"

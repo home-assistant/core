@@ -34,7 +34,7 @@ async def init_integration(
         options = ENTRY_OPTIONS
 
     config_entry = MockConfigEntry(
-        domain=srp_energy.DOMAIN,
+        domain=srp_energy.SRP_ENERGY_DOMAIN,
         source=source,
         data=config,
         connection_class=config_entries.CONN_CLASS_CLOUD_POLL,

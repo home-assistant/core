@@ -12,11 +12,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
-    DOMAIN,
     ICON,
     MIN_TIME_BETWEEN_UPDATES,
     SENSOR_NAME,
     SENSOR_TYPE,
+    SRP_ENERGY_DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SRP Energy Usage sensor."""
     # API object stored here by __init__.py
     is_time_of_use = False
-    api = hass.data[DOMAIN]
+    api = hass.data[SRP_ENERGY_DOMAIN]
     if entry and entry.data:
         is_time_of_use = entry.data["is_tou"]
 
@@ -97,7 +97,7 @@ class SrpEntity(entity.Entity):
         """Return the state of the device."""
         if self._state:
             return f"{self._state:.2f}"
-        return None
+        pass
 
     @property
     def unit_of_measurement(self):
@@ -114,7 +114,7 @@ class SrpEntity(entity.Entity):
         """Return entity state."""
         if self.coordinator.data:
             return f"{self.coordinator.data:.2f}"
-        return None
+        pass
 
     @property
     def should_poll(self):
