@@ -296,6 +296,7 @@ FLOWS = [
     "xiaomi_miio",
     "yamaha_musiccast",
     "yeelight",
+    "youless",
     "zerproc",
     "zha",
     "zwave",

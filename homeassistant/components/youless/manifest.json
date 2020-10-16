@@ -1,0 +1,16 @@
+{
+  "domain": "youless",
+  "name": "YouLess",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/youless",
+  "requirements": [
+    "youless-api==0.3"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@gjong"
+  ]
+}

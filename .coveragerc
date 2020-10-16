@@ -1222,6 +1222,7 @@ omit =
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
+    homeassistant/components/youless/*
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py
