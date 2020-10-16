@@ -44,6 +44,51 @@
                     "state": "close",
                     "type": 1,
                     "value": 0
+                },
+                "z03": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 1,
+                    "name": "Zone 3",
+                    "number": 1,
+                    "rssi": 25,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                },
+                "z04": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 1,
+                    "name": "Zone 4",
+                    "number": 1,
+                    "rssi": 75,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
+                },
+                "z05": {
+                    "error": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 25,
+                    "minDamper": 0,
+                    "motion": 1,
+                    "motionConfig": 1,
+                    "name": "Zone 5",
+                    "number": 1,
+                    "rssi": 100,
+                    "setTemp": 24,
+                    "state": "close",
+                    "type": 1,
+                    "value": 0
                 }
             }
         },
