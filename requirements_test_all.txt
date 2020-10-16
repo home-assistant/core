@@ -1330,6 +1330,9 @@ yeelight==0.6.3
 # homeassistant.components.youless
 youless-api==0.7
 
+# homeassistant.components.youless
+youless-api==0.3
+
 # homeassistant.components.onvif
 zeep[async]==4.0.0
 
