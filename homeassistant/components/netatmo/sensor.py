@@ -71,8 +71,6 @@ SENSOR_TYPES = {
         DEVICE_CLASS_BATTERY,
         True,
     ],
-    "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, True],
-    "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, True],
     "windangle": ["Direction", None, "mdi:compass-outline", None, True],
     "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None, False],
     "windstrength": [
@@ -353,10 +351,6 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
-            elif self.type == "min_temp":
-                self._state = data["min_temp"]
-            elif self.type == "max_temp":
-                self._state = data["max_temp"]
             elif self.type == "windangle_value":
                 self._state = fix_angle(data["WindAngle"])
             elif self.type == "windangle":
