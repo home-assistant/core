@@ -25,7 +25,8 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
@@ -92,6 +93,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     api = await async_get_api(hass)
     location = await async_get_location(hass, api, latitude, longitude)
+
+    # Migrate old unique_id
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        # Reject if new unique_id
+        if any([mode in entity_entry.unique_id for mode in FORECAST_MODE]):
+            return None
+
+        mode = entity_entry.data[CONF_MODE]
+
+        new_unique_id = (
+            f"{location.station_latitude}, {location.station_longitude}, {mode}"
+        )
+
+        _LOGGER.info(
+            "Migrating unique_id from [%s] to [%s]",
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+        return {"new_unique_id": new_unique_id}
+
+    await entity_registry.async_migrate_entries(
+        hass, config_entry.entry_id, _async_migrator
+    )
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
 
