@@ -104,7 +104,7 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up input boolean
+    # Set up input number
     tasks.append(
         bootstrap.async_setup_component(
             hass,
