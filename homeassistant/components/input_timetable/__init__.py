@@ -31,7 +31,6 @@ DOMAIN = "input_timetable"
 
 ATTR_TIME = "time"
 ATTR_TIMETABLE = "timetable"
-ATTR_CONFIG = "config"
 
 SERVICE_SET = "set"
 SERVICE_UNSET = "unset"
@@ -82,7 +81,7 @@ SERVICE_RESET_SCHEMA = vol.Schema(
 )
 SERVICE_RECONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG): vol.All(cv.ensure_list, [SERVICE_SET_SCHEMA]),
+        vol.Required(ATTR_TIMETABLE): vol.All(cv.ensure_list, [SERVICE_SET_SCHEMA]),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -306,13 +305,13 @@ class InputTimeTable(RestoreEntity):
         self._timetable.clear()
         self._update_state()
 
-    async def async_reconfig(self, config):
+    async def async_reconfig(self, timetable):
         """Override the timetable with the new list."""
         self._timetable = [
             StateEvent(
                 event[ATTR_TIME].replace(microsecond=0, tzinfo=None), event[ATTR_STATE]
             )
-            for event in config
+            for event in timetable
         ]
         self._sort_timetable()
         self._update_state()
