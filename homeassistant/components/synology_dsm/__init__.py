@@ -11,6 +11,7 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.exceptions import SynologyDSMRequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -165,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
-    except Exception as err:  # pylint: disable=broad-except
+    except SynologyDSMRequestException as err:
         raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
