@@ -221,6 +221,9 @@ class Climate(ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
 
+        if self.preset_mode == PRESET_ECO:
+            return
+
         temp = None
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
