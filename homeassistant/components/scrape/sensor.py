@@ -120,7 +120,7 @@ class ScrapeSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the source and updates the state."""
-        await self.rest.update()
+        await self.rest.async_update()
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
