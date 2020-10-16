@@ -4,7 +4,6 @@ import datetime
 import pytest
 
 from homeassistant.components.input_timetable import (
-    ATTR_CONFIG,
     ATTR_STATE,
     ATTR_TIME,
     ATTR_TIMETABLE,
@@ -99,7 +98,7 @@ async def call_reconfig(hass, entity_id, config):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_RECONFIG,
-        {ATTR_ENTITY_ID: entity_id, ATTR_CONFIG: config},
+        {ATTR_ENTITY_ID: entity_id, ATTR_TIMETABLE: config},
         blocking=True,
     )
 

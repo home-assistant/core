@@ -25,5 +25,15 @@ reset:
     entity_id:
       description: Entity id of the input timetable that should be reset.
       example: input_timetable.lights
+reconfig:
+  description: Overrides the timetable with the provided list.
+  fields:
+    entity_id:
+      description: Entity id of the input timetable that should be set.
+      example: input_timetable.lights
+    timetable:
+      description: List of state changes.
+      example:
+        [{ time: "01:02:03", state: "on" }, { time: "04:05:06", state: "off" }]
 reload:
   description: Reload the input_timetable configuration.
