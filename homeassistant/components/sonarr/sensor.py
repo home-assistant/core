@@ -288,7 +288,7 @@ class SonarrUpcomingSensor(SonarrSensor):
             key="upcoming",
             name=f"{sonarr.app.info.app_name} Upcoming",
             unit_of_measurement="Episodes",
-        )        
+        )
 
     @sonarr_exception_handler
     async def async_update(self) -> None:
