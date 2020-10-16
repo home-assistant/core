@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONTENT_TYPE_JSON,
 )
 
 from .test_controller import setup_unifi_integration
@@ -94,7 +95,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
@@ -103,7 +104,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
             "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
             "meta": {"rc": "ok"},
         },
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -145,7 +146,7 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
@@ -157,7 +158,7 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
             ],
             "meta": {"rc": "ok"},
         },
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -196,7 +197,7 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     aioclient_mock.get(
@@ -205,7 +206,7 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
             "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
             "meta": {"rc": "ok"},
         },
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_configure(

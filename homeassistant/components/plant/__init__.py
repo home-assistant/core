@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
     CONF_SENSORS,
+    LIGHT_LUX,
     PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
@@ -153,7 +154,7 @@ class Plant(Entity):
             "max": CONF_MAX_CONDUCTIVITY,
         },
         READING_BRIGHTNESS: {
-            ATTR_UNIT_OF_MEASUREMENT: "lux",
+            ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX,
             "min": CONF_MIN_BRIGHTNESS,
             "max": CONF_MAX_BRIGHTNESS,
         },
@@ -281,7 +282,8 @@ class Plant(Entity):
         """After being added to hass, load from history."""
         if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            self.hass.async_add_job(self._load_history_from_db)
+            await self.hass.async_add_executor_job(self._load_history_from_db)
+            self.async_write_ha_state()
 
         async_track_state_change_event(
             self.hass, list(self._sensormap), self._state_changed_event
@@ -292,7 +294,7 @@ class Plant(Entity):
             if state is not None:
                 self.state_changed(entity_id, state)
 
-    async def _load_history_from_db(self):
+    def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
 
         This only needs to be done once during startup.
@@ -329,7 +331,6 @@ class Plant(Entity):
                 except ValueError:
                     pass
         _LOGGER.debug("Initializing from database completed")
-        self.async_write_ha_state()
 
     @property
     def should_poll(self):

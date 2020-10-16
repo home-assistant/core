@@ -57,7 +57,13 @@ def decorate_command(channel, command):
             return result
 
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
-            channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
+            channel.debug(
+                "command failed: '%s' args: '%s' kwargs '%s' exception: '%s'",
+                command.__name__,
+                args,
+                kwds,
+                str(ex),
+            )
             return ex
 
     return wrapper

@@ -262,7 +262,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="onvif_error")
 
         except Fault:
-            errors["base"] = "connection_failed"
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(step_id="auth", errors=errors)
 

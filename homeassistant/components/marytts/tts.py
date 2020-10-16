@@ -1,14 +1,10 @@
 """Support for the MaryTTS service."""
-import logging
-
 from speak2mary import MaryTTS
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"

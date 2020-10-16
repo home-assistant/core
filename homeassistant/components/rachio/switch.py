@@ -56,6 +56,7 @@ from .webhooks import (
     SUBTYPE_SLEEP_MODE_OFF,
     SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED,
+    SUBTYPE_ZONE_PAUSED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
 )
@@ -178,11 +179,11 @@ class RachioStandbySwitch(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Put the controller in standby mode."""
-        self._controller.rachio.device.off(self._controller.controller_id)
+        self._controller.rachio.device.turn_off(self._controller.controller_id)
 
     def turn_off(self, **kwargs) -> None:
         """Resume controller functionality."""
-        self._controller.rachio.device.on(self._controller.controller_id)
+        self._controller.rachio.device.turn_on(self._controller.controller_id)
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
@@ -249,12 +250,12 @@ class RachioRainDelay(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Activate a 24 hour rain delay on the controller."""
-        self._controller.rachio.device.rainDelay(self._controller.controller_id, 86400)
+        self._controller.rachio.device.rain_delay(self._controller.controller_id, 86400)
         _LOGGER.debug("Starting rain delay for 24 hours")
 
     def turn_off(self, **kwargs) -> None:
         """Resume controller functionality."""
-        self._controller.rachio.device.rainDelay(self._controller.controller_id, 0)
+        self._controller.rachio.device.rain_delay(self._controller.controller_id, 0)
         _LOGGER.debug("Canceling rain delay")
 
     async def async_added_to_hass(self):
@@ -380,7 +381,7 @@ class RachioZone(RachioSwitch):
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""
         _LOGGER.debug("Setting %s moisture to %s percent", self._zone_name, percent)
-        self._controller.rachio.zone.setMoisturePercent(self._id, percent / 100)
+        self._controller.rachio.zone.set_moisture_percent(self._id, percent / 100)
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -392,7 +393,11 @@ class RachioZone(RachioSwitch):
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
-        elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
+        elif args[0][KEY_SUBTYPE] in [
+            SUBTYPE_ZONE_STOPPED,
+            SUBTYPE_ZONE_COMPLETED,
+            SUBTYPE_ZONE_PAUSED,
+        ]:
             self._state = False
 
         self.async_write_ha_state()

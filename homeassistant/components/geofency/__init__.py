@@ -1,6 +1,4 @@
 """Support for Geofency."""
-import logging
-
 from aiohttp import web
 import voluptuous as vol
 
@@ -20,8 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 

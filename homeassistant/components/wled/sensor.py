@@ -10,13 +10,14 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN, SIGNAL_DBM
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class WLEDWifiRSSISensor(WLEDSensor):
             icon="mdi:wifi",
             key="wifi_rssi",
             name=f"{coordinator.data.info.name} Wi-Fi RSSI",
-            unit_of_measurement=SIGNAL_DBM,
+            unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         )
 
     @property

@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "Tots els servidors enlla\u00e7ats ja estan configurats",
             "already_configured": "Aquest servidor Plex ja est\u00e0 configurat",
-            "already_in_progress": "S'est\u00e0 configurant Plex",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del token.",
-            "unknown": "Ha fallat per motiu desconegut"
+            "unknown": "Error inesperat"
         },
         "error": {
             "faulty_credentials": "Ha fallat l'autoritzaci\u00f3, comprova el Token",
@@ -20,7 +21,7 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "port": "Port",
-                    "ssl": "Utilitza SSL",
+                    "ssl": "Utilitza un certificat SSL",
                     "token": "Token (opcional)",
                     "verify_ssl": "Verifica el certificat SSL"
                 },

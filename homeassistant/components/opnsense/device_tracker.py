@@ -61,6 +61,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
         if device not in self.last_results:
             return None
         mfg = self.last_results[device].get("manufacturer")
-        if mfg:
-            return {"manufacturer": mfg}
-        return {}
+        if not mfg:
+            return {}
+        return {"manufacturer": mfg}

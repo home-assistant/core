@@ -51,7 +51,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         if configured_instances(self.hass):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
             return self._show_form()
@@ -62,7 +62,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         manager = VeSync(self._username, self._password)
         login = await self.hass.async_add_executor_job(manager.login)
         if not login:
-            return self._show_form(errors={"base": "invalid_login"})
+            return self._show_form(errors={"base": "invalid_auth"})
 
         return self.async_create_entry(
             title=self._username,

@@ -127,9 +127,7 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
-        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
+        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -144,7 +142,7 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
         ATTR_CHANGE: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
         ATTR_SPREAD: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
-        ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ATTR_TRANSITION: cv.positive_float,
     }
 )
 

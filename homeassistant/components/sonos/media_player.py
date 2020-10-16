@@ -33,6 +33,9 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -40,6 +43,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -86,6 +90,7 @@ SUPPORT_SONOS = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SEEK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
@@ -502,6 +507,7 @@ class SonosEntity(MediaPlayerEntity):
         self._player_volume = None
         self._player_muted = None
         self._shuffle = None
+        self._repeat = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -674,6 +680,7 @@ class SonosEntity(MediaPlayerEntity):
         """Get basic information and add event subscriptions."""
         try:
             self._shuffle = self.soco.shuffle
+            self._repeat = self.soco.repeat
             self.update_volume()
             self._set_favorites()
 
@@ -719,6 +726,7 @@ class SonosEntity(MediaPlayerEntity):
             return
 
         self._shuffle = self.soco.shuffle
+        self._repeat = self.soco.repeat
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -956,6 +964,18 @@ class SonosEntity(MediaPlayerEntity):
 
     @property
     @soco_coordinator
+    def repeat(self):
+        """Return current repeat mode."""
+        if self._repeat is True:
+            return REPEAT_MODE_ALL
+
+        if self._repeat == "ONE":
+            return REPEAT_MODE_ONE
+
+        return REPEAT_MODE_OFF
+
+    @property
+    @soco_coordinator
     def media_content_id(self):
         """Content id of current playing media."""
         return self._uri
@@ -1055,6 +1075,17 @@ class SonosEntity(MediaPlayerEntity):
         """Enable/Disable shuffle mode."""
         self.soco.shuffle = shuffle
 
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @soco_coordinator
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        repeat_map = {
+            REPEAT_MODE_OFF: False,
+            REPEAT_MODE_ALL: True,
+            REPEAT_MODE_ONE: "ONE",
+        }
+        self.soco.repeat = repeat_map[repeat]
+
     @soco_error()
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -1152,7 +1183,10 @@ class SonosEntity(MediaPlayerEntity):
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    self.soco.add_uri_to_queue(media_id)
+                    if self.soco.is_spotify_uri(media_id):
+                        self.soco.add_spotify_uri_to_queue(media_id)
+                    else:
+                        self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
                     _LOGGER.error(
                         'Error parsing media uri "%s", '
@@ -1161,7 +1195,12 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                self.soco.play_uri(media_id)
+                if self.soco.is_spotify_uri(media_id):
+                    self.soco.clear_queue()
+                    self.soco.add_spotify_uri_to_queue(media_id)
+                    self.soco.play_from_queue(0)
+                else:
+                    self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self._media_library, media_id, media_type)

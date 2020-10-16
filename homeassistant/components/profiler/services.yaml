@@ -1,0 +1,6 @@
+start:
+  description: Start the Profiler
+  fields:
+    seconds:
+      description: The number of seconds to run the profiler.
+      example: 60.0

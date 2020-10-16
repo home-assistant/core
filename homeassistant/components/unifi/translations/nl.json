@@ -58,7 +58,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
+                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients",
+                    "allow_uptime_sensors": "Uptime-sensoren voor netwerkclients"
                 },
                 "description": "Configureer statistische sensoren",
                 "title": "UniFi-opties 3/3"

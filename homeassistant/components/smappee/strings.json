@@ -19,15 +19,15 @@
         "title": "Discovered Smappee device"
       },
       "pick_implementation": {
-        "title": "Pick Authentication Method"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_configured_local_device": "Local device(s) is already configured. Please remove those first before configuring a cloud device.",
-      "authorize_url_timeout": "Timeout generating authorize url.",
-      "connection_error": "Failed to connect to Smappee device.",
-      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "invalid_mdns": "Unsupported device for the Smappee integration.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     }

@@ -5,6 +5,7 @@
         },
         "error": {
             "auth": "API-sleutel is niet correct.",
+            "cannot_connect": "Kan geen verbinding maken",
             "connection": "Kan geen verbinding maken met OWM API"
         },
         "step": {
@@ -17,6 +18,7 @@
                     "mode": "Mode",
                     "name": "Naam van de integratie"
                 },
+                "description": "Stel OpenWeatherMap-integratie in. Ga naar https://openweathermap.org/appid om een API-sleutel te genereren",
                 "title": "OpenWeatherMap"
             }
         }

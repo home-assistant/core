@@ -1,1 +1,1 @@
-"""The onewire component."""
+"""The 1-Wire component."""

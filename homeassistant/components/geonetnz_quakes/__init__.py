@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
                 vol.Optional(
                     CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-                ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                ): cv.positive_float,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,

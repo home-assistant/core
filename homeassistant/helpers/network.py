@@ -88,10 +88,12 @@ def get_url(
             scheme=scheme, host=request_host, port=hass.config.api.port
         )
 
-        known_hostname = None
+        known_hostnames = ["localhost"]
         if hass.components.hassio.is_hassio():
             host_info = hass.components.hassio.get_host_info()
-            known_hostname = f"{host_info['hostname']}.local"
+            known_hostnames.extend(
+                [host_info["hostname"], f"{host_info['hostname']}.local"]
+            )
 
         if (
             (
@@ -100,7 +102,7 @@ def get_url(
                     and is_ip_address(request_host)
                     and is_loopback(ip_address(request_host))
                 )
-                or request_host in ["localhost", known_hostname]
+                or request_host in known_hostnames
             )
             and (not require_ssl or current_url.scheme == "https")
             and (not require_standard_port or current_url.is_default_port())

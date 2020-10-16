@@ -737,6 +737,11 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
         },
     )
     await hass.async_block_till_done()
+    hass.states.async_set("light.master_hall_lights", STATE_ON)
+    hass.states.async_set("light.master_hall_lights_2", STATE_OFF)
+
+    hass.states.async_set("light.outside_patio_lights", STATE_OFF)
+    hass.states.async_set("light.outside_patio_lights_2", STATE_OFF)
 
     yaml_path = path.join(
         _get_fixtures_base_path(),
@@ -755,6 +760,44 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None
     assert hass.states.get("light.outside_patio_lights_g") is not None
+    assert hass.states.get("light.master_hall_lights_g").state == STATE_ON
+    assert hass.states.get("light.outside_patio_lights_g").state == STATE_OFF
+
+
+async def test_nested_group(hass):
+    """Test nested light group."""
+    hass.states.async_set("light.kitchen", "on")
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.bedroom_group"],
+                    "name": "Nested Group",
+                },
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.kitchen", "light.bedroom"],
+                    "name": "Bedroom Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bedroom_group")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
+
+    state = hass.states.get("light.nested_group")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
 
 
 def _get_fixtures_base_path():

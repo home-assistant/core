@@ -2,8 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Broen er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyt for bro p\u00e5g\u00e5r allerede.",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_bridges": "Ingen deCONZ broer oppdaget",
+            "no_hardware_available": "Ingen radiomaskinvare koblet til deCONZ",
             "not_deconz_bridge": "Ikke en deCONZ bro",
             "one_instance_only": "Komponenten st\u00f8tter bare \u00e9n deCONZ forekomst",
             "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
@@ -11,7 +12,7 @@
         "error": {
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
-        "flow_title": "deCONZ Zigbee gateway ({host})",
+        "flow_title": "",
         "step": {
             "hassio_confirm": {
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
@@ -24,7 +25,7 @@
             "manual_input": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 }
             },
             "user": {
@@ -93,7 +94,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Tillat deCONZ lys grupper"
+                    "allow_deconz_groups": "Tillat deCONZ lys grupper",
+                    "allow_new_devices": "Tillat automatisk tilsetning av nye enheter"
                 },
                 "description": "Konfigurere synlighet av deCONZ enhetstyper",
                 "title": "deCONZ alternativer"
