@@ -42,9 +42,18 @@
                 "description": "Wybierz encje, kt\u00f3rych NIE chcesz zmostkowa\u0107.",
                 "title": "Wykluczenie encji z wybranych domen"
             },
+            "include_exclude": {
+                "data": {
+                    "entities": "Encje",
+                    "mode": "Tryb"
+                },
+                "description": "Wybierz encje, kt\u00f3re chcesz zmostkowa\u0107. W trybie \"Uwzgl\u0119dnij\", wszystkie encje w danej domenie b\u0119d\u0105 pod\u0142\u0105czone, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wykluczone\", wszystkie encje b\u0119d\u0105 pod\u0142\u0105czone, z wyj\u0105tkiem tych wybranych.",
+                "title": "Wybierz encje do zmostkowania"
+            },
             "init": {
                 "data": {
-                    "include_domains": "Domeny do uwzgl\u0119dnienia"
+                    "include_domains": "Domeny do uwzgl\u0119dnienia",
+                    "mode": "Tryb"
                 },
                 "description": "Encje w \"uwzgl\u0119dnionych domenach\" zostan\u0105 po\u0142\u0105czone z HomeKit. B\u0119dziesz m\u00f3g\u0142 wybra\u0107, kt\u00f3re encje maj\u0105 zosta\u0107 wykluczone z tej listy na nast\u0119pnym ekranie.",
                 "title": "Domeny do uwzgl\u0119dnienia."

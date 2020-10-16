@@ -5,6 +5,7 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso"
         },
         "error": {
+            "cannot_connect": "Impossibile connettersi",
             "connect_error": "Impossibile connettersi",
             "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo."
         },
@@ -16,7 +17,7 @@
                     "name": "Nome del Gateway",
                     "token": "Token API"
                 },
-                "description": "\u00c8 necessario il Token API a 32 caratteri, vedere https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per le istruzioni. Si prega di notare che questo token \u00e8 diverso dalla chiave utilizzata dall'integrazione di Xiaomi Aqara.",
+                "description": "E' necessaria la Token API di 32 caratteri, vedere https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per le istruzioni. Notare che questa Token API \u00e8 differente dalla chiave usata dall'integrazione di Xiaomi Aqara.",
                 "title": "Connessione a un Xiaomi Gateway "
             },
             "user": {

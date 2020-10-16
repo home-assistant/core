@@ -39,9 +39,9 @@
         "error": {
             "already_configured_device": "Enheten er allerede konfigurert",
             "invalid_event_code": "Ugyldig hendelseskode",
-            "invalid_input_2262_off": "Ugyldig inndata for kommando av",
-            "invalid_input_2262_on": "Ugyldig inndata for kommando p\u00e5",
-            "invalid_input_off_delay": "Ugyldig inndata for av forsinkelse",
+            "invalid_input_2262_off": "Ugyldig innputt for kommando av",
+            "invalid_input_2262_on": "Ugyldig innputt for kommando p\u00e5",
+            "invalid_input_off_delay": "Ugyldig innputt for av forsinkelse",
             "unknown": "Uventet feil"
         },
         "step": {
