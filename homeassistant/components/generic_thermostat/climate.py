@@ -1,6 +1,7 @@
 """Adds support for generic thermostat units."""
 import asyncio
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -268,6 +269,15 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
+        if self._temp_precision is not None:
+            return self._temp_precision
+        return super().precision
+
+    @property
+    def target_temperature_step(self) -> Optional[float]:
+        """Return the supported step of target temperature."""
+        # Since this integration does not yet have a step size parameter
+        # we have to re-use the precision as the step size for now.
         if self._temp_precision is not None:
             return self._temp_precision
         return super().precision
