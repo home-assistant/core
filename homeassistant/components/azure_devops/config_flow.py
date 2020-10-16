@@ -60,7 +60,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._pat is not None:
                 await client.authorize(self._pat, self._organization)
                 if not client.authorized:
-                    errors["base"] = "authorization_error"
+                    errors["base"] = "invalid_auth"
                     return errors
             project_info = await client.get_project(self._organization, self._project)
             if project_info is None:
