@@ -27,8 +27,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             vol.All(
-                cv.deprecated(CONF_WS_URL),
-                cv.deprecated(CONF_API_URL),
+                cv.deprecated(CONF_WS_URL, invalidation_version="0.119"),
+                cv.deprecated(CONF_API_URL, invalidation_version="0.119"),
             )
         )
     },
