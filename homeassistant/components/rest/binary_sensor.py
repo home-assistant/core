@@ -102,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         auth = None
 
-    rest = RestData(hass, method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
     await rest.async_update()
     if rest.data is None:
         raise PlatformNotReady
