@@ -100,6 +100,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         client_secret: str,
         authorize_url: str,
         token_url: str,
+        redirect_uri: str = "",
     ):
         """Initialize local auth implementation."""
         self.hass = hass
@@ -108,6 +109,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.client_secret = client_secret
         self.authorize_url = authorize_url
         self.token_url = token_url
+        self._redirect_uri = redirect_uri
 
     @property
     def name(self) -> str:
@@ -122,7 +124,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{get_url(self.hass, require_current_request=True)}{AUTH_CALLBACK_PATH}"
+        if self._redirect_uri != "":
+            return f"{get_url(self.hass, require_current_request=True)}{AUTH_CALLBACK_PATH}"
+        else:
+            return self._redirect_uri
 
     @property
     def extra_authorize_data(self) -> dict:
