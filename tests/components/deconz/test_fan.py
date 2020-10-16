@@ -1,4 +1,5 @@
 """deCONZ fan platform tests."""
+
 from copy import deepcopy
 
 import pytest

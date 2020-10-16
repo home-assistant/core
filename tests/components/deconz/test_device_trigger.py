@@ -1,4 +1,5 @@
 """deCONZ device automation tests."""
+
 from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger

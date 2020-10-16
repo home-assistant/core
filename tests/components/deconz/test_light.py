@@ -1,4 +1,5 @@
 """deCONZ light platform tests."""
+
 from copy import deepcopy
 
 from homeassistant.components.deconz.const import (

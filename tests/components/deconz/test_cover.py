@@ -1,4 +1,5 @@
 """deCONZ cover platform tests."""
+
 from copy import deepcopy
 
 from homeassistant.components.cover import (

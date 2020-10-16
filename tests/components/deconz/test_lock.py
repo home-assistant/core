@@ -1,4 +1,5 @@
 """deCONZ lock platform tests."""
+
 from copy import deepcopy
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
