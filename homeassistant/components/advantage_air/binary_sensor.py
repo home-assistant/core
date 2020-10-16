@@ -1,11 +1,11 @@
 """Binary Sensor platform for Advantage Air integration."""
 
+from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 
@@ -26,41 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities)
 
 
-class AdvantageAirBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Parent class for Binary Sensor entities."""
-
-    def __init__(self, instance, ac_key, zone_key=None):
-        """Initialize common aspects of an Advantage Air sensor."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
-    @property
-    def _ac(self):
-        return self.coordinator.data["aircons"][self.ac_key]["info"]
-
-    @property
-    def _zone(self):
-        if self.zone_key:
-            return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
-        return None
-
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {
-                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"])
-            },
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
-
-
-class AdvantageAirZoneFilter(AdvantageAirBinarySensor):
+class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     """AdvantageAir Filter."""
 
     @property
@@ -84,7 +50,7 @@ class AdvantageAirZoneFilter(AdvantageAirBinarySensor):
         return self._ac["filterCleanStatus"]
 
 
-class AdvantageAirZoneMotion(AdvantageAirBinarySensor):
+class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     """AdvantageAir Zone Motion."""
 
     @property
