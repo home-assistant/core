@@ -20,7 +20,7 @@
                     "password": "Contrasenya"
                 },
                 "description": "El token d'acc\u00e9s ha caducat o ha estat revocat. Introdueix la teva contrasenya per tornar a vincular el compte.",
-                "title": "Torna a vincular un compte SimpliSafe"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {
                 "data": {
