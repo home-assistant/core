@@ -2,13 +2,12 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTRIBUTION, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +18,7 @@ async def async_setup_entry(
     """Set up FireServiceRota sensor based on a config entry."""
     coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [IncidentsSensor(coordinator, entry)],
-    )
+    async_add_entities([IncidentsSensor(coordinator, entry)])
 
 
 class IncidentsSensor(RestoreEntity, Entity):
@@ -90,7 +87,6 @@ class IncidentsSensor(RestoreEntity, Entity):
                     if address_value in data["address"]:
                         attr[address_value] = data["address"][address_value]
 
-            attr[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attr
 
     async def async_added_to_hass(self) -> None:
@@ -115,8 +111,6 @@ class IncidentsSensor(RestoreEntity, Entity):
 
     async def async_update(self) -> None:
         """Update using FireServiceRota data."""
-        if not self.enabled:
-            return
 
         if not self._coordinator.incident_data:
             return
