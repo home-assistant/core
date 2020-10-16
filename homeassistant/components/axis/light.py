@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         event = device.api.event[event_id]
 
         if event.CLASS == CLASS_LIGHT and event.TYPE == "Light":
-            async_add_entities([AxisLight(event, device)], True)
+            async_add_entities([AxisLight(event, device)])
 
     device.listeners.append(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
