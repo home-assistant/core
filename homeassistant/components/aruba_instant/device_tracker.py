@@ -36,7 +36,7 @@ def add_devices(instant, config_entry, device_registry):
     """Add APs into HA as devices."""
     _LOGGER.debug("Adding APs to the device registry.")
     access_points = instant.aps
-    for ap in access_points:
+    for ap in access_points:  # pylint: disable=invalid-name
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, access_points[ap]["ip"])},
@@ -84,7 +84,9 @@ class InstantClientEntity(ScannerEntity):
     """Instant Client Entity"""
 
     def __init__(self, coordinator, ent):
-        _LOGGER.debug(f"Creating entity for client {ent}.")
+        _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+            f"Creating entity for client {ent}."
+        )
         self.coordinator = coordinator
         self.hass = self.coordinator.hass
         self._mac = ent
@@ -108,7 +110,9 @@ class InstantClientEntity(ScannerEntity):
             self._is_connected = True
             self.coordinator.entities.update({self.unique_id: self})
         except KeyError:
-            _LOGGER.debug(f"{self._mac} is not currently connected.")
+            _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+                f"{self._mac} is not currently connected."
+            )
             self._is_connected = False
             self._name = "Unknown"
             self._ip = None
@@ -146,11 +150,15 @@ class InstantClientEntity(ScannerEntity):
             self._lat = self.coordinator.hass.config.latitude
             self._lon = self.coordinator.hass.config.longitude
             if self._is_connected is False:
-                _LOGGER.debug(f"{self._mac} - {self._name} is now connected.")
+                _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+                    f"{self._mac} - {self._name} is now connected."
+                )
             self._is_connected = True
         except KeyError:
             if self._is_connected is True:
-                _LOGGER.debug(f"{self._mac} - {self._name} is no longer connected.")
+                _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+                    f"{self._mac} - {self._name} is no longer connected."
+                )
             self._is_connected = False
             self._ip = None
             self._os = None

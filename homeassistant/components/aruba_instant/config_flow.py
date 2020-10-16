@@ -23,7 +23,6 @@ from .const import (
     DOMAIN,
     AVAILABLE_CLIENTS,
     TRACKED_CLIENTS,
-    SELECTED_CLIENTS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +83,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                self.config = {
+                self.config = {  # pylint: disable=attribute-defined-outside-init
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
@@ -93,7 +92,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL),
                 }
                 await self.async_set_unique_id(user_input[CONF_HOST])
-                info = await async_validate_input(self.hass, user_input)
+                await async_validate_input(self.hass, user_input)
                 return await self.async_step_track_clients(config_input=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
