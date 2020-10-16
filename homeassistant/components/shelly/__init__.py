@@ -124,18 +124,18 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             sw_version=self.device.settings["fw"],
         )
 
-    async def shutdown(self):
+    async def shutdown(self, ha_stop=False):
         """Shutdown the device wrapper."""
         if self._unsub_stop:
             self._unsub_stop()
             self._unsub_stop = None
-        if COAP_CONTEXT in self.hass.data[DOMAIN]:
+        if ha_stop and COAP_CONTEXT in self.hass.data[DOMAIN]:
             await self.hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
     async def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
         self._unsub_stop = None
-        await self.shutdown()
+        await self.shutdown(ha_stop=True)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -149,7 +149,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        await hass.data[DOMAIN].pop(entry.entry_id).shutdown()
         if len(hass.data[DOMAIN]) == 1:
             await hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
 
