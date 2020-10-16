@@ -18,11 +18,6 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def teardown_method(hass, method):
-    """Stop everything that was started."""
-    await hass.async_stop()
-
-
 async def test_template_state(hass):
     """Test template."""
     with assert_setup_component(1, lock.DOMAIN):
