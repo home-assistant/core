@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -78,13 +78,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl)
-    rest.update()
+    rest = RestData(hass, method, resource, auth, headers, payload, verify_ssl)
+    await rest.async_update()
 
     if rest.data is None:
         raise PlatformNotReady
 
-    add_entities(
+    async_add_entities(
         [ScrapeSensor(rest, name, select, attr, index, value_template, unit)], True
     )
 
@@ -118,9 +118,9 @@ class ScrapeSensor(Entity):
         """Return the state of the device."""
         return self._state
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from the source and updates the state."""
-        self.rest.update()
+        await self.rest.update()
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
@@ -143,7 +143,7 @@ class ScrapeSensor(Entity):
             return
 
         if self._value_template is not None:
-            self._state = self._value_template.render_with_possible_json_value(
+            self._state = self._value_template.async_render_with_possible_json_value(
                 value, None
             )
         else:
