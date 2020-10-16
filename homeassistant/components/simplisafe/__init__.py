@@ -173,6 +173,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -324,8 +326,9 @@ async def async_unload_entry(hass, entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        remove_listener()
+        for remove_listener in hass.data[DOMAIN][DATA_LISTENER][entry.entry_id]:
+            remove_listener()
+        hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
 
     return unload_ok
 
@@ -454,8 +457,10 @@ class SimpliSafe:
             """Define an event handler to disconnect from the websocket."""
             await self.websocket.async_disconnect()
 
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+            )
         )
 
         self.systems = await self._api.get_systems()
@@ -483,9 +488,9 @@ class SimpliSafe:
             """Refresh data from the SimpliSafe account."""
             await self.async_update()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][
-            self.config_entry.entry_id
-        ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
+        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+            async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
+        )
 
         await self.async_update()
 
