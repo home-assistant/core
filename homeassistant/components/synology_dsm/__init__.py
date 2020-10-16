@@ -163,7 +163,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     # Continue setup
     api = SynoApi(hass, entry)
-    await api.async_setup()
+    try:
+        await api.async_setup()
+    except Exception as err:  # pylint: disable=broad-except
+        raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -266,10 +269,7 @@ class SynoApi:
         self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
-        try:
-            await self.async_update()
-        except Exception as err:  # pylint: disable=broad-except
-            raise ConfigEntryNotReady from err
+        await self.async_update()
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass,
