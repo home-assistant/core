@@ -36,11 +36,8 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ruckus Unleashed from a config entry."""
     try:
-        ruckus = await hass.async_add_executor_job(
-            Ruckus,
-            entry.data[CONF_HOST],
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
+        ruckus = await Ruckus.create(
+            entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     except ConnectionError as error:
         raise ConfigEntryNotReady from error
@@ -51,10 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    system_info = await hass.async_add_executor_job(ruckus.system_info)
+    system_info = await ruckus.system_info()
 
     registry = await device_registry.async_get_registry(hass)
-    ap_info = await hass.async_add_executor_job(ruckus.ap_info)
+    ap_info = await ruckus.ap_info()
     for device in ap_info[API_AP][API_ID].values():
         registry.async_get_or_create(
             config_entry_id=entry.entry_id,
