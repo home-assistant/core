@@ -12,8 +12,8 @@ from homeassistant.const import CONF_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_adaptive_lighting_sensors(hass):
-    """Test sensors created for adaptive_lighting integration."""
+async def test_adaptive_lighting_switches(hass):
+    """Test switches created for adaptive_lighting integration."""
     entry = MockConfigEntry(
         domain=adaptive_lighting.DOMAIN, data={CONF_NAME: DEFAULT_NAME}
     )

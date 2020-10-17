@@ -100,13 +100,14 @@ async def async_unload_entry(hass, config_entry: ConfigEntry) -> bool:
     )
     data = hass.data[DOMAIN]
     data[config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-    if len(data) == 1 and ATTR_TURN_ON_OFF_LISTENER in data:  # no more config_entries
+    if unload_ok:
+        data.pop(config_entry.entry_id)
+
+    if len(data) == 1 and ATTR_TURN_ON_OFF_LISTENER in data:
+        # no more config_entries
         turn_on_off_listener = data.pop(ATTR_TURN_ON_OFF_LISTENER)
         turn_on_off_listener.remove_listener()
         turn_on_off_listener.remove_listener2()
-
-    if unload_ok:
-        data.pop(config_entry.entry_id)
 
     if not data:
         hass.data.pop(DOMAIN)
