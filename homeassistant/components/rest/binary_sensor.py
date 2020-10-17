@@ -30,13 +30,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import DOMAIN, PLATFORMS
-from .sensor import RestData
+from .data import DEFAULT_TIMEOUT, RestData
 
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
-DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

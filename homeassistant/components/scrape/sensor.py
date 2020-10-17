@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
