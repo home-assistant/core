@@ -5,6 +5,7 @@ import math
 import queue
 import threading
 import time
+from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List
 
 from influxdb import InfluxDBClient, exceptions
@@ -63,10 +64,17 @@ from .const import (
     CONF_SSL,
     CONF_TAGS,
     CONF_TAGS_ATTRIBUTES,
+    CONF_TIME_INTERVAL,
+    CONF_TIME_INTERVAL_DURATION,
     CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     CONNECTION_ERROR,
+    DEBUG_INTERVAL_CALLBACK_SETUP_MESSAGE,
+    DEBUG_STATE_CHANGE_EVENT_MESSAGE,
+    DEBUG_TIMER_ACTION_MESSAGE,
+    DEBUG_FILTERED_OUT_MESSAGE,
+    DEBUG_ADDED_TO_QUEUE_MESSAGE,
     DEFAULT_API_VERSION,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
@@ -145,6 +153,14 @@ def validate_version_specific_config(conf: Dict) -> Dict:
     return conf
 
 
+_TIME_INTERVAL_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+    {
+        vol.Required(CONF_TIME_INTERVAL_DURATION): vol.Any(
+            cv.time_period_dict, cv.time_period_str
+        )
+    }
+)
+
 _CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
@@ -154,6 +170,9 @@ _CUSTOMIZE_ENTITY_SCHEMA = vol.Schema(
 
 _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
+        vol.Optional(CONF_TIME_INTERVAL, default=[]): vol.All(
+            cv.ensure_list, [_TIME_INTERVAL_SCHEMA]
+        ),
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR): vol.In(
@@ -191,8 +210,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
-    """Build event to json converter and add to config."""
+def _generate_state_to_json(conf: Dict) -> Callable[[Dict], str]:
+    """Build state to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
@@ -206,9 +225,8 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
-    def event_to_json(event: Dict) -> str:
+    def state_to_json(state: Dict, date_time=None) -> str:
         """Convert event into json in format Influx expects."""
-        state = event.data.get(EVENT_NEW_STATE)
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
@@ -255,14 +273,15 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
                         measurement = state.entity_id
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
-
+        if date_time == None:
+            date_time = datetime.utcnow()
         json = {
             INFLUX_CONF_MEASUREMENT: measurement,
             INFLUX_CONF_TAGS: {
                 CONF_DOMAIN: state.domain,
                 CONF_ENTITY_ID: state.object_id,
             },
-            INFLUX_CONF_TIME: event.time_fired,
+            INFLUX_CONF_TIME: date_time,
             INFLUX_CONF_FIELDS: {},
         }
         if _include_state:
@@ -310,7 +329,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
 
         return json
 
-    return event_to_json
+    return state_to_json
 
 
 @dataclass
@@ -470,13 +489,18 @@ def setup(hass, config):
         event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
         return True
 
-    event_to_json = _generate_event_to_json(conf)
+    state_to_json = _generate_state_to_json(conf)
     max_tries = conf.get(CONF_RETRY_COUNT)
-    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
+    time_intervals = conf.get(CONF_TIME_INTERVAL)
+    state_to_json = _generate_state_to_json(conf)
+    instance = hass.data[DOMAIN] = InfluxThread(
+        hass, influx, state_to_json, max_tries, time_intervals
+    )
     instance.start()
 
     def shutdown(event):
         """Shut down the thread."""
+        instance.clean_up()
         instance.queue.put(None)
         instance.join()
         influx.close()
@@ -489,28 +513,74 @@ def setup(hass, config):
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, influx, event_to_json, max_tries):
+    def __init__(self, hass, influx, state_to_json, max_tries, time_intervals):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
+        hass = hass
         self.queue = queue.Queue()
         self.influx = influx
-        self.event_to_json = event_to_json
+        self.state_to_json = state_to_json
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        self.remove_listeners = []
+        self.remove_listeners.append(
+            hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        )
+        # Set up callbacks for each time interval
+        for time_interval in time_intervals:
+            timer_action, duration = self._generate_timer_action(hass, time_interval)
+            remove_listener = event_helper.async_track_time_interval(
+                hass, timer_action, duration
+            )
+            self.remove_listeners.append(remove_listener)
 
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Influx."""
-        item = (time.monotonic(), event)
+        state = event.data.get(EVENT_NEW_STATE)
+        _LOGGER.debug(
+            DEBUG_STATE_CHANGE_EVENT_MESSAGE,
+            state.entity_id,
+        )
+        item = (time.monotonic(), state, event.time_fired)
         self.queue.put(item)
+
+    def _generate_timer_action(self, hass, time_interval):
+        """Generate a method that gets a filtered set of entities and adds them to the queue"""
+        duration = time_interval[CONF_TIME_INTERVAL_DURATION]
+        entity_filter = convert_include_exclude_filter(time_interval)
+        _LOGGER.debug(
+            DEBUG_INTERVAL_CALLBACK_SETUP_MESSAGE,
+            duration,
+            entity_filter,
+        )
+
+        def timer_action(hass_time):
+            """Get all the states and add those that match the filter to the queue"""
+            _LOGGER.debug(DEBUG_TIMER_ACTION_MESSAGE, duration)
+            states = hass.states.all()
+            count = 0
+            for state in states:
+                if (
+                    state is None
+                    or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+                    or not entity_filter(state.entity_id)
+                ):
+                    _LOGGER.debug(DEBUG_FILTERED_OUT_MESSAGE, state.entity_id)
+                else:
+                    item = (time.monotonic(), state, datetime.utcnow())
+                    self.queue.put(item)
+                    count += 1
+                    _LOGGER.debug(DEBUG_ADDED_TO_QUEUE_MESSAGE, state.entity_id)
+
+        return timer_action, duration
 
     @staticmethod
     def batch_timeout():
         """Return number of seconds to wait for more events."""
         return BATCH_TIMEOUT
 
-    def get_events_json(self):
+    def get_json(self):
         """Return a batch of events formatted for writing."""
         queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries * RETRY_DELAY
 
@@ -528,13 +598,13 @@ class InfluxThread(threading.Thread):
                 if item is None:
                     self.shutdown = True
                 else:
-                    timestamp, event = item
+                    timestamp, data, date_time = item
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_json = self.event_to_json(event)
-                        if event_json:
-                            json.append(event_json)
+                        new_json = self.state_to_json(data, date_time)
+                        if new_json:
+                            json.append(new_json)
                     else:
                         dropped += 1
 
@@ -572,7 +642,7 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            count, json = self.get_events_json()
+            count, json = self.get_json()
             if json:
                 self.write_to_influxdb(json)
             for _ in range(count):
@@ -581,3 +651,7 @@ class InfluxThread(threading.Thread):
     def block_till_done(self):
         """Block till all events processed."""
         self.queue.join()
+
+    def clean_up(self):
+        """Remove listeners when shutting down"""
+        [r() for r in self.remove_listeners]

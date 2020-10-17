@@ -46,6 +46,9 @@ CONF_FUNCTION = "function"
 CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
+CONF_TIME_INTERVAL = "time_interval"
+CONF_TIME_INTERVAL_DURATION = "duration"
+
 DEFAULT_DATABASE = "home_assistant"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
 DEFAULT_SSL_V2 = True
@@ -128,6 +131,14 @@ RENDERING_QUERY_MESSAGE = "Rendering query: %s."
 RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
+
+DEBUG_INTERVAL_CALLBACK_SETUP_MESSAGE = (
+    "Timer action function with duration=%s and entity_filter=%s generated."
+)
+DEBUG_STATE_CHANGE_EVENT_MESSAGE = "State Change Event triggered for entity_id=%s."
+DEBUG_TIMER_ACTION_MESSAGE = "Interval %s expired, logging all filtered states."
+DEBUG_FILTERED_OUT_MESSAGE = "Entity %s filtered out."
+DEBUG_ADDED_TO_QUEUE_MESSAGE = "Entity %s added to queue."
 
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.
