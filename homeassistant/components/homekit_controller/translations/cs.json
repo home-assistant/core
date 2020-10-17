@@ -2,14 +2,19 @@
     "config": {
         "abort": {
             "accessory_not_found_error": "P\u00e1rov\u00e1n\u00ed nelze p\u0159idat, proto\u017ee za\u0159\u00edzen\u00ed ji\u017e nelze nal\u00e9zt.",
+            "already_configured": "P\u0159\u00edslu\u0161enstv\u00ed je ji\u017e nastaveno s t\u00edmto ovlada\u010dem.",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
-            "invalid_config_entry": "Toto za\u0159\u00edzen\u00ed vypad\u00e1, \u017ee je p\u0159ipraven\u00e9 ke sp\u00e1rov\u00e1n\u00ed, ale v Home Assistant ji\u017e existuje konfliktn\u00ed polo\u017eka konfigurace, kterou je t\u0159eba nejprve odebrat."
+            "invalid_config_entry": "Toto za\u0159\u00edzen\u00ed vypad\u00e1, \u017ee je p\u0159ipraven\u00e9 ke sp\u00e1rov\u00e1n\u00ed, ale v Home Assistant ji\u017e existuje konfliktn\u00ed polo\u017eka konfigurace, kterou je t\u0159eba nejprve odebrat.",
+            "no_devices": "Nebyla nalezena \u017e\u00e1dn\u00e1 nesp\u00e1rov\u00e1 za\u0159\u00edzen\u00ed"
         },
         "error": {
+            "authentication_error": "Nespr\u00e1vn\u00fd HomeKit k\u00f3d. Zkontrolujte to a zkuste to znovu.",
             "busy_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee je ji\u017e sp\u00e1rov\u00e1no s jin\u00fdm ovlada\u010dem.",
             "max_peers_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee nem\u00e1 voln\u00e9 \u00falo\u017ei\u0161t\u011b pro p\u00e1rov\u00e1n\u00ed.",
             "max_tries_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee p\u0159ijalo v\u00edce ne\u017e 100 ne\u00fasp\u011b\u0161n\u00fdch pokus\u016f o ov\u011b\u0159en\u00ed.",
-            "pairing_failed": "P\u0159i pokusu o sp\u00e1rov\u00e1n\u00ed s t\u00edmto za\u0159\u00edzen\u00edm do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b. M\u016f\u017ee se jednat o do\u010dasn\u00e9 selh\u00e1n\u00ed nebo va\u0161e za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt aktu\u00e1ln\u011b podporov\u00e1no."
+            "pairing_failed": "P\u0159i pokusu o sp\u00e1rov\u00e1n\u00ed s t\u00edmto za\u0159\u00edzen\u00edm do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b. M\u016f\u017ee se jednat o do\u010dasn\u00e9 selh\u00e1n\u00ed nebo va\u0161e za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt aktu\u00e1ln\u011b podporov\u00e1no.",
+            "unable_to_pair": "Nelze sp\u00e1rovat, zkuste to pros\u00edm znovu.",
+            "unknown_error": "Za\u0159\u00edzen\u00ed nahl\u00e1silo nezn\u00e1mou chybu. P\u00e1rov\u00e1n\u00ed se nezda\u0159ilo."
         },
         "flow_title": "{name} prost\u0159ednictv\u00edm protokolu HomeKit p\u0159\u00edslu\u0161enstv\u00ed",
         "step": {

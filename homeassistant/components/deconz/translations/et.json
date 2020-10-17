@@ -67,6 +67,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" nuppu on neljakordselt kl\u00f5psatud",
             "remote_button_quintuple_press": "\"{subtype}\" nuppu on viiekordselt kl\u00f5psatud",
             "remote_button_rotated": "Nuppu \"{subtype}\" keerati",
+            "remote_button_rotated_fast": "Nuppu \"{ subtype}\"p\u00f6\u00f6rati kiiresti ",
             "remote_button_rotation_stopped": "Nupu \" {subtype} \"  p\u00f6\u00f6ramine peatus",
             "remote_button_short_press": "\"{subtype}\" nupp  on vajutatud",
             "remote_button_short_release": "\"{subtype}\" nupp  vabastati",

@@ -2,7 +2,11 @@
     "config": {
         "abort": {
             "already_configured_account": "\u00da\u010det je ji\u017e nastaven",
+            "already_setup": "\u00da\u010det Ambiclimate je nastaven.",
             "oauth2_missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+        },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno pomoc\u00ed Ambiclimate"
         },
         "error": {
             "follow_link": "N\u00e1sledujte odkaz a prove\u010fte ov\u011b\u0159en\u00ed p\u0159ed stisknut\u00edm tla\u010d\u00edtka Odeslat.",

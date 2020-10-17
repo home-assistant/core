@@ -51,7 +51,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "authorization_error"}
+        assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
@@ -75,7 +75,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "reauth"
-        assert result2["errors"] == {"base": "authorization_error"}
+        assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:
@@ -99,7 +99,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "user"
-        assert result2["errors"] == {"base": "connection_error"}
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reauth_connection_error(hass: HomeAssistant) -> None:
@@ -123,7 +123,7 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result2["step_id"] == "reauth"
-        assert result2["errors"] == {"base": "connection_error"}
+        assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_project_error(hass: HomeAssistant) -> None:
@@ -201,7 +201,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "reauth"
-        assert result["errors"] == {"base": "authorization_error"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.DevOpsClient.authorize",

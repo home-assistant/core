@@ -17,6 +17,7 @@
         "step": {
             "init": {
                 "data": {
+                    "show_all_sources": "Zobrazit v\u0161echny zdroje",
                     "zone2": "Nastavte z\u00f3nu 2",
                     "zone3": "Nastavte z\u00f3nu 3"
                 }

@@ -21,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "offset": "Posun (v minut\u00e1ch)"
+                },
                 "title": "Mo\u017enosti"
             }
         }
