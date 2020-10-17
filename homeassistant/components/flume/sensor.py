@@ -139,7 +139,7 @@ class FlumeSensor(CoordinatorEntity):
     def state(self):
         """Return the state of the sensor."""
         sensor_key = self._flume_query_sensor[0]
-        if sensor_key not in self._flume_device.values[sensor_key]:
+        if sensor_key not in self._flume_device.values:
             _LOGGER.debug(
                 "Updating sensor: '%s', key: '%s' is not yet available.",
                 self._name,
