@@ -22,7 +22,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
-    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+    DOMAIN,
 )
 
 ADVANTAGE_AIR_HVAC_MODES = {
@@ -55,7 +55,7 @@ ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir climate platform."""
 
-    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
