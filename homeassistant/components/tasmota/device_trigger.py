@@ -1,4 +1,4 @@
-"""Provides device automations for MQTT."""
+"""Provides device automations for Tasmota."""
 import logging
 from typing import Callable, List, Optional
 
