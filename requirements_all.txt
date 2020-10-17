@@ -538,7 +538,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.0
+elkm1-lib==0.8.1
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
