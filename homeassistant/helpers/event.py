@@ -751,7 +751,6 @@ class _TrackTemplateResultInfo:
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
 
         self._rate_limit = KeyedRateLimit(hass)
-        self._rate_limited: Set[Template] = set()
         self._info: Dict[Template, RenderInfo] = {}
         self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
 
@@ -831,10 +830,7 @@ class _TrackTemplateResultInfo:
                 (track_template_,),
                 True,
             ):
-                if template not in self._rate_limited:
-                    self._rate_limited.add(template)
-                    return True
-                return False
+                return not self._rate_limit.async_has_timer(template)
 
             _LOGGER.debug(
                 "Template update %s triggered by event: %s",
@@ -842,8 +838,6 @@ class _TrackTemplateResultInfo:
                 event,
             )
 
-        if template in self._rate_limited:
-            self._rate_limited.remove(template)
         self._rate_limit.async_triggered(template, now)
         self._info[template] = info = template.async_render_to_info(
             track_template_.variables
@@ -899,18 +893,15 @@ class _TrackTemplateResultInfo:
 
         if info_changed:
             assert self._track_state_changes
-            if self._rate_limited:
-                update_track_states: Iterable[RenderInfo] = [
-                    _rate_limit_render_info(self._info[template])
-                    if template in self._rate_limited
-                    else self._info[template]
-                    for template in self._info
-                ]
-            else:
-                update_track_states = self._info.values()
-
             self._track_state_changes.async_update_listeners(
-                _render_infos_to_track_states(update_track_states)
+                _render_infos_to_track_states(
+                    [
+                        _rate_limit_render_info(self._info[template])
+                        if self._rate_limit.async_has_timer(template)
+                        else self._info[template]
+                        for template in self._info
+                    ]
+                )
             )
             _LOGGER.debug(
                 "Template group %s listens for %s",
