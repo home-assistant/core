@@ -1,5 +1,6 @@
 """Helpers for listening to events."""
 import asyncio
+import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
@@ -873,7 +874,7 @@ class _TrackTemplateResultInfo:
                 (track_template_,),
                 True,
             ):
-                return False
+                return not self._rate_limit.async_has_timer(template)
 
             _LOGGER.debug(
                 "Template update %s triggered by event: %s",
@@ -941,7 +942,14 @@ class _TrackTemplateResultInfo:
             assert self._track_state_changes
             self._update_time_listeners()
             self._track_state_changes.async_update_listeners(
-                _render_infos_to_track_states(self._info.values()),
+                _render_infos_to_track_states(
+                    [
+                        _rate_limit_render_info(self._info[template])
+                        if self._rate_limit.async_has_timer(template)
+                        else self._info[template]
+                        for template in self._info
+                    ]
+                )
             )
             _LOGGER.debug(
                 "Template group %s listens for %s",
@@ -1506,3 +1514,13 @@ def _rate_limit_for_event(
 
     rate_limit: Optional[timedelta] = info.rate_limit
     return rate_limit
+
+
+def _rate_limit_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove the domains and all_states from render info during a ratelimit."""
+    rate_limited_render_info = copy.copy(render_info)
+    rate_limited_render_info.all_states = False
+    rate_limited_render_info.all_states_lifecycle = False
+    rate_limited_render_info.domains = set()
+    rate_limited_render_info.domains_lifecycle = set()
+    return rate_limited_render_info
