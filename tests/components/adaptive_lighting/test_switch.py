@@ -81,35 +81,38 @@ async def test_adaptive_lighting_time_zones_and_sunsettings(hass, lat, long, tz)
         {"latitude": lat, "longitude": long, "time_zone": tz},
     )
 
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_SUNRISE_TIME: datetime.time(SUNRISE.hour),
+            CONF_SUNSET_TIME: datetime.time(SUNSET.hour),
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    context = Context()  # needs to be passed to update method
+    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+    min_color_temp = switch._sun_light_settings.min_color_temp
+
     sunset = hass.config.time_zone.localize(SUNSET).astimezone(dt_util.UTC)
     before_sunset = sunset - datetime.timedelta(hours=1)
     after_sunset = sunset + datetime.timedelta(hours=1)
-
-    # Setup with time at sunset
-    with patch("homeassistant.util.dt.utcnow", return_value=sunset):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_NAME: DEFAULT_NAME,
-                CONF_SUNRISE_TIME: datetime.time(SUNRISE.hour),
-                CONF_SUNSET_TIME: datetime.time(SUNSET.hour),
-            },
-        )
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+    sunrise = hass.config.time_zone.localize(SUNRISE).astimezone(dt_util.UTC)
+    before_sunrise = sunrise - datetime.timedelta(hours=1)
+    after_sunrise = sunrise + datetime.timedelta(hours=1)
 
     # At sunset the brightness should be max and color_temp at the smallest value
-    min_color_temp = switch._sun_light_settings.min_color_temp
-    assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
-    assert switch._settings["color_temp_kelvin"] == min_color_temp
+    with patch("homeassistant.util.dt.utcnow", return_value=sunset):
+        await switch._update_attrs_and_maybe_adapt_lights(context=context)
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] == min_color_temp
 
     # One hour before sunset the brightness should be max and color_temp
     # not at the smallest value yet.
-    context = Context()
     with patch("homeassistant.util.dt.utcnow", return_value=before_sunset):
         await switch._update_attrs_and_maybe_adapt_lights(context=context)
         assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
@@ -120,6 +123,25 @@ async def test_adaptive_lighting_time_zones_and_sunsettings(hass, lat, long, tz)
         await switch._update_attrs_and_maybe_adapt_lights(context=context)
         assert switch._settings[ATTR_BRIGHTNESS_PCT] < DEFAULT_MAX_BRIGHTNESS
         assert switch._settings["color_temp_kelvin"] == min_color_temp
+
+    # At sunrise the brightness should be max and color_temp at the smallest value
+    with patch("homeassistant.util.dt.utcnow", return_value=sunrise):
+        await switch._update_attrs_and_maybe_adapt_lights(context=context)
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] == min_color_temp
+
+    # One hour before sunrise the brightness should smaller than max
+    # and color_temp at the min value.
+    with patch("homeassistant.util.dt.utcnow", return_value=before_sunrise):
+        await switch._update_attrs_and_maybe_adapt_lights(context=context)
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] < DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] == min_color_temp
+
+    # One hour after sunrise the brightness should be up
+    with patch("homeassistant.util.dt.utcnow", return_value=after_sunrise):
+        await switch._update_attrs_and_maybe_adapt_lights(context=context)
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] > min_color_temp
 
     # Turn on sleep mode which make the brightness and color_temp
     # deterministic regardless of the time
