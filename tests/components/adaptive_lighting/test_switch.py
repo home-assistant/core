@@ -7,6 +7,7 @@ from homeassistant.components.adaptive_lighting.const import (
     ATTR_TURN_ON_OFF_LISTENER,
     CONF_SUNRISE_TIME,
     CONF_SUNSET_TIME,
+    DEFAULT_MAX_BRIGHTNESS,
     DEFAULT_NAME,
     DEFAULT_SLEEP_BRIGHTNESS,
     DEFAULT_SLEEP_COLOR_TEMP,
@@ -102,31 +103,23 @@ async def test_adaptive_lighting_time_zones_and_sunsettings(hass, lat, long, tz)
     switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
 
     # At sunset the brightness should be max and color_temp at the smallest value
-    assert switch._settings[ATTR_BRIGHTNESS_PCT] == 100
-    assert (
-        switch._settings["color_temp_kelvin"]
-        == switch._sun_light_settings.min_color_temp
-    )
+    min_color_temp = switch._sun_light_settings.min_color_temp
+    assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
+    assert switch._settings["color_temp_kelvin"] == min_color_temp
 
     # One hour before sunset the brightness should be max and color_temp
     # not at the smallest value yet.
     context = Context()
     with patch("homeassistant.util.dt.utcnow", return_value=before_sunset):
         await switch._update_attrs_and_maybe_adapt_lights(context=context)
-        assert switch._settings[ATTR_BRIGHTNESS_PCT] == 100
-        assert (
-            switch._settings["color_temp_kelvin"]
-            > switch._sun_light_settings.min_color_temp
-        )
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] > min_color_temp
 
     # One hour after sunset the brightness should be down
     with patch("homeassistant.util.dt.utcnow", return_value=after_sunset):
         await switch._update_attrs_and_maybe_adapt_lights(context=context)
-        assert switch._settings[ATTR_BRIGHTNESS_PCT] < 100
-        assert (
-            switch._settings["color_temp_kelvin"]
-            == switch._sun_light_settings.min_color_temp
-        )
+        assert switch._settings[ATTR_BRIGHTNESS_PCT] < DEFAULT_MAX_BRIGHTNESS
+        assert switch._settings["color_temp_kelvin"] == min_color_temp
 
     # Turn on sleep mode which make the brightness and color_temp
     # deterministic regardless of the time
