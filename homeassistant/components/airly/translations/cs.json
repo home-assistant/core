@@ -4,6 +4,7 @@
             "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
         },
         "error": {
+            "auth": "Kl\u00ed\u010d API nen\u00ed spr\u00e1vn\u00fd.",
             "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
         },
         "step": {

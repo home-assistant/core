@@ -4,10 +4,14 @@
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "step": {
+            "authorize": {
+                "title": "Ov\u011b\u0159en\u00ed aplikace na ecobee.com"
+            },
             "user": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API"
-                }
+                },
+                "title": "API kl\u00ed\u010d ecobee"
             }
         }
     }

@@ -6,8 +6,10 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "no_server_found": "Server se nepoda\u0159ilo automaticky objevit.",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
+        "flow_title": "Logitech Squeezebox: {host}",
         "step": {
             "edit": {
                 "data": {

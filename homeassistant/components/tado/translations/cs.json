@@ -23,7 +23,8 @@
             "init": {
                 "data": {
                     "fallback": "Povolit z\u00e1lo\u017en\u00ed re\u017eim."
-                }
+                },
+                "title": "Upravte mo\u017enosti Tado."
             }
         }
     }

@@ -27,6 +27,11 @@
                 "description": "J\u00e4lgige isiklikku AirVisual-seadet. Parooli saab hankida seadme kasutajaliidese kaudu.",
                 "title": "Seadistage AirVisual Node / Pro"
             },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                }
+            },
             "user": {
                 "data": {
                     "cloud_api": "Geograafiline asukoht",
