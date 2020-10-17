@@ -37,11 +37,11 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |
 #           |
 #           v
-#     +----------------+
-#     |Step: user      |
-# --->|                |
-#     |Input: host/port|
-#     +----------------+
+#     +----------------+    +--------------------+
+#     |Step: user      |    |Step: import        |
+# --->|                |<---|                    |<---
+#     |Input: host/port|    |Input: <import data>|
+#     +----------------+    +--------------------+
 #           |
 #           |    Auth        +------------+
 #           |    required?   |Step: auth  |
@@ -91,6 +91,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data: Optional[Dict[str, Any]] = None
         self._request_token_task = None
         self._auth_id = None
+        self._auto_confirm = False
 
     async def _create_and_connect_hyperion_client(
         self, raw=False
@@ -105,6 +106,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if await hc.async_client_connect(raw=raw):
             return hc
+
+    async def async_step_import(
+        self, import_data: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by a YAML config import."""
+        self._auto_confirm = True
+        return await self.async_step_user(user_input=import_data)
 
     async def async_step_zeroconf(
         self, discovery_info: Optional[ConfigType] = None
@@ -279,10 +287,9 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Get final confirmation before entry creation."""
-        if user_input is None:
+        if user_input is None and not self._auto_confirm:
             return await self._show_confirm_form()
 
-        # TODO: Consider the implications of this title.
         return self.async_create_entry(
             title=self.context[CONF_UNIQUE_ID], data=self._data
         )
@@ -326,6 +333,9 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(hyperion_id)
         self._abort_if_unique_id_configured()
+
+        if self._auto_confirm:
+            return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="confirm",

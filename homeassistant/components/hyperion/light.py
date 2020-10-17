@@ -1,8 +1,8 @@
 """Support for Hyperion-NG remotes."""
-import asyncio
 from functools import partial
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set
+import re
+from typing import Any, Dict, List, Set
 
 from hyperion import client, const
 import voluptuous as vol
@@ -20,7 +20,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +28,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, split_hyperion_unique_id
-from .const import CONF_INSTANCE, DEFAULT_ORIGIN, DOMAIN
+from .const import CONF_INSTANCE, DEFAULT_ORIGIN, DOMAIN, SOURCE_IMPORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,44 +92,91 @@ ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
+# TODO: Unique_id on entity use the __init__ function to create unique ids?
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Hyperion platform.."""
-    await async_setup(
-        hass,
-        KEY_ENTRY_ID_YAML,
-        async_add_entities,
-        config.get(CONF_HOST),
-        config.get(CONF_PORT),
-        name=config.get(CONF_NAME),
-        priority=config.get(CONF_PRIORITY),
+
+    # This is the entrypoint for the old YAML-style Hyperion integration. The goal here
+    # is to auto-convert the YAML configuration into a config entry, with no human
+    # interaction, preserving the entity_id. This should be possible, as the YAML
+    # configuration did not support any of the things that should otherwise require
+    # human interaction in the config flow (e.g. it did not support auth).
+
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    instance = 0  # YAML only supports a single instance.
+
+    # First, connect to the server and get the server id (which will be unique_id on a config_entry
+    # if there is one).
+    client = await _async_create_connect_client(host, port)
+    if not client:
+        raise PlatformNotReady
+    hyperion_id = await client.async_id()
+    if not hyperion_id:
+        raise PlatformNotReady
+
+    future_unique_id = get_hyperion_unique_id(hyperion_id, instance)
+
+    # Possibility 1: Already converted.
+    # There is already a config entry with the unique id reporting by the
+    # server. Nothing to do here.
+    for entry in hass.config_entries.async_entries(domain=DOMAIN):
+        if entry.unique_id == hyperion_id:
+            return
+
+    # Possibility 2: Upgraded to the new Hyperion component pre-config-flow.
+    # No config entry for this unique_id, but have an entity_registry entry
+    # with an old-style unique_id:
+    #     <host>:<port>-<instance> (instance will always be 0, as YAML
+    #                               configuration does not support multiple
+    #                               instances)
+    # The unique_id needs to be updated, then the config_flow should do the rest.
+    registry = await async_get_registry(hass)
+    for entity_id, entity in registry.entities.items():
+        if entity.config_entry_id is None and entity.platform == DOMAIN:
+            result = re.search(r"([^:]+):(\d+)-%i" % instance, entity.unique_id)
+            if result and result.group(0) == host and int(result.group(1)) == port:
+                registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
+                break
+    else:
+        # Possibility 3: First upgrade to the new Hyperion component.
+        # No config entry and no entity_registry entry, in which case the CONF_NAME
+        # variable will be used as the preferred name. Rather than pollute the config
+        # entry with a "suggested name" type variable, instead create an entry in the
+        # registry that will subsequently be used when the entity is created with this
+        # unique_id.
+        current_platform = entity_platform.current_platform.get()
+        registry.async_get_or_create(
+            domain=LIGHT_DOMAIN,
+            platform=DOMAIN,
+            unique_id=future_unique_id,
+            suggested_object_id=config[CONF_NAME],
+            known_object_ids=current_platform.entities.keys(),
+        )
+
+    # Kick off a config flow to create the config entry.
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: config.get(CONF_HOST),
+                CONF_PORT: config.get(CONF_HOST),
+            },
+        )
     )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Hyperion platform from config entry."""
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
+    token = config_entry.data.get(CONF_TOKEN)
+
     # TODO: Add support for varying the priority via an option flow.
-    await async_setup(
-        hass,
-        config_entry.entry_id,
-        async_add_entities,
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        token=config_entry.data.get(CONF_TOKEN),
-    )
-
-
-async def async_setup(
-    hass: HomeAssistant,
-    entry_id: str,
-    async_add_entities: Callable,
-    host: str,
-    port: int,
-    name: Optional[str] = None,
-    token: Optional[str] = None,
-    priority: int = DEFAULT_PRIORITY,
-):
-    """Set up a Hyperion light from a dict of data."""
+    priority = DEFAULT_PRIORITY
 
     async def async_instances_to_entities(
         platform: entity_platform.EntityPlatform,
@@ -167,14 +213,12 @@ async def async_setup(
             entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
             if entity_id is not None and entity_id in platform.entities:
                 continue
-            await asyncio.sleep(0)
-
             hyperion_client = await _async_create_connect_client(
                 host, port, instance=instance_id, token=token
             )
             if not hyperion_client:
                 continue
-            entity_name = name or instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
+            entity_name = instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
             entities_to_add.append(
                 Hyperion(unique_id, entity_name, priority, hyperion_client)
             )
@@ -202,7 +246,7 @@ async def async_setup(
     if not server_id:
         await hyperion_client.async_client_disconnect()
         raise PlatformNotReady
-    hass.data[DOMAIN][entry_id] = hyperion_client
+    hass.data[DOMAIN][config_entry.entry_id] = hyperion_client
 
     hyperion_client.set_callbacks(
         {

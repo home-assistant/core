@@ -38,7 +38,6 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Hyperion from a config entry."""
     # TODO: Put master Hyperion connection here?
-    _LOGGER.error("async_setup_entry(): %s", entry)
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)

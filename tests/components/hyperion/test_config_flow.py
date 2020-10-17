@@ -11,6 +11,7 @@ from homeassistant.components.hyperion.const import (
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
     DOMAIN,
+    SOURCE_IMPORT,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
@@ -36,8 +37,6 @@ TEST_HOST_PORT = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
-
-# TODO: Test with an entity in the entity registry that uses an OLD style unique_id.
 
 TEST_AUTH_REQUIRED_RESP = {
     "command": "authorize-tokenRequired",
@@ -393,5 +392,30 @@ async def test_zeroconf_success(hass):
     assert result["title"] == TEST_SERVER_ID
     assert result["data"] == {
         CONF_HOST: TEST_IP_ADDRESS,
+        CONF_PORT: TEST_PORT,
+    }
+
+
+async def test_import(hass):
+    """Check an import flow from the old-style YAML."""
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_IMPORT,
+            data={
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: TEST_PORT,
+            },
+        )
+        await hass.async_block_till_done()
+
+    # No human interaction should be required.
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["handler"] == DOMAIN
+    assert result["title"] == TEST_SERVER_ID
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
     }

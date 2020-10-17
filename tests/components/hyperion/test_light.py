@@ -4,8 +4,10 @@ import logging
 from asynctest import CoroutineMock, call, patch
 from hyperion import const
 
+from homeassistant import setup
 from homeassistant.components.hyperion import (
     async_unload_entry,
+    get_hyperion_unique_id,
     light as hyperion_light,
 )
 from homeassistant.components.hyperion.const import DOMAIN
@@ -22,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -71,10 +74,8 @@ async def _setup_entity_yaml(hass, client=None):
         await hass.async_block_till_done()
 
 
-async def _setup_entity_config_entry(hass, client=None):
-    """Add a test Hyperion entity to hass."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
+def _add_test_config_entry(hass):
+    """Add a test config entry."""
     config_entry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
@@ -86,6 +87,14 @@ async def _setup_entity_config_entry(hass, client=None):
         unique_id=TEST_SERVER_ID,
     )
     config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def _setup_entity_config_entry(hass, client=None):
+    """Add a test Hyperion entity to hass."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    config_entry = _add_test_config_entry(hass)
 
     client = client or create_mock_client()
     client.instances = [TEST_INSTANCE_1]
@@ -97,12 +106,84 @@ async def _setup_entity_config_entry(hass, client=None):
     return config_entry
 
 
-async def test_setup_yaml(hass):
-    """Test setting up the component via YAML-style config."""
+async def test_setup_yaml_already_converted(hass):
+    """Test an already converted YAML style config."""
+    # This tests "Possibility 1" from async_setup_platform()
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    # Add a pre-existing config entry.
+    _add_test_config_entry(hass)
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
+
+    # Setup should be skipped for the YAML config as there is a pre-existing config
+    # entry.
+    assert hass.states.get(TEST_YAML_ENTITY_ID) is None
+
+
+async def test_setup_yaml_old_style_unique_id(hass):
+    """Test an already converted YAML style config."""
+    # This tests "Possibility 2" from async_setup_platform()
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    # Add a pre-existing config entry.
+    registry = await async_get_registry(hass)
+    registry.async_get_or_create(
+        domain=LIGHT_DOMAIN, platform=DOMAIN, unique_id=f"{TEST_HOST}:{TEST_PORT}-0"
+    )
+
+    client = create_mock_client()
+    await _setup_entity_yaml(hass, client=client)
+
+    # The entity should have been created with the same entity_id.
     assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
-    assert hass.data[DOMAIN][hyperion_light.KEY_ENTRY_ID_YAML] == client
+
+    # The unique_id should have been updated in the registry (rather than the one
+    # specified above).
+    assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
+        TEST_SERVER_ID, 0
+    )
+
+    # There should be a config entry with the correct server unique_id.
+    found = False
+    for entry in hass.config_entries.async_entries(domain=DOMAIN):
+        if entry.unique_id == TEST_SERVER_ID:
+            assert hass.data[DOMAIN][entry.entry_id] == client
+            found = True
+            break
+    assert found, "Config entry not created as expected"
+
+
+async def test_setup_yaml_no_registry_entity(hass):
+    """Test an already converted YAML style config."""
+    # This tests "Possibility 3" from async_setup_platform()
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    registry = await async_get_registry(hass)
+
+    # Add a pre-existing config entry.
+    client = create_mock_client()
+    await _setup_entity_yaml(hass, client=client)
+
+    # The entity should have been created with the same entity_id.
+    assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
+
+    # The unique_id should have been updated in the registry (rather than the one
+    # specified above).
+    assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
+        TEST_SERVER_ID, 0
+    )
+
+    # There should be a config entry with the correct server unique_id.
+    found = False
+    for entry in hass.config_entries.async_entries(domain=DOMAIN):
+        if entry.unique_id == TEST_SERVER_ID:
+            assert hass.data[DOMAIN][entry.entry_id] == client
+            found = True
+            break
+    assert found, "Config entry not created as expected"
 
 
 async def test_setup_yaml_not_ready(hass):
