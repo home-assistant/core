@@ -1,6 +1,4 @@
 """Support for Tellstick Net/Telstick Live sensors."""
-import logging
-
 from homeassistant.components import sensor, tellduslive
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -18,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_TEMPERATURE = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"

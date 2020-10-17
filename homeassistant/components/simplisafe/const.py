@@ -1,10 +1,7 @@
 """Define constants for the SimpliSafe component."""
 from datetime import timedelta
-import logging
 
 from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
-
-LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "simplisafe"
 

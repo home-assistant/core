@@ -95,7 +95,9 @@ def _add_reference(obj, loader: SafeLineLoader, node: yaml.nodes.Node):  # type:
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
     setattr(obj, "__config_file__", loader.name)
-    setattr(obj, "__line__", node.start_mark.line)
+    setattr(
+        obj, "__line__", node.start_mark.line + 1
+    )  # +1 to convert technical 0..n lines to human friendly 1..n
     return obj
 
 

@@ -1,6 +1,5 @@
 """General channels module for Zigbee Home Automation."""
 import asyncio
-import logging
 from typing import Any, List, Optional
 
 import zigpy.exceptions
@@ -22,8 +21,6 @@ from ..const import (
     SIGNAL_UPDATE_DEVICE,
 )
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)

@@ -1,6 +1,4 @@
 """The tests the cover command line platform."""
-import logging
-
 import pytest
 
 from homeassistant import setup
@@ -24,8 +22,6 @@ from homeassistant.const import (
 )
 
 from tests.common import assert_setup_component, async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 ENTITY_COVER = "cover.test_template_cover"
 

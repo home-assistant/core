@@ -1,6 +1,5 @@
 """Locks on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from zigpy.zcl.foundation import Status
 
@@ -23,8 +22,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 """ The first state is Zigbee 'Not fully locked' """
 

@@ -121,11 +121,14 @@ def discover_scripts(hass):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
 
-        service_desc = {
-            "description": services_dict.get(name, {}).get("description", ""),
-            "fields": services_dict.get(name, {}).get("fields", {}),
-        }
-        async_set_service_schema(hass, DOMAIN, name, service_desc)
+        service_data = services_dict.get(name, {})
+
+        if service_data:
+            service_desc = {
+                "description": service_data.get("description", ""),
+                "fields": service_data.get("fields", {}),
+            }
+            async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
 @bind_hass

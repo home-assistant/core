@@ -1,5 +1,4 @@
 """Provides device automations for Tasmota."""
-import logging
 
 from hatasmota.const import AUTOMATION_TYPE_TRIGGER
 
@@ -8,8 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import device_trigger
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry):

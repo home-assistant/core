@@ -59,8 +59,8 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the scenes."""
-    logger = logging.getLogger(__name__)
-    component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
+    _LOGGER = logging.getLogger(__name__)
+    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.

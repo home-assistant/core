@@ -1,6 +1,4 @@
 """Config flow to configure the Twente Milieu integration."""
-import logging
-
 from twentemilieu import (
     TwenteMilieu,
     TwenteMilieuAddressError,
@@ -18,8 +16,6 @@ from homeassistant.components.twentemilieu.const import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)

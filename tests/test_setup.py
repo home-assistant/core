@@ -1,7 +1,6 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
-import logging
 import os
 import threading
 
@@ -33,8 +32,6 @@ from tests.common import (
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)

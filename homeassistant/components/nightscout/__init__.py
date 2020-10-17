@@ -1,7 +1,6 @@
 """The Nightscout integration."""
 import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
-import logging
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
@@ -12,13 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
-_API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

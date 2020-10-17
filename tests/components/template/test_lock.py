@@ -1,6 +1,4 @@
 """The tests for the Template lock platform."""
-import logging
-
 import pytest
 
 from homeassistant import setup
@@ -8,8 +6,6 @@ from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from tests.common import assert_setup_component, async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture

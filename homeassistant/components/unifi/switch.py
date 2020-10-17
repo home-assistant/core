@@ -17,7 +17,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 BLOCK_SWITCH = "block"
 POE_SWITCH = "poe"
@@ -225,7 +225,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         try:
             return self.device.ports[self.client.sw_port]
         except (AttributeError, KeyError, TypeError):
-            LOGGER.warning(
+            _LOGGER.warning(
                 "Entity %s reports faulty device %s or port %s",
                 self.entity_id,
                 self.client.sw_mac,
