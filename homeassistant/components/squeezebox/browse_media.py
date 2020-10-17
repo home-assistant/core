@@ -144,7 +144,7 @@ async def library_payload(player):
             library_info["children"].append(
                 BrowseMedia(
                     title=item,
-                    media_class=media_class["item"],
+                    media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
                     can_play=True,
