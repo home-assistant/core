@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_CA_CERT, DEFAULT_PORT, DOMAIN
+from .const import CONF_CA_CERT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
 from .helper import get_cert_expiry_timestamp
 
@@ -65,10 +65,8 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
             f"{self.config_entry.data[CONF_HOST]}:{self.config_entry.data[CONF_PORT]}"
         )
 
-        display_port = config_entry.options.get(
-            CONF_PORT, config_entry.data.get(CONF_PORT, "")
-        )
-        host = config_entry.options.get(CONF_HOST, config_entry.data.get(CONF_HOST))
+        display_port = config_entry.data.get(CONF_PORT, "")
+        host = config_entry.data.get(CONF_HOST)
         name = f"{host}{display_port}"
 
         super().__init__(
@@ -84,8 +82,8 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
         try:
             timestamp = await get_cert_expiry_timestamp(
                 self.hass,
-                self.config_entry.options[CONF_HOST],
-                self.config_entry.options[CONF_PORT],
+                self.config_entry.data[CONF_HOST],
+                self.config_entry.data[CONF_PORT],
                 self.config_entry.options[CONF_CA_CERT],
             )
         except TemporaryFailure as err:
@@ -95,7 +93,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
             self.is_cert_valid = False
             _LOGGER.error(
                 "Certificate validation error: %s [%s]",
-                self.config_entry.options[CONF_HOST],
+                self.config_entry.data[CONF_HOST],
                 err,
             )
             return None
@@ -109,8 +107,6 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
         if not self.config_entry.options:
             data = {**self.config_entry.data}
             options = {
-                CONF_HOST: data.pop(CONF_HOST, ""),
-                CONF_PORT: data.pop(CONF_PORT, DEFAULT_PORT),
                 CONF_CA_CERT: data.pop(CONF_CA_CERT, ""),
             }
             self.hass.config_entries.async_update_entry(

@@ -26,6 +26,7 @@
     "step": {
       "init": {
         "data": {
+          "title": "Use a custom CA certificate",
           "ca_cert": "Path of CA certificate"
         }
       }
