@@ -1,11 +1,14 @@
 """Base class for fritzbox_callmonitor entities."""
+import logging
 import re
 
 from fritzconnection.lib.fritzphonebook import FritzPhonebook
 
 from homeassistant.util import Throttle
 
-from .const import LOGGER, MIN_TIME_PHONEBOOK_UPDATE
+from .const import MIN_TIME_PHONEBOOK_UPDATE
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FritzBoxPhonebook:
@@ -39,7 +42,7 @@ class FritzBoxPhonebook:
             for name, nrs in self.phonebook_dict.items()
             for nr in nrs
         }
-        LOGGER.info("Fritz!Box phone book successfully updated")
+        _LOGGER.info("Fritz!Box phone book successfully updated")
 
     def get_phonebook_ids(self):
         """Return list of phonebook ids."""

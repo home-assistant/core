@@ -1,6 +1,5 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
 import datetime
-import logging
 
 STATE_RINGING = "ringing"
 STATE_DIALING = "dialing"
@@ -36,8 +35,6 @@ INTERVAL_RECONNECT = 60
 
 DOMAIN = "fritzbox_callmonitor"
 MANUFACTURER = "AVM"
-
-LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = ["sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"

@@ -1,6 +1,7 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 import datetime
 from functools import partial
+import logging
 import socket
 import threading
 import time
@@ -40,13 +41,14 @@ from .const import (
     FRITZ_STATE_RING,
     ICON_PHONE,
     INTERVAL_RECONNECT,
-    LOGGER,
     MANUFACTURER,
     STATE_DIALING,
     STATE_IDLE,
     STATE_RINGING,
     STATE_TALKING,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -215,7 +217,7 @@ class FritzBoxCallMonitor:
 
     def connect(self):
         """Connect to the Fritz!Box."""
-        LOGGER.debug("Setting up socket...")
+        _LOGGER.debug("Setting up socket...")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(10)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -224,13 +226,13 @@ class FritzBoxCallMonitor:
             threading.Thread(target=self._listen).start()
         except OSError as err:
             self.sock = None
-            LOGGER.error(
+            _LOGGER.error(
                 "Cannot connect to %s on port %s: %s", self.host, self.port, err
             )
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
-        LOGGER.debug("Connection established, waiting for response...")
+        _LOGGER.debug("Connection established, waiting for response...")
         while not self.stopped.isSet():
             try:
                 response = self.sock.recv(2048)
@@ -238,12 +240,12 @@ class FritzBoxCallMonitor:
                 # if no response after 10 seconds, just recv again
                 continue
             response = str(response, "utf-8")
-            LOGGER.debug("Received %s", response)
+            _LOGGER.debug("Received %s", response)
 
             if not response:
                 # if the response is empty, the connection has been lost.
                 # try to reconnect
-                LOGGER.warning("Connection lost, reconnecting...")
+                _LOGGER.warning("Connection lost, reconnecting...")
                 self.sock = None
                 while self.sock is None:
                     self.connect()
