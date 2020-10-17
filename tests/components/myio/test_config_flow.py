@@ -33,6 +33,9 @@ async def test_form(hass):
         "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         return_value=True,
     ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
+        return_value=True,
+    ), patch(
         "homeassistant.components.myio.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.myio.async_setup_entry",
