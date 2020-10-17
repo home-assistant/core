@@ -84,7 +84,7 @@ class TasmotaAvailability(TasmotaEntity):
         super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events."""
+        """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)

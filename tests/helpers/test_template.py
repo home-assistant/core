@@ -150,7 +150,7 @@ def test_iterating_all_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.temperature", 10)
@@ -168,7 +168,7 @@ def test_iterating_all_states_unavailable(hass):
     info = render_to_info(hass, tmpl_str)
 
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "unknown")
     hass.states.async_set("sensor.temperature", 10)
@@ -183,7 +183,7 @@ def test_iterating_domain_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.back_door", "open")
@@ -1422,7 +1422,7 @@ async def test_expand(hass):
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
@@ -1439,7 +1439,7 @@ async def test_expand(hass):
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", {"test.object"}, ["group"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     info = render_to_info(
         hass,
@@ -1590,7 +1590,7 @@ def test_async_render_to_info_with_complex_branching(hass):
     )
 
     assert_result_info(info, ["sensor.a"], {"light.a", "light.b"}, {"sensor"})
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
@@ -1612,7 +1612,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     assert info.domains == {"cover"}
     assert info.entities == set()
     assert info.all_states is False
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
@@ -1638,7 +1638,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     assert not info.domains
     assert info.entities == set()
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("binary_sensor.door", "closed")
     info = render_to_info(hass, template_complex_str)
@@ -1646,7 +1646,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     assert not info.domains
     assert info.entities == set()
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     template_cover_str = """
 
@@ -1663,7 +1663,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     assert info.domains == {"cover"}
     assert info.entities == set()
     assert info.all_states is False
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 def test_nested_async_render_to_info_case(hass):
