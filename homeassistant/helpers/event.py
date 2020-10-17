@@ -1,5 +1,6 @@
 """Helpers for listening to events."""
 import asyncio
+import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
@@ -750,6 +751,7 @@ class _TrackTemplateResultInfo:
         self._last_result: Dict[Template, Union[str, TemplateError]] = {}
 
         self._rate_limit = KeyedRateLimit(hass)
+        self._rate_limited: Set[Template] = set()
         self._info: Dict[Template, RenderInfo] = {}
         self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
 
@@ -829,6 +831,9 @@ class _TrackTemplateResultInfo:
                 (track_template_,),
                 True,
             ):
+                if template not in self._rate_limited:
+                    self._rate_limited.add(template)
+                    return True
                 return False
 
             _LOGGER.debug(
@@ -837,6 +842,8 @@ class _TrackTemplateResultInfo:
                 event,
             )
 
+        if template in self._rate_limited:
+            self._rate_limited.remove(template)
         self._rate_limit.async_triggered(template, now)
         self._info[template] = info = template.async_render_to_info(
             track_template_.variables
@@ -892,8 +899,18 @@ class _TrackTemplateResultInfo:
 
         if info_changed:
             assert self._track_state_changes
+            if self._rate_limited:
+                update_track_states: Iterable[RenderInfo] = [
+                    _rate_limit_render_info(self._info[template])
+                    if template in self._rate_limited
+                    else self._info[template]
+                    for template in self._info
+                ]
+            else:
+                update_track_states = self._info.values()
+
             self._track_state_changes.async_update_listeners(
-                _render_infos_to_track_states(self._info.values()),
+                _render_infos_to_track_states(update_track_states)
             )
             _LOGGER.debug(
                 "Template group %s listens for %s",
@@ -1458,3 +1475,13 @@ def _rate_limit_for_event(
 
     rate_limit: Optional[timedelta] = info.rate_limit
     return rate_limit
+
+
+def _rate_limit_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove the domains and all_states from render info during a ratelimit."""
+    rate_limited_render_info = copy.copy(render_info)
+    rate_limited_render_info.all_states = False
+    rate_limited_render_info.all_states_lifecycle = False
+    rate_limited_render_info.domains = set()
+    rate_limited_render_info.domains_lifecycle = set()
+    return rate_limited_render_info
