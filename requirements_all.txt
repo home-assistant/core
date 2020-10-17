@@ -1297,7 +1297,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.5.0
+pychromecast==7.5.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1357,7 +1357,7 @@ pyedimax==0.2.1
 pyeight==0.1.4
 
 # homeassistant.components.emby
-pyemby==1.6
+pyemby==1.7
 
 # homeassistant.components.envisalink
 pyenvisalink==4.0
