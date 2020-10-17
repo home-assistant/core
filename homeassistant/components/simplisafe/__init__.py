@@ -46,7 +46,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    _LOGGER,
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
     ATTR_CHIME_VOLUME,
@@ -59,6 +58,7 @@ from .const import (
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    LOGGER,
     VOLUMES,
 )
 
@@ -203,10 +203,10 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_TOKEN], client_id=client_id, session=websession
         )
     except InvalidCredentialsError:
-        _LOGGER.error("Invalid credentials provided")
+        LOGGER.error("Invalid credentials provided")
         return False
     except SimplipyError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
@@ -229,7 +229,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system_id = int(call.data[ATTR_SYSTEM_ID])
             if system_id not in simplisafe.systems:
-                _LOGGER.error("Unknown system ID in service call: %s", system_id)
+                LOGGER.error("Unknown system ID in service call: %s", system_id)
                 return
             await coro(call)
 
@@ -243,7 +243,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
             if system.version != 3:
-                _LOGGER.error("Service only available on V3 systems")
+                LOGGER.error("Service only available on V3 systems")
                 return
             await coro(call)
 
@@ -257,7 +257,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.clear_notifications()
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -268,7 +268,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -279,7 +279,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -297,7 +297,7 @@ async def async_setup_entry(hass, config_entry):
                 }
             )
         except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
+            LOGGER.error("Error during service call: %s", err)
             return
 
     for service, method, schema in [
@@ -351,16 +351,16 @@ class SimpliSafeWebsocket:
     @staticmethod
     def _on_connect():
         """Define a handler to fire when the websocket is connected."""
-        _LOGGER.info("Connected to websocket")
+        LOGGER.info("Connected to websocket")
 
     @staticmethod
     def _on_disconnect():
         """Define a handler to fire when the websocket is disconnected."""
-        _LOGGER.info("Disconnected from websocket")
+        LOGGER.info("Disconnected from websocket")
 
     def _on_event(self, event):
         """Define a handler to fire when a new SimpliSafe event arrives."""
-        _LOGGER.debug("New websocket event: %s", event)
+        LOGGER.debug("New websocket event: %s", event)
         async_dispatcher_send(
             self._hass, TOPIC_UPDATE_WEBSOCKET.format(event.system_id), event
         )
@@ -433,7 +433,7 @@ class SimpliSafe:
         if not to_add:
             return
 
-        _LOGGER.debug("New system notifications: %s", to_add)
+        LOGGER.debug("New system notifications: %s", to_add)
 
         self._system_notifications[system.system_id].update(to_add)
 
