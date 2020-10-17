@@ -16,7 +16,7 @@
             },
             "reauth_confirm": {
                 "description": "Spotify \u6574\u5408\u9700\u8981\u91cd\u65b0\u8a8d\u8b49 Spotify \u5e33\u865f\uff1a{account}",
-                "title": "\u91cd\u65b0\u8a8d\u8b49 Spotify\u3002"
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
     }
