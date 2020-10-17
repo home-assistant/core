@@ -1,29 +1,4 @@
-"""Adaptive Lighting integration in Home-Assistant.
-
-This integration calculates color temperature and brightness to synchronize
-your color-changing lights with the perceived color temperature of the sky
-throughout the day. This gives your environment a more natural feel, with
-cooler whites during the midday and warmer tints near twilight and dawn.
-
-Additionally, the integration sets your lights to a nice warm white at 1% in
-"Sleep mode", which is far brighter than starlight but won't reset your
-circadian rhythm or break down too much rhodopsin in your eyes.
-
-Human circadian rhythms are heavily influenced by ambient light levels and
-hues. Hormone production, brainwave activity, mood, and wakefulness are
-just some of the cognitive functions tied to cyclical natural light.
-
-Resources:
-- http://en.wikipedia.org/wiki/Zeitgeber
-- http://www.cambridgeincolour.com/tutorials/sunrise-sunset-calculator.htm
-- http://en.wikipedia.org/wiki/Color_temperature
-
-## Notes
-* Only your location is taken into account to calculate the the sun's position.
-* Weather is not considered.
-* The integration does not calculate a true "Blue Hour" -- it just sets the
-  lights to 2700K (warm white) until your hub goes into "Sleep mode".
-"""
+"""Adaptive Lighting integration in Home-Assistant."""
 import logging
 from typing import Any, Dict
 
