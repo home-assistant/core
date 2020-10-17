@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         if ac_device["info"]["freshAirStatus"] != "none":
             entities.append(AdvantageAirFreshAir(instance, ac_key))
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
