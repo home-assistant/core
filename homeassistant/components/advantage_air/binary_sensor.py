@@ -72,8 +72,3 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     def is_on(self):
         """Return if motion is detect."""
         return self._zone["motion"]
-
-    @property
-    def device_state_attributes(self):
-        """Return additional motion configuration."""
-        return {"motionConfig": self._zone["motionConfig"]}
