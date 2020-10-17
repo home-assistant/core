@@ -1354,7 +1354,7 @@ pyedimax==0.2.1
 pyeight==0.1.4
 
 # homeassistant.components.emby
-pyemby==1.6
+pyemby==1.7
 
 # homeassistant.components.envisalink
 pyenvisalink==4.0
