@@ -254,7 +254,7 @@ async def test_remove_orphaned_entries_service(hass):
                 if config_entry.entry_id in entry.config_entries
             ]
         )
-        == 4  # Gateway, light, switch and orphan
+        == 5  # Host, gateway, light, switch and orphan
     )
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -287,7 +287,7 @@ async def test_remove_orphaned_entries_service(hass):
                 if config_entry.entry_id in entry.config_entries
             ]
         )
-        == 3  # Gateway, light and switch
+        == 4  # Host, gateway, light and switch
     )
 
     assert (
