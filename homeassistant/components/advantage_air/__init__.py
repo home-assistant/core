@@ -1,5 +1,6 @@
 """Advantage Air climate integration."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -24,10 +25,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up AdvantageAir Config."""
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
-    port = config_entry.data[CONF_PORT]
+    ip_address = entry.data[CONF_IP_ADDRESS]
+    port = entry.data[CONF_PORT]
     api = advantage_air(
         ip_address,
         port=port,
@@ -61,24 +62,31 @@ async def async_setup_entry(hass, config_entry):
     if not coordinator.data:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": async_change,
     }
 
     for platform in ADVANTAGE_AIR_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload Advantage Air Config."""
-    for platform in ADVANTAGE_AIR_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in ADVANTAGE_AIR_PLATFORMS
+            ]
         )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    return await hass.data[DOMAIN].async_unload_entry(config_entry)
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
