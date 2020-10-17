@@ -173,11 +173,11 @@ def _format_state_value(value):
 def _create_flume_device_coordinator(hass, flume_device):
     """Create a data coordinator for the flume device."""
 
-    def _update_data():
+    async def _async_update_data():
         """Get the latest data from the Flume."""
         _LOGGER.debug("Updating Flume data")
         try:
-            flume_device.update_force()
+            await hass.async_add_executor_job(flume_device.update_force)
         except Exception as ex:  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with flume API: {ex}")
         _LOGGER.debug(
@@ -193,7 +193,7 @@ def _create_flume_device_coordinator(hass, flume_device):
         _LOGGER,
         # Name of the data. For logging purposes.
         name=flume_device.device_id,
-        update_method=_update_data,
+        update_method=_async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=SCAN_INTERVAL,
     )
