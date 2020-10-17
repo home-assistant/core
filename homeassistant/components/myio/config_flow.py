@@ -53,8 +53,7 @@ class MyIOHub:
 
         return self.message
 
-    @staticmethod
-    def test_already_check_false(self) -> bool:
+    def test_already_check_false(self) -> bool:  # pylint: disable=R0201
         """Change at the test if the server name is already in use."""
         return False
 
