@@ -8,15 +8,17 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.ruckus_unleashed import (
     DEFAULT_AP_INFO,
-    DEFAULT_SYSTEM_INFO,
-    DEFAULT_TITLE,
     DEFAULT_UNIQUE_ID,
     TEST_CLIENT,
     TEST_CLIENT_ENTITY_ID,
+    _patch_ap_info,
+    _patch_connect,
+    _patch_fetch_clients,
+    _patch_mesh_name,
+    _patch_system_info,
     init_integration,
     mock_config_entry,
 )
@@ -27,12 +29,7 @@ async def test_client_connected(hass):
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={
-            TEST_CLIENT[API_MAC]: TEST_CLIENT,
-        },
-    ):
+    with _patch_fetch_clients():
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
@@ -46,10 +43,7 @@ async def test_client_disconnected(hass):
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={},
-    ):
+    with _patch_fetch_clients(return_value={}):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -63,10 +57,7 @@ async def test_clients_update_failed(hass):
     await init_integration(hass)
 
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        side_effect=ConnectionError,
-    ):
+    with _patch_fetch_clients(side_effect=ConnectionError):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -89,22 +80,7 @@ async def test_restoring_clients(hass):
         config_entry=entry,
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
-        return_value=DEFAULT_AP_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={},
-    ):
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info(), _patch_ap_info(), _patch_fetch_clients():
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -19,11 +19,14 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from tests.async_mock import patch
 from tests.components.ruckus_unleashed import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
-    DEFAULT_TITLE,
+    _patch_async_update_data,
+    _patch_connect,
+    _patch_create,
+    _patch_mesh_name,
+    _patch_system_info,
     init_integration,
     mock_config_entry,
 )
@@ -32,10 +35,7 @@ from tests.components.ruckus_unleashed import (
 async def test_setup_entry_login_error(hass):
     """Test entry setup failed due to login error."""
     entry = mock_config_entry()
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.create",
-        side_effect=AuthenticationError,
-    ):
+    with _patch_create(side_effect=AuthenticationError):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -46,10 +46,7 @@ async def test_setup_entry_login_error(hass):
 async def test_setup_entry_connection_error(hass):
     """Test entry setup failed due to connection error."""
     entry = mock_config_entry()
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.create",
-        side_effect=ConnectionError,
-    ):
+    with _patch_create(side_effect=ConnectionError):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -94,18 +91,8 @@ async def test_unload_entry(hass):
 async def test_config_not_ready_during_setup(hass):
     """Test we throw a ConfigNotReady if Coordinator update fails."""
     entry = mock_config_entry()
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._async_update_data",
-        side_effect=ConnectionError,
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info(), _patch_async_update_data(
+        side_effect=ConnectionError
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

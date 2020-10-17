@@ -9,7 +9,13 @@ from homeassistant.util import utcnow
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-from tests.components.ruckus_unleashed import CONFIG, DEFAULT_SYSTEM_INFO, DEFAULT_TITLE
+from tests.components.ruckus_unleashed import (
+    CONFIG,
+    DEFAULT_TITLE,
+    _patch_connect,
+    _patch_mesh_name,
+    _patch_system_info,
+)
 
 
 async def test_form(hass):
@@ -20,16 +26,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info(), patch(
         "homeassistant.components.ruckus_unleashed.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.ruckus_unleashed.async_setup_entry",
@@ -54,10 +51,7 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=AuthenticationError,
-    ):
+    with _patch_connect(side_effect=AuthenticationError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -73,10 +67,7 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=ConnectionError,
-    ):
+    with _patch_connect(side_effect=ConnectionError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -92,10 +83,7 @@ async def test_form_unknown_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        side_effect=Exception,
-    ):
+    with _patch_connect():
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -113,16 +101,7 @@ async def test_form_cannot_connect_unknown_serial(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value={},
-    ):
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info(return_value={}):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -138,16 +117,7 @@ async def test_form_duplicate_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ):
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info():
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,

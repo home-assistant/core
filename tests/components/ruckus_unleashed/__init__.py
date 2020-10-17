@@ -53,6 +53,74 @@ TEST_CLIENT = {
 }
 
 
+def _patch_create(**kwargs):
+    """Patch the `Ruckus.create()` method."""
+    return patch(
+        "homeassistant.components.ruckus_unleashed.Ruckus.create",
+        **kwargs,
+    )
+
+
+def _patch_connect(**kwargs):
+    """Patch the `Ruckus.connect()` method."""
+    if not kwargs:
+        kwargs["return_value"] = None
+    return patch(
+        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
+        **kwargs,
+    )
+
+
+def _patch_mesh_name(**kwargs):
+    """Patch the `Ruckus.mesh_name()` method."""
+    if not kwargs:
+        kwargs["return_value"] = DEFAULT_TITLE
+    return patch(
+        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
+        **kwargs,
+    )
+
+
+def _patch_system_info(**kwargs):
+    """Patch the `Ruckus.system_info()` method."""
+    if not kwargs:
+        kwargs["return_value"] = DEFAULT_SYSTEM_INFO
+    return patch(
+        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
+        **kwargs,
+    )
+
+
+def _patch_ap_info(**kwargs):
+    """Patch the `Ruckus.ap_info()` method."""
+    if not kwargs:
+        kwargs["return_value"] = DEFAULT_AP_INFO
+    return patch(
+        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
+        **kwargs,
+    )
+
+
+def _patch_fetch_clients(**kwargs):
+    """Patch the `RuckusUnleashedDataUpdateCoordinator._fetch_clients()` method."""
+    if not kwargs:
+        kwargs["return_value"] = {
+            TEST_CLIENT[API_MAC]: TEST_CLIENT,
+        }
+    return patch(
+        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
+        **kwargs,
+    )
+
+
+def _patch_async_update_data(**kwargs):
+    """Patch the `RuckusUnleashedDataUpdateCoordinator._async_update_data()` method."""
+    return patch(
+        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._async_update_data",
+        **kwargs,
+    )
+
+
 def mock_config_entry() -> MockConfigEntry:
     """Return a Ruckus Unleashed mock config entry."""
     return MockConfigEntry(
@@ -67,24 +135,7 @@ def mock_config_entry() -> MockConfigEntry:
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the Ruckus Unleashed integration in Home Assistant."""
     entry = mock_config_entry()
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
-        return_value=DEFAULT_AP_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={
-            TEST_CLIENT[API_MAC]: TEST_CLIENT,
-        },
-    ):
+    with _patch_connect(), _patch_mesh_name(), _patch_system_info(), _patch_ap_info(), _patch_fetch_clients():
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
