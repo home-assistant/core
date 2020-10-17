@@ -7,7 +7,7 @@
                 "countDownToOn": 0,
                 "fan": "high",
                 "filterCleanStatus": 0,
-                "freshAirStatus": "none",
+                "freshAirStatus": "off",
                 "mode": "vent",
                 "myZone": 0,
                 "name": "AC One",
