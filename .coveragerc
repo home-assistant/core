@@ -18,9 +18,6 @@ omit =
     homeassistant/components/acmeda/helpers.py
     homeassistant/components/acmeda/hub.py
     homeassistant/components/acmeda/sensor.py
-    homeassistant/components/adaptive_lighting/__init__.py
-    homeassistant/components/adaptive_lighting/const.py
-    homeassistant/components/adaptive_lighting/switch.py
     homeassistant/components/adguard/__init__.py
     homeassistant/components/adguard/const.py
     homeassistant/components/adguard/sensor.py
