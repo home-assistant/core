@@ -1,5 +1,5 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
-import datetime
+from datetime import timedelta
 
 STATE_RINGING = "ringing"
 STATE_DIALING = "dialing"
@@ -29,8 +29,8 @@ DEFAULT_USERNAME = "admin"
 DEFAULT_PHONEBOOK = 0
 
 # Return cached results if phonebook was downloaded less then this time ago.
-MIN_TIME_PHONEBOOK_UPDATE = datetime.timedelta(hours=6)
-SCAN_INTERVAL = datetime.timedelta(hours=3)
+MIN_TIME_PHONEBOOK_UPDATE = timedelta(hours=6)
+SCAN_INTERVAL = timedelta(hours=3)
 INTERVAL_RECONNECT = 60
 
 DOMAIN = "fritzbox_callmonitor"

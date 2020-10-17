@@ -1,10 +1,17 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
-import datetime
+from datetime import datetime
 from functools import partial
 import logging
-import socket
-import threading
-import time
+from socket import (
+    AF_INET,
+    SO_KEEPALIVE,
+    SOCK_STREAM,
+    SOL_SOCKET,
+    socket,
+    timeout as SocketTimeout,
+)
+from threading import Event as ThreadingEvent, Thread
+from time import sleep
 
 import voluptuous as vol
 
@@ -213,17 +220,17 @@ class FritzBoxCallMonitor:
         self.port = port
         self.sock = None
         self._sensor = sensor
-        self.stopped = threading.Event()
+        self.stopped = ThreadingEvent()
 
     def connect(self):
         """Connect to the Fritz!Box."""
         _LOGGER.debug("Setting up socket...")
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.settimeout(10)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
         try:
             self.sock.connect((self.host, self.port))
-            threading.Thread(target=self._listen).start()
+            Thread(target=self._listen).start()
         except OSError as err:
             self.sock = None
             _LOGGER.error(
@@ -236,7 +243,7 @@ class FritzBoxCallMonitor:
         while not self.stopped.isSet():
             try:
                 response = self.sock.recv(2048)
-            except socket.timeout:
+            except SocketTimeout:
                 # if no response after 10 seconds, just recv again
                 continue
             response = str(response, "utf-8")
@@ -249,18 +256,18 @@ class FritzBoxCallMonitor:
                 self.sock = None
                 while self.sock is None:
                     self.connect()
-                    time.sleep(INTERVAL_RECONNECT)
+                    sleep(INTERVAL_RECONNECT)
             else:
                 line = response.split("\n", 1)[0]
                 self._parse(line)
-                time.sleep(1)
+                sleep(1)
 
     def _parse(self, line):
         """Parse the call information and set the sensor states."""
         line = line.split(";")
         df_in = "%d.%m.%y %H:%M:%S"
         df_out = "%Y-%m-%dT%H:%M:%S"
-        isotime = datetime.datetime.strptime(line[0], df_in).strftime(df_out)
+        isotime = datetime.strptime(line[0], df_in).strftime(df_out)
         if line[1] == FRITZ_STATE_RING:
             self._sensor.set_state(STATE_RINGING)
             att = {

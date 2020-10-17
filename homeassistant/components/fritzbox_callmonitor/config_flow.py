@@ -3,7 +3,7 @@
 from functools import partial
 
 from fritzconnection.core.exceptions import FritzConnectionException
-import requests
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -88,7 +88,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_SUCCESS
         except FritzConnectionException:
             return RESULT_INVALID_AUTH
-        except requests.exceptions.ConnectionError:
+        except RequestsConnectionError:
             return RESULT_NO_DEVIES_FOUND
 
     def _is_already_configured(self, host, phonebook_id):

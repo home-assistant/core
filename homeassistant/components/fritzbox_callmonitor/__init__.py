@@ -1,5 +1,5 @@
 """The fritzbox_callmonitor integration."""
-import asyncio
+from asyncio import gather
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
@@ -51,7 +51,7 @@ async def async_unload_entry(hass, entry):
     """Unloading the fritzbox_callmonitor platforms."""
 
     unload_ok = all(
-        await asyncio.gather(
+        await gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
                 for component in PLATFORMS
