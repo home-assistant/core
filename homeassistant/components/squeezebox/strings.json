@@ -29,5 +29,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_server_found": "No LMS server found."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "disable_volume_set_entities": "Entities that do not support volume set",
+	  "disable_volume_mute_entities": "Entities that do not support volume mute"
+	}
+      }
+    }
   }
 }

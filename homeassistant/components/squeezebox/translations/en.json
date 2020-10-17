@@ -1,33 +1,43 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured",
-            "no_server_found": "No LMS server found."
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "no_server_found": "Could not automatically discover server.",
-            "unknown": "Unexpected error"
-        },
-        "flow_title": "Logitech Squeezebox: {host}",
-        "step": {
-            "edit": {
-                "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "port": "Port",
-                    "username": "Username"
-                },
-                "title": "Edit connection information"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "title": "Configure Logitech Media Server"
-            }
+  "title": "Logitech Squeezebox",
+  "config": {
+    "flow_title": "Logitech Squeezebox: {host}",
+    "step": {
+      "user": {
+	"title": "Configure Logitech Media Server",
+	"data": {
+	  "host": "[%key:common::config_flow::data::host%]"
+	}
+      },
+      "edit": {
+        "title": "Edit connection information",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+	  "port": "[%key:common::config_flow::data::port%]",
+	  "username": "[%key:common::config_flow::data::username%]",
+	  "password": "[%key:common::config_flow::data::password%]"
         }
+      }
     },
-    "title": "Logitech Squeezebox"
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_server_found": "Could not automatically discover server."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_server_found": "No LMS server found."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "disable_volume_set_entities": "Entities that do not support volume set",
+	  "disable_volume_mute_entities": "Entities that do not support volume mute"
+	}
+      }
+    }
+  }
 }

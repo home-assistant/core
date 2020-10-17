@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
@@ -186,3 +187,42 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
         return await self.async_step_edit()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Launch options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for Squeezebox."""
+
+    def __init__(self, config_entry):
+        """Init OptionsFlowHandler."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        "disable_volume_set_entities",
+                        default=self.config_entry.options.get(
+                            "disable_volume_set_entities"
+                        ),
+                    ): str,
+                    vol.Optional(
+                        "disable_volume_mute_entities",
+                        default=self.config_entry.options.get(
+                            "disable_volume_mute_entities",
+                        ),
+                    ): str,
+                }
+            ),
+        )

@@ -26,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.const import (
@@ -67,6 +68,9 @@ ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
+SIGNAL_PLAYER_OPTIONS_CHANGED = "squeezebox_player_options_changed"
+
+REMOVE_UPDATE_LISTENER = "remove_update_listener"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +80,7 @@ SUPPORT_SQUEEZEBOX = (
     SUPPORT_BROWSE_MEDIA
     | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
@@ -245,7 +250,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             EVENT_HOMEASSISTANT_START, start_server_discovery(hass)
         )
 
+    # Register options listener and run it once to initialize options
+    remove_update_listener = config_entry.add_update_listener(update_listener)
+    hass.data[DOMAIN][config_entry.entry_id][
+        REMOVE_UPDATE_LISTENER
+    ] = remove_update_listener
+    await update_listener(hass, config_entry)
+
     return True
+
+
+async def update_listener(hass, entry):
+    """Handle options update."""
+    disable_volume_set_entities = entry.options.get("disable_volume_set_entities")
+    hass.data[DOMAIN]["disable_volume_set_entities"] = []
+    if disable_volume_set_entities is not None:
+        for entity in disable_volume_set_entities.split(","):
+            hass.data[DOMAIN]["disable_volume_set_entities"].append(entity.strip())
+
+    disable_volume_mute_entities = entry.options.get("disable_volume_mute_entities")
+    hass.data[DOMAIN]["disable_volume_mute_entities"] = []
+    if disable_volume_mute_entities is not None:
+        for entity in disable_volume_mute_entities.split(","):
+            hass.data[DOMAIN]["disable_volume_mute_entities"].append(entity.strip())
+
+    async_dispatcher_send(hass, SIGNAL_PLAYER_OPTIONS_CHANGED)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    remove_update_listener = hass.data[DOMAIN][entry.entry_id][REMOVE_UPDATE_LISTENER]
+    remove_update_listener()
+    hass.data[DOMAIN].pop(entry.entry_id)
 
 
 class SqueezeBoxEntity(MediaPlayerEntity):
@@ -261,7 +297,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._last_update = None
         self._query_result = {}
         self._available = True
-        self._remove_dispatcher = None
+        self._remove_discovery_dispatcher = None
+        self._remove_options_dispatcher = None
+        self._disable_volume_set = False
+        self._disable_volume_mute = False
 
     @property
     def device_state_attributes(self):
@@ -295,7 +334,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if unique_id == self.unique_id and connected:
             self._available = True
             _LOGGER.info("Player %s is available again", self.name)
-            self._remove_dispatcher()
+            self._remove_discovery_dispatcher()
 
     @property
     def state(self):
@@ -305,6 +344,36 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if self._player.mode:
             return SQUEEZEBOX_MODE.get(self._player.mode)
         return None
+
+    async def async_added_to_hass(self):
+        """Update support features after entity id is assigned."""
+        await super().async_added_to_hass()
+        self.update_supported_features()
+        self._remove_options_dispatcher = async_dispatcher_connect(
+            self.hass, SIGNAL_PLAYER_OPTIONS_CHANGED, self.update_supported_features
+        )
+
+    @callback
+    def update_supported_features(self):
+        """Update supported features."""
+        disable_volume_set = False
+        disable_volume_set_entities = self.hass.data[DOMAIN].get(
+            "disable_volume_set_entities"
+        )
+        if disable_volume_set_entities is not None:
+            if self.entity_id in disable_volume_set_entities:
+                disable_volume_set = True
+
+        disable_volume_mute = False
+        disable_volume_mute_entities = self.hass.data[DOMAIN].get(
+            "disable_volume_mute_entities"
+        )
+        if disable_volume_mute_entities is not None:
+            if self.entity_id in disable_volume_mute_entities:
+                disable_volume_mute = True
+
+        self._disable_volume_set = disable_volume_set
+        self._disable_volume_mute = disable_volume_mute
 
     async def async_update(self):
         """Update the Player() object."""
@@ -319,18 +388,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 self._available = False
 
                 # start listening for restored players
-                self._remove_dispatcher = async_dispatcher_connect(
+                self._remove_discovery_dispatcher = async_dispatcher_connect(
                     self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
                 )
 
     async def async_will_remove_from_hass(self):
-        """Remove from list of known players when removed from hass."""
+        """Remove dispatchers and from list of known players when removed from hass."""
         self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self)
+        if self._remove_options_dispatcher is not None:
+            self._remove_options_dispatcher()
+        if self._remove_discovery_dispatcher is not None:
+            self._remove_discovery_dispatcher()
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self._player.volume:
+        if self._player.volume and not self._disable_volume_set:
             return int(float(self._player.volume)) / 100.0
 
     @property
@@ -400,7 +473,12 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SQUEEZEBOX
+        features = SUPPORT_SQUEEZEBOX
+        if self._disable_volume_set:
+            features &= ~SUPPORT_VOLUME_SET
+        if self._disable_volume_mute:
+            features &= ~SUPPORT_VOLUME_MUTE
+        return features
 
     @property
     def sync_group(self):
