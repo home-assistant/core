@@ -52,6 +52,7 @@
         "invalid_access_token": "Invalid access token",
         "invalid_api_key": "Invalid API key",
         "invalid_auth": "Invalid authentication",
+        "invalid_credentials": "Invalid credentials",
         "invalid_host": "Invalid hostname or IP address",
         "unknown": "Unexpected error"
       },
