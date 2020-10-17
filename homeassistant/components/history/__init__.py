@@ -508,7 +508,20 @@ class HistoryPeriodView(HomeAssistantView):
             and entity_ids
             and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
         ):
+            _LOGGER.warning(
+                "bypass: include_start_time_state=%s, entity_ids=%s, start_time=%s",
+                include_start_time_state,
+                entity_ids,
+                start_time,
+            )
             return self.json([])
+        else:
+            _LOGGER.warning(
+                "querydb: include_start_time_state=%s, entity_ids=%s, start_time=%s",
+                include_start_time_state,
+                entity_ids,
+                start_time,
+            )
 
         return cast(
             web.Response,
@@ -675,7 +688,14 @@ def _entities_may_have_state_changes_after(
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
 
-        if not state or state.last_changed > start_time:
+        if state is not None:
+            _LOGGER.warning(
+                "entity_id=%s last_changed=%s start_time=%s",
+                entity_id,
+                state.last_changed,
+                start_time,
+            )
+        if state is None or state.last_changed > start_time:
             return True
 
     return False
