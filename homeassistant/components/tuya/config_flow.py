@@ -219,7 +219,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="device",
             data_schema=config_schema,
-            description_placeholders={"device_name": device.name()},
+            description_placeholders={
+                "device_type": device_type,
+                "device_name": device.name(),
+            },
         )
 
     async def async_step_init(self, user_input=None):
