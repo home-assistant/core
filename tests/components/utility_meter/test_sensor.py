@@ -267,6 +267,13 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.state == "5"
 
 
+async def test_self_reset_quarter_hourly(hass, legacy_patchable_time):
+    """Test quarter-hourly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarter-hourly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
 async def test_self_reset_hourly(hass, legacy_patchable_time):
     """Test hourly reset of meter."""
     await _test_self_reset(
