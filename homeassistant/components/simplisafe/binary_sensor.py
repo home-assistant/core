@@ -15,10 +15,11 @@ from . import SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
-    EntityTypes.entry,
     EntityTypes.carbon_monoxide,
-    EntityTypes.smoke,
+    EntityTypes.entry,
     EntityTypes.leak,
+    EntityTypes.lock,
+    EntityTypes.smoke,
     EntityTypes.temperature,
 ]
 
