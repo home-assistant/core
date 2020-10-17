@@ -33,9 +33,6 @@ async def test_form(hass):
         "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
-        return_value=True,
-    ), patch(
         "homeassistant.components.myio.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.myio.async_setup_entry",
@@ -51,6 +48,27 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(hass):
+    """Test we handle already configuration error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
+        side_effect=AlreadyConfigured,
+    ), patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
+        return_value=False,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "already_configured"}
 
 
 async def test_form_invalid_auth(hass):
@@ -138,24 +156,3 @@ async def test_form_app_port_problem(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "app_port"}
-
-
-async def test_form_already_configured(hass):
-    """Test we handle already configuration error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
-        side_effect=AlreadyConfigured,
-    ), patch(
-        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
-        return_value=False,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "already_configured"}
