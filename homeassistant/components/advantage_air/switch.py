@@ -3,7 +3,11 @@
 from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import (
+    ADVANTAGE_AIR_STATE_OFF,
+    ADVANTAGE_AIR_STATE_ON,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -44,11 +48,19 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""
         await self.async_change(
-            {self.ac_key: {"zones": {"info": {"freshAirStatus": "on"}}}}
+            {
+                self.ac_key: {
+                    "zones": {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}
+                }
+            }
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn fresh air off."""
         await self.async_change(
-            {self.ac_key: {"zones": {"info": {"freshAirStatus": "off"}}}}
+            {
+                self.ac_key: {
+                    "zones": {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}
+                }
+            }
         )
