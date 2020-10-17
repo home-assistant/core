@@ -23,8 +23,7 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-""" The first state is Zigbee 'Not fully locked' """
-
+# The first state is Zigbee 'Not fully locked'
 STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
