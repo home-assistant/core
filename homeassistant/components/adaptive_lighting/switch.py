@@ -213,6 +213,7 @@ async def async_setup_entry(
 ):
     """Set up the AdaptiveLighting switch."""
     data = hass.data[DOMAIN]
+    assert config_entry.entry_id in data
 
     if ATTR_TURN_ON_OFF_LISTENER not in data:
         data[ATTR_TURN_ON_OFF_LISTENER] = TurnOnOffListener(hass)
