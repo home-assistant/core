@@ -1,5 +1,4 @@
 """Support for Tasmota sensors."""
-import logging
 from typing import Optional
 
 from hatasmota.const import (
@@ -59,8 +58,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS = "device_class"
 ICON = "icon"

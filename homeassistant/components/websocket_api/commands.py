@@ -1,6 +1,5 @@
 """Commands part of Websocket API."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -21,8 +20,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
-
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

@@ -6,7 +6,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class UniFiBase(Entity):
@@ -26,7 +26,9 @@ class UniFiBase(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        LOGGER.debug("New %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac)
+        _LOGGER.debug(
+            "New %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+        )
         for signal, method in (
             (self.controller.signal_reachable, self.async_update_callback),
             (self.controller.signal_options_update, self.options_updated),
@@ -37,7 +39,7 @@ class UniFiBase(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        LOGGER.debug(
+        _LOGGER.debug(
             "Removing %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
         )
         self._item.remove_callback(self.async_update_callback)
@@ -46,7 +48,7 @@ class UniFiBase(Entity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        LOGGER.debug(
+        _LOGGER.debug(
             "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
         )
         self.async_write_ha_state()

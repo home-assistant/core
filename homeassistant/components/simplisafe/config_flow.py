@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from . import async_get_client_id
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import _LOGGER, DOMAIN  # pylint: disable=unused-import
 
 
 class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,12 +62,12 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             simplisafe = await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
-            LOGGER.info("Awaiting confirmation of MFA email click")
+            _LOGGER.info("Awaiting confirmation of MFA email click")
             return await self.async_step_mfa()
         except InvalidCredentialsError:
             errors = {"base": "invalid_credentials"}
         except SimplipyError as err:
-            LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
+            _LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             errors = {"base": "unknown"}
 
         if errors:
@@ -101,7 +101,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             simplisafe = await self._async_get_simplisafe_api()
         except PendingAuthorizationError:
-            LOGGER.error("Still awaiting confirmation of MFA email click")
+            _LOGGER.error("Still awaiting confirmation of MFA email click")
             return self.async_show_form(
                 step_id="mfa", errors={"base": "still_awaiting_mfa"}
             )

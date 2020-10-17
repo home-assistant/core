@@ -1,12 +1,8 @@
 """Support for monitoring a Smappee energy sensor."""
-import logging
-
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 TREND_SENSORS = {
     "total_power": [

@@ -1,5 +1,4 @@
 """Support for Arris TG2492LG router."""
-import logging
 from typing import List
 
 from arris_tg2492lg import ConnectBox, Device
@@ -12,8 +11,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "192.168.178.1"
 

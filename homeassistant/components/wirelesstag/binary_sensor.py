@@ -1,6 +1,4 @@
 """Binary sensor support for Wireless Sensor Tags."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -14,8 +12,6 @@ from . import (
     SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 # On means in range, Off means out of range
 SENSOR_PRESENCE = "presence"

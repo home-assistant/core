@@ -1,7 +1,5 @@
 """Plugwise platform for Home Assistant Core."""
-
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -13,8 +11,6 @@ from .const import ALL_PLATFORMS, DOMAIN, UNDO_UPDATE_LISTENER
 from .gateway import async_setup_entry_gw
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
