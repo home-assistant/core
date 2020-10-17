@@ -46,13 +46,18 @@ LAT_LONG_TZS = [
 ]
 
 
-async def test_adaptive_lighting_switches(hass):
-    """Test switches created for adaptive_lighting integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: DEFAULT_NAME})
+async def setup_switch(hass, extra_data):
+    """Create the switch entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: DEFAULT_NAME, **extra_data})
     entry.add_to_hass(hass)
-
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    return entry
+
+
+async def test_adaptive_lighting_switches(hass):
+    """Test switches created for adaptive_lighting integration."""
+    entry = await setup_switch(hass, {})
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
     assert hass.states.async_entity_ids(SWITCH_DOMAIN) == [
@@ -71,6 +76,19 @@ async def test_adaptive_lighting_switches(hass):
 
 
 @pytest.mark.parametrize("lat,long,tz", LAT_LONG_TZS)
+async def test_adaptive_lighting_time_zones_with_default_settings(hass, lat, long, tz):
+    """Test setting up the Adaptive Lighting switches with different timezones."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {"latitude": lat, "longitude": long, "time_zone": tz},
+    )
+    entry = await setup_switch(hass, {})
+    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+    # Shouldn't raise an exception ever
+    await switch._update_attrs_and_maybe_adapt_lights(context=Context())
+
+
+@pytest.mark.parametrize("lat,long,tz", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_and_sunsettings(hass, lat, long, tz):
     """Test setting up the Adaptive Lighting switches with different timezones.
 
@@ -80,19 +98,13 @@ async def test_adaptive_lighting_time_zones_and_sunsettings(hass, lat, long, tz)
         hass,
         {"latitude": lat, "longitude": long, "time_zone": tz},
     )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_NAME: DEFAULT_NAME,
+    entry = await setup_switch(
+        hass,
+        {
             CONF_SUNRISE_TIME: datetime.time(SUNRISE.hour),
             CONF_SUNSET_TIME: datetime.time(SUNSET.hour),
         },
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
     context = Context()  # needs to be passed to update method
     switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
