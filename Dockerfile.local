@@ -5,4 +5,5 @@ RUN pip3 install --no-cache-dir -i https://test.pypi.org/simple/ mythtvservicesa
 RUN pip3 install --no-cache-dir --upgrade git+https://github.com/rajlaud/pyCEC.git@tcp-fixes
 COPY *.whl /tmp/
 RUN pip3 install --force-reinstall --no-deps /tmp/*.whl
+RUN ln -s /config/.ssh /root/.ssh
 WORKDIR /config
