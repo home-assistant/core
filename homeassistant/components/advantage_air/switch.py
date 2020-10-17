@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        if ac_device["freshAirStatus"] != "none":
+        if ac_device["info"]["freshAirStatus"] != "none":
             entities.append(AdvantageAirFreshAir(instance, ac_key))
         async_add_entities(entities)
 
@@ -48,19 +48,11 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""
         await self.async_change(
-            {
-                self.ac_key: {
-                    "zones": {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}
-                }
-            }
+            {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_ON}}}
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn fresh air off."""
         await self.async_change(
-            {
-                self.ac_key: {
-                    "zones": {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}
-                }
-            }
+            {self.ac_key: {"info": {"freshAirStatus": ADVANTAGE_AIR_STATE_OFF}}}
         )
