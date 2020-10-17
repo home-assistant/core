@@ -7,7 +7,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.core import callback
 
 from . import SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import _LOGGER, DATA_CLIENT, DOMAIN
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_JAMMED = "jammed"
@@ -48,7 +48,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         try:
             await self._lock.lock()
         except SimplipyError as err:
-            LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
+            _LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
         self._is_locked = True
@@ -58,7 +58,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         try:
             await self._lock.unlock()
         except SimplipyError as err:
-            LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
+            _LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
 
         self._is_locked = False

@@ -1,6 +1,5 @@
 """Xbox Media Source Implementation."""
 from dataclasses import dataclass
-import logging
 from typing import List, Tuple
 
 # pylint: disable=no-name-in-module
@@ -30,8 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from .browse_media import _find_media_image
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIME_TYPE_MAP = {
     "gameclips": "video/mp4",

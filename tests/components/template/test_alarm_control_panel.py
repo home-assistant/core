@@ -1,6 +1,4 @@
 """The tests for the Template alarm control panel platform."""
-import logging
-
 from homeassistant import setup
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -14,8 +12,6 @@ from homeassistant.const import (
 
 from tests.common import async_mock_service
 from tests.components.alarm_control_panel import common
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_template_state_text(hass):

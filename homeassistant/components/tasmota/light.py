@@ -1,6 +1,4 @@
 """Support for Tasmota lights."""
-import logging
-
 from hatasmota.light import (
     LIGHT_TYPE_COLDWARM,
     LIGHT_TYPE_NONE,
@@ -32,8 +30,6 @@ import homeassistant.util.color as color_util
 from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100

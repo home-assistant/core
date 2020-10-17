@@ -1,6 +1,4 @@
 """Config flow for Tasmota."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,8 +9,6 @@ from .const import (  # pylint:disable=unused-import
     DEFAULT_PREFIX,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

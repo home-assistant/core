@@ -1,12 +1,9 @@
 """Support for Lutron Caseta scenes."""
-import logging
 from typing import Any
 
 from homeassistant.components.scene import Scene
 
 from . import DOMAIN as CASETA_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

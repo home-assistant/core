@@ -38,6 +38,7 @@ from homeassistant.core import callback
 
 from . import SimpliSafeEntity
 from .const import (
+    _LOGGER,
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
     ATTR_CHIME_VOLUME,
@@ -49,7 +50,6 @@ from .const import (
     ATTR_VOICE_PROMPT_VOLUME,
     DATA_CLIENT,
     DOMAIN,
-    LOGGER,
     VOLUME_STRING_MAP,
 )
 
@@ -144,7 +144,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             return True
 
         if not code or code != self._simplisafe.config_entry.options[CONF_CODE]:
-            LOGGER.warning(
+            _LOGGER.warning(
                 "Incorrect alarm code entered (target state: %s): %s", state, code
             )
             return False
@@ -159,7 +159,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_off()
         except SimplipyError as err:
-            LOGGER.error('Error while disarming "%s": %s', self._system.name, err)
+            _LOGGER.error('Error while disarming "%s": %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_DISARMED
@@ -172,7 +172,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_home()
         except SimplipyError as err:
-            LOGGER.error('Error while arming "%s" (home): %s', self._system.name, err)
+            _LOGGER.error('Error while arming "%s" (home): %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_ARMED_HOME
@@ -185,7 +185,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_away()
         except SimplipyError as err:
-            LOGGER.error('Error while arming "%s" (away): %s', self._system.name, err)
+            _LOGGER.error('Error while arming "%s" (away): %s', self._system.name, err)
             return
 
         self._state = STATE_ALARM_ARMING
