@@ -865,6 +865,8 @@ class _TrackTemplateResultInfo:
             if not _event_triggers_rerender(event, info):
                 return False
 
+            had_timer = self._rate_limit.async_has_timer(template)
+
             if self._rate_limit.async_schedule_action(
                 template,
                 _rate_limit_for_event(event, info, track_template_),
@@ -874,7 +876,7 @@ class _TrackTemplateResultInfo:
                 (track_template_,),
                 True,
             ):
-                return not self._rate_limit.async_has_timer(template)
+                return not had_timer
 
             _LOGGER.debug(
                 "Template update %s triggered by event: %s",
