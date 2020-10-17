@@ -580,7 +580,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         )
 
         if media_content_type in [None, "library"]:
-            return library_payload()
+            return await library_payload(self._player)
 
         payload = {
             "search_type": media_content_type,

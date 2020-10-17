@@ -120,7 +120,7 @@ async def build_item_response(player, payload):
     )
 
 
-def library_payload():
+async def library_payload(player):
     """Create response payload to describe contents of library."""
 
     library_info = {
@@ -135,16 +135,21 @@ def library_payload():
 
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
-        library_info["children"].append(
-            BrowseMedia(
-                title=item,
-                media_class=media_class["parent"],
-                media_content_id=item,
-                media_content_type=item,
-                can_play=True,
-                can_expand=True,
-            )
+        result = await player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[item],
+            limit=1,
         )
+        if result is not None and result.get("items") is not None:
+            library_info["children"].append(
+                BrowseMedia(
+                    title=item,
+                    media_class=media_class["parent"],
+                    media_content_id=item,
+                    media_content_type=item,
+                    can_play=True,
+                    can_expand=True,
+                )
+            )
 
     response = BrowseMedia(**library_info)
     return response
