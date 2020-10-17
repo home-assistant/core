@@ -110,10 +110,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # First, connect to the server and get the server id (which will be unique_id on a config_entry
     # if there is one).
-    client = await _async_create_connect_client(host, port)
-    if not client:
+    hyperion_client = await _async_create_connect_client(host, port)
+    if not hyperion_client:
         raise PlatformNotReady
-    hyperion_id = await client.async_id()
+    hyperion_id = await hyperion_client.async_id()
     if not hyperion_id:
         raise PlatformNotReady
 
@@ -279,8 +279,8 @@ async def _async_create_connect_client(
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    client = hass.data[DOMAIN].pop(entry.entry_id)
-    return await client.async_client_disconnect()
+    hyperion_client = hass.data[DOMAIN].pop(entry.entry_id)
+    return await hyperion_client.async_client_disconnect()
 
 
 class Hyperion(LightEntity):

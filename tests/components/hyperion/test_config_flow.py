@@ -97,16 +97,18 @@ async def _create_mock_entry(hass):
     return entry
 
 
-async def _init_flow(hass, source=SOURCE_USER, data={}):
+async def _init_flow(hass, source=SOURCE_USER, data=None):
     """Initialize a flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+    data = data or {}
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": source}, data=data
     )
 
 
-async def _configure_flow(hass, init_result, user_input={}):
+async def _configure_flow(hass, init_result, user_input=None):
     """Provide input to a flow."""
+    user_input = user_input or {}
     result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"], user_input=user_input
     )

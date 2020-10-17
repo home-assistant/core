@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+# pylint: disable=unused-import
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
@@ -99,13 +100,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create and connect a client instance."""
         if self._data is None:
             return
-        hc = client.HyperionClient(
+        hyperion_client = client.HyperionClient(
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),
         )
-        if await hc.async_client_connect(raw=raw):
-            return hc
+        if await hyperion_client.async_client_connect(raw=raw):
+            return hyperion_client
 
     async def async_step_import(
         self, import_data: Optional[ConfigType] = None
@@ -153,11 +154,11 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # First connect without attempting to login and determine if
         # authentication is required.
-        hc = await self._create_and_connect_hyperion_client(raw=True)
-        if not hc:
+        hyperion_client = await self._create_and_connect_hyperion_client(raw=True)
+        if not hyperion_client:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-        auth_resp = await hc.async_is_auth_required()
-        await hc.async_client_disconnect()
+        auth_resp = await hyperion_client.async_is_auth_required()
+        await hyperion_client.async_client_disconnect()
 
         # Could not determine if auth is required, show error.
         if not client.ResponseOK(auth_resp):
@@ -168,10 +169,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_auth_form()
 
         # Test a full connection with state load.
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
+        hyperion_client = await self._create_and_connect_hyperion_client()
+        if not hyperion_client:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-        await hc.async_client_disconnect()
+        await hyperion_client.async_client_disconnect()
 
         return await self._show_confirm_form()
 
@@ -192,11 +193,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _request_token_task_func(self, auth_id: str) -> Dict[str, Any]:
         """Send an async_request_token request."""
-        hc = await self._create_and_connect_hyperion_client(raw=True)
-        if hc:
+        hyperion_client = await self._create_and_connect_hyperion_client(raw=True)
+        if hyperion_client:
             # The Hyperion-py client has a default timeout of 3 minutes on this request.
-            response = await hc.async_request_token(comment=DEFAULT_ORIGIN, id=auth_id)
-            await hc.async_client_disconnect()
+            response = await hyperion_client.async_request_token(
+                comment=DEFAULT_ORIGIN, id=auth_id
+            )
+            await hyperion_client.async_client_disconnect()
             return response
         return None
 
@@ -229,10 +232,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
+        hyperion_client = await self._create_and_connect_hyperion_client()
+        if not hyperion_client:
             return self._show_auth_form({CONF_BASE: "auth_error"})
-        await hc.async_client_disconnect()
+        await hyperion_client.async_client_disconnect()
         return await self._show_confirm_form()
 
     async def async_step_create_token(
@@ -271,10 +274,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Create an entry after successful token creation."""
         # Test the token.
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
+        hyperion_client = await self._create_and_connect_hyperion_client()
+        if not hyperion_client:
             return self._show_auth_form({CONF_BASE: "auth_new_token_not_work_error"})
-        await hc.async_client_disconnect()
+        await hyperion_client.async_client_disconnect()
         return await self._show_confirm_form()
 
     async def async_step_create_token_fail(
@@ -290,6 +293,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None and not self._auto_confirm:
             return await self._show_confirm_form()
 
+        # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167
         return self.async_create_entry(
             title=self.context[CONF_UNIQUE_ID], data=self._data
         )
@@ -322,11 +326,11 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_confirm_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the confirmation form to the user."""
-        hc = await self._create_and_connect_hyperion_client()
-        if not hc:
+        hyperion_client = await self._create_and_connect_hyperion_client()
+        if not hyperion_client:
             return self._show_setup_form({CONF_BASE: "connection_error"})
-        hyperion_id = await hc.async_id()
-        await hc.async_client_disconnect()
+        hyperion_id = await hyperion_client.async_id()
+        await hyperion_client.async_client_disconnect()
 
         if not hyperion_id:
             return self.async_abort(reason="no_id")
