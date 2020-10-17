@@ -9,7 +9,7 @@
         "flow_title": "Arcam FMJ p\u00e5 {host}",
         "step": {
             "confirm": {
-                "description": "Vil du legge Arcam FMJ p\u00e5 ` {host} ` til Home Assistant? "
+                "description": "Vil du legge Arcam FMJ p\u00e5 `{host}` til Home Assistant?"
             },
             "user": {
                 "data": {

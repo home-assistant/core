@@ -17,7 +17,7 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Twoje poprzednio wprowadzone has\u0142o dla {username} ju\u017c nie dzia\u0142a. Zaktualizuj swoje has\u0142o, aby nadal korzysta\u0107 z tej integracji.",
-                "title": "Dane uwierzytelniaj\u0105ce iCloud"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "trusted_device": {
                 "data": {

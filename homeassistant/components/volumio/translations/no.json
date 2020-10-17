@@ -10,7 +10,7 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Vil du legge Volumio (` {name} `) til Home Assistant?",
+                "description": "Vil du legge Volumio (`{name}`) til Home Assistant?",
                 "title": "Oppdaget Volumio"
             },
             "user": {
