@@ -356,7 +356,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "no_key"}
+    assert result["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_flow_ssdp_discovery(hass, aioclient_mock):
