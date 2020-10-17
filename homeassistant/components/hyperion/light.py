@@ -92,8 +92,6 @@ ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
-# TODO: Unique_id on entity use the __init__ function to create unique ids?
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Hyperion platform.."""
