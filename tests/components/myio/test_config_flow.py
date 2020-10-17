@@ -137,6 +137,27 @@ async def test_form_app_port_problem(hass):
     assert result2["errors"] == {"base": "app_port"}
 
 
+async def test_form_already_configured(hass):
+    """Test we handle already configuration error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
+        return_value=False,
+    ), patch(
+        "homeassistant.components.myio.config_flow.validate_input",
+        side_effect=AlreadyConfigured,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "already_configured"}
+
+
 async def test_form_validate(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -167,28 +188,7 @@ async def test_form_validate(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_validate_already_configured(hass):
-    """Test we handle already configuration error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.myio.config_flow.validate_input",
-        side_effect=AlreadyConfigured,
-    ), patch(
-        "homeassistant.components.myio.config_flow.MyIOHub.already_check",
-        return_value=False,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "already_configured"}
-
-
-async def test_form_already_configured(hass):
+async def test_form_already_configured_2(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -219,24 +219,3 @@ async def test_form_already_configured(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_authenticate_message(hass):
-    """Test we handle already configuration error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.myio.config_flow.validate_input",
-        side_effect=InvalidAuth,
-    ), patch(
-        "homeassistant.components.myio.config_flow.MyIOHub.authenticate",
-        message="invalid_auth",
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
