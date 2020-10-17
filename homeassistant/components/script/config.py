@@ -31,7 +31,7 @@ async def _try_async_validate_config_item(hass, object_id, config, full_config=N
         cv.slug(object_id)
         config = await async_validate_config_item(hass, config, full_config)
     except (vol.Invalid, HomeAssistantError) as ex:
-        async_log_exception(ex, DOMAIN, full_config or config, hass)
+        async_log_exception(ex, DOMAIN, config or full_config, hass)
         return None
 
     return config
