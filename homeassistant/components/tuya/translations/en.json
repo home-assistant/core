@@ -31,8 +31,8 @@
             "init": {
                 "title": "Configure Tuya Options",
                 "data": {
-                    "discovery_interval": "Discovery device method polling interval (in seconds, 10-3600)",
-                    "query_interval": "Query device method polling interval (in seconds, 10-3600)",
+                    "discovery_interval": "Discovery device method polling interval (seconds)",
+                    "query_interval": "Query device method polling interval (seconds)",
                     "list_devices": "Select the device to configure"
                 }
             },

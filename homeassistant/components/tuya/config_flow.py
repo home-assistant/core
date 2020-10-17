@@ -242,13 +242,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(float), vol.Clamp(min=10, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
                 vol.Optional(
                     CONF_QUERY_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(float), vol.Clamp(min=10, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
             }
         )
 

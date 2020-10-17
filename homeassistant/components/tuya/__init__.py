@@ -83,7 +83,7 @@ def _update_discovery_interval(hass, interval):
         return
 
     try:
-        tuya.discovery_interval = interval
+        tuya.discovery_interval = float(interval)
         _LOGGER.info("Tuya discovery device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
@@ -95,7 +95,7 @@ def _update_query_interval(hass, interval):
         return
 
     try:
-        tuya.query_interval = interval
+        tuya.query_interval = float(interval)
         _LOGGER.info("Tuya query device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
