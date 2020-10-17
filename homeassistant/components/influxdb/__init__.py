@@ -1,11 +1,11 @@
 """Support for sending data to an Influx database."""
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 import math
 import queue
 import threading
 import time
-from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List
 
 from influxdb import InfluxDBClient, exceptions
@@ -273,7 +273,7 @@ def _generate_state_to_json(conf: Dict) -> Callable[[Dict], str]:
                         measurement = state.entity_id
                 else:
                     include_uom = measurement_attr != "unit_of_measurement"
-        if date_time == None:
+        if date_time is None:
             date_time = datetime.utcnow()
         json = {
             INFLUX_CONF_MEASUREMENT: measurement,
@@ -516,7 +516,6 @@ class InfluxThread(threading.Thread):
     def __init__(self, hass, influx, state_to_json, max_tries, time_intervals):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
-        hass = hass
         self.queue = queue.Queue()
         self.influx = influx
         self.state_to_json = state_to_json
@@ -546,7 +545,7 @@ class InfluxThread(threading.Thread):
         self.queue.put(item)
 
     def _generate_timer_action(self, hass, time_interval):
-        """Generate a method that gets a filtered set of entities and adds them to the queue"""
+        """Generate a method that gets a filtered set of entities and adds them to the queue."""
         duration = time_interval[CONF_TIME_INTERVAL_DURATION]
         entity_filter = convert_include_exclude_filter(time_interval)
         _LOGGER.debug(
@@ -556,7 +555,7 @@ class InfluxThread(threading.Thread):
         )
 
         def timer_action(hass_time):
-            """Get all the states and add those that match the filter to the queue"""
+            """Get all the states and add those that match the filter to the queue."""
             _LOGGER.debug(DEBUG_TIMER_ACTION_MESSAGE, duration)
             states = hass.states.all()
             count = 0
@@ -653,5 +652,6 @@ class InfluxThread(threading.Thread):
         self.queue.join()
 
     def clean_up(self):
-        """Remove listeners when shutting down"""
-        [r() for r in self.remove_listeners]
+        """Remove listeners when shutting down."""
+        for r in self.remove_listeners:
+            r()
