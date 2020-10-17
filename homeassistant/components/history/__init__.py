@@ -1,6 +1,6 @@
 """Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
@@ -508,20 +508,7 @@ class HistoryPeriodView(HomeAssistantView):
             and entity_ids
             and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
         ):
-            _LOGGER.warning(
-                "bypass: include_start_time_state=%s, entity_ids=%s, start_time=%s",
-                include_start_time_state,
-                entity_ids,
-                start_time,
-            )
             return self.json([])
-        else:
-            _LOGGER.warning(
-                "querydb: include_start_time_state=%s, entity_ids=%s, start_time=%s",
-                include_start_time_state,
-                entity_ids,
-                start_time,
-            )
 
         return cast(
             web.Response,
@@ -682,19 +669,12 @@ def _glob_to_like(glob_str):
 
 
 def _entities_may_have_state_changes_after(
-    hass: HomeAssistantType, entity_ids: Iterable, start_time: datetime
+    hass: HomeAssistantType, entity_ids: Iterable, start_time: dt
 ) -> bool:
     """Check the state machine to see if entities have changed since start time."""
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
 
-        if state is not None:
-            _LOGGER.warning(
-                "entity_id=%s last_changed=%s start_time=%s",
-                entity_id,
-                state.last_changed,
-                start_time,
-            )
         if state is None or state.last_changed > start_time:
             return True
 
