@@ -29,7 +29,7 @@ class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-toggle:freshair'
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
 
     @property
     def is_on(self):
