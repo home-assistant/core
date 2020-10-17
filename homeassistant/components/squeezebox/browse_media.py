@@ -38,17 +38,17 @@ SQUEEZEBOX_ID_BY_TYPE = {
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "Artists": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ARTIST},
-    "Albums": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
-    "Tracks": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_TRACK},
-    "Playlists": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_PLAYLIST},
-    "Genres": {"parent": MEDIA_CLASS_DIRECTORY, "children": "genre"},
-    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
-    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
-    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
-    MEDIA_TYPE_GENRE: {"parent": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
+    "Artists": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ARTIST},
+    "Albums": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
+    "Tracks": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_TRACK},
+    "Playlists": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_PLAYLIST},
+    "Genres": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_DIRECTORY},
+    MEDIA_TYPE_ALBUM: {"item": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
+    MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
+    MEDIA_TYPE_GENRE: {"item": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
     MEDIA_TYPE_PLAYLIST: {
-        "parent": MEDIA_CLASS_PLAYLIST,
+        "item": MEDIA_CLASS_PLAYLIST,
         "children": MEDIA_CLASS_TRACK,
     },
 }
@@ -90,32 +90,33 @@ async def build_item_response(player, payload):
 
     if result is not None and result.get("items"):
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
-        media = []
+        child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+
+        children = []
         for item in result["items"]:
-            media.append(
+            children.append(
                 BrowseMedia(
                     title=item["title"],
-                    media_class=media_class["parent"],
+                    media_class=child_media_class["item"],
                     media_content_id=str(item["id"]),
                     media_content_type=item_type,
                     can_play=True,
-                    can_expand=CONTENT_TYPE_MEDIA_CLASS[media_class["children"]]
-                    is not None,
+                    can_expand=child_media_class["children"] is not None,
                     thumbnail=item.get("image_url"),
                 )
             )
 
-    if media is None:
+    if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
 
     return BrowseMedia(
         title=result.get("title"),
-        media_class=media_class["parent"],
+        media_class=media_class["item"],
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
         can_play=True,
-        children=media,
+        children=children,
         can_expand=True,
     )
 
@@ -143,7 +144,7 @@ async def library_payload(player):
             library_info["children"].append(
                 BrowseMedia(
                     title=item,
-                    media_class=media_class["parent"],
+                    media_class=media_class["item"],
                     media_content_id=item,
                     media_content_type=item,
                     can_play=True,
