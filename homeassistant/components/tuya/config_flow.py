@@ -271,11 +271,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Return option schema for device."""
         if device_type == "light":
             return self._get_light_schema(curr_conf, device)
-        elif device_type == "climate":
+        if device_type == "climate":
             return self._get_climate_schema(curr_conf, device)
         return None
 
-    def _get_light_schema(self, curr_conf, device):
+    @staticmethod
+    def _get_light_schema(curr_conf, device):
         """Create option schema for light device."""
         min_kelvin = device.max_color_temp()
         max_kelvin = device.min_color_temp()
@@ -314,7 +315,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return config_schema
 
-    def _get_climate_schema(self, curr_conf, device):
+    @staticmethod
+    def _get_climate_schema(curr_conf, device):
         """Create option schema for climate device."""
         unit = device.temperature_unit()
         def_unit = TEMP_FAHRENHEIT if unit == "FAHRENHEIT" else TEMP_CELSIUS
