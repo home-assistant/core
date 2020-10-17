@@ -19,6 +19,7 @@ VALID_CONFIG = {
     }
 }
 
+
 @pytest.fixture
 async def setup_sensor(hass):
     """Set up demo sensor component."""
@@ -29,6 +30,7 @@ async def setup_sensor(hass):
         ):
             await async_setup_component(hass, DOMAIN, VALID_CONFIG)
             await hass.async_block_till_done()
+
 
 async def test_setup(hass, setup_sensor):
     """Test the setup with custom settings."""
