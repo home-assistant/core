@@ -53,6 +53,7 @@ class MyIOHub:
 
         return self.message
 
+    @staticmethod
     def test_already_check_false(self) -> bool:
         """Change at the test if the server name is already in use."""
         return False
