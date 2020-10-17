@@ -58,7 +58,7 @@ async def async_setup_entry(hass, entry):
         try:
             return await api_coro()
         except IQVIAError as err:
-            raise UpdateFailed(f"Retrieval of {api_coro} data failed") from err
+            raise UpdateFailed from err
 
     init_data_update_tasks = []
     for sensor_type, api_coro in [
