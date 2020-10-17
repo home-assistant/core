@@ -47,7 +47,7 @@ async def test_sensor_platform(hass, aioclient_mock):
 
     value = 20
     await hass.services.async_call(
-        DOMAIN,
+        ADVANTAGE_AIR_DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
@@ -72,7 +72,7 @@ async def test_sensor_platform(hass, aioclient_mock):
 
     value = 0
     await hass.services.async_call(
-        DOMAIN,
+        ADVANTAGE_AIR_DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
