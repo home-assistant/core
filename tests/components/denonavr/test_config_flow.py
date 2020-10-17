@@ -416,7 +416,7 @@ async def test_config_flow_manual_host_no_device_info(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_config_flow_ssdp(hass):
