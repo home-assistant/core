@@ -20,6 +20,8 @@ ATTR_PHONEBOOK_URL = "phonebook_url"
 FRITZ_ATTR_NAME = "name"
 FRITZ_ATTR_URL = "url"
 
+UNKOWN_NAME = "unknown"
+
 CONF_PHONEBOOK = "phonebook"
 CONF_PREFIXES = "prefixes"
 

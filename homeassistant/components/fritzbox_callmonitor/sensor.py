@@ -52,6 +52,7 @@ from .const import (
     STATE_IDLE,
     STATE_RINGING,
     STATE_TALKING,
+    UNKOWN_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +202,7 @@ class FritzBoxCallSensor(Entity):
     def number_to_name(self, number):
         """Return a name for a given phone number."""
         if self._phonebook is None:
-            return "unknown"
+            return UNKOWN_NAME
         return self._phonebook.get_name(number)
 
     def update(self):
