@@ -31,6 +31,7 @@
                 "data": {
                     "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
                 },
+                "description": "Nastaven\u00ed integrace Blink",
                 "title": "Mo\u017enosti Blink"
             }
         }

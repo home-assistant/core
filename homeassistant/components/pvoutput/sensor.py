@@ -5,7 +5,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_DATE,

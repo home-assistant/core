@@ -89,11 +89,12 @@ class BasicChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        power_source = await self.get_attribute_value(
-            "power_source", from_cache=from_cache
-        )
-        if power_source is not None:
-            self._power_source = power_source
+        if not self._ch_pool.skip_configuration or from_cache:
+            power_source = await self.get_attribute_value(
+                "power_source", from_cache=from_cache
+            )
+            if power_source is not None:
+                self._power_source = power_source
         await super().async_initialize(from_cache)
 
     def get_power_source(self):

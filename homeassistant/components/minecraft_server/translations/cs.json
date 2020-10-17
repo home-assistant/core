@@ -3,12 +3,16 @@
         "abort": {
             "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
+        "error": {
+            "invalid_port": "Port mus\u00ed b\u00fdt v rozsahu od 1024 do 65535. Opravte jej a zkuste to znovu."
+        },
         "step": {
             "user": {
                 "data": {
                     "host": "Hostitel",
                     "name": "Jm\u00e9no"
-                }
+                },
+                "title": "Propojte sv\u016fj server Minecraft"
             }
         }
     }

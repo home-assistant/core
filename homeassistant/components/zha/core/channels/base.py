@@ -200,6 +200,10 @@ class ZigbeeChannel(LogMixin):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
+        if not from_cache and self._ch_pool.skip_configuration:
+            self._status = ChannelStatus.INITIALIZED
+            return
+
         self.debug("initializing channel: from_cache: %s", from_cache)
         attributes = []
         for report_config in self._report_config:
