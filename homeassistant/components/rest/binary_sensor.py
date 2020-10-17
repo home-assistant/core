@@ -1,6 +1,4 @@
 """Support for RESTful binary sensors."""
-import logging
-
 import httpx
 import voluptuous as vol
 
@@ -33,8 +31,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import DOMAIN, PLATFORMS
 from .sensor import RestData
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"

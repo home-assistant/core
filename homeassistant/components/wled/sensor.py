@@ -1,6 +1,5 @@
 """Support for WLED sensors."""
 from datetime import timedelta
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
@@ -18,8 +17,6 @@ from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
 from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

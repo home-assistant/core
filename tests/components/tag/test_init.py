@@ -1,6 +1,4 @@
 """Tests for the tag component."""
-import logging
-
 import pytest
 
 from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
@@ -9,8 +7,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
