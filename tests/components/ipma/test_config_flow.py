@@ -132,12 +132,25 @@ async def test_config_entry_migration(hass):
     )
     ipma_entry.add_to_hass(hass)
 
+    ipma_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "hourly"},
+    )
+    ipma_entry2.add_to_hass(hass)
+
     mock_registry(
         hass,
         {
             "weather.hometown": entity_registry.RegistryEntry(
                 entity_id="weather.hometown",
                 unique_id="0, 0",
+                platform="ipma",
+                config_entry_id=ipma_entry.entry_id,
+            ),
+            "weather.hometown_2": entity_registry.RegistryEntry(
+                entity_id="weather.hometown_2",
+                unique_id="0, 0, hourly",
                 platform="ipma",
                 config_entry_id=ipma_entry.entry_id,
             ),
@@ -155,3 +168,6 @@ async def test_config_entry_migration(hass):
 
         weather_home = ent_reg.async_get("weather.hometown")
         assert weather_home.unique_id == "0, 0, daily"
+
+        weather_home2 = ent_reg.async_get("weather.hometown_2")
+        assert weather_home2.unique_id == "0, 0, hourly"
