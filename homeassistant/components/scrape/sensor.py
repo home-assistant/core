@@ -118,6 +118,22 @@ class ScrapeSensor(Entity):
         """Return the state of the device."""
         return self._state
 
+    def _extract_value(self):
+        """Parse the html extraction in the executor."""
+        raw_data = BeautifulSoup(self.rest.data, "html.parser")
+        _LOGGER.debug(raw_data)
+
+        if self._attr is not None:
+            value = raw_data.select(self._select)[self._index][self._attr]
+        else:
+            tag = raw_data.select(self._select)[self._index]
+            if tag.name in ("style", "script", "template"):
+                value = tag.string
+            else:
+                value = tag.text
+        _LOGGER.debug(value)
+        return value
+
     async def async_update(self):
         """Get the latest data from the source and updates the state."""
         await self.rest.async_update()
@@ -125,19 +141,8 @@ class ScrapeSensor(Entity):
             _LOGGER.error("Unable to retrieve data for %s", self.name)
             return
 
-        raw_data = BeautifulSoup(self.rest.data, "html.parser")
-        _LOGGER.debug(raw_data)
-
         try:
-            if self._attr is not None:
-                value = raw_data.select(self._select)[self._index][self._attr]
-            else:
-                tag = raw_data.select(self._select)[self._index]
-                if tag.name in ("style", "script", "template"):
-                    value = tag.string
-                else:
-                    value = tag.text
-            _LOGGER.debug(value)
+            value = await self.hass.async_add_executor_job(self._extract_value)
         except IndexError:
             _LOGGER.error("Unable to extract data from HTML for %s", self.name)
             return
