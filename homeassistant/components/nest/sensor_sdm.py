@@ -1,6 +1,5 @@
 """Support for Google Nest SDM sensors."""
 
-import logging
 from typing import Optional
 
 from google_nest_sdm.device import Device
@@ -18,8 +17,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, SIGNAL_NEST_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_sdm_entry(
@@ -106,7 +103,6 @@ class SensorBase(Entity):
 
         async def async_update_state():
             """Update sensor state."""
-            _LOGGER.info("async_update_state")
             await self.async_update_ha_state(True)
 
         # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
@@ -129,7 +125,6 @@ class TemperatureSensor(SensorBase):
     def state(self):
         """Return the state of the sensor."""
         trait = self._device.traits[TemperatureTrait.NAME]
-        _LOGGER.error(f"TemperatureSensor {trait.ambient_temperature_celsius}")
         return trait.ambient_temperature_celsius
 
     @property
