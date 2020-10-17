@@ -42,7 +42,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     "Albums": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
     "Tracks": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_TRACK},
     "Playlists": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_PLAYLIST},
-    "Genres": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_DIRECTORY},
+    "Genres": {"item": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_GENRE},
     MEDIA_TYPE_ALBUM: {"item": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
     MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
     MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
