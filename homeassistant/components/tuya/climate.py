@@ -29,14 +29,18 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
 from .const import (
     CONF_CURR_TEMP_DIVIDER,
     CONF_EXT_TEMP_SENSOR,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
     CONF_TEMP_DIVIDER,
     DOMAIN,
+    SIGNAL_CONFIG_ENTITY,
     TUYA_DATA,
     TUYA_DISCOVERY_NEW,
 )
@@ -105,23 +109,37 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
         self.operations = [HVAC_MODE_OFF]
         self._has_operation = False
+        self._def_hvac_mode = HVAC_MODE_AUTO
+        self._min_temp = None
+        self._max_temp = None
         self._temp_entity = None
         self._temp_entity_error = False
-        self._def_hvac_mode = HVAC_MODE_AUTO
+
+    @callback
+    def _load_config(self):
+        """Set device config parameter."""
+        config = self._get_device_config()
+        if not config:
+            return
+        unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+        if unit:
+            self._tuya.set_unit("FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS")
+        self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
+        self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
+        min_temp = config.get(CONF_MIN_TEMP, 0)
+        max_temp = config.get(CONF_MAX_TEMP, 0)
+        if min_temp >= max_temp:
+            self._min_temp = self._max_temp = None
+        else:
+            self._min_temp = min_temp
+            self._max_temp = max_temp
+        self._temp_entity = config.get(CONF_EXT_TEMP_SENSOR)
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
-
-        if self._dev_conf:
-            unit = self._dev_conf.get(CONF_UNIT_OF_MEASUREMENT)
-            if unit:
-                self._tuya.set_unit(
-                    "FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS"
-                )
-            self._tuya.temp_divider = self._dev_conf.get(CONF_TEMP_DIVIDER, 0)
-            self._tuya.curr_temp_divider = self._dev_conf.get(CONF_CURR_TEMP_DIVIDER, 0)
-            self._temp_entity = self._dev_conf.get(CONF_EXT_TEMP_SENSOR)
+        self._load_config()
+        async_dispatcher_connect(self.hass, SIGNAL_CONFIG_ENTITY, self._load_config)
 
         modes = self._tuya.operation_list()
         if modes is None:
@@ -232,23 +250,21 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        min_temp = self._tuya.min_temp()
+        min_temp = (
+            self._min_temp if self._min_temp is not None else self._tuya.min_temp()
+        )
         if min_temp is not None:
-            if self._tuya.has_decimal():
-                return min_temp
-            if min_temp != 0:
-                return min_temp
+            return min_temp
         return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        max_temp = self._tuya.max_temp()
+        max_temp = (
+            self._max_temp if self._max_temp is not None else self._tuya.max_temp()
+        )
         if max_temp is not None:
-            if self._tuya.has_decimal():
-                return max_temp
-            if max_temp != 100:
-                return max_temp
+            return max_temp
         return super().max_temp
 
     def _get_ext_temperature(self):

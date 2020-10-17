@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Invalid authentication",
             "cannot_connect": "Failed to connect",
-            "conn_error": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "auth_failed": "Invalid authentication",
             "invalid_auth": "Invalid authentication"
         },
         "flow_title": "Tuya configuration",
@@ -26,11 +23,34 @@
         }
     },
     "options": {
+        "error": {
+            "dev_not_config": "Device type not configurable",
+            "dev_not_found": "Device not found"
+        },
         "step": {
             "init": {
+                "title": "Configure Tuya Options",
                 "data": {
                     "discovery_interval": "Discovery device method polling interval (in seconds, 10-3600)",
-                    "query_interval": "Query device method polling interval (in seconds, 10-3600)"
+                    "query_interval": "Query device method polling interval (in seconds, 10-3600)",
+                    "list_devices": "Select the device to configure"
+                }
+            },
+            "device": {
+                "title": "Configure Tuya Device",
+                "description": "Options for device `{device_name}`",
+                "data": {
+                    "support_color": "Force color support",
+                    "brightness_range_mode": "Select the brightness range",
+                    "min_kelvin": "Set minimum supported color temperature in kelvin",
+                    "max_kelvin": "Set maximum supported color temperature in kelvin",
+                    "tuya_max_coltemp": "Set maximum temperature value reported by device",
+                    "unit_of_measurement": "Temperature unit",
+                    "temp_divider": "Temperature values divider (0 = use default)",
+                    "curr_temp_divider": "Current Temperature value divider (0 = use default)",
+                    "min_temp": "Minimum temperature (leave min and max = 0 for default)",
+                    "max_temp": "Maximum temperature (leave min and max = 0 for default)",
+                    "ext_temp_sensor": "Sensor for current temperature (empty = none)"
                 }
             }
         }

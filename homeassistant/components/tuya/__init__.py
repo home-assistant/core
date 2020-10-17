@@ -12,14 +12,13 @@ from tuyaha.tuyaapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -30,21 +29,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    CONF_BRIGHTNESS_RANGE_MODE,
     CONF_COUNTRYCODE,
-    CONF_CURR_TEMP_DIVIDER,
-    CONF_DEVICE_NAME,
     CONF_DISCOVERY_INTERVAL,
-    CONF_EXT_TEMP_SENSOR,
-    CONF_MAX_KELVIN,
-    CONF_MAX_TUYA_TEMP,
-    CONF_MIN_KELVIN,
     CONF_QUERY_INTERVAL,
-    CONF_SUPPORT_COLOR,
-    CONF_TEMP_DIVIDER,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
     DOMAIN,
+    SIGNAL_CONFIG_ENTITY,
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_UPDATE_ENTITY,
     TUYA_DATA,
     TUYA_DEVICES_CONF,
     TUYA_DISCOVERY_NEW,
@@ -59,9 +52,6 @@ ENTRY_IS_SETUP = "tuya_entry_is_setup"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-SIGNAL_DELETE_ENTITY = "tuya_delete"
-SIGNAL_UPDATE_ENTITY = "tuya_update"
-
 TUYA_TYPE_TO_HA = {
     "climate": "climate",
     "cover": "cover",
@@ -73,41 +63,18 @@ TUYA_TYPE_TO_HA = {
 
 TUYA_TRACKER = "tuya_tracker"
 
-TUYA_DEVICE_CONF_SCHEMA = {
-    vol.Optional(TUYA_DEVICES_CONF): vol.All(
-        cv.ensure_list,
-        [
-            vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_NAME): cv.string,
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.temperature_unit,
-                    vol.Optional(CONF_TEMP_DIVIDER, default=0): cv.positive_int,
-                    vol.Optional(CONF_CURR_TEMP_DIVIDER, default=0): cv.positive_int,
-                    vol.Optional(CONF_EXT_TEMP_SENSOR): cv.string,
-                    vol.Optional(CONF_SUPPORT_COLOR): cv.boolean,
-                    vol.Optional(
-                        CONF_BRIGHTNESS_RANGE_MODE, default=0
-                    ): cv.positive_int,
-                    vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
-                    vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
-                    vol.Optional(CONF_MAX_TUYA_TEMP): cv.positive_int,
-                }
-            )
-        ],
-    )
-}
-
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
+        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
-                    vol.Optional(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_COUNTRYCODE): cv.string,
-                    vol.Optional(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_COUNTRYCODE): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
                     vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
                 }
-            ).extend(TUYA_DEVICE_CONF_SCHEMA)
+            )
         },
     ),
     extra=vol.ALLOW_EXTRA,
@@ -141,27 +108,18 @@ def _update_query_interval(hass, interval):
 async def async_setup(hass, config):
     """Set up the Tuya integration."""
 
-    hass.data[DOMAIN] = {TUYA_DEVICES_CONF: {}}
     conf = config.get(DOMAIN)
     if conf is not None:
-        devices_config = conf.get(TUYA_DEVICES_CONF)
-        if devices_config:
-            hass.data[DOMAIN][TUYA_DEVICES_CONF] = devices_config
-
-        user = conf.get(CONF_USERNAME)
-        pwd = conf.get(CONF_PASSWORD)
-        country = conf.get(CONF_COUNTRYCODE)
-        if user and pwd and country:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-                )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
             )
+        )
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tuya platform."""
 
     tuya = TuyaApi()
@@ -188,18 +146,17 @@ async def async_setup_entry(hass, entry):
         )
         return False
 
-    hass.data.setdefault(DOMAIN, {}).update(
-        {
-            TUYA_DATA: tuya,
-            TUYA_TRACKER: None,
-            ENTRY_IS_SETUP: set(),
-            "entities": {},
-            "pending": {},
-            entry.entry_id: {
-                "listener": [entry.add_update_listener(update_listener)],
-            },
-        }
-    )
+    hass.data[DOMAIN] = {
+        TUYA_DATA: tuya,
+        TUYA_DEVICES_CONF: entry.options.copy(),
+        TUYA_TRACKER: None,
+        ENTRY_IS_SETUP: set(),
+        "entities": {},
+        "pending": {},
+        entry.entry_id: {
+            "listener": [entry.add_update_listener(update_listener)],
+        },
+    }
 
     _update_discovery_interval(
         hass, entry.options.get(CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL)
@@ -260,7 +217,7 @@ async def async_setup_entry(hass, entry):
                 hass.data[DOMAIN]["entities"].pop(dev_id)
 
     hass.data[DOMAIN][TUYA_TRACKER] = async_track_time_interval(
-        hass, async_poll_devices_update, timedelta(minutes=5)
+        hass, async_poll_devices_update, timedelta(minutes=2)
     )
 
     hass.services.async_register(
@@ -276,7 +233,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
     unload_ok = all(
         await asyncio.gather(
@@ -304,17 +261,19 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Update when config_entry options update."""
+    hass.data[DOMAIN][TUYA_DEVICES_CONF] = entry.options.copy()
     _update_discovery_interval(
         hass, entry.options.get(CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL)
     )
     _update_query_interval(
         hass, entry.options.get(CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL)
     )
+    async_dispatcher_send(hass, SIGNAL_CONFIG_ENTITY)
 
 
-async def cleanup_device_registry(hass, device_id):
+async def cleanup_device_registry(hass: HomeAssistant, device_id):
     """Remove device registry entry if there are no remaining entities."""
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -334,40 +293,36 @@ class TuyaDevice(Entity):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
-        self._dev_conf = None
 
     def _inc_device_count(self):
+        """Increment static variable device count."""
         dev_type = self._tuya.device_type()
-        if any(c in dev_type for c in ["scene", "switch"]):
+        if dev_type in ["scene", "switch"]:
             return
         TuyaDevice._device_count += 1
 
     def _dec_device_count(self):
+        """Decrement static variable device count."""
         dev_type = self._tuya.device_type()
-        if any(c in dev_type for c in ["scene", "switch"]):
+        if dev_type in ["scene", "switch"]:
             return
-        if TuyaDevice._device_count > 0:
-            TuyaDevice._device_count -= 1
+        TuyaDevice._device_count -= 1
 
     def _get_device_config(self):
+        """Get updated device options."""
+        dev_conf = {}
         devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
         if devices_config:
-            dev_id = self.object_id
-            dev_name = (self.name.lower()).replace(" ", "_")
-            for conf_info in devices_config:
-                conf_id = conf_info[CONF_DEVICE_NAME]
-                conf_name = (conf_id.lower()).replace(" ", "_")
-                if conf_name == dev_name or conf_id == dev_id:
-                    _LOGGER.debug("Configuration for device: %s", str(conf_info))
-                    return conf_info
-        return []
+            dev_conf = devices_config.get(self.object_id, {})
+            if dev_conf:
+                _LOGGER.debug(
+                    "Configuration for deviceID %s: %s", self.object_id, str(dev_conf)
+                )
+        return dev_conf
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        if self._dev_conf is None:
-            self._dev_conf = self._get_device_config()
-        dev_id = self._tuya.object_id()
-        self.hass.data[DOMAIN]["entities"][dev_id] = self.entity_id
+        self.hass.data[DOMAIN]["entities"][self.object_id] = self.entity_id
         async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
         async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
         self._inc_device_count()
@@ -391,14 +346,6 @@ class TuyaDevice(Entity):
     def available(self):
         """Return if the device is available."""
         return self._tuya.available()
-
-    @property
-    def device_state_attributes(self):
-        """Return the optional state attributes."""
-        data = {
-            ATTR_TUYA_DEV_ID: self.object_id,
-        }
-        return data
 
     @property
     def device_info(self):
