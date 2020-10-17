@@ -1,6 +1,5 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 from datetime import datetime
-from functools import partial
 import logging
 from socket import (
     AF_INET,
@@ -89,7 +88,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config_entry.data[CONF_PORT]
 
     phonebook_info = await hass.async_add_executor_job(
-        partial(phonebook.fph.phonebook_info, phonebook_id)
+        phonebook.fph.phonebook_info, phonebook_id
     )
 
     phonebook_name = phonebook_info.get(FRITZ_ATTR_NAME)
