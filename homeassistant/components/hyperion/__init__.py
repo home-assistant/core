@@ -14,6 +14,18 @@ PLATFORMS = [LIGHT_DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 
+# A config entry represents a connection to a single Hyperion server. The config
+# entry_id is the server id returned from the Hyperion instance (a unique ID per
+# server).
+#
+# Each server connection may create multiple entities, 1 per "instance" on the Hyperion
+# server. The unique_id for each entity is <server id>:<instance #>, where <server_id>
+# will be the unique_id on the relevant config entry (as above).
+#
+# The get_hyperion_unique_id method will create a per-entity unique id when given the
+# server id and the instance number. The split_hyperion_unique_id will reverse the
+# operation.
+
 
 def get_hyperion_unique_id(server_id: str, instance: int) -> str:
     """Get a unique_id for a Hyperion instance."""
