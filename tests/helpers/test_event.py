@@ -2080,12 +2080,12 @@ async def test_track_template_with_time_that_leaves_scope(hass):
     # Verify we do not update a second time
     # if the state change happens
     callback_count_before_time_change = len(specific_runs)
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=59))
     await hass.async_block_till_done()
     assert len(specific_runs) == callback_count_before_time_change
 
     # Verify we do update on the next time change
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=122))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
     await hass.async_block_till_done()
     assert len(specific_runs) == callback_count_before_time_change + 1
 
