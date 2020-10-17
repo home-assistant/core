@@ -20,6 +20,8 @@ async def test_async_setup_entry(hass, aioclient_mock):
     entry = await add_mock_config(hass)
     assert entry.state == ENTRY_STATE_LOADED
 
+    await entry.async_unload(hass)
+
 
 async def test_async_setup_entry_failure(hass, aioclient_mock):
     """Test a unsuccessful setup entry."""

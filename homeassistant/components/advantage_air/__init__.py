@@ -72,3 +72,13 @@ async def async_setup_entry(hass, config_entry):
         )
 
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload Advantage Air Config."""
+    for platform in ADVANTAGE_AIR_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        )
+    hass.data[DOMAIN].pop(config_entry.entry_id)
+    return await hass.data[DOMAIN].async_unload_entry(config_entry)
