@@ -17,5 +17,14 @@
                 "title": "P\u0159ipojen\u00ed k Canary"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\u010casov\u00fd limit po\u017eadavku (v sekund\u00e1ch)"
+                }
+            }
+        }
     }
 }

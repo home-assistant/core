@@ -31,6 +31,7 @@
                 "data": {
                     "unlock": "Ano, ud\u011blej to."
                 },
+                "description": "Va\u0161e za\u0159\u00edzen\u00ed je uzam\u010deno. To m\u016f\u017ee v\u00e9st k probl\u00e9m\u016fm s ov\u011b\u0159ov\u00e1n\u00edm v Home Assistant. Chcete jej odemknout?",
                 "title": "Odemknut\u00ed za\u0159\u00edzen\u00ed (voliteln\u00e9)"
             },
             "user": {
