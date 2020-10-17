@@ -1,6 +1,5 @@
 """Climate platform for Advantage Air integration."""
 
-from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -24,6 +23,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
+from .entity import AdvantageAirEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVAC_MODE_HEAT,
