@@ -2,7 +2,7 @@
 
 from json import loads
 
-from homeassistant.components.advantage_air.const import DOMAIN
+from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
