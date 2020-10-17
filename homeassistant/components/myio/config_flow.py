@@ -59,10 +59,12 @@ class MyIOHub:
 
     async def already_check(self, name, entries) -> bool:
         """Test if the server name is already in use."""
+
         if self.test_already_check_false() or any(
             slugify(name) == slugify(entry.data["name"]) for entry in entries
         ):
             return False
+
         return True
 
 
