@@ -369,9 +369,6 @@ blockchain==1.4.4
 # homeassistant.components.bme680
 # bme680==1.0.5
 
-# homeassistant.components.bom
-bomradarloop==0.1.5
-
 # homeassistant.components.bond
 bond-api==0.1.8
 
@@ -777,6 +774,9 @@ horimote==0.4.1
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
+# homeassistant.components.rest
+httpx==0.16.1
+
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.12
 
@@ -1019,7 +1019,7 @@ oasatelematics==0.3
 oauth2client==4.0.0
 
 # homeassistant.components.oem
-oemthermostat==1.1
+oemthermostat==1.1.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
@@ -1294,7 +1294,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.5.0
+pychromecast==7.5.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1354,7 +1354,7 @@ pyedimax==0.2.1
 pyeight==0.1.4
 
 # homeassistant.components.emby
-pyemby==1.6
+pyemby==1.7
 
 # homeassistant.components.envisalink
 pyenvisalink==4.0

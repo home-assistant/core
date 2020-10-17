@@ -1,9 +1,13 @@
 """deCONZ sensor platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    DOMAIN as DECONZ_DOMAIN,
+)
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-import homeassistant.components.sensor as sensor
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -85,11 +89,11 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, sensor.DOMAIN, {"sensor": {"platform": deconz.DOMAIN}}
+            hass, SENSOR_DOMAIN, {"sensor": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_sensors(hass):
@@ -170,7 +174,7 @@ async def test_allow_clip_sensors(hass):
     data["sensors"] = deepcopy(SENSORS)
     config_entry = await setup_deconz_integration(
         hass,
-        options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
+        options={CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
 
@@ -180,7 +184,7 @@ async def test_allow_clip_sensors(hass):
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -190,7 +194,7 @@ async def test_allow_clip_sensors(hass):
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 

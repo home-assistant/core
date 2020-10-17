@@ -137,7 +137,7 @@ async def async_start(
                     trigger_config,
                 )
             elif trigger_config.is_active:
-                _LOGGER.info("Adding new trigger: %s", discovery_hash)
+                _LOGGER.debug("Adding new trigger: %s", discovery_hash)
                 hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
                 tasmota_trigger = tasmota_get_trigger(trigger_config, tasmota_mqtt)

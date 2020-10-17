@@ -25,8 +25,6 @@ from homeassistant.core import State, callback
 from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
 
-_LOGGER = logging.getLogger(__name__)
-
 ClusterPair = collections.namedtuple("ClusterPair", "source_cluster target_cluster")
 
 

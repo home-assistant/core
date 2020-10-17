@@ -1,5 +1,4 @@
 """The tests for the Modbus sensor component."""
-import logging
 from unittest import mock
 
 import pytest
@@ -16,8 +15,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockModule, async_fire_time_changed, mock_integration
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture()

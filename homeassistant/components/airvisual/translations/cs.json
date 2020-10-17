@@ -37,7 +37,8 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Typ integrace"
                 },
-                "description": "Vyberte, jak\u00fd typ dat AirVisual chcete sledovat."
+                "description": "Vyberte, jak\u00fd typ dat AirVisual chcete sledovat.",
+                "title": "Nastaven\u00ed AirVisual"
             }
         }
     },

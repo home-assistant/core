@@ -1,9 +1,15 @@
 """deCONZ switch platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
+from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-import homeassistant.components.switch as switch
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -63,11 +69,11 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, switch.DOMAIN, {"switch": {"platform": deconz.DOMAIN}}
+            hass, SWITCH_DOMAIN, {"switch": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_switches(hass):
@@ -84,9 +90,9 @@ async def test_power_plugs(hass):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 4
-    assert hass.states.get("switch.on_off_switch").state == "on"
-    assert hass.states.get("switch.smart_plug").state == "off"
-    assert hass.states.get("switch.on_off_relay").state == "on"
+    assert hass.states.get("switch.on_off_switch").state == STATE_ON
+    assert hass.states.get("switch.smart_plug").state == STATE_OFF
+    assert hass.states.get("switch.on_off_relay").state == STATE_ON
     assert hass.states.get("switch.unsupported_switch") is None
 
     state_changed_event = {
@@ -98,7 +104,7 @@ async def test_power_plugs(hass):
     }
     gateway.api.event_handler(state_changed_event)
 
-    assert hass.states.get("switch.on_off_switch").state == "off"
+    assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
     # Verify service calls
 
@@ -110,9 +116,9 @@ async def test_power_plugs(hass):
         on_off_switch_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
-            {"entity_id": "switch.on_off_switch"},
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.on_off_switch"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -124,9 +130,9 @@ async def test_power_plugs(hass):
         on_off_switch_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
-            {"entity_id": "switch.on_off_switch"},
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.on_off_switch"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -145,7 +151,7 @@ async def test_sirens(hass):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
-    assert hass.states.get("switch.warning_device").state == "on"
+    assert hass.states.get("switch.warning_device").state == STATE_ON
     assert hass.states.get("switch.unsupported_switch") is None
 
     state_changed_event = {
@@ -157,7 +163,7 @@ async def test_sirens(hass):
     }
     gateway.api.event_handler(state_changed_event)
 
-    assert hass.states.get("switch.warning_device").state == "off"
+    assert hass.states.get("switch.warning_device").state == STATE_OFF
 
     # Verify service calls
 
@@ -169,9 +175,9 @@ async def test_sirens(hass):
         warning_device_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
-            {"entity_id": "switch.warning_device"},
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.warning_device"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -185,9 +191,9 @@ async def test_sirens(hass):
         warning_device_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
-            {"entity_id": "switch.warning_device"},
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.warning_device"},
             blocking=True,
         )
         await hass.async_block_till_done()

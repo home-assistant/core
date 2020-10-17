@@ -7,5 +7,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\u010casov\u00fd limit (v minut\u00e1ch)"
+                }
+            }
+        }
     }
 }

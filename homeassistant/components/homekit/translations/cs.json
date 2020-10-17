@@ -41,6 +41,7 @@
                 "title": "Vyberte dom\u00e9ny, kter\u00e9 chcete vystavit."
             },
             "yaml": {
+                "description": "Tento z\u00e1znam je \u0159\u00edzen pomoc\u00ed YAML",
                 "title": "Upravte mo\u017enosti HomeKit"
             }
         }

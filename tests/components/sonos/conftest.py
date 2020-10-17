@@ -23,6 +23,7 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
     ):
         mock_soco = mock.return_value
         mock_soco.uid = "RINCON_test"
+        mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
         mock_soco.get_speaker_info.return_value = speaker_info
         mock_soco.avTransport = dummy_soco_service

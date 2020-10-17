@@ -16,7 +16,7 @@
             },
             "reauth_confirm": {
                 "description": "Integracja Spotify wymaga ponownego uwierzytelnienia w Spotify dla konta: {account}",
-                "title": "Ponownie uwierzytelnij ze Spotify"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             }
         }
     }
