@@ -3,7 +3,6 @@ import json
 
 import pytest
 
-import homeassistant.components.sensor as sensor
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.setup import async_setup_component
 
