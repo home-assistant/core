@@ -1,6 +1,4 @@
 """Support for bandwidth sensors with UniFi clients."""
-import logging
-
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
@@ -9,8 +7,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
-
-LOGGER = logging.getLogger(__name__)
 
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"

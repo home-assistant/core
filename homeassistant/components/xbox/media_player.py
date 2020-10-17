@@ -1,5 +1,4 @@
 """Xbox Media Player Support."""
-import logging
 import re
 from typing import List, Optional
 
@@ -34,8 +33,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import ConsoleData, XboxUpdateCoordinator
 from .browse_media import build_item_response
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_XBOX = (
     SUPPORT_TURN_ON

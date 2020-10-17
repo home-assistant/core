@@ -43,6 +43,7 @@ from homeassistant.helpers.service import (
 )
 
 from .const import (
+    _LOGGER,
     ATTR_ALARM_DURATION,
     ATTR_ALARM_VOLUME,
     ATTR_CHIME_VOLUME,
@@ -55,7 +56,6 @@ from .const import (
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    LOGGER,
     VOLUMES,
 )
 
@@ -201,10 +201,10 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_TOKEN], client_id=client_id, session=websession
         )
     except InvalidCredentialsError:
-        LOGGER.error("Invalid credentials provided")
+        _LOGGER.error("Invalid credentials provided")
         return False
     except SimplipyError as err:
-        LOGGER.error("Config entry failed: %s", err)
+        _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
@@ -226,7 +226,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system_id = int(call.data[ATTR_SYSTEM_ID])
             if system_id not in simplisafe.systems:
-                LOGGER.error("Unknown system ID in service call: %s", system_id)
+                _LOGGER.error("Unknown system ID in service call: %s", system_id)
                 return
             await coro(call)
 
@@ -240,7 +240,7 @@ async def async_setup_entry(hass, config_entry):
             """Decorate."""
             system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
             if system.version != 3:
-                LOGGER.error("Service only available on V3 systems")
+                _LOGGER.error("Service only available on V3 systems")
                 return
             await coro(call)
 
@@ -254,7 +254,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.clear_notifications()
         except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+            _LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -265,7 +265,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+            _LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -276,7 +276,7 @@ async def async_setup_entry(hass, config_entry):
         try:
             await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
         except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+            _LOGGER.error("Error during service call: %s", err)
             return
 
     @verify_system_exists
@@ -294,7 +294,7 @@ async def async_setup_entry(hass, config_entry):
                 }
             )
         except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+            _LOGGER.error("Error during service call: %s", err)
             return
 
     for service, method, schema in [
@@ -349,16 +349,16 @@ class SimpliSafeWebsocket:
     @staticmethod
     def _on_connect():
         """Define a handler to fire when the websocket is connected."""
-        LOGGER.info("Connected to websocket")
+        _LOGGER.info("Connected to websocket")
 
     @staticmethod
     def _on_disconnect():
         """Define a handler to fire when the websocket is disconnected."""
-        LOGGER.info("Disconnected from websocket")
+        _LOGGER.info("Disconnected from websocket")
 
     def _on_event(self, event):
         """Define a handler to fire when a new SimpliSafe event arrives."""
-        LOGGER.debug("New websocket event: %s", event)
+        _LOGGER.debug("New websocket event: %s", event)
         async_dispatcher_send(
             self._hass, TOPIC_UPDATE_WEBSOCKET.format(event.system_id), event
         )
@@ -430,7 +430,7 @@ class SimpliSafe:
         if not to_add:
             return
 
-        LOGGER.debug("New system notifications: %s", to_add)
+        _LOGGER.debug("New system notifications: %s", to_add)
 
         self._system_notifications[system.system_id].update(to_add)
 
@@ -481,7 +481,7 @@ class SimpliSafe:
                     system.system_id
                 ] = await system.get_latest_event()
             except SimplipyError as err:
-                LOGGER.error("Error while fetching initial event: %s", err)
+                _LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
         async def refresh(event_time):
@@ -501,7 +501,7 @@ class SimpliSafe:
             """Update a system."""
             await system.update(cached=False)
             self._async_process_new_notifications(system)
-            LOGGER.debug('Updated REST API data for "%s"', system.address)
+            _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
                 self._hass, TOPIC_UPDATE_REST_API.format(system.system_id)
             )
@@ -534,7 +534,7 @@ class SimpliSafe:
 
                     return
 
-                LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+                _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
 
                 try:
@@ -543,22 +543,22 @@ class SimpliSafe:
                     )
                     return
                 except SimplipyError as err:
-                    LOGGER.error("Error while using stored refresh token: %s", err)
+                    _LOGGER.error("Error while using stored refresh token: %s", err)
                     return
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempt an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
-                LOGGER.info(result)
+                _LOGGER.info(result)
                 return
 
             if isinstance(result, SimplipyError):
-                LOGGER.error("SimpliSafe error while updating: %s", result)
+                _LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
             if isinstance(result, Exception):
-                LOGGER.error("Unknown error while updating: %s", result)
+                _LOGGER.error("Unknown error while updating: %s", result)
                 return
 
         if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:

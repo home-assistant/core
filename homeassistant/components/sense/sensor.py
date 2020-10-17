@@ -1,6 +1,4 @@
 """Support for monitoring a Sense energy sensor."""
-import logging
-
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
@@ -29,8 +27,6 @@ from .const import (
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TRENDS_COORDINATOR,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SensorConfig:
