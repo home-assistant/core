@@ -108,8 +108,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     SENSOR_YESTERDAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
 }
 
-SENSOR_ATTRIBUTE_MAP = {}
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Tasmota sensor dynamically through discovery."""
@@ -148,12 +146,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
     def state_updated(self, state, **kwargs):
         """Handle state updates."""
         self._state = state
-        attributes = {}
-        # Translate from HATasmota sensor attribute to HA device attribute
-        for key, attribute in SENSOR_ATTRIBUTE_MAP.items():
-            if key in kwargs:
-                attributes[attribute] = kwargs[key]
-        self._attributes = attributes
         self.async_write_ha_state()
 
     @property
