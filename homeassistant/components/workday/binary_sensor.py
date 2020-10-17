@@ -103,7 +103,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         for rm in remove_holidays:
             obj_holidays.pop(rm)
-    #        obj_holidays.pop(remove_holidays)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
