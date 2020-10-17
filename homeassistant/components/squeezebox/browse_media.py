@@ -86,7 +86,7 @@ async def build_item_response(player, payload):
         browse_id=browse_id,
     )
 
-    media = None
+    children = None
 
     if result is not None and result.get("items"):
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
@@ -161,7 +161,7 @@ async def generate_playlist(player, payload):
     media_id = payload["search_id"]
 
     if media_type not in SQUEEZEBOX_ID_BY_TYPE:
-        return
+        return None
 
     browse_id = (SQUEEZEBOX_ID_BY_TYPE[media_type], media_id)
     result = await player.async_browse(
