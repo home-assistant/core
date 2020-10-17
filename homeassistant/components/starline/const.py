@@ -1,4 +1,8 @@
 """StarLine constants."""
+import logging
+
+_LOGGER = logging.getLogger(__package__)
+
 DOMAIN = "starline"
 PLATFORMS = ["device_tracker", "binary_sensor", "sensor", "lock", "switch"]
 
