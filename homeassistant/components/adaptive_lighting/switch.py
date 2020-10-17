@@ -881,16 +881,12 @@ class SunLightSettings:
 
         def _replace_time(date: datetime.datetime, key: str) -> datetime.datetime:
             time = getattr(self, f"{key}_time")
-            date_time = datetime.datetime.combine(datetime.date.today(), time)
+            date_time = datetime.datetime.combine(date, time)
             utc_time = self.time_zone.localize(date_time).astimezone(dt_util.UTC)
-            return date.replace(
-                hour=utc_time.hour,
-                minute=utc_time.minute,
-                second=utc_time.second,
-                microsecond=utc_time.microsecond,
-            )
+            return utc_time
 
         location = self.astral_location
+
         sunrise = (
             location.sunrise(date, local=False)
             if self.sunrise_time is None
