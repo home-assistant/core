@@ -809,7 +809,7 @@ class _TrackTemplateResultInfo:
             self._refresh(None, track_templates=track_templates)
 
         self._time_listeners[template] = async_call_later(
-            self.hass, 60, _refresh_from_time
+            self.hass, 60.45, _refresh_from_time
         )
 
     @callback
