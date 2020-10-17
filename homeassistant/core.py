@@ -402,6 +402,7 @@ class HomeAssistant:
         self, target: Callable[..., T], *args: Any
     ) -> Awaitable[T]:
         """Add an executor job from within the event loop."""
+        _LOGGER.warning("async_add_executor_job: %s", target)
         task = self.loop.run_in_executor(None, target, *args)
 
         # If a task is scheduled
