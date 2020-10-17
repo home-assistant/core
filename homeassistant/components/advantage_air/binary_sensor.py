@@ -9,6 +9,8 @@ from homeassistant.components.binary_sensor import (
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir motion platform."""

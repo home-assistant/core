@@ -16,6 +16,8 @@ from .const import (
 )
 from .entity import AdvantageAirEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir cover platform."""

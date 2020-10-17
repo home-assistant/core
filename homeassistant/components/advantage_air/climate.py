@@ -51,6 +51,8 @@ AC_HVAC_MODES = [
 ]
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir climate platform."""

@@ -20,13 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
-    """Set up AdvantageAir."""
+    """Set up Advantage Air integration."""
     hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Set up AdvantageAir Config."""
+    """Set up Advantage Air config."""
     ip_address = entry.data[CONF_IP_ADDRESS]
     port = entry.data[CONF_PORT]
     api = advantage_air(
