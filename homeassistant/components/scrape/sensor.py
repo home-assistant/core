@@ -142,7 +142,7 @@ class ScrapeSensor(Entity):
             return
 
         try:
-            value = self.hass.async_add_executor_job(self._extract_value)
+            value = await self.hass.async_add_executor_job(self._extract_value)
         except IndexError:
             _LOGGER.error("Unable to extract data from HTML for %s", self.name)
             return
