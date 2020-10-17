@@ -447,7 +447,7 @@ def _format_config_error(
     )
 
     if domain != CONF_CORE and link:
-        message += f"Please check the docs at {link}"
+        message += f"Please check the docs at {link}."
 
     return message
 
