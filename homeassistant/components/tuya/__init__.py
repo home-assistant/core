@@ -12,13 +12,9 @@ from tuyaha.tuyaapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_USERNAME,
-)
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
