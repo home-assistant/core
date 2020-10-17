@@ -20,10 +20,19 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "prefixes": "Prefixes (comma separated list)",
                     "username": "Username"
                 }
             }
+        }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "title": "Configure Prefixes",
+            "data": {
+              "prefixes": "Prefixes (comma separated list)"
+            }
+          }
         }
     }
 }

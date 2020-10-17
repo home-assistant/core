@@ -4,7 +4,14 @@ import asyncio
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .base import FritzBoxPhonebook
-from .const import CONF_PHONEBOOK, CONF_PREFIXES, DOMAIN, PLATFORMS
+from .const import (
+    CONF_PHONEBOOK,
+    CONF_PREFIXES,
+    DOMAIN,
+    FRITZ_BOX_PHONEBOOK_OBJECT,
+    PLATFORMS,
+    UNDO_UPDATE_LISTENER,
+)
 
 
 async def async_setup(hass, config):
@@ -19,13 +26,18 @@ async def async_setup_entry(hass, entry):
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         phonebook_id=entry.data[CONF_PHONEBOOK],
-        prefixes=entry.data[CONF_PREFIXES],
+        prefixes=entry.options.get(CONF_PREFIXES),
     )
     await hass.async_add_executor_job(phonebook.init_phonebook)
     await hass.async_add_executor_job(phonebook.update_phonebook)
 
+    undo_listener = entry.add_update_listener(update_listener)
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = phonebook
+    hass.data[DOMAIN][entry.entry_id] = {
+        FRITZ_BOX_PHONEBOOK_OBJECT: phonebook,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -46,7 +58,15 @@ async def async_unload_entry(hass, entry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass, config_entry):
+    """Update listener to reload after option has changed."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

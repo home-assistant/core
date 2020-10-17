@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
 
@@ -29,7 +30,6 @@ DATA_SCHEMA_USER = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PREFIXES): str,
     }
 )
 
@@ -107,6 +107,12 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return phonebook_info[FRITZ_ATTR_NAME]
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return FritzBoxCallMonitorOptionsFlowHandler(config_entry)
+
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
@@ -122,12 +128,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._port = user_input[CONF_PORT]
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
-            self._prefixes = user_input.get(CONF_PREFIXES)
-
-            if self._prefixes and self._prefixes.strip():
-                self._prefixes = [
-                    prefix.strip() for prefix in self._prefixes.split(",")
-                ]
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
@@ -176,4 +176,40 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="phonebook",
             data_schema=vol.Schema({vol.Required(CONF_PHONEBOOK): vol.In(phonebooks)}),
             errors=errors,
+        )
+
+
+class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a fritzbox_callmonitor options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+        self._prefixes = None
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+
+            self._prefixes = user_input.get(CONF_PREFIXES)
+
+            if self._prefixes and self._prefixes.strip():
+                self._prefixes = [
+                    prefix.strip() for prefix in self._prefixes.split(",")
+                ]
+
+            return self.async_create_entry(
+                title="", data={CONF_PREFIXES: self._prefixes}
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PREFIXES,
+                        default=self.config_entry.options.get(CONF_PREFIXES),
+                    ): str,
+                }
+            ),
         )

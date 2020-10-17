@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
     FRITZ_ATTR_NAME,
     FRITZ_ATTR_URL,
+    FRITZ_BOX_PHONEBOOK_OBJECT,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
     FRITZ_STATE_DISCONNECT,
@@ -70,10 +71,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    phonebook = hass.data[DOMAIN][config_entry.entry_id]
+    phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZ_BOX_PHONEBOOK_OBJECT]
 
     phonebook_id = config_entry.data[CONF_PHONEBOOK]
-    prefixes = config_entry.data[CONF_PREFIXES]
+    prefixes = config_entry.options.get(CONF_PREFIXES)
+
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
 
