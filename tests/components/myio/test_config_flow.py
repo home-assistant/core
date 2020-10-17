@@ -64,7 +64,7 @@ async def test_form_already_configured(hass):
         side_effect=AlreadyConfigured,
     ), patch(
         "homeassistant.components.myio.config_flow.MyIOHub.already_check",
-        return_value=False,
+        test_false=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA

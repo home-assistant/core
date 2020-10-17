@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 class MyIOHub:
-    """Class to make tests pass."""
+    """Placeholder class to make tests pass."""
 
     def __init__(self, user_input):
         """Initialize."""
@@ -55,13 +55,12 @@ class MyIOHub:
 
     async def already_check(self, name, entries) -> bool:
         """Test if the server name is already in use."""
-
-        _slugified_name = True
-
-        if any(slugify(name) == slugify(entry.data["name"]) for entry in entries):
-            _slugified_name = False
-
-        return _slugified_name
+        test_false = False
+        if test_false or any(
+            slugify(name) == slugify(entry.data["name"]) for entry in entries
+        ):
+            return False
+        return True
 
 
 async def validate_input(user_input, entries):
