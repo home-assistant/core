@@ -17,15 +17,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    if "aircons" in instance["coordinator"].data:
-        entities = []
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-            entities.append(AdvantageAirZoneFilter(instance, ac_key))
-            for zone_key, zone in ac_device["zones"].items():
-                # Only add motion sensor when motion is enabled
-                if zone["motionConfig"] >= 2:
-                    entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
-        async_add_entities(entities)
+    entities = []
+    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+        entities.append(AdvantageAirZoneFilter(instance, ac_key))
+        for zone_key, zone in ac_device["zones"].items():
+            # Only add motion sensor when motion is enabled
+            if zone["motionConfig"] >= 2:
+                entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+    async_add_entities(entities)
 
 
 class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
