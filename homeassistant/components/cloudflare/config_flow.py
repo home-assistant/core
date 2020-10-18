@@ -69,7 +69,8 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         zones = await cfupdate.get_zones()
         if zone:
             zone_id = await cfupdate.get_zone_id()
-            records = await cfupdate.get_zone_records(zone_id, "A")
+            if zone_id:
+                records = await cfupdate.get_zone_records(zone_id, "A")
     except CloudflareConnectionException as error:
         raise CannotConnect from error
     except CloudflareAuthenticationException as error:
