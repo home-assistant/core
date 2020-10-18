@@ -14,7 +14,7 @@ from tests.components.advantage_air import (
 
 
 async def test_async_setup_entry(hass, aioclient_mock):
-    """Test a successful setup entry."""
+    """Test a successful setup entry and unload."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
