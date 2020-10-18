@@ -1027,6 +1027,9 @@ omnilogic==0.4.2
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
 
+# homeassistant.components.onvif
+onvif-zeep-async==1.0.0
+
 # homeassistant.components.opengarage
 open-garage==0.1.4
 

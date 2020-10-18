@@ -263,7 +263,6 @@ class ONVIFDevice:
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
-        # await asyncio.sleep(5)
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
         profiles = []
