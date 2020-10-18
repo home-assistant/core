@@ -1134,7 +1134,7 @@ def async_track_point_in_utc_time(
     job = action if isinstance(action, HassJob) else HassJob(action)
 
     cancel_callback = hass.loop.call_at(
-        hass.loop.time() + point_in_time.timestamp() - time.time(),
+        _datetime_to_loop_time(hass, point_in_time),
         hass.async_run_hass_job,
         job,
         utc_point_in_time,
@@ -1297,6 +1297,18 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 pattern_utc_now = dt_util.utcnow
 
 
+def _datetime_to_loop_time(hass: HomeAssistant, when: datetime) -> float:
+    # We always get time.time() first to avoid time.time()
+    # ticking forward after fetching hass.loop.time()
+    # and callback being scheduled a few microseconds early.
+    #
+    # Since time.time() and hass.loop.time() do not tick
+    # synchronously we add MAX_TIME_TRACKING_ERROR to ensure
+    # we always schedule the call after the requested time.
+    #
+    return when.timestamp() - time.time() + hass.loop.time() + MAX_TIME_TRACKING_ERROR
+
+
 @callback
 @bind_hass
 def async_track_utc_time_change(
@@ -1352,39 +1364,12 @@ def async_track_utc_time_change(
         calculate_next(now + timedelta(seconds=1))
 
         cancel_callback = hass.loop.call_at(
-            -time.time()
-            + hass.loop.time()
-            + next_time.timestamp()
-            + MAX_TIME_TRACKING_ERROR,
+            _datetime_to_loop_time(hass, next_time),
             pattern_time_change_listener,
         )
 
-    # We always get time.time() first to avoid time.time()
-    # ticking forward after fetching hass.loop.time()
-    # and callback being scheduled a few microseconds early.
-    #
-    # Since we loose additional time calling `hass.loop.time()`
-    # we add MAX_TIME_TRACKING_ERROR to ensure
-    # we always schedule the call within the time window between
-    # second and the next second.
-    #
-    # For example:
-    # If the clock ticks forward 30 microseconds when fectching
-    # `hass.loop.time()` and we want the event to fire at exactly
-    # 03:00:00.000000, the event would actually fire around
-    # 02:59:59.999970. To ensure we always fire sometime between
-    # 03:00:00.000000 and 03:00:00.999999 we add
-    # MAX_TIME_TRACKING_ERROR to make up for the time
-    # lost fetching the time. This ensures we do not fire the
-    # event before the next time pattern match which would result
-    # in the event being fired again since we would otherwise
-    # potentially fire early.
-    #
     cancel_callback = hass.loop.call_at(
-        -time.time()
-        + hass.loop.time()
-        + next_time.timestamp()
-        + MAX_TIME_TRACKING_ERROR,
+        _datetime_to_loop_time(hass, next_time),
         pattern_time_change_listener,
     )
 
