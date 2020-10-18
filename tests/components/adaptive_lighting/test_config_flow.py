@@ -1,4 +1,7 @@
 """Test Adaptive Lighting config flow."""
+import pytest
+from voluptuous.error import MultipleInvalid
+
 from homeassistant import data_entry_flow
 from homeassistant.components.adaptive_lighting.const import (
     CONF_SUNRISE_TIME,
@@ -74,3 +77,38 @@ async def test_options(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     for key, value in data.items():
         assert result["data"][key] == value
+
+
+async def test_incorrect_options(hass):
+    """Test updating incorrect options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={CONF_NAME: DEFAULT_NAME},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    data = DEFAULT_DATA.copy()
+    data[CONF_SUNRISE_TIME] = None
+    data[CONF_SUNSET_TIME] = None
+    with pytest.raises(MultipleInvalid):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+
+async def test_import_twice(hass):
+    """Test importing twice."""
+    data = DEFAULT_DATA.copy()
+    data[CONF_NAME] = DEFAULT_NAME
+    for _ in range(2):
+        _ = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=data,
+        )

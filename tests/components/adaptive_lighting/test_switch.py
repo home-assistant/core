@@ -1,23 +1,34 @@
 """Tests for Adaptive Lighting switches."""
 # pylint: disable=protected-access
+import asyncio
 import datetime
+from random import randint
 
 import pytest
 
 from homeassistant.components.adaptive_lighting.const import (
     ATTR_TURN_ON_OFF_LISTENER,
+    CONF_DETECT_NON_HA_CHANGES,
     CONF_INITIAL_TRANSITION,
     CONF_MANUAL_CONTROL,
+    CONF_PREFER_RGB_COLOR,
     CONF_SUNRISE_TIME,
     CONF_SUNSET_TIME,
     CONF_TRANSITION,
+    CONF_TURN_ON_LIGHTS,
     DEFAULT_MAX_BRIGHTNESS,
     DEFAULT_NAME,
     DEFAULT_SLEEP_BRIGHTNESS,
     DEFAULT_SLEEP_COLOR_TEMP,
     DOMAIN,
+    SERVICE_APPLY,
     SERVICE_SET_MANUAL_CONTROL,
     UNDO_UPDATE_LISTENER,
+)
+from homeassistant.components.adaptive_lighting.switch import (
+    color_difference_redmean,
+    create_context,
+    is_our_context,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -28,7 +39,15 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 import homeassistant.config as config_util
-from homeassistant.const import ATTR_ENTITY_ID, CONF_LIGHTS, CONF_NAME, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_LIGHTS,
+    CONF_NAME,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -108,6 +127,8 @@ async def setup_switch_and_lights(hass):
             CONF_SUNSET_TIME: datetime.time(SUNSET.hour),
             CONF_INITIAL_TRANSITION: 0,
             CONF_TRANSITION: 0,
+            CONF_DETECT_NON_HA_CHANGES: True,
+            CONF_PREFER_RGB_COLOR: False,
         },
     )
     switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
@@ -137,7 +158,7 @@ async def test_adaptive_lighting_switches(hass):
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_with_default_settings(
-    hass, lat, long, timezone, reset_time_zone
+    hass, lat, long, timezone, reset_time_zone  # pylint: disable=redefined-outer-name
 ):
     """Test setting up the Adaptive Lighting switches with different timezones."""
     await config_util.async_process_ha_core_config(
@@ -154,7 +175,7 @@ async def test_adaptive_lighting_time_zones_with_default_settings(
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_and_sun_settings(
-    hass, lat, long, timezone, reset_time_zone
+    hass, lat, long, timezone, reset_time_zone  # pylint: disable=redefined-outer-name
 ):
     """Test setting up the Adaptive Lighting switches with different timezones.
 
@@ -393,3 +414,78 @@ async def test_manual_control(hass):
         await turn_switch(False, entity_id)
         await turn_switch(True, entity_id)
         assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+
+
+async def test_apply_service(hass):
+    """Test adaptive_lighting.apply service."""
+    await setup_switch_and_lights(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_APPLY,
+        {
+            ATTR_ENTITY_ID: ENTITY_SWITCH,
+            CONF_LIGHTS: [ENTITY_LIGHT],
+            CONF_TURN_ON_LIGHTS: True,
+        },
+        blocking=True,
+    )
+
+
+async def test_switch_off_on_off(hass):
+    """Test switch rapid off_on_off."""
+
+    async def turn_light(state, **kwargs):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON if state else SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, **kwargs},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    async def update():
+        await switch._update_attrs_and_maybe_adapt_lights(
+            transition=0, context=switch.create_context("test")
+        )
+        await hass.async_block_till_done()
+
+    switch = await setup_switch_and_lights(hass)
+    # Turn light on
+    await turn_light(True)
+    # Turn light off with transition
+    await turn_light(False, transition=30)
+
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    # Set state to on after a second (like happens IRL)
+    await asyncio.sleep(1)
+    hass.states.async_set(ENTITY_LIGHT, STATE_ON)
+    # Set state to off after a second (like happens IRL)
+    await asyncio.sleep(1)
+    hass.states.async_set(ENTITY_LIGHT, STATE_OFF)
+
+    # Now we test whether the sleep task is there
+    assert ENTITY_LIGHT in switch.turn_on_off_listener.sleep_tasks
+    sleep_task = switch.turn_on_off_listener.sleep_tasks[ENTITY_LIGHT]
+    assert not sleep_task.cancelled()
+
+    # A 'light.turn_on' event should cancel that task
+    await turn_light(True)
+    await update()
+    assert sleep_task.cancelled()
+
+
+def test_color_difference_redmean():
+    """Test color_difference_redmean function."""
+    for _ in range(10):
+        rgb_1 = (randint(0, 255), randint(0, 255), randint(0, 255))
+        rgb_2 = (randint(0, 255), randint(0, 255), randint(0, 255))
+        color_difference_redmean(rgb_1, rgb_2)
+    color_difference_redmean((0, 0, 0), (255, 255, 255))
+
+
+def test_is_our_context():
+    """Test is_our_context function."""
+    context = create_context(DOMAIN, "test", 0)
+    assert is_our_context(context)
+    assert not is_our_context(None)
+    assert not is_our_context(Context())

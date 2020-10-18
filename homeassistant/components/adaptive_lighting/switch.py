@@ -17,10 +17,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import astral
 import voluptuous as vol
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -1173,13 +1169,7 @@ class TurnOnOffListener:
         if light not in self.last_state_change:
             return False
         old_states: List[State] = self.last_state_change[light]
-        await self.hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: light},
-            blocking=True,
-            context=context,
-        )
+        await self.hass.helpers.entity_component.async_update_entity(light)
         new_state = self.hass.states.get(light)
         compare_to = functools.partial(
             _attributes_have_changed,
