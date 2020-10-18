@@ -353,6 +353,10 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     assert hass.states.get("cover.door1").state == STATE_CLOSING
     api.close_door.assert_called_with(1)
 
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
+
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
@@ -367,6 +371,10 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_OPENING
     api.open_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
 
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
