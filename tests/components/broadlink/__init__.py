@@ -146,7 +146,7 @@ class BroadlinkDevice:
             "mac": self.mac,
             "type": self.devtype,
             "name": self.name,
-            "locked": False,
+            "lock": False,
         }
 
 

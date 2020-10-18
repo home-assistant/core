@@ -13,17 +13,11 @@ from broadlink.exceptions import (
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import (
-    ATTR_LOCKED,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
 from .const import (  # pylint: disable=unused-import
+    CONF_LOCK,
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -315,7 +309,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             (discovery_info[CONF_HOST], DEFAULT_PORT),
             bytes.fromhex(discovery_info[CONF_MAC]),
             name=discovery_info[CONF_NAME],
-            is_locked=discovery_info[ATTR_LOCKED],
+            is_locked=discovery_info[CONF_LOCK],
         )
         await self.async_set_device(device)
         self._abort_if_unique_id_configured(

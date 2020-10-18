@@ -13,13 +13,13 @@ from broadlink.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_LOCKED, CONF_HOST, CONF_MAC, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 
-from .const import DOMAIN
+from .const import CONF_LOCK, DOMAIN
 from .helpers import get_ip_or_none
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ class BroadlinkScout:
                         CONF_MAC: device.mac.hex(),
                         CONF_TYPE: device.devtype,
                         CONF_NAME: device.name,
-                        ATTR_LOCKED: device.is_locked,
+                        CONF_LOCK: device.is_locked,
                     },
                 )
             )
