@@ -168,7 +168,7 @@ class FlumeSensor(CoordinatorEntity):
     async def async_added_to_hass(self):
         """Request an update when added."""
         await super().async_added_to_hass()
-        # We do ask for an update with async_add_entities()
+        # We do not ask for an update with async_add_entities()
         # because it will update disabled entities
         await self.coordinator.async_request_refresh()
 
