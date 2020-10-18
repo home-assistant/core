@@ -1,6 +1,7 @@
 """Constants for the utility meter component."""
 DOMAIN = "utility_meter"
 
+QUARTERHOUR = "quarterhourly"
 HOURLY = "hourly"
 DAILY = "daily"
 WEEKLY = "weekly"
@@ -9,7 +10,7 @@ BIMONTHLY = "bimonthly"
 QUARTERLY = "quarterly"
 YEARLY = "yearly"
 
-METER_TYPES = [HOURLY, DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY]
+METER_TYPES = [QUARTERHOURLY, HOURLY, DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, YEARLY]
 
 DATA_UTILITY = "utility_meter_data"
 
