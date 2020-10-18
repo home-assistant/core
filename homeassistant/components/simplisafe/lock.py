@@ -32,7 +32,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     def __init__(self, simplisafe, system, lock):
         """Initialize."""
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
-        self._is_locked = False
         self._lock = lock
 
         for event_type in (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED):
@@ -73,6 +72,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
                 ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
             }
         )
+
+        self._is_locked = self._lock.state == LockStates.locked
 
     @callback
     def async_update_from_websocket_event(self, event):
