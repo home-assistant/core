@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from roon import RoonApi
+from roonapi import RoonApi
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.helpers.dispatcher import async_dispatcher_send
