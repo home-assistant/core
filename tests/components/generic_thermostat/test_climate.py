@@ -1105,6 +1105,7 @@ async def test_precision(hass, setup_comp_9):
 
 
 async def test_not_configured_preset(hass, setup_comp_9):
+    """Test that check no error trying to set a not configured preset."""
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert state.attributes[ATTR_TEMPERATURE] == 25
