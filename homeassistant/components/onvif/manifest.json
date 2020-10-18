@@ -2,11 +2,7 @@
   "domain": "onvif",
   "name": "ONVIF",
   "documentation": "https://www.home-assistant.io/integrations/onvif",
-  "requirements": [
-    "onvif-zeep-async==0.6.0",
-    "WSDiscovery==2.0.0",
-    "zeep[async]==3.4.0"
-  ],
+  "requirements": ["WSDiscovery==2.0.0"],
   "dependencies": ["ffmpeg"],
   "codeowners": ["@hunterjm"],
   "config_flow": true

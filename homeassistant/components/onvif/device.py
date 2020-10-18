@@ -4,7 +4,7 @@ import datetime as dt
 import os
 from typing import List
 
-from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
+from httpx import RequestError
 import onvif
 from onvif import ONVIFCamera
 from onvif.exceptions import ONVIFError
@@ -93,17 +93,23 @@ class ONVIFDevice:
         try:
             await self.device.update_xaddrs()
             await self.async_check_date_and_time()
+
+            # Create event manager
+            self.events = EventManager(
+                self.hass, self.device, self.config_entry.unique_id
+            )
+
+            # Fetch basic device info and capabilities
             self.info = await self.async_get_device_info()
             self.capabilities = await self.async_get_capabilities()
             self.profiles = await self.async_get_profiles()
 
+            # No camera profiles to add
+            if not self.profiles:
+                return False
+
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
-
-            if self.capabilities.events:
-                self.events = EventManager(
-                    self.hass, self.device, self.config_entry.unique_id
-                )
 
             # Determine max resolution from profiles
             self.max_resolution = max(
@@ -111,7 +117,7 @@ class ONVIFDevice:
                 for profile in self.profiles
                 if profile.video.encoding == "H264"
             )
-        except ClientConnectionError as err:
+        except RequestError as err:
             LOGGER.warning(
                 "Couldn't connect to camera '%s', but will retry later. Error: %s",
                 self.name,
@@ -195,7 +201,7 @@ class ONVIFDevice:
                         cam_date_utc,
                         system_date,
                     )
-        except ServerDisconnectedError as err:
+        except RequestError as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
@@ -237,14 +243,12 @@ class ONVIFDevice:
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault, ServerDisconnectedError):
+        except (ONVIFError, Fault, RequestError):
             pass
 
         pullpoint = False
         try:
-            event_service = self.device.create_events_service()
-            event_capabilities = await event_service.GetServiceCapabilities()
-            pullpoint = event_capabilities and event_capabilities.WSPullPointSupport
+            pullpoint = await self.events.async_start()
         except (ONVIFError, Fault):
             pass
 
@@ -259,9 +263,14 @@ class ONVIFDevice:
 
     async def async_get_profiles(self) -> List[Profile]:
         """Obtain media profiles for this device."""
+        # await asyncio.sleep(5)
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
         profiles = []
+
+        if not isinstance(result, list):
+            return profiles
+
         for key, onvif_profile in enumerate(result):
             # Only add H264 profiles
             if (
@@ -298,7 +307,7 @@ class ONVIFDevice:
                     ptz_service = self.device.create_ptz_service()
                     presets = await ptz_service.GetPresets(profile.token)
                     profile.ptz.presets = [preset.token for preset in presets if preset]
-                except (Fault, ServerDisconnectedError):
+                except (Fault, RequestError):
                     # It's OK if Presets aren't supported
                     profile.ptz.presets = []
 

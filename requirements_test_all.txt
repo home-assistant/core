@@ -498,9 +498,6 @@ oauth2client==4.0.0
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
 
-# homeassistant.components.onvif
-onvif-zeep-async==0.6.0
-
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
@@ -1095,9 +1092,6 @@ xmltodict==0.12.0
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
-
-# homeassistant.components.onvif
-zeep[async]==3.4.0
 
 # homeassistant.components.zeroconf
 zeroconf==0.28.6

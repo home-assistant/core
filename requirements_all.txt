@@ -1027,9 +1027,6 @@ omnilogic==0.4.2
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
 
-# homeassistant.components.onvif
-onvif-zeep-async==0.6.0
-
 # homeassistant.components.opengarage
 open-garage==0.1.4
 
@@ -2320,9 +2317,6 @@ yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
 youtube_dl==2020.09.20
-
-# homeassistant.components.onvif
-zeep[async]==3.4.0
 
 # homeassistant.components.zengge
 zengge==0.2

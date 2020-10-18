@@ -3,11 +3,7 @@ import asyncio
 import datetime as dt
 from typing import Callable, Dict, List, Optional, Set
 
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ClientOSError,
-    ServerDisconnectedError,
-)
+from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
 from zeep.exceptions import Fault
 
@@ -21,11 +17,9 @@ from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
 SUBSCRIPTION_ERRORS = (
-    ClientConnectorError,
-    ClientOSError,
     Fault,
-    ServerDisconnectedError,
     asyncio.TimeoutError,
+    TransportError,
 )
 
 
@@ -173,10 +167,14 @@ class EventManager:
                     dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
                 ).total_seconds() < 7200:
                     await self.async_renew()
-            except SUBSCRIPTION_ERRORS:
+            except RemoteProtocolError:
+                # Likley a shutdown event, nothing to see here
+                return
+            except SUBSCRIPTION_ERRORS as err:
                 LOGGER.warning(
-                    "Failed to fetch ONVIF PullPoint subscription messages for '%s'",
+                    "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
                     self.unique_id,
+                    err,
                 )
                 # Treat errors as if the camera restarted. Assume that the pullpoint
                 # subscription is no longer valid.
