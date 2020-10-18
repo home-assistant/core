@@ -121,7 +121,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     @property
     def available(self):
         """Return the unique id."""
-        return self._thermostat.online
+        return self.coordinator.last_update_success and self._thermostat.online
 
     def set_hvac_mode(self, hvac_mode):
         """Set the system mode."""
