@@ -60,6 +60,8 @@ LAT_LONG_TZS = [
 ENTITY_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_{DEFAULT_NAME}"
 ENTITY_SLEEP_MODE_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_sleep_mode_{DEFAULT_NAME}"
 
+ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
+
 
 async def setup_switch(hass, extra_data):
     """Create the switch entry."""
@@ -141,6 +143,7 @@ async def test_adaptive_lighting_time_zones_with_default_settings(
     await switch._update_attrs_and_maybe_adapt_lights(
         context=switch.create_context("test")
     )
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE  # Restore TZ
 
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
@@ -218,6 +221,8 @@ async def test_adaptive_lighting_time_zones_and_sun_settings(
     await switch._update_attrs_and_maybe_adapt_lights(context=context)
     assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_SLEEP_BRIGHTNESS
     assert switch._settings["color_temp_kelvin"] == DEFAULT_SLEEP_COLOR_TEMP
+
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE  # Restore TZ
 
 
 async def test_light_settings(hass, legacy_patchable_time):
