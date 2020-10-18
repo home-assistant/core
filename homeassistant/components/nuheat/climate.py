@@ -270,9 +270,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._update_internal_state()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )
 
     @callback
     def _update_internal_state(self):
