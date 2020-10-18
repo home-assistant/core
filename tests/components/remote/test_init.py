@@ -19,6 +19,7 @@ from tests.components.remote import common
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_LEARN_COMMAND = "learn_command"
+SERVICE_DELETE_COMMAND = "delete_command"
 
 
 class TestRemote(unittest.TestCase):
@@ -101,6 +102,7 @@ class TestRemote(unittest.TestCase):
             entity_id="entity_id_val",
             device="test_device",
             command=["test_command"],
+            command_type="rf",
             alternative=True,
             timeout=20,
         )
@@ -112,6 +114,28 @@ class TestRemote(unittest.TestCase):
 
         assert call.domain == remote.DOMAIN
         assert call.service == SERVICE_LEARN_COMMAND
+        assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
+
+    def test_delete_command(self):
+        """Test delete_command."""
+        delete_command_calls = mock_service(
+            self.hass, remote.DOMAIN, SERVICE_DELETE_COMMAND
+        )
+
+        common.delete_command(
+            self.hass,
+            entity_id="entity_id_val",
+            device="test_device",
+            command=["test_command"],
+        )
+
+        self.hass.block_till_done()
+
+        assert len(delete_command_calls) == 1
+        call = delete_command_calls[-1]
+
+        assert call.domain == remote.DOMAIN
+        assert call.service == SERVICE_DELETE_COMMAND
         assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
 
 
