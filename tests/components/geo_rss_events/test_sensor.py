@@ -13,11 +13,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import MagicMock, patch
-from tests.common import (
-    assert_setup_component,
-    fire_time_changed,
-    get_test_home_assistant,
-)
+from tests.common import assert_setup_component, async_fire_time_changed
 
 URL = "http://geo.rss.local/geo_rss_events.xml"
 VALID_CONFIG_WITH_CATEGORIES = {
@@ -38,6 +34,7 @@ VALID_CONFIG = {
 
 @pytest.fixture
 def mock_feed():
+    """Pytest fixture for homeassistant.components.geo_rss_events.sensor.GenericFeed."""
     with patch(
         "homeassistant.components.geo_rss_events.sensor.GenericFeed"
     ) as mock_feed:
@@ -76,9 +73,9 @@ async def test_setup(hass, mock_feed):
             # Artificially trigger update.
             hass.bus.fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
-            await hass.block_till_done()
+            await hass.async_block_till_done()
 
-            all_states = hass.states.all()
+            all_states = hass.states.async_all()
             assert len(all_states) == 1
 
             state = hass.states.get("sensor.event_service_any")
@@ -96,20 +93,20 @@ async def test_setup(hass, mock_feed):
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
             mock_feed.return_value.update.return_value = "OK_NO_DATA", None
-            fire_time_changed(hass, utcnow + geo_rss_events.SCAN_INTERVAL)
-            hass.block_till_done()
+            async_fire_time_changed(hass, utcnow + geo_rss_events.SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-            all_states = hass.states.all()
+            all_states = hass.states.async_all()
             assert len(all_states) == 1
             state = hass.states.get("sensor.event_service_any")
             assert int(state.state) == 2
 
             # Simulate an update - empty data, removes all entities
             mock_feed.return_value.update.return_value = "ERROR", None
-            fire_time_changed(hass, utcnow + 2 * geo_rss_events.SCAN_INTERVAL)
-            hass.block_till_done()
+            async_fire_time_changed(hass, utcnow + 2 * geo_rss_events.SCAN_INTERVAL)
+            await hass.async_block_till_done()
 
-            all_states = hass.states.all()
+            all_states = hass.states.async_all()
             assert len(all_states) == 1
             state = hass.states.get("sensor.event_service_any")
             assert int(state.state) == 0
@@ -138,9 +135,9 @@ async def test_setup_with_categories(hass, mock_feed):
         # Artificially trigger update.
         hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
-        hass.block_till_done()
+        await hass.async_block_till_done()
 
-        all_states = hass.states.all()
+        all_states = hass.states.async_all()
         assert len(all_states) == 1
 
         state = hass.states.get("sensor.event_service_category_1")
