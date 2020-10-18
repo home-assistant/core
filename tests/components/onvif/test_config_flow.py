@@ -69,6 +69,7 @@ def setup_mock_onvif_camera(
     mock_onvif_camera.update_xaddrs = AsyncMock(return_value=True)
     mock_onvif_camera.create_devicemgmt_service = MagicMock(return_value=devicemgmt)
     mock_onvif_camera.create_media_service = MagicMock(return_value=media_service)
+    mock_onvif_camera.close = AsyncMock(return_value=None)
 
     def mock_constructor(
         host,
