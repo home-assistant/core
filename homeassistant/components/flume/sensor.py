@@ -145,7 +145,7 @@ class FlumeSensor(CoordinatorEntity):
                 self._name,
                 sensor_key,
             )
-            return
+            return None
 
         _LOGGER.debug(
             "Updating sensor: '%s', value: '%s'",
@@ -168,7 +168,7 @@ class FlumeSensor(CoordinatorEntity):
     async def async_added_to_hass(self):
         """Request an update when added."""
         await super().async_added_to_hass()
-        # We do ask for an update with async_add_entities()
+        # We do not ask for an update with async_add_entities()
         # because it will update disabled entities
         await self.coordinator.async_request_refresh()
 
@@ -186,7 +186,7 @@ def _create_flume_device_coordinator(hass, flume_device):
         try:
             await hass.async_add_executor_job(flume_device.update_force)
         except Exception as ex:  # pylint: disable=broad-except
-            raise UpdateFailed(f"Error communicating with flume API: {ex}")
+            raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
             "Flume update details: %s",
             {

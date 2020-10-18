@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
-ADVANTAGE_AIR_PLATFORMS = ["climate", "cover", "binary_sensor", "sensor"]
+ADVANTAGE_AIR_PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -70,7 +70,6 @@ def get_data_update_coordinator(
 
         async def async_update_data():
             try:
-                # The api handles the timeout
                 return await hass.async_add_executor_job(api.info)
             except Exception as exception:
                 raise UpdateFailed(
