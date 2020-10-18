@@ -3,6 +3,7 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.components import blueprint
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -16,11 +17,11 @@ from homeassistant.loader import IntegrationNotFound
 
 from . import (
     CONF_ACTION,
-    CONF_BLUEPRINT,
     CONF_CONDITION,
     CONF_TRIGGER,
     DOMAIN,
     PLATFORM_SCHEMA,
+    async_get_blueprints,
 )
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -29,10 +30,11 @@ from . import (
 
 async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
-    config = PLATFORM_SCHEMA(config)
+    if blueprint.is_blueprint_config(config):
+        blueprints = async_get_blueprints(hass)
+        return await blueprints.async_inputs_from_config(config)
 
-    if CONF_BLUEPRINT in config:
-        return config
+    config = PLATFORM_SCHEMA(config)
 
     config[CONF_TRIGGER] = await async_validate_trigger_config(
         hass, config[CONF_TRIGGER]

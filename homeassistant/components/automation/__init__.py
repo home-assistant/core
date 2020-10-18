@@ -1,6 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
 import logging
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -49,6 +49,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -60,7 +61,7 @@ from homeassistant.util.dt import parse_datetime
 DOMAIN = "automation"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-GROUP_NAME_ALL_AUTOMATIONS = "all automations"
+DATA_BLUEPRINTS = "automation_blueprints"
 
 CONF_DESCRIPTION = "description"
 CONF_HIDE_ENTITY = "hide_entity"
@@ -75,12 +76,6 @@ CONF_STOP_ACTIONS = "stop_actions"
 CONF_BLUEPRINT = "blueprint"
 CONF_INPUT = "input"
 
-CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
-CONDITION_TYPE_AND = "and"
-CONDITION_TYPE_NOT = "not"
-CONDITION_TYPE_OR = "or"
-
-DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 DEFAULT_INITIAL_STATE = True
 DEFAULT_STOP_ACTIONS = True
 
@@ -92,65 +87,37 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
-# DATA_BLUEPRINTS = "automation_blueprints"
-# PATH_BLUEPRINTS = f"blueprints/{DOMAIN}"
-
 _LOGGER = logging.getLogger(__name__)
 
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
-AUTOMATION_FIELDS = {
-    vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-    vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
-    vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-}
-
-PLATFORM_BASE_SCHEMA = {
-    # str on purpose
-    CONF_ID: str,
-    CONF_ALIAS: cv.string,
-    vol.Optional(CONF_DESCRIPTION): cv.string,
-    vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-}
-
-PLATFORM_AUTOMATION_SCHEMA = vol.All(
+PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
     make_script_schema(
         {
-            **PLATFORM_BASE_SCHEMA,
-            **AUTOMATION_FIELDS,
+            # str on purpose
+            CONF_ID: str,
+            CONF_ALIAS: cv.string,
+            vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
+            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
         SCRIPT_MODE_SINGLE,
     ),
 )
 
-PLATFORM_BLUEPRINT_INSTANCE_SCHEMA = make_script_schema(
-    {
-        **PLATFORM_BASE_SCHEMA,
-        **blueprint.BLUEPRINT_INSTANCE_FIELDS,
-    },
-    SCRIPT_MODE_SINGLE,
-)
 
-
-def validate_automation(value):
-    """Validate an automation."""
-    if not isinstance(value, dict):
-        raise vol.Invalid("Expected a dictionary")
-
-    if CONF_BLUEPRINT in value:
-        return PLATFORM_BLUEPRINT_INSTANCE_SCHEMA(value)
-
-    return PLATFORM_AUTOMATION_SCHEMA(value)
-
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"), validate_automation
-)
+@singleton(DATA_BLUEPRINTS)
+@callback
+def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
+    """Get automation blueprints."""
+    return blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)
 
 
 @bind_hass
@@ -229,9 +196,7 @@ async def async_setup(hass, config):
     """Set up the automation."""
     hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    blueprints = blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)
-
-    await _async_process_config(hass, config, component, blueprints)
+    await _async_process_config(hass, config, component)
 
     async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
@@ -262,8 +227,8 @@ async def async_setup(hass, config):
         conf = await component.async_prepare_reload()
         if conf is None:
             return
-        blueprints.async_reset_cache()
-        await _async_process_config(hass, conf, component, blueprints)
+        async_get_blueprints(hass).async_reset_cache()
+        await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     async_register_admin_service(
@@ -552,7 +517,6 @@ async def _async_process_config(
     hass: HomeAssistant,
     config: Dict[str, Any],
     component: EntityComponent,
-    blueprints: blueprint.DomainBlueprints,
 ) -> None:
     """Process config and add automations.
 
@@ -561,37 +525,32 @@ async def _async_process_config(
     entities = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf = config[config_key]
+        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[
+            config_key
+        ]
 
         for list_no, config_block in enumerate(conf):
+            if isinstance(config_block, blueprint.BlueprintInputs):
+                blueprint_inputs = config_block
+
+                try:
+                    config_block = cast(
+                        Dict[str, Any],
+                        PLATFORM_SCHEMA(blueprint_inputs.async_substitute()),
+                    )
+                except vol.Invalid as err:
+                    _LOGGER.error(
+                        "Blueprint %s generated invalid automation with inputs %s: %s",
+                        blueprint_inputs.blueprint.name,
+                        blueprint_inputs.inputs,
+                        humanize_error(config_block, err),
+                    )
+                    continue
+
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
             initial_state = config_block.get(CONF_INITIAL_STATE)
-
-            if blueprint.is_blueprint_config(config_block):
-                try:
-                    bp_inputs = await blueprints.async_inputs_from_config(config_block)
-                except blueprint.BlueprintException as exc:
-                    _LOGGER.error(
-                        "Error processing blueprint %s: %s", exc.blueprint_name, exc
-                    )
-                    continue
-
-                automation_conf = bp_inputs.async_substitute()
-
-                try:
-                    automation_conf = PLATFORM_AUTOMATION_SCHEMA(automation_conf)
-                except vol.Invalid as err:
-                    _LOGGER.error(
-                        "Blueprint %s generated invalid automation with inputs %s: %s",
-                        bp_inputs.blueprint.name,
-                        bp_inputs.inputs,
-                        humanize_error(automation_conf, err),
-                    )
-                    continue
-
-                config_block = {**automation_conf, **config_block}
 
             action_script = Script(
                 hass,

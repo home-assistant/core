@@ -30,14 +30,17 @@ BLUEPRINT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-BLUEPRINT_INSTANCE_FIELDS = {
-    vol.Required(CONF_BLUEPRINT): vol.Schema(
-        {
-            vol.Required(CONF_NAME): cv.path,
-            vol.Required(CONF_INPUT): {str: cv.match_all},
-        }
-    )
-}
+BLUEPRINT_INSTANCE_FIELDS = vol.Schema(
+    {
+        vol.Required(CONF_BLUEPRINT): vol.Schema(
+            {
+                vol.Required(CONF_NAME): cv.path,
+                vol.Required(CONF_INPUT): {str: cv.match_all},
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -46,17 +49,25 @@ async def async_setup(hass, config):
     return True
 
 
-class BlueprintException(Exception):
+class BlueprintException(HomeAssistantError):
     """Base exception for blueprint errors."""
 
-    def __init__(self, domain: str, blueprint_name: str, msg) -> None:
-        """Initialize blueprint exception."""
+    def __init__(self, domain: str, msg: str) -> None:
+        """Initialize a blueprint exception."""
         super().__init__(msg)
         self.domain = domain
+
+
+class BlueprintWithNameException(BlueprintException):
+    """Base exception for blueprint errors."""
+
+    def __init__(self, domain: str, blueprint_name: str, msg: str) -> None:
+        """Initialize blueprint exception."""
+        super().__init__(domain, msg)
         self.blueprint_name = blueprint_name
 
 
-class FailedToLoad(BlueprintException):
+class FailedToLoad(BlueprintWithNameException):
     """When we failed to load the blueprint."""
 
     def __init__(self, domain: str, blueprint_name: str, exc: Exception) -> None:
@@ -64,7 +75,7 @@ class FailedToLoad(BlueprintException):
         super().__init__(domain, blueprint_name, f"Failed to load blueprint: {exc}")
 
 
-class InvalidBlueprint(BlueprintException):
+class InvalidBlueprint(BlueprintWithNameException):
     """When we encountered an invalid blueprint."""
 
     def __init__(
@@ -86,7 +97,18 @@ class InvalidBlueprint(BlueprintException):
         self.blueprint_data = blueprint_data
 
 
-class MissingPlaceholder(BlueprintException):
+class InvalidBlueprintInputs(BlueprintException):
+    """When we encountered invalid blueprint inputs."""
+
+    def __init__(self, domain: str, msg: str):
+        """Initialize an invalid blueprint inputs error."""
+        super().__init__(
+            domain,
+            f"Invalid blueprint inputs: {msg}",
+        )
+
+
+class MissingPlaceholder(BlueprintWithNameException):
     """When we miss a placeholder."""
 
     def __init__(
@@ -122,10 +144,17 @@ class Blueprint:
 class BlueprintInputs:
     """Inputs for a blueprint."""
 
-    def __init__(self, blueprint: Blueprint, inputs: Dict[str, Any]) -> None:
+    def __init__(
+        self, blueprint: Blueprint, config_with_inputs: Dict[str, Any]
+    ) -> None:
         """Instantiate a blueprint inputs object."""
         self.blueprint = blueprint
-        self.inputs = inputs
+        self.config_with_inputs = config_with_inputs
+
+    @property
+    def inputs(self):
+        """Return the inputs."""
+        return self.config_with_inputs[CONF_BLUEPRINT][CONF_INPUT]
 
     def validate(self) -> None:
         """Validate the inputs."""
@@ -142,8 +171,9 @@ class BlueprintInputs:
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
         processed = placeholder.substitute(self.blueprint.data, self.inputs)
-        processed.pop(CONF_BLUEPRINT)
-        return processed
+        combined = {**self.config_with_inputs, **processed}
+        combined.pop(CONF_BLUEPRINT)
+        return combined
 
 
 class DomainBlueprints:
@@ -207,10 +237,19 @@ class DomainBlueprints:
 
             return blueprint
 
-    async def async_inputs_from_config(self, config: dict) -> BlueprintInputs:
+    async def async_inputs_from_config(
+        self, config_with_blueprint: dict
+    ) -> BlueprintInputs:
         """Process a blueprint config."""
-        bp_conf = config[CONF_BLUEPRINT]
+        try:
+            config_with_blueprint = BLUEPRINT_INSTANCE_FIELDS(config_with_blueprint)
+        except vol.Invalid as err:
+            raise InvalidBlueprintInputs(
+                self.domain, humanize_error(config_with_blueprint, err)
+            )
+
+        bp_conf = config_with_blueprint[CONF_BLUEPRINT]
         blueprint = await self.async_get_blueprint(bp_conf[CONF_NAME])
-        inputs = BlueprintInputs(blueprint, bp_conf[CONF_INPUT])
+        inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs
