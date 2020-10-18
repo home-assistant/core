@@ -85,6 +85,10 @@ class AdvantageAirTimeTo(AdvantageAirEntity):
 class AdvantageAirZoneVent(AdvantageAirEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize the Advantage Air Zone Vent entity."""
+        super().__init__(instance, ac_key, zone_key)
+
     @property
     def name(self):
         """Return the name."""
@@ -117,6 +121,10 @@ class AdvantageAirZoneVent(AdvantageAirEntity):
 
 class AdvantageAirZoneSignal(AdvantageAirEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
+
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize the Advantage Air Zone Signal entity."""
+        super().__init__(instance, ac_key, zone_key)
 
     @property
     def name(self):

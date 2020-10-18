@@ -25,6 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
     """Representation of Advantage Air fresh air control."""
 
+    def __init__(self, instance, ac_key):
+        """Initialize the Advantage Air fresh air entity."""
+        super().__init__(instance, ac_key)
+
     @property
     def name(self):
         """Return the name."""

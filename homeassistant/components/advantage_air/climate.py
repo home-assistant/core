@@ -96,6 +96,10 @@ class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
 class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
+    def __init__(self, instance, ac_key):
+        """Initialize the Advantage Air Climate entity."""
+        super().__init__(instance, ac_key)
+
     @property
     def name(self):
         """Return the name."""
@@ -170,6 +174,10 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
+
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize the Advantage Air Zone Climate entity."""
+        super().__init__(instance, ac_key, zone_key)
 
     @property
     def name(self):
