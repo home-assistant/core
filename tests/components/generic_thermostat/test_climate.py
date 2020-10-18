@@ -1239,6 +1239,77 @@ async def test_restore_state(hass):
     assert state.state == HVAC_MODE_OFF
 
 
+async def test_restore_state_2(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "climate.test_thermostat",
+                HVAC_MODE_OFF,
+                {ATTR_TEMPERATURE: "27"},
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test_thermostat",
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "presets": {"away": 14},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_thermostat")
+    assert state.attributes[ATTR_TEMPERATURE] == 27
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert state.state == HVAC_MODE_OFF
+
+
+async def test_restore_state_3(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "climate.test_thermostat",
+                HVAC_MODE_OFF,
+                {ATTR_TEMPERATURE: "27"},
+            ),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test_thermostat",
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "presets": {"away": 14},
+                "default_preset": "away",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_thermostat")
+    assert state.attributes[ATTR_TEMPERATURE] == 14
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+    assert state.state == HVAC_MODE_OFF
+
+
 async def test_no_restore_state(hass):
     """Ensure states are restored on startup if they exist.
 
