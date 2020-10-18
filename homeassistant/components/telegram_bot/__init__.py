@@ -67,7 +67,7 @@ ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
-ATTR_INTERNAL_REQUEST_ID = "internal_request_id"
+ATTR_MESSAGE_TAG = "message_tag"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -138,7 +138,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-        vol.Optional(ATTR_INTERNAL_REQUEST_ID): vol.Coerce(int),
+        vol.Optional(ATTR_MESSAGE_TAG): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -503,7 +503,7 @@ class TelegramNotificationService:
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
-            ATTR_INTERNAL_REQUEST_ID: None,
+            ATTR_MESSAGE_TAG: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -518,8 +518,8 @@ class TelegramNotificationService:
                 params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
             if ATTR_REPLY_TO_MSGID in data:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
-            if ATTR_INTERNAL_REQUEST_ID in data:
-                params[ATTR_INTERNAL_REQUEST_ID] = data[ATTR_INTERNAL_REQUEST_ID]
+            if ATTR_MESSAGE_TAG in data:
+                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -558,9 +558,9 @@ class TelegramNotificationService:
                     ATTR_CHAT_ID: chat_id,
                     ATTR_MESSAGEID: message_id,
                 }
-                internal_request_id = kwargs_msg.get(ATTR_INTERNAL_REQUEST_ID)
-                if internal_request_id is not None:
-                    event_data[ATTR_INTERNAL_REQUEST_ID] = internal_request_id
+                message_tag = kwargs_msg.get(ATTR_MESSAGE_TAG)
+                if message_tag is not None:
+                    event_data[ATTR_MESSAGE_TAG] = message_tag
                 self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
