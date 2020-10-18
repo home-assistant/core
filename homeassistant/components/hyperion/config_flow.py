@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
 
 # pylint: disable=unused-import
@@ -23,7 +24,9 @@ from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
+    CONF_PRIORITY,
     DEFAULT_ORIGIN,
+    DEFAULT_PRIORITY,
     DOMAIN,
 )
 
@@ -348,4 +351,30 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._data[CONF_PORT],
                 CONF_ID: self.unique_id,
             },
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the Hyperion Options flow."""
+        return HyperionOptionsFlow()
+
+
+class HyperionOptionsFlow(config_entries.OptionsFlow):
+    """Hyperion Options flow."""
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): vol.Range(
+                        min=1, max=255
+                    ),
+                }
+            ),
         )

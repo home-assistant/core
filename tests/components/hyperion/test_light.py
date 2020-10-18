@@ -17,15 +17,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PORT,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
@@ -41,10 +34,10 @@ from . import (
     TEST_SERVER_ID,
     TEST_YAML_ENTITY_ID,
     TEST_YAML_NAME,
+    add_test_config_entry,
     create_mock_client,
+    setup_test_config_entry,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +51,7 @@ async def _setup_entity_yaml(hass, client=None):
     """Add a test Hyperion entity to hass."""
     client = client or create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
-        assert await async_setup_component(
+        assert await setup.async_setup_component(
             hass,
             LIGHT_DOMAIN,
             {
@@ -74,46 +67,12 @@ async def _setup_entity_yaml(hass, client=None):
         await hass.async_block_till_done()
 
 
-def _add_test_config_entry(hass):
-    """Add a test config entry."""
-    config_entry = MockConfigEntry(
-        entry_id=TEST_CONFIG_ENTRY_ID,
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-        },
-        title=f"Hyperion {TEST_SERVER_ID}",
-        unique_id=TEST_SERVER_ID,
-    )
-    config_entry.add_to_hass(hass)
-    return config_entry
-
-
-async def _setup_entity_config_entry(hass, client=None):
-    """Add a test Hyperion entity to hass."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    config_entry = _add_test_config_entry(hass)
-
-    client = client or create_mock_client()
-    client.instances = [TEST_INSTANCE_1]
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
-
-
 async def test_setup_yaml_already_converted(hass):
     """Test an already converted YAML style config."""
     # This tests "Possibility 1" from async_setup_platform()
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     # Add a pre-existing config entry.
-    _add_test_config_entry(hass)
+    add_test_config_entry(hass)
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
 
@@ -125,8 +84,6 @@ async def test_setup_yaml_already_converted(hass):
 async def test_setup_yaml_old_style_unique_id(hass):
     """Test an already converted YAML style config."""
     # This tests "Possibility 2" from async_setup_platform()
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     # Add a pre-existing config entry.
     registry = await async_get_registry(hass)
@@ -160,7 +117,6 @@ async def test_setup_yaml_no_registry_entity(hass):
     """Test an already converted YAML style config."""
     # This tests "Possibility 3" from async_setup_platform()
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     registry = await async_get_registry(hass)
 
     # Add a pre-existing config entry.
@@ -196,7 +152,7 @@ async def test_setup_yaml_not_ready(hass):
 
 async def test_setup_config_entry(hass):
     """Test setting up the component via config entries."""
-    await _setup_entity_config_entry(hass, client=create_mock_client())
+    await setup_test_config_entry(hass, client=create_mock_client())
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
@@ -204,13 +160,13 @@ async def test_setup_config_entry_not_ready(hass):
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
 async def test_setup_config_entry_dynamic_instances(hass):
     """Test dynamic changes in the omstamce configuration."""
-    config_entry = _add_test_config_entry(hass)
+    config_entry = add_test_config_entry(hass)
 
     master_client = create_mock_client()
     master_client.instances = [TEST_INSTANCE_1, TEST_INSTANCE_2]
@@ -283,7 +239,7 @@ async def test_setup_config_entry_dynamic_instances(hass):
 async def test_light_basic_properies(hass):
     """Test the basic properties."""
     client = create_mock_client()
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state.state == "on"
@@ -303,7 +259,7 @@ async def test_light_basic_properies(hass):
 async def test_light_async_turn_on(hass):
     """Test turning the light on."""
     client = create_mock_client()
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
     client.async_send_set_color = AsyncMock(return_value=True)
@@ -499,7 +455,7 @@ async def test_light_async_turn_on(hass):
 async def test_light_async_turn_off(hass):
     """Test turning the light off."""
     client = create_mock_client()
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
 
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
@@ -536,7 +492,7 @@ async def test_light_async_turn_off(hass):
 async def test_light_async_updates_from_hyperion_client(hass):
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
 
     # Bright change gets accepted.
     brightness = 10
@@ -635,7 +591,7 @@ async def test_full_state_loaded_on_start(hass):
     }
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
 
-    await _setup_entity_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, client=client)
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
 
@@ -649,7 +605,7 @@ async def test_unload_entry(hass):
     """Test unload."""
     assert DOMAIN not in hass.data
 
-    entry = await _setup_entity_config_entry(hass)
+    entry = await setup_test_config_entry(hass)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     client = hass.data[DOMAIN][entry.entry_id]
     assert client.async_client_connect.called

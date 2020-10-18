@@ -1,9 +1,14 @@
 """Tests for the Hyperion component."""
 
-from asynctest import CoroutineMock, Mock
+from asynctest import CoroutineMock, Mock, patch
 from hyperion import const
 
+from homeassistant.components.hyperion.const import DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "test"
 TEST_PORT = const.DEFAULT_PORT_JSON
@@ -46,3 +51,34 @@ def create_mock_client():
     ]
 
     return mock_client
+
+
+def add_test_config_entry(hass):
+    """Add a test config entry."""
+    config_entry = MockConfigEntry(
+        entry_id=TEST_CONFIG_ENTRY_ID,
+        domain=DOMAIN,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+        },
+        title=f"Hyperion {TEST_SERVER_ID}",
+        unique_id=TEST_SERVER_ID,
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def setup_test_config_entry(hass, client=None):
+    """Add a test Hyperion entity to hass."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    config_entry = add_test_config_entry(hass)
+
+    client = client or create_mock_client()
+    client.instances = [TEST_INSTANCE_1]
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    return config_entry

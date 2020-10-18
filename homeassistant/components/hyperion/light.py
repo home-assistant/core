@@ -28,12 +28,18 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, split_hyperion_unique_id
-from .const import CONF_INSTANCE, DEFAULT_ORIGIN, DOMAIN, SOURCE_IMPORT
+from .const import (
+    CONF_INSTANCE,
+    CONF_PRIORITY,
+    DEFAULT_ORIGIN,
+    DEFAULT_PRIORITY,
+    DOMAIN,
+    SOURCE_IMPORT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_COLOR = "default_color"
-CONF_PRIORITY = "priority"
 CONF_HDMI_PRIORITY = "hdmi_priority"
 CONF_EFFECT_LIST = "effect_list"
 
@@ -53,7 +59,6 @@ DEFAULT_BRIGHTNESS = 255
 DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
 DEFAULT_PORT = const.DEFAULT_PORT_JSON
-DEFAULT_PRIORITY = 128
 DEFAULT_HDMI_PRIORITY = 880
 DEFAULT_EFFECT_LIST = []
 

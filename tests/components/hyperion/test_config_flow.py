@@ -5,11 +5,12 @@ import logging
 from asynctest import CoroutineMock
 from hyperion import const
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_HYPERION_URL,
+    CONF_PRIORITY,
     DOMAIN,
     SOURCE_IMPORT,
 )
@@ -24,6 +25,7 @@ from . import (
     TEST_PORT,
     TEST_SERVER_ID,
     TEST_TOKEN,
+    add_test_config_entry,
     create_mock_client,
 )
 
@@ -99,7 +101,6 @@ async def _create_mock_entry(hass):
 
 async def _init_flow(hass, source=SOURCE_USER, data=None):
     """Initialize a flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     data = data or {}
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": source}, data=data
@@ -421,3 +422,27 @@ async def test_import(hass):
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
     }
+
+
+async def test_options(hass):
+    """Check an options flow."""
+
+    config_entry = add_test_config_entry(hass)
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # TODO use init and configure methods in this file?
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PRIORITY: 1}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_PRIORITY: 1}
