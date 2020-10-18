@@ -1717,7 +1717,7 @@ async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
     node.set_config_param.reset_mock()
 
 
-async def test_print_config_parameter(hass, mock_openzwave, zwave_setup):
+async def test_print_config_parameter(hass, mock_openzwave, zwave_setup, caplog):
     """Test zwave print_config_parameter service."""
     zwave_network = hass.data[DATA_NETWORK]
     zwave_network.state = MockNetwork.STATE_READY
@@ -1734,19 +1734,16 @@ async def test_print_config_parameter(hass, mock_openzwave, zwave_setup):
     node.values = {12: value1, 13: value2}
     zwave_network.nodes = {14: node}
 
-    with patch.object(zwave, "_LOGGER") as mock_logger:
-        await hass.services.async_call(
-            "zwave",
-            "print_config_parameter",
-            {const.ATTR_NODE_ID: 14, const.ATTR_CONFIG_PARAMETER: 13},
-        )
-        await hass.async_block_till_done()
+    caplog.clear()
 
-        assert mock_logger.info.called
-        assert len(mock_logger.info.mock_calls) == 1
-        assert mock_logger.info.mock_calls[0][1][1] == 13
-        assert mock_logger.info.mock_calls[0][1][2] == 14
-        assert mock_logger.info.mock_calls[0][1][3] == 2345
+    await hass.services.async_call(
+        "zwave",
+        "print_config_parameter",
+        {const.ATTR_NODE_ID: 14, const.ATTR_CONFIG_PARAMETER: 13},
+    )
+    await hass.async_block_till_done()
+
+    assert "Config parameter 13 on Node 14: 2345" in caplog.text
 
 
 async def test_print_node(hass, mock_openzwave, zwave_setup):
