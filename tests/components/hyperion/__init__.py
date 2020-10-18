@@ -43,7 +43,7 @@ class AsyncContextManagerMock(Mock):
         result = await self.async_client_connect()
         return self if result else None
 
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aexit__(self, exc_type, exc, traceback):
         """Leave context manager and disconnect the client."""
         await self.async_client_disconnect()
 
@@ -51,6 +51,7 @@ class AsyncContextManagerMock(Mock):
 def create_mock_client():
     """Create a mock Hyperion client."""
     mock_client = AsyncContextManagerMock()
+    # pylint: disable=attribute-defined-outside-init
     mock_client.async_client_connect = CoroutineMock(return_value=True)
     mock_client.async_client_disconnect = CoroutineMock(return_value=True)
     mock_client.async_is_auth_required = CoroutineMock(
@@ -94,6 +95,7 @@ async def setup_test_config_entry(hass, client=None):
     config_entry = add_test_config_entry(hass)
 
     client = client or create_mock_client()
+    # pylint: disable=attribute-defined-outside-init
     client.instances = [TEST_INSTANCE_1]
 
     with patch("hyperion.client.HyperionClient", return_value=client):
