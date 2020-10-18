@@ -3,5 +3,6 @@
   "name": "Cloudflare",
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
   "requirements": ["pycfdns==1.1.0"],
-  "codeowners": ["@ludeeus", "@ctalkington"]
+  "codeowners": ["@ludeeus", "@ctalkington"],
+  "config_flow": true
 }

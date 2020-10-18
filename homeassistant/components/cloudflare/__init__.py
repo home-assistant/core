@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     if DOMAIN in config and CONF_API_KEY in config[DOMAIN]:
         persistent_notification.async_create(
             hass,
-            "Cloudflare integration now requires API Token. Please go to the integrations page to setup.",
+            "Cloudflare integration now requires an API Token. Please go to the integrations page to setup.",
             "Cloudflare Setup",
             "cloudflare_setup",
         )
