@@ -51,6 +51,12 @@ async def async_setup(hass, config):
     return True
 
 
+def _run_ssdp_scans():
+    _LOGGER.debug("Scanning")
+    # Run 3 times as packets can get lost
+    return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -61,14 +67,9 @@ class Scanner:
         self._integration_matchers = integration_matchers
         self._description_cache = {}
 
-    def _run_scans(self):
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
-
     async def async_scan(self, _):
         """Scan for new entries."""
-        entries = await self.hass.async_add_executor_job(self._run_scans)
+        entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
 
         await self._process_entries(entries)
 
