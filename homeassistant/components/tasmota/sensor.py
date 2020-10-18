@@ -134,7 +134,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
 
     def __init__(self, **kwds):
         """Initialize the Tasmota sensor."""
-        self._attributes = None
         self._state = None
 
         super().__init__(
@@ -157,9 +156,12 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         return class_or_icon.get(DEVICE_CLASS)
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # Hide status sensors to not overwhelm users
+        if self._tasmota_entity.quantity == SENSOR_STATUS_SIGNAL:
+            return False
+        return True
 
     @property
     def icon(self):
