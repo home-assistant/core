@@ -130,7 +130,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zone",
-            data_schema=vol.Schema(_zone_schema(self.zones)),
+            data_schema=_zone_schema(self.zones),
             errors=errors,
         )
 
@@ -145,7 +145,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="records",
-            data_schema=vol.Schema(_records_schema(self.records)),
+            data_schema=_records_schema(self.records),
             errors=errors,
         )
 
@@ -177,4 +177,4 @@ class InvalidAuth(HomeAssistantError):
 
 
 class InvalidZone(HomeAssistantError):
-    """Error to indicate we cannot alidate zone exists in account."""
+    """Error to indicate we cannot validate zone exists in account."""
