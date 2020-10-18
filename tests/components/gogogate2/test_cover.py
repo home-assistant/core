@@ -385,6 +385,22 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_UNKNOWN
 
+    api.info.return_value = info_response(DoorStatus.OPENED)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "close_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "open_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+    api.open_door.assert_called_with(1)
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.states.async_entity_ids(DOMAIN)
 
