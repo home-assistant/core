@@ -58,7 +58,6 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error updating from OmniLogic: {error}") from error
 
         parsed_data = {}
-        self.update_interval = timedelta(self.config_entry.options.get(CONF_SCAN_INTERVAL,DEFAULT_SCAN_INTERVAL))
 
         def get_item_data(item, item_kind, current_id, data):
             """Get data per kind of Omnilogic API item."""
