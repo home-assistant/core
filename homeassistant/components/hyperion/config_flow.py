@@ -97,19 +97,16 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._auth_id = None
         self._auto_confirm = False
 
-    async def _create_and_connect_hyperion_client(
-        self, raw=False
+    async def _create_client(
+        self, raw_connection=False
     ) -> Optional[client.HyperionClient]:
         """Create and connect a client instance."""
-        if self._data is None:
-            return
-        hyperion_client = client.HyperionClient(
+        return client.HyperionClient(
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),
+            raw_connection=raw_connection,
         )
-        if await hyperion_client.async_client_connect(raw=raw):
-            return hyperion_client
 
     async def async_step_import(
         self, import_data: Optional[ConfigType] = None
@@ -168,11 +165,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # First connect without attempting to login and determine if
         # authentication is required.
-        hyperion_client = await self._create_and_connect_hyperion_client(raw=True)
-        if not hyperion_client:
-            return self._show_setup_form({CONF_BASE: "connection_error"})
-        auth_resp = await hyperion_client.async_is_auth_required()
-        await hyperion_client.async_client_disconnect()
+        async with await self._create_client(raw_connection=True) as hyperion_client:
+            if not hyperion_client:
+                return self._show_setup_form({CONF_BASE: "connection_error"})
+            auth_resp = await hyperion_client.async_is_auth_required()
 
         # Could not determine if auth is required, show error.
         if not client.ResponseOK(auth_resp):
@@ -181,13 +177,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED) is True:
             # Auth is required, show the form to get the token.
             return self._show_auth_form()
-
-        # Test a full connection with state load.
-        hyperion_client = await self._create_and_connect_hyperion_client()
-        if not hyperion_client:
-            return self._show_setup_form({CONF_BASE: "connection_error"})
-        await hyperion_client.async_client_disconnect()
-
         return await self._show_confirm_form()
 
     async def _cancel_request_token_task(self) -> None:
@@ -208,17 +197,16 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _request_token_task_func(self, auth_id: str) -> Optional[ConfigType]:
         """Send an async_request_token request."""
-        hyperion_client = await self._create_and_connect_hyperion_client(raw=True)
         auth_resp = {}
-        if hyperion_client:
-            # The Hyperion-py client has a default timeout of 3 minutes on this request.
-            auth_resp = await hyperion_client.async_request_token(
-                comment=DEFAULT_ORIGIN, id=auth_id
+        async with await self._create_client(raw_connection=True) as hyperion_client:
+            if hyperion_client:
+                # The Hyperion-py client has a default timeout of 3 minutes on this request.
+                auth_resp = await hyperion_client.async_request_token(
+                    comment=DEFAULT_ORIGIN, id=auth_id
+                )
+            await self.hass.config_entries.flow.async_configure(
+                flow_id=self.flow_id, user_input=auth_resp
             )
-            await hyperion_client.async_client_disconnect()
-        await self.hass.config_entries.flow.async_configure(
-            flow_id=self.flow_id, user_input=auth_resp
-        )
         return auth_resp
 
     def _get_hyperion_url(self):
@@ -250,10 +238,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
-        hyperion_client = await self._create_and_connect_hyperion_client()
-        if not hyperion_client:
-            return self._show_auth_form({CONF_BASE: "auth_error"})
-        await hyperion_client.async_client_disconnect()
+
+        async with await self._create_client() as hyperion_client:
+            if not hyperion_client:
+                return self._show_auth_form({CONF_BASE: "auth_error"})
         return await self._show_confirm_form()
 
     async def async_step_create_token(
@@ -293,10 +281,11 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._cancel_request_token_task()
 
         # Test the token.
-        hyperion_client = await self._create_and_connect_hyperion_client()
-        if not hyperion_client:
-            return self._show_auth_form({CONF_BASE: "auth_new_token_not_work_error"})
-        await hyperion_client.async_client_disconnect()
+        async with await self._create_client() as hyperion_client:
+            if not hyperion_client:
+                return self._show_auth_form(
+                    {CONF_BASE: "auth_new_token_not_work_error"}
+                )
         return await self._show_confirm_form()
 
     async def async_step_create_token_fail(
@@ -347,11 +336,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_confirm_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the confirmation form to the user."""
-        hyperion_client = await self._create_and_connect_hyperion_client()
-        if not hyperion_client:
-            return self._show_setup_form({CONF_BASE: "connection_error"})
-        hyperion_id = await hyperion_client.async_id()
-        await hyperion_client.async_client_disconnect()
+        async with await self._create_client() as hyperion_client:
+            if not hyperion_client:
+                return self._show_setup_form({CONF_BASE: "connection_error"})
+            hyperion_id = await hyperion_client.async_id()
 
         if not hyperion_id:
             return self.async_abort(reason="no_id")
@@ -376,10 +364,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow(config_entry)
-
-
-# TODO: Re-use hyperion connection in flow above?
-# TODO: Hyperion client 'async with' support pass raw?
 
 
 class HyperionOptionsFlow(config_entries.OptionsFlow):

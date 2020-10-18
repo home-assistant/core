@@ -1,5 +1,8 @@
 """Tests for the Hyperion component."""
 
+import logging
+from typing import Optional
+
 from asynctest import CoroutineMock, Mock, patch
 from hyperion import const
 
@@ -29,10 +32,25 @@ TEST_INSTANCE_1 = {"friendly_name": "Test instance 1", "instance": 1, "running":
 TEST_INSTANCE_2 = {"friendly_name": "Test instance 2", "instance": 2, "running": True}
 TEST_INSTANCE_3 = {"friendly_name": "Test instance 3", "instance": 3, "running": True}
 
+_LOGGER = logging.getLogger(__name__)
+
+
+class AsyncContextManagerMock(Mock):
+    """An async context manager mock for Hyperion."""
+
+    async def __aenter__(self) -> Optional["AsyncContextManagerMock"]:
+        """Enter context manager and connect the client."""
+        result = await self.async_client_connect()
+        return self if result else None
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Leave context manager and disconnect the client."""
+        await self.async_client_disconnect()
+
 
 def create_mock_client():
     """Create a mock Hyperion client."""
-    mock_client = Mock()
+    mock_client = AsyncContextManagerMock()
     mock_client.async_client_connect = CoroutineMock(return_value=True)
     mock_client.async_client_disconnect = CoroutineMock(return_value=True)
     mock_client.async_is_auth_required = CoroutineMock(

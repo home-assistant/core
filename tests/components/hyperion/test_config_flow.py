@@ -155,15 +155,8 @@ async def test_user_client_errors(hass):
 
     client = create_mock_client()
 
-    # Two connection attempts are made: fail the first one.
-    client.async_client_connect = CoroutineMock(side_effect=lambda raw: not raw)
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"]["base"] == "connection_error"
-
-    # Two connection attempts are made: fail the second one.
-    client.async_client_connect = CoroutineMock(side_effect=lambda raw: raw)
+    # Fail the connection.
+    client.async_client_connect = CoroutineMock(return_value=False)
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
