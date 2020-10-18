@@ -2,6 +2,7 @@
 import asyncio
 
 import aiohttp
+import pytest
 
 import homeassistant.components.rest.switch as rest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -16,121 +17,107 @@ from homeassistant.const import (
     HTTP_OK,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
+"""Tests for setting up the REST switch platform."""
 
-class TestRestSwitchSetup:
-    """Tests for setting up the REST switch platform."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+@pytest.mark.asyncio
+async def test_setup_missing_config(hass):
+    """Test setup with configuration missing required entries."""
+    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: rest.DOMAIN}, None)
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_setup_missing_config(self):
-        """Test setup with configuration missing required entries."""
-        assert not asyncio.run_coroutine_threadsafe(
-            rest.async_setup_platform(self.hass, {CONF_PLATFORM: rest.DOMAIN}, None),
-            self.hass.loop,
-        ).result()
+async def test_setup_missing_schema(hass):
+    """Test setup with resource missing schema."""
+    assert not await rest.async_setup_platform(
+        hass,
+        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "localhost"},
+        None,
+    )
 
-    def test_setup_missing_schema(self):
-        """Test setup with resource missing schema."""
-        assert not asyncio.run_coroutine_threadsafe(
-            rest.async_setup_platform(
-                self.hass,
-                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "localhost"},
-                None,
-            ),
-            self.hass.loop,
-        ).result()
 
-    def test_setup_failed_connect(self, aioclient_mock):
-        """Test setup when connection error occurs."""
-        aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
-        assert not asyncio.run_coroutine_threadsafe(
-            rest.async_setup_platform(
-                self.hass,
-                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
-                None,
-            ),
-            self.hass.loop,
-        ).result()
+async def test_setup_failed_connect(hass, aioclient_mock):
+    """Test setup when connection error occurs."""
+    aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
+    assert not await rest.async_setup_platform(
+        hass,
+        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        None,
+    )
 
-    def test_setup_timeout(self, aioclient_mock):
-        """Test setup when connection timeout occurs."""
-        aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
-        assert not asyncio.run_coroutine_threadsafe(
-            rest.async_setup_platform(
-                self.hass,
-                {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
-                None,
-            ),
-            self.hass.loop,
-        ).result()
 
-    def test_setup_minimum(self, aioclient_mock):
-        """Test setup with minimum configuration."""
-        aioclient_mock.get("http://localhost", status=HTTP_OK)
-        with assert_setup_component(1, SWITCH_DOMAIN):
-            assert setup_component(
-                self.hass,
-                SWITCH_DOMAIN,
-                {
-                    SWITCH_DOMAIN: {
-                        CONF_PLATFORM: rest.DOMAIN,
-                        CONF_RESOURCE: "http://localhost",
-                    }
-                },
-            )
-        assert aioclient_mock.call_count == 1
+async def test_setup_timeout(hass, aioclient_mock):
+    """Test setup when connection timeout occurs."""
+    aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
+    assert not await rest.async_setup_platform(
+        hass,
+        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        None,
+    )
 
-    def test_setup(self, aioclient_mock):
-        """Test setup with valid configuration."""
-        aioclient_mock.get("http://localhost", status=HTTP_OK)
-        assert setup_component(
-            self.hass,
+
+async def test_setup_minimum(hass, aioclient_mock):
+    """Test setup with minimum configuration."""
+    aioclient_mock.get("http://localhost", status=HTTP_OK)
+    with assert_setup_component(1, SWITCH_DOMAIN):
+        assert await async_setup_component(
+            hass,
             SWITCH_DOMAIN,
             {
                 SWITCH_DOMAIN: {
                     CONF_PLATFORM: rest.DOMAIN,
-                    CONF_NAME: "foo",
                     CONF_RESOURCE: "http://localhost",
-                    CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
-                    rest.CONF_BODY_ON: "custom on text",
-                    rest.CONF_BODY_OFF: "custom off text",
                 }
             },
         )
-        assert aioclient_mock.call_count == 1
-        assert_setup_component(1, SWITCH_DOMAIN)
+    assert aioclient_mock.call_count == 1
 
-    def test_setup_with_state_resource(self, aioclient_mock):
-        """Test setup with valid configuration."""
-        aioclient_mock.get("http://localhost", status=HTTP_NOT_FOUND)
-        aioclient_mock.get("http://localhost/state", status=HTTP_OK)
-        assert setup_component(
-            self.hass,
-            SWITCH_DOMAIN,
-            {
-                SWITCH_DOMAIN: {
-                    CONF_PLATFORM: rest.DOMAIN,
-                    CONF_NAME: "foo",
-                    CONF_RESOURCE: "http://localhost",
-                    rest.CONF_STATE_RESOURCE: "http://localhost/state",
-                    CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
-                    rest.CONF_BODY_ON: "custom on text",
-                    rest.CONF_BODY_OFF: "custom off text",
-                }
-            },
-        )
-        assert aioclient_mock.call_count == 1
-        assert_setup_component(1, SWITCH_DOMAIN)
+
+async def test_setup(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get("http://localhost", status=HTTP_OK)
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: rest.DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
+                rest.CONF_BODY_ON: "custom on text",
+                rest.CONF_BODY_OFF: "custom off text",
+            }
+        },
+    )
+    assert aioclient_mock.call_count == 1
+    assert_setup_component(1, SWITCH_DOMAIN)
+
+
+async def test_setup_with_state_resource(hass, aioclient_mock):
+    """Test setup with valid configuration."""
+    aioclient_mock.get("http://localhost", status=HTTP_NOT_FOUND)
+    aioclient_mock.get("http://localhost/state", status=HTTP_OK)
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {
+            SWITCH_DOMAIN: {
+                CONF_PLATFORM: rest.DOMAIN,
+                CONF_NAME: "foo",
+                CONF_RESOURCE: "http://localhost",
+                rest.CONF_STATE_RESOURCE: "http://localhost/state",
+                CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
+                rest.CONF_BODY_ON: "custom on text",
+                rest.CONF_BODY_OFF: "custom off text",
+            }
+        },
+    )
+    assert aioclient_mock.call_count == 1
+    assert_setup_component(1, SWITCH_DOMAIN)
 
 
 class TestRestSwitch:
