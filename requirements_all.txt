@@ -433,6 +433,9 @@ coinmarketcap==5.0.3
 # homeassistant.scripts.check_config
 colorlog==4.2.1
 
+# homeassistant.components.colorthief
+colorthief==0.2.1
+
 # homeassistant.components.concord232
 concord232==0.15
 
