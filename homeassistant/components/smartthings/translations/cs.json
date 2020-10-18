@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_webhook_url": "Home Assistant nen\u00ed spr\u00e1vn\u011b nastaven pro p\u0159\u00edjem aktualizac\u00ed ze SmartThings. URL je neplatn\u00e1:\n> {webhook_url}\n\nAktualizujte sv\u00e9 nastaven\u00ed podle [pokyn\u016f]({component_url}), restartujte Home Assistant a zkuste to znovu.",
             "no_available_locations": "V dom\u00e1c\u00ed asistenti nejsou k dispozici \u017e\u00e1dn\u00e1 um\u00edst\u011bn\u00ed SmartThings."
         },
         "error": {
