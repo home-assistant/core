@@ -1,4 +1,5 @@
 """Tests for Adaptive Lighting switches."""
+# pylint: disable=protected-access
 import datetime
 
 import pytest
@@ -125,12 +126,14 @@ async def test_adaptive_lighting_switches(hass):
     assert len(data.keys()) == 3
 
 
-@pytest.mark.parametrize("lat,long,tz", LAT_LONG_TZS)
-async def test_adaptive_lighting_time_zones_with_default_settings(hass, lat, long, tz):
+@pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
+async def test_adaptive_lighting_time_zones_with_default_settings(
+    hass, lat, long, timezone
+):
     """Test setting up the Adaptive Lighting switches with different timezones."""
     await config_util.async_process_ha_core_config(
         hass,
-        {"latitude": lat, "longitude": long, "time_zone": tz},
+        {"latitude": lat, "longitude": long, "time_zone": timezone},
     )
     entry = await setup_switch(hass, {})
     switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
@@ -140,9 +143,9 @@ async def test_adaptive_lighting_time_zones_with_default_settings(hass, lat, lon
     )
 
 
-@pytest.mark.parametrize("lat,long,tz", LAT_LONG_TZS)
+@pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_and_sun_settings(
-    hass, lat, long, tz, legacy_patchable_time
+    hass, lat, long, timezone, legacy_patchable_time
 ):
     """Test setting up the Adaptive Lighting switches with different timezones.
 
@@ -150,7 +153,7 @@ async def test_adaptive_lighting_time_zones_and_sun_settings(
     """
     await config_util.async_process_ha_core_config(
         hass,
-        {"latitude": lat, "longitude": long, "time_zone": tz},
+        {"latitude": lat, "longitude": long, "time_zone": timezone},
     )
     entry = await setup_switch(
         hass,
