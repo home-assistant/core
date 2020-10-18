@@ -1,5 +1,4 @@
 """Support for Gogogate2 garage Doors."""
-import time
 from typing import Callable, List, Optional
 
 from gogogate2_api.common import (
@@ -27,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import (
@@ -35,13 +33,7 @@ from .common import (
     cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import (
-    DEVICE_TYPE_GOGOGATE2,
-    DEVICE_TYPE_ISMARTGATE,
-    DOMAIN,
-    MANUFACTURER,
-    TRANSITION_COMPLETE_DURATION,
-)
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
 COVER_SCHEMA = vol.Schema(
     {
@@ -98,10 +90,6 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         self._api = data_update_coordinator.api
         self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-        self._last_action_timestamp = 0
-        self._scheduled_transition_update = None
-        self._is_opening = False
-        self._is_closing = False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -140,28 +128,26 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self._is_closing
+        return self._get_door().status == DoorStatus.CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self._is_opening
+        return self._get_door().status == DoorStatus.OPENING
 
     async def async_open_cover(self, **kwargs):
         """Open the door."""
-        if await self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self._api.open_door, self._get_door().door_id
-        ):
-            self._is_opening = True
-            self._async_schedule_update_for_transition()
+        )
+        await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
-        if await self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self._api.close_door, self._get_door().door_id
-        ):
-            self._is_closing = True
-            self._async_schedule_update_for_transition()
+        )
+        await self.coordinator.async_refresh()
 
     @property
     def state_attributes(self):
@@ -169,43 +155,9 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         return {**super().state_attributes, "door_id": self._get_door().door_id}
 
     def _get_door(self) -> AbstractDoor:
-        if time.time() - self._last_action_timestamp <= TRANSITION_COMPLETE_DURATION:
-            # If we just started a transition we need
-            # to prevent a bouncy state
-            return self._door
-
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
-
-    def _async_schedule_update_for_transition(self):
-        self._last_action_timestamp = time.time()
-        self.async_write_ha_state()
-
-        # Cancel any previous updates
-        if self._scheduled_transition_update:
-            self._scheduled_transition_update()
-
-        # Schedule an update for when we expect the transition
-        # to be completed so the garage door or gate does not
-        # seem like its closing or opening for a long time
-        self._scheduled_transition_update = async_call_later(
-            self.hass,
-            TRANSITION_COMPLETE_DURATION + 1,
-            self._async_complete_schedule_update,
-        )
-
-    async def _async_complete_schedule_update(self, _):
-        """Update status of the cover via coordinator."""
-        self._scheduled_transition_update = None
-        self._last_action_timestamp = 0
-        self._is_closing = self._is_opening = False
-        await self.coordinator.async_refresh()
-
-    async def async_will_remove_from_hass(self):
-        """Undo transition call later."""
-        if self._scheduled_transition_update:
-            self._scheduled_transition_update()
 
     @property
     def device_info(self):
