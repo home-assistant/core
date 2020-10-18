@@ -42,7 +42,9 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_USERNAME,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -348,8 +350,16 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     )
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_CLOSED
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
     api.async_close_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
+
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSED
 
     api.async_info.return_value = info_response(DoorStatus.OPENED)
     await hass.services.async_call(
@@ -359,13 +369,37 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     )
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_OPEN
+    assert hass.states.get("cover.door1").state == STATE_OPENING
     api.async_open_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPEN
 
     api.async_info.return_value = info_response(DoorStatus.UNDEFINED)
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_UNKNOWN
+
+    api.info.return_value = info_response(DoorStatus.OPENED)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "close_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "open_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+    api.open_door.assert_called_with(1)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.states.async_entity_ids(DOMAIN)

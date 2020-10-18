@@ -105,7 +105,6 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     def is_closed(self):
         """Return true if cover is closed, else False."""
         door = self._get_door()
-
         if door.status == DoorStatus.OPENED:
             return False
         if door.status == DoorStatus.CLOSED:
@@ -116,8 +115,7 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        door = self._get_door()
-        if door.gate:
+        if self._get_door().gate:
             return DEVICE_CLASS_GATE
 
         return DEVICE_CLASS_GARAGE
@@ -127,20 +125,30 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._get_door().status == DoorStatus.CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._get_door().status == DoorStatus.OPENING
+
     async def async_open_cover(self, **kwargs):
         """Open the door."""
         await self._api.async_open_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
         await self._api.async_close_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs["door_id"] = self._get_door().door_id
-        return attrs
+        return {**super().state_attributes, "door_id": self._get_door().door_id}
 
     def _get_door(self) -> AbstractDoor:
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
