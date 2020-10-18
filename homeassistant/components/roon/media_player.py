@@ -469,41 +469,8 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.queue_playlist(self.zone_id, media_id)
         elif media_type == "genre":
             self._server.roonapi.play_genre(self.zone_id, media_id)
-        elif media_type == "library":
-            _LOGGER.error(
-                "Playback requested: %s --> %s",
-                media_type,
-                media_id,
-            )
-            opts = {
-                "zone_or_output_id": self.zone_id,
-                "item_key": media_id,
-                "hierarchy": "browse",
-            }
-
-            old_level = 0
-            while True:
-                # For some ids the following will start playback
-                res1 = self._server.roonapi.browse_browse(opts)
-                if res1 is None:
-                    _LOGGER.error(
-                        "Playback requested of unsupported id: %s --> %s",
-                        media_type,
-                        media_id,
-                    )
-                    return
-
-                level = res1["list"]["level"]
-                _LOGGER.debug("Hierarchy old(%s)/new(%s)", old_level, level)
-                if level <= old_level:
-                    break
-                old_level = level
-                # Otherwise bounce down the left most path - when the level increases we've started playback!
-                result = self._server.roonapi.browse_load(opts)
-                first_item = result["items"][0]
-                _LOGGER.debug("Next command - %s)", first_item["title"])
-                play_item_id = first_item["item_key"]
-                opts["item_key"] = play_item_id
+        elif media_type == "library" or media_type == "track":
+            self._server.roonapi.play_id(self.zone_id, media_id)
         else:
             _LOGGER.error(
                 "Playback requested of unsupported type: %s --> %s",
