@@ -2,7 +2,6 @@
 import asyncio
 
 import aiohttp
-import pytest
 
 import homeassistant.components.rest.switch as rest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,12 +18,11 @@ from homeassistant.const import (
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 """Tests for setting up the REST switch platform."""
 
 
-@pytest.mark.asyncio
 async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
     assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: rest.DOMAIN}, None)
@@ -120,137 +118,297 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     assert_setup_component(1, SWITCH_DOMAIN)
 
 
-class TestRestSwitch:
-    """Tests for REST switch platform."""
+"""Tests for REST switch platform."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.name = "foo"
-        self.method = "post"
-        self.resource = "http://localhost/"
-        self.state_resource = self.resource
-        self.headers = {"Content-type": CONTENT_TYPE_JSON}
-        self.auth = None
-        self.body_on = Template("on", self.hass)
-        self.body_off = Template("off", self.hass)
-        self.switch = rest.RestSwitch(
-            self.name,
-            self.resource,
-            self.state_resource,
-            self.method,
-            self.headers,
-            self.auth,
-            self.body_on,
-            self.body_off,
-            None,
-            10,
-            True,
-        )
-        self.switch.hass = self.hass
+name = "foo"
+method = "post"
+resource = "http://localhost/"
+state_resource = resource
+headers = {"Content-type": CONTENT_TYPE_JSON}
+auth = None
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_name(self):
-        """Test the name."""
-        assert self.name == self.switch.name
+def test_name(hass):
+    """Test the name."""
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    assert name == switch.name
 
-    def test_is_on_before_update(self):
-        """Test is_on in initial state."""
-        assert self.switch.is_on is None
 
-    def test_turn_on_success(self, aioclient_mock):
-        """Test turn_on."""
-        aioclient_mock.post(self.resource, status=HTTP_OK)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop
-        ).result()
+def test_is_on_before_update(hass):
+    """Test is_on in initial state."""
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    assert switch.is_on is None
 
-        assert self.body_on.template == aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on
 
-    def test_turn_on_status_not_ok(self, aioclient_mock):
-        """Test turn_on when error status returned."""
-        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop
-        ).result()
+async def test_turn_on_success(hass, aioclient_mock):
+    """Test turn_on."""
+    aioclient_mock.post(resource, status=HTTP_OK)
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_on()
 
-        assert self.body_on.template == aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+    assert body_on.template == aioclient_mock.mock_calls[-1][2].decode()
+    assert switch.is_on
 
-    def test_turn_on_timeout(self, aioclient_mock):
-        """Test turn_on when timeout occurs."""
-        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop
-        ).result()
 
-        assert self.switch.is_on is None
+async def test_turn_on_status_not_ok(hass, aioclient_mock):
+    """Test turn_on when error status returned."""
+    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_on(), hass.loop
 
-    def test_turn_off_success(self, aioclient_mock):
-        """Test turn_off."""
-        aioclient_mock.post(self.resource, status=HTTP_OK)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop
-        ).result()
+    assert body_on.template == aioclient_mock.mock_calls[-1][2].decode()
+    assert switch.is_on is None
 
-        assert self.body_off.template == aioclient_mock.mock_calls[-1][2].decode()
-        assert not self.switch.is_on
 
-    def test_turn_off_status_not_ok(self, aioclient_mock):
-        """Test turn_off when error status returned."""
-        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_off(), self.hass.loop
-        ).result()
+async def test_turn_on_timeout(hass, aioclient_mock):
+    """Test turn_on when timeout occurs."""
+    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_on(), hass.loop
 
-        assert self.body_off.template == aioclient_mock.mock_calls[-1][2].decode()
-        assert self.switch.is_on is None
+    assert switch.is_on is None
 
-    def test_turn_off_timeout(self, aioclient_mock):
-        """Test turn_off when timeout occurs."""
-        aioclient_mock.post(self.resource, exc=asyncio.TimeoutError())
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_turn_on(), self.hass.loop
-        ).result()
 
-        assert self.switch.is_on is None
+async def test_turn_off_success(hass, aioclient_mock):
+    """Test turn_off."""
+    aioclient_mock.post(resource, status=HTTP_OK)
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_off(), hass.loop
 
-    def test_update_when_on(self, aioclient_mock):
-        """Test update when switch is on."""
-        aioclient_mock.get(self.resource, text=self.body_on.template)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop
-        ).result()
+    assert body_off.template == aioclient_mock.mock_calls[-1][2].decode()
+    assert not switch.is_on
 
-        assert self.switch.is_on
 
-    def test_update_when_off(self, aioclient_mock):
-        """Test update when switch is off."""
-        aioclient_mock.get(self.resource, text=self.body_off.template)
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop
-        ).result()
+async def test_turn_off_status_not_ok(hass, aioclient_mock):
+    """Test turn_off when error status returned."""
+    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_off(), hass.loop
 
-        assert not self.switch.is_on
+    assert body_off.template == aioclient_mock.mock_calls[-1][2].decode()
+    assert switch.is_on is None
 
-    def test_update_when_unknown(self, aioclient_mock):
-        """Test update when unknown status returned."""
-        aioclient_mock.get(self.resource, text="unknown status")
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop
-        ).result()
 
-        assert self.switch.is_on is None
+async def test_turn_off_timeout(hass, aioclient_mock):
+    """Test turn_off when timeout occurs."""
+    aioclient_mock.post(resource, exc=asyncio.TimeoutError())
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_turn_on(), hass.loop
 
-    def test_update_timeout(self, aioclient_mock):
-        """Test update when timeout occurs."""
-        aioclient_mock.get(self.resource, exc=asyncio.TimeoutError())
-        asyncio.run_coroutine_threadsafe(
-            self.switch.async_update(), self.hass.loop
-        ).result()
+    assert switch.is_on is None
 
-        assert self.switch.is_on is None
+
+async def test_update_when_on(hass, aioclient_mock):
+    """Test update when switch is on."""
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    aioclient_mock.get(resource, text=body_on.template)
+    await switch.async_update(), hass.loop
+
+    assert switch.is_on
+
+
+async def test_update_when_off(hass, aioclient_mock):
+    """Test update when switch is off."""
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    aioclient_mock.get(resource, text=body_off.template)
+    await switch.async_update(), hass.loop
+
+    assert not switch.is_on
+
+
+async def test_update_when_unknown(hass, aioclient_mock):
+    """Test update when unknown status returned."""
+    aioclient_mock.get(resource, text="unknown status")
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_update(), hass.loop
+
+    assert switch.is_on is None
+
+
+async def test_update_timeout(hass, aioclient_mock):
+    """Test update when timeout occurs."""
+    aioclient_mock.get(resource, exc=asyncio.TimeoutError())
+    body_on = Template("on", hass)
+    body_off = Template("off", hass)
+    switch = rest.RestSwitch(
+        name,
+        resource,
+        state_resource,
+        method,
+        headers,
+        auth,
+        body_on,
+        body_off,
+        None,
+        10,
+        True,
+    )
+    switch.hass = hass
+    await switch.async_update(), hass.loop
+
+    assert switch.is_on is None
