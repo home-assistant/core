@@ -56,6 +56,7 @@ LAT_LONG_TZS = [
     (32.87336, -117.22743, "US/Pacific"),
 ]
 
+ENTITY_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_{DEFAULT_NAME}"
 ENTITY_SLEEP_MODE_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_sleep_mode_{DEFAULT_NAME}"
 
 
@@ -329,6 +330,15 @@ async def test_manual_control(hass):
         await hass.async_block_till_done()
         await update()
 
+    async def turn_switch(state, entity_id):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON if state else SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
     async def change_manual_control(set_to):
         await hass.services.async_call(
             DOMAIN,
@@ -355,10 +365,17 @@ async def test_manual_control(hass):
     # Check that ENTITY_LIGHT is not manually controlled
     assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
 
-    # Check that changing light on and off removes manual control
+    # Check that toggling light off to on resets manual control
     await change_manual_control(True)
-    await turn_light(True)  # is already on
     assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
     await turn_light(False)
     await turn_light(True)
     assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+
+    # Check that toggling (sleep mode) switch resets manual control
+    for entity_id in [ENTITY_SWITCH, ENTITY_SLEEP_MODE_SWITCH]:
+        await change_manual_control(True)
+        assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+        await turn_switch(False, entity_id)
+        await turn_switch(True, entity_id)
+        assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
