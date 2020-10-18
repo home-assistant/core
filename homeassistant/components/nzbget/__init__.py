@@ -1,6 +1,5 @@
 """The NZBGet integration."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -35,9 +34,7 @@ from .const import (
 )
 from .coordinator import NZBGetDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     {

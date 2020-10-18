@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Uusi Pulse'i jaotureid ei avastatud.",
+            "no_devices_found": "V\u00f5rgus ei tuvastatud \u00fchtegi seadet"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Hosti ID"
+                },
+                "title": "Vali lisatav jaotur"
+            }
+        }
+    },
+    "title": ""
+}

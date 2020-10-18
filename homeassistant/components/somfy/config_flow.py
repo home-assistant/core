@@ -6,8 +6,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @config_entries.HANDLERS.register(DOMAIN)
 class SomfyFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):

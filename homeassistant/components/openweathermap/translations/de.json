@@ -10,7 +10,8 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "mode": "Modus"
-                }
+                },
+                "title": "OpenWeatherMap"
             }
         }
     },

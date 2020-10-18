@@ -1,6 +1,4 @@
 """The Minecraft Server sensor platform."""
-
-import logging
 from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,8 +24,6 @@ from .const import (
     UNIT_PROTOCOL_VERSION,
     UNIT_VERSION,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

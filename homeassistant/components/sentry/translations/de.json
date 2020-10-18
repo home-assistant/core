@@ -9,6 +9,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "Gib deine Sentry-DSN ein",
                 "title": "Sentry"
             }

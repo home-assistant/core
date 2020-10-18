@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "D\u00ebse SimpliSafe Kont g\u00ebtt scho benotzt.",
-            "reauth_successful": "SimpliSafe erfollegr\u00e4ich re-authentifiz\u00e9iert."
+            "reauth_successful": "Erfollegr\u00e4ich re-authentifiz\u00e9iert."
         },
         "error": {
             "identifier_exists": "Konto ass scho registr\u00e9iert",

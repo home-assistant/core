@@ -2,6 +2,7 @@
 import asyncio
 
 import aiohttp
+import aioshelly
 import pytest
 
 from homeassistant import config_entries, setup
@@ -113,10 +114,7 @@ async def test_form_errors_get_info(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "aioshelly.get_info",
-        side_effect=exc,
-    ):
+    with patch("aioshelly.get_info", side_effect=exc):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -138,10 +136,7 @@ async def test_form_errors_test_connection(hass, error):
 
     with patch(
         "aioshelly.get_info", return_value={"mac": "test-mac", "auth": False}
-    ), patch(
-        "aioshelly.Device.create",
-        new=AsyncMock(side_effect=exc),
-    ):
+    ), patch("aioshelly.Device.create", new=AsyncMock(side_effect=exc)):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -177,6 +172,22 @@ async def test_form_already_configured(hass):
 
     # Test config entry got updated with latest IP
     assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_form_firmware_unsupported(hass):
+    """Test we abort if device firmware is unsupported."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("aioshelly.get_info", side_effect=aioshelly.FirmwareUnsupported):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+        assert result2["type"] == "abort"
+        assert result2["reason"] == "unsupported_firmware"
 
 
 @pytest.mark.parametrize(
@@ -315,12 +326,22 @@ async def test_zeroconf_already_configured(hass):
     assert entry.data["host"] == "1.1.1.1"
 
 
+async def test_zeroconf_firmware_unsupported(hass):
+    """Test we abort if device firmware is unsupported."""
+    with patch("aioshelly.get_info", side_effect=aioshelly.FirmwareUnsupported):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={"host": "1.1.1.1", "name": "shelly1pm-12345"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "unsupported_firmware"
+
+
 async def test_zeroconf_cannot_connect(hass):
     """Test we get the form."""
-    with patch(
-        "aioshelly.get_info",
-        side_effect=asyncio.TimeoutError,
-    ):
+    with patch("aioshelly.get_info", side_effect=asyncio.TimeoutError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data={"host": "1.1.1.1", "name": "shelly1pm-12345"},

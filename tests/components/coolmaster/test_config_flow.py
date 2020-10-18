@@ -60,7 +60,7 @@ async def test_form_timeout(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_connection_refused(hass):
@@ -78,7 +78,7 @@ async def test_form_connection_refused(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_no_units(hass):

@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
@@ -46,11 +46,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> "OptionsFlowHandler":
         """Get options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def _async_show_user_form(self, user_input=None, errors=None):
+    async def _async_show_user_form(
+        self,
+        user_input: Optional[Dict[str, Any]] = None,
+        errors: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
@@ -89,11 +95,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
-    def _already_configured(self, user_input):
+    def _already_configured(self, user_input: Dict[str, Any]) -> bool:
         """See if we already have a router matching user input configured."""
         existing_urls = {
             url_normalize(entry.data[CONF_URL], default_scheme="http")
@@ -101,7 +109,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return user_input[CONF_URL] in existing_urls
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle user initiated config flow."""
         if user_input is None:
             return await self._async_show_user_form()
@@ -121,17 +131,20 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
-        conn = None
+        conn: Optional[Connection] = None
 
-        def logout():
-            if hasattr(conn, "user"):
+        def logout() -> None:
+            if isinstance(conn, AuthorizedConnection):
                 try:
                     conn.user.logout()
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(username: Optional[str], password: Optional[str]) -> Connection:
+        def try_connect(user_input: Dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
+            username = user_input.get(CONF_USERNAME)
+            password = user_input.get(CONF_PASSWORD)
+            conn: Connection
             if username or password:
                 conn = AuthorizedConnection(
                     user_input[CONF_URL],
@@ -178,18 +191,15 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title = info.get("DeviceName")
             return title or DEFAULT_DEVICE_NAME
 
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
+        assert self.hass is not None
         try:
-            conn = await self.hass.async_add_executor_job(
-                try_connect, username, password
-            )
+            conn = await self.hass.async_add_executor_job(try_connect, user_input)
         except LoginErrorUsernameWrongException:
             errors[CONF_USERNAME] = "incorrect_username"
         except LoginErrorPasswordWrongException:
             errors[CONF_PASSWORD] = "incorrect_password"
         except LoginErrorUsernamePasswordWrongException:
-            errors[CONF_USERNAME] = "incorrect_username_or_password"
+            errors[CONF_USERNAME] = "invalid_auth"
         except LoginErrorUsernamePasswordOverrunException:
             errors["base"] = "login_attempts_exceeded"
         except ResponseErrorException:
@@ -200,7 +210,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_URL] = "connection_timeout"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
-            errors[CONF_URL] = "unknown_connection_error"
+            errors[CONF_URL] = "unknown"
         if errors:
             await self.hass.async_add_executor_job(logout)
             return await self._async_show_user_form(
@@ -215,7 +225,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(  # type: ignore  # mypy says signature incompatible with supertype, but it's the same?
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle SSDP initiated config flow."""
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
@@ -256,7 +268,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle options flow."""
 
         # Recipients are persisted as a list, but handled as comma separated string in UI

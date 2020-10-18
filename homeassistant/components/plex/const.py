@@ -13,6 +13,8 @@ PLEXTV_THROTTLE = 60
 
 DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
+GDM_DEBOUNCER = "gdm_debouncer"
+GDM_SCANNER = "gdm_scanner"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
 PLAYER_SOURCE = "player_source"

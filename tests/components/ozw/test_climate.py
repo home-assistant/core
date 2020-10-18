@@ -281,3 +281,47 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     )
     assert len(sent_messages) == 11
     assert "does not support setting a mode" in caplog.text
+
+    # test thermostat device without a mode commandclass
+    state = hass.states.get("climate.secure_srt321_zwave_stat_tx_heating_1")
+    assert state is not None
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_HEAT,
+    ]
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 29.0
+    assert round(state.attributes[ATTR_TEMPERATURE], 0) == 16
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+    assert state.attributes.get(ATTR_PRESET_MODES) is None
+
+    # Test set target temperature
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.secure_srt321_zwave_stat_tx_heating_1",
+            "temperature": 28.0,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 12
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": 28.0,
+        "ValueIDKey": 281475267215378,
+    }
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {
+            "entity_id": "climate.secure_srt321_zwave_stat_tx_heating_1",
+            "hvac_mode": HVAC_MODE_HEAT,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 12
+    assert "does not support setting a mode" in caplog.text
