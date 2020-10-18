@@ -186,7 +186,17 @@ omit =
     homeassistant/components/dnsip/sensor.py
     homeassistant/components/dominos/*
     homeassistant/components/doods/*
-    homeassistant/components/doorbird/*
+    homeassistant/components/doorbird/__init__.py
+    homeassistant/components/doorbird/camera.py
+    homeassistant/components/doorbird/config_flow.py
+    homeassistant/components/doorbird/const.py
+    homeassistant/components/doorbird/entity.py
+    homeassistant/components/doorbird/logbook.py
+    homeassistant/components/doorbird/manifest.json
+    homeassistant/components/doorbird/media_source.py
+    homeassistant/components/doorbird/strings.json
+    homeassistant/components/doorbird/switch.py
+    homeassistant/components/doorbird/util.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
     homeassistant/components/dsmr_reader/*
