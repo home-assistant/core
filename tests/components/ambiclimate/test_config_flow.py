@@ -30,7 +30,7 @@ async def test_abort_if_no_implementation_registered(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "oauth2_missing_configuration"
+    assert result["reason"] == "missing_configuration"
 
 
 async def test_abort_if_already_setup(hass):

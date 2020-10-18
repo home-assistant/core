@@ -59,7 +59,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
 
         if not config:
             _LOGGER.debug("No config")
-            return self.async_abort(reason="oauth2_missing_configuration")
+            return self.async_abort(reason="missing_configuration")
 
         return await self.async_step_auth()
 
