@@ -19,8 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 # server).
 #
 # Each server connection may create multiple entities, 1 per "instance" on the Hyperion
-# server. The unique_id for each entity is <server id>:<instance #>, where <server_id>
-# will be the unique_id on the relevant config entry (as above).
+# server. The unique_id for each entity is <server id>:<domain>:<instance #>, where
+# <server_id> will be the unique_id on the relevant config entry (as above). Only
+# 'light' is supported for <domain> at this time.
 #
 # The get_hyperion_unique_id method will create a per-entity unique id when given the
 # server id and the instance number. The split_hyperion_unique_id will reverse the
