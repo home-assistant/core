@@ -7,6 +7,11 @@ import requests
 import somecomfort
 import voluptuous as vol
 
+from . import client_key_coordinator
+from . import HoneywellDevice
+
+
+from homeassistant.helpers.entity import Entity
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -104,63 +109,58 @@ HW_FAN_MODE_TO_HA = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    _LOGGER.info("honeywell setup_platform")
 
-    try:
-        client = somecomfort.SomeComfort(username, password)
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        )
-        return
+    coordinator = hass.data[client_key_coordinator]
+    client = coordinator.data
+
 
     dev_id = config.get(CONF_DEV_ID)
     loc_id = config.get(CONF_LOC_ID)
     cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    add_entities(
-        [
-            HoneywellUSThermostat(
-                client,
-                device,
-                cool_away_temp,
-                heat_away_temp,
-                username,
-                password,
-            )
-            for location in client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if (
-                (not loc_id or location.locationid == loc_id)
-                and (not dev_id or device.deviceid == dev_id)
-            )
-        ]
-    )
+    thermostats_list = [
+        HoneywellUSThermostat(
+            coordinator,
+            device,
+            cool_away_temp,
+            heat_away_temp
+        )
+        for location in client.locations_by_id.values()
+        for device in location.devices_by_id.values()
+        if (
+            (not loc_id or location.locationid == loc_id)
+            and (not dev_id or device.deviceid == dev_id)
+        )
+    ]
+    
+    sensors_list = []
+    
+    entities_list = thermostats_list + sensors_list
+    
+    async_add_entities(entities_list)
 
 
-class HoneywellUSThermostat(ClimateEntity):
+
+
+
+class HoneywellUSThermostat(ClimateEntity, HoneywellDevice):
     """Representation of a Honeywell US Thermostat."""
 
     def __init__(
-        self, client, device, cool_away_temp, heat_away_temp, username, password
+        self, coordinator, device, cool_away_temp, heat_away_temp
     ):
         """Initialize the thermostat."""
-        self._client = client
-        self._device = device
+        HoneywellDevice.__init__(self, coordinator, device)
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
-        self._username = username
-        self._password = password
 
         _LOGGER.debug("latestData = %s ", device._data)
 
@@ -408,54 +408,6 @@ class HoneywellUSThermostat(ClimateEntity):
         else:
             self.set_hvac_mode(HVAC_MODE_OFF)
 
-    def _retry(self) -> bool:
-        """Recreate a new somecomfort client.
 
-        When we got an error, the best way to be sure that the next query
-        will succeed, is to recreate a new somecomfort client.
-        """
-        try:
-            self._client = somecomfort.SomeComfort(self._username, self._password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", self._username)
-            return False
-        except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
-            return False
 
-        devices = [
-            device
-            for location in self._client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if device.name == self._device.name
-        ]
 
-        if len(devices) != 1:
-            _LOGGER.error("Failed to find device %s", self._device.name)
-            return False
-
-        self._device = devices[0]
-        return True
-
-    def update(self) -> None:
-        """Update the state."""
-        retries = 3
-        while retries > 0:
-            try:
-                self._device.refresh()
-                break
-            except (
-                somecomfort.client.APIRateLimited,
-                OSError,
-                requests.exceptions.ReadTimeout,
-            ) as exp:
-                retries -= 1
-                if retries == 0:
-                    raise exp
-                if not self._retry():
-                    raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
-
-        _LOGGER.debug(
-            "latestData = %s ", self._device._data  # pylint: disable=protected-access
-        )
