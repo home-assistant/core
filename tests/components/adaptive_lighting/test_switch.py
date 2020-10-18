@@ -63,6 +63,13 @@ ENTITY_SLEEP_MODE_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_sleep_mode_{DEFAULT_NAME}"
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
+@pytest.fixture
+def reset_time_zone():
+    """Reset time zone."""
+    yield
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
+
+
 async def setup_switch(hass, extra_data):
     """Create the switch entry."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: DEFAULT_NAME, **extra_data})
@@ -130,7 +137,7 @@ async def test_adaptive_lighting_switches(hass):
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_with_default_settings(
-    hass, lat, long, timezone
+    hass, lat, long, timezone, reset_time_zone
 ):
     """Test setting up the Adaptive Lighting switches with different timezones."""
     await config_util.async_process_ha_core_config(
@@ -143,12 +150,11 @@ async def test_adaptive_lighting_time_zones_with_default_settings(
     await switch._update_attrs_and_maybe_adapt_lights(
         context=switch.create_context("test")
     )
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE  # Restore TZ
 
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
 async def test_adaptive_lighting_time_zones_and_sun_settings(
-    hass, lat, long, timezone, legacy_patchable_time
+    hass, lat, long, timezone, reset_time_zone
 ):
     """Test setting up the Adaptive Lighting switches with different timezones.
 
@@ -222,10 +228,8 @@ async def test_adaptive_lighting_time_zones_and_sun_settings(
     assert switch._settings[ATTR_BRIGHTNESS_PCT] == DEFAULT_SLEEP_BRIGHTNESS
     assert switch._settings["color_temp_kelvin"] == DEFAULT_SLEEP_COLOR_TEMP
 
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE  # Restore TZ
 
-
-async def test_light_settings(hass, legacy_patchable_time):
+async def test_light_settings(hass):
     """Test that light settings are correctly applied."""
     switch = await setup_switch_and_lights(hass)
     lights = switch._lights
