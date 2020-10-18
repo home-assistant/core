@@ -121,6 +121,11 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_product_info()
 
     @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
     def unique_id(self):
         """Return the device's unique ID."""
         return self._hostname
