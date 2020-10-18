@@ -396,18 +396,19 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     await hass.async_block_till_done()
 
     # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
+    component = "mqtt"
+    spec = dir(hass.data[component])
     spec.remove("_matching_subscriptions")
 
     mqtt_component_mock = MagicMock(
-        return_value=hass.data["mqtt"],
+        return_value=hass.data[component],
         spec_set=spec,
-        wraps=hass.data["mqtt"],
+        wraps=hass.data[component],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
 
-    hass.data["mqtt"] = mqtt_component_mock
-    component = hass.data["mqtt"]
+    hass.data[component] = mqtt_component_mock
+    component = hass.data[component]
     component.reset_mock()
     return component
 
@@ -515,6 +516,7 @@ def legacy_patchable_time():
 
         # We can't use async_track_point_in_utc_time here because it would
         # break in the case that the system time abruptly jumps backwards.
+        # As such, utilize the last_now logic to avoid this issue.
         # Our custom last_now logic takes care of resolving that scenario.
         return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
 
