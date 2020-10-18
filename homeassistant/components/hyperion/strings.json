@@ -37,7 +37,8 @@
       "create_token_error": "Failed to create new token"
     },
     "abort": {
-      "already_configured": "The Hyperion Ambilight instance is already configured",
+      "already_configured": "The Hyperion Ambilight server is already configured",
+      "already_in_progress": "The Hyperion Ambilight server is already mid-configuration",
       "no_id": "The Hyperion Ambilight instance did not report its id"
     }
   },
