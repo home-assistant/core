@@ -145,7 +145,7 @@ class FlumeSensor(CoordinatorEntity):
                 self._name,
                 sensor_key,
             )
-            return
+            return None
 
         _LOGGER.debug(
             "Updating sensor: '%s', value: '%s'",
