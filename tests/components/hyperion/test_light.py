@@ -143,7 +143,7 @@ async def test_setup_yaml_old_style_unique_id(hass):
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SERVER_ID, 0
+        TEST_SERVER_ID, LIGHT_DOMAIN, 0
     )
 
     # There should be a config entry with the correct server unique_id.
@@ -173,7 +173,7 @@ async def test_setup_yaml_no_registry_entity(hass):
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SERVER_ID, 0
+        TEST_SERVER_ID, LIGHT_DOMAIN, 0
     )
 
     # There should be a config entry with the correct server unique_id.
@@ -210,17 +210,7 @@ async def test_setup_config_entry_not_ready(hass):
 
 async def test_setup_config_entry_dynamic_instances(hass):
     """Test dynamic changes in the omstamce configuration."""
-    config_entry = MockConfigEntry(
-        entry_id=TEST_CONFIG_ENTRY_ID,
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-        },
-        title=f"Hyperion {TEST_SERVER_ID}",
-        unique_id=TEST_SERVER_ID,
-    )
-    config_entry.add_to_hass(hass)
+    config_entry = _add_test_config_entry(hass)
 
     master_client = create_mock_client()
     master_client.instances = [TEST_INSTANCE_1, TEST_INSTANCE_2]

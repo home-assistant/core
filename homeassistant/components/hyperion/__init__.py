@@ -27,16 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 # operation.
 
 
-def get_hyperion_unique_id(server_id: str, instance: int) -> str:
+def get_hyperion_unique_id(server_id: str, domain: str, instance: int) -> str:
     """Get a unique_id for a Hyperion instance."""
-    return f"{server_id}:{instance}"
+    return f"{server_id}:{domain}:{instance}"
 
 
 def split_hyperion_unique_id(unique_id) -> Tuple[str, int]:
     """Split a unique_id for a Hyperion instance."""
     try:
-        server_id, instance = unique_id.rsplit(":", 1)
-        return server_id, int(instance)
+        server_id, domain, instance = unique_id.rsplit(":", 2)
+        return server_id, domain, int(instance)
     except ValueError:
         return None
 
@@ -49,7 +49,6 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Hyperion from a config entry."""
-    # TODO: Put master Hyperion connection here?
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
