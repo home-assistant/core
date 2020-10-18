@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "access_token": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed p\u0159\u00edstupov\u00e9ho tokenu.",
             "already_configured_account": "\u00da\u010det je ji\u017e nastaven",
             "already_setup": "\u00da\u010det Ambiclimate je nastaven.",
             "oauth2_missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."

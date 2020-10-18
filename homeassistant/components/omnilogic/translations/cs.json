@@ -17,5 +17,14 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Interval dotazov\u00e1n\u00ed (v sekund\u00e1ch)"
+                }
+            }
+        }
+    },
     "title": "Omnilogic"
 }
