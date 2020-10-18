@@ -57,7 +57,6 @@ class ThermostatSensor(HoneywellDevice, Entity):
         
     @property
     def state(self):
-        _LOGGER.info(self._device.__dict__)
         return self._device._data["uiData"][self._sensor_type]
 
 
@@ -117,29 +116,33 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for device in location.devices_by_id.values():
             if ((not loc_id or location.locationid == loc_id)
             and (not dev_id or device.deviceid == dev_id) ):
-                sensors_list.append(TemperatureSensor(
-                                      coordinator,
-                                      device,
-                                      "DispTemperature",
-                                      "Indoor Temperature"
-                                   ))
-                sensors_list.append(HumiditySensor(
-                                      coordinator,
-                                      device,
-                                      "IndoorHumidity",
-                                      "Indoor Humidity"
-                                   ))
-                sensors_list.append(TemperatureSensor(
-                                      coordinator,
-                                      device,
-                                      "OutdoorTemperature",
-                                      "Outdoor Temperature"
-                                   ))
-                sensors_list.append(HumiditySensor(
-                                      coordinator,
-                                      device,
-                                      "OutdoorHumidity",
-                                      "Outdoor Humidity"
-                                   ))
+                if device._data["uiData"]["DispTemperatureAvailable"]:
+                    sensors_list.append(TemperatureSensor(
+                                          coordinator,
+                                          device,
+                                          "DispTemperature",
+                                          "Indoor Temperature"
+                                       ))
+                if device._data["uiData"]["IndoorHumiditySensorAvailable"]:
+                    sensors_list.append(HumiditySensor(
+                                          coordinator,
+                                          device,
+                                          "IndoorHumidity",
+                                          "Indoor Humidity"
+                                       ))
+                if device._data["uiData"]["OutdoorTemperatureAvailable"]:
+                    sensors_list.append(TemperatureSensor(
+                                          coordinator,
+                                          device,
+                                          "OutdoorTemperature",
+                                          "Outdoor Temperature"
+                                       ))
+                if device._data["uiData"]["OutdoorHumidityAvailable"]:
+                    sensors_list.append(HumiditySensor(
+                                          coordinator,
+                                          device,
+                                          "OutdoorHumidity",
+                                          "Outdoor Humidity"
+                                       ))
         
     async_add_entities(sensors_list)
