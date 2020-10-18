@@ -20,7 +20,6 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
-    PRESET_NONE,
 )
 from homeassistant.components.generic_thermostat import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
