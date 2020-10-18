@@ -23,6 +23,23 @@ _LOGGER = logging.getLogger(__name__)
 client_key_coordinator = "client_key_coordinator"
 
 
+import asyncio
+from functools import wraps, partial
+
+def async_wrap(func):
+    @wraps(func)
+    async def run(*args, loop=None, executor=None, **kwargs):
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        pfunc = partial(func, *args, **kwargs)
+        return await loop.run_in_executor(executor, pfunc)
+    return run
+    
+@async_wrap
+def some_comfort_refresh_async_wrap(device):
+    device.refresh()
+
+
 class SomeComfortWrap():
 
     def __init__(self, username, password):
@@ -45,8 +62,8 @@ class HoneywellDevice(CoordinatorEntity):
         self._device = device
         
 
-
-async def create_client_wrap_async(username, password):
+@async_wrap
+def create_client_wrap_async(username, password):
     return somecomfort.SomeComfort(username, password)
 
 
@@ -81,7 +98,7 @@ async def async_setup(hass, config):
             try:
                 for location in client.locations_by_id.values():
                     for device in location.devices_by_id.values():
-                        device.refresh()
+                        await some_comfort_refresh_async_wrap(device)
                         _LOGGER.debug(
                             "latestData = %s ", device._data  # pylint: disable=protected-access
                         )
