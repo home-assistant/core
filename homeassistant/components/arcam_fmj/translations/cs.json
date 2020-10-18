@@ -15,5 +15,10 @@
                 "description": "Zadejte n\u00e1zev hostitele nebo IP adresu za\u0159\u00edzen\u00ed."
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} bylo po\u017e\u00e1d\u00e1no o zapnut\u00ed"
+        }
     }
 }

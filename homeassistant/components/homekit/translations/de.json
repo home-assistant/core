@@ -34,7 +34,16 @@
                     "exclude_entities": "Auszuschlie\u00dfende Entit\u00e4ten"
                 }
             },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e4ten",
+                    "mode": "Modus"
+                }
+            },
             "init": {
+                "data": {
+                    "mode": "Modus"
+                },
                 "title": "W\u00e4hlen Sie die zu \u00fcberbr\u00fcckenden Dom\u00e4nen aus."
             },
             "yaml": {

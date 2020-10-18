@@ -16,5 +16,14 @@
                 "title": "P\u0159ipojen\u00ed k za\u0159\u00edzeni Rachio"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Na jak dlouho, v minut\u00e1ch, zapnout stanici, kdy\u017e je zapnut vyp\u00edna\u010d."
+                }
+            }
+        }
     }
 }

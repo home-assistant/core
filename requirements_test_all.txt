@@ -364,7 +364,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.16
+hatasmota==0.0.18
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -388,7 +388,7 @@ home-assistant-frontend==20201001.2
 homeassistant-pyozw==0.1.10
 
 # homeassistant.components.home_connect
-homeconnect==0.5
+homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.11.0
