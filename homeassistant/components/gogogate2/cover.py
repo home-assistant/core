@@ -117,7 +117,6 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     def is_closed(self):
         """Return true if cover is closed, else False."""
         door = self._get_door()
-
         if door.status == DoorStatus.OPENED:
             return False
         if door.status == DoorStatus.CLOSED:
@@ -128,8 +127,7 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        door = self._get_door()
-        if door.gate:
+        if self._get_door().gate:
             return DEVICE_CLASS_GATE
 
         return DEVICE_CLASS_GARAGE
@@ -168,9 +166,7 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs["door_id"] = self._get_door().door_id
-        return attrs
+        return {**super().state_attributes, "door_id": self._get_door().door_id}
 
     def _get_door(self) -> AbstractDoor:
         if time.time() - self._last_action_timestamp <= TRANSITION_COMPLETE_DURATION:
@@ -178,13 +174,12 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
             # to prevent a bouncy state
             return self._door
 
-        self._is_closing = False
-        self._is_opening = False
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
 
     def _async_schedule_update_for_transition(self):
+        self._last_action_timestamp = time.time()
         self.async_write_ha_state()
 
         # Cancel any previous updates
@@ -196,14 +191,16 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         # seem like its closing or opening for a long time
         self._scheduled_transition_update = async_call_later(
             self.hass,
-            TRANSITION_COMPLETE_DURATION,
+            TRANSITION_COMPLETE_DURATION + 1,
             self._async_complete_schedule_update,
         )
 
     async def _async_complete_schedule_update(self, _):
         """Update status of the cover via coordinator."""
         self._scheduled_transition_update = None
-        await self.coordinator.async_request_refresh()
+        self._last_action_timestamp = 0
+        self._is_closing = self._is_opening = False
+        await self.coordinator.async_refresh()
 
     async def async_will_remove_from_hass(self):
         """Undo transition call later."""
