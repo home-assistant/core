@@ -1,6 +1,10 @@
 """Test the Advantage Air Initialization."""
 
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
+)
 
 from tests.components.advantage_air import (
     TEST_SYSTEM_DATA,
