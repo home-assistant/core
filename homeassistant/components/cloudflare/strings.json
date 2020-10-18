@@ -4,6 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to Cloudflare",
+        "description": "This integration requires an API Token created with the Edit zone DNS template.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
