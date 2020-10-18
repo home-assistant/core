@@ -106,12 +106,16 @@ class ISYSensorVariableEntity(ISYEntity):
     @property
     def state(self):
         """Return the state of the variable."""
-        return self._node.status
+        return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
     @property
     def device_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
-        return {"init_value": int(self._node.init)}
+        return {
+            "init_value": convert_isy_value_to_hass(
+                self._node.init, "", self._node.prec
+            )
+        }
 
     @property
     def icon(self):
