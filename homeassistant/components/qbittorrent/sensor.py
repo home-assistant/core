@@ -36,6 +36,7 @@ SENSOR_TYPE_COMPLETED_TORRENTS = "completed_torrents"
 
 DEFAULT_NAME = "qBittorrent"
 TRIM_SIZE = 35
+CONF_CATEGORIES = "categories"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["torrents"]): vol.All(
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
     }
