@@ -18,7 +18,7 @@ The system is built using a modular approach so support for other devices or act
 components <https://developers.home-assistant.io/docs/en/creating_component_index.html>`__.
 
 If you run into issues while using Home Assistant or during development
-of a component, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
+of a component or for further query, check the `Home Assistant help section <https://home-assistant.io/help/>`__ of our website for further help and information.
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://discord.gg/c5DvZ4e
