@@ -28,6 +28,9 @@
         }
     },
     "options": {
+        "error": {
+            "int": "Pole n\u00ed\u017ee mus\u00ed b\u00fdt cel\u00e9 \u010d\u00edslo."
+        },
         "step": {
             "arm_settings": {
                 "data": {
