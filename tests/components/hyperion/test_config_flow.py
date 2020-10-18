@@ -117,11 +117,11 @@ async def _init_flow(hass, source=SOURCE_USER, data=None):
     )
 
 
-async def _configure_flow(hass, init_result, user_input=None):
+async def _configure_flow(hass, result, user_input=None):
     """Provide input to a flow."""
     user_input = user_input or {}
     result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"], user_input=user_input
+        result["flow_id"], user_input=user_input
     )
     await hass.async_block_till_done()
     return result
@@ -286,9 +286,7 @@ async def test_auth_create_token_approval_declined(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
-        result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP_DONE
-        assert result["step_id"] == "create_token_fail"
+        # The flow will be automatically advanced by the auth token response.
 
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -326,10 +324,7 @@ async def test_auth_create_token_when_issued_token_fails(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
-        result = await _configure_flow(hass, result)
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP_DONE
-        assert result["step_id"] == "create_token_success"
+        # The flow will be automatically advanced by the auth token response.
 
         # Make the last verification fail.
         client.async_client_connect = CoroutineMock(return_value=False)
@@ -370,10 +365,7 @@ async def test_auth_create_token_success(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
         assert result["step_id"] == "create_token_external"
 
-        result = await _configure_flow(hass, result)
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP_DONE
-        assert result["step_id"] == "create_token_success"
+        # The flow will be automatically advanced by the auth token response.
 
         result = await _configure_flow(hass, result)
         result = await _configure_flow(hass, result)

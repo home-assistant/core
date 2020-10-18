@@ -196,7 +196,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self._request_token_task.done():
                 self._request_token_task.cancel()
 
-            # Process cancellation.
+            # Cancellation is only processed on the **next** cycle of the event loop, so
+            # yield here.
             await asyncio.sleep(0)
 
             try:
@@ -205,17 +206,20 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 pass
             self._request_token_task = None
 
-    async def _request_token_task_func(self, auth_id: str) -> Dict[str, Any]:
+    async def _request_token_task_func(self, auth_id: str) -> Optional[ConfigType]:
         """Send an async_request_token request."""
         hyperion_client = await self._create_and_connect_hyperion_client(raw=True)
+        auth_resp = {}
         if hyperion_client:
             # The Hyperion-py client has a default timeout of 3 minutes on this request.
-            response = await hyperion_client.async_request_token(
+            auth_resp = await hyperion_client.async_request_token(
                 comment=DEFAULT_ORIGIN, id=auth_id
             )
             await hyperion_client.async_client_disconnect()
-            return response
-        return None
+        await self.hass.config_entries.flow.async_configure(
+            flow_id=self.flow_id, user_input=auth_resp
+        )
+        return auth_resp
 
     def _get_hyperion_url(self):
         """Return the URL of the Hyperion UI."""
@@ -269,24 +273,25 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token_external(
-        self, _: Optional[ConfigType] = None
+        self, auth_resp: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
-        """Await completion of the request for a new token."""
-        if self._request_token_task:
-            auth_resp = await self._request_token_task
-            if client.ResponseOK(auth_resp):
-                token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
-                if token:
-                    self._data[CONF_TOKEN] = token
-                    return self.async_external_step_done(
-                        next_step_id="create_token_success"
-                    )
+        """Handle completion of the request for a new token."""
+        if client.ResponseOK(auth_resp):
+            token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
+            if token:
+                self._data[CONF_TOKEN] = token
+                return self.async_external_step_done(
+                    next_step_id="create_token_success"
+                )
         return self.async_external_step_done(next_step_id="create_token_fail")
 
     async def async_step_create_token_success(
         self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Create an entry after successful token creation."""
+        # Clean-up the request task.
+        await self._cancel_request_token_task()
+
         # Test the token.
         hyperion_client = await self._create_and_connect_hyperion_client()
         if not hyperion_client:
@@ -298,6 +303,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, _: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Show an error on the auth form."""
+        # Clean-up the request task.
+        await self._cancel_request_token_task()
         return self._show_auth_form({CONF_BASE: "auth_new_token_not_granted_error"})
 
     async def async_step_confirm(
@@ -372,6 +379,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 # TODO: Re-use hyperion connection in flow above?
+# TODO: Hyperion client 'async with' support pass raw?
 
 
 class HyperionOptionsFlow(config_entries.OptionsFlow):
