@@ -357,11 +357,15 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the Hyperion Options flow."""
-        return HyperionOptionsFlow()
+        return HyperionOptionsFlow(config_entry)
 
 
 class HyperionOptionsFlow(config_entries.OptionsFlow):
-    """Hyperion Options flow."""
+    """Hyperion options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize a Hyperion options flow."""
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -372,9 +376,12 @@ class HyperionOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): vol.Range(
-                        min=1, max=255
-                    ),
+                    vol.Optional(
+                        CONF_PRIORITY,
+                        default=self._config_entry.options.get(
+                            CONF_PRIORITY, DEFAULT_PRIORITY
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
                 }
             ),
         )

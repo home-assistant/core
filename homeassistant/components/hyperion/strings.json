@@ -40,5 +40,15 @@
       "already_configured": "The Hyperion Ambilight instance is already configured",
       "no_id": "The Hyperion Ambilight instance did not report its id"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "priority": "Hyperion priority to use for colors and effects"
+        },
+        "title": "Hyperion options"
+      }
+    }
   }
 }
