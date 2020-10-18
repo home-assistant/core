@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
+    TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
     TEST_ENTITY_ID_3,
@@ -104,13 +105,13 @@ async def test_setup_yaml_old_style_unique_id(hass):
     )
 
     # There should be a config entry with the correct server unique_id.
-    found = False
-    for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if entry.unique_id == TEST_SERVER_ID:
-            assert hass.data[DOMAIN][entry.entry_id] == client
-            found = True
-            break
-    assert found, "Config entry not created as expected"
+    entry_id = next(iter(hass.data[DOMAIN]))
+    assert hass.data[DOMAIN][entry_id] == client
+    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert (
+        hass.config_entries.async_get_entry(entry_id).options
+        == TEST_CONFIG_ENTRY_OPTIONS
+    )
 
 
 async def test_setup_yaml_no_registry_entity(hass):
@@ -133,13 +134,13 @@ async def test_setup_yaml_no_registry_entity(hass):
     )
 
     # There should be a config entry with the correct server unique_id.
-    found = False
-    for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if entry.unique_id == TEST_SERVER_ID:
-            assert hass.data[DOMAIN][entry.entry_id] == client
-            found = True
-            break
-    assert found, "Config entry not created as expected"
+    entry_id = next(iter(hass.data[DOMAIN]))
+    assert hass.data[DOMAIN][entry_id] == client
+    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert (
+        hass.config_entries.async_get_entry(entry_id).options
+        == TEST_CONFIG_ENTRY_OPTIONS
+    )
 
 
 async def test_setup_yaml_not_ready(hass):

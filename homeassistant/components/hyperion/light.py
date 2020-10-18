@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Set
 from hyperion import client, const
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -159,16 +160,38 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             known_object_ids=current_platform.entities.keys(),
         )
 
-    # Kick off a config flow to create the config entry.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
+    async def migrate_yaml_to_config_entry_and_options(host, port, priority):
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_HOST: config.get(CONF_HOST),
-                CONF_PORT: config.get(CONF_HOST),
+                CONF_HOST: host,
+                CONF_PORT: port,
             },
         )
+        if (
+            result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+            or result.get("result") is None
+        ):
+            _LOGGER.warning(
+                "Could not automatically migrate Hyperion YAML to a config entry."
+            )
+            return
+        config_entry = result.get("result")
+        result = await hass.config_entries.options.async_init(
+            config_entry.entry_id,
+            data={
+                CONF_PRIORITY: config[CONF_PRIORITY],
+            },
+        )
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            _LOGGER.warning(
+                "Could not automatically migrate Hyperion YAML to an options entry."
+            )
+
+    # Kick off a config flow to create the config entry.
+    hass.async_create_task(
+        migrate_yaml_to_config_entry_and_options(host, port, config[CONF_PRIORITY])
     )
 
 

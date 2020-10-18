@@ -6,7 +6,7 @@ from typing import Optional
 from asynctest import CoroutineMock, Mock, patch
 from hyperion import const
 
-from homeassistant.components.hyperion.const import DOMAIN
+from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.setup import async_setup_component
@@ -17,7 +17,7 @@ TEST_HOST = "test"
 TEST_PORT = const.DEFAULT_PORT_JSON
 TEST_INSTANCE = 1
 TEST_SERVER_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
-TEST_PRIORITY = 128
+TEST_PRIORITY = 180
 TEST_YAML_NAME = f"{TEST_HOST}_{TEST_PORT}_{TEST_INSTANCE}"
 TEST_YAML_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_YAML_NAME}"
 TEST_ENTITY_ID_1 = "light.test_instance_1"
@@ -27,6 +27,7 @@ TEST_ENTITY_ID_3 = "light.test_instance_3"
 TEST_TOKEN = "sekr1t"
 TEST_HYPERION_URL = f"http://{TEST_HOST}:{const.DEFAULT_PORT_UI}"
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
+TEST_CONFIG_ENTRY_OPTIONS = {CONF_PRIORITY: TEST_PRIORITY}
 
 TEST_INSTANCE_1 = {"friendly_name": "Test instance 1", "instance": 1, "running": True}
 TEST_INSTANCE_2 = {"friendly_name": "Test instance 2", "instance": 2, "running": True}
@@ -83,7 +84,7 @@ def add_test_config_entry(hass):
         },
         title=f"Hyperion {TEST_SERVER_ID}",
         unique_id=TEST_SERVER_ID,
-        options={},
+        options=TEST_CONFIG_ENTRY_OPTIONS,
     )
     config_entry.add_to_hass(hass)
     return config_entry
