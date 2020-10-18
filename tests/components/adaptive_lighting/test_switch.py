@@ -141,7 +141,9 @@ async def test_adaptive_lighting_time_zones_with_default_settings(hass, lat, lon
 
 
 @pytest.mark.parametrize("lat,long,tz", LAT_LONG_TZS)
-async def test_adaptive_lighting_time_zones_and_sun_settings(hass, lat, long, tz):
+async def test_adaptive_lighting_time_zones_and_sun_settings(
+    hass, lat, long, tz, legacy_patchable_time
+):
     """Test setting up the Adaptive Lighting switches with different timezones.
 
     Also test the (sleep) brightness and color temperature settings.
@@ -215,7 +217,7 @@ async def test_adaptive_lighting_time_zones_and_sun_settings(hass, lat, long, tz
     assert switch._settings["color_temp_kelvin"] == DEFAULT_SLEEP_COLOR_TEMP
 
 
-async def test_light_settings(hass):
+async def test_light_settings(hass, legacy_patchable_time):
     """Test that light settings are correctly applied."""
     switch = await setup_switch_and_lights(hass)
     lights = switch._lights
