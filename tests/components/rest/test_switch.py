@@ -22,6 +22,13 @@ from tests.common import assert_setup_component
 
 """Tests for setting up the REST switch platform."""
 
+NAME = "foo"
+METHOD = "post"
+RESOURCE = "http://localhost/"
+STATE_RESOURCE = RESOURCE
+HEADERS = {"Content-type": CONTENT_TYPE_JSON}
+AUTH = None
+
 
 async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
@@ -120,24 +127,17 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
 
 """Tests for REST switch platform."""
 
-name = "foo"
-method = "post"
-resource = "http://localhost/"
-state_resource = resource
-headers = {"Content-type": CONTENT_TYPE_JSON}
-auth = None
-
 
 def _setup_test_switch(hass):
     body_on = Template("on", hass)
     body_off = Template("off", hass)
     switch = rest.RestSwitch(
-        name,
-        resource,
-        state_resource,
-        method,
-        headers,
-        auth,
+        NAME,
+        RESOURCE,
+        STATE_RESOURCE,
+        METHOD,
+        HEADERS,
+        AUTH,
         body_on,
         body_off,
         None,
@@ -151,7 +151,7 @@ def _setup_test_switch(hass):
 def test_name(hass):
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
-    assert name == switch.name
+    assert NAME == switch.name
 
 
 def test_is_on_before_update(hass):
@@ -162,7 +162,7 @@ def test_is_on_before_update(hass):
 
 async def test_turn_on_success(hass, aioclient_mock):
     """Test turn_on."""
-    aioclient_mock.post(resource, status=HTTP_OK)
+    aioclient_mock.post(RESOURCE, status=HTTP_OK)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -172,7 +172,7 @@ async def test_turn_on_success(hass, aioclient_mock):
 
 async def test_turn_on_status_not_ok(hass, aioclient_mock):
     """Test turn_on when error status returned."""
-    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -182,7 +182,7 @@ async def test_turn_on_status_not_ok(hass, aioclient_mock):
 
 async def test_turn_on_timeout(hass, aioclient_mock):
     """Test turn_on when timeout occurs."""
-    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -191,7 +191,7 @@ async def test_turn_on_timeout(hass, aioclient_mock):
 
 async def test_turn_off_success(hass, aioclient_mock):
     """Test turn_off."""
-    aioclient_mock.post(resource, status=HTTP_OK)
+    aioclient_mock.post(RESOURCE, status=HTTP_OK)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_off()
 
@@ -201,7 +201,7 @@ async def test_turn_off_success(hass, aioclient_mock):
 
 async def test_turn_off_status_not_ok(hass, aioclient_mock):
     """Test turn_off when error status returned."""
-    aioclient_mock.post(resource, status=HTTP_INTERNAL_SERVER_ERROR)
+    aioclient_mock.post(RESOURCE, status=HTTP_INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_off()
 
@@ -211,7 +211,7 @@ async def test_turn_off_status_not_ok(hass, aioclient_mock):
 
 async def test_turn_off_timeout(hass, aioclient_mock):
     """Test turn_off when timeout occurs."""
-    aioclient_mock.post(resource, exc=asyncio.TimeoutError())
+    aioclient_mock.post(RESOURCE, exc=asyncio.TimeoutError())
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_turn_on()
 
@@ -221,7 +221,7 @@ async def test_turn_off_timeout(hass, aioclient_mock):
 async def test_update_when_on(hass, aioclient_mock):
     """Test update when switch is on."""
     switch, body_on, body_off = _setup_test_switch(hass)
-    aioclient_mock.get(resource, text=body_on.template)
+    aioclient_mock.get(RESOURCE, text=body_on.template)
     await switch.async_update()
 
     assert switch.is_on
@@ -230,7 +230,7 @@ async def test_update_when_on(hass, aioclient_mock):
 async def test_update_when_off(hass, aioclient_mock):
     """Test update when switch is off."""
     switch, body_on, body_off = _setup_test_switch(hass)
-    aioclient_mock.get(resource, text=body_off.template)
+    aioclient_mock.get(RESOURCE, text=body_off.template)
     await switch.async_update()
 
     assert not switch.is_on
@@ -238,7 +238,7 @@ async def test_update_when_off(hass, aioclient_mock):
 
 async def test_update_when_unknown(hass, aioclient_mock):
     """Test update when unknown status returned."""
-    aioclient_mock.get(resource, text="unknown status")
+    aioclient_mock.get(RESOURCE, text="unknown status")
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_update()
 
@@ -247,7 +247,7 @@ async def test_update_when_unknown(hass, aioclient_mock):
 
 async def test_update_timeout(hass, aioclient_mock):
     """Test update when timeout occurs."""
-    aioclient_mock.get(resource, exc=asyncio.TimeoutError())
+    aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
     switch, body_on, body_off = _setup_test_switch(hass)
     await switch.async_update()
 
