@@ -259,8 +259,12 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         # in the future to make sure the change actually
         # took effect
         event_helper.call_later(
-            self.hass, NUHEAT_API_STATE_SHIFT_DELAY, self.coordinator.async_refresh
+            self.hass, NUHEAT_API_STATE_SHIFT_DELAY, self._forced_refresh
         )
+
+    async def _forced_refresh(self, *_) -> None:
+        """Force a refresh."""
+        await self.coordinator.async_refresh()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
