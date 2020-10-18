@@ -140,8 +140,19 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Intentionally uses the IP address field, as ".local" cannot
         # be resolved by Home Assistant Core in Docker.
         # See related: https://github.com/home-assistant/core/issues/38537
-        data[CONF_HOST] = discovery_info["host"]
-        data[CONF_PORT] = discovery_info["port"]
+        data[CONF_HOST] = discovery_info[CONF_HOST]
+        data[CONF_PORT] = discovery_info[CONF_PORT]
+        hyperion_id = discovery_info.get("properties", {}).get(CONF_ID)
+        if hyperion_id:
+            # For Zeroconf, we set the unique_id as early as possible to avoid discovery
+            # popping up a duplicate on the screen. The unique_id is set authoritatively
+            # later in the flow by asking the server to confirm its id (which should
+            # theoretically be the same as specified here)
+            await self.async_set_unique_id(hyperion_id)
+            self._abort_if_unique_id_configured()
+        else:
+            return self.async_abort(reason="no_id")
+
         # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
         # data[const.KEY_ID] = user_input["properties"]["id"]
 
@@ -358,6 +369,9 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow(config_entry)
+
+
+# TODO: Re-use hyperion connection in flow above?
 
 
 class HyperionOptionsFlow(config_entries.OptionsFlow):

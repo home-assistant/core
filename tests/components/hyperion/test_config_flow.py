@@ -78,7 +78,7 @@ TEST_ZEROCONF_SERVICE_INFO = {
     "type": "_hyperiond-json._tcp.local.",
     CONF_NAME: "hyperion:19444._hyperiond-json._tcp.local.",
     "properties": {
-        "id": "f9aab089-f85a-55cf-b7c1-222a72faebe9",
+        "id": TEST_SERVER_ID,
         "version": "2.0.0-alpha.8",
     },
 }
@@ -387,7 +387,7 @@ async def test_auth_create_token_success(hass):
 
 
 async def test_zeroconf_success(hass):
-    """Check a full flow without auth."""
+    """Check a zeroconf flow."""
 
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
@@ -407,6 +407,24 @@ async def test_zeroconf_success(hass):
         CONF_HOST: TEST_IP_ADDRESS,
         CONF_PORT: TEST_PORT,
     }
+
+
+async def test_zeroconf_fail_no_id(hass):
+    """Check a zeroconf flow where no id is provided."""
+
+    client = create_mock_client()
+    bad_data = {
+        key: TEST_ZEROCONF_SERVICE_INFO[key]
+        for key in TEST_ZEROCONF_SERVICE_INFO
+        if key != "properties"
+    }
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(hass, source=SOURCE_ZEROCONF, data=bad_data)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_id"
 
 
 async def test_import(hass):

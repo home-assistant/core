@@ -27,8 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 # server id and the instance number. The split_hyperion_unique_id will reverse the
 # operation.
 
-# TODO: Zeroconf should not notify when server is already added (unique add in zeroconf step)
-
 
 def get_hyperion_unique_id(server_id: str, domain: str, instance: int) -> str:
     """Get a unique_id for a Hyperion instance."""
