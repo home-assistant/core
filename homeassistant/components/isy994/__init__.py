@@ -156,7 +156,6 @@ async def async_setup_entry(
             password=password,
             use_https=https,
             tls_ver=tls_version,
-            log=_LOGGER,
             webroot=host.path,
         )
     )
