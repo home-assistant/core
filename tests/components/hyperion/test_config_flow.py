@@ -14,11 +14,20 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
     SOURCE_IMPORT,
 )
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TOKEN,
+    SERVICE_TURN_ON,
+)
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
+    TEST_ENTITY_ID_1,
     TEST_HOST,
     TEST_HYPERION_URL,
     TEST_INSTANCE,
@@ -102,6 +111,7 @@ async def _create_mock_entry(hass):
 async def _init_flow(hass, source=SOURCE_USER, data=None):
     """Initialize a flow."""
     data = data or {}
+
     return await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": source}, data=data
     )
@@ -433,16 +443,26 @@ async def test_options(hass):
     with patch("hyperion.client.HyperionClient", return_value=client):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
-    # TODO use init and configure methods in this file?
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+        new_priority = 1
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_PRIORITY: new_priority}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {CONF_PRIORITY: new_priority}
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_PRIORITY: 1}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_PRIORITY: 1}
+        # Turn the light on and ensure the new priority is used.
+        client.async_send_set_color = CoroutineMock(return_value=True)
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+            blocking=True,
+        )
+        assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority

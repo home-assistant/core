@@ -24,7 +24,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, split_hyperion_unique_id
@@ -178,9 +178,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config_entry.data[CONF_PORT]
     token = config_entry.data.get(CONF_TOKEN)
 
-    # TODO: Add support for varying the priority via an option flow.
-    priority = DEFAULT_PRIORITY
-
     async def async_instances_to_entities(
         platform: entity_platform.EntityPlatform,
         response: Dict[str, Any],
@@ -223,12 +220,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 continue
             entity_name = instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
             entities_to_add.append(
-                Hyperion(unique_id, entity_name, priority, hyperion_client)
+                Hyperion(unique_id, entity_name, config_entry.options, hyperion_client)
             )
 
         # Delete instances that are no longer present on this server.
         hyperion_entity_ids = list(platform.entities.keys())
-        _LOGGER.error(hyperion_entity_ids)
         for entity_id in hyperion_entity_ids:
             entity_server_id, domain, instance_id = split_hyperion_unique_id(
                 platform.entities[entity_id].unique_id
@@ -251,18 +247,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         raise PlatformNotReady
     hass.data[DOMAIN][config_entry.entry_id] = hyperion_client
 
+    current_platform = entity_platform.current_platform.get()
+
     hyperion_client.set_callbacks(
         {
             f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}": partial(
-                async_instances_to_entities, entity_platform.current_platform.get()
+                async_instances_to_entities,
+                current_platform,
             )
         }
     )
 
+    config_entry.add_update_listener(_async_options_updated)
+
     await async_instances_to_entities_raw(
-        entity_platform.current_platform.get(),
+        current_platform,
         hyperion_client.instances,
     )
+
+
+async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def _async_create_connect_client(
@@ -289,11 +295,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, unique_id, name, priority, hyperion_client):
+    def __init__(self, unique_id, name, options, hyperion_client):
         """Initialize the light."""
         self._unique_id = unique_id
         self._name = name
-        self._priority = priority
+        self._options = options
         self._client = hyperion_client
 
         # Active state representing the Hyperion instance.
@@ -361,6 +367,11 @@ class Hyperion(LightEntity):
         """Return a unique id for this instance."""
         return self._unique_id
 
+    def _get_option(self, key: str) -> Any:
+        """Get a value from the provided options."""
+        defaults = {CONF_PRIORITY: DEFAULT_PRIORITY}
+        return self._options.get(key, defaults[key])
+
     async def async_turn_on(self, **kwargs):
         """Turn the lights on."""
         # == Turn device on ==
@@ -415,7 +426,7 @@ class Hyperion(LightEntity):
 
             # Clear any color/effect.
             if not await self._client.async_send_clear(
-                **{const.KEY_PRIORITY: self._priority}
+                **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
             ):
                 return
 
@@ -436,13 +447,13 @@ class Hyperion(LightEntity):
             # This call should not be necessary, but without it there is no priorities-update issued:
             # https://github.com/hyperion-project/hyperion.ng/issues/992
             if not await self._client.async_send_clear(
-                **{const.KEY_PRIORITY: self._priority}
+                **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
             ):
                 return
 
             if not await self._client.async_send_set_effect(
                 **{
-                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
                     const.KEY_EFFECT: {const.KEY_NAME: effect},
                     const.KEY_ORIGIN: DEFAULT_ORIGIN,
                 }
@@ -452,7 +463,7 @@ class Hyperion(LightEntity):
         else:
             if not await self._client.async_send_set_color(
                 **{
-                    const.KEY_PRIORITY: self._priority,
+                    const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
                     const.KEY_COLOR: rgb_color,
                     const.KEY_ORIGIN: DEFAULT_ORIGIN,
                 }

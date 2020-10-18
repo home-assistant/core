@@ -613,4 +613,3 @@ async def test_unload_entry(hass):
 
     assert await async_unload_entry(hass, entry)
     assert client.async_client_disconnect.called
-    assert DOMAIN not in hass.data
