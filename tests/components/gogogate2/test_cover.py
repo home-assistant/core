@@ -41,7 +41,9 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_USERNAME,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -348,8 +350,12 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     )
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_CLOSED
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
     api.close_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSED
 
     api.info.return_value = info_response(DoorStatus.OPENED)
     await hass.services.async_call(
@@ -359,8 +365,12 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     )
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
-    assert hass.states.get("cover.door1").state == STATE_OPEN
+    assert hass.states.get("cover.door1").state == STATE_OPENING
     api.open_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPEN
 
     api.info.return_value = info_response(DoorStatus.UNDEFINED)
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
