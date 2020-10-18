@@ -31,10 +31,9 @@ class LGDevice(MediaPlayerEntity):
         """Initialize the LG speakers."""
         self._host = discovery_info.get("host")
         self._port = discovery_info.get("port")
-        properties = discovery_info.get("properties")
-        self._uuid = properties.get("UUID")
+        self._hostname = discovery_info.get("hostname")
 
-        self._name = ""
+        self._name = self._hostname.split(".")[0]
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
@@ -124,7 +123,7 @@ class LGDevice(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return the device's unique ID."""
-        return self._uuid
+        return self._hostname
 
     @property
     def name(self):
