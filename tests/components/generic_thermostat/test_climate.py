@@ -15,6 +15,11 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_HOME,
+    PRESET_NONE,
+    PRESET_SLEEP,
     PRESET_NONE,
 )
 from homeassistant.components.generic_thermostat import (
@@ -1098,6 +1103,80 @@ async def test_precision(hass, setup_comp_9):
     await common.async_set_temperature(hass, 23.27)
     state = hass.states.get(ENTITY)
     assert 23.3 == state.attributes.get("temperature")
+
+
+async def test_not_configured_preset(hass, setup_comp_9):
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 25
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert ATTR_PRESET_MODE not in state.attributes
+
+
+@pytest.fixture
+async def setup_comp_10(hass):
+    """Initialize components."""
+    hass.config.temperature_unit = TEMP_FAHRENHEIT
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "presets": {
+                    "away": 16,
+                    "comfort": 21,
+                    "eco": 19,
+                    "home": 20,
+                    "sleep": 18,
+                },
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_multiple_presets(hass, setup_comp_10):
+    """Test that setting precision to tenths works as intended."""
+    await hass.async_block_till_done()
+    # set temp to 19 (manual)
+    await common.async_set_temperature(hass, 19)
+    state = hass.states.get(ENTITY)
+    assert 19 == state.attributes.get("temperature")
+    # set preset away
+    await common.async_set_preset_mode(hass, PRESET_AWAY)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 16
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
+    # set preset comfort
+    await common.async_set_preset_mode(hass, PRESET_COMFORT)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 21
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_COMFORT
+    # set temp to 25 (manual)
+    await common.async_set_temperature(hass, 25)
+    state = hass.states.get(ENTITY)
+    assert 25 == state.attributes.get("temperature")
+    # set preset eco
+    await common.async_set_preset_mode(hass, PRESET_ECO)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 19
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+    # set preset home
+    await common.async_set_preset_mode(hass, PRESET_HOME)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_HOME
+    # set preset sleep
+    await common.async_set_preset_mode(hass, PRESET_SLEEP)
+    state = hass.states.get(ENTITY)
+    assert state.attributes[ATTR_TEMPERATURE] == 18
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_SLEEP
 
 
 async def test_custom_setup_params(hass):
