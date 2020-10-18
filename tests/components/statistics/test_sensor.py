@@ -32,7 +32,7 @@ def mock_legacy_time(legacy_patchable_time):
 def stats():
     """Return common values and stats for all tests."""
 
-    class Stats(object):
+    class Stats:
         def __init__(self):
             self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
             self.count = len(self.values)
