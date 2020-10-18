@@ -668,9 +668,6 @@ gntp==1.0.3
 # homeassistant.components.goalzero
 goalzero==0.1.4
 
-# homeassistant.components.gogogate2
-gogogate2-api==2.0.4
-
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
