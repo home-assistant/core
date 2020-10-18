@@ -1,10 +1,11 @@
 """Allow to set up simple automation rules via the config file."""
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Set, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.components import blueprint
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -31,12 +32,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    condition,
-    extract_domain_configs,
-    placeholder,
-    template,
-)
+from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -57,7 +53,6 @@ from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
-from homeassistant.util.yaml.loader import load_yaml
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -97,8 +92,8 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
-DATA_BLUEPRINTS = "automation_blueprints"
-PATH_BLUEPRINTS = f"blueprints/{DOMAIN}"
+# DATA_BLUEPRINTS = "automation_blueprints"
+# PATH_BLUEPRINTS = f"blueprints/{DOMAIN}"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,8 +131,7 @@ PLATFORM_AUTOMATION_SCHEMA = vol.All(
 PLATFORM_BLUEPRINT_INSTANCE_SCHEMA = make_script_schema(
     {
         **PLATFORM_BASE_SCHEMA,
-        vol.Required(CONF_BLUEPRINT): cv.path,
-        vol.Required(CONF_INPUT): {str: str},
+        **blueprint.BLUEPRINT_INSTANCE_FIELDS,
     },
     SCRIPT_MODE_SINGLE,
 )
@@ -156,15 +150,6 @@ def validate_automation(value):
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"), validate_automation
-)
-
-
-BLUEPRINT_SCHEMA = vol.Schema(
-    {
-        **AUTOMATION_FIELDS,
-        # No definition yet for the inputs.
-        vol.Required("input"): {str: vol.Any(None)},
-    }
 )
 
 
@@ -244,7 +229,9 @@ async def async_setup(hass, config):
     """Set up the automation."""
     hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    await _async_process_config(hass, config, component)
+    blueprints = blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)
+
+    await _async_process_config(hass, config, component, blueprints)
 
     async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
@@ -275,8 +262,8 @@ async def async_setup(hass, config):
         conf = await component.async_prepare_reload()
         if conf is None:
             return
-        hass.data.pop(DATA_BLUEPRINTS, None)
-        await _async_process_config(hass, conf, component)
+        blueprints.async_reset_cache()
+        await _async_process_config(hass, conf, component, blueprints)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     async_register_admin_service(
@@ -561,28 +548,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         return {CONF_ID: self._id}
 
 
-async def _load_blueprint(hass, name):
-    """Load a blueprint."""
-    blueprints = hass.data.setdefault(DATA_BLUEPRINTS, {})
-
-    if name in blueprints:
-        return blueprints[name]
-
-    fname = f"{name}.yaml"
-
-    try:
-        blueprint = await hass.async_add_executor_job(
-            load_yaml, hass.config.path(PATH_BLUEPRINTS, fname)
-        )
-    except FileNotFoundError:
-        _LOGGER.error("Unable to find blueprint %s", name)
-        blueprint = None
-
-    blueprints[name] = blueprint
-    return blueprint
-
-
-async def _async_process_config(hass, config, component):
+async def _async_process_config(
+    hass: HomeAssistant,
+    config: Dict[str, Any],
+    component: EntityComponent,
+    blueprints: blueprint.DomainBlueprints,
+) -> None:
     """Process config and add automations.
 
     This method is a coroutine.
@@ -598,32 +569,24 @@ async def _async_process_config(hass, config, component):
 
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            if CONF_BLUEPRINT in config_block:
-                blueprint = await _load_blueprint(hass, config_block[CONF_BLUEPRINT])
-
-                if blueprint is None:
-                    continue
-
+            if blueprint.is_blueprint_config(config_block):
                 try:
-                    automation_conf = placeholder.substitute(
-                        blueprint, config_block[CONF_INPUT]
-                    )
-                except placeholder.UndefinedSubstitution as err:
+                    bp_inputs = await blueprints.async_inputs_from_config(config_block)
+                except blueprint.BlueprintException as exc:
                     _LOGGER.error(
-                        "Automation for blueprint %s is missing input value %s",
-                        f"{config_block[CONF_BLUEPRINT]}.yaml",
-                        err.placeholder,
+                        "Error processing blueprint %s: %s", exc.blueprint_name, exc
                     )
                     continue
 
+                automation_conf = bp_inputs.async_substitute()
+
                 try:
-                    automation_conf.pop(CONF_INPUT)
                     automation_conf = PLATFORM_AUTOMATION_SCHEMA(automation_conf)
                 except vol.Invalid as err:
                     _LOGGER.error(
                         "Blueprint %s generated invalid automation with inputs %s: %s",
-                        config_block[CONF_BLUEPRINT],
-                        config_block[CONF_INPUT],
+                        bp_inputs.blueprint.name,
+                        bp_inputs.inputs,
                         humanize_error(automation_conf, err),
                     )
                     continue
