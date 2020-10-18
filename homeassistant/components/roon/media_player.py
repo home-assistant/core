@@ -469,7 +469,7 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.queue_playlist(self.zone_id, media_id)
         elif media_type == "genre":
             self._server.roonapi.play_genre(self.zone_id, media_id)
-        elif media_type == "library" or media_type == "track":
+        elif media_type in ("library", "track"):
             self._server.roonapi.play_id(self.zone_id, media_id)
         else:
             _LOGGER.error(
