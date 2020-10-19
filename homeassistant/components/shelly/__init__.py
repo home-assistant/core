@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
-from .const import COAP_CONTEXT, DOMAIN, UNDO_SHUTDOWN_LISTENER
+from .const import COAP_CONTEXT, CONFIG_ENTRY, DOMAIN, GENERAL, UNDO_SHUTDOWN_LISTENER
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +27,14 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][GENERAL] = {}
+    hass.data[DOMAIN][CONFIG_ENTRY] = {}
+    hass.data[DOMAIN][GENERAL][
+        COAP_CONTEXT
+    ] = await aiocoap.Context.create_client_context()
+    hass.data[DOMAIN][GENERAL][UNDO_SHUTDOWN_LISTENER] = hass.bus.async_listen(
+        EVENT_HOMEASSISTANT_STOP, shutdown_listener(hass)
+    )
     return True
 
 
@@ -39,16 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
     )
-
-    if COAP_CONTEXT not in hass.data[DOMAIN]:
-        coap_context = hass.data[DOMAIN][
-            COAP_CONTEXT
-        ] = await aiocoap.Context.create_client_context()
-        hass.data[DOMAIN][UNDO_SHUTDOWN_LISTENER] = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, shutdown_listener(hass)
-        )
-    else:
-        coap_context = hass.data[DOMAIN][COAP_CONTEXT]
+    coap_context = hass.data[DOMAIN][GENERAL][COAP_CONTEXT]
 
     try:
         async with async_timeout.timeout(10):
@@ -60,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err
 
-    wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
+    wrapper = hass.data[DOMAIN][CONFIG_ENTRY][entry.entry_id] = ShellyDeviceWrapper(
         hass, entry, device
     )
     await wrapper.async_setup()
@@ -152,14 +151,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN].pop(entry.entry_id).shutdown()
-        if len(hass.data[DOMAIN]) == 2:
-            await hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
-            hass.data[DOMAIN][UNDO_SHUTDOWN_LISTENER]()
+        await hass.data[DOMAIN][CONFIG_ENTRY].pop(entry.entry_id).shutdown()
+        if not hass.data[DOMAIN][CONFIG_ENTRY]:
+            await hass.data[DOMAIN][GENERAL].pop(COAP_CONTEXT).shutdown()
+            hass.data[DOMAIN][GENERAL][UNDO_SHUTDOWN_LISTENER]()
 
     return unload_ok
 
 
 async def shutdown_listener(hass: HomeAssistant):
     """Home Assistant shutdown listener."""
-    await hass.data[DOMAIN].pop(COAP_CONTEXT).shutdown()
+    await hass.data[DOMAIN][GENERAL].pop(COAP_CONTEXT).shutdown()
