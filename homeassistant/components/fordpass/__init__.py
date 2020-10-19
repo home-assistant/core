@@ -82,6 +82,7 @@ class FordPassDataUpdateCoordinator(DataUpdateCoordinator):
         self._hass = hass
         self.vin = vin
         self.vehicle = Vehicle(user, password, vin)
+        self._available = True
 
         super().__init__(
             hass,
@@ -97,8 +98,16 @@ class FordPassDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self._hass.async_add_executor_job(
                     self.vehicle.status  # Fetch new status
                 )
+
+                # If data has now been fetched but was previously unavailable, log and reset
+                if not self._available:
+                    _LOGGER.info(f"Restored connection to FordPass for {self.vin}")
+                    self._available = True
+
                 return DottedDict(data)
         except Exception as ex:
+            self._available = False  # Mark as unavailable
+            _LOGGER.warning(f"Error communicating with FordPass for {self.vin}")
             raise UpdateFailed(
                 f"Error communicating with FordPass for {self.vin}"
             ) from ex

@@ -9,5 +9,6 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@clarkd"]
+  "codeowners": ["@clarkd"],
+  "quality_scale": "silver"
 }
