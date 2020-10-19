@@ -244,7 +244,7 @@ class AxisNetworkDevice:
 
     async def async_reset(self):
         """Reset this device to default state."""
-        self.hass.loop.create_task(self.api.vapix.close())
+        await self.api.vapix.close()
         self.disconnect_from_stream()
 
         unload_ok = all(
