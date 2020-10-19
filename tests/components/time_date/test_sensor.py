@@ -12,6 +12,7 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 @pytest.fixture(autouse=True)
 def restore_ts():
     """Restore default TZ."""
+    yield
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
