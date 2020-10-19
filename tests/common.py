@@ -975,7 +975,7 @@ def mock_integration(hass, module):
 
     def mock_import_platform(platform_name):
         raise ImportError(
-            "Mocked unable to import platform",
+            f"Mocked unable to import platform '{platform_name}'",
             name=f"{integration.pkg_path}.{platform_name}",
         )
 
