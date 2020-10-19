@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata",
             "connection_error": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata"
         },
         "flow_title": "Denon AVR v\u00f5rguvastuv\u00f5tja: {nimi}",

@@ -19,7 +19,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "\u63a5\u6536\u5668 IP"
+                    "select_host": "\u63a5\u6536\u5668 IP \u4f4d\u5740"
                 },
                 "description": "\u8acb\u518d\u6b21\u57f7\u884c\u8a2d\u5b9a\uff0c\u5047\u5982\u9084\u8981\u65b0\u589e\u5176\u4ed6\u63a5\u6536\u5668",
                 "title": "\u9078\u64c7\u6240\u8981\u9023\u7dda\u7684\u63a5\u6536\u5668\u3002"
