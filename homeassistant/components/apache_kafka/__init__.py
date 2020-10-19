@@ -60,7 +60,7 @@ async def async_setup(hass, config):
         conf.get(CONF_PASSWORD),
     )
 
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, kafka.shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, kafka.shutdown)
 
     await kafka.start()
 
