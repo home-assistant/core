@@ -1,1 +1,1 @@
-"""Tests for the Fordpass integration."""
+"""Tests for the FordPass integration."""
