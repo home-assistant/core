@@ -58,7 +58,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not await sensor.connection():
         raise PlatformNotReady
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.shutdown())
+    async def _shutdown(*_):
+        await sensor.shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
     async_add_entities([sensor], True)
 
 
