@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
+from .const import LOGGER
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
 
 CONF_SUBTYPE = "subtype"
@@ -29,6 +30,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATED_FAST = "remote_button_rotated_fast"
 CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_AWAKE = "remote_awakened"
 CONF_MOVE = "remote_moved"
@@ -185,8 +187,10 @@ TRADFRI_REMOTE = {
 
 TRADFRI_WIRELESS_DIMMER_MODEL = "TRADFRI wireless dimmer"
 TRADFRI_WIRELESS_DIMMER = {
+    (CONF_ROTATED_FAST, CONF_LEFT): {CONF_EVENT: 4002},
     (CONF_ROTATED, CONF_LEFT): {CONF_EVENT: 3002},
     (CONF_ROTATED, CONF_RIGHT): {CONF_EVENT: 2002},
+    (CONF_ROTATED_FAST, CONF_RIGHT): {CONF_EVENT: 1002},
 }
 
 AQARA_CUBE_MODEL = "lumi.sensor_cube"
@@ -429,6 +433,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
+        LOGGER.error("No deconz_event tied to device %s found", device.name)
         raise InvalidDeviceAutomationConfig
 
     event_id = deconz_event.serial

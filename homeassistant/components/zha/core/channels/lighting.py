@@ -1,13 +1,9 @@
 """Lighting channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.lighting as lighting
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ClientChannel, ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)

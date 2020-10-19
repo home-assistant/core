@@ -4,6 +4,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
+    ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NUMBER,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -11,9 +16,6 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
@@ -39,6 +41,10 @@ def get_mock_remote(
     encrypted=False,
     app_id=None,
     encryption_key=None,
+    name=DEFAULT_NAME,
+    manufacturer="mock-manufacturer",
+    model_number="mock-model-number",
+    unique_id="mock-unique-id",
 ):
     """Return a mock remote."""
     mock_remote = Mock()
@@ -60,6 +66,16 @@ def get_mock_remote(
             raise authorize_error
 
     mock_remote.authorize_pin_code = authorize_pin_code
+
+    def get_device_info():
+        return {
+            ATTR_FRIENDLY_NAME: name,
+            ATTR_MANUFACTURER: manufacturer,
+            ATTR_MODEL_NUMBER: model_number,
+            ATTR_UDN: unique_id,
+        }
+
+    mock_remote.get_device_info = get_device_info
 
     return mock_remote
 
@@ -92,6 +108,12 @@ async def test_flow_non_encrypted(hass):
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: None,
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_MANUFACTURER: "mock-manufacturer",
+            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -116,7 +138,7 @@ async def test_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_unknown_abort(hass):
@@ -139,7 +161,7 @@ async def test_flow_unknown_abort(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_encrypted_valid_pin_code(hass):
@@ -184,6 +206,12 @@ async def test_flow_encrypted_valid_pin_code(hass):
         CONF_ON_ACTION: None,
         CONF_APP_ID: "test-app-id",
         CONF_ENCRYPTION_KEY: "test-encryption-key",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_MANUFACTURER: "mock-manufacturer",
+            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -255,7 +283,7 @@ async def test_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_encrypted_unknown_abort(hass):
@@ -288,7 +316,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_non_encrypted_already_configured_abort(hass):
@@ -362,6 +390,12 @@ async def test_imported_flow_non_encrypted(hass):
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: "test-on-action",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_MANUFACTURER: "mock-manufacturer",
+            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -406,6 +440,12 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         CONF_ON_ACTION: "test-on-action",
         CONF_APP_ID: "test-app-id",
         CONF_ENCRYPTION_KEY: "test-encryption-key",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_MANUFACTURER: "mock-manufacturer",
+            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -475,7 +515,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_imported_flow_encrypted_unknown_abort(hass):
@@ -507,7 +547,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_not_connected_error(hass):
@@ -530,7 +570,7 @@ async def test_imported_flow_not_connected_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_imported_flow_unknown_abort(hass):
@@ -552,7 +592,7 @@ async def test_imported_flow_unknown_abort(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_non_encrypted_already_configured_abort(hass):

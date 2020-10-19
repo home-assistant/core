@@ -1,6 +1,4 @@
 """Support for Enigma2 media players."""
-import logging
-
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
@@ -31,8 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -253,17 +249,13 @@ class Enigma2Device(MediaPlayerEntity):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        attributes = {}
-        if not self.e2_box.in_standby:
-            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = self.e2_box.status_info[
-                "isRecording"
-            ]
-            attributes[ATTR_MEDIA_DESCRIPTION] = self.e2_box.status_info[
+        if self.e2_box.in_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
+            ATTR_MEDIA_DESCRIPTION: self.e2_box.status_info[
                 "currservice_fulldescription"
-            ]
-            attributes[ATTR_MEDIA_START_TIME] = self.e2_box.status_info[
-                "currservice_begin"
-            ]
-            attributes[ATTR_MEDIA_END_TIME] = self.e2_box.status_info["currservice_end"]
-
-        return attributes
+            ],
+            ATTR_MEDIA_START_TIME: self.e2_box.status_info["currservice_begin"],
+            ATTR_MEDIA_END_TIME: self.e2_box.status_info["currservice_end"],
+        }

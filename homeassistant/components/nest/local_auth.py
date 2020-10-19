@@ -40,7 +40,7 @@ async def resolve_auth_code(hass, client_id, client_secret, code):
     auth.pin = code
 
     try:
-        await hass.async_add_job(auth.login)
+        await hass.async_add_executor_job(auth.login)
         return await result
     except AuthorizationError as err:
         if err.response.status_code == HTTP_UNAUTHORIZED:

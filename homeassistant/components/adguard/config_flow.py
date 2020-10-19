@@ -1,6 +1,4 @@
 """Config flow to configure the AdGuard Home integration."""
-import logging
-
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
@@ -16,8 +14,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -80,7 +76,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         try:
             await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
@@ -152,7 +148,7 @@ class AdGuardHomeFlowHandler(ConfigFlow):
         try:
             await adguard.version()
         except AdGuardHomeConnectionError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return await self._show_hassio_form(errors)
 
         return self.async_create_entry(

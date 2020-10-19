@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "No se puede encontrar la clase de sistema necesaria para este componente, aseg\u00farate de que tu kernel es reciente y el hardware es compatible",
-            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "step": {
             "confirm": {

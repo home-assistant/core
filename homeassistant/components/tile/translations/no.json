@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Tile kontoen er allerede registrert."
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
+            "invalid_auth": "Ugyldig godkjenning",
             "invalid_credentials": "Ugyldige Tile registreringsinformasjon gitt."
         },
         "step": {

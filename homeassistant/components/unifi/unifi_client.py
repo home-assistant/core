@@ -1,12 +1,7 @@
 """Base class for UniFi clients."""
-
-import logging
-
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .unifi_entity_base import UniFiBase
-
-LOGGER = logging.getLogger(__name__)
 
 
 class UniFiClient(UniFiBase):
@@ -54,4 +49,8 @@ class UniFiClient(UniFiBase):
     @property
     def device_info(self) -> dict:
         """Return a client description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.client.mac)},
+            "default_name": self.name,
+            "default_manufacturer": self.client.oui,
+        }

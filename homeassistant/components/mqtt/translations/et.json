@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Kehtetu loomise teavitus.",
             "bad_will": "Kehtetu l\u00f5petamise teavitus.",
-            "cannot_connect": "Vahendajaga ei saa \u00fchendust luua."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "broker": {

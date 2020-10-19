@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "All Philips Hue bridges are already configured",
-            "already_configured": "Bridge is already configured",
-            "already_in_progress": "Config flow for bridge is already in progress.",
-            "cannot_connect": "Unable to connect to the bridge",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
             "discover_timeout": "Unable to discover Hue bridges",
             "no_bridges": "No Philips Hue bridges discovered",
             "not_hue_bridge": "Not a Hue bridge",
-            "unknown": "Unknown error occurred"
+            "unknown": "Unexpected error"
         },
         "error": {
-            "linking": "Unknown linking error occurred.",
+            "linking": "Unexpected error",
             "register_failed": "Failed to register, please try again"
         },
         "step": {

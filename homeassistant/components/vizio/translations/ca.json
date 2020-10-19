@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "Codi PIN"
                 },
                 "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar la vinculaci\u00f3.",
                 "title": "Proc\u00e9s de vinculaci\u00f3 complet"

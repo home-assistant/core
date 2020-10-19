@@ -1,5 +1,4 @@
 """Support for Notion binary sensors."""
-import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
@@ -28,8 +27,6 @@ from .const import (
     SENSOR_WINDOW_HINGED_HORIZONTAL,
     SENSOR_WINDOW_HINGED_VERTICAL,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_TYPES = {
     SENSOR_BATTERY: ("Low Battery", "battery"),

@@ -19,12 +19,12 @@
     },
     "error": {
       "wrong_host": "Invalid hostname or IP address.",
-      "connection_error": "Connection error.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "snmp_error": "SNMP server turned off or printer not supported."
     },
     "abort": {
       "unsupported_model": "This printer model is not supported.",
-      "already_configured": "This printer is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

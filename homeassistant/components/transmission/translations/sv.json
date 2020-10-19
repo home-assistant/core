@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Gr\u00e4ns",
+                    "order": "Ordning",
                     "scan_interval": "Uppdateringsfrekvens"
                 },
                 "title": "Konfigurera alternativ f\u00f6r Transmission"
