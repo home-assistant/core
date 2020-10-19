@@ -5,13 +5,6 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "install_addon": {
-                "data": {
-                    "network_key": "Network Key",
-                    "usb_path": "USB Device Path"
-                },
-                "title": "Enter the OpenZWave add-on config"
-            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Do you want to use the OpenZWave Supervisor add-on?"
