@@ -32,6 +32,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Set up flow instance."""
+        self.addon_config = None
         self.addon_info = None
         self.network_key = None
         self.usb_path = None
@@ -102,10 +103,10 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_start_addon(self, user_input=None):
         """Ask for missing config and start add-on."""
         if self.usb_path is None or self.network_key is None:
-            addon_config = await self._async_get_addon_config()
+            self.addon_config = await self._async_get_addon_config()
 
-            self.usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE)
-            self.network_key = self.network_key or addon_config.get(
+            self.usb_path = self.usb_path or self.addon_config.get(CONF_ADDON_DEVICE)
+            self.network_key = self.network_key or self.addon_config.get(
                 CONF_ADDON_NETWORK_KEY
             )
             data_schema = vol.Schema({})
@@ -127,7 +128,8 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.network_key:
             new_addon_config[CONF_ADDON_NETWORK_KEY] = self.network_key
 
-        await self._async_set_addon_config(new_addon_config)
+        if new_addon_config != self.addon_config:
+            await self._async_set_addon_config(new_addon_config)
         await self.hass.components.hassio.async_start_addon("core_zwave")
 
         return self._async_use_mqtt_integration()
