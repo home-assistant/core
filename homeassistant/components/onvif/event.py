@@ -156,7 +156,7 @@ class EventManager:
             try:
                 pullpoint = self.device.create_pullpoint_service()
                 response = await pullpoint.PullMessages(
-                    {"MessageLimit":100, "Timeout":dt.timedelta(seconds=5)}
+                    {"MessageLimit":100, "Timeout":dt.timedelta(seconds=60)}
                 )
 
                 # Renew subscription if less than two hours is left
