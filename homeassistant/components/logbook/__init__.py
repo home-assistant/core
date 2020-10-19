@@ -2,7 +2,6 @@
 from datetime import timedelta
 from itertools import groupby
 import json
-import logging
 import re
 
 import sqlalchemy
@@ -106,8 +105,6 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -755,7 +752,6 @@ class LazyEventPartialState:
     def time_fired_isoformat(self):
         """Time event was fired in utc isoformat."""
         if not self._time_fired_isoformat:
-            _LOGGER.warning("TIME: %s", self._row.time_fired)
             self._time_fired_isoformat = process_timestamp_to_utc_isoformat(
                 self._row.time_fired or dt_util.utcnow()
             )
