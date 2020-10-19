@@ -176,6 +176,9 @@ async-upnp-client==0.14.13
 # homeassistant.components.stream
 av==8.0.2
 
+# homeassistant.components.avea
+# avea==1.4
+
 # homeassistant.components.avri
 avri-api==0.1.7
 
