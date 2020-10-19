@@ -14,13 +14,6 @@ CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"
 TITLE = "OpenZWave"
 
-ADDON_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USB_PATH): str,
-        vol.Optional(CONF_NETWORK_KEY, default=""): str,
-    }
-)
-
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=False): bool})
 
 
@@ -83,32 +76,24 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if await self._async_is_addon_installed():
             return await self.async_step_start_addon()
 
-        return await self.async_step_install_addon()
+        return await self._async_install_addon()
 
-    async def async_step_install_addon(self, user_input=None):
-        """Ask user for add-on config and install add-on."""
-        if user_input is not None:
-            self.network_key = user_input[CONF_NETWORK_KEY]
-            self.usb_path = user_input[CONF_USB_PATH]
+    async def _async_install_addon(self):
+        """Install add-on."""
+        await self.hass.components.hassio.async_install_addon("core_zwave")
+        self.integration_created_addon = True
 
-            await self.hass.components.hassio.async_install_addon("core_zwave")
-            self.integration_created_addon = True
-
-            return await self.async_step_start_addon()
-
-        return self.async_show_form(
-            step_id="install_addon", data_schema=ADDON_CONFIG_SCHEMA
-        )
+        return await self.async_step_start_addon()
 
     async def async_step_start_addon(self, user_input=None):
         """Ask for missing config and start add-on."""
-        if self.usb_path is None or self.network_key is None:
+        if self.addon_config is None:
             self.addon_config = await self._async_get_addon_config()
 
-            self.usb_path = self.usb_path or self.addon_config.get(CONF_ADDON_DEVICE)
-            self.network_key = self.network_key or self.addon_config.get(
-                CONF_ADDON_NETWORK_KEY
-            )
+        self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE)
+        self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY)
+
+        if self.usb_path is None or self.network_key is None:
             data_schema = vol.Schema({})
 
             if not self.usb_path:

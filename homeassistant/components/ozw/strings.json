@@ -6,10 +6,6 @@
         "description": "Select how to connect to the OpenZWave controller MQTT broker",
         "data": {"use_addon": "Do you want to use the OpenZWave Supervisor add-on?"}
       },
-      "install_addon": {
-        "title": "Enter the OpenZWave add-on config",
-        "data": {"usb_path": "[%key:common::config_flow::data::usb_path%]", "network_key": "Network Key"}
-      },
       "start_addon": {
         "title": "Enter the OpenZWave add-on config",
         "data": {"usb_path": "[%key:common::config_flow::data::usb_path%]", "network_key": "Network Key"}
