@@ -13,9 +13,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_USERNAME): vol.All(str, vol.Email),
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(VIN): str,
+        vol.Required(VIN): vol.All(str, vol.Length(min=17, max=17)),
     }
 )
 
