@@ -14,7 +14,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 TEST_HOST = "test"
-TEST_PORT = const.DEFAULT_PORT_JSON
+TEST_PORT = const.DEFAULT_PORT_JSON + 1
+TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
 TEST_SERVER_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
 TEST_PRIORITY = 180

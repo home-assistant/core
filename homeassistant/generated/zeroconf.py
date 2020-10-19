@@ -80,11 +80,6 @@ ZEROCONF = {
             "name": "shelly*"
         }
     ],
-    "_hyperiond-json._tcp.local.": [
-        {
-            "domain": "hyperion"
-        }
-    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"

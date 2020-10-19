@@ -9,7 +9,9 @@
   "requirements": [
     "hyperion-py==0.3.0"
   ],
-  "zeroconf": [
-    "_hyperiond-json._tcp.local."
+  "ssdp": [
+    {
+      "manufacturer": "Hyperion Open Source Ambient Lighting"
+    }
   ]
 }

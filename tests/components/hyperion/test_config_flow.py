@@ -15,7 +15,7 @@ from homeassistant.components.hyperion.const import (
     SOURCE_IMPORT,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -32,6 +32,7 @@ from . import (
     TEST_HYPERION_URL,
     TEST_INSTANCE,
     TEST_PORT,
+    TEST_PORT_UI,
     TEST_SERVER_ID,
     TEST_TOKEN,
     add_test_config_entry,
@@ -81,6 +82,40 @@ TEST_ZEROCONF_SERVICE_INFO = {
         "id": TEST_SERVER_ID,
         "version": "2.0.0-alpha.8",
     },
+}
+
+TEST_SSDP_SERVICE_INFO = {
+    "ssdp_location": f"http://{TEST_HOST}:{TEST_PORT_UI}/description.xml",
+    "ssdp_st": "upnp:rootdevice",
+    "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+    "friendlyName": f"Hyperion ({TEST_HOST})",
+    "manufacturer": "Hyperion Open Source Ambient Lighting",
+    "manufacturerURL": "https://www.hyperion-project.org",
+    "modelDescription": "Hyperion Open Source Ambient Light",
+    "modelName": "Hyperion",
+    "modelNumber": "2.0.0-alpha.8",
+    "modelURL": "https://www.hyperion-project.org",
+    "serialNumber": f"{TEST_SERVER_ID}",
+    "UDN": f"uuid:{TEST_SERVER_ID}",
+    "ports": {
+        "jsonServer": f"{TEST_PORT}",
+        "sslServer": "8092",
+        "protoBuffer": "19445",
+        "flatBuffer": "19400",
+    },
+    "presentationURL": "index.html",
+    "iconList": {
+        "icon": {
+            "mimetype": "image/png",
+            "height": "100",
+            "width": "100",
+            "depth": "32",
+            "url": "img/hyperion/ssdp_icon.png",
+        }
+    },
+    "ssdp_usn": f"uuid:{TEST_SERVER_ID}",
+    "ssdp_ext": "",
+    "ssdp_server": "Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8",
 }
 
 
@@ -406,6 +441,45 @@ async def test_zeroconf_fail_no_id(hass):
 
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _init_flow(hass, source=SOURCE_ZEROCONF, data=bad_data)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_id"
+
+
+async def test_ssdp_success(hass):
+    """Check an SSDP flow."""
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO)
+        await hass.async_block_till_done()
+
+    # Accept the confirmation.
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["handler"] == DOMAIN
+    assert result["title"] == TEST_SERVER_ID
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
+
+
+async def test_ssdp_fail_no_id(hass):
+    """Check an SSDP flow where no id is provided."""
+
+    client = create_mock_client()
+    bad_data = {
+        key: TEST_SSDP_SERVICE_INFO[key]
+        for key in TEST_SSDP_SERVICE_INFO
+        if key != "serialNumber"
+    }
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

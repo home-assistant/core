@@ -3,11 +3,13 @@
 import asyncio
 import logging
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -34,9 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
 #     +-----------------------+
-#     |Step: Zeroconf         |
+#     |Step: Zeroconf / SSDP  |
 # --->|                       |
-#     |Input: <zeroconf data> |
+#     |Input: <discovery data>|
 #     +-----------------------+
 #           |
 #           |
@@ -82,6 +84,14 @@ _LOGGER.setLevel(logging.DEBUG)
 #     |    Create!     |
 #     +----------------+
 
+# A note on discovery: Hyperion supports both Zeroconf and SSDP out of the box. This
+# config flow needs two port numbers from the Hyperion instance, the JSON port (for the
+# API) and the UI port (for the user to approve dynamically created auth tokens). With
+# Zeroconf the port numbers for both are in different Zeroconf entries, and as Home
+# Assistant only passes a single entry into the config flow, we can only conveniently
+# 'see' one port or the other (which means we need to guess one port number). With SSDP,
+# we get the combined block including both port numbers, so SSDP is favored.
+
 
 class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hyperion config flow."""
@@ -96,6 +106,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._request_token_task = None
         self._auth_id = None
         self._auto_confirm = False
+        self._port_ui = const.DEFAULT_PORT_UI
 
     async def _create_client(
         self, raw_connection=False
@@ -114,6 +125,68 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by a YAML config import."""
         self._auto_confirm = True
         return await self.async_step_user(user_input=import_data)
+
+    async def async_step_ssdp(
+        self, discovery_info: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
+        """Handle a flow initiated by SSDP."""
+        # Sample data provided by SSDP: {
+        #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
+        #   'ssdp_st': 'upnp:rootdevice',
+        #   'deviceType': 'urn:schemas-upnp-org:device:Basic:1',
+        #   'friendlyName': 'Hyperion (192.168.0.1)',
+        #   'manufacturer': 'Hyperion Open Source Ambient Lighting',
+        #   'manufacturerURL': 'https://www.hyperion-project.org',
+        #   'modelDescription': 'Hyperion Open Source Ambient Light',
+        #   'modelName': 'Hyperion',
+        #   'modelNumber': '2.0.0-alpha.8',
+        #   'modelURL': 'https://www.hyperion-project.org',
+        #   'serialNumber': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #   'UDN': 'uuid:f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #   'ports': {
+        #       'jsonServer': '19444',
+        #       'sslServer': '8092',
+        #       'protoBuffer': '19445',
+        #       'flatBuffer': '19400'
+        #   },
+        #   'presentationURL': 'index.html',
+        #   'iconList': {
+        #       'icon': {
+        #           'mimetype': 'image/png',
+        #           'height': '100',
+        #           'width': '100',
+        #           'depth': '32',
+        #           'url': 'img/hyperion/ssdp_icon.png'
+        #       }
+        #   },
+        #   'ssdp_usn': 'uuid:f9aab089-f85a-55cf-b7c1-222a72faebe9',
+        #   'ssdp_ext': '',
+        #   'ssdp_server': 'Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8'}
+        data = {}
+
+        data[CONF_HOST] = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
+
+        try:
+            data[CONF_PORT] = int(
+                discovery_info.get("ports", {}).get(
+                    "jsonServer", const.DEFAULT_PORT_JSON
+                )
+            )
+        except ValueError:
+            data[CONF_PORT] = const.DEFAULT_PORT_JSON
+
+        hyperion_id = discovery_info.get(ATTR_UPNP_SERIAL)
+        if hyperion_id:
+            # For discovery mechanisms, we set the unique_id as early as possible to
+            # avoid discovery popping up a duplicate on the screen. The unique_id is set
+            # authoritatively later in the flow by asking the server to confirm its id
+            # (which should theoretically be the same as specified here)
+            # await self.async_set_unique_id(hyperion_id)
+            self._abort_if_unique_id_configured()
+        else:
+            return self.async_abort(reason="no_id")
+        return await self.async_step_user(user_input=data)
 
     async def async_step_zeroconf(
         self, discovery_info: Optional[ConfigType] = None
@@ -139,20 +212,17 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # See related: https://github.com/home-assistant/core/issues/38537
         data[CONF_HOST] = discovery_info[CONF_HOST]
         data[CONF_PORT] = discovery_info[CONF_PORT]
+
         hyperion_id = discovery_info.get("properties", {}).get(CONF_ID)
         if hyperion_id:
-            # For Zeroconf, we set the unique_id as early as possible to avoid discovery
-            # popping up a duplicate on the screen. The unique_id is set authoritatively
-            # later in the flow by asking the server to confirm its id (which should
-            # theoretically be the same as specified here)
+            # For discovery mechanisms, we set the unique_id as early as possible to
+            # avoid discovery popping up a duplicate on the screen. The unique_id is set
+            # authoritatively later in the flow by asking the server to confirm its id
+            # (which should theoretically be the same as specified here)
             await self.async_set_unique_id(hyperion_id)
             self._abort_if_unique_id_configured()
         else:
             return self.async_abort(reason="no_id")
-
-        # data[const.KEY_NAME] = data[CONF_HOST].rsplit(".")[0]
-        # data[const.KEY_ID] = user_input["properties"]["id"]
-
         return await self.async_step_user(user_input=data)
 
     async def async_step_user(
@@ -218,7 +288,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # network sessions.  However, as it is only used for approving new
         # tokens, and as the user can just open it manually, the extra
         # complexity may not be worth it.
-        return f"http://{self._data[CONF_HOST]}:{const.DEFAULT_PORT_UI}"
+        return f"http://{self._data[CONF_HOST]}:{self._port_ui}"
 
     async def async_step_auth(
         self, user_input: Optional[ConfigType] = None
