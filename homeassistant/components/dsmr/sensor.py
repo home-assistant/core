@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -28,6 +29,7 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
+    DEFAULT_FORCE_UPDATE,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
@@ -49,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     }
 )
 
@@ -272,6 +275,11 @@ class DSMREntity(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._config[CONF_FORCE_UPDATE]
 
     @staticmethod
     def translate_tariff(value, dsmr_version):
