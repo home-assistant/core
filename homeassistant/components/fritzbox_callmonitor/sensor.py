@@ -136,13 +136,14 @@ class FritzBoxCallSensor(Entity):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
-        self._name = f"{phonebook.fph.modelname} Call Monitor {phonebook_name}"
         self._host = host
         self._phonebook = phonebook
         self._phonebook_name = phonebook_name
         self._phonebook_url = phonebook_url
         self._phonebook_id = phonebook_id
         self._prefixes = prefixes
+        self._model_name = phonebook.fph.modelname
+        self._name = f"{self._model_name} Call Monitor {self._phonebook_name}"
 
     def set_state(self, state):
         """Set the state."""
@@ -187,10 +188,10 @@ class FritzBoxCallSensor(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "name": self._phonebook.fph.modelname,
+            "name": self._model_name,
             "identifiers": {(DOMAIN, self._host, self._phonebook_id)},
             "manufacturer": MANUFACTURER,
-            "model": self._phonebook.fph.modelname,
+            "model": self._model_name,
             "sw_version": self._phonebook.fph.fc.system_version,
         }
 
