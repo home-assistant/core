@@ -1,5 +1,6 @@
 """Test fixtures for Tasmota component."""
 
+from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
 from homeassistant import config_entries
@@ -43,10 +44,17 @@ def disable_debounce():
         yield
 
 
+@pytest.fixture
+def status_sensor_disabled():
+    """Fixture to allow overriding MQTT config."""
+    return True
+
+
 @pytest.fixture(autouse=True)
-def disable_status_sensor():
+def disable_status_sensor(status_sensor_disabled):
     """Disable Tasmota status sensor."""
-    with patch("hatasmota.discovery.get_status_sensor_entities", return_value=[]):
+    wraps = None if status_sensor_disabled else get_status_sensor_entities
+    with patch("hatasmota.discovery.get_status_sensor_entities", wraps=wraps):
         yield
 
 
