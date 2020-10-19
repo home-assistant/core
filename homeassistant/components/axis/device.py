@@ -161,9 +161,7 @@ class AxisNetworkDevice:
     async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
         """Set up to use MQTT."""
         try:
-            status = await hass.async_add_executor_job(
-                self.api.vapix.mqtt.get_client_status
-            )
+            status = await self.api.vapix.mqtt.get_client_status()
         except Unauthorized:
             # This means the user has too low privileges
             status = {}
@@ -241,10 +239,12 @@ class AxisNetworkDevice:
     @callback
     def shutdown(self, event):
         """Stop the event stream."""
+        self.hass.loop.create_task(self.api.vapix.close())
         self.disconnect_from_stream()
 
     async def async_reset(self):
         """Reset this device to default state."""
+        self.hass.loop.create_task(self.api.vapix.close())
         self.disconnect_from_stream()
 
         unload_ok = all(
@@ -275,7 +275,7 @@ async def get_device(hass, host, port, username, password):
 
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(device.vapix.initialize)
+            await device.vapix.initialize()
 
         return device
 
