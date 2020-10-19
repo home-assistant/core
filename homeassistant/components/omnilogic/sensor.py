@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .const import COORDINATOR, DOMAIN, PUMP_TYPES, DEFAULT_PH_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,7 +175,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         unit_of_measurement = self._unit
 
         if self._unit_type == "Metric":
-            salt_return = round(salt_return / 1000, 2)
+            salt_return = round(int(salt_return) / 1000, 2)
             unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
 
         self._unit = unit_of_measurement
@@ -202,6 +202,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
 
         ph_state = self.coordinator.data[self._item_id][self._state_key]
+        ph_state = float(ph_state) + float(self.config_entry.options.get("ph_offset", DEFAULT_PH_OFFSET))
 
         if ph_state == 0:
             ph_state = None
@@ -279,7 +280,7 @@ SENSOR_TYPES = {
             "icon": "mdi:speedometer",
             "unit": PERCENTAGE,
             "guard_condition": [
-                {"Type": "FMT_SINGLE_SPEED"},
+                {"Filter-Type": "FMT_SINGLE_SPEED"},
             ],
         },
     ],
@@ -308,9 +309,6 @@ SENSOR_TYPES = {
                 {
                     "Shared-Type": "BOW_SHARED_EQUIPMENT",
                     "status": "0",
-                },
-                {
-                    "operatingMode": "2",
                 },
             ],
         },

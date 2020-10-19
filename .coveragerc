@@ -609,6 +609,7 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
+    homeassistant/components/omnilogic/binary_sensor.py
     homeassistant/components/onewire/const.py
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py

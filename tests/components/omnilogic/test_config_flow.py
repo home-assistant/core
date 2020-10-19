@@ -140,8 +140,10 @@ async def test_option_flow(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"polling_interval": 9},
+        user_input={"ph_offset": 0.8},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"]["polling_interval"] == 9
+    assert result["data"]["ph_offset"] == 0.8
