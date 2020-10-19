@@ -1096,6 +1096,9 @@ xmltodict==0.12.0
 # homeassistant.components.yeelight
 yeelight==0.5.4
 
+# homeassistant.components.onvif
+zeep[async]==4.0.0
+
 # homeassistant.components.zeroconf
 zeroconf==0.28.6
 
