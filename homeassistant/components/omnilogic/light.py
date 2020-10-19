@@ -2,8 +2,10 @@
 import logging
 import time
 
-from omnilogic import LightEffect
+from omnilogic import LightEffect, OmniLogicException
+import voluptuous as vol
 
+from homeassistant.helpers import entity_platform
 from homeassistant import core
 from homeassistant.components.light import (
     ATTR_EFFECT, 
@@ -15,6 +17,8 @@ from homeassistant.components.light import (
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN
+
+SERVICE_SET_V2EFFECT = "set_v2_lights"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +66,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
+    # register service
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_V2EFFECT,
+        {
+            vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(min=0, max=4)),
+            vol.Optional("speed"): vol.All(vol.Coerce(int), vol.Range(min=0, max=8)),
+        },
+        "async_set_v2effect",
+    )
 
 class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     """Define an Omnilogic Water Heater entity."""
@@ -88,12 +103,19 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         self._wait_for_state_change = False
         if coordinator.data[item_id]["V2"] == "yes":
             self._version = 2
+            self._brightness = 4
+            self._speed = 4
         else:
             self._version = 1
 
     @property
     def is_on(self):
         """Return if the light is on."""
+
+        if self._version == 2:
+            self._attrs["brightness"] = self.coordinator.data[self._item_id]["brightness"]
+            self._attrs["speed"] = self.coordinator.data[self._item_id]["speed"]
+
         return int(self.coordinator.data[self._item_id][self._state_key])
 
     @property
@@ -101,11 +123,6 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         """Return the current light effect."""
         effect = LightEffect(self.coordinator.data[self._item_id]["currentShow"])
         return effect.name
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        
 
     @property
     def effect_list(self):
@@ -118,11 +135,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     @property
     def supported_features(self):
         """Return the list of supported features of the light."""
-        supports = SUPPORT_EFFECT
-        if self._version == 2:
-            supports = supports | SUPPORT_BRIGHTNESS
-
-        return supports
+        return SUPPORT_EFFECT
 
     async def async_set_effect(self, effect):
         """Set the light show effect."""
@@ -162,8 +175,32 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         )
 
         if success:
-            time.sleep(60)
+            time.sleep(60) 
             self.async_schedule_update_ha_state(True)
+
+    async def async_set_v2effect(self, **kwargs):
+        """Set the light effect speed or brightness for V2 lights."""
+
+        if self._version == 2:
+            speed = kwargs.get("speed", self._speed)
+            brightness = kwargs.get("brightness", self._brightness)
+            if 0 <= speed <= 8 and 0 <= brightness <= 4:
+                success = await self.coordinator.api.set_lightshowv2(
+                    int(self._item_id[1]),
+                    int(self._item_it[3]),
+                    int(self._item_id[-1]),
+                    int(self.coordinator.data[self._item_id]["currentShow"]),
+                    speed,
+                    brightness,
+                )
+
+                if success:
+                    time.sleep(30)
+                    self.async_schedule_update_ha_state(True)
+            else:
+                raise OmniLogicException("Speed must be 0-8 and brightness 0-4.")
+        else:
+            raise OmniLogicException("Cannot set effect speed or brightness on version 1 lights.")
 
 
 
