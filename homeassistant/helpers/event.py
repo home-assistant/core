@@ -1434,7 +1434,7 @@ def _entities_domains_from_render_infos(
     render_infos: Iterable[RenderInfo],
 ) -> Tuple[Set, Set]:
     """Combine from multiple RenderInfo."""
-    entities: Set[set] = set()
+    entities: Set[str] = set()
     domains: Set[str] = set()
 
     for render_info in render_infos:
