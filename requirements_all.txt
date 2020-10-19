@@ -248,7 +248,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.50
+androidtv[async]==0.0.51
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1520,7 +1520,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.5
+pymyq==2.0.8
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
