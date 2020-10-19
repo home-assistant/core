@@ -80,23 +80,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZ_BOX_PHONEBOOK_OBJECT]
 
     phonebook_name = config_entry.title
-    prefixes = config_entry.options.get(CONF_PREFIXES)
-
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-
     phonebook_id = config_entry.data[CONF_PHONEBOOK]
+    prefixes = config_entry.options.get(CONF_PREFIXES)
     serial_number = config_entry.data[SERIAL_NUMBER]
 
+    name = f"{phonebook.fph.modelname} Call Monitor {phonebook_name}"
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
-        host=host,
-        phonebook=phonebook,
-        phonebook_name=phonebook_name,
-        prefixes=prefixes,
+        name=name,
         unique_id=unique_id,
+        phonebook=phonebook,
+        prefixes=prefixes,
     )
+
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
 
     monitor = FritzBoxCallMonitor(
         host=host,
@@ -118,17 +117,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FritzBoxCallSensor(Entity):
     """Implementation of a Fritz!Box call monitor."""
 
-    def __init__(self, host, phonebook, phonebook_name, prefixes, unique_id):
+    def __init__(self, name, unique_id, phonebook, prefixes):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
-        self._host = host
-        self._phonebook = phonebook
-        self._phonebook_name = phonebook_name
-        self._prefixes = prefixes
-        self._model_name = phonebook.fph.modelname
+        self._name = name
         self._unique_id = unique_id
-        self._name = f"{self._model_name} Call Monitor {self._phonebook_name}"
+        self._phonebook = phonebook
+        self._prefixes = prefixes
 
     def set_state(self, state):
         """Set the state."""
@@ -169,10 +165,10 @@ class FritzBoxCallSensor(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "name": self._model_name,
+            "name": self._phonebook.fph.modelname,
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": MANUFACTURER,
-            "model": self._model_name,
+            "model": self._phonebook.fph.modelname,
             "sw_version": self._phonebook.fph.fc.system_version,
         }
 
