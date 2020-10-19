@@ -235,7 +235,12 @@ class LogbookView(HomeAssistantView):
 
         def json_events():
             """Fetch events and generate JSON."""
-            return self.json(
+            import cProfile
+
+            pr = cProfile.Profile()
+            pr.enable()
+
+            result = self.json(
                 _get_events(
                     hass,
                     start_day,
@@ -246,6 +251,10 @@ class LogbookView(HomeAssistantView):
                     entity_matches_only,
                 )
             )
+            pr.disable()
+            pr.create_stats()
+            pr.dump_stats("logbookv2.cprof")
+            return result
 
         return await hass.async_add_executor_job(json_events)
 
