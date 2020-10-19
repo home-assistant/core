@@ -1,7 +1,5 @@
 """Support for the Omnilogic integration pool heaters."""
 
-import logging
-
 from homeassistant.components.water_heater import (
     STATE_OFF,
     STATE_ON,
@@ -13,8 +11,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 OPERATION_LIST = [STATE_ON, STATE_OFF]

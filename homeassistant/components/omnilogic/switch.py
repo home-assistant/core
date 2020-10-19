@@ -1,5 +1,4 @@
 """Platform for switch integration."""
-import logging
 import time
 
 from omnilogic import OmniLogicException
@@ -11,7 +10,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
 
-_LOGGER = logging.getLogger(__name__)
 SERVICE_SET_SPEED = "set_pump_speed"
 
 
