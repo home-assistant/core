@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -87,6 +87,11 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     def max_temp(self) -> float:
         """Return the maximum set temperature value."""
         return self._multi_level_switch_property.max
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the set temperature."""
+        return PRECISION_TENTHS
 
     @property
     def supported_features(self):
