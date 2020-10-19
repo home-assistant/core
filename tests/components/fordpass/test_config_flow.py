@@ -86,3 +86,26 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_exception(hass):
+    """Test we handle unknown exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.fordpass.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "vin": "WX123456789",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
