@@ -14,15 +14,13 @@ FRITZ_STATE_DISCONNECT = "DISCONNECT"
 ICON_PHONE = "mdi:phone"
 
 ATTR_PREFIXES = "prefixes"
-ATTR_PHONEBOOK_NAME = "phonebook_name"
-ATTR_PHONEBOOK_URL = "phonebook_url"
 
 FRITZ_ATTR_NAME = "name"
-FRITZ_ATTR_URL = "url"
 
 UNKOWN_NAME = "unknown"
 
 CONF_PHONEBOOK = "phonebook"
+CONF_PHONEBOOK_NAME = "phonebook_name"
 CONF_PREFIXES = "prefixes"
 
 DEFAULT_HOST = "169.254.1.1"  # IP valid for all Fritz!Box routers

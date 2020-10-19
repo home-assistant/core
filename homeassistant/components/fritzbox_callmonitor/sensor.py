@@ -28,8 +28,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTR_PHONEBOOK_NAME,
-    ATTR_PHONEBOOK_URL,
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
@@ -38,8 +36,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
-    FRITZ_ATTR_NAME,
-    FRITZ_ATTR_URL,
     FRITZ_BOX_PHONEBOOK_OBJECT,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
@@ -82,24 +78,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the fritzbox_callmonitor sensor from config_entry."""
     phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZ_BOX_PHONEBOOK_OBJECT]
 
+    phonebook_name = config_entry.title
     phonebook_id = config_entry.data[CONF_PHONEBOOK]
     prefixes = config_entry.options.get(CONF_PREFIXES)
 
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
 
-    phonebook_info = await hass.async_add_executor_job(
-        phonebook.fph.phonebook_info, phonebook_id
-    )
-
-    phonebook_name = phonebook_info.get(FRITZ_ATTR_NAME)
-    phonebook_url = phonebook_info.get(FRITZ_ATTR_URL)
-
     sensor = FritzBoxCallSensor(
         host=host,
         phonebook=phonebook,
         phonebook_name=phonebook_name,
-        phonebook_url=phonebook_url,
         phonebook_id=phonebook_id,
         prefixes=prefixes,
     )
@@ -129,7 +118,6 @@ class FritzBoxCallSensor(Entity):
         host,
         phonebook,
         phonebook_name,
-        phonebook_url,
         phonebook_id,
         prefixes,
     ):
@@ -139,7 +127,6 @@ class FritzBoxCallSensor(Entity):
         self._host = host
         self._phonebook = phonebook
         self._phonebook_name = phonebook_name
-        self._phonebook_url = phonebook_url
         self._phonebook_id = phonebook_id
         self._prefixes = prefixes
         self._model_name = phonebook.fph.modelname
@@ -178,10 +165,6 @@ class FritzBoxCallSensor(Entity):
         """Return the state attributes."""
         if self._prefixes:
             self._attributes[ATTR_PREFIXES] = self._prefixes
-        if self._phonebook_name:
-            self._attributes[ATTR_PHONEBOOK_NAME] = self._phonebook_name
-        if self._phonebook_url:
-            self._attributes[ATTR_PHONEBOOK_URL] = self._phonebook_url
         return self._attributes
 
     @property
