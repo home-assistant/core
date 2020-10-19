@@ -937,7 +937,7 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _rate_limit_render_info(self._info[template])
+                        _suppress_domain_all_in_render_info(self._info[template])
                         if self._rate_limit.async_has_timer(template)
                         else self._info[template]
                         for template in self._info
@@ -1434,8 +1434,8 @@ def _entities_domains_from_render_infos(
     render_infos: Iterable[RenderInfo],
 ) -> Tuple[Set, Set]:
     """Combine from multiple RenderInfo."""
-    entities = set()
-    domains = set()
+    entities: Set[set] = set()
+    domains: Set[str] = set()
 
     for render_info in render_infos:
         if render_info.entities:
@@ -1509,7 +1509,7 @@ def _rate_limit_for_event(
     return rate_limit
 
 
-def _rate_limit_render_info(render_info: RenderInfo) -> RenderInfo:
+def _suppress_domain_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
     """Remove the domains and all_states from render info during a ratelimit."""
     rate_limited_render_info = copy.copy(render_info)
     rate_limited_render_info.all_states = False
