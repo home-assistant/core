@@ -4,11 +4,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
+from .const import CONF_INTEGRATION_CREATED_ADDON
 from .const import DOMAIN  # pylint:disable=unused-import
 
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_NETWORK_KEY = "network_key"
-CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_NETWORK_KEY = "network_key"
 CONF_USB_PATH = "usb_path"
 CONF_USE_ADDON = "use_addon"

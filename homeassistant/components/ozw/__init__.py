@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const
 from .const import (
+    CONF_INTEGRATION_CREATED_ADDON,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
@@ -261,6 +262,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     for unsubscribe_listener in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
         unsubscribe_listener()
     hass.data[DOMAIN].pop(entry.entry_id)
+
+    if entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
+        await hass.components.hassio.async_stop_addon(hass, "core_zwave")
+        await hass.components.hassio.async_uninstall_addon(hass, "core_zwave")
 
     return True
 
