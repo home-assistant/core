@@ -37,11 +37,18 @@ async def async_attach_trigger(hass, config, action, automation_info):
     job = HassJob(action)
 
     @callback
-    def time_automation_listener(description, now):
+    def time_automation_listener(description, now, *, entity_id=None):
         """Listen for time changes and calls action."""
         hass.async_run_hass_job(
             job,
-            {"trigger": {"platform": "time", "now": now, "description": description}},
+            {
+                "trigger": {
+                    "platform": "time",
+                    "now": now,
+                    "description": description,
+                    "entity_id": entity_id,
+                }
+            },
         )
 
     @callback
@@ -84,14 +91,22 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 if trigger_dt >= dt_util.now():
                     remove = async_track_point_in_time(
                         hass,
-                        partial(time_automation_listener, f"time set in {entity_id}"),
+                        partial(
+                            time_automation_listener,
+                            f"time set in {entity_id}",
+                            entity_id=entity_id,
+                        ),
                         trigger_dt,
                     )
             elif has_time:
                 # Else if it has time, then track time change.
                 remove = async_track_time_change(
                     hass,
-                    partial(time_automation_listener, f"time set in {entity_id}"),
+                    partial(
+                        time_automation_listener,
+                        f"time set in {entity_id}",
+                        entity_id=entity_id,
+                    ),
                     hour=hour,
                     minute=minute,
                     second=second,
