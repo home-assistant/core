@@ -5,6 +5,7 @@ import logging
 
 from omnilogic import OmniLogicException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -32,10 +33,12 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         api: str,
         name: str,
+        config_entry: ConfigEntry,
         polling_interval: int,
     ):
         """Initialize the global Omnilogic data updater."""
         self.api = api
+        self.config_entry = config_entry
 
         super().__init__(
             hass=hass,
@@ -103,9 +106,13 @@ class OmniLogicEntity(CoordinatorEntity):
 
         if bow_id is not None:
             unique_id = f"{unique_id}_{coordinator.data[bow_id]['systemId']}"
-            entity_friendly_name = (
-                f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
-            )
+
+            if kind != "Heaters":
+                entity_friendly_name = (
+                    f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
+                )
+            else:
+                entity_friendly_name = f"{entity_friendly_name}{coordinator.data[bow_id]['Operation']['VirtualHeater']['Name']} "
 
         unique_id = f"{unique_id}_{coordinator.data[item_id]['systemId']}_{kind}"
 
