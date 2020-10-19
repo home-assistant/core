@@ -196,7 +196,7 @@ root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
 
-def vapix_request(self, session, url, **kwargs):
+async def vapix_request(self, session, url, **kwargs):
     """Return data based on url."""
     if API_DISCOVERY_URL in url:
         return API_DISCOVERY_RESPONSE
