@@ -73,7 +73,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-DEFAULT_RATE_LIMIT = timedelta(minutes=1)
+ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
+DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 
 @bind_hass
@@ -240,12 +241,11 @@ class RenderInfo:
     def _freeze(self) -> None:
         self._freeze_sets()
 
-        if self.rate_limit is None and (
-            self.domains or self.domains_lifecycle or self.all_states or self.exception
-        ):
-            # If the template accesses all states or an entire
-            # domain, and no rate limit is set, we use the default.
-            self.rate_limit = DEFAULT_RATE_LIMIT
+        if self.rate_limit is None:
+            if self.all_states or self.exception:
+                self.rate_limit = ALL_STATES_RATE_LIMIT
+            elif self.domains or self.domains_lifecycle:
+                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
 
         if self.exception:
             return
