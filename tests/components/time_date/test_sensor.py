@@ -1,8 +1,19 @@
 """The tests for time_date sensor platform."""
+import pytest
+
 import homeassistant.components.time_date.sensor as time_date
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
+
+ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
+
+
+@pytest.fixture(autouse=True)
+def restore_ts():
+    """Restore default TZ."""
+    yield
+    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 # pylint: disable=protected-access
