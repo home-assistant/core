@@ -1,7 +1,12 @@
 """The fritzbox_callmonitor integration."""
 from asyncio import gather
+import logging
+
+from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .base import FritzBoxPhonebook
 from .const import (
@@ -12,6 +17,8 @@ from .const import (
     PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -28,7 +35,16 @@ async def async_setup_entry(hass, entry):
         phonebook_id=entry.data[CONF_PHONEBOOK],
         prefixes=entry.options.get(CONF_PREFIXES),
     )
-    await hass.async_add_executor_job(phonebook.init_phonebook)
+
+    try:
+        await hass.async_add_executor_job(phonebook.init_phonebook)
+    except (
+        RequestsConnectionError,
+        FritzSecurityError,
+        FritzConnectionException,
+    ) as ex:
+        _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
+        raise ConfigEntryNotReady from ex
 
     undo_listener = entry.add_update_listener(update_listener)
 
