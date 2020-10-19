@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This vehicle is already configured"
+        },
+        "error": {
+            "cannot_connect": "Could not connect to FordPass",
+            "invalid_auth": "Authentication failed to FordPass",
+            "unknown": "An unknown error occured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "FordPass Password",
+                    "username": "FordPass Username (Email)",
+                    "vin": "VIN"
+                }
+            }
+        }
+    },
+    "title": "FordPass"
+}

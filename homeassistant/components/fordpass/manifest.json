@@ -1,0 +1,13 @@
+{
+  "domain": "fordpass",
+  "name": "FordPass",
+  "config_flow": true,
+  "documentation": "https://github.com/clarkd/fordpass-homeassistant",
+  "issue_tracker": "https://github.com/clarkd/fordpass-homeassistant/issues",
+  "requirements": ["fordpass==0.0.4", "dotted==0.1.8"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@clarkd"]
+}

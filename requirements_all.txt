@@ -501,6 +501,9 @@ dlipower==0.7.165
 # homeassistant.components.doorbird
 doorbirdpy==2.1.0
 
+# homeassistant.components.fordpass
+dotted==0.1.8
+
 # homeassistant.components.dovado
 dovado==0.4.1
 
@@ -606,6 +609,9 @@ fnvhash==0.1.0
 
 # homeassistant.components.foobot
 foobot_async==0.3.2
+
+# homeassistant.components.fordpass
+fordpass==0.0.4
 
 # homeassistant.components.fortios
 fortiosapi==0.10.8

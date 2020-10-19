@@ -286,6 +286,9 @@ omit =
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
+    homeassistant/components/fordpass/__init__.py
+    homeassistant/components/fordpass/const.py
+    homeassistant/components/fordpass/lock.py
     homeassistant/components/fortios/device_tracker.py
     homeassistant/components/foscam/camera.py
     homeassistant/components/foscam/const.py

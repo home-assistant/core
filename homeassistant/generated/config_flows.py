@@ -59,6 +59,7 @@ FLOWS = [
     "flo",
     "flume",
     "flunearyou",
+    "fordpass",
     "forked_daapd",
     "freebox",
     "fritzbox",
