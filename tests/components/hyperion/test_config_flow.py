@@ -15,11 +15,10 @@ from homeassistant.components.hyperion.const import (
     SOURCE_IMPORT,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
     SERVICE_TURN_ON,
@@ -70,18 +69,6 @@ TEST_REQUEST_TOKEN_FAIL = {
     "command": "authorize-requestToken",
     "success": False,
     "error": "Token request timeout or denied",
-}
-
-TEST_ZEROCONF_SERVICE_INFO = {
-    CONF_HOST: TEST_IP_ADDRESS,
-    "hostname": TEST_HOST,
-    CONF_PORT: TEST_PORT,
-    "type": "_hyperiond-json._tcp.local.",
-    CONF_NAME: "hyperion:19444._hyperiond-json._tcp.local.",
-    "properties": {
-        "id": TEST_SERVER_ID,
-        "version": "2.0.0-alpha.8",
-    },
 }
 
 TEST_SSDP_SERVICE_INFO = {
@@ -404,47 +391,6 @@ async def test_auth_create_token_success(hass):
             **TEST_HOST_PORT,
             CONF_TOKEN: TEST_TOKEN,
         }
-
-
-async def test_zeroconf_success(hass):
-    """Check a zeroconf flow."""
-
-    client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _init_flow(
-            hass, source=SOURCE_ZEROCONF, data=TEST_ZEROCONF_SERVICE_INFO
-        )
-        await hass.async_block_till_done()
-
-    # Accept the confirmation.
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_SERVER_ID
-    assert result["data"] == {
-        CONF_HOST: TEST_IP_ADDRESS,
-        CONF_PORT: TEST_PORT,
-    }
-
-
-async def test_zeroconf_fail_no_id(hass):
-    """Check a zeroconf flow where no id is provided."""
-
-    client = create_mock_client()
-    bad_data = {
-        key: TEST_ZEROCONF_SERVICE_INFO[key]
-        for key in TEST_ZEROCONF_SERVICE_INFO
-        if key != "properties"
-    }
-
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _init_flow(hass, source=SOURCE_ZEROCONF, data=bad_data)
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "no_id"
 
 
 async def test_ssdp_success(hass):

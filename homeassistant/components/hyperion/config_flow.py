@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
 #     +-----------------------+
-#     |Step: Zeroconf / SSDP  |
+#     |Step: SSDP             |
 # --->|                       |
 #     |Input: <discovery data>|
 #     +-----------------------+
@@ -84,13 +84,14 @@ _LOGGER.setLevel(logging.DEBUG)
 #     |    Create!     |
 #     +----------------+
 
-# A note on discovery: Hyperion supports both Zeroconf and SSDP out of the box. This
-# config flow needs two port numbers from the Hyperion instance, the JSON port (for the
-# API) and the UI port (for the user to approve dynamically created auth tokens). With
-# Zeroconf the port numbers for both are in different Zeroconf entries, and as Home
-# Assistant only passes a single entry into the config flow, we can only conveniently
-# 'see' one port or the other (which means we need to guess one port number). With SSDP,
-# we get the combined block including both port numbers, so SSDP is favored.
+# A note on choice of discovery mechanisms: Hyperion supports both Zeroconf and SSDP out
+# of the box. This config flow needs two port numbers from the Hyperion instance, the
+# JSON port (for the API) and the UI port (for the user to approve dynamically created
+# auth tokens). With Zeroconf the port numbers for both are in different Zeroconf
+# entries, and as Home Assistant only passes a single entry into the config flow, we can
+# only conveniently 'see' one port or the other (which means we need to guess one port
+# number). With SSDP, we get the combined block including both port numbers, so SSDP is
+# the favored discovery implementation.
 
 
 class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -188,43 +189,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_id")
         return await self.async_step_user(user_input=data)
 
-    async def async_step_zeroconf(
-        self, discovery_info: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by zeroconf."""
-
-        # Sample data provided by Zeroconf: {
-        #   'host': '192.168.0.1',
-        #   'port': 19444,
-        #   'hostname': 'hyperion.local.',
-        #   'type': '_hyperiond-json._tcp.local.',
-        #   'name': 'hyperion:19444._hyperiond-json._tcp.local.',
-        #   'properties': {
-        #     '_raw': {
-        #       'id': b'f9aab089-f85a-55cf-b7c1-222a72faebe9',
-        #       'version': b'2.0.0-alpha.8'},
-        #     'id': 'f9aab089-f85a-55cf-b7c1-222a72faebe9',
-        #     'version': '2.0.0-alpha.8'}}
-        data = {}
-
-        # Intentionally uses the IP address field, as ".local" cannot
-        # be resolved by Home Assistant Core in Docker.
-        # See related: https://github.com/home-assistant/core/issues/38537
-        data[CONF_HOST] = discovery_info[CONF_HOST]
-        data[CONF_PORT] = discovery_info[CONF_PORT]
-
-        hyperion_id = discovery_info.get("properties", {}).get(CONF_ID)
-        if hyperion_id:
-            # For discovery mechanisms, we set the unique_id as early as possible to
-            # avoid discovery popping up a duplicate on the screen. The unique_id is set
-            # authoritatively later in the flow by asking the server to confirm its id
-            # (which should theoretically be the same as specified here)
-            await self.async_set_unique_id(hyperion_id)
-            self._abort_if_unique_id_configured()
-        else:
-            return self.async_abort(reason="no_id")
-        return await self.async_step_user(user_input=data)
-
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
@@ -281,13 +245,12 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_hyperion_url(self):
         """Return the URL of the Hyperion UI."""
-        # This is a guess at the web frontend URL for this client. We have no
-        # way of knowing that it is correct. Alternatives may be ask the user
-        # for the http port, to listen on zeroconf (we already have the JSON
-        # port, but not the http port), or to ask Hyperion via JSON for the
-        # network sessions.  However, as it is only used for approving new
-        # tokens, and as the user can just open it manually, the extra
-        # complexity may not be worth it.
+        # If this flow was kicked off by SSDP, this will be the correct frontend URL. If
+        # this is a manual flow instantiation, then it will be a best guess (as this
+        # flow does not have that information available to it). This is only used for
+        # approving new dynamically created tokens, so the complexity of asking the user
+        # manually for this information is likely not worth it (when it would only be
+        # used to open a URL, that the user already knows the address of).
         return f"http://{self._data[CONF_HOST]}:{self._port_ui}"
 
     async def async_step_auth(
