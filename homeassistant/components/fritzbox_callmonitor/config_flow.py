@@ -93,10 +93,10 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._phonebook.init_phonebook()
             self._phonebook_ids = self._phonebook.get_phonebook_ids()
 
-            fc = FritzConnection(
+            fritz_connection = FritzConnection(
                 address=self._host, user=self._username, password=self._password
             )
-            device_info = fc.call_action(
+            device_info = fritz_connection.call_action(
                 FRITZ_SERVICE_DEVICE_INFO, FRITZ_ACTION_GET_INFO
             )
             self._serial_number = device_info[FRITZ_ATTR_SERIAL_NUMBER]
