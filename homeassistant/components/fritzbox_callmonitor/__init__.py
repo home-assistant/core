@@ -29,7 +29,6 @@ async def async_setup_entry(hass, entry):
         prefixes=entry.options.get(CONF_PREFIXES),
     )
     await hass.async_add_executor_job(phonebook.init_phonebook)
-    await hass.async_add_executor_job(phonebook.update_phonebook)
 
     undo_listener = entry.add_update_listener(update_listener)
 

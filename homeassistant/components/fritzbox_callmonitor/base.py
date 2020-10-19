@@ -32,10 +32,14 @@ class FritzBoxPhonebook:
             user=self.username,
             password=self.password,
         )
+        self.update_phonebook()
 
     @Throttle(MIN_TIME_PHONEBOOK_UPDATE)
     def update_phonebook(self):
         """Update the phone book dictionary."""
+        if not self.phonebook_id:
+            return
+
         self.phonebook_dict = self.fph.get_all_names(self.phonebook_id)
         self.number_dict = {
             re.sub(r"[^\d\+]", "", nr): name
