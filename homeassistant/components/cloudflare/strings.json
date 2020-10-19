@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Connect to Cloudflare",
-        "description": "This integration requires an API Token created with the Edit zone DNS template.",
+        "description": "This integration requires an API Token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
