@@ -101,13 +101,13 @@ class FordPassDataUpdateCoordinator(DataUpdateCoordinator):
 
                 # If data has now been fetched but was previously unavailable, log and reset
                 if not self._available:
-                    _LOGGER.info(f"Restored connection to FordPass for {self.vin}")
+                    _LOGGER.info("Restored connection to FordPass for %s", self.vin)
                     self._available = True
 
                 return DottedDict(data)
         except Exception as ex:
             self._available = False  # Mark as unavailable
-            _LOGGER.warning(f"Error communicating with FordPass for {self.vin}")
+            _LOGGER.warning("Error communicating with FordPass for %s", self.vin)
             raise UpdateFailed(
                 f"Error communicating with FordPass for {self.vin}"
             ) from ex
