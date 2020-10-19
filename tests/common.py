@@ -973,6 +973,14 @@ def mock_integration(hass, module):
         hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
 
+    def mock_import_platform(platform_name):
+        raise ImportError(
+            "Mocked unable to import platform",
+            name=f"{integration.pkg_path}.{platform_name}",
+        )
+
+    integration._import_platform = mock_import_platform
+
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration
     hass.data.setdefault(loader.DATA_COMPONENTS, {})[module.DOMAIN] = module
