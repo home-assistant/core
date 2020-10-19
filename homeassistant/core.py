@@ -171,6 +171,9 @@ class HassJob:
 
     def __init__(self, target: Callable):
         """Create a job object."""
+        if asyncio.iscoroutine(target):
+            raise ValueError("Coroutine not allowed to be passed to HassJob")
+
         self.target = target
         self.job_type = _get_callable_job_type(target)
 
@@ -186,8 +189,6 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutine(check_target):
-        return HassJobType.Coroutine
     if asyncio.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
@@ -352,6 +353,9 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
+        if asyncio.iscoroutine(target):
+            return self.async_create_task(cast(Coroutine, target))
+
         return self.async_add_hass_job(HassJob(target), *args)
 
     @callback
@@ -445,6 +449,10 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if asyncio.iscoroutine(target):
+            self.async_create_task(cast(Coroutine, target))
+            return
+
         self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:

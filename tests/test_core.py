@@ -1522,3 +1522,18 @@ async def test_async_entity_ids_count(hass):
 
     assert hass.states.async_entity_ids_count() == 5
     assert hass.states.async_entity_ids_count("light") == 3
+
+
+async def test_hassjob_forbid_coroutine():
+    """Test hassjob forbids coroutines."""
+
+    async def bla():
+        pass
+
+    coro = bla()
+
+    with pytest.raises(ValueError):
+        ha.HassJob(coro)
+
+    # To avoid warning about unawaited coro
+    await coro
