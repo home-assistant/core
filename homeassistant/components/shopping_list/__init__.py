@@ -203,7 +203,7 @@ class ShoppingData:
                 )
             new_items.append(all_items_mapping[key])
         self.items = new_items
-        self.hass.async_add_job(self.save)
+        self.hass.async_add_executor_job(self.save)
 
     async def async_load(self):
         """Load items."""
