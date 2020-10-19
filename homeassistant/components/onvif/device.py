@@ -379,7 +379,9 @@ class ONVIFDevice:
                 await asyncio.sleep(continuous_duration)
                 req = ptz_service.create_type("Stop")
                 req.ProfileToken = profile.token
-                await ptz_service.Stop({"ProfileToken": req.ProfileToken, 'PanTilt': True, 'Zoom': False})
+                await ptz_service.Stop(
+                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
+                )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz.relative:
