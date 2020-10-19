@@ -15,8 +15,8 @@ set_v2_lights:
       description: Target light entity
       example: switch.pool_lights
     speed:
-      description: Speed for the light effect (0-8).
+      description: Speed for the light effect (0-8) (Optional).
       example: 4
     brightness:
-      description: Brightness for the light effect (0-4).
+      description: Brightness for the light effect (0-4) (Optional).
       example: 4
