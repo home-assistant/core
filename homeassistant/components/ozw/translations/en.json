@@ -2,12 +2,29 @@
     "config": {
         "abort": {
             "mqtt_required": "The MQTT integration is not set up",
-            "one_instance_allowed": "The integration only supports one Z-Wave instance",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "user": {
-                "title": "Confirm set up"
+            "install_addon": {
+                "data": {
+                    "network_key": "Network Key",
+                    "usb_path": "USB Device Path"
+                },
+                "title": "Enter the OpenZWave add-on config"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Do you want to use the OpenZWave Supervisor add-on?"
+                },
+                "description": "Select how to connect to the OpenZWave controller MQTT broker",
+                "title": "Select connection method"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Network Key",
+                    "usb_path": "USB Device Path"
+                },
+                "title": "Enter the OpenZWave add-on config"
             }
         }
     }
