@@ -1,11 +1,17 @@
 """Config flow for ozw integration."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_INTEGRATION_CREATED_ADDON
 from .const import DOMAIN  # pylint:disable=unused-import
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_ADDON_DEVICE = "device"
 CONF_ADDON_NETWORK_KEY = "network_key"
@@ -80,7 +86,11 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_install_addon(self):
         """Install add-on."""
-        await self.hass.components.hassio.async_install_addon("core_zwave")
+        try:
+            await self.hass.components.hassio.async_install_addon("core_zwave")
+        except HassioAPIError as err:
+            _LOGGER.error("Failed to install OpenZWave add-on: %s", err)
+            return self.async_abort(reason="addon_install_failed")
         self.integration_created_addon = True
 
         return await self.async_step_start_addon()
@@ -115,16 +125,25 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if new_addon_config != self.addon_config:
             await self._async_set_addon_config(new_addon_config)
-        await self.hass.components.hassio.async_start_addon("core_zwave")
+
+        try:
+            await self.hass.components.hassio.async_start_addon("core_zwave")
+        except HassioAPIError as err:
+            _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
+            return self.async_abort(reason="addon_start_failed")
 
         return self._async_use_mqtt_integration()
 
     async def _async_get_addon_info(self):
         """Return and cache add-on info."""
         if self.addon_info is None:
-            self.addon_info = await self.hass.components.hassio.async_get_addon_info(
-                "core_zwave"
-            )
+            try:
+                self.addon_info = (
+                    await self.hass.components.hassio.async_get_addon_info("core_zwave")
+                )
+            except HassioAPIError as err:
+                _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
+                return self.async_abort(reason="addon_info_failed")
 
         return self.addon_info
 
@@ -146,4 +165,10 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_set_addon_config(self, config):
         """Set add-on config."""
         options = {"options": config}
-        await self.hass.components.hassio.async_set_addon_options("core_zwave", options)
+        try:
+            await self.hass.components.hassio.async_set_addon_options(
+                "core_zwave", options
+            )
+        except HassioAPIError as err:
+            _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
+            raise AbortFlow("addon_set_config_failed") from err
