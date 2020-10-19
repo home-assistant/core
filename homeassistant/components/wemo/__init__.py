@@ -6,6 +6,9 @@ import pywemo
 import requests
 import voluptuous as vol
 
+from socket import gethostbyname
+from ipaddress import ip_address
+
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
@@ -33,12 +36,23 @@ _LOGGER = logging.getLogger(__name__)
 def coerce_host_port(value):
     """Validate that provided value is either just host or host:port.
 
+    If a hostname is provided, resolve it to an IP address before proceeding.
+
     Returns (host, None) or (host, port) respectively.
     """
     host, _, port = value.partition(":")
 
     if not host:
         raise vol.Invalid("host cannot be empty")
+
+    # Force hostnames into IP addresses for PyWemo compatibility
+    try:
+        ip_address(host)
+    except ValueError:
+        # This was not an IP; try to resolve it
+        ip = gethostbyname(host)
+        _LOGGER.debug('Found hostname for Wemo device {}; resolving to IP {}'.format(host, ip))
+        host = ip
 
     if port:
         port = cv.port(port)
