@@ -19,7 +19,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "not_supported": "Connected to AVM FRITZ!Box but could not find the specified phonebook."
+      "insufficient_permissions": "User has insufficient permissions to access Fritz!Box settings and its phonebook."
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"

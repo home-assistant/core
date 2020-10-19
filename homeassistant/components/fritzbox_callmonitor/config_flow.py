@@ -2,7 +2,8 @@
 
 from functools import partial
 
-from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection import FritzConnection
+from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
@@ -21,7 +22,11 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_ACTION_GET_INFO,
     FRITZ_ATTR_NAME,
+    FRITZ_ATTR_SERIAL_NUMBER,
+    FRITZ_SERVICE_DEVICE_INFO,
+    SERIAL_NUMBER,
 )
 
 DATA_SCHEMA_USER = vol.Schema(
@@ -34,8 +39,8 @@ DATA_SCHEMA_USER = vol.Schema(
 )
 
 RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
 RESULT_NO_DEVIES_FOUND = "no_devices_found"
-RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
 
@@ -57,6 +62,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._phonebook_ids = None
         self._phonebook = None
         self._prefixes = None
+        self._serial_number = None
 
     def _get_entry(self):
         """Create and return an entry."""
@@ -69,6 +75,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_PHONEBOOK: self._phonebook_id,
                 CONF_PREFIXES: self._prefixes,
+                SERIAL_NUMBER: self._serial_number,
             },
         )
 
@@ -85,11 +92,22 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self._phonebook.init_phonebook()
             self._phonebook_ids = self._phonebook.get_phonebook_ids()
+
+            fc = FritzConnection(
+                address=self._host, user=self._username, password=self._password
+            )
+            device_info = fc.call_action(
+                FRITZ_SERVICE_DEVICE_INFO, FRITZ_ACTION_GET_INFO
+            )
+            self._serial_number = device_info[FRITZ_ATTR_SERIAL_NUMBER]
+
             return RESULT_SUCCESS
-        except FritzConnectionException:
-            return RESULT_INVALID_AUTH
         except RequestsConnectionError:
             return RESULT_NO_DEVIES_FOUND
+        except FritzSecurityError:
+            return RESULT_INSUFFICIENT_PERMISSIONS
+        except FritzConnectionException:
+            return RESULT_INVALID_AUTH
 
     def _is_already_configured(self, host, phonebook_id):
         """Check if an entity with the same host and phonebook_id is already configured."""

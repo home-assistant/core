@@ -44,6 +44,7 @@ from .const import (
     ICON_PHONE,
     INTERVAL_RECONNECT,
     MANUFACTURER,
+    SERIAL_NUMBER,
     STATE_DIALING,
     STATE_IDLE,
     STATE_RINGING,
@@ -79,18 +80,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZ_BOX_PHONEBOOK_OBJECT]
 
     phonebook_name = config_entry.title
-    phonebook_id = config_entry.data[CONF_PHONEBOOK]
     prefixes = config_entry.options.get(CONF_PREFIXES)
 
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
 
+    phonebook_id = config_entry.data[CONF_PHONEBOOK]
+    serial_number = config_entry.data[SERIAL_NUMBER]
+
+    unique_id = f"{serial_number}-{phonebook_id}"
+
     sensor = FritzBoxCallSensor(
         host=host,
         phonebook=phonebook,
         phonebook_name=phonebook_name,
-        phonebook_id=phonebook_id,
         prefixes=prefixes,
+        unique_id=unique_id,
     )
 
     monitor = FritzBoxCallMonitor(
@@ -113,23 +118,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FritzBoxCallSensor(Entity):
     """Implementation of a Fritz!Box call monitor."""
 
-    def __init__(
-        self,
-        host,
-        phonebook,
-        phonebook_name,
-        phonebook_id,
-        prefixes,
-    ):
+    def __init__(self, host, phonebook, phonebook_name, prefixes, unique_id):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
         self._host = host
         self._phonebook = phonebook
         self._phonebook_name = phonebook_name
-        self._phonebook_id = phonebook_id
         self._prefixes = prefixes
         self._model_name = phonebook.fph.modelname
+        self._unique_id = unique_id
         self._name = f"{self._model_name} Call Monitor {self._phonebook_name}"
 
     def set_state(self, state):
@@ -172,7 +170,7 @@ class FritzBoxCallSensor(Entity):
         """Return device specific attributes."""
         return {
             "name": self._model_name,
-            "identifiers": {(DOMAIN, self._host, self._phonebook_id)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": MANUFACTURER,
             "model": self._model_name,
             "sw_version": self._phonebook.fph.fc.system_version,
@@ -181,7 +179,7 @@ class FritzBoxCallSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{self._host}-{self._phonebook_id}"
+        return self._unique_id
 
     def number_to_name(self, number):
         """Return a name for a given phone number."""

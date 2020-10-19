@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "This AVM FRITZ!Box call monitor is already configured.",
             "no_devices_found": "No supported AVM FRITZ!Box found on the network.",
-            "not_supported": "Connected to AVM FRITZ!Box but could not find the specified phonebook."
+            "insufficient_permissions": "User has insufficient permissions to access Fritz!Box settings and its phonebook."
         },
         "error": {
             "invalid_auth": "Username and/or password are incorrect."
