@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
+    DOMAIN as LIGHT_DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -30,33 +31,34 @@ SUPPORT_DEMO = (
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo light platform."""
-    async_add_entities(
-        [
-            DemoLight(
-                unique_id="light_1",
-                name="Bed Light",
-                state=False,
-                available=True,
-                effect_list=LIGHT_EFFECT_LIST,
-                effect=LIGHT_EFFECT_LIST[0],
-            ),
-            DemoLight(
-                unique_id="light_2",
-                name="Ceiling Lights",
-                state=True,
-                available=True,
-                ct=LIGHT_TEMPS[1],
-            ),
-            DemoLight(
-                unique_id="light_3",
-                name="Kitchen Lights",
-                state=True,
-                available=True,
-                hs_color=LIGHT_COLORS[1],
-                ct=LIGHT_TEMPS[0],
-            ),
-        ]
-    )
+    lights = [
+        DemoLight(
+            unique_id="light_1",
+            name="Bed Light",
+            state=False,
+            available=True,
+            effect_list=LIGHT_EFFECT_LIST,
+            effect=LIGHT_EFFECT_LIST[0],
+        ),
+        DemoLight(
+            unique_id="light_2",
+            name="Ceiling Lights",
+            state=True,
+            available=True,
+            ct=LIGHT_TEMPS[1],
+        ),
+        DemoLight(
+            unique_id="light_3",
+            name="Kitchen Lights",
+            state=True,
+            available=True,
+            hs_color=LIGHT_COLORS[1],
+            ct=LIGHT_TEMPS[0],
+        ),
+    ]
+    async_add_entities(lights)
+    data = hass.data.setdefault(DOMAIN, {})
+    data[LIGHT_DOMAIN] = lights
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
