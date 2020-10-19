@@ -84,7 +84,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Handle options flow."""
         conf = self.config_entry
         if conf.source == config_entries.SOURCE_IMPORT:
-            return self.async_show_form(step_id="init", data_schema={})
+            return self.async_show_form(step_id="init", data_schema=None)
         errors = {}
         if user_input is not None:
             validate_options(user_input, errors)

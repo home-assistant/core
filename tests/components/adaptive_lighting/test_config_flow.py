@@ -1,7 +1,4 @@
 """Test Adaptive Lighting config flow."""
-import pytest
-from voluptuous.error import MultipleInvalid
-
 from homeassistant import data_entry_flow
 from homeassistant.components.adaptive_lighting.const import (
     CONF_SUNRISE_TIME,
@@ -11,6 +8,7 @@ from homeassistant.components.adaptive_lighting.const import (
     NONE_STR,
     VALIDATION_TUPLES,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
@@ -93,13 +91,12 @@ async def test_incorrect_options(hass):
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     data = DEFAULT_DATA.copy()
-    data[CONF_SUNRISE_TIME] = None
-    data[CONF_SUNSET_TIME] = None
-    with pytest.raises(MultipleInvalid):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input=data,
-        )
+    data[CONF_SUNRISE_TIME] = "yolo"
+    data[CONF_SUNSET_TIME] = "yolo"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=data,
+    )
 
 
 async def test_import_twice(hass):
@@ -112,3 +109,23 @@ async def test_import_twice(hass):
             context={"source": "import"},
             data=data,
         )
+
+
+async def test_changing_options_when_using_yaml(hass):
+    """Test changing options when using YAML."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={CONF_NAME: DEFAULT_NAME},
+        source=SOURCE_IMPORT,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )

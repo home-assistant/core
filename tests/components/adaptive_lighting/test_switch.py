@@ -455,29 +455,32 @@ async def test_switch_off_on_off(hass):
 
     switch = await setup_switch_and_lights(hass)
 
-    # - SCENARIO 1
-    # Turn light on
-    await turn_light(True)
-    # Turn light off with transition
-    await turn_light(False, transition=30)
+    for turn_light_state_at_end in [True, False]:
+        # Turn light on
+        await turn_light(True)
+        # Turn light off with transition
+        await turn_light(False, transition=30)
 
-    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
-    # Set state to on after a second (like happens IRL)
-    await asyncio.sleep(1)
-    hass.states.async_set(ENTITY_LIGHT, STATE_ON)
-    # Set state to off after a second (like happens IRL)
-    await asyncio.sleep(1)
-    hass.states.async_set(ENTITY_LIGHT, STATE_OFF)
+        assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+        # Set state to on after a second (like happens IRL)
+        await asyncio.sleep(1)
+        hass.states.async_set(ENTITY_LIGHT, STATE_ON)
+        # Set state to off after a second (like happens IRL)
+        await asyncio.sleep(1)
+        hass.states.async_set(ENTITY_LIGHT, STATE_OFF)
 
-    # Now we test whether the sleep task is there
-    assert ENTITY_LIGHT in switch.turn_on_off_listener.sleep_tasks
-    sleep_task = switch.turn_on_off_listener.sleep_tasks[ENTITY_LIGHT]
-    assert not sleep_task.cancelled()
+        # Now we test whether the sleep task is there
+        assert ENTITY_LIGHT in switch.turn_on_off_listener.sleep_tasks
+        sleep_task = switch.turn_on_off_listener.sleep_tasks[ENTITY_LIGHT]
+        assert not sleep_task.cancelled()
 
-    # A 'light.turn_on' event should cancel that task
-    await turn_light(True)
-    await update()
-    assert sleep_task.cancelled()
+        # A 'light.turn_on' event should cancel that task
+        await turn_light(turn_light_state_at_end)
+        await update()
+        if turn_light_state_at_end:
+            assert sleep_task.cancelled()
+        expected_state = {False: STATE_OFF, True: STATE_ON}[turn_light_state_at_end]
+        assert hass.states.get(ENTITY_LIGHT).state == expected_state
 
 
 def test_color_difference_redmean():
