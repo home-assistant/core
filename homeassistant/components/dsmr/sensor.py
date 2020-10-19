@@ -29,7 +29,6 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
-    DEFAULT_FORCE_UPDATE,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
@@ -51,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     }
 )
 
@@ -279,7 +277,7 @@ class DSMREntity(Entity):
     @property
     def force_update(self):
         """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
+        return True
 
     @staticmethod
     def translate_tariff(value, dsmr_version):
