@@ -988,6 +988,7 @@ class SunLightSettings:
             "rgb_color": rgb_color,
             "xy_color": xy_color,
             "hs_color": hs_color,
+            "sun_position": percent,
         }
 
 
