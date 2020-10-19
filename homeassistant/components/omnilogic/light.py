@@ -122,10 +122,11 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
     @property
     def effect_list(self):
         """Return the supported light effects."""
+        effect_list = list(LightEffect.__members__)[:17]
         if self._version == 2:
-            return list(LightEffect.__members__)
-        else:
-            return list(LightEffect.__members__)[:17]
+            effect_list = list(LightEffect.__members__)
+
+        return effect_list
 
     @property
     def supported_features(self):
@@ -160,7 +161,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
             time.sleep(30)
             self.async_schedule_update_ha_state(True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn off the light."""
         success = await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
