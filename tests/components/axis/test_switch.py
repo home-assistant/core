@@ -57,6 +57,8 @@ async def test_switches_with_port_cgi(hass):
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
+    device.api.vapix.ports["0"].open = AsyncMock()
+    device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
     for event in EVENTS:
@@ -100,6 +102,8 @@ async def test_switches_with_port_management(hass):
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
+    device.api.vapix.ports["0"].open = AsyncMock()
+    device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
     for event in EVENTS:
