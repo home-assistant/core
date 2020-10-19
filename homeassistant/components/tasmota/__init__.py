@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import discovery
+from . import device_automation, discovery
 from .const import CONF_DISCOVERY_PREFIX, DATA_REMOVE_DISCOVER_COMPONENT, PLATFORMS
 from .discovery import TASMOTA_DISCOVERY_DEVICE
 
@@ -64,10 +64,6 @@ async def async_setup_entry(hass, entry):
     ] = async_dispatcher_connect(hass, TASMOTA_DISCOVERY_DEVICE, async_discover_device)
 
     async def start_platforms():
-        # Local import to avoid circular dependencies
-        # pylint: disable=import-outside-toplevel
-        from . import device_automation
-
         await device_automation.async_setup_entry(hass, entry)
         await asyncio.gather(
             *[
