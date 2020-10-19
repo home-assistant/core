@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_FORCE_UPDATE,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
