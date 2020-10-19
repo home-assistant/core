@@ -24,16 +24,16 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "vin": "WX123456789",
+                "vin": "WX123456789101112",
                 "username": "test-username",
                 "password": "test-password",
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Vehicle (WX123456789)"
+    assert result2["title"] == "Vehicle (WX123456789101112)"
     assert result2["data"] == {
-        "vin": "WX123456789",
+        "vin": "WX123456789101112",
         "username": "test-username",
         "password": "test-password",
     }
@@ -55,7 +55,7 @@ async def test_form_invalid_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "vin": "WX123456789",
+                "vin": "WX123456789101112",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -78,7 +78,7 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "vin": "WX123456789",
+                "vin": "WX123456789101112",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -101,7 +101,7 @@ async def test_form_unknown_exception(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "vin": "WX123456789",
+                "vin": "WX123456789101112",
                 "username": "test-username",
                 "password": "test-password",
             },
