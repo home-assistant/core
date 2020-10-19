@@ -88,8 +88,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
-                        default=6,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
                     ): int,
+                    vol.Optional(
+                        "ph_offset",
+                        default=self.config_entry.options.get(
+                            "ph_offset", DEFAULT_PH_OFFSET
+                        ),
+                    ): vol.All(vol.Coerce(float)),
                 }
             ),
         )

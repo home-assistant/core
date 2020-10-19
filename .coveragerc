@@ -700,11 +700,9 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
-    homeassistant/components/ondilo_ico/__init__.py
-    homeassistant/components/ondilo_ico/api.py
-    homeassistant/components/ondilo_ico/const.py
-    homeassistant/components/ondilo_ico/oauth_impl.py
-    homeassistant/components/ondilo_ico/sensor.py
+    homeassistant/components/omnilogic/switch.py
+    homeassistant/components/omnilogic/light.py
+    homeassistant/components/omnilogic/water_heater.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
