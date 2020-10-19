@@ -24,17 +24,17 @@ class Lock(FordPassEntity, LockEntity):
         """Initialize."""
         super().__init__(device_id="lock", name="Lock", coordinator=coordinator)
 
-    async def async_lock(self):
+    async def async_lock(self, **kwargs):
         """Locks the vehicle."""
-        _LOGGER.info(f"Locking {self.coordinator.vin}")
+        _LOGGER.debug("Locking %s", self.coordinator.vin)
         await self.coordinator.hass.async_add_executor_job(
             self.coordinator.vehicle.lock
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_unlock(self):
+    async def async_unlock(self, **kwargs):
         """Unlocks the vehicle."""
-        _LOGGER.info(f"Unlocking {self.coordinator.vin}")
+        _LOGGER.debug("Unlocking %s", self.coordinator.vin)
         await self.coordinator.hass.async_add_executor_job(
             self.coordinator.vehicle.unlock
         )

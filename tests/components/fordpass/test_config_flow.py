@@ -1,6 +1,6 @@
 """Test the fordpass config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.fordpass.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.fordpass.config_flow import InvalidAuth
 from homeassistant.components.fordpass.const import DOMAIN
 
 from tests.async_mock import patch
@@ -15,10 +15,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fordpass.config_flow.fordpass.authenticate",
-        return_value=True,
-    ), patch(
+    with patch("fordpass.Vehicle.auth", return_value=True,), patch(
         "homeassistant.components.fordpass.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.fordpass.async_setup_entry",
@@ -52,7 +49,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.fordpass.config_flow.fordpass.authenticate",
+        "fordpass.Vehicle.auth",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -75,8 +72,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.fordpass.config_flow.fordpass.authenticate",
-        side_effect=CannotConnect,
+        "fordpass.Vehicle.auth",
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

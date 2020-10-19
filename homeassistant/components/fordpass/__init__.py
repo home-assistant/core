@@ -92,7 +92,6 @@ class FordPassDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from FordPass."""
-
         try:
             async with async_timeout.timeout(30):
                 data = await self._hass.async_add_executor_job(

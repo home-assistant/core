@@ -30,11 +30,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         result = await hass.async_add_executor_job(vehicle.auth)
 
-        if not result:
-            _LOGGER.error("Failed to authenticate with fordpass")
-            raise CannotConnect
     except Exception as ex:
         raise InvalidAuth from ex
+
+    if not result:
+        _LOGGER.error("Failed to authenticate with fordpass")
+        raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {"title": f"Vehicle ({data[VIN]})"}
@@ -52,9 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
+                print("EXCEPT")
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
