@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from .const import DOMAIN
 from .device import BroadlinkDevice
-from .updater import BroadlinkScout
+from .discovery import BroadlinkScout
 
 
 @dataclass

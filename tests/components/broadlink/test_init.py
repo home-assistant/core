@@ -10,7 +10,7 @@ from . import get_device
 
 from tests.async_mock import patch
 
-DISCOVERY = "homeassistant.components.broadlink.updater.blk.discover"
+DISCOVERY = "homeassistant.components.broadlink.discovery.blk.discover"
 
 
 @pytest.fixture(autouse=True)
