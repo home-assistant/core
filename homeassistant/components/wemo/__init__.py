@@ -50,9 +50,9 @@ def coerce_host_port(value):
         ip_address(host)
     except ValueError:
         # This was not an IP; try to resolve it
-        ip = gethostbyname(host)
-        _LOGGER.debug('Found hostname for Wemo device {}; resolving to IP {}'.format(host, ip))
-        host = ip
+        resolved_ip = gethostbyname(host)
+        _LOGGER.debug('Found hostname for Wemo device %s; resolving to IP %s' % (host, resolved_ip))
+        host = resolved_ip
 
     if port:
         port = cv.port(port)
