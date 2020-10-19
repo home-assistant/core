@@ -182,7 +182,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # avoid discovery popping up a duplicate on the screen. The unique_id is set
             # authoritatively later in the flow by asking the server to confirm its id
             # (which should theoretically be the same as specified here)
-            # await self.async_set_unique_id(hyperion_id)
+            await self.async_set_unique_id(hyperion_id)
             self._abort_if_unique_id_configured()
         else:
             return self.async_abort(reason="no_id")

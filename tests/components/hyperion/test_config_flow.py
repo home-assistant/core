@@ -486,6 +486,24 @@ async def test_ssdp_fail_no_id(hass):
         assert result["reason"] == "no_id"
 
 
+async def test_ssdp_abort_duplicates(hass):
+    """Check an SSDP flow where no id is provided."""
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result_1 = await _init_flow(
+            hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO
+        )
+        result_2 = await _init_flow(
+            hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO
+        )
+        await hass.async_block_till_done()
+
+    assert result_1["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result_2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result_2["reason"] == "already_in_progress"
+
+
 async def test_import(hass):
     """Check an import flow from the old-style YAML."""
 

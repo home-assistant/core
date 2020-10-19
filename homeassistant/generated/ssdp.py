@@ -116,7 +116,8 @@ SSDP = {
     ],
     "hyperion": [
         {
-            "manufacturer": "Hyperion Open Source Ambient Lighting"
+            "manufacturer": "Hyperion Open Source Ambient Lighting",
+            "st": "urn:hyperion-project.org:device:basic:1"
         }
     ],
     "isy994": [
