@@ -153,10 +153,9 @@ def is_callback(func: Callable[..., Any]) -> bool:
 class HassJobType(enum.Enum):
     """Represent a job type."""
 
-    Coroutine = 1
-    Coroutinefunction = 2
-    Callback = 3
-    Executor = 4
+    Coroutinefunction = 1
+    Callback = 2
+    Executor = 3
 
 
 class HassJob:
@@ -368,9 +367,7 @@ class HomeAssistant:
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
-        if hassjob.job_type == HassJobType.Coroutine:
-            task = self.loop.create_task(hassjob.target)  # type: ignore
-        elif hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
             self.loop.call_soon(hassjob.target, *args)
