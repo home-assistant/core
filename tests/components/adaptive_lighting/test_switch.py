@@ -26,14 +26,18 @@ from homeassistant.components.adaptive_lighting.const import (
     UNDO_UPDATE_LISTENER,
 )
 from homeassistant.components.adaptive_lighting.switch import (
+    _attributes_have_changed,
+    _expand_light_groups,
     color_difference_redmean,
     create_context,
     is_our_context,
 )
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
 )
@@ -450,6 +454,8 @@ async def test_switch_off_on_off(hass):
         await hass.async_block_till_done()
 
     switch = await setup_switch_and_lights(hass)
+
+    # - SCENARIO 1
     # Turn light on
     await turn_light(True)
     # Turn light off with transition
@@ -489,3 +495,60 @@ def test_is_our_context():
     assert is_our_context(context)
     assert not is_our_context(None)
     assert not is_our_context(Context())
+
+
+def test_attributes_have_changed():
+    """Test _attributes_have_changed function."""
+    attributes_1 = {ATTR_BRIGHTNESS: 1, ATTR_RGB_COLOR: (0, 0, 0), ATTR_COLOR_TEMP: 100}
+    attributes_2 = {
+        ATTR_BRIGHTNESS: 100,
+        ATTR_RGB_COLOR: (255, 0, 0),
+        ATTR_COLOR_TEMP: 300,
+    }
+    kwargs = dict(
+        light="light.test",
+        adapt_brightness=True,
+        adapt_color_temp=True,
+        adapt_rgb_color=True,
+        context=Context(),
+    )
+    assert not _attributes_have_changed(
+        old_attributes=attributes_1, new_attributes=attributes_1, **kwargs
+    )
+    for key, value in attributes_2.items():
+        attrs = dict(attributes_1)
+        attrs[key] = value
+        assert _attributes_have_changed(
+            old_attributes=attributes_1, new_attributes=attrs, **kwargs
+        )
+
+
+@pytest.mark.parametrize("wait", [True, False])
+async def test_expand_light_groups(hass, wait):
+    """Test expanding light groups."""
+    await setup_switch(hass, {})
+    lights = ["light.ceiling_lights", "light.kitchen_lights"]
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": GROUP_DOMAIN,
+                    "entities": lights,
+                },
+            ]
+        },
+    )
+    if wait:
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    expanded = set(_expand_light_groups(hass, ["light.light_group"]))
+    if wait:
+        assert expanded == set(lights)
+    else:
+        # Cannot expand yet because state is None
+        assert expanded == {"light.light_group"}
