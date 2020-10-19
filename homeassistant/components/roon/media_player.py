@@ -1,6 +1,8 @@
 """MediaPlayer platform for Roon integration."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -25,6 +27,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -52,11 +55,37 @@ SUPPORT_ROON = (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_SYNC = "sync"
+SERVICE_UNSYNC = "unsync"
+SERVICE_TRANSFER = "transfer"
+
+ATTR_LINK_ID = "link_id"
+ATTR_UNLINK_ID = "unlink_id"
+ATTR_TRANSFER_ID = "transfer_id"
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
+
+    # Register entity services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SYNC,
+        {vol.Required(ATTR_LINK_ID): cv.string},
+        "async_sync",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UNSYNC,
+        {vol.Required(ATTR_UNLINK_ID): cv.string},
+        "async_unsync",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TRANSFER,
+        {vol.Required(ATTR_TRANSFER_ID): cv.string},
+        "async_transfer",
+    )
 
     @callback
     def async_update_media_player(player_data):
@@ -83,6 +112,7 @@ class RoonDevice(MediaPlayerEntity):
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
         self._remove_signal_status = None
+        self._sync_zones = []
         self._server = server
         self._available = True
         self._last_position_update = None
@@ -156,6 +186,7 @@ class RoonDevice(MediaPlayerEntity):
             self._state = STATE_OFF
         else:
             self._available = True
+            self._sync_zones = self.get_sync_zones()
             # determine player state
             self.update_state()
             if self.state == STATE_PLAYING:
@@ -269,6 +300,20 @@ class RoonDevice(MediaPlayerEntity):
         self._media_position = now_playing["position"]
         self._media_duration = now_playing["duration"]
         self._media_image_url = now_playing["image"]
+
+    def get_sync_zones(self):
+        """Get available sync slaves."""
+        sync_zones = [self.name]
+        for zone in self._server.zones.values():
+            for output in zone["outputs"]:
+                if (
+                    output["output_id"] in self.player_data["can_group_with_output_ids"]
+                    and zone["display_name"] not in sync_zones
+                ):
+                    sync_zones.append(zone["display_name"])
+        _LOGGER.debug(f"sync_options for player {self.name}: {sync_zones}")
+
+        return sync_zones
 
     @property
     def media_position_updated_at(self):
@@ -472,3 +517,26 @@ class RoonDevice(MediaPlayerEntity):
                 media_type,
                 media_id,
             )
+
+    async def async_sync(self, link_id):
+        """Add another Roon player to this player's sync group."""
+        _LOGGER.error(
+            "%s, async_sync called with %s but not implemented", self.name, link_id
+        )
+        # await self._player.async_sync(other_player_id)
+
+    async def async_unsync(self, unlink_id):
+        """Remove a Roon player to this player's sync group."""
+        _LOGGER.error(
+            "%s, async_sync called with %s but not implemented", self.name, unlink_id
+        )
+        # await self._player.async_unsync()
+
+    async def async_transfer(self, transfer_id):
+        """Transfer playback from this roon player to another."""
+        _LOGGER.error(
+            "%s, async_transfer called with %s but not implemented",
+            self.name,
+            transfer_id,
+        )
+        # await self._player.async_unsync()
