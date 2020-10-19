@@ -154,8 +154,6 @@ def is_our_context(context: Optional[Context]) -> bool:
 
 async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
     """Handle the entity service apply."""
-    if not isinstance(switch, AdaptiveSwitch):
-        raise ValueError("Apply can only be called for a AdaptiveSwitch.")
     hass = switch.hass
     data = service_call.data
     all_lights = _expand_light_groups(hass, data[CONF_LIGHTS])

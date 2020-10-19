@@ -12,6 +12,7 @@ from homeassistant.components.adaptive_lighting.const import (
     CONF_INITIAL_TRANSITION,
     CONF_MANUAL_CONTROL,
     CONF_PREFER_RGB_COLOR,
+    CONF_SUNRISE_OFFSET,
     CONF_SUNRISE_TIME,
     CONF_SUNSET_TIME,
     CONF_TRANSITION,
@@ -51,7 +52,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -120,7 +121,6 @@ async def setup_switch_and_lights(hass):
     lights = [
         "light.bed_light",
         "light.ceiling_lights",
-        "light.kitchen_lights",
     ]
     assert all(hass.states.get(light) is not None for light in lights)
     entry = await setup_switch(
@@ -350,6 +350,25 @@ async def test_light_settings(hass):
         assert_expected_color_temp(state)
 
 
+async def test_turn_on_off_listener_not_tracking_untracked_lights(hass):
+    """Test that lights that are not in a Adaptive Lighting switch aren't tracked."""
+    switch = await setup_switch_and_lights(hass)
+    light = "light.kitchen_lights"
+    assert light not in switch._lights
+    for state in [True, False]:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON if state else SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: light},
+            blocking=True,
+        )
+        await switch._update_attrs_and_maybe_adapt_lights(
+            context=switch.create_context("test")
+        )
+        await hass.async_block_till_done()
+    assert light not in switch.turn_on_off_listener.lights
+
+
 async def test_manual_control(hass):
     """Test the 'manual control' tracking."""
     switch = await setup_switch_and_lights(hass)
@@ -459,14 +478,14 @@ async def test_switch_off_on_off(hass):
         # Turn light on
         await turn_light(True)
         # Turn light off with transition
-        await turn_light(False, transition=30)
+        await turn_light(False, transition=1)
 
         assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
         # Set state to on after a second (like happens IRL)
-        await asyncio.sleep(1)
+        await asyncio.sleep(1e-3)
         hass.states.async_set(ENTITY_LIGHT, STATE_ON)
         # Set state to off after a second (like happens IRL)
-        await asyncio.sleep(1)
+        await asyncio.sleep(1e-3)
         hass.states.async_set(ENTITY_LIGHT, STATE_OFF)
 
         # Now we test whether the sleep task is there
@@ -481,6 +500,55 @@ async def test_switch_off_on_off(hass):
             assert sleep_task.cancelled()
         expected_state = {False: STATE_OFF, True: STATE_ON}[turn_light_state_at_end]
         assert hass.states.get(ENTITY_LIGHT).state == expected_state
+
+
+async def test_significant_change(hass):
+    """Test significant change."""
+
+    async def turn_light(state, **kwargs):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON if state else SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, **kwargs},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    async def update(force):
+        await switch._update_attrs_and_maybe_adapt_lights(
+            transition=0,
+            context=switch.create_context("test"),
+            force=force,
+        )
+        await hass.async_block_till_done()
+
+    def get_demo_light(entity_id):
+        return next(
+            demo_light
+            for demo_light in hass.data["demo"]["light"]
+            if demo_light.entity_id == entity_id
+        )
+
+    switch = await setup_switch_and_lights(hass)
+    await turn_light(True)
+    await update(force=True)  # removes manual control
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+
+    # Change brightness by setting state (not using 'light.turn_on')
+    attributes = hass.states.get(ENTITY_LIGHT).attributes
+    new_attributes = attributes.copy()
+    new_brightness = (attributes[ATTR_BRIGHTNESS] + 100) % 255
+    new_attributes[ATTR_BRIGHTNESS] = new_brightness
+    get_demo_light(ENTITY_LIGHT)._brightness = new_brightness
+    hass.states.async_set(ENTITY_LIGHT, STATE_ON, new_attributes, True)
+    await hass.async_block_till_done()
+    assert switch.turn_on_off_listener.last_service_data.get(ENTITY_LIGHT) is not None
+    for _ in range(switch.turn_on_off_listener.max_cnt_significant_changes):
+        await update(force=False)
+        assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    # On next update the light should be marked as manually controlled
+    await update(force=False)
+    # assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
 
 
 def test_color_difference_redmean():
@@ -524,6 +592,12 @@ def test_attributes_have_changed():
         assert _attributes_have_changed(
             old_attributes=attributes_1, new_attributes=attrs, **kwargs
         )
+    # Switch from rgb_color to color_temp
+    assert _attributes_have_changed(
+        old_attributes={ATTR_BRIGHTNESS: 1, ATTR_COLOR_TEMP: 100},
+        new_attributes={ATTR_BRIGHTNESS: 1, ATTR_RGB_COLOR: (0, 0, 0)},
+        **kwargs,
+    )
 
 
 @pytest.mark.parametrize("wait", [True, False])
@@ -555,3 +629,62 @@ async def test_expand_light_groups(hass, wait):
     else:
         # Cannot expand yet because state is None
         assert expanded == {"light.light_group"}
+
+
+async def test_unload_switch(hass):
+    """Test removing Adaptive Lighting."""
+    entry = await setup_switch(hass, {})
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN not in hass.data
+
+
+@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+async def test_restore_off_state(hass, state):
+    """Test that the 'off' and 'on' states are propoperly restored."""
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=State(ENTITY_SWITCH, state),
+    ):
+        await hass.async_start()
+        await hass.async_block_till_done()
+        entry = await setup_switch(hass, {})
+        switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+        if state == STATE_ON:
+            assert switch.is_on
+        else:
+            assert not switch.is_on
+
+
+@pytest.mark.xfail(reason="Offset is larger than half a day")
+async def test_offset_too_large(hass):
+    """Test that update fails when the offset is too large."""
+    entry = await setup_switch(hass, {CONF_SUNRISE_OFFSET: 3600 * 12})
+    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+    await switch._update_attrs_and_maybe_adapt_lights(
+        context=switch.create_context("test")
+    )
+    await hass.async_block_till_done()
+
+
+async def test_turn_on_and_off_when_already_at_that_state(hass):
+    """Test 'switch.turn_on/off' when switch is on/off."""
+    entry = await setup_switch(hass, {})
+    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+
+    await switch.async_turn_on()
+    await hass.async_block_till_done()
+    await switch.async_turn_on()
+    await hass.async_block_till_done()
+
+    await switch.async_turn_off()
+    await hass.async_block_till_done()
+    await switch.async_turn_off()
+    await hass.async_block_till_done()
+
+
+async def test_async_update_at_interval(hass):
+    """Test '_async_update_at_interval' method."""
+    entry = await setup_switch(hass, {})
+    switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
+    await switch._async_update_at_interval()

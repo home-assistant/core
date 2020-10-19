@@ -86,11 +86,6 @@ def timedelta_as_int(value):
     return value.total_seconds()
 
 
-def join_strings(lst):
-    """Join a list to comma-separated values string."""
-    return ",".join(lst)
-
-
 # conf_option: (validator, coerce) tuples
 # these validators cannot be serialized but can be serialized when coerced by coerce.
 EXTRA_VALIDATION = {
