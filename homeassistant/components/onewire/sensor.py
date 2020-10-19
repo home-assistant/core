@@ -234,10 +234,8 @@ def get_entities(config):
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
         _LOGGER.warning(
-            "The OWFS implementation of 1-Wire sensors is deprecated, and should be migrated to OWServer (on localhost:4304)."
-        )
-        _LOGGER.warning(
-            "If migration to OWServer is not feasible on your installation, please raise an issue at https://github.com/home-assistant/core/issues/new?title=Unable%20to%20migrate%20onewire%20from%20OWFS%20to%20OWServer"
+            "The OWFS implementation of 1-Wire sensors is deprecated, and should be migrated to OWServer (on localhost:4304). %s",
+            "If migration to OWServer is not feasible on your installation, please raise an issue at https://github.com/home-assistant/core/issues/new?title=Unable%20to%20migrate%20onewire%20from%20OWFS%20to%20OWServer",
         )
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
