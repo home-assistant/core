@@ -48,6 +48,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_LIGHTS,
     CONF_NAME,
+    CONF_PLATFORM,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
@@ -55,6 +56,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from .fake_light import FakeLight
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -103,13 +106,45 @@ async def setup_switch(hass, extra_data):
     return entry
 
 
+async def setup_lights(hass):
+    """Set up 3 light entities using the 'test' platform."""
+    platform = getattr(hass.components, "test.light")
+    while platform.ENTITIES:
+        # Make sure it is empty
+        platform.ENTITIES.pop()
+    lights = [
+        FakeLight(
+            unique_id="light_1",
+            name="Bed Light",
+            state=True,
+            ct=200,
+        ),
+        FakeLight(
+            unique_id="light_2",
+            name="Ceiling Lights",
+            state=True,
+            ct=380,
+        ),
+        FakeLight(
+            unique_id="light_3",
+            name="Kitchen Lights",
+            state=True,
+            hs_color=(345, 75),
+            ct=240,
+        ),
+    ]
+    platform.ENTITIES.extend(lights)
+    assert await async_setup_component(
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+    return lights
+
+
 async def setup_switch_and_lights(hass):
     """Create switch and demo lights."""
     # Setup demo lights and turn on
-    await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: [{"platform": "demo"}]}
-    )
-    await hass.async_block_till_done()
+    lights_instances = await setup_lights(hass)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -137,7 +172,7 @@ async def setup_switch_and_lights(hass):
     )
     switch = hass.data[DOMAIN][entry.entry_id][SWITCH_DOMAIN]
     await hass.async_block_till_done()
-    return switch
+    return switch, lights_instances
 
 
 async def test_adaptive_lighting_switches(hass):
@@ -256,7 +291,7 @@ async def test_adaptive_lighting_time_zones_and_sun_settings(
 
 async def test_light_settings(hass):
     """Test that light settings are correctly applied."""
-    switch = await setup_switch_and_lights(hass)
+    switch, _ = await setup_switch_and_lights(hass)
     lights = switch._lights
 
     # Turn on "sleep mode"
@@ -352,7 +387,7 @@ async def test_light_settings(hass):
 
 async def test_turn_on_off_listener_not_tracking_untracked_lights(hass):
     """Test that lights that are not in a Adaptive Lighting switch aren't tracked."""
-    switch = await setup_switch_and_lights(hass)
+    switch, _ = await setup_switch_and_lights(hass)
     light = "light.kitchen_lights"
     assert light not in switch._lights
     for state in [True, False]:
@@ -371,7 +406,7 @@ async def test_turn_on_off_listener_not_tracking_untracked_lights(hass):
 
 async def test_manual_control(hass):
     """Test the 'manual control' tracking."""
-    switch = await setup_switch_and_lights(hass)
+    switch, _ = await setup_switch_and_lights(hass)
     context = switch.create_context("test")  # needs to be passed to update method
 
     async def update():
@@ -472,7 +507,7 @@ async def test_switch_off_on_off(hass):
         )
         await hass.async_block_till_done()
 
-    switch = await setup_switch_and_lights(hass)
+    switch, _ = await setup_switch_and_lights(hass)
 
     for turn_light_state_at_end in [True, False]:
         # Turn light on
@@ -522,14 +557,7 @@ async def test_significant_change(hass):
         )
         await hass.async_block_till_done()
 
-    def get_demo_light(entity_id):
-        return next(
-            demo_light
-            for demo_light in hass.data["demo"]["light"]
-            if demo_light.entity_id == entity_id
-        )
-
-    switch = await setup_switch_and_lights(hass)
+    switch, (bed_light, *_) = await setup_switch_and_lights(hass)
     await turn_light(True)
     await update(force=True)  # removes manual control
     assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
@@ -539,7 +567,7 @@ async def test_significant_change(hass):
     new_attributes = attributes.copy()
     new_brightness = (attributes[ATTR_BRIGHTNESS] + 100) % 255
     new_attributes[ATTR_BRIGHTNESS] = new_brightness
-    get_demo_light(ENTITY_LIGHT)._brightness = new_brightness
+    bed_light._brightness = new_brightness
     hass.states.async_set(ENTITY_LIGHT, STATE_ON, new_attributes, True)
     await hass.async_block_till_done()
     assert switch.turn_on_off_listener.last_service_data.get(ENTITY_LIGHT) is not None
