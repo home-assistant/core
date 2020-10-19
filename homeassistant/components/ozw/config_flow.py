@@ -21,7 +21,7 @@ ADDON_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Required(CONF_USE_ADDON): bool})
+ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=False): bool})
 
 
 class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
