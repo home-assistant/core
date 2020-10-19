@@ -52,7 +52,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._name = None
         self._host = None
         self._port = None
         self._username = None
@@ -141,7 +140,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
 
-            self._name = user_input[CONF_HOST]
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
             self._password = user_input[CONF_PASSWORD]
