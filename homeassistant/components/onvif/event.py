@@ -76,6 +76,10 @@ class EventManager:
         if await self.device.create_pullpoint_subscription():
             # Initialize events
             pullpoint = self.device.create_pullpoint_service()
+            try:
+                await pullpoint.SetSynchronizationPoint()
+            except SUBSCRIPTION_ERRORS:
+                pass
             response = await pullpoint.PullMessages(
                 {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
             )
