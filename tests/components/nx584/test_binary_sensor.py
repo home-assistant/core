@@ -1,5 +1,4 @@
 """The tests for the nx584 sensor platform."""
-import unittest
 from unittest import mock
 
 from nx584 import client as nx584_client
@@ -7,45 +6,57 @@ import pytest
 import requests
 
 from homeassistant.components.nx584 import binary_sensor as nx584
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
 class StopMe(Exception):
     """Stop helper."""
 
-    pass
+
+@pytest.fixture
+def fake_zones():
+    """Fixture for fake zones.
+
+    Returns:
+        list: List of fake zones
+    """
+    return [
+        {"name": "front", "number": 1},
+        {"name": "back", "number": 2},
+        {"name": "inside", "number": 3},
+    ]
 
 
-class TestNX584SensorSetup(unittest.TestCase):
+@pytest.fixture
+def client(fake_zones):
+    """Fixture for client.
+
+    Args:
+        fake_zones (list): Fixture of fake zones
+
+    Yields:
+        MagicMock: Client Mock
+    """
+    _mock_client = mock.patch.object(nx584_client, "Client")
+    _mock_client.start()
+
+    client = nx584_client.Client.return_value
+    client.list_zones.return_value = fake_zones
+    client.get_version.return_value = "1.1"
+
+    yield _mock_client
+
+    _mock_client.stop()
+
+
+@pytest.mark.usefixtures("client")
+class TestNX584SensorSetup:
     """Test the NX584 sensor platform."""
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self._mock_client = mock.patch.object(nx584_client, "Client")
-        self._mock_client.start()
-
-        self.fake_zones = [
-            {"name": "front", "number": 1},
-            {"name": "back", "number": 2},
-            {"name": "inside", "number": 3},
-        ]
-
-        client = nx584_client.Client.return_value
-        client.list_zones.return_value = self.fake_zones
-        client.get_version.return_value = "1.1"
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-        self._mock_client.stop()
-
+    @staticmethod
     @mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
     @mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-    def test_setup_defaults(self, mock_nx, mock_watcher):
+    def test_setup_defaults(mock_nx, mock_watcher, hass, fake_zones):
         """Test the setup with no configuration."""
         add_entities = mock.MagicMock()
         config = {
@@ -54,17 +65,16 @@ class TestNX584SensorSetup(unittest.TestCase):
             "exclude_zones": [],
             "zone_types": {},
         }
-        assert nx584.setup_platform(self.hass, config, add_entities)
-        mock_nx.assert_has_calls(
-            [mock.call(zone, "opening") for zone in self.fake_zones]
-        )
+        assert nx584.setup_platform(hass, config, add_entities)
+        mock_nx.assert_has_calls([mock.call(zone, "opening") for zone in fake_zones])
         assert add_entities.called
         assert nx584_client.Client.call_count == 1
         assert nx584_client.Client.call_args == mock.call("http://localhost:5007")
 
+    @staticmethod
     @mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher")
     @mock.patch("homeassistant.components.nx584.binary_sensor.NX584ZoneSensor")
-    def test_setup_full_config(self, mock_nx, mock_watcher):
+    def test_setup_full_config(mock_nx, mock_watcher, hass, fake_zones):
         """Test the setup with full configuration."""
         config = {
             "host": "foo",
@@ -73,11 +83,11 @@ class TestNX584SensorSetup(unittest.TestCase):
             "zone_types": {3: "motion"},
         }
         add_entities = mock.MagicMock()
-        assert nx584.setup_platform(self.hass, config, add_entities)
+        assert nx584.setup_platform(hass, config, add_entities)
         mock_nx.assert_has_calls(
             [
-                mock.call(self.fake_zones[0], "opening"),
-                mock.call(self.fake_zones[2], "motion"),
+                mock.call(fake_zones[0], "opening"),
+                mock.call(fake_zones[2], "motion"),
             ]
         )
         assert add_entities.called
@@ -85,67 +95,69 @@ class TestNX584SensorSetup(unittest.TestCase):
         assert nx584_client.Client.call_args == mock.call("http://foo:123")
         assert mock_watcher.called
 
-    def _test_assert_graceful_fail(self, config):
+    @staticmethod
+    async def _test_assert_graceful_fail(hass, config):
         """Test the failing."""
-        assert not setup_component(self.hass, "nx584", config)
+        assert not await async_setup_component(hass, "nx584", config)
 
-    def test_setup_bad_config(self):
+    @pytest.mark.parametrize(
+        "config",
+        [
+            ({"exclude_zones": ["a"]}),
+            ({"zone_types": {"a": "b"}}),
+            ({"zone_types": {1: "notatype"}}),
+            ({"zone_types": {"notazone": "motion"}}),
+        ],
+    )
+    async def test_setup_bad_config(self, hass, config):
         """Test the setup with bad configuration."""
-        bad_configs = [
-            {"exclude_zones": ["a"]},
-            {"zone_types": {"a": "b"}},
-            {"zone_types": {1: "notatype"}},
-            {"zone_types": {"notazone": "motion"}},
-        ]
-        for config in bad_configs:
-            self._test_assert_graceful_fail(config)
+        await self._test_assert_graceful_fail(hass, config)
 
-    def test_setup_connect_failed(self):
-        """Test the setup with connection failure."""
-        nx584_client.Client.return_value.list_zones.side_effect = (
-            requests.exceptions.ConnectionError
-        )
-        self._test_assert_graceful_fail({})
+    @pytest.mark.parametrize(
+        "exception_type",
+        [
+            pytest.param(requests.exceptions.ConnectionError, id="connect_failed"),
+            pytest.param(IndexError, id="no_partitions"),
+        ],
+    )
+    async def test_setup_with_exceptions(self, hass, exception_type):
+        """Test the setup handles exceptions."""
+        nx584_client.Client.return_value.list_zones.side_effect = exception_type
+        await self._test_assert_graceful_fail(hass, {})
 
-    def test_setup_no_partitions(self):
-        """Test the setup with connection failure."""
-        nx584_client.Client.return_value.list_zones.side_effect = IndexError
-        self._test_assert_graceful_fail({})
-
-    def test_setup_version_too_old(self):
+    async def test_setup_version_too_old(self, hass):
         """Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = "1.0"
-        self._test_assert_graceful_fail({})
+        await self._test_assert_graceful_fail(hass, {})
 
-    def test_setup_no_zones(self):
+    @staticmethod
+    def test_setup_no_zones(hass):
         """Test the setup with no zones."""
         nx584_client.Client.return_value.list_zones.return_value = []
         add_entities = mock.MagicMock()
-        assert nx584.setup_platform(self.hass, {}, add_entities)
+        assert nx584.setup_platform(hass, {}, add_entities)
         assert not add_entities.called
 
 
-class TestNX584ZoneSensor(unittest.TestCase):
+def test_nx584_zone_sensor_normal():
     """Test for the NX584 zone sensor."""
+    zone = {"number": 1, "name": "foo", "state": True}
+    sensor = nx584.NX584ZoneSensor(zone, "motion")
+    assert "foo" == sensor.name
+    assert not sensor.should_poll
+    assert sensor.is_on
+    assert sensor.device_state_attributes["zone_number"] == 1
 
-    def test_sensor_normal(self):
-        """Test the sensor."""
-        zone = {"number": 1, "name": "foo", "state": True}
-        sensor = nx584.NX584ZoneSensor(zone, "motion")
-        assert "foo" == sensor.name
-        assert not sensor.should_poll
-        assert sensor.is_on
-        assert sensor.device_state_attributes["zone_number"] == 1
-
-        zone["state"] = False
-        assert not sensor.is_on
+    zone["state"] = False
+    assert not sensor.is_on
 
 
-class TestNX584Watcher(unittest.TestCase):
+class TestNX584Watcher:
     """Test the NX584 watcher."""
 
+    @staticmethod
     @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-    def test_process_zone_event(self, mock_update):
+    def test_process_zone_event(mock_update):
         """Test the processing of zone events."""
         zone1 = {"number": 1, "name": "foo", "state": True}
         zone2 = {"number": 2, "name": "bar", "state": True}
@@ -158,14 +170,16 @@ class TestNX584Watcher(unittest.TestCase):
         assert not zone1["state"]
         assert mock_update.call_count == 1
 
+    @staticmethod
     @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-    def test_process_zone_event_missing_zone(self, mock_update):
+    def test_process_zone_event_missing_zone(mock_update):
         """Test the processing of zone events with missing zones."""
         watcher = nx584.NX584Watcher(None, {})
         watcher._process_zone_event({"zone": 1, "zone_state": False})
         assert not mock_update.called
 
-    def test_run_with_zone_events(self):
+    @staticmethod
+    def test_run_with_zone_events():
         """Test the zone events."""
         empty_me = [1, 2]
 
@@ -196,8 +210,9 @@ class TestNX584Watcher(unittest.TestCase):
         run()
         assert 3 == client.get_events.call_count
 
+    @staticmethod
     @mock.patch("time.sleep")
-    def test_run_retries_failures(self, mock_sleep):
+    def test_run_retries_failures(mock_sleep):
         """Test the retries with failures."""
         empty_me = [1, 2]
 
