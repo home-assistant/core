@@ -103,7 +103,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE)
         self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY)
 
-        if self.usb_path is None or self.network_key is None:
+        if user_input is None and None in (self.usb_path, self.network_key):
             data_schema = vol.Schema({})
 
             if not self.usb_path:
