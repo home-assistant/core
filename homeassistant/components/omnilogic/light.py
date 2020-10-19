@@ -182,7 +182,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
             if 0 <= speed <= 8 and 0 <= brightness <= 4:
                 success = await self.coordinator.api.set_lightshowv2(
                     int(self._item_id[1]),
-                    int(self._item_it[3]),
+                    int(self._item_id[3]),
                     int(self._item_id[-1]),
                     int(self.coordinator.data[self._item_id]["currentShow"]),
                     speed,
