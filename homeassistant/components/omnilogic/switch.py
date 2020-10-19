@@ -116,7 +116,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
             time.sleep(10)
             self.async_schedule_update_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs):
         """Turn off the relay."""
         success = await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
@@ -203,7 +203,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         """Set the switch speed."""
 
         if self._pump_type != "SINGLE":
-            if speed >= self._min_speed and speed <= self._max_speed:
+            if self._min_speed <= speed <= self._max_speed:
                 success = await self.coordinator.api.set_relay_valve(
                     int(self._item_id[1]),
                     int(self._item_id[3]),
