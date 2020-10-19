@@ -61,6 +61,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             api = get_api(user_input)
             try:
                 data: AbstractInfoResponse = await api.async_info()
+                await api.async_remove()
                 data_dict = dataclasses.asdict(data)
                 title = data_dict.get(
                     "gogogatename", data_dict.get("ismartgatename", "Cover")
