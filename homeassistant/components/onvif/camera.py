@@ -3,6 +3,7 @@ import asyncio
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -116,9 +117,16 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         image = None
 
         if self.device.capabilities.snapshot:
-            image = await self.device.device.get_snapshot(
-                self.profile.token, self._basic_auth
-            )
+            try:
+                image = await self.device.device.get_snapshot(
+                    self.profile.token, self._basic_auth
+                )
+            except ONVIFError as err:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
+                    self.device.name,
+                    err,
+                )
 
         if image is None:
             ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)

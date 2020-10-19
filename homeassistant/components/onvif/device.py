@@ -314,17 +314,6 @@ class ONVIFDevice:
 
         return profiles
 
-    async def async_get_snapshot_uri(self, profile: Profile) -> str:
-        """Get the snapshot URI for a specified profile."""
-        if not self.capabilities.snapshot:
-            return None
-
-        media_service = self.device.create_media_service()
-        req = media_service.create_type("GetSnapshotUri")
-        req.ProfileToken = profile.token
-        result = await media_service.GetSnapshotUri(req)
-        return result.Uri
-
     async def async_get_stream_uri(self, profile: Profile) -> str:
         """Get the stream URI for a specified profile."""
         media_service = self.device.create_media_service()

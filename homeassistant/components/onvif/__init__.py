@@ -122,7 +122,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def _get_snapshot_auth(device):
-    if not (device.username and device.password):
+    """Determine auth type for snapshots."""
+    if not device.capabilities.snapshot or not (device.username and device.password):
         return HTTP_DIGEST_AUTHENTICATION
 
     try:
@@ -131,8 +132,10 @@ async def _get_snapshot_auth(device):
         if snapshot:
             return HTTP_DIGEST_AUTHENTICATION
         return HTTP_BASIC_AUTHENTICATION
-    except (ONVIFAuthError, ONVIFError, ONVIFTimeoutError):
+    except (ONVIFAuthError, ONVIFTimeoutError):
         return HTTP_BASIC_AUTHENTICATION
+    except ONVIFError:
+        return HTTP_DIGEST_AUTHENTICATION
 
 
 async def async_populate_snapshot_auth(hass, device, entry):
