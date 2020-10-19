@@ -36,6 +36,7 @@ CONF_SUNSET_TIME = "sunset_time"
 CONF_TAKE_OVER_CONTROL, DEFAULT_TAKE_OVER_CONTROL = "take_over_control", True
 CONF_TRANSITION, DEFAULT_TRANSITION = "transition", 45
 
+SLEEP_MODE_SWITCH = "sleep_mode_switch"
 ATTR_TURN_ON_OFF_LISTENER = "turn_on_off_listener"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 NONE_STR = "None"

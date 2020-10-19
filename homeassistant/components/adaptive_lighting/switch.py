@@ -102,6 +102,7 @@ from .const import (
     ICON,
     SERVICE_APPLY,
     SERVICE_SET_MANUAL_CONTROL,
+    SLEEP_MODE_SWITCH,
     SUN_EVENT_MIDNIGHT,
     SUN_EVENT_NOON,
     TURNING_OFF_DELAY,
@@ -216,7 +217,7 @@ async def async_setup_entry(
     sleep_mode_switch = AdaptiveSleepModeSwitch(hass, config_entry)
     switch = AdaptiveSwitch(hass, config_entry, turn_on_off_listener, sleep_mode_switch)
 
-    data[config_entry.entry_id]["sleep_mode_switch"] = sleep_mode_switch
+    data[config_entry.entry_id][SLEEP_MODE_SWITCH] = sleep_mode_switch
     data[config_entry.entry_id][SWITCH_DOMAIN] = switch
 
     async_add_entities([switch, sleep_mode_switch], update_before_add=True)
