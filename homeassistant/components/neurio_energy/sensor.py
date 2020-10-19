@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_API_SECRET): cv.string,
-        vol.Optional(CONF_SENSOR_ID): cv.string,
+        vol.Required(CONF_SENSOR_ID): cv.string,
     }
 )
 
