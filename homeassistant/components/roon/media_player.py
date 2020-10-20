@@ -59,9 +59,9 @@ SERVICE_SYNC = "sync"
 SERVICE_UNSYNC = "unsync"
 SERVICE_TRANSFER = "transfer"
 
-ATTR_LINK_ID = "link_id"
-ATTR_UNLINK_ID = "unlink_id"
-ATTR_TRANSFER_ID = "transfer_id"
+ATTR_LINK_NAME = "link_name"
+ATTR_UNLINK_NAME = "unlink_name"
+ATTR_TRANSFER_NAME = "transfer_name"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -73,17 +73,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
         SERVICE_SYNC,
-        {vol.Required(ATTR_LINK_ID): cv.string},
+        {vol.Required(ATTR_LINK_NAME): cv.string},
         "async_sync",
     )
     platform.async_register_entity_service(
         SERVICE_UNSYNC,
-        {vol.Required(ATTR_UNLINK_ID): cv.string},
+        {vol.Required(ATTR_UNLINK_NAME): cv.string},
         "async_unsync",
     )
     platform.async_register_entity_service(
         SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER_ID): cv.string},
+        {vol.Required(ATTR_TRANSFER_NAME): cv.string},
         "async_transfer",
     )
 
@@ -112,7 +112,7 @@ class RoonDevice(MediaPlayerEntity):
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
         self._remove_signal_status = None
-        self._sync_zones = []
+        self._sync_available = []
         self._server = server
         self._available = True
         self._last_position_update = None
@@ -186,7 +186,6 @@ class RoonDevice(MediaPlayerEntity):
             self._state = STATE_OFF
         else:
             self._available = True
-            self._sync_zones = self.get_sync_zones()
             # determine player state
             self.update_state()
             if self.state == STATE_PLAYING:
@@ -300,20 +299,6 @@ class RoonDevice(MediaPlayerEntity):
         self._media_position = now_playing["position"]
         self._media_duration = now_playing["duration"]
         self._media_image_url = now_playing["image"]
-
-    def get_sync_zones(self):
-        """Get available sync slaves."""
-        sync_zones = [self.name]
-        for zone in self._server.zones.values():
-            for output in zone["outputs"]:
-                if (
-                    output["output_id"] in self.player_data["can_group_with_output_ids"]
-                    and zone["display_name"] not in sync_zones
-                ):
-                    sync_zones.append(zone["display_name"])
-        _LOGGER.debug(f"sync_options for player {self.name}: {sync_zones}")
-
-        return sync_zones
 
     @property
     def media_position_updated_at(self):
@@ -518,25 +503,86 @@ class RoonDevice(MediaPlayerEntity):
                 media_id,
             )
 
-    async def async_sync(self, link_id):
+    async def async_sync(self, link_name):
         """Add another Roon player to this player's sync group."""
-        _LOGGER.error(
-            "%s, async_sync called with %s but not implemented", self.name, link_id
-        )
-        # await self._player.async_sync(other_player_id)
 
-    async def async_unsync(self, unlink_id):
+        link_name = link_name.lower()
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        sync_available = {}
+        for zone in self._server.zones.values():
+            for output in zone["outputs"]:
+                if (
+                    zone["display_name"] != self.name
+                    and output["output_id"]
+                    in self.player_data["can_group_with_output_ids"]
+                    and zone["display_name"] not in sync_available.keys()
+                ):
+                    sync_available[zone["display_name"].lower()] = output["output_id"]
+
+        if link_name not in sync_available.keys():
+            _LOGGER.error(
+                "Can't sync player %s from %s because it's not in sync available list %s",
+                link_name,
+                self.name,
+                list(sync_available.keys()),
+            )
+            return
+
+        _LOGGER.info("Linking %s to %s", link_name, self.name.lower())
+        self._server.roonapi.group_outputs(
+            [self._output_id] + [sync_available[link_name]]
+        )
+
+    async def async_unsync(self, unlink_name):
         """Remove a Roon player to this player's sync group."""
-        _LOGGER.error(
-            "%s, async_sync called with %s but not implemented", self.name, unlink_id
-        )
-        # await self._player.async_unsync()
 
-    async def async_transfer(self, transfer_id):
+        unlink_name = unlink_name.lower()
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        sync_group = {
+            output["display_name"].lower(): output["output_id"]
+            for output in zone_data["outputs"]
+            if output["display_name"] != self.name
+        }
+
+        if unlink_name not in sync_group.keys():
+            _LOGGER.error(
+                "Can't unsync player %s from %s because it's not in sync group %s",
+                unlink_name,
+                self.name,
+                list(sync_group.keys()),
+            )
+            return
+
+        _LOGGER.info("Uninking %s from %s", unlink_name, self.name.lower())
+        self._server.roonapi.ungroup_outputs([sync_group[unlink_name]])
+
+    async def async_transfer(self, transfer_name):
         """Transfer playback from this roon player to another."""
-        _LOGGER.error(
-            "%s, async_transfer called with %s but not implemented",
-            self.name,
-            transfer_id,
-        )
-        # await self._player.async_unsync()
+
+        transfer_name = transfer_name.lower()
+        zone_ids = {
+            output["display_name"].lower(): output["zone_id"]
+            for output in self._server.zones.values()
+            if output["display_name"] != self.name
+        }
+        _LOGGER.warning(zone_ids)
+
+        transfer_id = zone_ids.get(transfer_name)
+        if transfer_id is None:
+            _LOGGER.error(
+                "Can't transfer from %s to %s because destination not in known zones %s",
+                self.name,
+                transfer_name,
+                list(zone_ids.keys()),
+            )
+
+        _LOGGER.info("Transferring from %s to %s", self.name.lower(), transfer_name)
+        self._server.roonapi.transfer_zone(self._zone_id, transfer_id)
