@@ -236,16 +236,15 @@ class AxisNetworkDevice:
             )
             self.api.stream.stop()
 
-    @callback
-    def shutdown(self, event):
+    async def shutdown(self, event):
         """Stop the event stream."""
-        self.hass.loop.create_task(self.api.vapix.close())
         self.disconnect_from_stream()
+        await self.api.vapix.close()
 
     async def async_reset(self):
         """Reset this device to default state."""
-        await self.api.vapix.close()
         self.disconnect_from_stream()
+        await self.api.vapix.close()
 
         unload_ok = all(
             await asyncio.gather(

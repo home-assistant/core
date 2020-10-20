@@ -38,7 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "00408C12345"
@@ -384,10 +384,12 @@ async def test_shutdown():
 
     axis_device = axis.device.AxisNetworkDevice(hass, entry)
     axis_device.api = Mock()
+    axis_device.api.vapix.close = AsyncMock()
 
-    axis_device.shutdown(None)
+    await axis_device.shutdown(None)
 
     assert len(axis_device.api.stream.stop.mock_calls) == 1
+    assert len(axis_device.api.vapix.close.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):
