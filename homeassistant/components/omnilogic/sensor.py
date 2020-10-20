@@ -9,7 +9,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
+from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
 from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
 
 
@@ -29,18 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for entity_setting in entity_settings:
             for state_key, entity_class in entity_setting["entity_classes"].items():
-                if state_key not in item:
-                    continue
-
-                guard = False
-                for guard_condition in entity_setting["guard_condition"]:
-                    if guard_condition and all(
-                        item.get(guard_key) == guard_value
-                        for guard_key, guard_value in guard_condition.items()
-                    ):
-                        guard = True
-
-                if guard:
+                if check_guard(state_key, item, entity_setting):
                     continue
 
                 entity = entity_class(
