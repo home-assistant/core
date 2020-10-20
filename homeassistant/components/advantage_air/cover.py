@@ -36,10 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
 
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone Cover entity."""
-        super().__init__(instance, ac_key, zone_key)
-
     @property
     def name(self):
         """Return the name."""
