@@ -87,8 +87,10 @@ class FritzBoxScanner(DeviceScanner):
             ip_device = self.fritz_box.get_specific_host_entry(device).get(
                 "NewIPAddress"
             )
-        except fritzexceptions.FritzLookUpError as e:
-            _LOGGER.warning(f"Host entry for {device} not found", e)
+        except fritzexceptions.FritzLookUpError as fritz_lookup_error:
+            _LOGGER.warning(
+                "Host entry for %s not found: %s", device, fritz_lookup_error
+            )
 
         if not ip_device:
             return {}
