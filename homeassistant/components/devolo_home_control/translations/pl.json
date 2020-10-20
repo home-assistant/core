@@ -5,7 +5,7 @@
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika i/lub has\u0142o."
+            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika i/lub has\u0142o"
         },
         "step": {
             "user": {
