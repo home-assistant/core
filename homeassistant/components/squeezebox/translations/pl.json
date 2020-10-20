@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "no_server_found": "Nie znaleziono serwera LMS."
+            "no_server_found": "Nie znaleziono serwera LMS"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",

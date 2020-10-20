@@ -2,8 +2,6 @@
 import copy
 import json
 
-import pytest
-
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
@@ -172,37 +170,6 @@ async def test_device_update(
     assert device_entry.model == "Another model"
     assert device_entry.name == "Another name"
     assert device_entry.sw_version == "v6.6.6"
-
-
-@pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg, setup_tasmota):
-    """Test handling of exception when creating discovered device."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    mac = config["mac"]
-    data = json.dumps(config)
-
-    # Trigger an exception when the entity is added
-    with patch(
-        "hatasmota.discovery.get_device_config_helper",
-        return_value=object(),
-    ):
-        async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
-        await hass.async_block_till_done()
-
-    # Verify device entry is not created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
-    assert device_entry is None
-    assert (
-        "Exception in async_discover_device when dispatching 'tasmota_discovery_device'"
-        in caplog.text
-    )
-
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
-    await hass.async_block_till_done()
-
-    # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
-    assert device_entry is not None
 
 
 async def test_device_remove(

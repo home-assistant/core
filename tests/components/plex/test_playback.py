@@ -6,11 +6,19 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     MEDIA_TYPE_MUSIC,
 )
-from homeassistant.components.plex.const import DOMAIN, SERVERS, SERVICE_PLAY_ON_SONOS
+from homeassistant.components.plex.const import (
+    CONF_SERVER,
+    DOMAIN,
+    SERVERS,
+    SERVICE_PLAY_ON_SONOS,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DEFAULT_OPTIONS, SECONDARY_DATA
+
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_sonos_playback(hass, mock_plex_server):
@@ -108,6 +116,8 @@ async def test_sonos_playback(hass, mock_plex_server):
         hass.components.sonos,
         "get_coordinator_name",
         return_value="media_player.sonos_kitchen",
+    ), patch(
+        "plexapi.playqueue.PlayQueue.create"
     ):
         assert await hass.services.async_call(
             DOMAIN,
@@ -116,6 +126,35 @@ async def test_sonos_playback(hass, mock_plex_server):
                 ATTR_ENTITY_ID: "media_player.sonos_kitchen",
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
                 ATTR_MEDIA_CONTENT_ID: '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}',
+            },
+            True,
+        )
+
+
+async def test_playback_multiple_servers(hass, mock_websocket, setup_plex_server):
+    """Test playing media when multiple servers available."""
+    secondary_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=SECONDARY_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=SECONDARY_DATA["server_id"],
+    )
+
+    await setup_plex_server()
+    await setup_plex_server(config_entry=secondary_entry)
+
+    with patch.object(
+        hass.components.sonos,
+        "get_coordinator_name",
+        return_value="media_player.sonos_kitchen",
+    ), patch("plexapi.playqueue.PlayQueue.create"):
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_ON_SONOS,
+            {
+                ATTR_ENTITY_ID: "media_player.sonos_kitchen",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: f'{{"plex_server": "{SECONDARY_DATA[CONF_SERVER]}", "library_name": "Music", "artist_name": "Artist", "album_name": "Album"}}',
             },
             True,
         )
