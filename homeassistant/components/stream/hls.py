@@ -18,7 +18,7 @@ def async_setup_hls(hass):
     hass.http.register_view(HlsSegmentView())
     hass.http.register_view(HlsInitView())
     hass.http.register_view(HlsMasterPlaylistView())
-    return "/api/hls/{}/master_playlist.m3u8"
+    return ("/api/hls/{}/master_playlist.m3u8", "/api/hls/{}/playlist.m3u8")
 
 
 class HlsMasterPlaylistView(StreamView):

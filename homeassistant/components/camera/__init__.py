@@ -603,6 +603,7 @@ async def ws_camera_stream(hass, connection, msg):
             fmt=fmt,
             keepalive=camera_prefs.preload_stream,
             options=camera.stream_options,
+            master_playlist=msg.get("master_playlist") is False,
         )
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:

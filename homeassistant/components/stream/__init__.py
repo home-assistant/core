@@ -41,10 +41,25 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
 
 
 @bind_hass
-def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=None):
+def request_stream(
+    hass,
+    stream_source,
+    *,
+    fmt="hls",
+    keepalive=False,
+    options=None,
+    master_playlist=True,
+):
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
+
+    if not master_playlist:  # request for regular playlist, stream should already exist
+        try:
+            stream = hass.data[DOMAIN][ATTR_STREAMS].get(stream_source)
+            return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt][1].format(stream.access_token)
+        except Exception as err:
+            raise HomeAssistantError("Unable to get stream") from err
 
     if options is None:
         options = {}
@@ -73,7 +88,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         if not stream.access_token:
             stream.access_token = secrets.token_hex()
             stream.start()
-        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
+        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt][0].format(stream.access_token)
     except Exception as err:
         raise HomeAssistantError("Unable to get stream") from err
 
@@ -93,8 +108,8 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][ATTR_STREAMS] = {}
 
     # Setup HLS
-    hls_endpoint = async_setup_hls(hass)
-    hass.data[DOMAIN][ATTR_ENDPOINTS]["hls"] = hls_endpoint
+    hls_endpoints = async_setup_hls(hass)
+    hass.data[DOMAIN][ATTR_ENDPOINTS]["hls"] = hls_endpoints
 
     # Setup Recorder
     async_setup_recorder(hass)
