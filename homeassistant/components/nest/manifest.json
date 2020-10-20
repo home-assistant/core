@@ -8,5 +8,8 @@
       "python-nest==4.1.0",
       "google-nest-sdm==0.1.6"
   ],
-  "codeowners": ["@awarecan"]
+  "codeowners": [
+      "@awarecan",
+      "@allenporter"
+  ]
 }
