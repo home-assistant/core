@@ -273,6 +273,11 @@ class DSMREntity(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self.get_dsmr_object_attr("unit")
 
+    @property
+    def force_update(self):
+        """Force update."""
+        return True
+
     @staticmethod
     def translate_tariff(value, dsmr_version):
         """Convert 2/1 to normal/low depending on DSMR version."""
