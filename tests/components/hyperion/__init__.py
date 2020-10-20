@@ -24,6 +24,7 @@ TEST_YAML_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_YAML_NAME}"
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
+TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
 TEST_HYPERION_URL = f"http://{TEST_HOST}:{const.DEFAULT_PORT_UI}"

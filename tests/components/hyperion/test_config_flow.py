@@ -33,6 +33,7 @@ from . import (
     TEST_PORT,
     TEST_PORT_UI,
     TEST_SERVER_ID,
+    TEST_TITLE,
     TEST_TOKEN,
     add_test_config_entry,
     create_mock_client,
@@ -112,7 +113,7 @@ async def _create_mock_entry(hass):
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         unique_id=TEST_SERVER_ID,
-        title=TEST_SERVER_ID,
+        title=TEST_TITLE,
         data={
             "host": TEST_HOST,
             "port": TEST_PORT,
@@ -204,7 +205,7 @@ async def test_user_noauth_flow_success(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_SERVER_ID
+    assert result["title"] == TEST_TITLE
     assert result["data"] == {
         **TEST_HOST_PORT,
     }
@@ -262,7 +263,7 @@ async def test_auth_static_token(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_SERVER_ID
+    assert result["title"] == TEST_TITLE
     assert result["data"] == {
         **TEST_HOST_PORT,
         CONF_TOKEN: TEST_TOKEN,
@@ -386,7 +387,7 @@ async def test_auth_create_token_success(hass):
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["handler"] == DOMAIN
-        assert result["title"] == TEST_SERVER_ID
+        assert result["title"] == TEST_TITLE
         assert result["data"] == {
             **TEST_HOST_PORT,
             CONF_TOKEN: TEST_TOKEN,
@@ -407,7 +408,7 @@ async def test_ssdp_success(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_SERVER_ID
+    assert result["title"] == TEST_TITLE
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
@@ -468,7 +469,7 @@ async def test_import(hass):
     # No human interaction should be required.
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_SERVER_ID
+    assert result["title"] == TEST_TITLE
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,

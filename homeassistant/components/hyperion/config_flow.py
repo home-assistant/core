@@ -10,14 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
-from homeassistant.const import (
-    CONF_BASE,
-    CONF_HOST,
-    CONF_ID,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
 
@@ -338,7 +331,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167
         return self.async_create_entry(
-            title=self.context[CONF_UNIQUE_ID], data=self._data
+            title=f"{self._data[CONF_HOST]}:{self._data[CONF_PORT]}", data=self._data
         )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
