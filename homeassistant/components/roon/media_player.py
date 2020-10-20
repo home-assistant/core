@@ -524,7 +524,7 @@ class RoonDevice(MediaPlayerEntity):
 
         if link_name not in sync_available.keys():
             _LOGGER.error(
-                "Can't sync player %s from %s because it's not in sync available list %s",
+                "Can't sync player %s with %s because it's not in the sync available list %s",
                 link_name,
                 self.name,
                 list(sync_available.keys()),
