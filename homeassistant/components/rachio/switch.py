@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -108,28 +109,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = iter(service.data[ATTR_DURATION])
         default_time = service.data[ATTR_DURATION][0]
+        entity_to_zone_id = {
+            entity.entity_id: entity.zone_id for entity in zone_entities
+        }
 
-        # Iterate through service data first to preserve zone order
-        for (count, data) in enumerate(entity_id, 1):
-            for zone in zone_entities:
-                if zone.entity_id == data:
-                    # Time can be passed as a list per zone,
-                    # or one time for all zones
-                    time = int(next(duration, default_time)) * 60
-                    zones_list.append(
-                        {
-                            ATTR_ID: zone.id,
-                            ATTR_DURATION: time,
-                            ATTR_SORT_ORDER: count,
-                        }
-                    )
-                    break
+        for (count, data) in enumerate(entity_id):
+            if data in entity_to_zone_id:
+                # Time can be passed as a list per zone,
+                # or one time for all zones
+                time = int(next(duration, default_time)) * 60
+                zones_list.append(
+                    {
+                        ATTR_ID: entity_to_zone_id.get(data),
+                        ATTR_DURATION: time,
+                        ATTR_SORT_ORDER: count,
+                    }
+                )
 
         if len(zones_list) != 0:
             person.start_multiple_zones(zones_list)
             _LOGGER.debug("Starting zone(s) %s", entity_id)
         else:
-            _LOGGER.warning("No matching zones found in given entity_ids")
+            raise HomeAssistantError("No matching zones found in given entity_ids")
 
     hass.services.async_register(
         DOMAIN_RACHIO,
