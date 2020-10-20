@@ -192,6 +192,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.warning(
                 "Could not automatically migrate Hyperion YAML to an options entry."
             )
+            return
+        _LOGGER.info(
+            "Successfully migrated Hyperion YAML configuration to a config entry."
+        )
 
     # Kick off a config flow to create the config entry.
     hass.async_create_task(
