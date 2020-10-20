@@ -6,7 +6,7 @@ from fritzconnection.lib.fritzphonebook import FritzPhonebook
 
 from homeassistant.util import Throttle
 
-from .const import MIN_TIME_PHONEBOOK_UPDATE, UNKOWN_NAME
+from .const import MIN_TIME_PHONEBOOK_UPDATE, REGEX_NUMBER, UNKOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class FritzBoxPhonebook:
 
         self.phonebook_dict = self.fph.get_all_names(self.phonebook_id)
         self.number_dict = {
-            re.sub(r"[^\d\+]", "", nr): name
+            re.sub(REGEX_NUMBER, "", nr): name
             for name, nrs in self.phonebook_dict.items()
             for nr in nrs
         }
@@ -54,7 +54,7 @@ class FritzBoxPhonebook:
 
     def get_name(self, number):
         """Return a name for a given phone number."""
-        number = re.sub(r"[^\d\+]", "", str(number))
+        number = re.sub(REGEX_NUMBER, "", str(number))
         if self.number_dict is None:
             return UNKOWN_NAME
 

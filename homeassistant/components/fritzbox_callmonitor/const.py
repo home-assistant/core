@@ -22,6 +22,7 @@ FRITZ_SERVICE_DEVICE_INFO = "DeviceInfo"
 
 UNKOWN_NAME = "unknown"
 SERIAL_NUMBER = "serial_number"
+REGEX_NUMBER = r"[^\d\+]"
 
 CONF_PHONEBOOK = "phonebook"
 CONF_PHONEBOOK_NAME = "phonebook_name"
