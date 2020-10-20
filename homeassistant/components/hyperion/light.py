@@ -145,12 +145,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
                 break
     else:
-        # Possibility 3: First upgrade to the new Hyperion component.
+        # Possibility 3: This is the first upgrade to the new Hyperion component.
         # No config entry and no entity_registry entry, in which case the CONF_NAME
         # variable will be used as the preferred name. Rather than pollute the config
         # entry with a "suggested name" type variable, instead create an entry in the
         # registry that will subsequently be used when the entity is created with this
         # unique_id.
+
+        # This also covers the case that should not occur in the wild (no config entry,
+        # but new style unique_id).
         current_platform = entity_platform.current_platform.get()
         registry.async_get_or_create(
             domain=LIGHT_DOMAIN,

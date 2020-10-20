@@ -87,7 +87,7 @@ async def test_setup_yaml_old_style_unique_id(hass):
     # This tests "Possibility 2" from async_setup_platform()
     old_unique_id = f"{TEST_HOST}:{TEST_PORT}-0"
 
-    # Add a pre-existing config entry.
+    # Add a pre-existing registry entry.
     registry = await async_get_registry(hass)
     registry.async_get_or_create(
         domain=LIGHT_DOMAIN,
@@ -108,6 +108,44 @@ async def test_setup_yaml_old_style_unique_id(hass):
         TEST_SERVER_ID, LIGHT_DOMAIN, 0
     )
     assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
+
+    # There should be a config entry with the correct server unique_id.
+    entry_id = next(iter(hass.data[DOMAIN]))
+    assert hass.data[DOMAIN][entry_id] == client
+    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert (
+        hass.config_entries.async_get_entry(entry_id).options
+        == TEST_CONFIG_ENTRY_OPTIONS
+    )
+
+
+async def test_setup_yaml_new_style_unique_id_wo_config(hass):
+    """Test an a new unique_id without a config entry."""
+    # Note: This casde should not happen in the wild, as no released version of Home
+    # Assistant should this combination, but verify correct behavior for defense in
+    # depth.
+
+    new_unique_id = get_hyperion_unique_id(TEST_SERVER_ID, LIGHT_DOMAIN, 0)
+    entity_id_to_preserve = "light.magic_entity"
+
+    # Add a pre-existing registry entry.
+    registry = await async_get_registry(hass)
+    registry.async_get_or_create(
+        domain=LIGHT_DOMAIN,
+        platform=DOMAIN,
+        unique_id=new_unique_id,
+        suggested_object_id=entity_id_to_preserve.split(".")[1],
+    )
+
+    client = create_mock_client()
+    await _setup_entity_yaml(hass, client=client)
+
+    # The entity should have been created with the same entity_id.
+    assert hass.states.get(entity_id_to_preserve) is not None
+
+    # The unique_id should have been updated in the registry (rather than the one
+    # specified above).
+    assert registry.async_get(entity_id_to_preserve).unique_id == new_unique_id
 
     # There should be a config entry with the correct server unique_id.
     entry_id = next(iter(hass.data[DOMAIN]))
