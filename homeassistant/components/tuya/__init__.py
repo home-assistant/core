@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             tuya.poll_devices_update()
         except TuyaFrequentlyInvokeException as exc:
-            _LOGGER.warning(exc)
+            _LOGGER.error(exc)
         return tuya.get_all_devices()
 
     async def async_poll_devices_update(event_time):
@@ -289,6 +289,7 @@ class TuyaDevice(Entity):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
+        self._unsub_dispatcher = None
 
     def _inc_device_count(self):
         """Increment static variable device count."""
@@ -322,6 +323,13 @@ class TuyaDevice(Entity):
         async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
         async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
         self._inc_device_count()
+
+    async def async_will_remove_from_hass(self):
+        """Unregister config update dispatcher."""
+        if self._unsub_dispatcher is not None:
+            self._unsub_dispatcher()  # pylint: disable=not-callable
+            self._unsub_dispatcher = None
+        self._dec_device_count()
 
     @property
     def object_id(self):
@@ -361,12 +369,11 @@ class TuyaDevice(Entity):
         try:
             self._tuya.update(use_discovery=(TuyaDevice._device_count > 1))
         except TuyaFrequentlyInvokeException as exc:
-            _LOGGER.warning(exc)
+            _LOGGER.error(exc)
 
     async def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
-            self._dec_device_count()
             entity_registry = (
                 await self.hass.helpers.entity_registry.async_get_registry()
             )

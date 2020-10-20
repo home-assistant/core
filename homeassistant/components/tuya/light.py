@@ -123,7 +123,9 @@ class TuyaLight(TuyaDevice, LightEntity):
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
         self._load_config()
-        async_dispatcher_connect(self.hass, SIGNAL_CONFIG_ENTITY, self._load_config)
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, SIGNAL_CONFIG_ENTITY, self._load_config
+        )
         return
 
     @property
