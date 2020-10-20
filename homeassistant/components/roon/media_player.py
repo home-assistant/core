@@ -112,7 +112,6 @@ class RoonDevice(MediaPlayerEntity):
     def __init__(self, server, player_data):
         """Initialize Roon device object."""
         self._remove_signal_status = None
-        self._sync_available = []
         self._server = server
         self._available = True
         self._last_position_update = None
