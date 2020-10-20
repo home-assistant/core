@@ -85,11 +85,15 @@ async def test_setup_yaml_already_converted(hass):
 async def test_setup_yaml_old_style_unique_id(hass):
     """Test an already converted YAML style config."""
     # This tests "Possibility 2" from async_setup_platform()
+    old_unique_id = f"{TEST_HOST}:{TEST_PORT}-0"
 
     # Add a pre-existing config entry.
     registry = await async_get_registry(hass)
     registry.async_get_or_create(
-        domain=LIGHT_DOMAIN, platform=DOMAIN, unique_id=f"{TEST_HOST}:{TEST_PORT}-0"
+        domain=LIGHT_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        suggested_object_id=TEST_YAML_NAME,
     )
 
     client = create_mock_client()
@@ -103,6 +107,7 @@ async def test_setup_yaml_old_style_unique_id(hass):
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
         TEST_SERVER_ID, LIGHT_DOMAIN, 0
     )
+    assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
 
     # There should be a config entry with the correct server unique_id.
     entry_id = next(iter(hass.data[DOMAIN]))

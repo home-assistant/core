@@ -141,7 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for entity_id, entity in registry.entities.items():
         if entity.config_entry_id is None and entity.platform == DOMAIN:
             result = re.search(r"([^:]+):(\d+)-%i" % instance, entity.unique_id)
-            if result and result.group(0) == host and int(result.group(1)) == port:
+            if result and result.group(1) == host and int(result.group(2)) == port:
                 registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
                 break
     else:
