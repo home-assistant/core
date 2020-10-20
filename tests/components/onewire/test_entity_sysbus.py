@@ -34,6 +34,7 @@ MOCK_DEVICE_SENSORS = {
             },
         ]
     },
+    "12-111111111111": {"sensors": []},
     "1D-111111111111": {"sensors": []},
     "22-111111111111": {
         "sensors": [
@@ -46,6 +47,7 @@ MOCK_DEVICE_SENSORS = {
             },
         ]
     },
+    "26-111111111111": {"sensors": []},
     "28-111111111111": {
         "sensors": [
             {
@@ -98,6 +100,9 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     expected_sensors = MOCK_DEVICE_SENSORS[device_id]["sensors"]
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
+
+    # Ensure enough read side effect
+    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
 
     with patch(
         "homeassistant.components.onewire.sensor.os.path.isdir", return_value=True
