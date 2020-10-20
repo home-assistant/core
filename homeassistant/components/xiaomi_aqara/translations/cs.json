@@ -14,7 +14,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP adresa br\u00e1ny"
+                    "select_ip": "IP adresa"
                 },
                 "title": "Vyberte br\u00e1nu Xiaomi Aqara, kterou chcete p\u0159ipojit"
             },

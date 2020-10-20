@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Akcesorium lub mostek o tej samej nazwie lub adresie IP jest ju\u017c skonfigurowany."
+            "port_name_in_use": "Akcesorium lub mostek o tej samej nazwie lub adresie IP jest ju\u017c skonfigurowany"
         },
         "step": {
             "pairing": {

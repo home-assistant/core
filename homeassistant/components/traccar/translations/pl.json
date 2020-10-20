@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Twoja instancja Home Assistant musi by\u0107 dost\u0119pna z Internetu, aby otrzymywa\u0107 wiadomo\u015bci z Traccar.",
+            "not_internet_accessible": "Twoja instancja Home Assistant musi by\u0107 dost\u0119pna z Internetu, aby otrzymywa\u0107 wiadomo\u015bci z Traccar",
             "one_instance_allowed": "Niezb\u0119dna jest tylko jedna instancja.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
