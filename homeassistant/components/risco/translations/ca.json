@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Demana codi PIN per activar",
-                    "code_disarm_required": "Demana codi PIN per desactivar",
+                    "code_arm_required": "Demana el Codi PIN per activar",
+                    "code_disarm_required": "Demana el Codi PIN per desactivar",
                     "scan_interval": "Freq\u00fc\u00e8ncia de sondeig a Risco (en segons)"
                 },
                 "title": "Opcions de configuraci\u00f3"

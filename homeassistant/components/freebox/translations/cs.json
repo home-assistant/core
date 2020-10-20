@@ -5,9 +5,13 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "register_failed": "Registrace se nezda\u0159ila, zkuste to pros\u00edm znovu",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "link": {
+                "title": "Propojte router Freebox"
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",

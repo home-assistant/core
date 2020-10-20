@@ -60,7 +60,6 @@ homeassistant/components/blebox/* @gadgetmobile
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
-homeassistant/components/bom/* @maddenp
 homeassistant/components/bond/* @prystupa
 homeassistant/components/braviatv/* @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
@@ -164,6 +163,7 @@ homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/gpsd/* @fabaff
+homeassistant/components/gree/* @cmroche
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
@@ -318,7 +318,6 @@ homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
 homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
-homeassistant/components/panasonic_viera/* @joogps
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/pcal9535a/* @Shulyaka

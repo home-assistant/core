@@ -13,7 +13,9 @@
             "pair_tv": {
                 "data": {
                     "pin": "PIN k\u00f3d"
-                }
+                },
+                "description": "Va\u0161e televize by m\u011bla zobrazovat k\u00f3d. Zadejte tento k\u00f3d do formul\u00e1\u0159e a pokra\u010dujte dal\u0161\u00edm krokem, kter\u00fdm dokon\u010d\u00edte p\u00e1rov\u00e1n\u00ed.",
+                "title": "Dokon\u010dete proces p\u00e1rov\u00e1n\u00ed"
             },
             "pairing_complete": {
                 "description": "V\u00e1\u0161 Za\u0159\u00edzen\u00ed VIZIO SmartCast je nyn\u00ed p\u0159ipojeno k Home Assistant.",
@@ -38,6 +40,12 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplikace, kter\u00e9 chcete zahrnout nebo vylou\u010dit",
+                    "include_or_exclude": "Zahrnout nebo vylou\u010dit aplikace?",
+                    "volume_step": "V\u00fd\u0161e kroku hlasitosti"
+                },
+                "description": "Pokud m\u00e1te Smart TV, m\u016f\u017eete vyfiltrovat seznam zdroj\u016f v\u00fdb\u011brem aplikac\u00ed, kter\u00e9 chcete do seznamu zdroj\u016f zahrnout nebo vylou\u010dit.",
                 "title": "Aktualizujte mo\u017enosti Za\u0159\u00edzen\u00ed VIZIO SmartCast"
             }
         }

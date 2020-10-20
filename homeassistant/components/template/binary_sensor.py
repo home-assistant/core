@@ -1,6 +1,4 @@
 """Support for exposing a templated binary sensor."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -29,8 +27,6 @@ from homeassistant.helpers.template import result_as_boolean
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"

@@ -3,6 +3,7 @@ from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_entries_for_device,
@@ -204,9 +205,20 @@ async def async_remove_orphaned_entries_service(hass, data):
         if gateway.config_entry.entry_id in entry.config_entries
     ]
 
-    # Don't remove the Gateway device
-    if gateway.device_id in devices_to_be_removed:
-        devices_to_be_removed.remove(gateway.device_id)
+    # Don't remove the Gateway host entry
+    gateway_host = device_registry.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
+        identifiers=set(),
+    )
+    if gateway_host.id in devices_to_be_removed:
+        devices_to_be_removed.remove(gateway_host.id)
+
+    # Don't remove the Gateway service entry
+    gateway_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, gateway.api.config.bridgeid)}, connections=set()
+    )
+    if gateway_service.id in devices_to_be_removed:
+        devices_to_be_removed.remove(gateway_service.id)
 
     # Don't remove devices belonging to available events
     for event in gateway.events:

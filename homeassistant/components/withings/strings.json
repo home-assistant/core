@@ -9,12 +9,12 @@
       },
       "pick_implementation": { "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]" },
       "reauth": {
-        "title": "Re-authenticate Profile",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
       }
     },
     "error": {
-      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "abort": {
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",

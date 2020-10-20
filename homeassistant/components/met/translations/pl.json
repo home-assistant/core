@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
-            "name_exists": "Lokalizacja ju\u017c istnieje."
+            "name_exists": "Lokalizacja ju\u017c istnieje"
         },
         "step": {
             "user": {

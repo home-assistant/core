@@ -9,6 +9,7 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
+from pysonos.core import PLAY_MODE_BY_MEANING, PLAY_MODES
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -196,6 +197,14 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 ]
+
+REPEAT_TO_SONOS = {
+    REPEAT_MODE_OFF: False,
+    REPEAT_MODE_ALL: True,
+    REPEAT_MODE_ONE: "ONE",
+}
+
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -506,8 +515,7 @@ class SonosEntity(MediaPlayerEntity):
         self._player = player
         self._player_volume = None
         self._player_muted = None
-        self._shuffle = None
-        self._repeat = None
+        self._play_mode = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -679,8 +687,7 @@ class SonosEntity(MediaPlayerEntity):
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._shuffle = self.soco.shuffle
-            self._repeat = self.soco.repeat
+            self._play_mode = self.soco.play_mode
             self.update_volume()
             self._set_favorites()
 
@@ -725,8 +732,7 @@ class SonosEntity(MediaPlayerEntity):
         if new_status == "TRANSITIONING":
             return
 
-        self._shuffle = self.soco.shuffle
-        self._repeat = self.soco.repeat
+        self._play_mode = event.current_play_mode if event else self.soco.play_mode
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -960,19 +966,14 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self._play_mode][0]
 
     @property
     @soco_coordinator
     def repeat(self):
         """Return current repeat mode."""
-        if self._repeat is True:
-            return REPEAT_MODE_ALL
-
-        if self._repeat == "ONE":
-            return REPEAT_MODE_ONE
-
-        return REPEAT_MODE_OFF
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
     @soco_coordinator
@@ -1073,18 +1074,17 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def set_repeat(self, repeat):
         """Set repeat mode."""
-        repeat_map = {
-            REPEAT_MODE_OFF: False,
-            REPEAT_MODE_ALL: True,
-            REPEAT_MODE_ONE: "ONE",
-        }
-        self.soco.repeat = repeat_map[repeat]
+        sonos_shuffle = PLAY_MODES[self._play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error()
     def mute_volume(self, mute):

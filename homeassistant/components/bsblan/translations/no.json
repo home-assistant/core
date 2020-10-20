@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kunne ikke koble til BSB-Lan-enheten."
         },
         "flow_title": "",
@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Vert",
                     "passkey": "Tilgangsn\u00f8kkel streng",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Konfigurer din BSB-Lan-enhet for \u00e5 integrere med Home Assistant.",
                 "title": "Koble til BSB-Lan-enheten"

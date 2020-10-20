@@ -3,11 +3,11 @@
         "abort": {
             "already_configured": "Po\u0142\u0105czenie z modemem Insteon jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "select_single": "Wybierz jedn\u0105 z opcji."
+            "select_single": "Wybierz jedn\u0105 z opcji"
         },
         "step": {
             "hub1": {
@@ -78,8 +78,8 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "input_error": "Nieprawid\u0142owe wpisy, sprawd\u017a wpisane warto\u015bci.",
-            "select_single": "Wybierz jedn\u0105 z opcji."
+            "input_error": "Nieprawid\u0142owe wpisy, sprawd\u017a wpisane warto\u015bci",
+            "select_single": "Wybierz jedn\u0105 z opcji"
         },
         "step": {
             "add_override": {

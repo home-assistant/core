@@ -5,7 +5,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil",
             "unsupported_version": "BleBox-enheten har utdatert fastvare. Vennligst oppgrader den f\u00f8rst."
         },
@@ -14,7 +14,7 @@
             "user": {
                 "data": {
                     "host": "IP adresse",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Konfigurer BleBox-en til \u00e5 integreres med Home Assistant.",
                 "title": "Konfigurere BleBox-enheten"

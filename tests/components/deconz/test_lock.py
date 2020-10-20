@@ -1,10 +1,15 @@
 """deCONZ lock platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
+from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-import homeassistant.components.lock as lock
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -32,11 +37,11 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, lock.DOMAIN, {"lock": {"platform": deconz.DOMAIN}}
+            hass, LOCK_DOMAIN, {"lock": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_locks(hass):
@@ -78,9 +83,9 @@ async def test_locks(hass):
 
     with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
-            lock.DOMAIN,
-            lock.SERVICE_LOCK,
-            {"entity_id": "lock.door_lock"},
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: "lock.door_lock"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -90,9 +95,9 @@ async def test_locks(hass):
 
     with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
-            lock.DOMAIN,
-            lock.SERVICE_UNLOCK,
-            {"entity_id": "lock.door_lock"},
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.door_lock"},
             blocking=True,
         )
         await hass.async_block_till_done()

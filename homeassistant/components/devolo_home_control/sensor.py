@@ -110,6 +110,9 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
         if self._device_class is None:
             self._name += f" {self._multi_level_sensor_property.sensor_type}"
 
+        if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
+            self._enabled_default = False
+
 
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
     """Representation of a battery entity within devolo Home Control."""

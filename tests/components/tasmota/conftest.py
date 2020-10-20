@@ -1,5 +1,6 @@
 """Test fixtures for Tasmota component."""
 
+from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
 from homeassistant import config_entries
@@ -10,7 +11,12 @@ from homeassistant.components.tasmota.const import (
 )
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    async_mock_service,
+    mock_device_registry,
+    mock_registry,
+)
 
 
 @pytest.fixture
@@ -25,10 +31,30 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
+@pytest.fixture
+def calls(hass):
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")
+
+
 @pytest.fixture(autouse=True)
 def disable_debounce():
     """Set MQTT debounce timer to zero."""
     with patch("hatasmota.mqtt.DEBOUNCE_TIMEOUT", 0):
+        yield
+
+
+@pytest.fixture
+def status_sensor_disabled():
+    """Fixture to allow overriding MQTT config."""
+    return True
+
+
+@pytest.fixture(autouse=True)
+def disable_status_sensor(status_sensor_disabled):
+    """Disable Tasmota status sensor."""
+    wraps = None if status_sensor_disabled else get_status_sensor_entities
+    with patch("hatasmota.discovery.get_status_sensor_entities", wraps=wraps):
         yield
 
 
