@@ -300,7 +300,7 @@ aurorapy==0.2.6
 av==8.0.2
 
 # homeassistant.components.avea
-# avea==1.4
+avea==1.4
 
 # homeassistant.components.avion
 # avion==0.10
