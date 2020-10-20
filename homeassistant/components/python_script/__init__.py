@@ -176,12 +176,15 @@ def execute(hass, filename, source, data=None):
 
         return getattr(obj, name, default)
 
+    extra_builtins = {
+        "datetime": datetime,
+        "sorted": sorted,
+        "time": TimeWrapper(),
+        "dt_util": dt_util,
+    }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
-    builtins["datetime"] = datetime
-    builtins["sorted"] = sorted
-    builtins["time"] = TimeWrapper()
-    builtins["dt_util"] = dt_util
+    builtins.update(extra_builtins)
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
