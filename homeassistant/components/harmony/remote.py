@@ -317,10 +317,14 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._available = True
         self.async_write_ha_state()
         async_dispatcher_send(
-            self.hass, SIGNAL_UPDATE_ACTIVITY, {"current_activity": activity_name}
+            self.hass,
+            f"{SIGNAL_UPDATE_ACTIVITY}-{self.unique_id}",
+            {"current_activity": activity_name},
         )
         async_dispatcher_send(
-            self.hass, CONNECTION_UPDATE_ACTIVITY, {"available": self._available}
+            self.hass,
+            f"{CONNECTION_UPDATE_ACTIVITY}-{self.unique_id}",
+            {"available": self._available},
         )
 
     async def new_config(self, _=None):
@@ -348,7 +352,9 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
             # Still disconnected. Let the state engine know.
             self.async_write_ha_state()
             async_dispatcher_send(
-                self.hass, CONNECTION_UPDATE_ACTIVITY, {"available": self._available}
+                self.hass,
+                f"{CONNECTION_UPDATE_ACTIVITY}-{self.unique_id}",
+                {"available": self._available},
             )
 
     async def async_turn_on(self, **kwargs):

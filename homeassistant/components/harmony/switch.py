@@ -74,13 +74,17 @@ class HarmonyActivitySwitch(SwitchEntity):
         """Call when entity is added to hass."""
         self._dispatcher_disconnectors.append(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_ACTIVITY, self._update_activity_callback
+                self.hass,
+                f"{SIGNAL_UPDATE_ACTIVITY}-{self._device.unique_id}",
+                self._update_activity_callback,
             )
         )
 
         self._dispatcher_disconnectors.append(
             async_dispatcher_connect(
-                self.hass, CONNECTION_UPDATE_ACTIVITY, self._update_connection_callback
+                self.hass,
+                f"{CONNECTION_UPDATE_ACTIVITY}-{self._device.unique_id}",
+                self._update_connection_callback,
             )
         )
 
