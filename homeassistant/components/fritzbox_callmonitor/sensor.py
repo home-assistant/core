@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -87,11 +86,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     phonebook_id = config_entry.data[CONF_PHONEBOOK]
     prefixes = config_entry.options.get(CONF_PREFIXES)
     serial_number = config_entry.data[SERIAL_NUMBER]
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
 
     phonebook_info = await hass.async_add_executor_job(
         phonebook.fph.phonebook_info, phonebook_id
     )
-
     actual_phonebook_name = phonebook_info[FRITZ_ATTR_NAME]
 
     if phonebook_name != actual_phonebook_name:
@@ -106,24 +106,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         unique_id=unique_id,
         phonebook=phonebook,
         prefixes=prefixes,
-    )
-
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-
-    monitor = FritzBoxCallMonitor(
         host=host,
         port=port,
-        sensor=sensor,
     )
-    monitor.connect()
 
-    @callback
-    def _stop_monitoring(event):
-        """Stop monitoring."""
-        monitor.stopped.set()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_monitoring)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, sensor.async_will_remove_from_hass()
+    )
 
     async_add_entities([sensor])
 
@@ -131,7 +120,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FritzBoxCallSensor(Entity):
     """Implementation of a Fritz!Box call monitor."""
 
-    def __init__(self, name, unique_id, phonebook, prefixes):
+    def __init__(self, name, unique_id, phonebook, prefixes, host, port):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
@@ -139,6 +128,29 @@ class FritzBoxCallSensor(Entity):
         self._unique_id = unique_id
         self._phonebook = phonebook
         self._prefixes = prefixes
+        self._host = host
+        self._port = port
+        self._monitor = None
+
+    async def async_added_to_hass(self):
+        """Connect to FRITZ!Box to monitor its call state."""
+        _LOGGER.debug("Starting monitor for: %s", self._name)
+        self._monitor = FritzBoxCallMonitor(
+            host=self._host,
+            port=self._port,
+            sensor=self,
+        )
+        self._monitor.connect()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect from FRITZ!Box by stopping monitor."""
+        if (
+            self._monitor
+            and self._monitor.stopped
+            and not self._monitor.stopped.is_set()
+        ):
+            _LOGGER.debug("Stopping monitor for: %s", self._name)
+            self._monitor.stopped.set()
 
     def set_state(self, state):
         """Set the state."""
