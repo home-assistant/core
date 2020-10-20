@@ -30,10 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Filter."""
 
-    def __init__(self, instance, ac_key):
-        """Initialize the Advantage Air Filter entity."""
-        super().__init__(instance, ac_key)
-
     @property
     def name(self):
         """Return the name."""
@@ -57,10 +53,6 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
 
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone Motion."""
-
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone Motion entity."""
-        super().__init__(instance, ac_key, zone_key)
 
     @property
     def name(self):
