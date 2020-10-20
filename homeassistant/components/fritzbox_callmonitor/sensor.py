@@ -244,7 +244,7 @@ class FritzBoxCallMonitor:
     def _listen(self):
         """Listen to incoming or outgoing calls."""
         _LOGGER.debug("Connection established, waiting for response...")
-        while not self.stopped.isSet():
+        while not self.stopped.is_set():
             try:
                 response = self.sock.recv(2048)
             except SocketTimeout:
