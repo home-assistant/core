@@ -8,5 +8,6 @@
   ],
   "requirements": [
     "advantage_air==0.2.1"
-  ]
+  ],
+  "quality_scale": "platinum"
 }
