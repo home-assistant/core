@@ -22,13 +22,24 @@ def _get_mock_harmonyclient():
     type(harmonyclient_mock).close = AsyncMock()
     type(harmonyclient_mock).get_activity_name = MagicMock(return_value="Watch TV")
     type(harmonyclient_mock.hub_config).activities = PropertyMock(
-        return_value=[{"name": "Watch TV", "id": 123}]
+        return_value=[
+            {"name": "Watch TV", "id": 123},
+            {"name": "Play Music", "id": 456},
+        ]
     )
     type(harmonyclient_mock.hub_config).devices = PropertyMock(
         return_value=[{"name": "My TV", "id": 1234}]
     )
     type(harmonyclient_mock.hub_config).info = PropertyMock(return_value={})
     type(harmonyclient_mock.hub_config).hub_state = PropertyMock(return_value={})
+    type(harmonyclient_mock.hub_config).config = PropertyMock(
+        return_value={
+            "activity": [
+                {"id": 123, "label": "Watch TV"},
+                {"id": 456, "label": "Play Music"},
+            ]
+        }
+    )
 
     return harmonyclient_mock
 
@@ -214,7 +225,6 @@ async def test_form_cannot_connect(hass):
 
 async def test_options_flow(hass):
     """Test config flow options."""
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="abcde12345",
