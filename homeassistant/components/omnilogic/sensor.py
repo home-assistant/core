@@ -201,12 +201,15 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
 
         ph_state = self.coordinator.data[self._item_id][self._state_key]
-        ph_state = float(ph_state) + float(
-            self.coordinator.config_entry.options.get("ph_offset", DEFAULT_PH_OFFSET)
-        )
 
         if ph_state == 0:
             ph_state = None
+        else:
+            ph_state = float(ph_state) + float(
+                self.coordinator.config_entry.options.get(
+                    "ph_offset", DEFAULT_PH_OFFSET
+                )
+            )
 
         return ph_state
 
@@ -241,7 +244,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the ORP sensor."""
 
-        orp_state = self.coordinator.data[self._item_id][self._state_key]
+        orp_state = int(self.coordinator.data[self._item_id][self._state_key])
 
         if orp_state == -1:
             orp_state = None
