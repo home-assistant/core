@@ -34,6 +34,7 @@ from homeassistant.components.adaptive_lighting.switch import (
     create_context,
     is_our_context,
 )
+from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -57,8 +58,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from .fake_light import FakeLight
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -115,19 +114,19 @@ async def setup_lights(hass):
         # Make sure it is empty
         platform.ENTITIES.pop()
     lights = [
-        FakeLight(
+        DemoLight(
             unique_id="light_1",
             name="Bed Light",
             state=True,
             ct=200,
         ),
-        FakeLight(
+        DemoLight(
             unique_id="light_2",
             name="Ceiling Lights",
             state=True,
             ct=380,
         ),
-        FakeLight(
+        DemoLight(
             unique_id="light_3",
             name="Kitchen Lights",
             state=True,
