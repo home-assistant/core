@@ -1,9 +1,6 @@
 """The tests for the Google Wifi platform."""
 from datetime import datetime, timedelta
 
-import pytest
-import requests_mock
-
 from homeassistant import core as ha
 import homeassistant.components.google_wifi.sensor as google_wifi
 from homeassistant.const import STATE_UNKNOWN
@@ -13,7 +10,7 @@ from homeassistant.util import dt as dt_util
 from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component
 
-NAME = "foo"
+SENSOR_DICT = {}
 
 MOCK_DATA = (
     '{"software": {"softwareVersion":"initial",'
@@ -37,16 +34,10 @@ MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
 """Tests for setting up the Google Wifi sensor platform."""
 
 
-@pytest.fixture
-def cleanUp(self):
-    """Fixture for cleanup."""
-    return self.addCleanup(self.hass.stop)
-
-
-async def test_setup_minimum(hass):
+async def test_setup_minimum(hass, requests_mock):
     """Test setup with minimum configuration."""
     resource = f"http://{google_wifi.DEFAULT_HOST}{google_wifi.ENDPOINT}"
-    requests_mock.Mocker().get(resource, status_code=200)
+    requests_mock.get(resource, status_code=200)
     assert await async_setup_component(
         hass,
         "sensor",
@@ -55,10 +46,10 @@ async def test_setup_minimum(hass):
     assert_setup_component(1, "sensor")
 
 
-async def test_setup_get(hass):
+async def test_setup_get(hass, requests_mock):
     """Test setup with full configuration."""
     resource = f"http://localhost{google_wifi.ENDPOINT}"
-    requests_mock.Mocker().get(resource, status_code=200)
+    requests_mock.get(resource, status_code=200)
     assert await async_setup_component(
         hass,
         "sensor",
@@ -84,78 +75,66 @@ async def test_setup_get(hass):
 """Tests for Google Wifi sensor platform."""
 
 
-@pytest.fixture
-def setUp(self):
-    """Set up things to be run when tests are started."""
-    with requests_mock.Mocker() as mock_req:
-        self.setup_api(MOCK_DATA, mock_req)
-    return self.addCleanup(self.hass.stop)
-
-
-def setup_api(self, data, mock_req):
+def setup_api(data, requests_mock):
     """Set up API with fake data."""
     resource = f"http://localhost{google_wifi.ENDPOINT}"
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
-        mock_req.get(resource, text=data, status_code=200)
+        requests_mock.get(resource, text=data, status_code=200)
         conditions = google_wifi.MONITORED_CONDITIONS.keys()
-        self.api = google_wifi.GoogleWifiAPI("localhost", conditions)
-    self.name = NAME
-    self.sensor_dict = {}
+        API = google_wifi.GoogleWifiAPI("localhost", conditions)
+    NAME = "foo"
     for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
-        sensor = google_wifi.GoogleWifiSensor(self.api, self.name, condition)
-        name = f"{self.name}_{condition}"
+        sensor = google_wifi.GoogleWifiSensor(API, NAME, condition)
+        name = f"{NAME}_{condition}"
         units = cond_list[1]
         icon = cond_list[2]
-        self.sensor_dict[condition] = {
+        SENSOR_DICT[condition] = {
             "sensor": sensor,
             "name": name,
             "units": units,
             "icon": icon,
         }
+    return API
 
 
-def fake_delay(self, ha_delay):
+def fake_delay(hass, ha_delay):
     """Fake delay to prevent update throttle."""
     hass_now = dt_util.utcnow()
     shifted_time = hass_now + timedelta(seconds=ha_delay)
-    self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+    hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
 
 
-@pytest.fixture
-def test_name(self):
+def test_name():
     """Test the name."""
-    for name in self.sensor_dict:
-        sensor = self.sensor_dict[name]["sensor"]
-        test_name = self.sensor_dict[name]["name"]
+    for name in SENSOR_DICT:
+        sensor = SENSOR_DICT[name]["sensor"]
+        test_name = SENSOR_DICT[name]["name"]
         assert test_name == sensor.name
 
 
-@pytest.fixture
-def test_unit_of_measurement(self):
+def test_unit_of_measurement():
     """Test the unit of measurement."""
-    for name in self.sensor_dict:
-        sensor = self.sensor_dict[name]["sensor"]
-        assert self.sensor_dict[name]["units"] == sensor.unit_of_measurement
+    for name in SENSOR_DICT:
+        sensor = SENSOR_DICT[name]["sensor"]
+        assert SENSOR_DICT[name]["units"] == sensor.unit_of_measurement
 
 
-@pytest.fixture
-def test_icon(self):
+def test_icon():
     """Test the icon."""
-    for name in self.sensor_dict:
-        sensor = self.sensor_dict[name]["sensor"]
-        assert self.sensor_dict[name]["icon"] == sensor.icon
+    for name in SENSOR_DICT:
+        sensor = SENSOR_DICT[name]["sensor"]
+        assert SENSOR_DICT[name]["icon"] == sensor.icon
 
 
-@pytest.fixture
-def test_state(self):
+def test_state(hass, requests_mock):
     """Test the initial state."""
-    self.setup_api(MOCK_DATA, requests_mock.Mocker())
+    setup_api(MOCK_DATA, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
-        for name in self.sensor_dict:
-            sensor = self.sensor_dict[name]["sensor"]
-            self.fake_delay(2)
+        for name in SENSOR_DICT:
+            sensor = SENSOR_DICT[name]["sensor"]
+            fake_delay(hass, 2)
             sensor.update()
             if name == google_wifi.ATTR_LAST_RESTART:
                 assert "1969-12-31 00:00:00" == sensor.state
@@ -167,28 +146,24 @@ def test_state(self):
                 assert "initial" == sensor.state
 
 
-@pytest.fixture
-@requests_mock.Mocker()
-def test_update_when_value_is_none(self, mock_req):
+def test_update_when_value_is_none(hass, requests_mock):
     """Test state gets updated to unknown when sensor returns no data."""
-    self.setup_api(None, mock_req)
-    for name in self.sensor_dict:
-        sensor = self.sensor_dict[name]["sensor"]
-        self.fake_delay(2)
+    setup_api(None, requests_mock)
+    for name in SENSOR_DICT:
+        sensor = SENSOR_DICT[name]["sensor"]
+        fake_delay(hass, 2)
         sensor.update()
         assert sensor.state is None
 
 
-@pytest.fixture
-@requests_mock.Mocker()
-def test_update_when_value_changed(self, mock_req):
+def test_update_when_value_changed(hass, requests_mock):
     """Test state gets updated when sensor returns a new status."""
-    self.setup_api(MOCK_DATA_NEXT, mock_req)
+    setup_api(MOCK_DATA_NEXT, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
-        for name in self.sensor_dict:
-            sensor = self.sensor_dict[name]["sensor"]
-            self.fake_delay(2)
+        for name in SENSOR_DICT:
+            sensor = SENSOR_DICT[name]["sensor"]
+            fake_delay(hass, 2)
             sensor.update()
             if name == google_wifi.ATTR_LAST_RESTART:
                 assert "1969-12-30 00:00:00" == sensor.state
@@ -204,34 +179,33 @@ def test_update_when_value_changed(self, mock_req):
                 assert "next" == sensor.state
 
 
-@pytest.fixture
-@requests_mock.Mocker()
-def test_when_api_data_missing(self, mock_req):
+def test_when_api_data_missing(hass, requests_mock):
     """Test state logs an error when data is missing."""
-    self.setup_api(MOCK_DATA_MISSING, mock_req)
+    setup_api(MOCK_DATA_MISSING, requests_mock)
     now = datetime(1970, month=1, day=1)
     with patch("homeassistant.util.dt.now", return_value=now):
-        for name in self.sensor_dict:
-            sensor = self.sensor_dict[name]["sensor"]
-            self.fake_delay(2)
+        for name in SENSOR_DICT:
+            sensor = SENSOR_DICT[name]["sensor"]
+            fake_delay(hass, 2)
             sensor.update()
             assert STATE_UNKNOWN == sensor.state
 
 
-@pytest.fixture
-def test_update_when_unavailable(self):
+def test_update_when_unavailable(requests_mock):
     """Test state updates when Google Wifi unavailable."""
-    self.api.update = Mock(
-        "google_wifi.GoogleWifiAPI.update", side_effect=self.update_side_effect()
+    API = setup_api(MOCK_DATA, requests_mock)
+    API.update = Mock(
+        "google_wifi.GoogleWifiAPI.update",
+        side_effect=update_side_effect(requests_mock),
     )
-    for name in self.sensor_dict:
-        sensor = self.sensor_dict[name]["sensor"]
+    for name in SENSOR_DICT:
+        sensor = SENSOR_DICT[name]["sensor"]
         sensor.update()
         assert sensor.state is None
 
 
-@pytest.fixture
-def update_side_effect(self):
+def update_side_effect(requests_mock):
     """Mock representation of update function."""
-    self.api.data = None
-    self.api.available = False
+    API = setup_api(MOCK_DATA, requests_mock)
+    API.data = None
+    API.available = False
