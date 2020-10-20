@@ -131,10 +131,12 @@ class OmniLogicHeaterControl(OmniLogicEntity, WaterHeaterEntity):
     @property
     def current_operation(self):
         """Return the current operation mode of the Heater."""
+        current_operation = STATE_OFF
+
         if self.coordinator.data[self._item_id[:4]]["VirtualHeater"]["enable"] == "yes":
-            return STATE_ON
-        else:
-            return STATE_OFF
+            current_operation = STATE_ON
+
+        return current_operation
 
     @property
     def current_temperature(self):
@@ -158,10 +160,12 @@ class OmniLogicHeaterControl(OmniLogicEntity, WaterHeaterEntity):
     @property
     def state(self):
         """Return the current state of the heater."""
+        state = STATE_ON
+
         if self.coordinator.data[self._item_id]["heaterState"] == "0":
-            return STATE_OFF
-        else:
-            return STATE_ON
+            state = STATE_OFF
+
+        return state
 
     async def async_set_temperature(self, **kwargs):
         """Set the water heater temperature set-point."""
