@@ -20,11 +20,19 @@ BLUEPRINT_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
+def validate_yaml_suffix(value):
+    """Validate value has a YAML suffix."""
+    if not value.endswith(".yaml"):
+        raise vol.Invalid("Path needs to end in .yaml")
+    return value
+
+
 BLUEPRINT_INSTANCE_FIELDS = vol.Schema(
     {
         vol.Required(CONF_BLUEPRINT): vol.Schema(
             {
-                vol.Required(CONF_PATH): cv.path,
+                vol.Required(CONF_PATH): vol.All(cv.path, validate_yaml_suffix),
                 vol.Required(CONF_INPUT): {str: cv.match_all},
             }
         )

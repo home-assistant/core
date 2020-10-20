@@ -50,29 +50,41 @@ def test_get_github_import_url():
     )
 
 
-def test_extract_blueprint_from_community_post(community_post):
+def test_extract_blueprint_from_community_topic(community_post):
     """Test extracting blueprint."""
-    blueprint = importer._extract_blueprint_from_community_post(
-        json.loads(community_post)["post_stream"]["posts"][0]
+    blueprint = importer._extract_blueprint_from_community_topic(
+        json.loads(community_post)
     )
     assert isinstance(blueprint, models.Blueprint)
     assert blueprint.domain == "automation"
     assert blueprint.placeholders == {"service_to_call", "trigger_event"}
 
 
-def test_extract_blueprint_from_community_post_invalid_yaml():
+def test_extract_blueprint_from_community_topic_invalid_yaml():
     """Test extracting blueprint with invalid YAML."""
     with pytest.raises(HomeAssistantError):
-        importer._extract_blueprint_from_community_post(
-            {"cooked": '<code class="lang-yaml">invalid: yaml: 2</code>'}
+        importer._extract_blueprint_from_community_topic(
+            {
+                "post_stream": {
+                    "posts": [
+                        {"cooked": '<code class="lang-yaml">invalid: yaml: 2</code>'}
+                    ]
+                }
+            }
         )
 
 
-def test__extract_blueprint_from_community_post_wrong_lang():
+def test__extract_blueprint_from_community_topic_wrong_lang():
     """Test extracting blueprint with invalid YAML."""
     assert (
-        importer._extract_blueprint_from_community_post(
-            {"cooked": '<code class="lang-php">invalid yaml + 2</code>'}
+        importer._extract_blueprint_from_community_topic(
+            {
+                "post_stream": {
+                    "posts": [
+                        {"cooked": '<code class="lang-php">invalid yaml + 2</code>'}
+                    ]
+                }
+            }
         )
         is None
     )

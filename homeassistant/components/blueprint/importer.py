@@ -2,6 +2,7 @@
 import re
 
 import voluptuous as vol
+import yarl
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -75,13 +76,16 @@ def _get_community_post_import_url(url: str) -> str:
     return json_url
 
 
-def _extract_blueprint_from_community_post(
-    post,
+def _extract_blueprint_from_community_topic(
+    topic,
 ) -> Blueprint:
     """Extract a blueprint from a community post JSON.
 
     Async friendly.
     """
+    blueprint = None
+    post = topic["post_stream"]["posts"][0]
+
     for match in COMMUNITY_CODE_BLOCK.finditer(post["cooked"]):
         block_syntax, block_content = match.groups()
 
@@ -99,9 +103,15 @@ def _extract_blueprint_from_community_post(
         if not is_blueprint_config(data):
             continue
 
-        return Blueprint(data)
+        blueprint = Blueprint(data)
+        break
 
-    return None
+    if blueprint is None:
+        return None
+
+    blueprint.suggested_filename = topic["slug"]
+
+    return blueprint
 
 
 async def fetch_blueprint_from_community_post(
@@ -119,8 +129,7 @@ async def fetch_blueprint_from_community_post(
     resp = await session.get(import_url, raise_for_status=True)
     json_resp = await resp.json()
     json_resp = COMMUNITY_TOPIC_SCHEMA(json_resp)
-    post = json_resp["post_stream"]["posts"][0]
-    return _extract_blueprint_from_community_post(post)
+    return _extract_blueprint_from_community_topic(json_resp)
 
 
 async def fetch_blueprint_from_github_url(hass: HomeAssistant, url: str) -> Blueprint:
@@ -130,7 +139,14 @@ async def fetch_blueprint_from_github_url(hass: HomeAssistant, url: str) -> Blue
 
     resp = await session.get(import_url, raise_for_status=True)
     data = yaml.parse_yaml(await resp.text())
-    return Blueprint(data)
+    blueprint = Blueprint(data)
+
+    parsed_import_url = yarl.URL(import_url)
+    blueprint.suggested_filename = (
+        f"{parsed_import_url.parts[1]}-{parsed_import_url.parts[-1]}"
+    )
+
+    return blueprint
 
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> Blueprint:

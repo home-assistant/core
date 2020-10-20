@@ -1,7 +1,8 @@
 """Blueprint models."""
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+import pathlib
+from typing import Any, Dict, Optional, Union
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -12,8 +13,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
 from homeassistant.util import yaml
 
-from .const import BLUEPRINT_FOLDER, CONF_BLUEPRINT, CONF_INPUT, CONF_SOURCE_URL
+from .const import BLUEPRINT_FOLDER, CONF_BLUEPRINT, CONF_INPUT, CONF_SOURCE_URL, DOMAIN
 from .errors import (
+    BlueprintException,
     FailedToLoad,
     InvalidBlueprint,
     InvalidBlueprintInputs,
@@ -24,6 +26,8 @@ from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
 
 class Blueprint:
     """Blueprint of a configuration structure."""
+
+    suggested_filename = None
 
     def __init__(
         self,
@@ -41,6 +45,7 @@ class Blueprint:
         self.name = override_name or data[CONF_BLUEPRINT][CONF_NAME]
         self.placeholders = placeholder.extract_placeholders(data)
 
+        # In future, we will treat this as "incorrect" and allow to recover from this
         data_domain = data[CONF_BLUEPRINT][CONF_DOMAIN]
         if expected_domain is not None and data_domain != expected_domain:
             raise InvalidBlueprint(
@@ -61,6 +66,11 @@ class Blueprint:
                 data,
                 f"Missing input definition for {', '.join(missing)}",
             )
+
+    @property
+    def metadata(self) -> dict:
+        """Return blueprint metadata."""
+        return self.data[CONF_BLUEPRINT]
 
     def update_metadata(self, *, source_url: Optional[str] = None) -> None:
         """Update metadata."""
@@ -119,10 +129,57 @@ class DomainBlueprints:
         self._blueprints = {}
         self._load_lock = asyncio.Lock()
 
+        hass.data.setdefault(DOMAIN, {})[domain] = self
+
     @callback
     def async_reset_cache(self) -> None:
         """Reset the blueprint cache."""
         self._blueprints = {}
+
+    def _load_blueprint(self, blueprint_name) -> Blueprint:
+        """Load a blueprint."""
+        try:
+            blueprint_data = yaml.load_yaml(
+                self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_name)
+            )
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise FailedToLoad(self.domain, blueprint_name, err) from err
+
+        return Blueprint(
+            blueprint_data,
+            expected_domain=self.domain,
+            override_name=blueprint_name,
+        )
+
+    def _load_blueprints(self) -> Dict[str, Union[Blueprint, BlueprintException]]:
+        """Load all the blueprints."""
+        blueprint_folder = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain)
+        )
+        results = {}
+
+        for blueprint_file in blueprint_folder.glob("**/*.yaml"):
+            # blueprint_path = blueprint_folder / blueprint_file
+            if self._blueprints.get(blueprint_file.name) is None:
+                try:
+                    self._blueprints[blueprint_file.name] = self._load_blueprint(
+                        blueprint_file.name
+                    )
+                except BlueprintException as err:
+                    self._blueprints[blueprint_file.name] = None
+                    results[blueprint_file.name] = err
+                    continue
+
+            results[blueprint_file.name] = self._blueprints[blueprint_file.name]
+
+        return results
+
+    async def async_get_blueprints(
+        self,
+    ) -> Dict[str, Union[Blueprint, BlueprintException]]:
+        """Get all the blueprints."""
+        async with self._load_lock:
+            return await self.hass.async_add_executor_job(self._load_blueprints)
 
     async def async_get_blueprint(self, blueprint_name: str) -> Blueprint:
         """Get a blueprint."""
@@ -135,22 +192,14 @@ class DomainBlueprints:
                 return self._blueprints[blueprint_name]
 
             try:
-                blueprint_data = await self.hass.async_add_executor_job(
-                    yaml.load_yaml,
-                    self.hass.config.path(
-                        BLUEPRINT_FOLDER, self.domain, f"{blueprint_name}.yaml"
-                    ),
+                blueprint = await self.hass.async_add_executor_job(
+                    self._load_blueprint, blueprint_name
                 )
-            except (HomeAssistantError, FileNotFoundError) as err:
+            except Exception:
                 self._blueprints[blueprint_name] = None
-                raise FailedToLoad(self.domain, blueprint_name, err) from err
+                raise
 
-            blueprint = self._blueprints[blueprint_name] = Blueprint(
-                blueprint_data,
-                expected_domain=self.domain,
-                override_name=blueprint_name,
-            )
-
+            self._blueprints[blueprint_name] = blueprint
             return blueprint
 
     async def async_inputs_from_config(

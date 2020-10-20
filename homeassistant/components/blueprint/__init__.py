@@ -3,7 +3,8 @@ from typing import Any
 
 from homeassistant.core import callback
 
-from .const import CONF_BLUEPRINT
+from . import websocket_api
+from .const import CONF_BLUEPRINT, DOMAIN  # noqa
 from .errors import (  # noqa
     BlueprintException,
     BlueprintWithNameException,
@@ -14,8 +15,6 @@ from .errors import (  # noqa
 )
 from .models import Blueprint, BlueprintInputs, DomainBlueprints  # noqa
 
-DOMAIN = "blueprint"
-
 
 @callback
 def is_blueprint_config(config: Any) -> bool:
@@ -25,5 +24,5 @@ def is_blueprint_config(config: Any) -> bool:
 
 async def async_setup(hass, config):
     """Set up the blueprint integration."""
-    # Register websocket APIs for frontend here.
+    websocket_api.async_setup(hass)
     return True
