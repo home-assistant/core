@@ -64,6 +64,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_location
+from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy,
     color_temperature_kelvin_to_mired,
@@ -214,7 +215,7 @@ async def async_setup_entry(
         data[ATTR_TURN_ON_OFF_LISTENER] = TurnOnOffListener(hass)
     turn_on_off_listener = data[ATTR_TURN_ON_OFF_LISTENER]
 
-    sleep_mode_switch = AdaptiveSleepModeSwitch(hass, config_entry)
+    sleep_mode_switch = SimpleSwitch("sleep_mode", hass, config_entry)
     switch = AdaptiveSwitch(hass, config_entry, turn_on_off_listener, sleep_mode_switch)
 
     data[config_entry.entry_id][SLEEP_MODE_SWITCH] = sleep_mode_switch
@@ -407,7 +408,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         hass,
         config_entry: ConfigEntry,
         turn_on_off_listener: TurnOnOffListener,
-        sleep_mode_switch: AdaptiveSleepModeSwitch,
+        sleep_mode_switch: SimpleSwitch,
     ):
         """Initialize the Adaptive Lighting switch."""
         self.hass = hass
@@ -805,26 +806,29 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             self.turn_on_off_listener.reset(entity_id)
 
 
-class AdaptiveSleepModeSwitch(SwitchEntity, RestoreEntity):
+class SimpleSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Adaptive Lighting switch."""
 
-    def __init__(self, hass: HomeAssistant, config_entry):
+    def __init__(self, which: str, hass: HomeAssistant, config_entry):
         """Initialize the Adaptive Lighting switch."""
         self.hass = hass
         data = validate(config_entry)
         self._name = data[CONF_NAME]
         self._icon = ICON
         self._state = None
+        self._which = which
+        self._unique_id = f"{self._name}_{slugify(self._which)}"
+        self._name = f"Adaptive Lighting {which}: {self._name}"
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return f"Adaptive Lighting Sleep Mode: {self._name}"
+        return self._name
 
     @property
     def unique_id(self):
         """Return the unique ID of entity."""
-        return f"{self._name}_sleep_mode"
+        return self._unique_id
 
     @property
     def icon(self) -> str:
