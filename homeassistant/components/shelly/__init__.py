@@ -37,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         COAP_CONTEXT
     ] = await aiocoap.Context.create_client_context()
     hass.data[DOMAIN][DATA_GENERAL][UNDO_SHUTDOWN_LISTENER] = hass.bus.async_listen(
-        EVENT_HOMEASSISTANT_STOP, shutdown_listener(hass)
+        EVENT_HOMEASSISTANT_STOP, shutdown_listener
     )
     return True
 
