@@ -18,6 +18,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -32,10 +33,12 @@ from .const import (
     CONF_PHONEBOOK,
     CONF_PREFIXES,
     DEFAULT_HOST,
+    DEFAULT_NAME,
     DEFAULT_PHONEBOOK,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    FRITZ_ATTR_NAME,
     FRITZ_BOX_PHONEBOOK_OBJECT,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
@@ -60,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
         vol.Optional(CONF_PREFIXES): vol.All(cv.ensure_list, [cv.string]),
     }
@@ -84,7 +88,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     prefixes = config_entry.options.get(CONF_PREFIXES)
     serial_number = config_entry.data[SERIAL_NUMBER]
 
-    name = f"{phonebook.fph.modelname} Call Monitor {phonebook_name}"
+    phonebook_info = await hass.async_add_executor_job(
+        phonebook.fph.phonebook_info, phonebook_id
+    )
+
+    actual_phonebook_name = phonebook_info[FRITZ_ATTR_NAME]
+
+    if phonebook_name != actual_phonebook_name:
+        name = phonebook_name
+    else:
+        name = f"{phonebook.fph.modelname} Call Monitor {phonebook_name}"
+
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(

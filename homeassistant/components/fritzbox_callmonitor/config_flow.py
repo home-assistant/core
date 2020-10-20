@@ -1,14 +1,18 @@
 """Config flow for fritzbox_callmonitor."""
 
-from functools import partial
-
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
@@ -120,7 +124,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _get_name_of_phonebook(self, phonebook_id):
         """Return name of phonebook for given phonebook_id."""
         phonebook_info = await self.hass.async_add_executor_job(
-            partial(self._phonebook.fph.phonebook_info, phonebook_id)
+            self._phonebook.fph.phonebook_info, phonebook_id
         )
         return phonebook_info[FRITZ_ATTR_NAME]
 
@@ -148,13 +152,16 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
-                if len(self._phonebook_ids) > 1:
+                if CONF_PHONEBOOK in user_input:
+                    self._phonebook_id = user_input[CONF_PHONEBOOK]
+                    self._phonebook_name = user_input[CONF_NAME]
+                elif len(self._phonebook_ids) > 1:
                     return await self.async_step_phonebook()
-
-                self._phonebook_id = DEFAULT_PHONEBOOK
-                self._phonebook_name = await self._get_name_of_phonebook(
-                    self._phonebook_id
-                )
+                else:
+                    self._phonebook_id = DEFAULT_PHONEBOOK
+                    self._phonebook_name = await self._get_name_of_phonebook(
+                        self._phonebook_id
+                    )
 
                 if self._is_already_configured(self._host, self._phonebook_id):
                     return self.async_abort(reason="already_configured")

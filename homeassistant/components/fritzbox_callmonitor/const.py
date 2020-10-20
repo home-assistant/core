@@ -31,6 +31,7 @@ DEFAULT_HOST = "169.254.1.1"  # IP valid for all Fritz!Box routers
 DEFAULT_PORT = 1012
 DEFAULT_USERNAME = "admin"
 DEFAULT_PHONEBOOK = 0
+DEFAULT_NAME = "Phone"
 
 # Return cached results if phonebook was downloaded less then this time ago.
 MIN_TIME_PHONEBOOK_UPDATE = timedelta(hours=6)
