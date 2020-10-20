@@ -4,9 +4,15 @@ import base64
 import aiohttp
 import pytest
 
-from homeassistant.components.colorthief import DOMAIN
+from homeassistant.components.colorthief import (
+    ATTR_FILE_PATH,
+    ATTR_LIGHT_ENTITY_ID,
+    ATTR_URL,
+    DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -67,9 +73,9 @@ async def setup_light(hass):
 async def test_url_success(hass, aioclient_mock):
     """Test that a successful image GET translate to light RGB."""
     service_data = {
-        "url": "http://example.com/images/logo.png",
-        "light": LIGHT_ENTITY,
-        "brightness_pct": 50,
+        ATTR_URL: "http://example.com/images/logo.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_BRIGHTNESS_PCT: 50,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
@@ -118,8 +124,8 @@ async def _async_load_colorthief_url(hass, service_data):
 async def test_url_exception(hass, aioclient_mock):
     """Test that a HTTPError fails to turn light on."""
     service_data = {
-        "url": "http://example.com/images/logo.png",
-        "light": LIGHT_ENTITY,
+        ATTR_URL: "http://example.com/images/logo.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
@@ -136,8 +142,8 @@ async def test_url_exception(hass, aioclient_mock):
 async def test_url_error(hass, aioclient_mock):
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
-        "url": "http://example.com/images/logo.png",
-        "light": LIGHT_ENTITY,
+        ATTR_URL: "http://example.com/images/logo.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
@@ -161,9 +167,9 @@ async def test_url_error(hass, aioclient_mock):
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
-        "file_path": "/tmp/logo.png",
-        "light": LIGHT_ENTITY,
-        "brightness_pct": 100,
+        ATTR_FILE_PATH: "/tmp/logo.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_BRIGHTNESS_PCT: 100,
     }
 
     await async_setup_component(hass, DOMAIN, {})
@@ -189,4 +195,5 @@ async def test_file(hass):
     assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
 
     # Ensure the RGB values are correct
+    # TODO: Get this working again...
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
