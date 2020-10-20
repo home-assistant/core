@@ -106,7 +106,9 @@ class SensorBase(Entity):
         # here to re-fresh the signals from _device.  Unregister this callback
         # when the entity is removed.
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, self.async_write_ha_state)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_NEST_UPDATE, self.async_write_ha_state
+            )
         )
 
 
