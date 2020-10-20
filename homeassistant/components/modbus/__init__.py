@@ -239,6 +239,8 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
+LIGHT_SCHEMA = SWITCH_SCHEMA
+
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
