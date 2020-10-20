@@ -1,17 +1,15 @@
 """Tests for colorthief component service calls."""
 import base64
 
+import aiohttp
 import pytest
-import requests
 
 from homeassistant.components.colorthief import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -20,6 +18,7 @@ from tests.async_mock import Mock, mock_open, patch
 from tests.common import load_fixture
 
 LIGHT_ENTITY = "light.kitchen_lights"
+CLOSE_THRESHOLD = 5
 
 
 def _close_enough(actual_rgb, testing_rgb):
@@ -31,7 +30,11 @@ def _close_enough(actual_rgb, testing_rgb):
     g_diff = abs(ag - tg)
     b_diff = abs(ab - tb)
 
-    return r_diff < 5 and g_diff < 5 and b_diff < 5
+    return (
+        r_diff <= CLOSE_THRESHOLD
+        and g_diff <= CLOSE_THRESHOLD
+        and b_diff <= CLOSE_THRESHOLD
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -51,15 +54,6 @@ async def setup_light(hass):
     assert state.attributes.get(ATTR_RGB_COLOR) == (255, 63, 111)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: LIGHT_ENTITY, ATTR_EFFECT: "none"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: LIGHT_ENTITY}, blocking=True
     )
     await hass.async_block_till_done()
@@ -70,19 +64,39 @@ async def setup_light(hass):
     assert state.state == STATE_OFF
 
 
-async def test_url_success(hass, requests_mock):
+async def test_url_success(hass, aioclient_mock):
     """Test that a successful image GET translate to light RGB."""
     service_data = {
         "url": "http://example.com/images/logo.png",
         "light": LIGHT_ENTITY,
+        "brightness_pct": 50,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
-    requests_mock.get(
-        service_data["url"],
+    aioclient_mock.get(
+        url=service_data["url"],
         content=base64.b64decode(load_fixture("colorthief_url.txt")),
     )
 
+    await _async_load_colorthief_url(hass, service_data)
+
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+
+    # Ensure we turned it on
+    assert state.state == STATE_ON
+
+    # Brightness has changed, optional service call field
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+    # RGB has changed though
+    assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
+
+    # Ensure the RGB values are correct
+    # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
+
+
+async def _async_load_colorthief_url(hass, service_data):
     # Load our ColorThief component
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -96,24 +110,11 @@ async def test_url_success(hass, requests_mock):
     await hass.services.async_call(
         DOMAIN, "predominant_color_url", service_data, blocking=True
     )
+
     await hass.async_block_till_done()
 
-    state = hass.states.get(LIGHT_ENTITY)
 
-    assert state
-
-    # Ensure we turned it on
-    assert state.state == STATE_ON
-
-    assert state.attributes[ATTR_BRIGHTNESS] == 180
-
-    # Ensure the RGB values are correct
-    assert _close_enough(
-        state.attributes[ATTR_RGB_COLOR], (89, 172, 255)
-    )  # 50, 100, 150))  # Why are the rgb_colors mugging me off?
-
-
-async def test_url_exception(hass, requests_mock):
+async def test_url_exception(hass, aioclient_mock):
     """Test that a HTTPError fails to turn light on."""
     service_data = {
         "url": "http://example.com/images/logo.png",
@@ -121,22 +122,9 @@ async def test_url_exception(hass, requests_mock):
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
-    requests_mock.get(service_data["url"], exc=requests.HTTPError)
+    aioclient_mock.get(url=service_data["url"], exc=aiohttp.ClientError)
 
-    # Load our ColorThief component
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # Validate pre service call
-    state = hass.states.get(LIGHT_ENTITY)
-    assert state
-    assert state.state == STATE_OFF
-
-    # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
-    await hass.services.async_call(
-        DOMAIN, "predominant_color_url", service_data, blocking=True
-    )
-    await hass.async_block_till_done()
+    await _async_load_colorthief_url(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -144,7 +132,7 @@ async def test_url_exception(hass, requests_mock):
     assert state.state == STATE_OFF
 
 
-async def test_url_error(hass, requests_mock):
+async def test_url_error(hass, aioclient_mock):
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
         "url": "http://example.com/images/logo.png",
@@ -152,21 +140,9 @@ async def test_url_error(hass, requests_mock):
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
-    requests_mock.get(service_data["url"], status_code=400)
+    aioclient_mock.get(url=service_data["url"], status=400)
 
-    # Load our ColorThief component
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(LIGHT_ENTITY)
-    assert state
-    assert state.state == STATE_OFF
-
-    # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
-    await hass.services.async_call(
-        DOMAIN, "predominant_color_url", service_data, blocking=True
-    )
-    await hass.async_block_till_done()
+    await _async_load_colorthief_url(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -179,12 +155,14 @@ async def test_url_error(hass, requests_mock):
 @patch(
     "builtins.open",
     mock_open(read_data=base64.b64decode(load_fixture("colorthief_file.txt"))),
+    create=True,
 )
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
         "file_path": "/tmp/logo.png",
         "light": LIGHT_ENTITY,
+        "brightness_pct": 100,
     }
 
     await async_setup_component(hass, DOMAIN, {})
@@ -204,7 +182,10 @@ async def test_file(hass):
     # Ensure we turned it on
     assert state.state == STATE_ON
 
-    # assert state.attributes[ATTR_BRIGHTNESS] == 255
+    # And set the brightness
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+    assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
 
     # Ensure the RGB values are correct
-    assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
+    # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
