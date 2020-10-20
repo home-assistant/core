@@ -203,7 +203,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
     subscriber.set_update_callback(SignalUpdateCallback(hass))
-    hass.async_create_task(subscriber.start_async())
+    hass.loop.create_task(subscriber.start_async())
     hass.data[DOMAIN][entry.entry_id] = subscriber
 
     for component in PLATFORMS:
