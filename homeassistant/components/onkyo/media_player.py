@@ -36,11 +36,10 @@ DEFAULT_PORT = 60128
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
-CONF_ZONES = "zones"
 
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 90
-ZONES = ["zone2", "zone3", "zone4"]
+ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
 
 DEFAULT_SOURCES = {
     "tv": "TV",
@@ -141,7 +140,11 @@ SUPPORT_ONKYO = (
 )
 
 SUPPORT_ONKYO_WO_VOLUME = (
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA
+    SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_VOLUME_MUTE
 )
 
 SUPPORT_ONKYO_WO_SOUND_MODE = (
@@ -157,13 +160,12 @@ SUPPORT_ONKYO_WO_SOUND_MODE = (
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
-        vol.Optional(CONF_ZONES, default=[]): vol.All(cv.ensure_list, [vol.In(ZONES)]),
     }
 )
 
@@ -219,9 +221,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    name = config.get(CONF_NAME) or "Onkyo Receiver"
+    name = config[CONF_NAME]
     max_volume = config[CONF_MAX_VOLUME]
-    zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
 
     platform = entity_platform.current_platform.get()
@@ -233,20 +234,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
 
+    active_zones = {}
+
+    def async_onkyo_discover_zones_callback(zone):
+        """Receive the power status of the available zones on the AVR."""
+        # When we receive the status for a zone, it is available on the AVR
+        # So we create an entity for the zone and add it to active_zones
+        if zone in ZONES:
+            _LOGGER.debug("Discovered %s on %s, add to active zones", ZONES[zone], name)
+            zone_entity = OnkyoAVR(avr, name, sources, zone, max_volume)
+            active_zones[zone] = zone_entity
+            async_add_entities([zone_entity])
+
     @callback
     def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
-        for zone in active_zones:
-            zone.process_update(message)
 
-    active_zones = []
+        zone, _, _ = message
+        if zone in active_zones:
+            active_zones[zone].process_update(message)
+        else:
+            async_onkyo_discover_zones_callback(zone)
 
     @callback
     def async_onkyo_connect_callback():
         """Receiver (re)connected."""
         _LOGGER.debug("AVR (re)connected:")
-        for zone in active_zones:
+        for zone in active_zones.values():
             zone.backfill_state()
 
     try:
@@ -259,8 +274,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except Exception:
         raise PlatformNotReady from Exception
 
-    for zone in ["main"] + zones:
-        active_zones.append(OnkyoAVR(avr, name, sources, zone, max_volume))
+    # Discover what zones are available for the avr by querying the power.
+    # If we get a response for the specific zone, it means it is available.
+    for zone in ZONES:
+        avr.query_property(zone, "power")
+
+    # Add the main zone to active_zones, since it is always active
+    main_entity = OnkyoAVR(avr, name, sources, "main", max_volume)
+    active_zones["main"] = main_entity
 
     @callback
     def close_avr(_event):
@@ -268,7 +289,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
 
-    async_add_entities(active_zones)
+    async_add_entities([main_entity])
 
 
 class OnkyoAVR(MediaPlayerEntity):
@@ -278,7 +299,7 @@ class OnkyoAVR(MediaPlayerEntity):
         """Initialize entity with transport."""
         super().__init__()
         self._avr = avr
-        self._name = f"{name} {zone if zone != 'main' else ''}"
+        self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
@@ -321,12 +342,12 @@ class OnkyoAVR(MediaPlayerEntity):
                 self._attributes.pop(ATTR_PRESET, None)
                 self._attributes.pop(ATTR_VIDEO_OUT, None)
 
-        elif command in ["volume", "master-volume"]:
+        elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
-        elif command == "audio-muting":
+        elif command in ["muting", "audio-muting"]:
             self._muted = bool(value == "on")
-        elif command == "input-selector":
+        elif command in ["selector", "input-selector"]:
             self._parse_source(value)
             self._query_delayed_av_info()
         elif command == "hdmi-output-selector":
@@ -365,6 +386,9 @@ class OnkyoAVR(MediaPlayerEntity):
             self._query_avr("listening-mode")
             self._query_avr("audio-information")
             self._query_avr("video-information")
+        else:
+            self._query_avr("muting")
+            self._query_avr("selector")
 
     @property
     def supported_features(self):
@@ -429,7 +453,9 @@ class OnkyoAVR(MediaPlayerEntity):
         """Change AVR to the designated source (by name)."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self._update_avr("input-selector", source)
+        self._update_avr(
+            "input-selector" if self._zone == "main" else "selector", source
+        )
 
     async def async_select_sound_mode(self, sound_mode):
         """Change AVR to the designated sound_mode (by name)."""
@@ -439,7 +465,7 @@ class OnkyoAVR(MediaPlayerEntity):
 
     async def async_turn_off(self):
         """Turn AVR power off."""
-        self._update_avr("power", "off")
+        self._update_avr("power", "standby")
 
     async def async_turn_on(self):
         """Turn AVR power on."""
@@ -460,7 +486,10 @@ class OnkyoAVR(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute):
         """Engage AVR mute."""
-        self._update_avr("audio-muting", "on" if mute else "off")
+        self._update_avr(
+            "audio-muting" if self._zone == "main" else "muting",
+            "on" if mute else "off",
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
@@ -528,7 +557,7 @@ class OnkyoAVR(MediaPlayerEntity):
         }
 
     def _query_delayed_av_info(self):
-        if not self._query_timer:
+        if self._zone == "main" and not self._query_timer:
             self._query_timer = self.hass.loop.call_later(
                 AUDIO_VIDEO_INFORMATION_UPDATE_INTERVAL, self._query_av_info
             )
