@@ -83,7 +83,7 @@ class RachioPerson:
     def start_multiple_zones(self, zones) -> None:
         """Start multiple zones."""
         self.rachio.zone.start_multiple(zones)
-        
+
 
 class RachioIro:
     """Represent a Rachio Iro."""

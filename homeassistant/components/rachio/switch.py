@@ -117,13 +117,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     # or one time for all zones
                     time = int(next(duration, default_time)) * 60
                     zones_list.append(
-                        (
-                            {
-                                ATTR_ID: zone.id,
-                                ATTR_DURATION: time,
-                                ATTR_SORT_ORDER: count,
-                            }
-                        )
+                        {ATTR_ID: zone.id, ATTR_DURATION: time, ATTR_SORT_ORDER: count,}
                     )
                     break
 
