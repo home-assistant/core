@@ -1242,7 +1242,7 @@ async def test_blueprint_automation(hass, calls):
         {
             "automation": {
                 "blueprint": {
-                    "name": "test_event_service",
+                    "path": "test_event_service",
                     "input": {
                         "trigger_event": "blueprint_event",
                         "service_to_call": "test.automation",
