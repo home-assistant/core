@@ -30,7 +30,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API v\u00f5ti"
-                }
+                },
+                "title": "Taastuvasta AirVisual"
             },
             "user": {
                 "data": {
