@@ -628,7 +628,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cloudflare
-pycfdns==1.1.0
+pycfdns==1.1.1
 
 # homeassistant.components.cast
 pychromecast==7.5.0
