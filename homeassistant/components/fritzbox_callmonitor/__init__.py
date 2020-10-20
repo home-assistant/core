@@ -26,14 +26,14 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, config_entry):
     """Set up the fritzbox_callmonitor platforms."""
     phonebook = FritzBoxPhonebook(
-        host=entry.data[CONF_HOST],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        phonebook_id=entry.data[CONF_PHONEBOOK],
-        prefixes=entry.options.get(CONF_PREFIXES),
+        host=config_entry.data[CONF_HOST],
+        username=config_entry.data[CONF_USERNAME],
+        password=config_entry.data[CONF_PASSWORD],
+        phonebook_id=config_entry.data[CONF_PHONEBOOK],
+        prefixes=config_entry.options.get(CONF_PREFIXES),
     )
 
     try:
@@ -46,38 +46,38 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    undo_listener = entry.add_update_listener(update_listener)
+    undo_listener = config_entry.add_update_listener(update_listener)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][config_entry.entry_id] = {
         FRITZ_BOX_PHONEBOOK_OBJECT: phonebook,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, config_entry):
     """Unloading the fritzbox_callmonitor platforms."""
 
     unload_ok = all(
         await gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
                 for component in PLATFORMS
             ]
         )
     )
 
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 

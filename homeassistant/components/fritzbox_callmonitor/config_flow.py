@@ -67,8 +67,8 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._prefixes = None
         self._serial_number = None
 
-    def _get_entry(self):
-        """Create and return an entry."""
+    def _get_config_entry(self):
+        """Create and return an config entry."""
         return self.async_create_entry(
             title=self._phonebook_name,
             data={
@@ -114,10 +114,10 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _is_already_configured(self, host, phonebook_id):
         """Check if an entity with the same host and phonebook_id is already configured."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
-                entry.data[CONF_HOST] == host
-                and entry.data[CONF_PHONEBOOK] == phonebook_id
+                config_entry.data[CONF_HOST] == host
+                and config_entry.data[CONF_PHONEBOOK] == phonebook_id
             ):
                 return True
 
@@ -166,7 +166,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self._is_already_configured(self._host, self._phonebook_id):
                     return self.async_abort(reason="already_configured")
 
-                return self._get_entry()
+                return self._get_config_entry()
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
@@ -193,7 +193,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._is_already_configured(self._host, self._phonebook_id):
                 return self.async_abort(reason="already_configured")
 
-            return self._get_entry()
+            return self._get_config_entry()
 
         return self.async_show_form(
             step_id="phonebook",
