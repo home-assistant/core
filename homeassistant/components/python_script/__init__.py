@@ -5,15 +5,13 @@ import logging
 import os
 import time
 
-from RestrictedPython import compile_restricted_exec
+from RestrictedPython import compile_restricted_exec, safe_builtins, utility_builtins
 from RestrictedPython.Eval import default_guarded_getitem
 from RestrictedPython.Guards import (
     full_write_guard,
     guarded_iter_unpack_sequence,
     guarded_unpack_sequence,
-    safe_builtins,
 )
-from RestrictedPython.Utilities import utility_builtins
 import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
