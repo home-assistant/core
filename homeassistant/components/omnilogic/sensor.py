@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 
 from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -201,6 +201,9 @@ class OmniLogicPHSensor(OmnilogicSensor):
         """Return the state for the pH sensor."""
 
         ph_state = self.coordinator.data[self._item_id][self._state_key]
+        ph_state = float(ph_state) + float(
+            self.coordinator.config_entry.options.get("ph_offset", DEFAULT_PH_OFFSET)
+        )
 
         if ph_state == 0:
             ph_state = None
