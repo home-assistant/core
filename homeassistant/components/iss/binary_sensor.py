@@ -61,6 +61,7 @@ class IssBinarySensor(BinarySensorEntity):
         self.iss_data = iss_data
         self._state = None
         self._name = name
+        self._icon = "mdi:space-station"
         self._show_on_map = show
 
     @property
@@ -77,6 +78,11 @@ class IssBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this sensor."""
         return DEFAULT_DEVICE_CLASS
+
+    @property
+    def icon(self):
+        """Return the icon of this sensor."""
+        return self._icon
 
     @property
     def device_state_attributes(self):

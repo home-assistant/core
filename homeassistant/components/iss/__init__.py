@@ -1,1 +1,1 @@
-"""The iss component."""
+"""The ISS sensor platform."""
