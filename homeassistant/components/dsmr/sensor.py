@@ -278,6 +278,11 @@ class DSMREntity(Entity):
         """Force update."""
         return True
 
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
+
     @staticmethod
     def translate_tariff(value, dsmr_version):
         """Convert 2/1 to normal/low depending on DSMR version."""
