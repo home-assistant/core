@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
 )
-from homeassistant.const import CONF_HOST, TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     "temperature": ("Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE),
     "air_quality": ("Air Quality", None, None),
-    "humidity": ("Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY),
+    "humidity": ("Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY),
     "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE),
     "noise": ("Noise", None, None),
 }

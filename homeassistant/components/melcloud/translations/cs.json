@@ -1,11 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integrace MELCloud ji\u017e pro tento e-mail nastavena. P\u0159\u00edstupov\u00fd token byl aktualizov\u00e1n."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "E-mail"
-                }
+                },
+                "description": "P\u0159ipojte se pomoc\u00ed sv\u00e9ho \u00fa\u010dtu MELCloud.",
+                "title": "P\u0159ipojen\u00ed k MELCloud"
             }
         }
     }

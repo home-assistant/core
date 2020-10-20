@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Verten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "connection_failed": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "register_failed": "Registrering feilet, vennligst pr\u00f8v igjen",
-            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere"
+            "unknown": "Uventet feil"
         },
         "step": {
             "link": {
@@ -15,8 +15,10 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert"
-                }
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": ""
             }
         }
     }

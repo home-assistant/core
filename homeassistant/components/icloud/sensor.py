@@ -1,9 +1,8 @@
 """Support for iCloud sensors."""
-import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -12,8 +11,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -83,7 +80,7 @@ class IcloudDeviceBatterySensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Battery state measured in percentage."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def icon(self) -> str:

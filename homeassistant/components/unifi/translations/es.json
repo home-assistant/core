@@ -54,7 +54,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para los clientes de la red"
+                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para los clientes de la red",
+                    "allow_uptime_sensors": "Sensores de tiempo de actividad para clientes de la red"
                 },
                 "description": "Configurar estad\u00edsticas de los sensores",
                 "title": "Opciones UniFi 3/3"

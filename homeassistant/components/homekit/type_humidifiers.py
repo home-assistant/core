@@ -17,10 +17,10 @@ from homeassistant.components.humidifier.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -215,7 +215,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 f"{self._target_humidity_char_name} to "
-                f"{char_values[self._target_humidity_char_name]}{UNIT_PERCENTAGE}",
+                f"{char_values[self._target_humidity_char_name]}{PERCENTAGE}",
             )
 
     @callback

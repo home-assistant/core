@@ -29,8 +29,8 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],
-            config[CONF_USERNAME] if config[CONF_USERNAME] != "" else None,
-            config[CONF_PASSWORD] if config[CONF_PASSWORD] != "" else None,
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
             config[CONF_SSL],
             config[CONF_VERIFY_SSL],
             config[CONF_PORT],

@@ -5,7 +5,8 @@
             "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "no_agreements": "This account has no Toon displays."
+            "no_agreements": "This account has no Toon displays.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
         },
         "step": {
             "agreement": {

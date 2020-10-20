@@ -1,6 +1,4 @@
 """Config flow to configure the OVO Energy integration."""
-import logging
-
 import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
@@ -10,8 +8,6 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_ACCOUNT_ID, DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -34,7 +30,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
             except aiohttp.ClientError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             else:
                 if authenticated:
                     await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -49,7 +45,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         },
                     )
 
-                errors["base"] = "authorization_error"
+                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors

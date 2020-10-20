@@ -2,6 +2,6 @@
   "domain": "azure_service_bus",
   "name": "Azure Service Bus",
   "documentation": "https://www.home-assistant.io/integrations/azure_service_bus",
-  "requirements": ["azure-servicebus==0.50.1"],
+  "requirements": ["azure-servicebus==0.50.3"],
   "codeowners": ["@hfurubotten"]
 }

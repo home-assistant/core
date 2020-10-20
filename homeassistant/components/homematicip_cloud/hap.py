@@ -34,7 +34,7 @@ class HomematicipAuth:
             self.auth = await self.get_auth(
                 self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
-            return True
+            return self.auth is not None
         except HmipcConnectionError:
             return False
 
@@ -63,7 +63,7 @@ class HomematicipAuth:
                 auth.pin = pin
             await auth.connectionRequest("HomeAssistant")
         except HmipConnectionError:
-            return False
+            return None
         return auth
 
 

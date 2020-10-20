@@ -5,16 +5,18 @@
             "no_server_found": "Ingen LMS-server funnet."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "no_server_found": "Kan ikke automatisk oppdage serveren.",
             "unknown": "Uventet feil"
         },
+        "flow_title": "",
         "step": {
             "edit": {
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Redigere tilkoblingsinformasjon"
@@ -26,5 +28,6 @@
                 "title": "Konfigurer Logitech Media Server"
             }
         }
-    }
+    },
+    "title": ""
 }

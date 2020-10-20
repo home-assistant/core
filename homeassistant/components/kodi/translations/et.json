@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Kas soovid lisada Kodi {name} Home Assistanti?"
+            },
+            "host": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": "",
+                    "ssl": "Kasutab SSL serti"
+                }
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": ""
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} paluti v\u00e4lja l\u00fclitada",
+            "turn_on": "{entity_name} paluti sisse l\u00fclitada"
+        }
+    }
+}

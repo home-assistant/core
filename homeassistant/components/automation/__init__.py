@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_MODE,
     CONF_PLATFORM,
+    CONF_VARIABLES,
     CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
@@ -29,7 +30,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, extract_domain_configs
+from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -39,10 +40,12 @@ from homeassistant.helpers.script import (
     ATTR_MAX,
     ATTR_MODE,
     CONF_MAX,
+    CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
 )
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
@@ -103,6 +106,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
         SCRIPT_MODE_SINGLE,
@@ -238,6 +242,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         cond_func,
         action_script,
         initial_state,
+        variables,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -252,6 +257,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
         self._logger = _LOGGER
+        self._variables: ScriptVariables = variables
 
     @property
     def name(self):
@@ -377,11 +383,20 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             await self.async_disable()
 
-    async def async_trigger(self, variables, context=None, skip_condition=False):
+    async def async_trigger(self, run_variables, context=None, skip_condition=False):
         """Trigger automation.
 
         This method is a coroutine.
         """
+        if self._variables:
+            try:
+                variables = self._variables.async_render(self.hass, run_variables)
+            except template.TemplateError as err:
+                self._logger.error("Error rendering variables: %s", err)
+                return
+        else:
+            variables = run_variables
+
         if (
             not skip_condition
             and self._cond_func is not None
@@ -515,7 +530,11 @@ async def _async_process_config(hass, config, component):
                 running_description="automation actions",
                 script_mode=config_block[CONF_MODE],
                 max_runs=config_block[CONF_MAX],
+                max_exceeded=config_block[CONF_MAX_EXCEEDED],
                 logger=_LOGGER,
+                # We don't pass variables here
+                # Automation will already render them to use them in the condition
+                # and so will pass them on to the script.
             )
 
             if CONF_CONDITION in config_block:
@@ -533,6 +552,7 @@ async def _async_process_config(hass, config, component):
                 cond_func,
                 action_script,
                 initial_state,
+                config_block.get(CONF_VARIABLES),
             )
 
             entities.append(entity)

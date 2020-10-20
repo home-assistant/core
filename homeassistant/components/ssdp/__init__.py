@@ -1,6 +1,7 @@
 """The SSDP integration."""
 import asyncio
 from datetime import timedelta
+import itertools
 import logging
 
 import aiohttp
@@ -17,16 +18,22 @@ SCAN_INTERVAL = timedelta(seconds=60)
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_USN = "ssdp_usn"
+ATTR_SSDP_EXT = "ssdp_ext"
+ATTR_SSDP_SERVER = "ssdp_server"
 # Attributes for accessing info from retrieved UPnP device description
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
 ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
+ATTR_UPNP_MODEL_DESCRIPTION = "modelDescription"
 ATTR_UPNP_MODEL_NAME = "modelName"
 ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+ATTR_UPNP_MODEL_URL = "modelURL"
 ATTR_UPNP_SERIAL = "serialNumber"
 ATTR_UPNP_UDN = "UDN"
+ATTR_UPNP_UPC = "UPC"
+ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +51,12 @@ async def async_setup(hass, config):
     return True
 
 
+def _run_ssdp_scans():
+    _LOGGER.debug("Scanning")
+    # Run 3 times as packets can get lost
+    return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -56,11 +69,9 @@ class Scanner:
 
     async def async_scan(self, _):
         """Scan for new entries."""
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            entries = await self.hass.async_add_executor_job(ssdp.scan)
-            await self._process_entries(entries)
+        entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
+
+        await self._process_entries(entries)
 
         # We clear the cache after each run. We track discovered entries
         # so will never need a description twice.
@@ -107,6 +118,9 @@ class Scanner:
         """Process a single entry."""
 
         info = {"st": entry.st}
+        for key in "usn", "ext", "server":
+            if key in entry.values:
+                info[key] = entry.values[key]
 
         if entry.location:
 
@@ -165,5 +179,12 @@ def info_from_entry(entry, device_info):
     }
     if device_info:
         info.update(device_info)
+        info.pop("st", None)
+        if "usn" in info:
+            info[ATTR_SSDP_USN] = info.pop("usn")
+        if "ext" in info:
+            info[ATTR_SSDP_EXT] = info.pop("ext")
+        if "server" in info:
+            info[ATTR_SSDP_SERVER] = info.pop("server")
 
     return info

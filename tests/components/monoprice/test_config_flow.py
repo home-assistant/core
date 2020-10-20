@@ -97,15 +97,16 @@ async def test_options_flow(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        # unique_id="abcde12345",
         data=conf,
-        # options={CONF_SHOW_ON_MAP: True},
     )
     config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.monoprice.async_setup_entry", return_value=True
     ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

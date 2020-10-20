@@ -16,7 +16,7 @@
                     "key": "Cl\u00e9 d'authentification (utilis\u00e9e uniquement par les appareils BRP072C/Zena)",
                     "password": "Mot de passe de l'appareil (utilis\u00e9 uniquement par les appareils SKYFi)"
                 },
-                "description": "Entrez l'adresse IP de votre Daikin AC.",
+                "description": "Saisissez l'adresse IP de votre Daikin AC. \n\n Notez que Cl\u00e9 d'API et Mot de passe sont utilis\u00e9s respectivement par les p\u00e9riph\u00e9riques BRP072Cxx et SKYFi.",
                 "title": "Configurer Daikin AC"
             }
         }

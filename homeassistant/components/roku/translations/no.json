@@ -7,14 +7,15 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "Roku: {name}",
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
-                "description": "Vil du sette opp {name} ?"
+                "description": "Vil du sette opp {name} ?",
+                "title": ""
             },
             "user": {
                 "data": {
-                    "host": "Vert "
+                    "host": "Vert"
                 },
                 "description": "Fyll inn Roku-informasjonen din."
             }

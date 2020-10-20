@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Apparaat wordt niet ondersteund"
+        },
+        "step": {
+            "finish": {
+                "data": {
+                    "name": "Naam"
+                }
+            }
+        }
+    }
+}

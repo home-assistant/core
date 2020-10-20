@@ -5,6 +5,7 @@ import socket
 from typing import Any, Dict, Optional
 
 from pyvizio import VizioAsync, async_guess_device_type
+from pyvizio.const import APP_HOME
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -154,7 +155,15 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(CONF_APPS, {}).get(
                             default_include_or_exclude, []
                         ),
-                    ): cv.multi_select(VizioAsync.get_apps_list()),
+                    ): cv.multi_select(
+                        [
+                            APP_HOME["name"],
+                            *[
+                                app["name"]
+                                for app in self.hass.data[DOMAIN][CONF_APPS].data
+                            ],
+                        ]
+                    ),
                 }
             )
 

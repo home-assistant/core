@@ -73,7 +73,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form({"base": "connection_upgrade"})
         except (IPPConnectionError, IPPResponseError):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self._show_setup_form({"base": "connection_error"})
+            return self._show_setup_form({"base": "cannot_connect"})
         except IPPParseError:
             _LOGGER.debug("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")
@@ -127,7 +127,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_upgrade")
         except (IPPConnectionError, IPPResponseError):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         except IPPParseError:
             _LOGGER.debug("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")

@@ -1,5 +1,15 @@
 """Test OpenZWave Websocket API."""
+from openzwavemqtt.const import (
+    ATTR_CODE_SLOT,
+    ATTR_LABEL,
+    ATTR_OPTIONS,
+    ATTR_POSITION,
+    ATTR_VALUE,
+    ValueType,
+)
 
+from homeassistant.components.ozw.const import ATTR_CONFIG_PARAMETER
+from homeassistant.components.ozw.lock import ATTR_USERCODE
 from homeassistant.components.ozw.websocket_api import (
     ATTR_IS_AWAKE,
     ATTR_IS_BEAMING,
@@ -17,7 +27,14 @@ from homeassistant.components.ozw.websocket_api import (
     ID,
     NODE_ID,
     OZW_INSTANCE,
+    PARAMETER,
     TYPE,
+    VALUE,
+)
+from homeassistant.components.websocket_api.const import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
 )
 
 from .common import MQTTMessage, setup_ozw
@@ -68,8 +85,13 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result[ATTR_NODE_SPECIFIC_STRING] == "Binary Power Switch"
     assert result[ATTR_NEIGHBORS] == [1, 33, 36, 37, 39]
 
+    await client.send_json({ID: 7, TYPE: "ozw/node_status", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
     # Test node statistics
-    await client.send_json({ID: 7, TYPE: "ozw/node_statistics", NODE_ID: 39})
+    await client.send_json({ID: 8, TYPE: "ozw/node_statistics", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
 
@@ -87,13 +109,18 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["received_unsolicited"] == 3546
 
     # Test node metadata
-    await client.send_json({ID: 8, TYPE: "ozw/node_metadata", NODE_ID: 39})
+    await client.send_json({ID: 9, TYPE: "ozw/node_metadata", NODE_ID: 39})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["metadata"]["ProductPic"] == "images/aeotec/zwa002.png"
 
+    await client.send_json({ID: 10, TYPE: "ozw/node_metadata", NODE_ID: 999})
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
     # Test network statistics
-    await client.send_json({ID: 9, TYPE: "ozw/network_statistics"})
+    await client.send_json({ID: 11, TYPE: "ozw/network_statistics"})
     msg = await client.receive_json()
     result = msg["result"]
     assert result["readCnt"] == 92220
@@ -101,12 +128,194 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
     assert result["node_count"] == 5
 
     # Test get nodes
-    await client.send_json({ID: 10, TYPE: "ozw/get_nodes"})
+    await client.send_json({ID: 12, TYPE: "ozw/get_nodes"})
     msg = await client.receive_json()
     result = msg["result"]
     assert len(result) == 5
     assert result[2][ATTR_IS_AWAKE]
     assert not result[1][ATTR_IS_FAILED]
+
+    # Test get config parameters
+    await client.send_json({ID: 13, TYPE: "ozw/get_config_parameters", NODE_ID: 39})
+    msg = await client.receive_json()
+    result = msg["result"]
+    assert len(result) == 8
+    for config_param in result:
+        assert config_param["type"] in (
+            ValueType.LIST.value,
+            ValueType.BOOL.value,
+            ValueType.INT.value,
+            ValueType.BYTE.value,
+            ValueType.SHORT.value,
+            ValueType.BITSET.value,
+        )
+
+    # Test set config parameter
+    config_param = result[0]
+    current_val = config_param[ATTR_VALUE]
+    new_val = next(
+        option["Value"]
+        for option in config_param[ATTR_OPTIONS]
+        if option["Label"] != current_val
+    )
+    new_label = next(
+        option["Label"]
+        for option in config_param[ATTR_OPTIONS]
+        if option["Label"] != current_val and option["Value"] != new_val
+    )
+    await client.send_json(
+        {
+            ID: 14,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
+            VALUE: new_val,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await client.send_json(
+        {
+            ID: 15,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
+            VALUE: new_label,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Test OZW Instance not found error
+    await client.send_json(
+        {ID: 16, TYPE: "ozw/get_config_parameters", OZW_INSTANCE: 999, NODE_ID: 1}
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+    # Test OZW Node not found error
+    await client.send_json(
+        {
+            ID: 18,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 999,
+            PARAMETER: 0,
+            VALUE: "test",
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+    # Test parameter not found
+    await client.send_json(
+        {
+            ID: 19,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: 45,
+            VALUE: "test",
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+    # Test list value not found
+    await client.send_json(
+        {
+            ID: 20,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: config_param[ATTR_CONFIG_PARAMETER],
+            VALUE: "test",
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+    # Test value type invalid
+    await client.send_json(
+        {
+            ID: 21,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: 3,
+            VALUE: 0,
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_SUPPORTED
+
+    # Test invalid bitset format
+    await client.send_json(
+        {
+            ID: 22,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: 3,
+            VALUE: {ATTR_POSITION: 1, ATTR_VALUE: True, ATTR_LABEL: "test"},
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_INVALID_FORMAT
+
+    # Test valid bitset format passes validation
+    await client.send_json(
+        {
+            ID: 23,
+            TYPE: "ozw/set_config_parameter",
+            NODE_ID: 39,
+            PARAMETER: 10000,
+            VALUE: {ATTR_POSITION: 1, ATTR_VALUE: True},
+        }
+    )
+    msg = await client.receive_json()
+    result = msg["error"]
+    assert result["code"] == ERR_NOT_FOUND
+
+
+async def test_ws_locks(hass, lock_data, hass_ws_client):
+    """Test lock websocket apis."""
+    await setup_ozw(hass, fixture=lock_data)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            ID: 1,
+            TYPE: "ozw/get_code_slots",
+            NODE_ID: 10,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 2,
+            TYPE: "ozw/set_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+            ATTR_USERCODE: "1234",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json(
+        {
+            ID: 3,
+            TYPE: "ozw/clear_usercode",
+            NODE_ID: 10,
+            ATTR_CODE_SLOT: 1,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
 
 
 async def test_refresh_node(hass, generic_data, sent_messages, hass_ws_client):

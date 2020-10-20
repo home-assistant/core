@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
@@ -114,7 +114,7 @@ class IPPMarkerSensor(IPPSensor):
             icon="mdi:water",
             key=f"marker_{marker_index}",
             name=f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}",
-            unit_of_measurement=UNIT_PERCENTAGE,
+            unit_of_measurement=PERCENTAGE,
         )
 
     @property

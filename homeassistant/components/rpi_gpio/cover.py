@@ -1,5 +1,4 @@
 """Support for controlling a Raspberry Pi cover."""
-import logging
 from time import sleep
 
 import voluptuous as vol
@@ -8,8 +7,9 @@ from homeassistant.components import rpi_gpio
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 
-_LOGGER = logging.getLogger(__name__)
+from . import DOMAIN, PLATFORMS
 
 CONF_COVERS = "covers"
 CONF_RELAY_PIN = "relay_pin"
@@ -49,6 +49,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RPi cover platform."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     relay_time = config.get(CONF_RELAY_TIME)
     state_pull_mode = config.get(CONF_STATE_PULL_MODE)
     invert_state = config.get(CONF_INVERT_STATE)

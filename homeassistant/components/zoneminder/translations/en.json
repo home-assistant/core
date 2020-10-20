@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Username or password is incorrect.",
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Failed to connect to a ZoneMinder server.",
+            "invalid_auth": "Invalid authentication"
+        },
+        "create_entry": {
+            "default": "ZoneMinder server added."
+        },
+        "error": {
+            "auth_fail": "Username or password is incorrect.",
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Failed to connect to a ZoneMinder server.",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host and Port (ex 10.10.0.4:8010)",
+                    "password": "Password",
+                    "path": "ZM Path",
+                    "path_zms": "ZMS Path",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "title": "Add ZoneMinder Server."
+            }
+        }
+    }
+}

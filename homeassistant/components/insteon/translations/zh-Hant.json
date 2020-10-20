@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -78,7 +78,7 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "input_error": "\u7269\u4ef6\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u503c\u3002",
+            "input_error": "\u5be6\u9ad4\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u503c\u3002",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
         "step": {

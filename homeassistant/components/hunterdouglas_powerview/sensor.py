@@ -1,9 +1,7 @@
 """Support for hunterdouglass_powerview sensors."""
-import logging
-
 from aiopvapi.resources.shade import factory as PvShade
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
 
 from .const import (
@@ -16,8 +14,6 @@ from .const import (
     SHADE_BATTERY_LEVEL_MAX,
 )
 from .entity import ShadeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -49,7 +45,7 @@ class PowerViewShadeBatterySensor(ShadeEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def name(self):

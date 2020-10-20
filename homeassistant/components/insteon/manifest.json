@@ -2,7 +2,7 @@
   "domain": "insteon",
   "name": "Insteon",
   "documentation": "https://www.home-assistant.io/integrations/insteon",
-  "requirements": ["pyinsteon==1.0.7"],
+  "requirements": ["pyinsteon==1.0.8"],
   "codeowners": ["@teharris1"],
   "config_flow": true
 }

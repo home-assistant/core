@@ -4,7 +4,7 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS, TIME_HOURS, UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_OFF, TEMP_CELSIUS, TIME_HOURS
 from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES
@@ -13,7 +13,7 @@ SENSOR_UNITS = {
     "air_quality": None,
     "dust": None,
     "filter_life": TIME_HOURS,
-    "humidity": UNIT_PERCENTAGE,
+    "humidity": PERCENTAGE,
 }
 
 SENSOR_ICONS = {
@@ -74,9 +74,7 @@ class DysonSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message
-        )
+        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""

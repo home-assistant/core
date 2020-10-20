@@ -12,14 +12,14 @@ from homeassistant.components.wled.const import (
     ATTR_MAX_POWER,
     CURRENT_MA,
     DOMAIN,
-    SIGNAL_DBM,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -128,7 +128,7 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_wifi_signal")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "76"
 
     entry = registry.async_get("sensor.wled_rgb_light_wifi_signal")
@@ -138,7 +138,10 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SIGNAL_DBM
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
     assert state.state == "-62"
 
     entry = registry.async_get("sensor.wled_rgb_light_wifi_rssi")
@@ -183,7 +186,6 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default WLED sensors."""
     await init_integration(hass, aioclient_mock)
     registry = await hass.helpers.entity_registry.async_get_registry()
-    print(registry.entities)
 
     state = hass.states.get(entity_id)
     assert state is None

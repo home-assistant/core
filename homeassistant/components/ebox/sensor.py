@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_GIGABITS,
+    PERCENTAGE,
     TIME_DAYS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +36,7 @@ SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    "usage": ["Usage", UNIT_PERCENTAGE, "mdi:percent"],
+    "usage": ["Usage", PERCENTAGE, "mdi:percent"],
     "balance": ["Balance", PRICE, "mdi:cash-usd"],
     "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
     "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],

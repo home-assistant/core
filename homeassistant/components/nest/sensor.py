@@ -5,10 +5,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 
 from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
@@ -42,7 +42,7 @@ _VALID_SENSOR_TYPES = (
     + STRUCTURE_CAMERA_SENSOR_TYPES
 )
 
-SENSOR_UNITS = {"humidity": UNIT_PERCENTAGE}
+SENSOR_UNITS = {"humidity": PERCENTAGE}
 
 SENSOR_DEVICE_CLASSES = {"humidity": DEVICE_CLASS_HUMIDITY}
 
@@ -144,7 +144,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         return all_sensors
 
-    async_add_entities(await hass.async_add_job(get_sensors), True)
+    async_add_entities(await hass.async_add_executor_job(get_sensors), True)
 
 
 class NestBasicSensor(NestSensorDevice):

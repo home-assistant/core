@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
@@ -178,7 +178,7 @@ async def async_get_trigger_capabilities(hass: HomeAssistant, config):
     if trigger_type == "current_temperature_changed":
         unit_of_measurement = hass.config.units.temperature_unit
     else:
-        unit_of_measurement = UNIT_PERCENTAGE
+        unit_of_measurement = PERCENTAGE
 
     return {
         "extra_fields": vol.Schema(

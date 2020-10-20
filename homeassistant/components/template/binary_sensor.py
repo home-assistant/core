@@ -1,6 +1,4 @@
 """Support for exposing a templated binary sensor."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -29,8 +27,6 @@ from homeassistant.helpers.template import result_as_boolean
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
@@ -194,3 +190,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the sensor class of the binary sensor."""
+        return self._device_class

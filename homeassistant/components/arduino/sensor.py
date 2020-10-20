@@ -1,6 +1,4 @@
 """Support for getting information from Arduino pins."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -9,8 +7,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = "pins"
 CONF_TYPE = "analog"

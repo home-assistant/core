@@ -209,7 +209,7 @@ class RoonDevice(MediaPlayerEntity):
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
             media_position = convert(now_playing_data["seek_position"], int, 0)
-            media_duration = convert(now_playing_data["length"], int, 0)
+            media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:
             # catch KeyError

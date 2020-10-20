@@ -18,11 +18,6 @@ from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 _LOGGER = logging.getLogger(DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set the switch platform up (legacy)."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switches from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
@@ -46,9 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for i in range(1, int(relay_count) + 1):
         switches.append(
             ProgettihwswSwitch(
-                hass,
                 coordinator,
-                config_entry,
                 f"Relay #{i}",
                 setup_switch(board_api, i, config_entry.data[f"relay_{str(i)}"]),
             )
@@ -60,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     """Represent a switch entity."""
 
-    def __init__(self, hass, coordinator, config_entry, name, switch: Relay):
+    def __init__(self, coordinator, name, switch: Relay):
         """Initialize the values."""
         super().__init__(coordinator)
         self._switch = switch

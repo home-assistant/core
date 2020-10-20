@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": ""
+                },
+                "title": ""
+            }
+        }
+    },
+    "title": ""
+}

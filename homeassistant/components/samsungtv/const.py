@@ -16,7 +16,7 @@ CONF_ON_ACTION = "turn_on_action"
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
-RESULT_NOT_SUCCESSFUL = "not_successful"
+RESULT_CANNOT_CONNECT = "cannot_connect"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 METHOD_LEGACY = "legacy"

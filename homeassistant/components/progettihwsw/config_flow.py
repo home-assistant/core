@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required("host"): str, vol.Required("port", default=80): int}
@@ -15,10 +15,20 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user host input."""
 
+    confs = hass.config_entries.async_entries(DOMAIN)
+    same_entries = [
+        True
+        for entry in confs
+        if entry.data["host"] == data["host"] and entry.data["port"] == data["port"]
+    ]
+
+    if same_entries:
+        raise ExistingEntry
+
     api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
     is_valid = await api_instance.check_board()
 
-    if is_valid is False:
+    if not is_valid:
         raise CannotConnect
 
     return {
@@ -29,43 +39,36 @@ async def validate_input(hass: core.HomeAssistant, data):
     }
 
 
-async def validate_input_relay_modes(data):
-    """Validate the user input in relay modes form."""
-    for mode in data.values():
-        if mode not in ("bistable", "monostable"):
-            raise WrongInfo
-
-    return True
-
-
 class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ProgettiHWSW Automation."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize class variables."""
+        self.s1_in = None
+
     async def async_step_relay_modes(self, user_input=None):
         """Manage relay modes step."""
         errors = {}
         if user_input is not None:
-            try:
-                await validate_input_relay_modes(user_input)
-                whole_data = user_input
-                whole_data.update(self.s1_in)
-            except WrongInfo:
-                errors["base"] = "wrong_info_relay_modes"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=whole_data["title"], data=whole_data
-                )
+
+            whole_data = user_input
+            whole_data.update(self.s1_in)
+
+            return self.async_create_entry(title=whole_data["title"], data=whole_data)
 
         relay_modes_schema = {}
         for i in range(1, int(self.s1_in["relay_count"]) + 1):
             relay_modes_schema[
                 vol.Required(f"relay_{str(i)}", default="bistable")
-            ] = str
+            ] = vol.In(
+                {
+                    "bistable": "Bistable (ON/OFF Mode)",
+                    "monostable": "Monostable (Timer Mode)",
+                }
+            )
 
         return self.async_show_form(
             step_id="relay_modes",
@@ -77,17 +80,19 @@ class ProgettiHWSWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input.update(info)
-                self.s1_in = (  # pylint: disable=attribute-defined-outside-init
-                    user_input
-                )
-                return await self.async_step_relay_modes()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except ExistingEntry:
+                return self.async_abort(reason="already_configured")
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
+            else:
+                user_input.update(info)
+                self.s1_in = user_input
+                return await self.async_step_relay_modes()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -99,4 +104,8 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 
 class WrongInfo(exceptions.HomeAssistantError):
+    """Error to indicate we cannot validate relay modes input."""
+
+
+class ExistingEntry(exceptions.HomeAssistantError):
     """Error to indicate we cannot validate relay modes input."""

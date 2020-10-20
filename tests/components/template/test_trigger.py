@@ -6,6 +6,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.template import trigger as template_trigger
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -16,7 +17,6 @@ from tests.common import (
     async_mock_service,
     mock_component,
 )
-from tests.components.automation import common
 
 
 @pytest.fixture
@@ -52,8 +52,12 @@ async def test_if_fires_on_change_bool(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.states.async_set("test.entity", "planet")
     await hass.async_block_till_done()
@@ -698,8 +702,12 @@ async def test_if_not_fires_when_turned_off_with_for(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=4))
     await hass.async_block_till_done()
     assert len(calls) == 0
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
     assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=6))
     await hass.async_block_till_done()

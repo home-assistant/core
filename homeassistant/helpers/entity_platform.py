@@ -138,7 +138,7 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(
+            return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
                 platform.setup_platform,  # type: ignore
                 hass,
@@ -315,6 +315,13 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
+        except Exception:
+            self.logger.exception(
+                "Error adding entities for domain %s with platform %s",
+                self.domain,
+                self.platform_name,
+            )
+            raise
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
@@ -546,7 +553,7 @@ class EntityPlatform:
 
         async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
-            await service.entity_service_call(  # type: ignore
+            await service.entity_service_call(
                 self.hass,
                 [
                     plf
@@ -595,3 +602,19 @@ class EntityPlatform:
 current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(
     "current_platform", default=None
 )
+
+
+@callback
+def async_get_platforms(
+    hass: HomeAssistantType, integration_name: str
+) -> List[EntityPlatform]:
+    """Find existing platforms."""
+    if (
+        DATA_ENTITY_PLATFORM not in hass.data
+        or integration_name not in hass.data[DATA_ENTITY_PLATFORM]
+    ):
+        return []
+
+    platforms: List[EntityPlatform] = hass.data[DATA_ENTITY_PLATFORM][integration_name]
+
+    return platforms

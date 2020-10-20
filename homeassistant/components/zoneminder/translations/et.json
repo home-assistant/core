@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "ZoneMinderi serveriga \u00fchenduse loomine nurjus.",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "create_entry": {
+            "default": "ZoneMinderi server on lisatud."
+        },
+        "error": {
+            "auth_fail": "Vale kasutajanimi v\u00f5i salas\u00f5na",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "ZoneMinderi serveriga \u00fchenduse loomine nurjus.",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host ja port (n\u00e4iteks 10.10.0.4:8010)",
+                    "password": "Salas\u00f5na",
+                    "path": "ZM aadress",
+                    "path_zms": "ZMS-i aadress",
+                    "ssl": "Kasutage ZoneMinderiga \u00fchenduse loomiseks SSL-i",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "title": "Lisa ZoneMinderi server."
+            }
+        }
+    }
+}
