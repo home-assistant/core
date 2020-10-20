@@ -23,12 +23,12 @@ CLOSE_THRESHOLD = 5
 
 def _close_enough(actual_rgb, testing_rgb):
     """Validate the given RGB value is in acceptable tolerance."""
-    ar, ag, ab = actual_rgb
-    tr, tg, tb = testing_rgb
+    actual_red, actual_green, actual_blue = actual_rgb
+    testing_red, testing_green, testing_blue = testing_rgb
 
-    r_diff = abs(ar - tr)
-    g_diff = abs(ag - tg)
-    b_diff = abs(ab - tb)
+    r_diff = abs(actual_red - testing_red)
+    g_diff = abs(actual_green - testing_green)
+    b_diff = abs(actual_blue - testing_blue)
 
     return (
         r_diff <= CLOSE_THRESHOLD
@@ -93,6 +93,7 @@ async def test_url_success(hass, aioclient_mock):
     assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
 
     # Ensure the RGB values are correct
+    # TODO: Why does the demo light not set / report the rgb_color correctly!
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
 
 

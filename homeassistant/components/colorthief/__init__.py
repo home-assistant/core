@@ -10,7 +10,7 @@ from colorthief import ColorThief
 
 from homeassistant.components.colorthief.const import (
     ATTR_FILE_PATH,
-    ATTR_LIGHT,
+    ATTR_LIGHT_ENTITY_ID,
     ATTR_URL,
     DOMAIN,
     SERVICE_PREDOMINANT_COLOR_FILE,
@@ -37,13 +37,13 @@ async def async_setup(hass, hass_config):
     async def _async_get_color(file_handler) -> tuple:
         """Given an image file, extract the predominant color from it."""
         try:
-            cf = await hass.async_add_executor_job(ColorThief, file_handler)
+            color_thief = await hass.async_add_executor_job(ColorThief, file_handler)
         except UnidentifiedImageError as ex:
             _LOGGER.error("Bad image file provided, are you sure it's an image? %s", ex)
             return
 
         # get_color returns a SINGLE RGB value for the given image
-        color = cf.get_color(quality=1)
+        color = color_thief.get_color(quality=1)
 
         _LOGGER.debug("Extracted RGB color %s from image", color)
 
@@ -75,7 +75,7 @@ async def async_setup(hass, hass_config):
         service_data = service_call.data
 
         url = service_data.get(ATTR_URL)
-        light_entity_id = service_data.get(ATTR_LIGHT)
+        light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
 
         # Optional fields
         brightness_pct = service_data.get(ATTR_BRIGHTNESS_PCT)
@@ -95,11 +95,11 @@ async def async_setup(hass, hass_config):
 
         content = await response.content.read()
 
-        with io.BytesIO(content) as f:
-            f.name = "colorthief.jpg"
-            f.seek(0)
+        with io.BytesIO(content) as _file:
+            _file.name = "colorthief.jpg"
+            _file.seek(0)
 
-            color = await _async_get_color(f)
+            color = await _async_get_color(_file)
 
         if color:
             await _async_set_light(light_entity_id, color, brightness_pct, transition)
@@ -115,7 +115,7 @@ async def async_setup(hass, hass_config):
         service_data = service_call.data
 
         file_path = service_data.get(ATTR_FILE_PATH)
-        light_entity_id = service_data.get(ATTR_LIGHT)
+        light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
 
         # Optional fields
         brightness_pct = service_data.get(ATTR_BRIGHTNESS_PCT)
@@ -124,12 +124,12 @@ async def async_setup(hass, hass_config):
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
         # TODO: Remove BytesIO buffer for an already existing file...
-        with open(file_path) as fh:  # File test didn't like original file
-            with io.BytesIO(fh.read()) as f:
-                f.name = "colorthief.jpg"
-                f.seek(0)
+        with open(file_path) as file_handler:  # File test didn't like original file
+            with io.BytesIO(file_handler.read()) as _file:
+                _file.name = "colorthief.jpg"
+                _file.seek(0)
 
-                color = await _async_get_color(f)
+                color = await _async_get_color(_file)
 
         if color:
             await _async_set_light(light_entity_id, color, brightness_pct, transition)

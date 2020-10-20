@@ -1,7 +1,7 @@
 """Constants for the ColorThief component."""
 ATTR_FILE_PATH = "file_path"
 ATTR_URL = "url"
-ATTR_LIGHT = "light"
+ATTR_LIGHT_ENTITY_ID = "light_entity_id"
 
 DOMAIN = "colorthief"
 
