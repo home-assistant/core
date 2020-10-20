@@ -39,7 +39,7 @@
             },
             "device": {
                 "title": "Configure Tuya Device",
-                "description": "Configure required options to fix displayed information for {device_type} device with name `{device_name}`",
+                "description": "Configure options to adjust displayed information for {device_type} device `{device_name}`",
                 "data": {
                     "support_color": "Force color support",
                     "brightness_range_mode": "Brightness range used by device",

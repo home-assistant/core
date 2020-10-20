@@ -139,8 +139,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
         self._load_config()
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_CONFIG_ENTITY, self._load_config
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_CONFIG_ENTITY, self._load_config)
         )
 
         modes = self._tuya.operation_list()

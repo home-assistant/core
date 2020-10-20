@@ -289,7 +289,6 @@ class TuyaDevice(Entity):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
-        self._unsub_dispatcher = None
 
     def _inc_device_count(self):
         """Increment static variable device count."""
@@ -320,15 +319,20 @@ class TuyaDevice(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]["entities"][self.object_id] = self.entity_id
-        async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback
+            )
+        )
         self._inc_device_count()
 
     async def async_will_remove_from_hass(self):
-        """Unregister config update dispatcher."""
-        if self._unsub_dispatcher is not None:
-            self._unsub_dispatcher()  # pylint: disable=not-callable
-            self._unsub_dispatcher = None
+        """Call when entity is removed from hass."""
         self._dec_device_count()
 
     @property
