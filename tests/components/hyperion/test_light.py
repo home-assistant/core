@@ -306,7 +306,7 @@ async def test_light_async_turn_on(hass):
     await setup_test_config_entry(hass, client=client)
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
-    client.async_send_set_color = AsyncMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
     )
@@ -322,8 +322,8 @@ async def test_light_async_turn_on(hass):
     # On (=), 50% (!), solid (=), [255,255,255] (=)
     # ===
     brightness = 128
-    client.async_send_set_color = AsyncMock(return_value=True)
-    client.async_send_set_adjustment = AsyncMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_adjustment = CoroutineMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -351,7 +351,7 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 50% (=), solid (=), [0,255,255] (!)
     hs_color = (180.0, 100.0)
-    client.async_send_set_color = AsyncMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -380,8 +380,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (!), solid, [0,255,255] (=)
     brightness = 255
-    client.async_send_set_color = AsyncMock(return_value=True)
-    client.async_send_set_adjustment = AsyncMock(return_value=True)
+    client.async_send_set_color = CoroutineMock(return_value=True)
+    client.async_send_set_adjustment = CoroutineMock(return_value=True)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -407,8 +407,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), V4L (!), [0,255,255] (=)
     effect = const.KEY_COMPONENTID_EXTERNAL_SOURCES[2]  # V4L
-    client.async_send_clear = AsyncMock(return_value=True)
-    client.async_send_set_component = AsyncMock(return_value=True)
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_component = CoroutineMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -453,8 +453,8 @@ async def test_light_async_turn_on(hass):
 
     # On (=), 100% (=), "Warm Blobs" (!), [0,255,255] (=)
     effect = "Warm Blobs"
-    client.async_send_clear = AsyncMock(return_value=True)
-    client.async_send_set_effect = AsyncMock(return_value=True)
+    client.async_send_clear = CoroutineMock(return_value=True)
+    client.async_send_set_effect = CoroutineMock(return_value=True)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -501,7 +501,7 @@ async def test_light_async_turn_off(hass):
     client = create_mock_client()
     await setup_test_config_entry(hass, client=client)
 
-    client.async_send_set_component = AsyncMock(return_value=True)
+    client.async_send_set_component = CoroutineMock(return_value=True)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
