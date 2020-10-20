@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fetch data from API endpoint."""
         try:
             await hass.async_add_executor_job(thermostat.get_data)
-        except Exception as err:
+        except requests.exceptions.RequestException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
