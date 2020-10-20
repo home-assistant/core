@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
@@ -55,8 +56,6 @@ DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
-
-ATTR_RESTORED = "restored"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"

@@ -1,6 +1,5 @@
 """Cover platform for Advantage Air integration."""
 
-from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_DAMPER,
@@ -10,13 +9,20 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 
-from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN, DOMAIN
+from .const import (
+    ADVANTAGE_AIR_STATE_CLOSE,
+    ADVANTAGE_AIR_STATE_OPEN,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+)
+from .entity import AdvantageAirEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir cover platform."""
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
     for ac_key, ac_device in instance["coordinator"].data["aircons"].items():

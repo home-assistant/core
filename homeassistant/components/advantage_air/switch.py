@@ -1,6 +1,5 @@
 """Switch platform for Advantage Air integration."""
 
-from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.helpers.entity import ToggleEntity
 
 from .const import (
@@ -8,6 +7,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
+from .entity import AdvantageAirEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

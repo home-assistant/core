@@ -43,6 +43,7 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
+    ATTR_RESERVED,
     ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
@@ -61,6 +62,7 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
+    STATE_UNAVAILABLE,
     __version__,
 )
 from homeassistant.exceptions import (
@@ -1118,6 +1120,28 @@ class StateMachine:
         ).result()
 
     @callback
+    def async_reserve(self, entity_id: str) -> None:
+        """Reserve a state in the state machine for an entity being added.
+
+        This must not fire an event when the state is reserved.
+
+        This avoids a race condition where multiple entities with the same
+        entity_id are added.
+        """
+        entity_id = entity_id.lower()
+
+        if entity_id in self._states:
+            raise HomeAssistantError(
+                "async_reserve must not be called once the state is in the state machine."
+            )
+
+        self._states[entity_id] = State(
+            entity_id,
+            STATE_UNAVAILABLE,
+            {ATTR_RESERVED: True},
+        )
+
+    @callback
     def async_set(
         self,
         entity_id: str,
@@ -1139,7 +1163,8 @@ class StateMachine:
         new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
-        if old_state is None:
+        if old_state is None or ATTR_RESERVED in old_state.attributes:
+            old_state = None
             same_state = False
             same_attr = False
             last_changed = None
@@ -1147,6 +1172,10 @@ class StateMachine:
             same_state = old_state.state == new_state and not force_update
             same_attr = old_state.attributes == MappingProxyType(attributes)
             last_changed = old_state.last_changed if same_state else None
+            if ATTR_RESERVED in attributes:
+                raise HomeAssistantError(
+                    f"{ATTR_RESERVED} is a reserved name for attributes"
+                )
 
         if same_state and same_attr:
             return

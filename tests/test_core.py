@@ -1537,3 +1537,13 @@ async def test_hassjob_forbid_coroutine():
 
     # To avoid warning about unawaited coro
     await coro
+
+
+async def test_reserving_states(hass):
+    """Test we can reserve a state in the state machine."""
+
+    hass.states.async_reserve("light.bedroom")
+    hass.states.async_set("light.bedroom", "on")
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
