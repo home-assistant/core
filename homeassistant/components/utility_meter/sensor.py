@@ -253,22 +253,22 @@ class UtilityMeterSensor(RestoreEntity):
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
-                minute=self._period_offset.seconds+900 // 60,
-                second=self._period_offset.seconds+900 % 60,
+                minute=self._period_offset.seconds + 900 // 60,
+                second=self._period_offset.seconds + 900 % 60,
             )
 
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
-                minute=self._period_offset.seconds+1800 // 60,
-                second=self._period_offset.seconds+1800 % 60,
+                minute=self._period_offset.seconds + 1800 // 60,
+                second=self._period_offset.seconds + 1800 % 60,
             )
 
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
-                minute=self._period_offset.seconds+2700 // 60,
-                second=self._period_offset.seconds+2700 % 60,
+                minute=self._period_offset.seconds + 2700 // 60,
+                second=self._period_offset.seconds + 2700 % 60,
             )
 
         elif self._period == HOURLY:
