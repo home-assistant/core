@@ -5,7 +5,12 @@ import logging
 import os
 import time
 
-from RestrictedPython import compile_restricted_exec, safe_builtins, utility_builtins
+from RestrictedPython import (
+    compile_restricted_exec,
+    limited_builtins,
+    safe_builtins,
+    utility_builtins,
+)
 from RestrictedPython.Eval import default_guarded_getitem
 from RestrictedPython.Guards import (
     full_write_guard,
@@ -181,9 +186,15 @@ def execute(hass, filename, source, data=None):
         "sorted": sorted,
         "time": TimeWrapper(),
         "dt_util": dt_util,
+        "min": min,
+        "max": max,
+        "sum": sum,
+        "any": any,
+        "all": all,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)
+    builtins.update(limited_builtins)
     builtins.update(extra_builtins)
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
