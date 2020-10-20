@@ -474,16 +474,7 @@ def test_placeholder_class():
     assert len({placeholder, placeholder2}) == 1
 
 
-def test_placeholder_constructor():
+def test_placeholder():
     """Test loading placeholders."""
-    data = load_yaml(
-        "",
-        """
-structure:
-  entity_id: !placeholder controlled entity
-        """,
-    )
-
-    placeholder = data["structure"]["entity_id"]
-    assert isinstance(placeholder, yaml_loader.Placeholder)
-    assert placeholder.name == "controlled entity"
+    data = {"hello": yaml.Placeholder("test_name")}
+    assert yaml.parse_yaml(yaml.dump(data)) == data
