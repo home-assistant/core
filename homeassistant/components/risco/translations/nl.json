@@ -1,9 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
         "step": {
             "user": {
                 "data": {
-                    "pin": "Pincode",
+                    "password": "Wachtwoord",
+                    "pin": "PIN-code",
                     "username": "Gebruikersnaam"
                 }
             }

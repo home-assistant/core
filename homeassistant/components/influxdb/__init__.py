@@ -52,6 +52,7 @@ from .const import (
     CONF_DEFAULT_MEASUREMENT,
     CONF_HOST,
     CONF_IGNORE_ATTRIBUTES,
+    CONF_MEASUREMENT_ATTR,
     CONF_ORG,
     CONF_OVERRIDE_MEASUREMENT,
     CONF_PASSWORD,
@@ -68,6 +69,7 @@ from .const import (
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
     DEFAULT_HOST_V2,
+    DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
     DOMAIN,
     EVENT_NEW_STATE,
@@ -154,6 +156,9 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
         vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
+        vol.Optional(CONF_MEASUREMENT_ATTR, default=DEFAULT_MEASUREMENT_ATTR): vol.In(
+            ["unit_of_measurement", "domain__device_class", "entity_id"]
+        ),
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_TAGS_ATTRIBUTES, default=[]): vol.All(
@@ -192,6 +197,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
     tags = conf.get(CONF_TAGS)
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
+    measurement_attr = conf.get(CONF_MEASUREMENT_ATTR)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
     global_ignore_attributes = set(conf[CONF_IGNORE_ATTRIBUTES])
     component_config = EntityValues(
@@ -223,20 +229,32 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
                 _include_state = True
 
         include_uom = True
+        include_dc = True
         entity_config = component_config.get(state.entity_id)
         measurement = entity_config.get(CONF_OVERRIDE_MEASUREMENT)
         if measurement in (None, ""):
             if override_measurement:
                 measurement = override_measurement
             else:
-                measurement = state.attributes.get(CONF_UNIT_OF_MEASUREMENT)
+                if measurement_attr == "entity_id":
+                    measurement = state.entity_id
+                elif measurement_attr == "domain__device_class":
+                    device_class = state.attributes.get("device_class")
+                    if device_class is None:
+                        # This entity doesn't have a device_class set, use only domain
+                        measurement = state.domain
+                    else:
+                        measurement = f"{state.domain}__{device_class}"
+                        include_dc = False
+                else:
+                    measurement = state.attributes.get(measurement_attr)
                 if measurement in (None, ""):
                     if default_measurement:
                         measurement = default_measurement
                     else:
                         measurement = state.entity_id
                 else:
-                    include_uom = False
+                    include_uom = measurement_attr != "unit_of_measurement"
 
         json = {
             INFLUX_CONF_MEASUREMENT: measurement,
@@ -258,8 +276,10 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
             if key in tags_attributes:
                 json[INFLUX_CONF_TAGS][key] = value
             elif (
-                key != CONF_UNIT_OF_MEASUREMENT or include_uom
-            ) and key not in ignore_attributes:
+                (key != CONF_UNIT_OF_MEASUREMENT or include_uom)
+                and (key != "device_class" or include_dc)
+                and key not in ignore_attributes
+            ):
                 # If the key is already in fields
                 if key in json[INFLUX_CONF_FIELDS]:
                     key = f"{key}_"
@@ -322,8 +342,13 @@ def get_influx_connection(conf, test_write=False, test_read=False):
 
         def write_v2(json):
             """Write data to V2 influx."""
+            data = {"bucket": bucket, "record": json}
+
+            if precision is not None:
+                data["write_precision"] = precision
+
             try:
-                write_api.write(bucket=bucket, record=json, write_precision=precision)
+                write_api.write(**data)
             except (urllib3.exceptions.HTTPError, OSError) as exc:
                 raise ConnectionError(CONNECTION_ERROR % exc) from exc
             except ApiException as exc:

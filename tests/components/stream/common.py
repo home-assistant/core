@@ -1,15 +1,12 @@
 """Collection of test helpers."""
 from fractions import Fraction
 import io
-import logging
 
 import av
 import numpy as np
 
 from homeassistant.components.stream import Stream
 from homeassistant.components.stream.const import ATTR_STREAMS, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 AUDIO_SAMPLE_RATE = 8000
 

@@ -45,9 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
-            int, vol.Range(min=0)
-        ),
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_SLOT, default=DEFAULT_SLOT): vol.All(
             int, vol.Range(min=1, max=1000000)
         ),
@@ -150,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(
         SERVICE_LEARN,
         {
-            vol.Optional(CONF_TIMEOUT, default=10): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int,
             vol.Optional(CONF_SLOT, default=1): vol.All(
                 int, vol.Range(min=1, max=1000000)
             ),

@@ -571,6 +571,27 @@ def test_multi_select_in_serializer():
     }
 
 
+def test_boolean_in_serializer():
+    """Test boolean with custom_serializer."""
+    assert cv.custom_serializer(cv.boolean) == {
+        "type": "boolean",
+    }
+
+
+def test_string_in_serializer():
+    """Test string with custom_serializer."""
+    assert cv.custom_serializer(cv.string) == {
+        "type": "string",
+    }
+
+
+def test_positive_time_period_dict_in_serializer():
+    """Test positive_time_period_dict with custom_serializer."""
+    assert cv.custom_serializer(cv.positive_time_period_dict) == {
+        "type": "positive_time_period_dict",
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""

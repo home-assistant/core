@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
@@ -71,6 +72,9 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "object_id",
     "name",
 }
+
+ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
+DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 
 @bind_hass
@@ -198,16 +202,22 @@ class RenderInfo:
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
+        self.rate_limit = None
+        self.has_time = False
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> has_time={self.has_time}"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
         return (
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
+
+    def _filter_entities(self, entity_id: str) -> bool:
+        """Template should re-render if the entity state changes when we match specific entities."""
+        return entity_id in self.entities
 
     def _filter_lifecycle_domains(self, entity_id: str) -> bool:
         """Template should re-render if the entity is added or removed with domains watched."""
@@ -221,15 +231,22 @@ class RenderInfo:
 
     def _freeze_static(self) -> None:
         self.is_static = True
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
+        self._freeze_sets()
         self.all_states = False
 
-    def _freeze(self) -> None:
+    def _freeze_sets(self) -> None:
         self.entities = frozenset(self.entities)
         self.domains = frozenset(self.domains)
         self.domains_lifecycle = frozenset(self.domains_lifecycle)
+
+    def _freeze(self) -> None:
+        self._freeze_sets()
+
+        if self.rate_limit is None:
+            if self.all_states or self.exception:
+                self.rate_limit = ALL_STATES_RATE_LIMIT
+            elif self.domains or self.domains_lifecycle:
+                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
 
         if self.exception:
             return
@@ -243,14 +260,25 @@ class RenderInfo:
         if self.all_states:
             return
 
-        if self.entities or self.domains:
+        if self.domains:
             self.filter = self._filter_domains_and_entities
+        elif self.entities:
+            self.filter = self._filter_entities
         else:
             self.filter = _false
 
 
 class Template:
     """Class to hold a template and manage caching and rendering."""
+
+    __slots__ = (
+        "__weakref__",
+        "template",
+        "hass",
+        "is_static",
+        "_compiled_code",
+        "_compiled",
+    )
 
     def __init__(self, template, hass=None):
         """Instantiate a template."""
@@ -291,7 +319,7 @@ class Template:
 
         return extract_entities(self.hass, self.template, variables)
 
-    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template."""
         if self.is_static:
             return self.template.strip()
@@ -304,7 +332,7 @@ class Template:
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
+    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
@@ -318,9 +346,26 @@ class Template:
             kwargs.update(variables)
 
         try:
-            return compiled.render(kwargs).strip()
-        except jinja2.TemplateError as err:
+            render_result = compiled.render(kwargs)
+        except Exception as err:  # pylint: disable=broad-except
             raise TemplateError(err) from err
+
+        render_result = render_result.strip()
+
+        if not self.hass.config.legacy_templates:
+            try:
+                result = literal_eval(render_result)
+
+                # If the literal_eval result is a string, use the original
+                # render, by not returning right here. The evaluation of strings
+                # resulting in strings impacts quotes, to avoid unexpected
+                # output; use the original render instead of the evaluated one.
+                if not isinstance(result, str):
+                    return result
+            except (ValueError, SyntaxError, MemoryError):
+                pass
+
+        return render_result
 
     async def async_render_will_timeout(
         self, timeout: float, variables: TemplateVarsType = None, **kwargs: Any
@@ -576,17 +621,18 @@ class DomainStates:
 class TemplateState(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state")
+    __slots__ = ("_hass", "_state", "_collect")
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass, state):
+    def __init__(self, hass, state, collect=True):
         """Initialize template state."""
         self._hass = hass
         self._state = state
+        self._collect = collect
 
     def _collect_state(self):
-        if _RENDER_INFO in self._hass.data:
+        if self._collect and _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -595,7 +641,7 @@ class TemplateState(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if _RENDER_INFO in self._hass.data:
+            if self._collect and _RENDER_INFO in self._hass.data:
                 self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
@@ -686,7 +732,7 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
 def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state)
+        yield TemplateState(hass, state, collect=False)
 
 
 def _get_state_if_valid(
@@ -914,6 +960,24 @@ def state_attr(hass, entity_id, name):
     if state_obj is not None:
         return state_obj.attributes.get(name)
     return None
+
+
+def now(hass):
+    """Record fetching now."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.now()
+
+
+def utcnow(hass):
+    """Record fetching utcnow."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.utcnow()
 
 
 def forgiving_round(value, precision=0, method="common"):
@@ -1246,9 +1310,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["now"] = dt_util.now
         self.globals["as_local"] = dt_util.as_local
-        self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
@@ -1279,6 +1341,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["utcnow"] = hassfunction(utcnow)
+        self.globals["now"] = hassfunction(now)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

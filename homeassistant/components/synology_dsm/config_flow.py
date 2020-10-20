@@ -126,7 +126,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(host, port, username, password, use_ssl)
+        api = SynologyDSM(host, port, username, password, use_ssl, timeout=30)
 
         try:
             serial = await self.hass.async_add_executor_job(
@@ -140,10 +140,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_2sa(user_input, errors)
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
-            errors[CONF_USERNAME] = "login"
+            errors[CONF_USERNAME] = "invalid_auth"
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
-            errors[CONF_HOST] = "connection"
+            errors[CONF_HOST] = "cannot_connect"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"

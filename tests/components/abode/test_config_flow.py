@@ -61,7 +61,7 @@ async def test_invalid_credentials(hass):
         side_effect=AbodeAuthenticationException((400, "auth error")),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass):
@@ -78,7 +78,7 @@ async def test_connection_error(hass):
         ),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "connection_error"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_step_import(hass):

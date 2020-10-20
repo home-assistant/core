@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "unknown": "Tundmatu viga"
+        },
         "error": {
-            "cannot_connect": "\u00dchendus nurjus"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "flow_title": "Canary {name}",
         "step": {
@@ -9,7 +13,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Loo \u00fchendus Canary-iga"
             }
         }
     },
@@ -17,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "Kaamerate jaoks edastavad argumendid (ffmpeg)",
                     "timeout": "P\u00e4ringu ajal\u00f5pp (sekundites)"
                 }
             }

@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN \u78bc"
                 },
                 "description": "\u96fb\u8996\u4e0a\u61c9\u8a72\u6703\u986f\u793a\u4e00\u7d44\u4ee3\u78bc\u3002\u65bc\u8868\u683c\u4e2d\u8f38\u5165\u4ee3\u78bc\uff0c\u7136\u5f8c\u7e7c\u7e8c\u4e0b\u4e00\u6b65\u4ee5\u5b8c\u6210\u914d\u5c0d\u3002",
                 "title": "\u5b8c\u6210\u914d\u5c0d\u904e\u7a0b"

@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {

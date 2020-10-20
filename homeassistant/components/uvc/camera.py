@@ -152,7 +152,7 @@ class UnifiVideoCamera(Camera):
                 camera.login()
                 _LOGGER.debug(
                     "Logged into UVC camera %(name)s via %(addr)s",
-                    dict(name=self._name, addr=addr),
+                    {"name": self._name, "addr": addr},
                 )
                 self._connect_addr = addr
                 break

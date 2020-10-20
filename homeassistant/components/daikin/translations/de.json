@@ -4,7 +4,8 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "device_timeout": "Verbindung fehlgeschlagen"
+            "device_timeout": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {

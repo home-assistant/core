@@ -34,19 +34,20 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._async_try_connect(host)
+            except exceptions.ConnectError:
+                errors["base"] = "cannot_connect"
+                _LOGGER.error("Error connecting to device at %s", host)
+            except exceptions.InvalidHost:
+                errors["base"] = "invalid_host"
+                _LOGGER.error("Invalid host at %s", host)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
-            except exceptions.ConnectError:
-                errors["base"] = "cannot_connect"
-                _LOGGER.exception("Error connecting to device at %s", host)
-            except exceptions.InvalidHost:
-                errors["base"] = "invalid_host"
-                _LOGGER.exception("Invalid data received from device at %s", host)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -67,7 +68,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_endpoint_existed(self, endpoint):
         for entry in self._async_current_entries():
             if endpoint == entry.data.get(CONF_HOST):
-                return endpoint
+                return True
+        return False
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)

@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne DoorBird er allerede konfigurert",
+            "already_configured": "Enheten er allerede konfigurert",
             "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
             "not_doorbird_device": "Denne enheten er ikke en DoorBird"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "DoorBird {name} ( {host} )",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

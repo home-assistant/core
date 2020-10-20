@@ -32,10 +32,13 @@ from homeassistant.const import (
     HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.template import attach
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
@@ -285,7 +288,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 @validate_schema(
     {
         str: {
-            vol.Required(ATTR_TEMPLATE): cv.template,
+            vol.Required(ATTR_TEMPLATE): cv.string,
             vol.Optional(ATTR_TEMPLATE_VARIABLES, default={}): dict,
         }
     }
@@ -295,10 +298,9 @@ async def webhook_render_template(hass, config_entry, data):
     resp = {}
     for key, item in data.items():
         try:
-            tpl = item[ATTR_TEMPLATE]
-            attach(hass, tpl)
+            tpl = template.Template(item[ATTR_TEMPLATE], hass)
             resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-        except TemplateError as ex:
+        except template.TemplateError as ex:
             resp[key] = {"error": str(ex)}
 
     return webhook_response(resp, registration=config_entry.data)

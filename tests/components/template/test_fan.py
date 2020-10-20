@@ -1,6 +1,4 @@
 """The tests for the Template fan platform."""
-import logging
-
 import pytest
 import voluptuous as vol
 
@@ -19,9 +17,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.fan import common
-
-_LOGGER = logging.getLogger(__name__)
-
 
 _TEST_FAN = "fan.test_fan"
 # Represent for fan's state
@@ -662,7 +657,7 @@ def _verify(
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
-    assert state.state == expected_state
+    assert state.state == str(expected_state)
     assert attributes.get(ATTR_SPEED) == expected_speed
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction

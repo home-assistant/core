@@ -78,7 +78,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
-    thermostats = await hass.async_add_job(hass.data[DATA_NEST].thermostats)
+    thermostats = await hass.async_add_executor_job(hass.data[DATA_NEST].thermostats)
 
     all_devices = [
         NestThermostat(structure, device, temp_unit)

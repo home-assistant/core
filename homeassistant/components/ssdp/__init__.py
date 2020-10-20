@@ -1,6 +1,7 @@
 """The SSDP integration."""
 import asyncio
 from datetime import timedelta
+import itertools
 import logging
 
 import aiohttp
@@ -50,6 +51,12 @@ async def async_setup(hass, config):
     return True
 
 
+def _run_ssdp_scans():
+    _LOGGER.debug("Scanning")
+    # Run 3 times as packets can get lost
+    return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -62,11 +69,9 @@ class Scanner:
 
     async def async_scan(self, _):
         """Scan for new entries."""
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            entries = await self.hass.async_add_executor_job(ssdp.scan)
-            await self._process_entries(entries)
+        entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
+
+        await self._process_entries(entries)
 
         # We clear the cache after each run. We track discovered entries
         # so will never need a description twice.
