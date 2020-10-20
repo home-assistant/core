@@ -66,6 +66,8 @@ omit =
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
+    homeassistant/components/avea/__init__.py
+    homeassistant/components/avea/const.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/avri/const.py
