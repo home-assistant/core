@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_pin_code": "Podany kod PIN jest nieprawid\u0142owy",
-            "not_connected": "Nie uda\u0142o si\u0119 nawi\u0105za\u0107 zdalnego po\u0142\u0105czenia z telewizorem Panasonic Viera."
+            "not_connected": "Nie uda\u0142o si\u0119 nawi\u0105za\u0107 zdalnego po\u0142\u0105czenia z telewizorem Panasonic Viera"
         },
         "step": {
             "pairing": {

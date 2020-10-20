@@ -1,5 +1,4 @@
 """Support for Tasmota switches."""
-import logging
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
@@ -9,8 +8,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -19,6 +19,7 @@
     "config_flow": {
       "title": {
         "oauth2_pick_implementation": "Pick Authentication Method",
+        "reauth": "Reauthenticate Integration",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {

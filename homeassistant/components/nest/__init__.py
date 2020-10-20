@@ -149,7 +149,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("proceeding with setup")
     conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
-    if not await hass.async_add_job(hass.data[DATA_NEST].initialize):
+    if not await hass.async_add_executor_job(hass.data[DATA_NEST].initialize):
         return False
 
     for component in "climate", "camera", "sensor", "binary_sensor":

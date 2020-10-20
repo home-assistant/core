@@ -1,6 +1,4 @@
 """Mock devices object to test Insteon."""
-import logging
-
 from pyinsteon.address import Address
 from pyinsteon.device_types import (
     GeneralController_MiniRemote_4,
@@ -9,8 +7,6 @@ from pyinsteon.device_types import (
 )
 
 from tests.async_mock import AsyncMock, MagicMock
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):

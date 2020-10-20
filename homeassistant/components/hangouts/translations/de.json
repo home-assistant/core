@@ -7,7 +7,7 @@
         "error": {
             "invalid_2fa": "Ung\u00fcltige 2-Faktor Authentifizierung, bitte versuche es erneut.",
             "invalid_2fa_method": "Ung\u00fcltige 2FA Methode (mit Telefon verifizieren)",
-            "invalid_login": "Ung\u00fcltige Daten, bitte erneut versuchen."
+            "invalid_login": "Ung\u00fcltiges Login, bitte versuche es erneut."
         },
         "step": {
             "2fa": {

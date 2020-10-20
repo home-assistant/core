@@ -8,6 +8,9 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Kas soovid lisada Volumio ('{name}') Home Assistanti?"
+            },
             "user": {
                 "data": {
                     "host": "",

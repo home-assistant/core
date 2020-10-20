@@ -3,7 +3,7 @@ import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -86,6 +86,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             "manufacturer": self._device_info[ATTR_MANUFACTURER],
             "model": self._device_info[ATTR_MODEL_NUMBER],
         }
+
+    @property
+    def device_class(self):
+        """Return the device class of the device."""
+        return DEVICE_CLASS_TV
 
     @property
     def name(self):

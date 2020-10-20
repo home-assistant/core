@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -21,11 +22,17 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Adre\u00e7a IP o amfitri\u00f3 de la unitat",
+                    "ip_address": "Amfitri\u00f3",
                     "password": "Contrasenya"
                 },
                 "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
                 "title": "Configuraci\u00f3 d'AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "title": "Re-autenticaci\u00f3 amb AirVisual"
             },
             "user": {
                 "data": {

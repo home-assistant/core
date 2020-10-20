@@ -11,13 +11,18 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nID: {id}\nHostitel: {host}\nPort: {port}\n\nChov\u00e1n\u00ed vstupu/v\u00fdstupu a panelu m\u016f\u017eete nastavit v ovl\u00e1dac\u00edm panelu alarmu Konnected."
+                "description": "Model: {model}\nID: {id}\nHostitel: {host}\nPort: {port}\n\nChov\u00e1n\u00ed vstupu/v\u00fdstupu a panelu m\u016f\u017eete nastavit v ovl\u00e1dac\u00edm panelu alarmu Konnected.",
+                "title": "Za\u0159\u00edzen\u00ed Konnected je p\u0159ipraveno"
+            },
+            "import_confirm": {
+                "title": "Importovat za\u0159\u00edzen\u00ed Konnected"
             },
             "user": {
                 "data": {
                     "host": "IP adresa",
                     "port": "Port"
-                }
+                },
+                "description": "Zadejte pros\u00edm informace o hostiteli va\u0161eho panelu Konnected."
             }
         }
     },
@@ -28,6 +33,7 @@
         "step": {
             "options_binary": {
                 "data": {
+                    "inverse": "Prohodit stav otev\u0159en\u00ed/zav\u0159en\u00ed",
                     "name": "Jm\u00e9no (voliteln\u00e9)",
                     "type": "Typ bin\u00e1rn\u00edho senzoru"
                 },
@@ -37,6 +43,7 @@
             "options_digital": {
                 "data": {
                     "name": "Jm\u00e9no (voliteln\u00e9)",
+                    "poll_interval": "Interval dotazov\u00e1n\u00ed (v sekund\u00e1ch) (voliteln\u00e9)",
                     "type": "Typ senzoru"
                 },
                 "description": "Mo\u017enosti {zone}",

@@ -73,7 +73,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-DEFAULT_RATE_LIMIT = timedelta(minutes=1)
+ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
+DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 
 @bind_hass
@@ -202,16 +203,21 @@ class RenderInfo:
         self.domains_lifecycle = set()
         self.entities = set()
         self.rate_limit = None
+        self.has_time = False
 
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
-        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}>"
+        return f"<RenderInfo {self.template} all_states={self.all_states} all_states_lifecycle={self.all_states_lifecycle} domains={self.domains} domains_lifecycle={self.domains_lifecycle} entities={self.entities} rate_limit={self.rate_limit}> has_time={self.has_time}"
 
     def _filter_domains_and_entities(self, entity_id: str) -> bool:
         """Template should re-render if the entity state changes when we match specific domains or entities."""
         return (
             split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
         )
+
+    def _filter_entities(self, entity_id: str) -> bool:
+        """Template should re-render if the entity state changes when we match specific entities."""
+        return entity_id in self.entities
 
     def _filter_lifecycle_domains(self, entity_id: str) -> bool:
         """Template should re-render if the entity is added or removed with domains watched."""
@@ -236,12 +242,11 @@ class RenderInfo:
     def _freeze(self) -> None:
         self._freeze_sets()
 
-        if self.rate_limit is None and (
-            self.domains or self.domains_lifecycle or self.all_states or self.exception
-        ):
-            # If the template accesses all states or an entire
-            # domain, and no rate limit is set, we use the default.
-            self.rate_limit = DEFAULT_RATE_LIMIT
+        if self.rate_limit is None:
+            if self.all_states or self.exception:
+                self.rate_limit = ALL_STATES_RATE_LIMIT
+            elif self.domains or self.domains_lifecycle:
+                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
 
         if self.exception:
             return
@@ -255,14 +260,25 @@ class RenderInfo:
         if self.all_states:
             return
 
-        if self.entities or self.domains:
+        if self.domains:
             self.filter = self._filter_domains_and_entities
+        elif self.entities:
+            self.filter = self._filter_entities
         else:
             self.filter = _false
 
 
 class Template:
     """Class to hold a template and manage caching and rendering."""
+
+    __slots__ = (
+        "__weakref__",
+        "template",
+        "hass",
+        "is_static",
+        "_compiled_code",
+        "_compiled",
+    )
 
     def __init__(self, template, hass=None):
         """Instantiate a template."""
@@ -946,6 +962,24 @@ def state_attr(hass, entity_id, name):
     return None
 
 
+def now(hass):
+    """Record fetching now."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.now()
+
+
+def utcnow(hass):
+    """Record fetching utcnow."""
+    render_info = hass.data.get(_RENDER_INFO)
+    if render_info is not None:
+        render_info.has_time = True
+
+    return dt_util.utcnow()
+
+
 def forgiving_round(value, precision=0, method="common"):
     """Round accepted strings."""
     try:
@@ -1276,9 +1310,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["now"] = dt_util.now
         self.globals["as_local"] = dt_util.as_local
-        self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
         self.globals["timedelta"] = timedelta
@@ -1309,6 +1341,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["utcnow"] = hassfunction(utcnow)
+        self.globals["now"] = hassfunction(now)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

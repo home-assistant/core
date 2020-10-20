@@ -15,7 +15,7 @@
                 "data": {
                     "host": "Hostitel"
                 },
-                "description": "Nastavte WLED pro integraci s Home Assistant."
+                "description": "Nastavte WLED k integraci s Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Chcete p\u0159idat WLED se jm\u00e9nem {name} do Home Assistant?",

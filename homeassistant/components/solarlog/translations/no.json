@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {

@@ -2,17 +2,29 @@
 import asyncio
 
 from pyruckus import Ruckus
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import COORDINATOR, DOMAIN, PLATFORMS, UNDO_UPDATE_LISTENERS
+from .const import (
+    API_AP,
+    API_DEVICE_NAME,
+    API_ID,
+    API_MAC,
+    API_MODEL,
+    API_SYSTEM_OVERVIEW,
+    API_VERSION,
+    COORDINATOR,
+    DOMAIN,
+    MANUFACTURER,
+    PLATFORMS,
+    UNDO_UPDATE_LISTENERS,
+)
 from .coordinator import RuckusUnleashedDataUpdateCoordinator
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,6 +50,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
+
+    system_info = await hass.async_add_executor_job(ruckus.system_info)
+
+    registry = await device_registry.async_get_registry(hass)
+    ap_info = await hass.async_add_executor_job(ruckus.ap_info)
+    for device in ap_info[API_AP][API_ID].values():
+        registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            identifiers={(CONNECTION_NETWORK_MAC, device[API_MAC])},
+            manufacturer=MANUFACTURER,
+            name=device[API_DEVICE_NAME],
+            model=device[API_MODEL],
+            sw_version=system_info[API_SYSTEM_OVERVIEW][API_VERSION],
+        )
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,

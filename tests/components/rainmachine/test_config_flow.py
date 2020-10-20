@@ -69,38 +69,6 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_step_import(hass):
-    """Test that the import step works."""
-    conf = {
-        CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
-        CONF_SCAN_INTERVAL: 60,
-    }
-
-    flow = config_flow.RainMachineFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    with patch(
-        "regenmaschine.client.Client.load_local",
-        return_value=True,
-    ):
-        result = await flow.async_step_import(import_config=conf)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "192.168.1.100"
-        assert result["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 8080,
-            CONF_SSL: True,
-            CONF_SCAN_INTERVAL: 60,
-            CONF_ZONE_RUN_TIME: 600,
-        }
-
-
 async def test_step_user(hass):
     """Test that the user step works."""
     conf = {

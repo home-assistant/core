@@ -1,6 +1,5 @@
 """Support for LED lights."""
 from functools import partial
-import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import voluptuous as vol
@@ -44,8 +43,6 @@ from .const import (
     DOMAIN,
     SERVICE_EFFECT,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 

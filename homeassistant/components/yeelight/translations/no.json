@@ -5,7 +5,7 @@
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "pick_device": {
@@ -18,7 +18,7 @@
                     "host": "Vert",
                     "ip_address": "IP adresse"
                 },
-                "description": "Hvis du lar verten st\u00e5 tom, brukes oppdagelsen til \u00e5 finne enheter."
+                "description": "Hvis du lar verten st\u00e5 tom, brukes automatisk oppdagelse til \u00e5 finne enheter"
             }
         }
     },
