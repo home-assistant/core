@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.remote import ATTR_ACTIVITY
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import CONNECTION_UPDATE_ACTIVITY, DOMAIN, SIGNAL_UPDATE_ACTIVITY
@@ -17,7 +18,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     switches = []
     for activity in activities:
-        switches.append(HarmonyActivitySwitch(activity, device))
+        _LOGGER.debug("creating switch for activity: %s", activity)
+        name = f"{entry.data[CONF_NAME]} {activity}"
+        switches.append(HarmonyActivitySwitch(name, activity, device))
 
     async_add_entities(switches, True)
 
@@ -25,8 +28,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HarmonyActivitySwitch(SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, activity, device):
+    def __init__(self, name, activity, device):
         """Initialize HarmonyActivitySwitch class."""
+        self._name = name
         self._activity = activity
         self._device = device
         self._state = False
@@ -36,7 +40,7 @@ class HarmonyActivitySwitch(SwitchEntity):
     @property
     def name(self):
         """Return the Harmony activity's name."""
-        return self._activity
+        return self._name
 
     @property
     def unique_id(self):
