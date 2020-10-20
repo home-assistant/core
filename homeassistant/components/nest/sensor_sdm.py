@@ -76,6 +76,7 @@ class SensorBase(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
+            # The API "name" field is a unique device identifier.
             "identifiers": {(DOMAIN, self._device.name)},
             "name": self.device_name,
             "manufacturer": "Google Nest",
