@@ -221,7 +221,7 @@ class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
 
 
 class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEntity):
-    """Representation of the HomematicIP contact interface."""
+    """Representation of the HomematicIP multi room/area contact interface."""
 
     def __init__(
         self, hap: HomematicipHAP, device, channel: int, is_multi_area: bool = False
