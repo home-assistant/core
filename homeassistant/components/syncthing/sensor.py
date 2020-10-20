@@ -30,24 +30,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
 
     name = config_entry.data[CONF_NAME]
-    synchting = hass.data[DOMAIN][name]
+    syncthing = hass.data[DOMAIN][name]
 
     try:
-        config = await synchting.system.config()
-        version = await synchting.system.version()
-        dev = []
-
-        for folder in config["folders"]:
-            dev.append(
-                FolderSensor(
-                    hass,
-                    synchting,
-                    name,
-                    folder["id"],
-                    folder["label"],
-                    version["version"],
-                )
+        config = await syncthing.system.config()
+        version = await syncthing.system.version()
+        dev = [
+            FolderSensor(
+                hass,
+                syncthing,
+                name,
+                folder["id"],
+                folder["label"],
+                version["version"],
             )
+            for folder in config["folders"]
+        ]
 
         async_add_entities(dev)
     except aiosyncthing.exceptions.SyncthingError as exception:
