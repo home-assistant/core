@@ -37,6 +37,15 @@ async def zwave_setup(hass):
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+async def zwave_setup_ready(hass, zwave_setup):
+    """Zwave setup and set network to ready."""
+    zwave_network = hass.data[DATA_NETWORK]
+    zwave_network.state = MockNetwork.STATE_READY
+
+    await hass.async_start()
+
+
 async def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
     device_config = {"light.kitchen": {"ignored": "true"}}
@@ -1249,12 +1258,9 @@ async def test_device_config_glob_is_ordered():
     assert isinstance(conf["zwave"][CONF_DEVICE_CONFIG_GLOB], OrderedDict)
 
 
-async def test_add_node(hass, mock_openzwave, zwave_setup):
+async def test_add_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave add_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "add_node", {})
     await hass.async_block_till_done()
@@ -1264,12 +1270,9 @@ async def test_add_node(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.controller.add_node.mock_calls[0][1]) == 0
 
 
-async def test_add_node_secure(hass, mock_openzwave, zwave_setup):
+async def test_add_node_secure(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave add_node_secure service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "add_node_secure", {})
     await hass.async_block_till_done()
@@ -1279,12 +1282,9 @@ async def test_add_node_secure(hass, mock_openzwave, zwave_setup):
     assert zwave_network.controller.add_node.mock_calls[0][1][0] is True
 
 
-async def test_remove_node(hass, mock_openzwave, zwave_setup):
+async def test_remove_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave remove_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "remove_node", {})
     await hass.async_block_till_done()
@@ -1293,12 +1293,9 @@ async def test_remove_node(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.controller.remove_node.mock_calls) == 1
 
 
-async def test_cancel_command(hass, mock_openzwave, zwave_setup):
+async def test_cancel_command(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave cancel_command service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "cancel_command", {})
     await hass.async_block_till_done()
@@ -1307,12 +1304,9 @@ async def test_cancel_command(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.controller.cancel_command.mock_calls) == 1
 
 
-async def test_heal_network(hass, mock_openzwave, zwave_setup):
+async def test_heal_network(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave heal_network service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "heal_network", {})
     await hass.async_block_till_done()
@@ -1321,12 +1315,9 @@ async def test_heal_network(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.heal.mock_calls) == 1
 
 
-async def test_soft_reset(hass, mock_openzwave, zwave_setup):
+async def test_soft_reset(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave soft_reset service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "soft_reset", {})
     await hass.async_block_till_done()
@@ -1335,12 +1326,9 @@ async def test_soft_reset(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.controller.soft_reset.mock_calls) == 1
 
 
-async def test_test_network(hass, mock_openzwave, zwave_setup):
+async def test_test_network(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave test_network service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call("zwave", "test_network", {})
     await hass.async_block_till_done()
@@ -1349,12 +1337,9 @@ async def test_test_network(hass, mock_openzwave, zwave_setup):
     assert len(zwave_network.test.mock_calls) == 1
 
 
-async def test_stop_network(hass, mock_openzwave, zwave_setup):
+async def test_stop_network(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave stop_network service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     with patch.object(hass.bus, "fire") as mock_fire:
         await hass.services.async_call("zwave", "stop_network", {})
@@ -1367,12 +1352,9 @@ async def test_stop_network(hass, mock_openzwave, zwave_setup):
         assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
 
 
-async def test_rename_node(hass, mock_openzwave, zwave_setup):
+async def test_rename_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave rename_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     zwave_network.nodes = {11: MagicMock()}
     await hass.services.async_call(
@@ -1385,12 +1367,9 @@ async def test_rename_node(hass, mock_openzwave, zwave_setup):
     assert zwave_network.nodes[11].name == "test_name"
 
 
-async def test_rename_value(hass, mock_openzwave, zwave_setup):
+async def test_rename_value(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave rename_value service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     value = MockValue(index=12, value_id=123456, label="Old Label")
@@ -1412,12 +1391,9 @@ async def test_rename_value(hass, mock_openzwave, zwave_setup):
     assert value.label == "New Label"
 
 
-async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup):
+async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave set_poll_intensity service, successful set."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     value = MockValue(index=12, value_id=123456, poll_intensity=0)
@@ -1442,12 +1418,11 @@ async def test_set_poll_intensity_enable(hass, mock_openzwave, zwave_setup):
     assert enable_poll.mock_calls[0][1][0] == 4
 
 
-async def test_set_poll_intensity_enable_failed(hass, mock_openzwave, zwave_setup):
+async def test_set_poll_intensity_enable_failed(
+    hass, mock_openzwave, zwave_setup_ready
+):
     """Test zwave set_poll_intensity service, failed set."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     value = MockValue(index=12, value_id=123456, poll_intensity=0)
@@ -1472,12 +1447,9 @@ async def test_set_poll_intensity_enable_failed(hass, mock_openzwave, zwave_setu
     assert len(enable_poll.mock_calls) == 1
 
 
-async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup):
+async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave set_poll_intensity service, successful disable."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     value = MockValue(index=12, value_id=123456, poll_intensity=4)
@@ -1501,12 +1473,11 @@ async def test_set_poll_intensity_disable(hass, mock_openzwave, zwave_setup):
     assert len(disable_poll.mock_calls) == 2
 
 
-async def test_set_poll_intensity_disable_failed(hass, mock_openzwave, zwave_setup):
+async def test_set_poll_intensity_disable_failed(
+    hass, mock_openzwave, zwave_setup_ready
+):
     """Test zwave set_poll_intensity service, failed disable."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     value = MockValue(index=12, value_id=123456, poll_intensity=4)
@@ -1531,12 +1502,9 @@ async def test_set_poll_intensity_disable_failed(hass, mock_openzwave, zwave_set
     assert len(disable_poll.mock_calls) == 1
 
 
-async def test_remove_failed_node(hass, mock_openzwave, zwave_setup):
+async def test_remove_failed_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave remove_failed_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call(
         "zwave", "remove_failed_node", {const.ATTR_NODE_ID: 12}
@@ -1549,12 +1517,9 @@ async def test_remove_failed_node(hass, mock_openzwave, zwave_setup):
     assert remove_failed_node.mock_calls[0][1][0] == 12
 
 
-async def test_replace_failed_node(hass, mock_openzwave, zwave_setup):
+async def test_replace_failed_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave replace_failed_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     await hass.services.async_call(
         "zwave", "replace_failed_node", {const.ATTR_NODE_ID: 13}
@@ -1567,12 +1532,9 @@ async def test_replace_failed_node(hass, mock_openzwave, zwave_setup):
     assert replace_failed_node.mock_calls[0][1][0] == 13
 
 
-async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
+async def test_set_config_parameter(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave set_config_parameter service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value_byte = MockValue(
         index=12,
@@ -1717,12 +1679,9 @@ async def test_set_config_parameter(hass, mock_openzwave, zwave_setup):
     node.set_config_param.reset_mock()
 
 
-async def test_print_config_parameter(hass, mock_openzwave, zwave_setup, caplog):
+async def test_print_config_parameter(hass, mock_openzwave, zwave_setup_ready, caplog):
     """Test zwave print_config_parameter service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value1 = MockValue(
         index=12, command_class=const.COMMAND_CLASS_CONFIGURATION, data=1234
@@ -1746,12 +1705,9 @@ async def test_print_config_parameter(hass, mock_openzwave, zwave_setup, caplog)
     assert "Config parameter 13 on Node 14: 2345" in caplog.text
 
 
-async def test_print_node(hass, mock_openzwave, zwave_setup):
+async def test_print_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave print_node_parameter service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
 
@@ -1764,12 +1720,9 @@ async def test_print_node(hass, mock_openzwave, zwave_setup):
         assert "FOUND NODE " in mock_logger.info.mock_calls[0][1][0]
 
 
-async def test_set_wakeup(hass, mock_openzwave, zwave_setup):
+async def test_set_wakeup(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave set_wakeup service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value = MockValue(index=12, command_class=const.COMMAND_CLASS_WAKE_UP)
     node = MockNode(node_id=14)
@@ -1793,12 +1746,9 @@ async def test_set_wakeup(hass, mock_openzwave, zwave_setup):
     assert value.data == 15
 
 
-async def test_reset_node_meters(hass, mock_openzwave, zwave_setup):
+async def test_reset_node_meters(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave reset_node_meters service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value = MockValue(
         instance=1, index=8, data=99.5, command_class=const.COMMAND_CLASS_METER
@@ -1834,12 +1784,9 @@ async def test_reset_node_meters(hass, mock_openzwave, zwave_setup):
     assert value_id == reset_value.value_id
 
 
-async def test_add_association(hass, mock_openzwave, zwave_setup):
+async def test_add_association(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave change_association service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     ZWaveGroup = mock_openzwave.group.ZWaveGroup
     group = MagicMock()
@@ -1874,12 +1821,9 @@ async def test_add_association(hass, mock_openzwave, zwave_setup):
     assert group.add_association.mock_calls[0][1][1] == 5
 
 
-async def test_remove_association(hass, mock_openzwave, zwave_setup):
+async def test_remove_association(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave change_association service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     ZWaveGroup = mock_openzwave.group.ZWaveGroup
     group = MagicMock()
@@ -1914,13 +1858,8 @@ async def test_remove_association(hass, mock_openzwave, zwave_setup):
     assert group.remove_association.mock_calls[0][1][1] == 5
 
 
-async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
+async def test_refresh_entity(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave refresh_entity service."""
-    zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
-
     node = MockNode()
     value = MockValue(
         data=False, node=node, command_class=const.COMMAND_CLASS_SENSOR_BINARY
@@ -1951,12 +1890,9 @@ async def test_refresh_entity(hass, mock_openzwave, zwave_setup):
     )
 
 
-async def test_refresh_node(hass, mock_openzwave, zwave_setup):
+async def test_refresh_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave refresh_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=14)
     zwave_network.nodes = {14: node}
@@ -1967,12 +1903,9 @@ async def test_refresh_node(hass, mock_openzwave, zwave_setup):
     assert len(node.refresh_info.mock_calls) == 1
 
 
-async def test_set_node_value(hass, mock_openzwave, zwave_setup):
+async def test_set_node_value(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave set_node_value service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value = MockValue(index=12, command_class=const.COMMAND_CLASS_INDICATOR, data=4)
     node = MockNode(node_id=14, command_classes=[const.COMMAND_CLASS_INDICATOR])
@@ -1995,13 +1928,10 @@ async def test_set_node_value(hass, mock_openzwave, zwave_setup):
 
 
 async def test_set_node_value_with_long_id_and_text_value(
-    hass, mock_openzwave, zwave_setup
+    hass, mock_openzwave, zwave_setup_ready
 ):
     """Test zwave set_node_value service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     value = MockValue(
         index=87512398541236578,
@@ -2027,12 +1957,9 @@ async def test_set_node_value_with_long_id_and_text_value(
     assert zwave_network.nodes[14].values[87512398541236578].data == "#00ff00"
 
 
-async def test_refresh_node_value(hass, mock_openzwave, zwave_setup):
+async def test_refresh_node_value(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave refresh_node_value service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(
         node_id=14,
@@ -2058,12 +1985,9 @@ async def test_refresh_node_value(hass, mock_openzwave, zwave_setup):
     assert value.refresh.called
 
 
-async def test_heal_node(hass, mock_openzwave, zwave_setup):
+async def test_heal_node(hass, mock_openzwave, zwave_setup_ready):
     """Test zwave heal_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=19)
     zwave_network.nodes = {19: node}
@@ -2074,12 +1998,9 @@ async def test_heal_node(hass, mock_openzwave, zwave_setup):
     assert len(node.heal.mock_calls) == 1
 
 
-async def test_test_node(hass, mock_openzwave, zwave_setup):
+async def test_test_node(hass, mock_openzwave, zwave_setup_ready):
     """Test the zwave test_node service."""
     zwave_network = hass.data[DATA_NETWORK]
-    zwave_network.state = MockNetwork.STATE_READY
-
-    await hass.async_start()
 
     node = MockNode(node_id=19)
     zwave_network.nodes = {19: node}
