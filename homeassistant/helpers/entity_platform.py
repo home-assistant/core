@@ -7,7 +7,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
 
 from homeassistant import config_entries
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     ServiceCall,
@@ -461,12 +461,14 @@ class EntityPlatform:
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
+        restored = False
 
         if not already_exists:
             existing = self.hass.states.get(entity.entity_id)
 
-            if existing and not existing.attributes.get("restored"):
-                already_exists = True
+            if existing:
+                restored = ATTR_RESTORED in existing.attributes
+                already_exists = not restored
 
         if already_exists:
             if entity.unique_id is not None:
@@ -483,6 +485,15 @@ class EntityPlatform:
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
+
+        if not restored:
+            # Reserve the state in the state machine
+            # because as soon as we return control to the event
+            # loop below, another entity could be added
+            # with the same id before `entity.add_to_platform_finish()`
+            # has a chance to finish.
+            self.hass.states.async_reserve(entity.entity_id)
+
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
         await entity.add_to_platform_finish()

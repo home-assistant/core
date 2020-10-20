@@ -355,6 +355,12 @@ ATTR_STATE = "state"
 ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
+# The entity has been restored with restore state
+ATTR_RESTORED = "restored"
+
+# The entity is in the process of being created
+ATTR_RESERVED = "__reserved"
+
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
