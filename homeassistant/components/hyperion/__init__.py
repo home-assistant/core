@@ -19,25 +19,24 @@ _LOGGER = logging.getLogger(__name__)
 # server).
 #
 # Each server connection may create multiple entities, 1 per "instance" on the Hyperion
-# server. The unique_id for each entity is <server id>:<domain>:<instance #>, where
-# <server_id> will be the unique_id on the relevant config entry (as above). Only
-# 'light' is supported for <domain> at this time.
+# server. The unique_id for each entity is <server id>_<instance #>, where <server_id>
+# will be the unique_id on the relevant config entry (as above).
 #
 # The get_hyperion_unique_id method will create a per-entity unique id when given the
 # server id and the instance number. The split_hyperion_unique_id will reverse the
 # operation.
 
 
-def get_hyperion_unique_id(server_id: str, domain: str, instance: int) -> str:
+def get_hyperion_unique_id(server_id: str, instance: int) -> str:
     """Get a unique_id for a Hyperion instance."""
-    return f"{server_id}:{domain}:{instance}"
+    return f"{server_id}_{instance}"
 
 
 def split_hyperion_unique_id(unique_id) -> Tuple[str, int]:
     """Split a unique_id for a Hyperion instance."""
     try:
-        server_id, domain, instance = unique_id.rsplit(":", 2)
-        return server_id, domain, int(instance)
+        server_id, instance = unique_id.rsplit("_", 1)
+        return server_id, int(instance)
     except ValueError:
         return None
 

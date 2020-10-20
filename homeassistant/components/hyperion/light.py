@@ -21,6 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.core import split_entity_id
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -121,7 +122,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not hyperion_id:
         raise PlatformNotReady
 
-    future_unique_id = get_hyperion_unique_id(hyperion_id, LIGHT_DOMAIN, instance)
+    future_unique_id = get_hyperion_unique_id(hyperion_id, instance)
 
     # Possibility 1: Already converted.
     # There is already a config entry with the unique id reporting by the
@@ -235,7 +236,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if instance_id is None or not instance.get(const.KEY_RUNNING, False):
                 continue
             desired_instance_ids.add(instance_id)
-            unique_id = get_hyperion_unique_id(server_id, LIGHT_DOMAIN, instance_id)
+            unique_id = get_hyperion_unique_id(server_id, instance_id)
             entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
             if entity_id is not None and entity_id in platform.entities:
                 continue
@@ -252,10 +253,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Delete instances that are no longer present on this server.
         hyperion_entity_ids = list(platform.entities.keys())
         for entity_id in hyperion_entity_ids:
-            entity_server_id, domain, instance_id = split_hyperion_unique_id(
+            entity_server_id, instance_id = split_hyperion_unique_id(
                 platform.entities[entity_id].unique_id
             )
-            if domain != LIGHT_DOMAIN or server_id != entity_server_id:
+            if (
+                split_entity_id(entity_id)[0] != LIGHT_DOMAIN
+                or server_id != entity_server_id
+            ):
                 continue
             if instance_id not in desired_instance_ids:
                 await platform.async_remove_entity(entity_id)
