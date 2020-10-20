@@ -186,10 +186,12 @@ def get_entities(config):
         for device in devices:
             _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
+            device_type = owproxy.read(f"{device}type").decode()
+            sensor_id = os.path.split(os.path.split(device)[0])[1]
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
-                family = owproxy.read(f"{device}type").decode()
+                family = device_type
 
             if family not in hb_info_from_type(dev_type):
                 _LOGGER.warning(
@@ -198,6 +200,16 @@ def get_entities(config):
                     device,
                 )
                 continue
+            device_info = {
+                "identifiers": {(DOMAIN, sensor_id)},
+                "manufacturer": "Maxim Integrated",
+                "model": device_type,
+                "name": sensor_id,
+            }
+            _LOGGER.info(
+                "Built device info: %s",
+                device_info,
+            )
             for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
                 if "moisture" in sensor_key:
                     s_id = sensor_key.split("_")[1]
@@ -206,13 +218,13 @@ def get_entities(config):
                     )
                     if is_leaf:
                         sensor_key = f"wetness_{s_id}"
-                sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
                 entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
                         device_file,
                         sensor_key,
+                        device_info,
                         owproxy,
                     )
                 )
@@ -232,12 +244,19 @@ def get_entities(config):
                 )
                 continue
 
+            device_info = {
+                "identifiers": {(DOMAIN, sensor_id)},
+                "manufacturer": "Maxim Integrated",
+                "model": family,
+                "name": sensor_id,
+            }
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
             entities.append(
                 OneWireDirect(
                     device_names.get(sensor_id, sensor_id),
                     device_file,
                     "temperature",
+                    device_info,
                     p1sensor,
                 )
             )
@@ -286,12 +305,13 @@ def get_entities(config):
 class OneWire(Entity):
     """Implementation of a 1-Wire sensor."""
 
-    def __init__(self, name, device_file, sensor_type):
+    def __init__(self, name, device_file, sensor_type, device_info=None):
         """Initialize the sensor."""
         self._name = f"{name} {sensor_type.capitalize()}"
         self._device_file = device_file
         self._device_class = SENSOR_TYPES[sensor_type][2]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._device_info = device_info
         self._state = None
         self._value_raw = None
 
@@ -327,13 +347,18 @@ class OneWire(Entity):
         """Return a unique ID."""
         return self._device_file
 
+    @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return device specific attributes."""
+        return self._device_info
+
 
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
 
-    def __init__(self, name, device_file, sensor_type, owproxy):
+    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type)
+        super().__init__(name, device_file, sensor_type, device_info)
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
@@ -358,9 +383,9 @@ class OneWireProxy(OneWire):
 class OneWireDirect(OneWire):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
-    def __init__(self, name, device_file, sensor_type, owsensor):
+    def __init__(self, name, device_file, sensor_type, device_info, owsensor):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type)
+        super().__init__(name, device_file, sensor_type, device_info)
         self._owsensor = owsensor
 
     def update(self):
