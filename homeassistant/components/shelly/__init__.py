@@ -26,9 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][GENERAL] = {}
-    hass.data[DOMAIN][CONFIG_ENTRY] = {}
+    hass.data[DOMAIN] = {GENERAL: {}, CONFIG_ENTRY: {}}
     hass.data[DOMAIN][GENERAL][
         COAP_CONTEXT
     ] = await aiocoap.Context.create_client_context()
