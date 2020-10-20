@@ -1,6 +1,4 @@
 """Tests for 1-Wire devices connected on OWServer."""
-from unittest.mock import patch
-
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
@@ -20,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import mock_registry
 
 MOCK_CONFIG = {
