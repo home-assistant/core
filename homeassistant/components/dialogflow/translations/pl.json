@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty Dialogflow.",
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja.",
+            "not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty Dialogflow",
+            "one_instance_allowed": "Wymagana jest tylko jedna instancja",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "create_entry": {

@@ -2,14 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "not_forked_daapd": "Urz\u0105dzenie nie jest serwerem forked-daapd."
+            "not_forked_daapd": "Urz\u0105dzenie nie jest serwerem forked-daapd"
         },
         "error": {
             "unknown_error": "Nieoczekiwany b\u0142\u0105d",
-            "websocket_not_enabled": "Websocket serwera forked-daapd nie jest w\u0142\u0105czony.",
+            "websocket_not_enabled": "Websocket serwera forked-daapd nie jest w\u0142\u0105czony",
             "wrong_host_or_port": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia. Sprawd\u017a adres hosta i port.",
             "wrong_password": "Nieprawid\u0142owe has\u0142o",
-            "wrong_server_type": "Integracja forked-daapd wymaga serwera forked-daapd w wersji >= 27.0."
+            "wrong_server_type": "Integracja forked-daapd wymaga serwera forked-daapd w wersji >= 27.0"
         },
         "flow_title": "Serwer forked-daapd: {name} ( {host})",
         "step": {

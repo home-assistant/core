@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "ElkM1 z tym adresem jest ju\u017c skonfigurowany.",
-            "already_configured": "ElkM1 z tym prefiksem jest ju\u017c skonfigurowany."
+            "address_already_configured": "ElkM1 z tym adresem jest ju\u017c skonfigurowany",
+            "already_configured": "ElkM1 z tym prefiksem jest ju\u017c skonfigurowany"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
