@@ -33,7 +33,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_NEST, DOMAIN as NEST_DOMAIN, SIGNAL_NEST_UPDATE
+from . import DATA_NEST, DOMAIN as NEST_DOMAIN
+from .const import SIGNAL_NEST_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
