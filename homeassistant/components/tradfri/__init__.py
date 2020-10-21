@@ -64,7 +64,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         return True
 
     configured_hosts = [
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     ]
 
     legacy_hosts = await hass.async_add_executor_job(
