@@ -29,6 +29,7 @@ from homeassistant.components.axis.const import (
     DOMAIN as AXIS_DOMAIN,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_ON,
 )
 
 from tests.async_mock import AsyncMock, Mock, patch
@@ -306,7 +308,7 @@ async def test_device_support_mqtt(hass, mqtt_mock):
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
 
     pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
-    assert pir.state == "on"
+    assert pir.state == STATE_ON
     assert pir.name == f"{NAME} PIR 0"
 
 
@@ -328,7 +330,7 @@ async def test_update_address(hass):
                 "hostname": "name",
                 "properties": {"macaddress": MAC},
             },
-            context={"source": "zeroconf"},
+            context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()
 
