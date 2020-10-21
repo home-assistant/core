@@ -3,7 +3,7 @@
   "name": "Govee LED strips",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/govee",
-  "requirements": ["govee-api-laggat==0.1.27", "dacite==1.5.1"],
+  "requirements": ["govee-api-laggat==0.1.28", "dacite==1.5.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
