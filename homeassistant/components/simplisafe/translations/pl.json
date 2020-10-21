@@ -25,7 +25,7 @@
             },
             "user": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie Home Assistanta)",
+                    "code": "Kod (u\u017cywany w interfejsie Home Assistant)",
                     "password": "Has\u0142o",
                     "username": "Adres e-mail"
                 },
@@ -37,7 +37,7 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistanta)"
+                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistant)"
                 },
                 "title": "Konfiguracja SimpliSafe"
             }

@@ -5,6 +5,7 @@
             "reauth_successful": "Taasautentimine \u00f5nnestus"
         },
         "error": {
+            "invalid_auth": "Tuvastamise viga",
             "unknown": "Tundmatu viga"
         },
         "step": {

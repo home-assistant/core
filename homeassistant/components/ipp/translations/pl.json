@@ -13,7 +13,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105. Spr\u00f3buj ponownie z zaznaczon\u0105 opcj\u0105 SSL/TLS"
+            "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105. Spr\u00f3buj ponownie z zaznaczon\u0105 opcj\u0105 SSL/TLS."
         },
         "flow_title": "Drukarka: {name}",
         "step": {
@@ -29,7 +29,7 @@
                 "title": "Po\u0142\u0105cz swoj\u0105 drukark\u0119"
             },
             "zeroconf_confirm": {
-                "description": "Czy chcesz doda\u0107 drukark\u0119 o nazwie `{name}` do Home Assistanta?",
+                "description": "Czy chcesz doda\u0107 drukark\u0119 o nazwie `{name}` do Home Assistant?",
                 "title": "Wykryto drukark\u0119"
             }
         }
