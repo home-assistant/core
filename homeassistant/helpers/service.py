@@ -320,7 +320,7 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service, {})
+                yaml_description = domain_yaml.get(service, {})  # type: ignore
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
