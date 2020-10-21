@@ -303,7 +303,7 @@ async def test_device_support_mqtt(hass, mqtt_mock):
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
 
-    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
+    pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
     assert pir.state == "on"
     assert pir.name == f"{NAME} PIR 0"
 
