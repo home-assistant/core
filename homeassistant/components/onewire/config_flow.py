@@ -115,7 +115,6 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, platform_config):
         """Handle import configuration from YAML."""
-        _LOGGER.info("Importing old config entry %s", platform_config)
         # OWServer
         if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:
             if CONF_PORT not in platform_config:
