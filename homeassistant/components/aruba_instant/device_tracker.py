@@ -1,4 +1,4 @@
-"""Aruba Instant Device Tracker"""
+"""Aruba Instant Device Tracker for Home Assistant."""
 
 from datetime import timedelta
 import logging
@@ -81,9 +81,10 @@ class InstantCoordinator(DataUpdateCoordinator):
 
 
 class InstantClientEntity(ScannerEntity):
-    """Instant Client Entity"""
+    """Instant Client Entity class."""
 
     def __init__(self, coordinator, ent):
+        """Instantiate the InstantClientEntity class."""
         _LOGGER.debug(  # pylint: disable=logging-format-interpolation
             f"Creating entity for client {ent}."
         )

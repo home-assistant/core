@@ -7,10 +7,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import EntityRegistry, async_get_registry
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from .virtual_controller import VirtualController
-from .const import DOMAIN, AVAILABLE_CLIENTS, TRACKED_CLIENTS, SELECTED_CLIENTS
+from .const import DOMAIN, AVAILABLE_CLIENTS, TRACKED_CLIENTS
 
 _LOGGER = logging.getLogger(__name__)
 urllib3.disable_warnings()

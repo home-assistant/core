@@ -76,6 +76,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        """Return Instant Options Flow Handler."""
         return InstantOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
@@ -109,7 +110,7 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_track_clients(self, user_input=None, config_input=None):
-        """Handles tracking clients on initial component setup."""
+        """Handle tracking clients on initial component setup."""
         errors = {}
         data = {}
         if user_input is not None:

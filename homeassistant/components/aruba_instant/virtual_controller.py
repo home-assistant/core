@@ -1,4 +1,4 @@
-"""Instant Virtual Controller abstraction class for HA"""
+"""Instant Virtual Controller abstraction class for HA."""
 
 import logging
 
@@ -13,11 +13,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class VirtualController:
-    """
-    Instantiate an InstantVC object.
-    """
+    """Instantiate an InstantVC object."""
+
     _LOGGER.debug("Intializing Aruba Instant Virtual Controller")
+
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
+        """Instantiate the VirtualController class."""
+
         self.hass = hass
         self.vc_name = ""
         self.host = entry.data.get("host")
@@ -33,7 +35,7 @@ class VirtualController:
             ssl_verify=entry.data.get("verify_ssl"),
         )
         self._logged_in = self._virtual_controller.logged_in
-        selected_clients = entry.data.get('clients')
+        selected_clients = entry.data.get("clients")
         try:
             for client in selected_clients:
                 hass.data[DOMAIN][TRACKED_CLIENTS][self.entry_id].add(client)

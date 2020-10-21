@@ -1,47 +1,22 @@
 """Test the Aruba Instant config flow."""
-from homeassistant import config_entries, setup
-from homeassistant.components.aruba_instant.config_flow import CannotConnect, InvalidAuth
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.aruba_instant.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+)
 from homeassistant.components.aruba_instant.const import DOMAIN
 
 from tests.async_mock import patch
 
 
 async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.aruba_instant.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aruba_instant.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.aruba_instant.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
 
 
 async def test_form_invalid_auth(hass):
@@ -51,13 +26,13 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.aruba_instant.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.aruba_instant.config_flow.async_validate_input",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
+                "host": "172.16.20.2",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -74,7 +49,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.aruba_instant.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.aruba_instant.config_flow.async_validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
