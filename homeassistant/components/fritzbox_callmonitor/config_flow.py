@@ -221,7 +221,7 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
 
-        OPTION_SCHEMA_PREFIXES = vol.Schema(
+        option_schema_prefixes = vol.Schema(
             {
                 vol.Optional(
                     CONF_PREFIXES,
@@ -235,7 +235,7 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
-                data_schema=OPTION_SCHEMA_PREFIXES,
+                data_schema=option_schema_prefixes,
                 errors={},
             )
 
@@ -249,6 +249,6 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=OPTION_SCHEMA_PREFIXES,
+            data_schema=option_schema_prefixes,
             errors={"base": RESULT_MALFORMED_PREFIXES},
         )
