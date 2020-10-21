@@ -24,6 +24,7 @@ def create_file(path):
 @pytest.fixture(autouse=True)
 def remove_file():
     """Remove test file."""
+    yield
     if os.path.isfile(TEST_FILE):
         os.remove(TEST_FILE)
 
