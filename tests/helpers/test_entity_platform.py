@@ -969,7 +969,7 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
         await hass.async_block_till_done()
     full_name = f"{mock_entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
-    assert len(hass.states.async_entity_ids()) == 1
+    assert len(hass.states.async_entity_ids()) == 0
     assert len(registry.entities) == 1
     assert "Timed out adding entities" in caplog.text
     assert "test_domain.test1" in caplog.text

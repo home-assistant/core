@@ -182,7 +182,7 @@ class EntityRegistry:
         while (
             test_string in self.entities
             or test_string in known_object_ids
-            or self.hass.states.get(test_string)
+            or not self.hass.states.async_available(test_string)
         ):
             tries += 1
             test_string = f"{preferred_string}_{tries}"
