@@ -21,9 +21,6 @@
         "description": "All settings for a Adaptive Lighting component. The option names correspond with the YAML settings. No options are shown if you have this entry defined in YAML.",
         "data": {
           "lights": "lights",
-          "adapt_brightness": "adapt_brightness",
-          "adapt_color_temp": "adapt_color_temp, adapt color temperature using 'color_temp' if supported",
-          "adapt_rgb_color": "adapt_rgb_color, adapt color temperature using RGB/XY if supported",
           "initial_transition": "initial_transition, when lights go 'off' to 'on' or when 'sleep_state' changes",
           "interval": "interval, time between switch updates in seconds",
           "max_brightness": "max_brightness, in %",
@@ -39,7 +36,7 @@
           "sunset_offset": "sunset_offset, in +/- seconds",
           "sunset_time": "sunset_time, in 'HH:MM:SS' format (if 'None', it uses the actual sunset time at your location)",
           "take_over_control": "take_over_control, if anything but Adaptive Lighting calls 'light.turn_on' when a light is already on, stop adapting that light until it (or the switch) toggles off -> on.",
-          "detect_non_ha_changes": "detect_non_ha_changes, detects all >5% changes made to the lights (also outside of HA), requires 'take_over_control' to be enabled (calls 'homeassistant.update_entity' every 'interval'!)",
+          "detect_non_ha_changes": "detect_non_ha_changes, detects all >10% changes made to the lights (also outside of HA), requires 'take_over_control' to be enabled (calls 'homeassistant.update_entity' every 'interval'!)",
           "transition": "transition, in seconds"
         }
       }

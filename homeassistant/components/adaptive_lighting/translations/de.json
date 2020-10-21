@@ -1,0 +1,48 @@
+{
+  "title": "Adaptive Lighting",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Benenne das Adaptive Lighting",
+        "description": "Jede Instanz kann mehrere Licht Entitäten beinhalten",
+        "data": {
+          "name": "Name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert!"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adaptive Lighting Optionen",
+        "description": "Alle Einstellungen für eine Adaptive Lighting Komponente. Die Optionsnamen entsprechen den YAML-Einstellungen. Es werden keine Optionen angezeigt, wenn dieser Eintrag in YAML konfiguriert wurde.",
+        "data": {
+          "lights": "Lichter",
+          "initial_transition": "initial_transition, wenn Lichter von 'off' zu 'on' wechseln oder wenn 'sleep_state' wechselt",
+          "interval": "interval, Zeit zwischen Updates des Switches",
+          "max_brightness": "max_brightness, maximale Helligkeit in %",
+          "max_color_temp": "max_color_temp, maximale Farbtemperatur in Kelvin",
+          "min_brightness": "min_brightness, minimale Helligkeit in %",
+          "min_color_temp": "min_color_temp, minimale Farbtemperatur in Kelvin",
+          "only_once": "only_once, passe die Lichter nur beim Einschalten an",
+          "prefer_rgb_color": "prefer_rgb_color, nutze 'rgb_color' vor 'color_temp', wenn möglich",
+          "sleep_brightness": "sleep_brightness, Schlafhelligkeit in %",
+          "sleep_color_temp": "sleep_color_temp, Schlaffarbtemperaturin Kelvin",
+          "sunrise_offset": "sunrise_offset, Sonnenaufgang Verschiebung in +/- seconds",
+          "sunrise_time": "sunrise_time, Sonnenaufgangszeit in 'HH:MM:SS' Format (wenn 'None' wird die aktuelle Zeit des Sonnenaufgangs an deiner Position verwendet)",
+          "sunset_offset": "sunset_offset, Sonnenuntergang Verschiebung in +/- seconds",
+          "sunset_time": "sunset_time, Sonnenuntergangszeit in 'HH:MM:SS' Format (wenn 'None' wird die aktuelle Zeit des Sonnenuntergangs an deiner Position verwendet)",
+          "take_over_control": "take_over_control, wenn irgendetwas während ein Licht an ist außer Adaptive Lighting den Service 'light.turn_on' aufruft, stoppe die Anpassung des Lichtes (oder des Schalters) bis dieser wieder von off -> on geschaltet wird.",
+          "detect_non_ha_changes": "detect_non_ha_changes, entdeckt alle Änderungen über 10% am Licht (auch außerhalb von HA gemacht), 'take_over_control' muss aktiviert sein (ruft 'homeassistant.update_entity' jede 'interval' auf!)",
+          "transition": "transition, Wechselzeit in Sekunden"
+        }
+      }
+    },
+    "error": {
+      "option_error": "Fehlerhafte Option"
+    }
+  }
+}
