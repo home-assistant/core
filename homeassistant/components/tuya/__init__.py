@@ -149,9 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ENTRY_IS_SETUP: set(),
         "entities": {},
         "pending": {},
-        entry.entry_id: {
-            "listener": [entry.add_update_listener(update_listener)],
-        },
+        "listener": entry.add_update_listener(update_listener),
     }
 
     _update_discovery_interval(
@@ -242,9 +240,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        for listener in hass.data[DOMAIN][entry.entry_id]["listener"]:
-            listener()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN]["listener"]()
+        hass.data[DOMAIN]["listener"] = None
         hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
         hass.data[DOMAIN][TUYA_TRACKER]()
         hass.data[DOMAIN][TUYA_TRACKER] = None
@@ -290,30 +287,33 @@ class TuyaDevice(Entity):
         self._tuya = tuya
         self._tuya_platform = platform
 
+    def _device_can_use_query(self):
+        """Check if device can also use query method"""
+        dev_type = self._tuya.device_type()
+        return dev_type not in ["scene", "switch"]
+
     def _inc_device_count(self):
         """Increment static variable device count."""
-        dev_type = self._tuya.device_type()
-        if dev_type in ["scene", "switch"]:
+        if not self._device_can_use_query():
             return
         TuyaDevice._device_count += 1
 
     def _dec_device_count(self):
         """Decrement static variable device count."""
-        dev_type = self._tuya.device_type()
-        if dev_type in ["scene", "switch"]:
+        if not self._device_can_use_query():
             return
         TuyaDevice._device_count -= 1
 
     def _get_device_config(self):
         """Get updated device options."""
-        dev_conf = {}
         devices_config = self.hass.data[DOMAIN].get(TUYA_DEVICES_CONF)
-        if devices_config:
-            dev_conf = devices_config.get(self.object_id, {})
-            if dev_conf:
-                _LOGGER.debug(
-                    "Configuration for deviceID %s: %s", self.object_id, str(dev_conf)
-                )
+        if not devices_config:
+            return {}
+        dev_conf = devices_config.get(self.object_id, {})
+        if dev_conf:
+            _LOGGER.debug(
+                "Configuration for deviceID %s: %s", self.object_id, str(dev_conf)
+            )
         return dev_conf
 
     async def async_added_to_hass(self):

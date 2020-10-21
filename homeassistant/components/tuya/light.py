@@ -90,7 +90,7 @@ class TuyaLight(TuyaDevice, LightEntity):
         self._max_kelvin = tuya.min_color_temp()
 
     @callback
-    def _load_config(self):
+    def _process_config(self):
         """Set device config parameter."""
         config = self._get_device_config()
         if not config:
@@ -122,9 +122,11 @@ class TuyaLight(TuyaDevice, LightEntity):
     async def async_added_to_hass(self):
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
-        self._load_config()
+        self._process_config()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_CONFIG_ENTITY, self._load_config)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_CONFIG_ENTITY, self._process_config
+            )
         )
         return
 

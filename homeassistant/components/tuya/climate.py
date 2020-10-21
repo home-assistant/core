@@ -116,7 +116,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._temp_entity_error = False
 
     @callback
-    def _load_config(self):
+    def _process_config(self):
         """Set device config parameter."""
         config = self._get_device_config()
         if not config:
@@ -138,9 +138,11 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
-        self._load_config()
+        self._process_config()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_CONFIG_ENTITY, self._load_config)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_CONFIG_ENTITY, self._process_config
+            )
         )
 
         modes = self._tuya.operation_list()
@@ -150,11 +152,12 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             return
 
         for mode in modes:
-            if mode in TUYA_STATE_TO_HA:
-                ha_mode = TUYA_STATE_TO_HA[mode]
-                if ha_mode not in self.operations:
-                    self.operations.append(ha_mode)
-                self._has_operation = True
+            if mode not in TUYA_STATE_TO_HA:
+                continue
+            ha_mode = TUYA_STATE_TO_HA[mode]
+            if ha_mode not in self.operations:
+                self.operations.append(ha_mode)
+            self._has_operation = True
 
     @property
     def precision(self):
