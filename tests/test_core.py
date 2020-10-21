@@ -1543,7 +1543,20 @@ async def test_reserving_states(hass):
     """Test we can reserve a state in the state machine."""
 
     hass.states.async_reserve("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_set("light.bedroom", "on")
+    assert hass.states.async_available("light.bedroom") is False
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
     hass.states.async_set("light.bedroom", "on")
 
     with pytest.raises(ha.HomeAssistantError):
         hass.states.async_reserve("light.bedroom")
+
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True

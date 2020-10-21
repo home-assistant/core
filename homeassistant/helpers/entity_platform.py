@@ -463,12 +463,14 @@ class EntityPlatform:
         already_exists = entity.entity_id in self.entities
         restored = False
 
-        if not already_exists:
+        if not already_exists and not self.hass.states.async_available(
+            entity.entity_id
+        ):
             existing = self.hass.states.get(entity.entity_id)
-
-            if existing:
-                restored = ATTR_RESTORED in existing.attributes
-                already_exists = not restored
+            if existing is not None and ATTR_RESTORED in existing.attributes:
+                restored = True
+            else:
+                already_exists = True
 
         if already_exists:
             if entity.unique_id is not None:

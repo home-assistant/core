@@ -43,7 +43,6 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
-    ATTR_RESERVED,
     ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
@@ -62,7 +61,6 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
-    STATE_UNAVAILABLE,
     __version__,
 )
 from homeassistant.exceptions import (
@@ -972,9 +970,12 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
+    __slots__ = ("_states", "_reservations", "_bus", "_loop")
+
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: Dict[str, State] = {}
+        self._reservations: Set[str] = set()
         self._bus = bus
         self._loop = loop
 
@@ -1082,6 +1083,9 @@ class StateMachine:
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
 
+        if entity_id in self._reservations:
+            self._reservations.remove(entity_id)
+
         if old_state is None:
             return False
 
@@ -1128,17 +1132,18 @@ class StateMachine:
         entity_id are added.
         """
         entity_id = entity_id.lower()
-
-        if entity_id in self._states:
+        if entity_id in self._states or entity_id in self._reservations:
             raise HomeAssistantError(
                 "async_reserve must not be called once the state is in the state machine."
             )
 
-        self._states[entity_id] = State(
-            entity_id,
-            STATE_UNAVAILABLE,
-            {ATTR_RESERVED: True},
-        )
+        self._reservations.add(entity_id)
+
+    @callback
+    def async_available(self, entity_id: str) -> bool:
+        """Check to see if an entity_id is available to be used."""
+        entity_id = entity_id.lower()
+        return entity_id not in self._states and entity_id not in self._reservations
 
     @callback
     def async_set(
@@ -1162,8 +1167,7 @@ class StateMachine:
         new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
-        if old_state is None or ATTR_RESERVED in old_state.attributes:
-            old_state = None
+        if old_state is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1171,10 +1175,6 @@ class StateMachine:
             same_state = old_state.state == new_state and not force_update
             same_attr = old_state.attributes == MappingProxyType(attributes)
             last_changed = old_state.last_changed if same_state else None
-            if ATTR_RESERVED in attributes:
-                raise HomeAssistantError(
-                    f"{ATTR_RESERVED} is a reserved name for attributes"
-                )
 
         if same_state and same_attr:
             return
