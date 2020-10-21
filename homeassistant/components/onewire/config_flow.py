@@ -5,8 +5,9 @@ import os
 from pyownet import protocol
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (  # pylint: disable=unused-import
     CONF_MOUNT_DIR,
@@ -37,11 +38,11 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize 1-Wire config flow."""
@@ -66,6 +67,17 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def get_existing_owserver_entry(self, host: str, port: int):
+        """Get existing entry with matching host and port."""
+        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
+                and config_entry.data[CONF_HOST] == host
+                and config_entry.data[CONF_PORT] == str(port)
+            ):
+                return config_entry
+        return None
+
     async def async_step_owserver(self, user_input=None):
         """Handle OWServer configuration."""
         errors = {}
@@ -74,11 +86,10 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             owhost = user_input[CONF_HOST]
             owport = user_input[CONF_PORT]
             try:
+                existing_entry = self.get_existing_owserver_entry(owhost, owport)
+                if existing_entry is not None:
+                    raise AbortFlow("already_configured")
                 await self.hass.async_add_executor_job(protocol.proxy, owhost, owport)
-                await self.async_set_unique_id(
-                    f"{CONF_TYPE_OWSERVER}:{owhost}:{owport}"
-                )
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=owhost, data=self.onewire_config)
             except (protocol.Error, protocol.ConnError) as exc:
                 _LOGGER.error(
