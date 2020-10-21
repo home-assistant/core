@@ -7,7 +7,7 @@ import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE, LIGHT_LUX
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -37,7 +37,6 @@ OPERATION_MODES = {
     ONE_TIME_HIGH_RES_MODE_2: (0x21, False),  # 0.5lx resolution.
 }
 
-SENSOR_UNIT = "lx"
 DEFAULT_NAME = "BH1750 Light Sensor"
 DEFAULT_I2C_ADDRESS = "0x23"
 DEFAULT_I2C_BUS = 1
@@ -70,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     bus = smbus.SMBus(bus_number)
 
-    sensor = await hass.async_add_job(
+    sensor = await hass.async_add_executor_job(
         partial(
             BH1750,
             bus,
@@ -85,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("BH1750 sensor not detected at %s", i2c_address)
         return False
 
-    dev = [BH1750Sensor(sensor, name, SENSOR_UNIT, config[CONF_MULTIPLIER])]
+    dev = [BH1750Sensor(sensor, name, LIGHT_LUX, config[CONF_MULTIPLIER])]
     _LOGGER.info(
         "Setup of BH1750 light sensor at %s in mode %s is complete",
         i2c_address,
@@ -131,7 +130,7 @@ class BH1750Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
-        await self.hass.async_add_job(self.bh1750_sensor.update)
+        await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
             self._state = int(round(self.bh1750_sensor.light_level * self._multiplier))
         else:

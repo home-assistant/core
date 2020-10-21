@@ -1,6 +1,4 @@
 """Support for LG soundbars."""
-import logging
-
 import temescal
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -11,8 +9,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import STATE_ON
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LG = (
     SUPPORT_VOLUME_SET
@@ -35,6 +31,8 @@ class LGDevice(MediaPlayerEntity):
         """Initialize the LG speakers."""
         self._host = discovery_info.get("host")
         self._port = discovery_info.get("port")
+        properties = discovery_info.get("properties")
+        self._uuid = properties.get("UUID")
 
         self._name = ""
         self._volume = 0
@@ -127,6 +125,11 @@ class LGDevice(MediaPlayerEntity):
         for equaliser in self._equalisers:
             if equaliser >= len(temescal.equalisers):
                 temescal.equalisers.append("unknown " + str(equaliser))
+
+    @property
+    def unique_id(self):
+        """Return the device's unique ID."""
+        return self._uuid
 
     @property
     def name(self):

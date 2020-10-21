@@ -49,7 +49,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         return await API.login_via_credentials(
-            self._username, self._password, client_id=client_id, session=websession,
+            self._username,
+            self._password,
+            client_id=client_id,
+            session=websession,
         )
 
     async def _async_login_during_step(self, *, step_id, form_schema):
@@ -62,14 +65,16 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.info("Awaiting confirmation of MFA email click")
             return await self.async_step_mfa()
         except InvalidCredentialsError:
-            errors = {"base": "invalid_credentials"}
+            errors = {"base": "invalid_auth"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             errors = {"base": "unknown"}
 
         if errors:
             return self.async_show_form(
-                step_id=step_id, data_schema=form_schema, errors=errors,
+                step_id=step_id,
+                data_schema=form_schema,
+                errors=errors,
             )
 
         return await self.async_step_finish(
@@ -87,10 +92,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self._username, data=user_input)
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
 
     async def async_step_mfa(self, user_input=None):
         """Handle multi-factor auth confirmation."""
@@ -169,7 +170,8 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_CODE, default=self.config_entry.options.get(CONF_CODE),
+                        CONF_CODE,
+                        default=self.config_entry.options.get(CONF_CODE),
                     ): str
                 }
             ),

@@ -1,14 +1,10 @@
 """Config flow for Coronavirus integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 
 from . import get_coordinator
 from .const import DOMAIN, OPTION_WORLDWIDE  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

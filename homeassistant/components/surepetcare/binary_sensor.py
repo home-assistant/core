@@ -203,7 +203,10 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
     def __init__(
-        self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
+        self,
+        _id: int,
+        sure_type: SureProductID,
+        spc: SurePetcareAPI,
     ) -> None:
         """Initialize a Sure Petcare Device."""
         super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, sure_type)

@@ -1,7 +1,4 @@
 """Support for Spider thermostats."""
-
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -12,7 +9,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import DOMAIN as SPIDER_DOMAIN
+from .const import DOMAIN
 
 SUPPORT_FAN = ["Auto", "Low", "Medium", "High", "Boost 10", "Boost 20", "Boost 30"]
 
@@ -26,19 +23,14 @@ HA_STATE_TO_SPIDER = {
 
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 
-_LOGGER = logging.getLogger(__name__)
 
+async def async_setup_entry(hass, config, async_add_entities):
+    """Initialize a Spider thermostat."""
+    api = hass.data[DOMAIN][config.entry_id]
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Spider thermostat."""
-    if discovery_info is None:
-        return
+    entities = [SpiderThermostat(api, entity) for entity in api.get_thermostats()]
 
-    devices = [
-        SpiderThermostat(hass.data[SPIDER_DOMAIN]["controller"], device)
-        for device in hass.data[SPIDER_DOMAIN]["thermostats"]
-    ]
-    add_entities(devices, True)
+    async_add_entities(entities)
 
 
 class SpiderThermostat(ClimateEntity):

@@ -3,7 +3,12 @@ import logging
 
 from bimmer_connected.state import ChargingState, LockState
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PLUG,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
@@ -12,17 +17,25 @@ from .const import ATTRIBUTION
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "lids": ["Doors", "opening", "mdi:car-door-lock"],
-    "windows": ["Windows", "opening", "mdi:car-door"],
+    "lids": ["Doors", DEVICE_CLASS_OPENING, "mdi:car-door-lock"],
+    "windows": ["Windows", DEVICE_CLASS_OPENING, "mdi:car-door"],
     "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
-    "condition_based_services": ["Condition based services", "problem", "mdi:wrench"],
-    "check_control_messages": ["Control messages", "problem", "mdi:car-tire-alert"],
+    "condition_based_services": [
+        "Condition based services",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:wrench",
+    ],
+    "check_control_messages": [
+        "Control messages",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:car-tire-alert",
+    ],
 }
 
 SENSOR_TYPES_ELEC = {
     "charging_status": ["Charging status", "power", "mdi:ev-station"],
-    "connection_status": ["Connection status", "plug", "mdi:car-electric"],
+    "connection_status": ["Connection status", DEVICE_CLASS_PLUG, "mdi:car-electric"],
 }
 
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)

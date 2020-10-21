@@ -1,0 +1,5 @@
+{
+    "config": {
+        "flow_title": "Bond: {bond_id} ({host})"
+    }
+}

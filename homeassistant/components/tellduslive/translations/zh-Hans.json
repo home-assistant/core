@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "TelldusLive \u5df2\u914d\u7f6e\u5b8c\u6210",
             "authorize_url_fail": "\u751f\u6210\u6388\u6743\u7f51\u5740\u65f6\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002",
             "authorize_url_timeout": "\u751f\u6210\u6388\u6743\u7f51\u5740\u8d85\u65f6\u3002",
             "unknown": "\u53d1\u751f\u672a\u77e5\u7684\u9519\u8bef"

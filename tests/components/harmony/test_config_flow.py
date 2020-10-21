@@ -44,14 +44,17 @@ async def test_user_form(hass):
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.harmony.async_setup_entry", return_value=True,
+        "homeassistant.components.harmony.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "1.2.3.4", "name": "friend"},
+            result["flow_id"],
+            {"host": "1.2.3.4", "name": "friend"},
         )
 
     assert result2["type"] == "create_entry"
@@ -68,11 +71,13 @@ async def test_form_import(hass):
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.harmony.async_setup_entry", return_value=True,
+        "homeassistant.components.harmony.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -110,7 +115,8 @@ async def test_form_ssdp(hass):
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -129,13 +135,18 @@ async def test_form_ssdp(hass):
     }
 
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.harmony.async_setup_entry", return_value=True,
+        "homeassistant.components.harmony.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Harmony Hub"
@@ -149,17 +160,22 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
     """Test we abort without connecting if the host is already known."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "2.2.2.2", "name": "any"},
+        domain=DOMAIN,
+        data={"host": "2.2.2.2", "name": "any"},
     )
     config_entry.add_to_hass(hass)
 
-    config_entry_without_host = MockConfigEntry(domain=DOMAIN, data={"name": "other"},)
+    config_entry_without_host = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "other"},
+    )
     config_entry_without_host.add_to_hass(hass)
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        return_value=harmonyapi,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -179,7 +195,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.harmony.util.HarmonyAPI", side_effect=CannotConnect,
+        "homeassistant.components.harmony.util.HarmonyAPI",
+        side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -208,7 +225,8 @@ async def test_options_flow(hass):
     harmony_client = _get_mock_harmonyclient()
 
     with patch(
-        "aioharmony.harmonyapi.HarmonyClient", return_value=harmony_client,
+        "aioharmony.harmonyapi.HarmonyClient",
+        return_value=harmony_client,
     ), patch("homeassistant.components.harmony.remote.HarmonyRemote.write_config_file"):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)

@@ -1,6 +1,5 @@
 """Tests for the Bond switch device."""
 from datetime import timedelta
-import logging
 
 from bond_api import Action, DeviceType
 
@@ -19,8 +18,6 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def generic_device(name: str):
     """Create a generic device with given name."""
@@ -29,10 +26,17 @@ def generic_device(name: str):
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, SWITCH_DOMAIN, generic_device("name-1"))
+    await setup_platform(
+        hass,
+        SWITCH_DOMAIN,
+        generic_device("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["switch.name_1"]
+    entity = registry.entities["switch.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_turn_on_switch(hass: core.HomeAssistant):

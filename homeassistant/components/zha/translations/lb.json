@@ -65,6 +65,7 @@
             "device_dropped": "Apparat gefall",
             "device_flipped": "Apparat \u00ebmgedr\u00e9int \"{subtype}\"",
             "device_knocked": "Apparat geklappt \"{subtype}\"",
+            "device_offline": "Apparat net ereechbar",
             "device_rotated": "Apparat gedr\u00e9int \"{subtype}\"",
             "device_shaken": "Apparat ger\u00ebselt",
             "device_slid": "Apparat gerutscht \"{subtype}\"",

@@ -1,6 +1,5 @@
 """Test qwikswitch sensors."""
 import asyncio
-import logging
 
 from aiohttp.client_exceptions import ClientError
 import pytest
@@ -11,8 +10,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock
 from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -270,7 +267,9 @@ async def test_button(hass, aioclient_mock, qs_devices):
 
     button_pressed = Mock()
     hass.bus.async_listen_once("qwikswitch.button.@a00002", button_pressed)
-    listen_mock.queue_response(json={"id": "@a00002", "cmd": "TOGGLE"},)
+    listen_mock.queue_response(
+        json={"id": "@a00002", "cmd": "TOGGLE"},
+    )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     button_pressed.assert_called_once()

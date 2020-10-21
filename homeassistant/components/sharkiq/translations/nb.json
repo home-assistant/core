@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uforventet feil"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

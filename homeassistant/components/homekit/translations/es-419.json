@@ -23,8 +23,7 @@
             "advanced": {
                 "data": {
                     "auto_start": "Inicio autom\u00e1tico (deshabilitar si se usa Z-Wave u otro sistema de inicio diferido)",
-                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)",
-                    "zeroconf_default_interface": "Use la interfaz zeroconf predeterminada (habil\u00edtela si no se puede encontrar el puente en la aplicaci\u00f3n Inicio)"
+                    "safe_mode": "Modo seguro (habil\u00edtelo solo si falla el emparejamiento)"
                 },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
                 "title": "Configuraci\u00f3n avanzada"

@@ -122,7 +122,9 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_SYNC, HARMONY_SYNC_SCHEMA, "sync",
+        SERVICE_SYNC,
+        HARMONY_SYNC_SCHEMA,
+        "sync",
     )
     platform.async_register_entity_service(
         SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"
@@ -140,7 +142,7 @@ class HarmonyRemote(remote.RemoteEntity, RestoreEntity):
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
         self._activity_starting = None
-        self._is_initial_update = False
+        self._is_initial_update = True
         self._client = HarmonyClient(ip_address=host)
         self._config_path = out_path
         self.delay_secs = delay_secs

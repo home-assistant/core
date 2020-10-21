@@ -1,6 +1,5 @@
 """Adds config flow for Tibber integration."""
 import asyncio
-import logging
 
 import aiohttp
 import tibber
@@ -11,8 +10,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
@@ -48,13 +45,15 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except asyncio.TimeoutError:
                 errors[CONF_ACCESS_TOKEN] = "timeout"
             except aiohttp.ClientError:
-                errors[CONF_ACCESS_TOKEN] = "connection_error"
+                errors[CONF_ACCESS_TOKEN] = "cannot_connect"
             except tibber.InvalidLogin:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
 
             if errors:
                 return self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA, errors=errors,
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors=errors,
                 )
 
             unique_id = tibber_connection.user_id
@@ -62,7 +61,12 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=tibber_connection.name, data={CONF_ACCESS_TOKEN: access_token},
+                title=tibber_connection.name,
+                data={CONF_ACCESS_TOKEN: access_token},
             )
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA, errors={},)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors={},
+        )

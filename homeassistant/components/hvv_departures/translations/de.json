@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, bitte erneut versuchen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_results": "Keine Ergebnisse. Versuch es mit einer anderen Station/Adresse"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "Station/Adresse"
+                },
+                "title": "Station/Adresse eingeben"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Station/Adresse"
+                },
+                "title": "Station/Adresse ausw\u00e4hlen"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Mit der HVV-API verbinden"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Linien ausw\u00e4hlen",
+                    "offset": "Versatz (Minuten)",
+                    "real_time": "Echtzeitdaten verwenden"
+                },
+                "description": "Optionen f\u00fcr diesen Abfahrtssensor \u00e4ndern",
+                "title": "Optionen"
+            }
+        }
+    },
+    "title": "HVV Abfahrten"
+}

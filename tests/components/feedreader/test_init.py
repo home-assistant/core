@@ -38,11 +38,14 @@ class TestFeedreaderComponent(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        # Delete any previously stored data
+        self.addCleanup(self.tear_down_cleanup)
+
+    def tear_down_cleanup(self):
+        """Clean up files and stop Home Assistant."""
         data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         if exists(data_file):
             remove(data_file)
-        self.addCleanup(self.hass.stop)
+        self.hass.stop()
 
     def test_setup_one_feed(self):
         """Test the general setup of this component."""

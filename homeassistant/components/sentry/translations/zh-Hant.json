@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "Sentry \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
             "bad_dsn": "DSN \u7121\u6548",
@@ -9,8 +10,27 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
                 "description": "\u8f38\u5165 Sentry DSN",
                 "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "\u74b0\u5883\u9078\u9805\u540d\u7a31",
+                    "event_custom_components": "\u50b3\u9001\u81ea\u8a02\u5143\u4ef6\u4e8b\u4ef6",
+                    "event_handled": "\u50b3\u9001\u5df2\u8655\u7406\u4e8b\u4ef6",
+                    "event_third_party_packages": "\u50b3\u9001\u7b2c\u4e09\u65b9\u5c01\u5305\u4e8b\u4ef6",
+                    "logging_event_level": "\u65e5\u8a8c\u7b49\u7d1a\u76e3\u63a7\u5c07\u6703\u8a3b\u518a\u4e8b\u4ef6\u70ba",
+                    "logging_level": "\u65e5\u8a8c\u7b49\u7d1a\u76e3\u63a7\u5c07\u6703\u7d00\u9304\u4e8b\u4ef6\u70ba\u6a94\u6848\u5c0e\u822a\u70ba",
+                    "tracing": "\u958b\u555f\u6548\u80fd\u8ffd\u8e64",
+                    "tracing_sample_rate": "\u8ffd\u8e64\u63a1\u6a23\u7bc4\u570d\uff0c\u4ecb\u65bc 0.0 \u53ca 1.0 \u4e4b\u9593\uff081.0 = 100%\uff09"
+                }
             }
         }
     }

@@ -1,10 +1,21 @@
 {
     "config": {
+        "abort": {
+            "auth_failed": "Authentification invalide",
+            "conn_error": "\u00c9chec de connexion",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "error": {
+            "auth_failed": "Authentification invalide"
+        },
         "flow_title": "Configuration Tuya",
         "step": {
             "user": {
                 "data": {
-                    "platform": "L'application dans laquelle votre compte est enregistr\u00e9"
+                    "country_code": "Le code de pays de votre compte (par exemple, 1 pour les \u00c9tats-Unis ou 86 pour la Chine)",
+                    "password": "Mot de passe",
+                    "platform": "L'application dans laquelle votre compte est enregistr\u00e9",
+                    "username": "Nom d'utilisateur"
                 },
                 "description": "Saisissez vos informations d'identification Tuya.",
                 "title": "Tuya"

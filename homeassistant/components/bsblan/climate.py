@@ -86,7 +86,10 @@ class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
     def __init__(
-        self, entry_id: str, bsblan: BSBLan, info: Info,
+        self,
+        entry_id: str,
+        bsblan: BSBLan,
+        info: Info,
     ):
         """Initialize BSBLan climate device."""
         self._current_temperature: Optional[float] = None

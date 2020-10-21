@@ -7,7 +7,7 @@
             "open_tilt": "Apri l'inclinazione di {entity_name}",
             "set_position": "Imposta la posizione di {entity_name}",
             "set_tilt_position": "Imposta la posizione di inclinazione di {entity_name}",
-            "stop": "Stop {entity_name}"
+            "stop": "Ferma {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} \u00e8 chiuso",

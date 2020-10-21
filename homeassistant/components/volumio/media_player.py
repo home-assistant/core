@@ -4,15 +4,17 @@ Volumio Platform.
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
-import logging
+import json
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
@@ -31,10 +33,10 @@ from homeassistant.const import (
 )
 from homeassistant.util import Throttle
 
+from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
 _CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
@@ -45,10 +47,12 @@ SUPPORT_VOLUMIO = (
     | SUPPORT_SEEK
     | SUPPORT_STOP
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
     | SUPPORT_VOLUME_STEP
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_BROWSE_MEDIA
 )
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
@@ -246,3 +250,14 @@ class Volumio(MediaPlayerEntity):
     async def _async_update_playlists(self, **kwargs):
         """Update available Volumio playlists."""
         self._playlists = await self._volumio.get_playlists()
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Send the play_media command to the media player."""
+        await self._volumio.replace_and_play(json.loads(media_id))
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_type in [None, "library"]:
+            return await browse_top_level(self._volumio)
+
+        return await browse_node(self._volumio, media_content_type, media_content_id)

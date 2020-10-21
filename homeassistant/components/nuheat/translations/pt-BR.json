@@ -12,7 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "serial_number": "N\u00famero de s\u00e9rie do termostato."
+                    "serial_number": "N\u00famero de s\u00e9rie do termostato.",
+                    "username": "Usu\u00e1rio"
                 },
                 "description": "Voc\u00ea precisar\u00e1 obter o n\u00famero de s\u00e9rie ou ID num\u00e9rico do seu termostato acessando https://MyNuHeat.com e selecionando seu(s) termostato(s).",
                 "title": "Conecte-se ao NuHeat"

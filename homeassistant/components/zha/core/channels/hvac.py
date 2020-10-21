@@ -6,7 +6,6 @@ https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from collections import namedtuple
-import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from zigpy.exceptions import ZigbeeException
@@ -24,8 +23,6 @@ from ..const import (
 )
 from ..helpers import retryable_req
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
@@ -332,7 +329,10 @@ class ThermostatChannel(ZigbeeChannel):
         if not isinstance(res, list):
             # assume default response
             self.debug(
-                "attr reporting for '%s' on '%s': %s", attrs, self.name, res,
+                "attr reporting for '%s' on '%s': %s",
+                attrs,
+                self.name,
+                res,
             )
             return
         if res[0].status == Status.SUCCESS and len(res) == 1:

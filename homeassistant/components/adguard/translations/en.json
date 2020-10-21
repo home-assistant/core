@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "adguard_home_addon_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}. Please update your Hass.io AdGuard Home add-on.",
-            "adguard_home_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}.",
             "existing_instance_updated": "Updated existing configuration.",
-            "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect."
         },
         "step": {
@@ -19,9 +18,9 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "AdGuard Home uses a SSL certificate",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username",
-                    "verify_ssl": "AdGuard Home uses a proper certificate"
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Set up your AdGuard Home instance to allow monitoring and control."
             }

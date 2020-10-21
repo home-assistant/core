@@ -1,14 +1,10 @@
 """Support for the MaryTTS service."""
-import logging
-
 from speak2mary import MaryTTS
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
@@ -39,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+def get_engine(hass, config, discovery_info=None):
     """Set up MaryTTS speech component."""
     return MaryTTSProvider(hass, config)
 
@@ -80,7 +76,7 @@ class MaryTTSProvider(Provider):
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
         effects = options[CONF_EFFECT]
 

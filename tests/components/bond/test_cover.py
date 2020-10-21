@@ -1,6 +1,5 @@
 """Tests for the Bond cover device."""
 from datetime import timedelta
-import logging
 
 from bond_api import Action, DeviceType
 
@@ -24,8 +23,6 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def shades(name: str):
     """Create motorized shades with given name."""
@@ -34,10 +31,17 @@ def shades(name: str):
 
 async def test_entity_registry(hass: core.HomeAssistant):
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
+    await setup_platform(
+        hass,
+        COVER_DOMAIN,
+        shades("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    assert [key for key in registry.entities] == ["cover.name_1"]
+    entity = registry.entities["cover.name_1"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_open_cover(hass: core.HomeAssistant):

@@ -58,7 +58,7 @@ async def setup_platform(
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
         domain=BOND_DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_ACCESS_TOKEN: "test-token"},
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
     mock_entry.add_to_hass(hass)
 
@@ -113,7 +113,8 @@ def patch_bond_device_ids(enabled: bool = True, return_value=None, side_effect=N
 def patch_bond_device(return_value=None):
     """Patch Bond API device endpoint."""
     return patch(
-        "homeassistant.components.bond.Bond.device", return_value=return_value,
+        "homeassistant.components.bond.Bond.device",
+        return_value=return_value,
     )
 
 

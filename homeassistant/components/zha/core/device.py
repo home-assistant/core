@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 from zigpy import types
 import zigpy.exceptions
-from zigpy.profiles import zha, zll
+from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
@@ -30,8 +30,10 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
+    ATTR_DEVICE_IEEE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENDPOINT_NAMES,
     ATTR_ENDPOINTS,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -40,6 +42,7 @@ from .const import (
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
@@ -247,9 +250,14 @@ class ZHADevice(LogMixin):
     @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
+        triggers = {
+            ("device_offline", "device_offline"): {
+                "device_event_type": "device_offline"
+            }
+        }
         if hasattr(self._zigpy_device, "device_automation_triggers"):
-            return self._zigpy_device.device_automation_triggers
-        return None
+            triggers.update(self._zigpy_device.device_automation_triggers)
+        return triggers
 
     @property
     def available_signal(self):
@@ -346,6 +354,14 @@ class ZHADevice(LogMixin):
             # reinit channels then signal entities
             self.hass.async_create_task(self._async_became_available())
             return
+        if availability_changed and not available:
+            self.hass.bus.async_fire(
+                "zha_event",
+                {
+                    ATTR_DEVICE_IEEE: str(self.ieee),
+                    "device_event_type": "device_offline",
+                },
+            )
         async_dispatcher_send(self.hass, f"{self._available_signal}_entity")
 
     async def _async_became_available(self) -> None:
@@ -385,7 +401,7 @@ class ZHADevice(LogMixin):
         entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
-        if self._channels.identify_ch is not None:
+        if self._channels.identify_ch is not None and not self.skip_configuration:
             await self._channels.identify_ch.trigger_effect(
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )
@@ -422,6 +438,39 @@ class ZHADevice(LogMixin):
             }
             for entity_ref in self.gateway.device_registry[self.ieee]
         ]
+
+        # Return the neighbor information
+        device_info[ATTR_NEIGHBORS] = [
+            {
+                "device_type": neighbor.neighbor.device_type.name,
+                "rx_on_when_idle": neighbor.neighbor.rx_on_when_idle.name,
+                "relationship": neighbor.neighbor.relationship.name,
+                "extended_pan_id": str(neighbor.neighbor.extended_pan_id),
+                "ieee": str(neighbor.neighbor.ieee),
+                "nwk": str(neighbor.neighbor.nwk),
+                "permit_joining": neighbor.neighbor.permit_joining.name,
+                "depth": str(neighbor.neighbor.depth),
+                "lqi": str(neighbor.neighbor.lqi),
+            }
+            for neighbor in self._zigpy_device.neighbors
+        ]
+
+        # Return endpoint device type Names
+        names = []
+        for endpoint in (ep for epid, ep in self.device.endpoints.items() if epid):
+            profile = PROFILES.get(endpoint.profile_id)
+            if profile and endpoint.device_type is not None:
+                # DeviceType provides undefined enums
+                names.append({ATTR_NAME: profile.DeviceType(endpoint.device_type).name})
+            else:
+                names.append(
+                    {
+                        ATTR_NAME: f"unknown {endpoint.device_type} device_type "
+                        "of 0x{endpoint.profile_id:04x} profile id"
+                    }
+                )
+        device_info[ATTR_ENDPOINT_NAMES] = names
+
         reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
@@ -460,7 +509,7 @@ class ZHADevice(LogMixin):
                 CLUSTER_TYPE_OUT: endpoint.out_clusters,
             }
             for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
-            if ep_id != 0 and endpoint.profile_id in (zha.PROFILE_ID, zll.PROFILE_ID)
+            if ep_id != 0 and endpoint.profile_id in PROFILES
         }
 
     @callback

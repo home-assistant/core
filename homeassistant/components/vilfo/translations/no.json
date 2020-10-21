@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Vilfo Ruteren er allerede konfigurert."
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes. Vennligst sjekk informasjonen du oppga, og pr\u00f8v igjen.",
-            "invalid_auth": "Ugyldig godkjenning. Vennligst sjekk access token, og pr\u00f8v p\u00e5 nytt.",
-            "unknown": "Det oppstod en uventet feil under installasjonen av integrasjonen."
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
         },
         "step": {
             "user": {

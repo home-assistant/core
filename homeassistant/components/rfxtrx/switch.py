@@ -25,20 +25,24 @@ DATA_SWITCH = f"{DOMAIN}_switch"
 _LOGGER = logging.getLogger(__name__)
 
 
+def supported(event):
+    """Return whether an event supports switch."""
+    return (
+        isinstance(event.device, rfxtrxmod.LightingDevice)
+        and not event.device.known_to_be_dimmable
+        and not event.device.known_to_be_rollershutter
+        or isinstance(event.device, rfxtrxmod.RfyDevice)
+    )
+
+
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and not event.device.known_to_be_dimmable
-            and not event.device.known_to_be_rollershutter
-            or isinstance(event.device, rfxtrxmod.RfyDevice)
-        )
 
     # Add switch from config file
     entities = []

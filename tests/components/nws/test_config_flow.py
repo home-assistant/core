@@ -22,7 +22,8 @@ async def test_form(hass, mock_simple_nws_config):
     with patch(
         "homeassistant.components.nws.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nws.async_setup_entry", return_value=True,
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": "test"}
@@ -51,7 +52,8 @@ async def test_form_cannot_connect(hass, mock_simple_nws_config):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": "test"},
+        result["flow_id"],
+        {"api_key": "test"},
     )
 
     assert result2["type"] == "form"
@@ -68,7 +70,8 @@ async def test_form_unknown_error(hass, mock_simple_nws_config):
     )
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"api_key": "test"},
+        result["flow_id"],
+        {"api_key": "test"},
     )
 
     assert result2["type"] == "form"
@@ -84,10 +87,12 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
     with patch(
         "homeassistant.components.nws.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nws.async_setup_entry", return_value=True,
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_key": "test"},
+            result["flow_id"],
+            {"api_key": "test"},
         )
 
     assert result2["type"] == "create_entry"
@@ -102,10 +107,12 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
     with patch(
         "homeassistant.components.nws.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.nws.async_setup_entry", return_value=True,
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_key": "test"},
+            result["flow_id"],
+            {"api_key": "test"},
         )
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
             "unknown": "Unexpected error"
         },
         "flow_title": "Bond: {bond_id} ({host})",

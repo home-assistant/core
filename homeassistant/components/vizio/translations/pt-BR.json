@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "complete_pairing_failed": "N\u00e3o foi poss\u00edvel concluir o pareamento. Verifique se o PIN que voc\u00ea forneceu est\u00e1 correto e a TV ainda est\u00e1 ligada e conectada \u00e0 internet antes de reenviar."
+            "complete_pairing_failed": "N\u00e3o foi poss\u00edvel concluir o pareamento. Verifique se o PIN que voc\u00ea forneceu est\u00e1 correto e a TV ainda est\u00e1 ligada e conectada \u00e0 internet antes de reenviar.",
+            "existing_config_entry_found": "Uma entrada j\u00e1 existente  configurada com o mesmo n\u00famero de s\u00e9rie j\u00e1 foi configurada. Voc\u00ea deve apagar a entrada existente para poder configurar esta."
         },
         "step": {
             "pair_tv": {

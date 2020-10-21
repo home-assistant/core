@@ -61,8 +61,22 @@ DEVICE_TYPE_DEVICE_CLASS = {
 }
 
 
+def supported(event):
+    """Return whether an event supports binary_sensor."""
+    if isinstance(event, rfxtrxmod.ControlEvent):
+        return True
+    if isinstance(event, rfxtrxmod.SensorEvent):
+        return event.values.get("Sensor Status") in [
+            *SENSOR_STATUS_ON,
+            *SENSOR_STATUS_OFF,
+        ]
+    return False
+
+
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up platform."""
     sensors = []
@@ -71,16 +85,6 @@ async def async_setup_entry(
     pt2262_devices = []
 
     discovery_info = config_entry.data
-
-    def supported(event):
-        if isinstance(event, rfxtrxmod.ControlEvent):
-            return True
-        if isinstance(event, rfxtrxmod.SensorEvent):
-            return event.values.get("Sensor Status") in [
-                *SENSOR_STATUS_ON,
-                *SENSOR_STATUS_OFF,
-            ]
-        return False
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
