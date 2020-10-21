@@ -159,7 +159,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = {}
 
         data[CONF_HOST] = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
+        try:
+            self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
+        except ValueError:
+            self._port_ui = const.DEFAULT_PORT_UI
 
         try:
             data[CONF_PORT] = int(

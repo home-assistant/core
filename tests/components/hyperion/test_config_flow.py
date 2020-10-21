@@ -194,6 +194,36 @@ async def test_user_client_errors(hass):
         assert result["errors"]["base"] == "auth_required_error"
 
 
+async def test_user_confirm_connection_error(hass):
+    """Test a failure to connect during confirmation."""
+
+    result = await _init_flow(hass)
+
+    good_client = create_mock_client()
+    bad_client = create_mock_client()
+    bad_client.async_client_connect = CoroutineMock(return_value=False)
+
+    # Confirmation sync_client_connect fails.
+    with patch("hyperion.client.HyperionClient", side_effect=[good_client, bad_client]):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"]["base"] == "connection_error"
+
+
+async def test_user_confirm_id_error(hass):
+    """Test a failure fetching the server id during confirmation."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.async_id = CoroutineMock(return_value=None)
+
+    # Confirmation sync_client_connect fails.
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "no_id"
+
+
 async def test_user_noauth_flow_success(hass):
     """Check a full flow without auth."""
     result = await _init_flow(hass)
@@ -415,15 +445,12 @@ async def test_ssdp_success(hass):
     }
 
 
-async def test_ssdp_fail_no_id(hass):
+async def test_ssdp_missing_serial(hass):
     """Check an SSDP flow where no id is provided."""
 
     client = create_mock_client()
-    bad_data = {
-        key: TEST_SSDP_SERVICE_INFO[key]
-        for key in TEST_SSDP_SERVICE_INFO
-        if key != "serialNumber"
-    }
+    bad_data = {**TEST_SSDP_SERVICE_INFO}
+    del bad_data["serialNumber"]
 
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
@@ -431,6 +458,55 @@ async def test_ssdp_fail_no_id(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "no_id"
+
+
+async def test_ssdp_failure_bad_port_json(hass):
+    """Check an SSDP flow with bad json port."""
+
+    client = create_mock_client()
+    bad_data = {**TEST_SSDP_SERVICE_INFO}
+    bad_data["ports"]["jsonServer"] = "not_a_port"
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
+        result = await _configure_flow(hass, result)
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_PORT] == const.DEFAULT_PORT_JSON
+
+
+async def test_ssdp_failure_bad_port_ui(hass):
+    """Check an SSDP flow with bad ui port."""
+
+    client = create_mock_client()
+    client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    bad_data = {**TEST_SSDP_SERVICE_INFO}
+    bad_data["ssdp_location"] = f"http://{TEST_HOST}:not_a_port/description.xml"
+
+    with patch("hyperion.client.HyperionClient", return_value=client), patch(
+        "hyperion.client.generate_random_auth_id", return_value=TEST_AUTH_ID
+    ):
+        result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "auth"
+
+        client.async_request_token = CoroutineMock(return_value=TEST_REQUEST_TOKEN_FAIL)
+
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "create_token"
+
+        # Verify a working URL is used despite the bad port number
+        assert result["description_placeholders"] == {
+            CONF_AUTH_ID: TEST_AUTH_ID,
+            CONF_HYPERION_URL: TEST_HYPERION_URL,
+        }
 
 
 async def test_ssdp_abort_duplicates(hass):
