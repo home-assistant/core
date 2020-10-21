@@ -6,12 +6,19 @@ from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.async_mock import patch
-from tests.components.devolo_home_control import configure_integration
+from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_credentials_invalid(hass):
     """Test setup entry fails if credentials are invalid."""
-    entry = configure_integration(hass)
+    config = {
+        "username": "test-username",
+        "password": "test-password",
+        "home_control_url": "https://test_url.test",
+        "mydevolo_url": "https://test_mydevolo_url.test",
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.devolo_home_control.Mydevolo.credentials_valid",
@@ -24,7 +31,14 @@ async def test_setup_entry_credentials_invalid(hass):
 
 async def test_setup_entry_maintenance(hass):
     """Test setup entry fails if mydevolo is in maintenance mode."""
-    entry = configure_integration(hass)
+    config = {
+        "username": "test-username",
+        "password": "test-password",
+        "home_control_url": "https://test_url.test",
+        "mydevolo_url": "https://test_mydevolo_url.test",
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.devolo_home_control.Mydevolo.credentials_valid",
