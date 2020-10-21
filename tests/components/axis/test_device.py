@@ -231,7 +231,6 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
-        entry_id="1",
         version=2,
     )
     config_entry.add_to_hass(hass)
