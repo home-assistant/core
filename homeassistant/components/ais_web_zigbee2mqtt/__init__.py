@@ -47,6 +47,7 @@ class HassIOIngress(HomeAssistantView):
         self._port = port
         self._hass = hass
         self._websession = websession
+        self._valid_token = ""
 
     def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
@@ -57,13 +58,16 @@ class HassIOIngress(HomeAssistantView):
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
         # validate token
-        try:
-            auth = self._hass.auth
-            refresh_token = await auth.async_validate_access_token(token)
-            if refresh_token is None:
+        if token != self._valid_token:
+            try:
+                auth = self._hass.auth
+                refresh_token = await auth.async_validate_access_token(token)
+                if refresh_token is None:
+                    raise HTTPUnauthorized() from None
+                # remember the token as valid
+                self._valid_token = token
+            except Exception:
                 raise HTTPUnauthorized() from None
-        except Exception:
-            raise HTTPUnauthorized() from None
 
         try:
             # Websockettoken
