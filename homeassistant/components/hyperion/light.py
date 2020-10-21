@@ -74,7 +74,7 @@ PLATFORM_SCHEMA = vol.All(
 
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
-ICON_EXTERNAL_SOURCE = "mdi:video-input-hdmi"
+ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
