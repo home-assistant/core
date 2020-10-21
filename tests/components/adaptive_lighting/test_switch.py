@@ -7,6 +7,8 @@ from random import randint
 import pytest
 
 from homeassistant.components.adaptive_lighting.const import (
+    ADAPT_BRIGHTNESS_SWITCH,
+    ADAPT_COLOR_SWITCH,
     ATTR_TURN_ON_OFF_LISTENER,
     CONF_DETECT_NON_HA_CHANGES,
     CONF_INITIAL_TRANSITION,
@@ -84,8 +86,11 @@ LAT_LONG_TZS = [
     (32.87336, -117.22743, "US/Pacific"),
 ]
 
-ENTITY_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_{DEFAULT_NAME}"
-ENTITY_SLEEP_MODE_SWITCH = f"{SWITCH_DOMAIN}.{DOMAIN}_sleep_mode_{DEFAULT_NAME}"
+_SWITCH_FMT = f"{SWITCH_DOMAIN}.{DOMAIN}"
+ENTITY_SWITCH = f"{_SWITCH_FMT}_{DEFAULT_NAME}"
+ENTITY_SLEEP_MODE_SWITCH = f"{_SWITCH_FMT}_sleep_mode_{DEFAULT_NAME}"
+ENTITY_ADAPT_BRIGHTNESS_SWITCH = f"{_SWITCH_FMT}_adapt_brightness_{DEFAULT_NAME}"
+ENTITY_ADAPT_COLOR_SWITCH = f"{_SWITCH_FMT}_adapt_color_{DEFAULT_NAME}"
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -179,11 +184,13 @@ async def test_adaptive_lighting_switches(hass):
     """Test switches created for adaptive_lighting integration."""
     entry, _ = await setup_switch(hass, {})
 
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    assert hass.states.async_entity_ids(SWITCH_DOMAIN) == [
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
+    assert set(hass.states.async_entity_ids(SWITCH_DOMAIN)) == {
         ENTITY_SWITCH,
         ENTITY_SLEEP_MODE_SWITCH,
-    ]
+        ENTITY_ADAPT_COLOR_SWITCH,
+        ENTITY_ADAPT_BRIGHTNESS_SWITCH,
+    }
     assert ATTR_TURN_ON_OFF_LISTENER in hass.data[DOMAIN]
     assert entry.entry_id in hass.data[DOMAIN]
     assert len(hass.data[DOMAIN].keys()) == 2
@@ -191,8 +198,10 @@ async def test_adaptive_lighting_switches(hass):
     data = hass.data[DOMAIN][entry.entry_id]
     assert SLEEP_MODE_SWITCH in data
     assert SWITCH_DOMAIN in data
+    assert ADAPT_COLOR_SWITCH in data
+    assert ADAPT_BRIGHTNESS_SWITCH in data
     assert UNDO_UPDATE_LISTENER in data
-    assert len(data.keys()) == 3
+    assert len(data.keys()) == 5
 
 
 @pytest.mark.parametrize("lat,long,timezone", LAT_LONG_TZS)
@@ -604,8 +613,7 @@ def test_attributes_have_changed():
     kwargs = dict(
         light="light.test",
         adapt_brightness=True,
-        adapt_color_temp=True,
-        adapt_rgb_color=True,
+        adapt_color=True,
         context=Context(),
     )
     assert not _attributes_have_changed(
