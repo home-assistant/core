@@ -566,20 +566,13 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         remove_interval = async_track_time_interval(
             self.hass, self._async_update_at_interval, self._interval
         )
-        remove_simple_switches = [
-            async_track_state_change_event(
-                self.hass,
-                switch.entity_id,
-                self._simple_switch_state_event,
-            )
-            for switch in (
-                self.sleep_mode_switch,
-                self.adapt_brightness_switch,
-                self.adapt_color_switch,
-            )
-        ]
+        remove_sleep = async_track_state_change_event(
+            self.hass,
+            self.sleep_mode_switch.entity_id,
+            self._sleep_mode_switch_state_event,
+        )
 
-        self.remove_listeners.extend([remove_interval, *remove_simple_switches])
+        self.remove_listeners.extend([remove_interval, remove_sleep])
 
         if self._lights:
             self._expand_light_groups()
@@ -788,22 +781,18 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 continue
             await self._adapt_light(light, transition, force=force, context=context)
 
-    async def _simple_switch_state_event(self, event: Event) -> None:
+    async def _sleep_mode_switch_state_event(self, event: Event) -> None:
         if not match_switch_state_event(event, (STATE_ON, STATE_OFF)):
             return
-        which = {
-            self.sleep_mode_switch.entity_id: "sleep_sw",
-            self.adapt_color_switch.entity_id: "color_sw",
-            self.adapt_brightness_switch.entity_id: "brigt_sw",
-        }[event.data[ATTR_ENTITY_ID]]
-        _LOGGER.debug("%s: _simple_switch_state_event, event: '%s'", self._name, event)
-        if which == "sleep_sw":
-            # Reset the manually controlled status when the "sleep mode" changes
-            self.turn_on_off_listener.reset(*self._lights)
+        _LOGGER.debug(
+            "%s: _sleep_mode_switch_state_event, event: '%s'", self._name, event
+        )
+        # Reset the manually controlled status when the "sleep mode" changes
+        self.turn_on_off_listener.reset(*self._lights)
         await self._update_attrs_and_maybe_adapt_lights(
             transition=self._initial_transition,
             force=True,
-            context=self.create_context(which),
+            context=self.create_context("sleep"),
         )
 
     async def _light_event(self, event: Event) -> None:
