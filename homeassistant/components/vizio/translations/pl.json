@@ -20,11 +20,11 @@
                 "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.\n\nToken dost\u0119pu to '**{access_token}**'.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.\n\nToken dost\u0119pu to '**{access_token}**'.",
                 "title": "Parowanie zako\u0144czone"
             },
             "user": {

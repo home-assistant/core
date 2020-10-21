@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiocoap import error as aiocoap_error
+import aiocoap
 import aioshelly
 import async_timeout
 
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
-from .const import DOMAIN
+from .const import COAP_CONTEXT, DATA_CONFIG_ENTRY, DOMAIN
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][COAP_CONTEXT] = await aiocoap.Context.create_client_context()
+
+    async def shutdown_listener(*_):
+        """Home Assistant shutdown listener."""
+        await hass.data[DOMAIN][COAP_CONTEXT].shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
+
     return True
 
 
@@ -39,18 +47,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
     )
+
+    coap_context = hass.data[DOMAIN][COAP_CONTEXT]
+
     try:
         async with async_timeout.timeout(10):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
+                coap_context,
                 options,
             )
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err
 
-    wrapper = hass.data[DOMAIN][entry.entry_id] = ShellyDeviceWrapper(
-        hass, entry, device
-    )
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        entry.entry_id
+    ] = ShellyDeviceWrapper(hass, entry, device)
     await wrapper.async_setup()
 
     for component in PLATFORMS:
@@ -75,18 +87,14 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.entry = entry
         self.device = device
-        self._unsub_stop = None
 
     async def _async_update_data(self):
         """Fetch data."""
-        # Race condition on shutdown. Stop all the fetches.
-        if self._unsub_stop is None:
-            return None
 
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except (aiocoap_error.Error, OSError) as err:
+        except (aiocoap.error.Error, OSError) as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
@@ -101,9 +109,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self):
         """Set up the wrapper."""
-        self._unsub_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
-        )
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
         dev_reg.async_get_or_create(
@@ -117,18 +122,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             sw_version=self.device.settings["fw"],
         )
 
-    async def shutdown(self):
-        """Shutdown the device wrapper."""
-        if self._unsub_stop:
-            self._unsub_stop()
-            self._unsub_stop = None
-        await self.device.shutdown()
-
-    async def _handle_ha_stop(self, _):
-        """Handle Home Assistant stopping."""
-        self._unsub_stop = None
-        await self.shutdown()
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
@@ -141,6 +134,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN].pop(entry.entry_id).shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
     return unload_ok
