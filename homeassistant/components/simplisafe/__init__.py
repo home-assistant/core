@@ -622,11 +622,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
-        return (
-            self.coordinator.last_update_success
-            and not (self._system.version == 3 and self._system.offline)
-            and self._online
-        )
+        return not (self._system.version == 3 and self._system.offline) and self._online
 
     @property
     def device_info(self):
