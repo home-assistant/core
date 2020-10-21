@@ -236,7 +236,9 @@ async def async_setup(hass, config):
             title.hass = hass
             payload[ATTR_TITLE] = title.async_render()
 
-        await hass.services.async_call(pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True)
+        await hass.services.async_call(
+            pn.DOMAIN, pn.SERVICE_CREATE, payload, blocking=True
+        )
 
     async def async_setup_platform(
         integration_name, p_config=None, discovery_info=None
