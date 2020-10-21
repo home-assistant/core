@@ -211,15 +211,15 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._prefixes = None
 
-    def _are_prefixes_valid(self, prefixes):
-        """Check if given prefixes are valid."""
-        return prefixes and prefixes.strip() or prefixes is None
+    def _are_prefixes_valid(self):
+        """Check if prefixes are valid."""
+        return self._prefixes.strip() if self._prefixes else self._prefixes is None
 
-    def _get_list_of_prefixes(self, prefixes):
+    def _get_list_of_prefixes(self):
         """Get list of prefixes."""
-        if prefixes is None:
+        if self._prefixes is None:
             return None
-        return [prefix.strip() for prefix in prefixes.split(",")]
+        return [prefix.strip() for prefix in self._prefixes.split(",")]
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -227,10 +227,10 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
 
-            prefixes = user_input.get(CONF_PREFIXES)
+            self._prefixes = user_input.get(CONF_PREFIXES)
 
-            if self._are_prefixes_valid(prefixes):
-                self._prefixes = self._get_list_of_prefixes(prefixes)
+            if self._are_prefixes_valid():
+                self._prefixes = self._get_list_of_prefixes()
                 return self.async_create_entry(
                     title="", data={CONF_PREFIXES: self._prefixes}
                 )
