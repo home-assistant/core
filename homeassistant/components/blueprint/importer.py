@@ -1,4 +1,5 @@
 """Import logic for blueprint."""
+from dataclasses import dataclass
 import re
 
 import voluptuous as vol
@@ -9,8 +10,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util import yaml
 
-from . import is_blueprint_config
 from .models import Blueprint
+from .schemas import is_blueprint_config
 
 COMMUNITY_TOPIC_PATTERN = re.compile(
     r"^https://community.home-assistant.io/t/[a-z-]+/(?P<topic>\d+)(?:/(?P<post>\d+)|)$"
@@ -33,6 +34,16 @@ COMMUNITY_TOPIC_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+@dataclass
+class ImportedBlueprint:
+    """Imported blueprint."""
+
+    url: str
+    suggested_filename: str
+    raw_data: str
+    blueprint: Blueprint
 
 
 def _get_github_import_url(url: str) -> str:
@@ -77,12 +88,14 @@ def _get_community_post_import_url(url: str) -> str:
 
 
 def _extract_blueprint_from_community_topic(
+    url,
     topic,
-) -> Blueprint:
+) -> ImportedBlueprint:
     """Extract a blueprint from a community post JSON.
 
     Async friendly.
     """
+    block_content = None
     blueprint = None
     post = topic["post_stream"]["posts"][0]
 
@@ -92,8 +105,10 @@ def _extract_blueprint_from_community_topic(
         if block_syntax not in ("auto", "yaml"):
             continue
 
+        block_content = block_content.strip()
+
         try:
-            data = yaml.parse_yaml(block_content.strip())
+            data = yaml.parse_yaml(block_content)
         except HomeAssistantError:
             if block_syntax == "yaml":
                 raise
@@ -109,14 +124,12 @@ def _extract_blueprint_from_community_topic(
     if blueprint is None:
         return None
 
-    blueprint.suggested_filename = topic["slug"]
-
-    return blueprint
+    return ImportedBlueprint(url, topic["slug"], block_content, blueprint)
 
 
 async def fetch_blueprint_from_community_post(
     hass: HomeAssistant, url: str
-) -> Blueprint:
+) -> ImportedBlueprint:
     """Get blueprints from a community post url.
 
     Method can raise aiohttp client exceptions, vol.Invalid.
@@ -129,39 +142,35 @@ async def fetch_blueprint_from_community_post(
     resp = await session.get(import_url, raise_for_status=True)
     json_resp = await resp.json()
     json_resp = COMMUNITY_TOPIC_SCHEMA(json_resp)
-    return _extract_blueprint_from_community_topic(json_resp)
+    return _extract_blueprint_from_community_topic(url, json_resp)
 
 
-async def fetch_blueprint_from_github_url(hass: HomeAssistant, url: str) -> Blueprint:
+async def fetch_blueprint_from_github_url(
+    hass: HomeAssistant, url: str
+) -> ImportedBlueprint:
     """Get a blueprint from a github url."""
     import_url = _get_github_import_url(url)
     session = aiohttp_client.async_get_clientsession(hass)
 
     resp = await session.get(import_url, raise_for_status=True)
-    data = yaml.parse_yaml(await resp.text())
+    raw_yaml = await resp.text()
+    data = yaml.parse_yaml(raw_yaml)
     blueprint = Blueprint(data)
 
     parsed_import_url = yarl.URL(import_url)
-    blueprint.suggested_filename = (
-        f"{parsed_import_url.parts[1]}-{parsed_import_url.parts[-1]}"
-    )
+    suggested_filename = f"{parsed_import_url.parts[1]}-{parsed_import_url.parts[-1]}"
+    if suggested_filename.endswith(".yaml"):
+        suggested_filename = suggested_filename[:-5]
 
-    return blueprint
+    return ImportedBlueprint(url, suggested_filename, raw_yaml, blueprint)
 
 
-async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> Blueprint:
+async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
     """Get a blueprint from a url."""
     for meth in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
         try:
-            blueprint = await meth(hass, url)
-            break
+            return await meth(hass, url)
         except ValueError:
             pass
 
-    else:
-        raise HomeAssistantError("Unsupported url")
-
-    if blueprint is not None:
-        blueprint.update_metadata(source_url=url)
-
-    return blueprint
+    raise HomeAssistantError("Unsupported url")

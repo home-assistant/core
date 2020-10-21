@@ -4,12 +4,14 @@ import logging
 from pathlib import Path
 from typing import Dict, Optional
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
-from . import models
+from . import importer, models
 from .const import BLUEPRINT_FOLDER, DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
@@ -19,6 +21,7 @@ _LOGGER = logging.getLogger(__package__)
 def async_setup(hass: HomeAssistant):
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, ws_list_blueprints)
+    websocket_api.async_register_command(hass, ws_import_blueprint)
 
 
 @websocket_api.async_response
@@ -62,3 +65,35 @@ async def ws_list_blueprints(hass, connection, msg):
         results[domain] = domain_results
 
     connection.send_result(msg["id"], results)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "blueprint/import",
+        vol.Required("url"): cv.url,
+    }
+)
+async def ws_import_blueprint(hass, connection, msg):
+    """Import a blueprint."""
+    async with async_timeout.timeout(10):
+        imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
+
+    if imported_blueprint is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_SUPPORTED, "This url is not supported"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "url": imported_blueprint.url,
+            "suggested_filename": imported_blueprint.suggested_filename,
+            "raw_data": imported_blueprint.raw_data,
+            "blueprint": {
+                "name": imported_blueprint.blueprint.name,
+                "metadata": imported_blueprint.blueprint.metadata,
+            },
+        },
+    )

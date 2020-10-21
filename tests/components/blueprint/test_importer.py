@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.components.blueprint import importer, models
+from homeassistant.components.blueprint import importer
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import load_fixture
@@ -52,25 +52,30 @@ def test_get_github_import_url():
 
 def test_extract_blueprint_from_community_topic(community_post):
     """Test extracting blueprint."""
-    blueprint = importer._extract_blueprint_from_community_topic(
-        json.loads(community_post)
+    imported_blueprint = importer._extract_blueprint_from_community_topic(
+        "http://example.com", json.loads(community_post)
     )
-    assert isinstance(blueprint, models.Blueprint)
-    assert blueprint.domain == "automation"
-    assert blueprint.placeholders == {"service_to_call", "trigger_event"}
+    assert imported_blueprint is not None
+    assert imported_blueprint.url == "http://example.com"
+    assert imported_blueprint.blueprint.domain == "automation"
+    assert imported_blueprint.blueprint.placeholders == {
+        "service_to_call",
+        "trigger_event",
+    }
 
 
 def test_extract_blueprint_from_community_topic_invalid_yaml():
     """Test extracting blueprint with invalid YAML."""
     with pytest.raises(HomeAssistantError):
         importer._extract_blueprint_from_community_topic(
+            "http://example.com",
             {
                 "post_stream": {
                     "posts": [
                         {"cooked": '<code class="lang-yaml">invalid: yaml: 2</code>'}
                     ]
                 }
-            }
+            },
         )
 
 
@@ -78,13 +83,14 @@ def test__extract_blueprint_from_community_topic_wrong_lang():
     """Test extracting blueprint with invalid YAML."""
     assert (
         importer._extract_blueprint_from_community_topic(
+            "http://example.com",
             {
                 "post_stream": {
                     "posts": [
                         {"cooked": '<code class="lang-php">invalid yaml + 2</code>'}
                     ]
                 }
-            }
+            },
         )
         is None
     )
@@ -95,12 +101,15 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
     aioclient_mock.get(
         "https://community.home-assistant.io/t/test-topic/123.json", text=community_post
     )
-    blueprint = await importer.fetch_blueprint_from_url(
+    imported_blueprint = await importer.fetch_blueprint_from_url(
         hass, "https://community.home-assistant.io/t/test-topic/123/2"
     )
-    assert isinstance(blueprint, models.Blueprint)
-    assert blueprint.domain == "automation"
-    assert blueprint.placeholders == {"service_to_call", "trigger_event"}
+    assert isinstance(imported_blueprint, importer.ImportedBlueprint)
+    assert imported_blueprint.blueprint.domain == "automation"
+    assert imported_blueprint.blueprint.placeholders == {
+        "service_to_call",
+        "trigger_event",
+    }
 
 
 async def test_fetch_blueprint_from_github_url(hass, aioclient_mock):
@@ -116,7 +125,10 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock):
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
         "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
     ):
-        blueprint = await importer.fetch_blueprint_from_url(hass, url)
-        assert isinstance(blueprint, models.Blueprint), url
-        assert blueprint.domain == "automation", url
-        assert blueprint.placeholders == {"service_to_call", "trigger_event"}, url
+        imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
+        assert isinstance(imported_blueprint, importer.ImportedBlueprint), url
+        assert imported_blueprint.blueprint.domain == "automation", url
+        assert imported_blueprint.blueprint.placeholders == {
+            "service_to_call",
+            "trigger_event",
+        }, url

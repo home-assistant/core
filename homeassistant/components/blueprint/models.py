@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Union
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import CONF_DOMAIN, CONF_NAME
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
@@ -26,8 +26,6 @@ from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
 
 class Blueprint:
     """Blueprint of a configuration structure."""
-
-    suggested_filename = None
 
     def __init__(
         self,
@@ -214,7 +212,7 @@ class DomainBlueprints:
             )
 
         bp_conf = config_with_blueprint[CONF_BLUEPRINT]
-        blueprint = await self.async_get_blueprint(bp_conf[CONF_NAME])
+        blueprint = await self.async_get_blueprint(bp_conf[CONF_PATH])
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs

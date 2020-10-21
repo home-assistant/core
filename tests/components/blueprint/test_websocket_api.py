@@ -1,4 +1,6 @@
 """Test websocket API."""
+from pathlib import Path
+
 import pytest
 
 from homeassistant.components import automation
@@ -32,4 +34,43 @@ async def test_list_blueprints(hass, hass_ws_client):
                 "name": "Call service based on event",
             },
         }
+    }
+
+
+async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
+    """Test listing blueprints."""
+    raw_data = Path(
+        hass.config.path("blueprints/automation/test_event_service.yaml")
+    ).read_text()
+
+    aioclient_mock.get(
+        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
+        text=raw_data,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "blueprint/import",
+            "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        "suggested_filename": "balloob-motion_light",
+        "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "raw_data": raw_data,
+        "blueprint": {
+            "name": "Call service based on event",
+            "metadata": {
+                "domain": "automation",
+                "input": {"service_to_call": None, "trigger_event": None},
+                "name": "Call service based on event",
+            },
+        },
     }
