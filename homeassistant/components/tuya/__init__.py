@@ -280,29 +280,29 @@ async def cleanup_device_registry(hass: HomeAssistant, device_id):
 class TuyaDevice(Entity):
     """Tuya base device."""
 
-    _device_count = 0
+    _dev_can_query_count = 0
 
     def __init__(self, tuya, platform):
         """Init Tuya devices."""
         self._tuya = tuya
         self._tuya_platform = platform
 
-    def _device_can_use_query(self):
+    def _device_can_query(self):
         """Check if device can also use query method."""
         dev_type = self._tuya.device_type()
         return dev_type not in ["scene", "switch"]
 
     def _inc_device_count(self):
         """Increment static variable device count."""
-        if not self._device_can_use_query():
+        if not self._device_can_query():
             return
-        TuyaDevice._device_count += 1
+        TuyaDevice._dev_can_query_count += 1
 
     def _dec_device_count(self):
         """Decrement static variable device count."""
-        if not self._device_can_use_query():
+        if not self._device_can_query():
             return
-        TuyaDevice._device_count -= 1
+        TuyaDevice._dev_can_query_count -= 1
 
     def _get_device_config(self):
         """Get updated device options."""
@@ -371,7 +371,7 @@ class TuyaDevice(Entity):
     def update(self):
         """Refresh Tuya device data."""
         try:
-            self._tuya.update(use_discovery=(TuyaDevice._device_count > 1))
+            self._tuya.update(use_discovery=(TuyaDevice._dev_can_query_count > 1))
         except TuyaFrequentlyInvokeException as exc:
             _LOGGER.error(exc)
 
