@@ -87,13 +87,9 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.hass = hass
         self.entry = entry
         self.device = device
-        self._unsub_stop = None
 
     async def _async_update_data(self):
         """Fetch data."""
-        # Race condition on shutdown. Stop all the fetches.
-        if self._unsub_stop is None:
-            return None
 
         try:
             async with async_timeout.timeout(5):
@@ -113,9 +109,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self):
         """Set up the wrapper."""
-        self._unsub_stop = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
-        )
         dev_reg = await device_registry.async_get_registry(self.hass)
         model_type = self.device.settings["device"]["type"]
         dev_reg.async_get_or_create(
@@ -129,17 +122,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             sw_version=self.device.settings["fw"],
         )
 
-    async def shutdown(self):
-        """Shutdown the device wrapper."""
-        if self._unsub_stop:
-            self._unsub_stop()
-            self._unsub_stop = None
-
-    async def _handle_ha_stop(self, _):
-        """Handle Home Assistant stopping."""
-        self._unsub_stop = None
-        await self.shutdown()
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
@@ -152,6 +134,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        await hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id).shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
     return unload_ok
