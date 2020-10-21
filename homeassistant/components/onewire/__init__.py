@@ -1,17 +1,11 @@
 """The 1-Wire component."""
 import asyncio
 
-import voluptuous as vol
-
-from .const import DOMAIN, SUPPORTED_PLATFORMS
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
-)
+from .const import SUPPORTED_PLATFORMS
 
 
 async def async_setup(hass, config):
-    """Old way of setting up 1-Wire integrations."""
+    """Set up 1-Wire integrations."""
     return True
 
 

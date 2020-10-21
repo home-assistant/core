@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 async def setup_onewire_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
-        domain=onewire.DOMAIN,
+        domain=DOMAIN,
         source="user",
         data={
             onewire.config_flow.CONF_TYPE: CONF_TYPE_SYSBUS,
