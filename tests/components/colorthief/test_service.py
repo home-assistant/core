@@ -1,5 +1,6 @@
 """Tests for colorthief component service calls."""
 import base64
+import io
 
 import aiohttp
 import pytest
@@ -164,6 +165,19 @@ async def test_url_error(hass, aioclient_mock):
     mock_open(read_data=base64.b64decode(load_fixture("colorthief_file.txt"))),
     create=True,
 )
+def _get_file_mock(file_path):
+    """Convert file to BytesIO for testing due to PIL UnidentifiedImageError."""
+    _file = None
+
+    with open(file_path) as file_handler:
+        _file = io.BytesIO(file_handler.read())
+
+    _file.name = "colorthief.jpg"
+    _file.seek(0)
+
+    return _file
+
+
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
@@ -179,8 +193,10 @@ async def test_file(hass):
     assert state
     assert state.state == STATE_OFF
 
-    await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
-    await hass.async_block_till_done()
+    # Mock the file handler read with our 1x1 base64 encoded fixture image
+    with patch("homeassistant.components.colorthief._get_file", _get_file_mock):
+        await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
+        await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
 

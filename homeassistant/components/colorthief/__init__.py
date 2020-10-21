@@ -29,6 +29,10 @@ from homeassistant.helpers import aiohttp_client
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_file(file_path):
+    return file_path
+
+
 async def async_setup(hass, hass_config):
     """Set up services for ColorThief integration."""
 
@@ -123,13 +127,8 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
-        # TODO: Remove BytesIO buffer for an already existing file...
-        with open(file_path) as file_handler:  # File test didn't like original file
-            with io.BytesIO(file_handler.read()) as _file:
-                _file.name = "colorthief.jpg"
-                _file.seek(0)
-
-                color = await _async_get_color(_file)
+        _file = _get_file(file_path)
+        color = await _async_get_color(_file)
 
         if color:
             await _async_set_light(light_entity_id, color, brightness_pct, transition)
