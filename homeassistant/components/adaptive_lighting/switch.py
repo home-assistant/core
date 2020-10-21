@@ -19,9 +19,17 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
+    ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
@@ -130,6 +138,23 @@ SCAN_INTERVAL = timedelta(seconds=10)
 BRIGHTNESS_CHANGE = 25  # ≈10% of total range
 COLOR_TEMP_CHANGE = 20  # ≈5% of total range
 RGB_REDMEAN_CHANGE = 80  # ≈10% of total range
+
+COLOR_ATTRS = {  # Should ATTR_PROFILE be in here?
+    ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_WHITE_VALUE,  # Should this be here?
+    ATTR_XY_COLOR,
+}
+
+BRIGHTNESS_ATTRS = {
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
+}
 
 # Keep a short domain version for the context instances (which can only be 36 chars)
 _DOMAIN_SHORT = "adapt_lgt"
@@ -750,6 +775,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
                 and self.turn_on_off_listener.is_manually_controlled(
                     light,
                     force,
+                    self.adapt_brightness_switch.is_on,
+                    self.adapt_color_switch.is_on,
                 )
             ):
                 _LOGGER.debug(
@@ -1160,6 +1187,8 @@ class TurnOnOffListener:
         self,
         light: str,
         force: bool,
+        adapt_brightness: bool,
+        adapt_color: bool,
     ) -> bool:
         """Check if the light has been 'on' and is now manually controlled."""
         manual_control = self.manual_control.setdefault(light, False)
@@ -1173,18 +1202,22 @@ class TurnOnOffListener:
             and not is_our_context(turn_on_event.context)
             and not force
         ):
-            # Light was already on and 'light.turn_on' was not called by
-            # the adaptive_lighting integration.
-            manual_control = self.manual_control[light] = True
-            _fire_manual_control_event(self.hass, light, turn_on_event.context)
-            _LOGGER.debug(
-                "'%s' was already on and 'light.turn_on' was not called by the"
-                " adaptive_lighting integration (context.id='%s'), the Adaptive"
-                " Lighting will stop adapting the light until the switch or the"
-                " light turns off and then on again.",
-                light,
-                turn_on_event.context.id,
-            )
+            keys = turn_on_event.data[ATTR_SERVICE_DATA].keys()
+            if (adapt_color and COLOR_ATTRS.intersection(keys)) or (
+                adapt_brightness and BRIGHTNESS_ATTRS.intersection(keys)
+            ):
+                # Light was already on and 'light.turn_on' was not called by
+                # the adaptive_lighting integration.
+                manual_control = self.manual_control[light] = True
+                _fire_manual_control_event(self.hass, light, turn_on_event.context)
+                _LOGGER.debug(
+                    "'%s' was already on and 'light.turn_on' was not called by the"
+                    " adaptive_lighting integration (context.id='%s'), the Adaptive"
+                    " Lighting will stop adapting the light until the switch or the"
+                    " light turns off and then on again.",
+                    light,
+                    turn_on_event.context.id,
+                )
         return manual_control
 
     async def significant_change(

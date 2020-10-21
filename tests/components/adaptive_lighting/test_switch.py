@@ -412,18 +412,18 @@ async def test_turn_on_off_listener_not_tracking_untracked_lights(hass):
 
 async def test_manual_control(hass):
     """Test the 'manual control' tracking."""
-    switch, _ = await setup_lights_and_switch(hass)
+    switch, (light, *_) = await setup_lights_and_switch(hass)
     context = switch.create_context("test")  # needs to be passed to update method
 
     async def update():
         await switch._update_attrs_and_maybe_adapt_lights(transition=0, context=context)
         await hass.async_block_till_done()
 
-    async def turn_light(state):
+    async def turn_light(state, **kwargs):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON if state else SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, **kwargs},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -452,11 +452,17 @@ async def test_manual_control(hass):
         await hass.async_block_till_done()
         await update()
 
+    def increased_brightness():
+        return (light._brightness + 100) % 255
+
+    def increased_color_temp():
+        return max((light._ct + 100) % light.max_mireds, light.min_mireds)
+
     # Nothing is manually controlled
     await update()
     assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
     # Call light.turn_on for ENTITY_LIGHT
-    await turn_light(True)
+    await turn_light(True, brightness=increased_brightness())
     # Check that ENTITY_LIGHT is manually controlled
     assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
     # Test adaptive_lighting.set_manual_control
@@ -468,7 +474,7 @@ async def test_manual_control(hass):
     await change_manual_control(True)
     assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
     await turn_light(False)
-    await turn_light(True)
+    await turn_light(True, brightness=increased_brightness())
     assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
 
     # Check that toggling (sleep mode) switch resets manual control
@@ -478,6 +484,45 @@ async def test_manual_control(hass):
         await turn_switch(False, entity_id)
         await turn_switch(True, entity_id)
         assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+
+    # Check that when 'adapt_brightness' is off, changing the brightness
+    # doesn't mark it as manually controlled but changing color_temp
+    # does
+    await turn_light(False)  # reset manually controlled status
+    await turn_light(True)
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await switch.adapt_brightness_switch.async_turn_off()
+    await turn_light(True, brightness=increased_brightness())
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await turn_light(True, color_temp=(light._ct + 100) % 500)
+    assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await switch.adapt_brightness_switch.async_turn_on()  # turn on again
+
+    # Check that when 'adapt_color' is off, changing the color
+    # doesn't mark it as manually controlled but changing brightness
+    # does
+    await turn_light(False)  # reset manually controlled status
+    await turn_light(True)
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await switch.adapt_color_switch.async_turn_off()
+    await turn_light(True, color_temp=increased_color_temp())
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await turn_light(True, brightness=increased_brightness())
+    assert switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+
+    # Check that when 'adapt_color' adapt_brightness are both off
+    # nothing marks it as manually controlled
+    await turn_light(False)  # reset manually controlled status
+    await turn_light(True)
+    await switch.adapt_color_switch.async_turn_off()
+    await switch.adapt_brightness_switch.async_turn_off()
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
+    await turn_light(True, color_temp=increased_color_temp())
+    await turn_light(True, brightness=increased_brightness())
+    await turn_light(
+        True, color_temp=increased_color_temp(), brightness=increased_brightness()
+    )
+    assert not switch.turn_on_off_listener.manual_control[ENTITY_LIGHT]
 
 
 async def test_apply_service(hass):
