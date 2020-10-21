@@ -54,13 +54,6 @@ def request_stream(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    if not master_playlist:  # request for regular playlist, stream should already exist
-        try:
-            stream = hass.data[DOMAIN][ATTR_STREAMS].get(stream_source)
-            return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt][1].format(stream.access_token)
-        except Exception as err:
-            raise HomeAssistantError("Unable to get stream") from err
-
     if options is None:
         options = {}
 
@@ -88,7 +81,9 @@ def request_stream(
         if not stream.access_token:
             stream.access_token = secrets.token_hex()
             stream.start()
-        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt][0].format(stream.access_token)
+        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt][
+            0 if master_playlist else 1
+        ].format(stream.access_token)
     except Exception as err:
         raise HomeAssistantError("Unable to get stream") from err
 
