@@ -1,6 +1,5 @@
 """The FMI (Finnish Meteorological Institute) component."""
 
-import asyncio
 from datetime import date, datetime
 
 from async_timeout import timeout
@@ -78,21 +77,13 @@ async def async_setup_entry(hass, config_entry) -> bool:
 
 async def async_unload_entry(hass, config_entry):
     """Unload an FMI config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    for component in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return True
 
 
 async def update_listener(hass, config_entry):
