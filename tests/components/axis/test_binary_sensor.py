@@ -51,7 +51,8 @@ async def test_no_binary_sensors(hass):
 
 async def test_binary_sensors(hass):
     """Test that sensors are loaded properly."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     for event in EVENTS:
         device.api.event.process_event(event)

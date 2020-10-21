@@ -64,7 +64,8 @@ async def test_flow_manual_configuration(hass):
 
 async def test_manual_configuration_update_configuration(hass):
     """Test that config flow fails on already configured device."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
@@ -262,7 +263,8 @@ async def test_zeroconf_flow(hass):
 
 async def test_zeroconf_flow_already_configured(hass):
     """Test that zeroconf doesn't setup already configured devices."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.host == "1.2.3.4"
 
     result = await hass.config_entries.flow.async_init(
@@ -283,7 +285,8 @@ async def test_zeroconf_flow_already_configured(hass):
 
 async def test_zeroconf_flow_updated_configuration(hass):
     """Test that zeroconf update configuration with new parameters."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.host == "1.2.3.4"
     assert device.config_entry.data == {
         CONF_HOST: "1.2.3.4",
@@ -351,7 +354,8 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.option_stream_profile == DEFAULT_STREAM_PROFILE
 
     result = await hass.config_entries.options.async_init(device.config_entry.entry_id)

@@ -60,7 +60,8 @@ async def test_no_switches(hass):
 
 async def test_switches_with_port_cgi(hass):
     """Test that switches are loaded properly using port.cgi."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"
@@ -107,7 +108,8 @@ async def test_switches_with_port_management(hass):
     api_discovery["data"]["apiList"].append(API_DISCOVERY_PORT_MANAGEMENT)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        device = await setup_axis_integration(hass)
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     device.api.vapix.ports = {"0": AsyncMock(), "1": AsyncMock()}
     device.api.vapix.ports["0"].name = "Doorbell"

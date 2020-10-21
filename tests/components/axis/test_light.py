@@ -64,7 +64,8 @@ async def test_lights(hass):
     api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        device = await setup_axis_integration(hass)
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     # Add light
     with patch(
