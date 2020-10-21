@@ -44,6 +44,7 @@ DATA_SCHEMA_USER = vol.Schema(
 
 RESULT_INVALID_AUTH = "invalid_auth"
 RESULT_INSUFFICIENT_PERMISSIONS = "insufficient_permissions"
+RESULT_MALFORMED_PREFIXES = "malformed_prefixes"
 RESULT_NO_DEVIES_FOUND = "no_devices_found"
 RESULT_SUCCESS = "success"
 
@@ -210,20 +211,31 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._prefixes = None
 
+    def _are_prefixes_valid(self, prefixes):
+        """Check if given prefixes are valid."""
+        return prefixes and prefixes.strip() or prefixes is None
+
+    def _get_list_of_prefixes(self, prefixes):
+        """Get list of prefixes."""
+        if prefixes is None:
+            return None
+        return [prefix.strip() for prefix in prefixes.split(",")]
+
     async def async_step_init(self, user_input=None):
         """Manage the options."""
+        errors = {}
+
         if user_input is not None:
 
-            self._prefixes = user_input.get(CONF_PREFIXES)
+            prefixes = user_input.get(CONF_PREFIXES)
 
-            if self._prefixes and self._prefixes.strip():
-                self._prefixes = [
-                    prefix.strip() for prefix in self._prefixes.split(",")
-                ]
+            if self._are_prefixes_valid(prefixes):
+                self._prefixes = self._get_list_of_prefixes(prefixes)
+                return self.async_create_entry(
+                    title="", data={CONF_PREFIXES: self._prefixes}
+                )
 
-            return self.async_create_entry(
-                title="", data={CONF_PREFIXES: self._prefixes}
-            )
+            errors["base"] = RESULT_MALFORMED_PREFIXES
 
         return self.async_show_form(
             step_id="init",
@@ -231,8 +243,13 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_PREFIXES,
-                        default=self.config_entry.options.get(CONF_PREFIXES),
-                    ): str,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_PREFIXES
+                            )
+                        },
+                    ): str
                 }
             ),
+            errors=errors,
         )

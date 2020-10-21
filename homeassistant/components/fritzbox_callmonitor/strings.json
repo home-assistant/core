@@ -33,6 +33,9 @@
           "prefixes": "Prefixes (comma separated list)"
         }
       }
+    },
+    "error": {
+      "malformed_prefixes": "Prefixes are malformed, please check their format."
     }
   }
 }
