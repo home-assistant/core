@@ -28,7 +28,8 @@
                 "data": {
                     "camera_copy": "Kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264"
                 },
-                "description": "Zkontrolujte v\u0161echny kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264. Pokud kamera nepodporuje stream H.264, syst\u00e9m video p\u0159ek\u00f3duje pro HomeKit na H.264. P\u0159ek\u00f3dov\u00e1n\u00ed vy\u017eaduje v\u00fdkonn\u00fd procesor a je pravd\u011bpodobn\u00e9, \u017ee nebude fungovat na po\u010d\u00edta\u010d\u00edch s jednou z\u00e1kladn\u00ed deskou."
+                "description": "Zkontrolujte v\u0161echny kamery, kter\u00e9 podporuj\u00ed nativn\u00ed streamy H.264. Pokud kamera nepodporuje stream H.264, syst\u00e9m video p\u0159ek\u00f3duje pro HomeKit na H.264. P\u0159ek\u00f3dov\u00e1n\u00ed vy\u017eaduje v\u00fdkonn\u00fd procesor a je pravd\u011bpodobn\u00e9, \u017ee nebude fungovat na po\u010d\u00edta\u010d\u00edch s jednou z\u00e1kladn\u00ed deskou.",
+                "title": "Vyberte videokodek kamery."
             },
             "exclude": {
                 "data": {
