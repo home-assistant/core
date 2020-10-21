@@ -54,6 +54,7 @@ class SafeLineLoader(yaml.SafeLoader):
 
 def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
+    _LOGGER.warning("Load yaml: %s", fname)
     try:
         with open(fname, encoding="utf-8") as conf_file:
             # If configuration file is empty YAML returns None
