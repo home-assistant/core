@@ -1,5 +1,6 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
+from datetime import timedelta
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor
@@ -18,7 +19,7 @@ from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 
 
 async def test_template(hass):
@@ -831,6 +832,7 @@ async def test_self_referencing_sensor_with_icon_and_picture_entity_loop(hass, c
 
 async def test_self_referencing_entity_picture_loop(hass, caplog):
     """Test a self referencing sensor does not loop forever with a looping self referencing entity picture."""
+
     await async_setup_component(
         hass,
         sensor.DOMAIN,
@@ -853,10 +855,19 @@ async def test_self_referencing_entity_picture_loop(hass, caplog):
 
     assert len(hass.states.async_all()) == 1
 
+    next_time = dt_util.utcnow() + timedelta(seconds=1.2)
+    with patch(
+        "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
+    ):
+        async_fire_time_changed(hass, next_time)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    assert "Template loop detected" in caplog.text
+
     state = hass.states.get("sensor.test")
     assert int(state.state) == 1
-    assert state.attributes[ATTR_ENTITY_PICTURE] == 3
-    assert "Template loop detected" in caplog.text
+    assert state.attributes[ATTR_ENTITY_PICTURE] == 2
 
     await hass.async_block_till_done()
     assert int(state.state) == 1
