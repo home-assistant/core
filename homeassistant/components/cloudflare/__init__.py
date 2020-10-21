@@ -6,8 +6,8 @@ from typing import Dict
 from pycfdns import CloudflareUpdater
 from pycfdns.exceptions import (
     CloudflareAuthenticationException,
-    CloudflareException,
     CloudflareConnectionException,
+    CloudflareException,
 )
 import voluptuous as vol
 
