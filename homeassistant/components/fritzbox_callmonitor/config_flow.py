@@ -113,15 +113,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FritzConnectionException:
             return RESULT_INVALID_AUTH
 
-    def _is_already_configured(self, host, phonebook_id):
-        """Check if an entity with the same host and phonebook_id is already configured."""
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                config_entry.data[CONF_HOST] == host
-                and config_entry.data[CONF_PHONEBOOK] == phonebook_id
-            ):
-                return True
-
     async def _get_name_of_phonebook(self, phonebook_id):
         """Return name of phonebook for given phonebook_id."""
         phonebook_info = await self.hass.async_add_executor_job(
@@ -141,66 +132,72 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        errors = {}
 
-        if user_input is not None:
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA_USER, errors={}
+            )
 
-            self._host = user_input[CONF_HOST]
-            self._port = user_input[CONF_PORT]
-            self._password = user_input[CONF_PASSWORD]
-            self._username = user_input[CONF_USERNAME]
+        self._host = user_input[CONF_HOST]
+        self._port = user_input[CONF_PORT]
+        self._password = user_input[CONF_PASSWORD]
+        self._username = user_input[CONF_USERNAME]
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
+        result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result == RESULT_SUCCESS:
-                if CONF_PHONEBOOK in user_input:
-                    self._phonebook_id = user_input[CONF_PHONEBOOK]
-                    self._phonebook_name = user_input[CONF_NAME]
-                elif len(self._phonebook_ids) > 1:
-                    return await self.async_step_phonebook()
-                else:
-                    self._phonebook_id = DEFAULT_PHONEBOOK
-                    self._phonebook_name = await self._get_name_of_phonebook(
-                        self._phonebook_id
-                    )
+        if result == RESULT_INVALID_AUTH:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=DATA_SCHEMA_USER,
+                errors={"base": RESULT_INVALID_AUTH},
+            )
 
-                if self._is_already_configured(self._host, self._phonebook_id):
-                    return self.async_abort(reason="already_configured")
+        if result != RESULT_SUCCESS:
+            return self.async_abort(reason=result)
 
-                return self._get_config_entry()
-            if result != RESULT_INVALID_AUTH:
-                return self.async_abort(reason=result)
-            errors["base"] = result
+        if result == RESULT_SUCCESS:
+            if CONF_PHONEBOOK in user_input:
+                self._phonebook_id = user_input[CONF_PHONEBOOK]
+                self._phonebook_name = user_input[CONF_NAME]
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
-        )
+            elif len(self._phonebook_ids) > 1:
+                return await self.async_step_phonebook()
+
+            else:
+                self._phonebook_id = DEFAULT_PHONEBOOK
+                self._phonebook_name = await self._get_name_of_phonebook(
+                    self._phonebook_id
+                )
+
+            await self.async_set_unique_id(
+                f"{self._serial_number}-{self._phonebook_id}"
+            )
+            self._abort_if_unique_id_configured()
+
+            return self._get_config_entry()
 
     async def async_step_phonebook(self, user_input=None):
         """Handle a flow to chose one of multiple available phonebooks."""
-        errors = {}
         phonebooks = []
 
         for phonebook_id in self._phonebook_ids:
             phonebooks.append(await self._get_name_of_phonebook(phonebook_id))
 
-        if user_input is not None:
-            phonebook_name = user_input[CONF_PHONEBOOK]
-            phonebook_id = phonebooks.index(phonebook_name)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="phonebook",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_PHONEBOOK): vol.In(phonebooks)}
+                ),
+            )
 
-            self._phonebook_name = phonebook_name
-            self._phonebook_id = phonebook_id
+        self._phonebook_name = user_input[CONF_PHONEBOOK]
+        self._phonebook_id = phonebooks.index(self._phonebook_name)
 
-            if self._is_already_configured(self._host, self._phonebook_id):
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
+        self._abort_if_unique_id_configured()
 
-            return self._get_config_entry()
-
-        return self.async_show_form(
-            step_id="phonebook",
-            data_schema=vol.Schema({vol.Required(CONF_PHONEBOOK): vol.In(phonebooks)}),
-            errors=errors,
-        )
+        return self._get_config_entry()
 
 
 class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
@@ -223,33 +220,35 @@ class FritzBoxCallMonitorOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        errors = {}
 
-        if user_input is not None:
+        OPTION_SCHEMA_PREFIXES = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_PREFIXES,
+                    description={
+                        "suggested_value": self.config_entry.options.get(CONF_PREFIXES)
+                    },
+                ): str
+            }
+        )
 
-            self._prefixes = user_input.get(CONF_PREFIXES)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="init",
+                data_schema=OPTION_SCHEMA_PREFIXES,
+                errors={},
+            )
 
-            if self._are_prefixes_valid():
-                self._prefixes = self._get_list_of_prefixes()
-                return self.async_create_entry(
-                    title="", data={CONF_PREFIXES: self._prefixes}
-                )
+        self._prefixes = user_input.get(CONF_PREFIXES)
 
-            errors["base"] = RESULT_MALFORMED_PREFIXES
+        if self._are_prefixes_valid():
+            self._prefixes = self._get_list_of_prefixes()
+            return self.async_create_entry(
+                title="", data={CONF_PREFIXES: self._prefixes}
+            )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_PREFIXES,
-                        description={
-                            "suggested_value": self.config_entry.options.get(
-                                CONF_PREFIXES
-                            )
-                        },
-                    ): str
-                }
-            ),
-            errors=errors,
+            data_schema=OPTION_SCHEMA_PREFIXES,
+            errors={"base": RESULT_MALFORMED_PREFIXES},
         )
