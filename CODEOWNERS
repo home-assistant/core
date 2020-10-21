@@ -278,7 +278,7 @@ homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
-homeassistant/components/nest/* @awarecan
+homeassistant/components/nest/* @awarecan @allenporter
 homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nexia/* @ryannazaretian @bdraco

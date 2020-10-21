@@ -137,7 +137,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.4
+aioshelly==0.4.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -155,7 +155,7 @@ airly==1.0.0
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.51
+androidtv[async]==0.0.52
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -344,6 +344,9 @@ google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
+
+# homeassistant.components.nest
+google-nest-sdm==0.1.6
 
 # homeassistant.components.gree
 greeclimate==0.9.0
@@ -944,7 +947,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.18.0
+sentry-sdk==0.19.1
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
