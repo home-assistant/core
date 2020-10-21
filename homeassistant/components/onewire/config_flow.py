@@ -19,6 +19,21 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
 )
 
+DATA_SCHEMA_USER = vol.Schema(
+    {vol.Required(CONF_TYPE): vol.In([CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS])}
+)
+DATA_SCHEMA_OWSERVER = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_OWSERVER_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_OWSERVER_PORT): int,
+    }
+)
+DATA_SCHEMA_MOUNTDIR = vol.Schema(
+    {
+        vol.Required(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): str,
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -45,11 +60,9 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_TYPE_SYSBUS == user_input[CONF_TYPE]:
                 return await self.async_step_mount_dir()
 
-        proxy_types = [CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS]
-
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_TYPE): vol.In(proxy_types)}),
+            data_schema=DATA_SCHEMA_USER,
             errors=errors,
         )
 
@@ -58,8 +71,8 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             self.onewire_config.update(user_input)
-            owhost = user_input.get(CONF_HOST)
-            owport = user_input.get(CONF_PORT)
+            owhost = user_input[CONF_HOST]
+            owport = user_input[CONF_PORT]
             try:
                 await self.hass.async_add_executor_job(protocol.proxy, owhost, owport)
                 await self.async_set_unique_id(
@@ -75,12 +88,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="owserver",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=DEFAULT_OWSERVER_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_OWSERVER_PORT): int,
-                }
-            ),
+            data_schema=DATA_SCHEMA_OWSERVER,
             errors=errors,
         )
 
@@ -89,7 +97,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             self.onewire_config.update(user_input)
-            mount_dir = user_input.get(CONF_MOUNT_DIR)
+            mount_dir = user_input[CONF_MOUNT_DIR]
             if os.path.isdir(mount_dir):
                 await self.async_set_unique_id(f"{CONF_TYPE_SYSBUS}:{mount_dir}")
                 self._abort_if_unique_id_configured()
@@ -101,11 +109,7 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="mount_dir",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): str,
-                }
-            ),
+            data_schema=DATA_SCHEMA_MOUNTDIR,
             errors=errors,
         )
 
@@ -114,10 +118,14 @@ class OneWireFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.info("Importing old config entry %s", platform_config)
         # OWServer
         if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:
+            if CONF_PORT not in platform_config:
+                platform_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
             return await self.async_step_owserver(platform_config)
 
         # SysBus
         if platform_config[CONF_TYPE] == CONF_TYPE_SYSBUS:
+            if CONF_MOUNT_DIR not in platform_config:
+                platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
             return await self.async_step_mount_dir(platform_config)
 
         # OWFS
