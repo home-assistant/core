@@ -72,7 +72,7 @@ async def test_discover_notify(hass, mock_demo_notify):
     """Test discovery of notify demo platform."""
     assert notify.DOMAIN not in hass.config.components
     mock_demo_notify.return_value = None
-    discovery.load_platform(
+    await discovery.async_load_platform(
         hass, "notify", "demo", {"test_key": "test_val"}, {"notify": {}}
     )
     await hass.async_block_till_done()
