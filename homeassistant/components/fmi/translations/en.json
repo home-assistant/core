@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name",
+                    "offset": "Forecast Offset"
+                },
+                "description": "Latitude and longitude will be used for weather coordinates",
+                "title": "Connect to the Finnish Meteorological Institute"
+            }
+        }
+    }
+}
