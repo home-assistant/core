@@ -18,13 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 
-from .const import (
-    COAP_CONTEXT,
-    DATA_CONFIG_ENTRY,
-    DATA_GENERAL,
-    DOMAIN,
-    UNDO_SHUTDOWN_LISTENER,
-)
+from .const import COAP_CONTEXT, DATA_CONFIG_ENTRY, DOMAIN
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {DATA_GENERAL: {}, DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][COAP_CONTEXT] = await aiocoap.Context.create_client_context()
+
+    async def shutdown_listener(*_):
+        """Home Assistant shutdown listener."""
+        await hass.data[DOMAIN][COAP_CONTEXT].shutdown()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
+
     return True
 
 
@@ -46,21 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         temperature_unit,
     )
 
-    if COAP_CONTEXT not in hass.data[DOMAIN][DATA_GENERAL]:
-        coap_context = hass.data[DOMAIN][DATA_GENERAL][
-            COAP_CONTEXT
-        ] = await aiocoap.Context.create_client_context()
-    else:
-        coap_context = hass.data[DOMAIN][DATA_GENERAL][COAP_CONTEXT]
-
-    async def shutdown_listener(*_):
-        """Home Assistant shutdown listener."""
-        await coap_context.shutdown()
-
-    if UNDO_SHUTDOWN_LISTENER not in hass.data[DOMAIN][DATA_GENERAL]:
-        hass.data[DOMAIN][DATA_GENERAL][UNDO_SHUTDOWN_LISTENER] = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, shutdown_listener
-        )
+    coap_context = hass.data[DOMAIN][COAP_CONTEXT]
 
     try:
         async with async_timeout.timeout(10):
@@ -165,8 +153,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         await hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id).shutdown()
-        if not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-            await hass.data[DOMAIN][DATA_GENERAL].pop(COAP_CONTEXT).shutdown()
-            hass.data[DOMAIN][DATA_GENERAL][UNDO_SHUTDOWN_LISTENER]()
 
     return unload_ok
