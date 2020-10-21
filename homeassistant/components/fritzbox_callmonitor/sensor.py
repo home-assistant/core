@@ -14,7 +14,7 @@ from time import sleep
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
@@ -124,7 +124,7 @@ class FritzBoxCallSensor(Entity):
         """Initialize the sensor."""
         self._state = STATE_IDLE
         self._attributes = {}
-        self._name = name
+        self.entity_id = f"{SENSOR_DOMAIN}.{name}"
         self._unique_id = unique_id
         self._phonebook = phonebook
         self._prefixes = prefixes
@@ -134,7 +134,7 @@ class FritzBoxCallSensor(Entity):
 
     async def async_added_to_hass(self):
         """Connect to FRITZ!Box to monitor its call state."""
-        _LOGGER.debug("Starting monitor for: %s", self._name)
+        _LOGGER.debug("Starting monitor for: %s", self.entity_id)
         self._monitor = FritzBoxCallMonitor(
             host=self._host,
             port=self._port,
@@ -149,7 +149,7 @@ class FritzBoxCallSensor(Entity):
             and self._monitor.stopped
             and not self._monitor.stopped.is_set()
         ):
-            _LOGGER.debug("Stopping monitor for: %s", self._name)
+            _LOGGER.debug("Stopping monitor for: %s", self.entity_id)
             self._monitor.stopped.set()
 
     def set_state(self, state):
@@ -169,11 +169,6 @@ class FritzBoxCallSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def icon(self):
