@@ -99,7 +99,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def _async_migrator(entity_entry: entity_registry.RegistryEntry):
         # Reject if new unique_id
-        if any([mode in entity_entry.unique_id for mode in FORECAST_MODE]):
+        if entity_entry.unique_id.count(',') == 2:
             return None
 
         new_unique_id = (
