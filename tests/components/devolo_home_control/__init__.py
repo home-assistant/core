@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
+def configure_integration(hass: HomeAssistant):
     """Configure the integration."""
     config = {
         "username": "test-username",
