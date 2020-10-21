@@ -288,7 +288,7 @@ class TuyaDevice(Entity):
         self._tuya_platform = platform
 
     def _device_can_use_query(self):
-        """Check if device can also use query method"""
+        """Check if device can also use query method."""
         dev_type = self._tuya.device_type()
         return dev_type not in ["scene", "switch"]
 
