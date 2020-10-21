@@ -128,7 +128,7 @@ def hb_info_from_type(dev_type="std"):
         return HOBBYBOARD_EF
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up 1-Wire platform."""
     if config.get(CONF_HOST):
         config[CONF_TYPE] = CONF_TYPE_OWSERVER
@@ -137,9 +137,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:  # pragma: no cover
         # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        _LOGGER.warning(
-            "OWFS implementation does not conform to policy regarding 3rd-party libraries, and will no longer be updated. Please migrate to OWServer implementation."
-        )
         config[CONF_TYPE] = CONF_TYPE_OWFS
 
     hass.async_create_task(
