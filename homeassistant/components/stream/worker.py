@@ -160,10 +160,6 @@ def _stream_worker_internal(hass, stream, quit_event):
                 audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
-            if not stream.keepalive:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
