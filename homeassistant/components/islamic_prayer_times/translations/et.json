@@ -3,6 +3,11 @@
         "abort": {
             "one_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "user": {
+                "description": "Kas soovitd seadistada Islam Prayer Times?"
+            }
         }
     }
 }

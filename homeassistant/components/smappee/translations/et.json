@@ -5,6 +5,7 @@
             "already_configured_local_device": "Kohalikud seadmed on juba seadistatud. Enne pilveseadme seadistamist eemaldage need.",
             "cannot_connect": "\u00dchendamine nurjus",
             "connection_error": "Smappee seadmega \u00fchenduse loomine nurjus.",
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})"
         },
         "step": {
@@ -13,6 +14,9 @@
                     "host": ""
                 },
                 "description": "Smappee kohaliku sidumise algatamiseks sisestage hostinimi"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas soovid lisada Home Assistanti Smappee seadme seerianumbriga \" {serial_number} \"?"
             }
         }
     }

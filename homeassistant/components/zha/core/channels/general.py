@@ -1,6 +1,5 @@
 """General channels module for Zigbee Home Automation."""
 import asyncio
-import logging
 from typing import Any, List, Optional
 
 import zigpy.exceptions
@@ -22,8 +21,6 @@ from ..const import (
     SIGNAL_UPDATE_DEVICE,
 )
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
@@ -89,11 +86,12 @@ class BasicChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        power_source = await self.get_attribute_value(
-            "power_source", from_cache=from_cache
-        )
-        if power_source is not None:
-            self._power_source = power_source
+        if not self._ch_pool.skip_configuration or from_cache:
+            power_source = await self.get_attribute_value(
+                "power_source", from_cache=from_cache
+            )
+            if power_source is not None:
+                self._power_source = power_source
         await super().async_initialize(from_cache)
 
     def get_power_source(self):

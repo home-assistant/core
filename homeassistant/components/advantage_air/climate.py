@@ -1,5 +1,4 @@
 """Climate platform for Advantage Air integration."""
-import logging
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -7,7 +6,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -17,15 +15,15 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
-    DOMAIN,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
+from .entity import AdvantageAirEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVAC_MODE_HEAT,
@@ -53,36 +51,26 @@ AC_HVAC_MODES = [
 ]
 ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AdvantageAir climate platform."""
 
-    instance = hass.data[DOMAIN][config_entry.entry_id]
+    instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
-    for ac_key in instance["coordinator"].data["aircons"]:
+    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
         entities.append(AdvantageAirAC(instance, ac_key))
-        for zone_key in instance["coordinator"].data["aircons"][ac_key]["zones"]:
+        for zone_key, zone in ac_device["zones"].items():
             # Only add zone climate control when zone is in temperature control
-            if (
-                instance["coordinator"].data["aircons"][ac_key]["zones"][zone_key][
-                    "type"
-                ]
-                != 0
-            ):
+            if zone["type"] != 0:
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
-class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
+class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
     """AdvantageAir Climate class."""
-
-    def __init__(self, instance):
-        """Initialize the base Advantage Air climate entity."""
-        super().__init__(instance["coordinator"])
-        self.async_change = instance["async_change"]
 
     @property
     def temperature_unit(self):
@@ -104,30 +92,14 @@ class AdvantageAirClimateEntity(CoordinatorEntity, ClimateEntity):
         """Return the minimum supported temperature."""
         return 16
 
-    @property
-    def device_info(self):
-        """Return parent device information."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
-
 
 class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
-    def __init__(self, instance, ac_key):
-        """Initialize the Advantage Air AC climate entity."""
-        super().__init__(instance)
-        self.ac_key = ac_key
-
     @property
     def name(self):
         """Return the name."""
-        return self.coordinator.data["aircons"][self.ac_key]["info"]["name"]
+        return self._ac["name"]
 
     @property
     def unique_id(self):
@@ -137,18 +109,13 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def target_temperature(self):
         """Return the current target temperature."""
-        return self.coordinator.data["aircons"][self.ac_key]["info"]["setTemp"]
+        return self._ac["setTemp"]
 
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if (
-            self.coordinator.data["aircons"][self.ac_key]["info"]["state"]
-            == ADVANTAGE_AIR_STATE_ON
-        ):
-            return ADVANTAGE_AIR_HVAC_MODES.get(
-                self.coordinator.data["aircons"][self.ac_key]["info"]["mode"]
-            )
+        if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
+            return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
         return HVAC_MODE_OFF
 
     @property
@@ -159,9 +126,7 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     @property
     def fan_mode(self):
         """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(
-            self.coordinator.data["aircons"][self.ac_key]["info"]["fan"], FAN_OFF
-        )
+        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
     @property
     def fan_modes(self):
@@ -172,11 +137,6 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-    @property
-    def device_state_attributes(self):
-        """Return additional attributes about AC unit."""
-        return self.coordinator.data["aircons"][self.ac_key]["info"]
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
@@ -211,18 +171,10 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
-    def __init__(self, instance, ac_key, zone_key):
-        """Initialize the Advantage Air Zone climate entity."""
-        super().__init__(instance)
-        self.ac_key = ac_key
-        self.zone_key = zone_key
-
     @property
     def name(self):
         """Return the name."""
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-            "name"
-        ]
+        return self._zone["name"]
 
     @property
     def unique_id(self):
@@ -232,26 +184,17 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-            "measuredTemp"
-        ]
+        return self._zone["measuredTemp"]
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-            "setTemp"
-        ]
+        return self._zone["setTemp"]
 
     @property
     def hvac_mode(self):
         """Return the current HVAC modes."""
-        if (
-            self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key][
-                "state"
-            ]
-            == ADVANTAGE_AIR_STATE_OPEN
-        ):
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return HVAC_MODE_FAN_ONLY
         return HVAC_MODE_OFF
 
@@ -259,11 +202,6 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     def hvac_modes(self):
         """Return supported HVAC modes."""
         return ZONE_HVAC_MODES
-
-    @property
-    def device_state_attributes(self):
-        """Return additional attributes about Zone."""
-        return self.coordinator.data["aircons"][self.ac_key]["zones"][self.zone_key]
 
     @property
     def supported_features(self):

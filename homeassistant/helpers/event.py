@@ -1,5 +1,6 @@
 """Helpers for listening to events."""
 import asyncio
+import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
@@ -236,6 +237,9 @@ def async_track_state_change_event(
     care about the state change events so we can
     do a fast dict lookup to route events.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
 
@@ -263,8 +267,6 @@ def async_track_state_change_event(
 
     job = HassJob(action)
 
-    entity_ids = _async_string_to_lower_list(entity_ids)
-
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
 
@@ -280,6 +282,11 @@ def async_track_state_change_event(
         )
 
     return remove_listener
+
+
+@callback
+def _remove_empty_listener() -> None:
+    """Remove a listener that does nothing."""
 
 
 @callback
@@ -314,6 +321,9 @@ def async_track_entity_registry_updated_event(
 
     Similar to async_track_state_change_event.
     """
+    entity_ids = _async_string_to_lower_list(entity_ids)
+    if not entity_ids:
+        return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
 
@@ -341,8 +351,6 @@ def async_track_entity_registry_updated_event(
         )
 
     job = HassJob(action)
-
-    entity_ids = _async_string_to_lower_list(entity_ids)
 
     for entity_id in entity_ids:
         entity_callbacks.setdefault(entity_id, []).append(job)
@@ -388,6 +396,9 @@ def async_track_state_added_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is added to domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
 
@@ -406,8 +417,6 @@ def async_track_state_added_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
@@ -433,6 +442,9 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is removed from domains."""
+    domains = _async_string_to_lower_list(domains)
+    if not domains:
+        return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
 
@@ -451,8 +463,6 @@ def async_track_state_removed_domain(
         )
 
     job = HassJob(action)
-
-    domains = _async_string_to_lower_list(domains)
 
     for domain in domains:
         domain_callbacks.setdefault(domain, []).append(job)
@@ -743,26 +753,28 @@ class _TrackTemplateResultInfo:
         self._rate_limit = KeyedRateLimit(hass)
         self._info: Dict[Template, RenderInfo] = {}
         self._track_state_changes: Optional[_TrackStateChangeFiltered] = None
+        self._time_listeners: Dict[Template, Callable] = {}
 
     def async_setup(self, raise_on_template_error: bool) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
+            self._info[template] = info = template.async_render_to_info(variables)
 
-            self._info[template] = template.async_render_to_info(variables)
-            if self._info[template].exception:
+            if info.exception:
                 if raise_on_template_error:
-                    raise self._info[template].exception
+                    raise info.exception
                 _LOGGER.error(
                     "Error while processing template: %s",
                     track_template_.template,
-                    exc_info=self._info[template].exception,
+                    exc_info=info.exception,
                 )
 
         self._track_state_changes = async_track_state_change_filtered(
             self.hass, _render_infos_to_track_states(self._info.values()), self._refresh
         )
+        self._update_time_listeners()
         _LOGGER.debug(
             "Template group %s listens for %s",
             self._track_templates,
@@ -773,7 +785,38 @@ class _TrackTemplateResultInfo:
     def listeners(self) -> Dict:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
-        return self._track_state_changes.listeners
+        return {
+            **self._track_state_changes.listeners,
+            "time": bool(self._time_listeners),
+        }
+
+    @callback
+    def _setup_time_listener(self, template: Template, has_time: bool) -> None:
+        if template in self._time_listeners:
+            self._time_listeners.pop(template)()
+
+        # now() or utcnow() has left the scope of the template
+        if not has_time:
+            return
+
+        track_templates = [
+            track_template_
+            for track_template_ in self._track_templates
+            if track_template_.template == template
+        ]
+
+        @callback
+        def _refresh_from_time(now: datetime) -> None:
+            self._refresh(None, track_templates=track_templates)
+
+        self._time_listeners[template] = async_call_later(
+            self.hass, 60.45, _refresh_from_time
+        )
+
+    @callback
+    def _update_time_listeners(self) -> None:
+        for template, info in self._info.items():
+            self._setup_time_listener(template, info.has_time)
 
     @callback
     def async_remove(self) -> None:
@@ -781,6 +824,8 @@ class _TrackTemplateResultInfo:
         assert self._track_state_changes
         self._track_state_changes.async_remove()
         self._rate_limit.async_remove()
+        for template in list(self._time_listeners):
+            self._time_listeners.pop(template)()
 
     @callback
     def async_refresh(self) -> None:
@@ -808,10 +853,10 @@ class _TrackTemplateResultInfo:
         if event:
             info = self._info[template]
 
-            if not self._rate_limit.async_has_timer(
-                template
-            ) and not _event_triggers_rerender(event, info):
+            if not _event_triggers_rerender(event, info):
                 return False
+
+            had_timer = self._rate_limit.async_has_timer(template)
 
             if self._rate_limit.async_schedule_action(
                 template,
@@ -819,8 +864,10 @@ class _TrackTemplateResultInfo:
                 now,
                 self._refresh,
                 event,
+                (track_template_,),
+                True,
             ):
-                return False
+                return not had_timer
 
             _LOGGER.debug(
                 "Template update %s triggered by event: %s",
@@ -829,10 +876,12 @@ class _TrackTemplateResultInfo:
             )
 
         self._rate_limit.async_triggered(template, now)
-        self._info[template] = template.async_render_to_info(track_template_.variables)
+        self._info[template] = info = template.async_render_to_info(
+            track_template_.variables
+        )
 
         try:
-            result: Union[str, TemplateError] = self._info[template].result()
+            result: Union[str, TemplateError] = info.result()
         except TemplateError as ex:
             result = ex
 
@@ -848,24 +897,52 @@ class _TrackTemplateResultInfo:
         return TrackTemplateResult(template, last_result, result)
 
     @callback
-    def _refresh(self, event: Optional[Event]) -> None:
+    def _refresh(
+        self,
+        event: Optional[Event],
+        track_templates: Optional[Iterable[TrackTemplate]] = None,
+        replayed: Optional[bool] = False,
+    ) -> None:
+        """Refresh the template.
+
+        The event is the state_changed event that caused the refresh
+        to be considered.
+
+        track_templates is an optional list of TrackTemplate objects
+        to refresh.  If not provided, all tracked templates will be
+        considered.
+
+        replayed is True if the event is being replayed because the
+        rate limit was hit.
+        """
         updates = []
         info_changed = False
-        now = dt_util.utcnow()
+        now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        for track_template_ in self._track_templates:
+        for track_template_ in track_templates or self._track_templates:
             update = self._render_template_if_ready(track_template_, now, event)
             if not update:
                 continue
 
+            template = track_template_.template
+            self._setup_time_listener(template, self._info[template].has_time)
+
             info_changed = True
+
             if isinstance(update, TrackTemplateResult):
                 updates.append(update)
 
         if info_changed:
             assert self._track_state_changes
             self._track_state_changes.async_update_listeners(
-                _render_infos_to_track_states(self._info.values()),
+                _render_infos_to_track_states(
+                    [
+                        _suppress_domain_all_in_render_info(self._info[template])
+                        if self._rate_limit.async_has_timer(template)
+                        else self._info[template]
+                        for template in self._info
+                    ]
+                )
             )
             _LOGGER.debug(
                 "Template group %s listens for %s",
@@ -1430,3 +1507,13 @@ def _rate_limit_for_event(
 
     rate_limit: Optional[timedelta] = info.rate_limit
     return rate_limit
+
+
+def _suppress_domain_all_in_render_info(render_info: RenderInfo) -> RenderInfo:
+    """Remove the domains and all_states from render info during a ratelimit."""
+    rate_limited_render_info = copy.copy(render_info)
+    rate_limited_render_info.all_states = False
+    rate_limited_render_info.all_states_lifecycle = False
+    rate_limited_render_info.domains = set()
+    rate_limited_render_info.domains_lifecycle = set()
+    return rate_limited_render_info

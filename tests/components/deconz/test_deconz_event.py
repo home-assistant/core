@@ -1,4 +1,5 @@
 """Test deCONZ remote events."""
+
 from copy import deepcopy
 
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT

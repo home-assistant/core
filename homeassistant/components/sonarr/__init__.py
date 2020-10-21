@@ -6,7 +6,6 @@ from typing import Any, Dict
 
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
@@ -122,13 +121,6 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     _LOGGER.error("API Key is no longer valid. Please reauthenticate")
-
-    persistent_notification.async_create(
-        hass,
-        f"Sonarr integration for the Sonarr API hosted at {entry.entry_data[CONF_HOST]} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
-        "Sonarr re-authentication",
-        "sonarr_reauth",
-    )
 
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:

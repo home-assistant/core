@@ -8,11 +8,17 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "Verbindungstyp",
                     "host": "Smile IP-Adresse",
                     "password": "Smile ID"
                 },
                 "description": "Details",
                 "title": "Stellen Sie eine Verbindung zu Smile her"
+            },
+            "user_gateway": {
+                "data": {
+                    "port": "Port"
+                }
             }
         }
     }

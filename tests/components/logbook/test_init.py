@@ -3,7 +3,6 @@
 import collections
 from datetime import datetime, timedelta
 import json
-import logging
 import unittest
 
 import pytest
@@ -41,8 +40,6 @@ import homeassistant.util.dt as dt_util
 from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant, init_recorder_component, mock_platform
 from tests.components.recorder.common import trigger_db_commit
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TestComponentLogbook(unittest.TestCase):

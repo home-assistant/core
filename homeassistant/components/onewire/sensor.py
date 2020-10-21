@@ -14,6 +14,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_MBAR,
     TEMP_CELSIUS,
     VOLT,
 )
@@ -28,6 +29,7 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    PRESSURE_CBAR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,16 +88,16 @@ SENSOR_TYPES = {
     "humidity_hih5030": ["humidity", PERCENTAGE],
     "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
-    "pressure": ["pressure", "mb"],
+    "pressure": ["pressure", PRESSURE_MBAR],
     "illuminance": ["illuminance", LIGHT_LUX],
     "wetness_0": ["wetness", PERCENTAGE],
     "wetness_1": ["wetness", PERCENTAGE],
     "wetness_2": ["wetness", PERCENTAGE],
     "wetness_3": ["wetness", PERCENTAGE],
-    "moisture_0": ["moisture", "cb"],
-    "moisture_1": ["moisture", "cb"],
-    "moisture_2": ["moisture", "cb"],
-    "moisture_3": ["moisture", "cb"],
+    "moisture_0": ["moisture", PRESSURE_CBAR],
+    "moisture_1": ["moisture", PRESSURE_CBAR],
+    "moisture_2": ["moisture", PRESSURE_CBAR],
+    "moisture_3": ["moisture", PRESSURE_CBAR],
     "counter_a": ["counter", "count"],
     "counter_b": ["counter", "count"],
     "HobbyBoard": ["none", "none"],
@@ -231,6 +233,13 @@ def get_entities(config):
         # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
+        _LOGGER.warning(
+            "The OWFS implementation of 1-Wire sensors is deprecated, "
+            "and should be migrated to OWServer (on localhost:4304). "
+            "If migration to OWServer is not feasible on your installation, "
+            "please raise an issue at https://github.com/home-assistant/core/issues/new"
+            "?title=Unable%20to%20migrate%20onewire%20from%20OWFS%20to%20OWServer",
+        )
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
                 family = family_file.read()

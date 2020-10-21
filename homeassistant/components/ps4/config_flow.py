@@ -1,6 +1,5 @@
 """Config Flow for PlayStation 4."""
 from collections import OrderedDict
-import logging
 
 from pyps4_2ndscreen.errors import CredentialTimeout
 from pyps4_2ndscreen.helpers import Helper
@@ -19,8 +18,6 @@ from homeassistant.const import (
 from homeassistant.util import location
 
 from .const import CONFIG_ENTRY_VERSION, DEFAULT_ALIAS, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_MODE = "Config Mode"
 CONF_AUTO = "Auto Discover"

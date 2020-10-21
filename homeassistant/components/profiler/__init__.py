@@ -1,7 +1,6 @@
 """The profiler integration."""
 import asyncio
 import cProfile
-import logging
 import time
 
 from pyprof2calltree import convert
@@ -16,8 +15,6 @@ from .const import DOMAIN
 
 SERVICE_START = "start"
 CONF_SECONDS = "seconds"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -1,5 +1,4 @@
 """Support for Tasmota sensors."""
-import logging
 from typing import Optional
 
 from hatasmota.const import (
@@ -34,6 +33,7 @@ from hatasmota.const import (
     SENSOR_PRESSUREATSEALEVEL,
     SENSOR_PROXIMITY,
     SENSOR_REACTIVE_POWERUSAGE,
+    SENSOR_STATUS_SIGNAL,
     SENSOR_TEMPERATURE,
     SENSOR_TODAY,
     SENSOR_TOTAL,
@@ -51,16 +51,16 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS = "device_class"
 ICON = "icon"
@@ -98,6 +98,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     SENSOR_PRESSUREATSEALEVEL: {DEVICE_CLASS: DEVICE_CLASS_PRESSURE},
     SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     SENSOR_REACTIVE_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
+    SENSOR_STATUS_SIGNAL: {DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH},
     SENSOR_TEMPERATURE: {DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE},
     SENSOR_TODAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     SENSOR_TOTAL: {DEVICE_CLASS: DEVICE_CLASS_POWER},
@@ -134,12 +135,18 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
 
     def __init__(self, **kwds):
         """Initialize the Tasmota sensor."""
-        self._state = False
+        self._state = None
 
         super().__init__(
             discovery_update=self.discovery_update,
             **kwds,
         )
+
+    @callback
+    def state_updated(self, state, **kwargs):
+        """Handle state updates."""
+        self._state = state
+        self.async_write_ha_state()
 
     @property
     def device_class(self) -> Optional[str]:
@@ -148,6 +155,14 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
             self._tasmota_entity.quantity, {}
         )
         return class_or_icon.get(DEVICE_CLASS)
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # Hide status sensors to not overwhelm users
+        if self._tasmota_entity.quantity == SENSOR_STATUS_SIGNAL:
+            return False
+        return True
 
     @property
     def icon(self):

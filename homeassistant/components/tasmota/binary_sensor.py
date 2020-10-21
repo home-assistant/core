@@ -1,5 +1,4 @@
 """Support for Tasmota binary sensors."""
-import logging
 
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -10,8 +9,6 @@ import homeassistant.helpers.event as evt
 from .const import DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

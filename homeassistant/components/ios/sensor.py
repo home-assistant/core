@@ -114,7 +114,7 @@ class IOSSensor(Entity):
             return icon_state
         return icon_for_battery_level(battery_level=battery_level, charging=charging)
 
-    def update(self):
+    async def async_update(self):
         """Get the latest state of the sensor."""
         self._device = ios.devices(self.hass).get(self._device_name)
         self._state = self._device[ios.ATTR_BATTERY][self.type]

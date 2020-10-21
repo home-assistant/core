@@ -17,18 +17,18 @@
         },
         "trigger_type": {
             "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
-            "current": "nat\u0119\u017cenie zmieni si\u0119 w {entity_name}",
-            "energy": "moc zmieni si\u0119 w {entity_name}",
+            "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
+            "energy": "zmieni si\u0119 moc pr\u0105du w {entity_name}",
             "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",
             "illuminance": "zmieni si\u0119 nat\u0119\u017cenie o\u015bwietlenia {entity_name}",
             "power": "zmieni si\u0119 moc {entity_name}",
-            "power_factor": "wsp\u00f3\u0142czynnik mocy zmieni si\u0119 w {entity_name}",
+            "power_factor": "zmieni si\u0119 wsp\u00f3\u0142czynnik mocy w {entity_name}",
             "pressure": "zmieni si\u0119 ci\u015bnienie {entity_name}",
             "signal_strength": "zmieni si\u0119 si\u0142a sygna\u0142u {entity_name}",
             "temperature": "zmieni si\u0119 temperatura {entity_name}",
             "timestamp": "zmieni si\u0119 znacznik czasu {entity_name}",
             "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}",
-            "voltage": "napi\u0119cie zmieni si\u0119 w {entity_name}"
+            "voltage": "zmieni si\u0119 napi\u0119cie w {entity_name}"
         }
     },
     "state": {

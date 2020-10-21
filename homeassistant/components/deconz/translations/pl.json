@@ -67,6 +67,7 @@
             "remote_button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
             "remote_button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
             "remote_button_rotated": "przycisk zostanie obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotated_fast": "przycisk zostanie szybko obr\u00f3cony \"{subtype}\"",
             "remote_button_rotation_stopped": "nast\u0105pi zatrzymanie obrotu przycisku \"{subtype}\"",
             "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",

@@ -1,7 +1,5 @@
 """Support for RESTful binary sensors."""
-import logging
-
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -29,18 +27,15 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import DOMAIN, PLATFORMS
-from .sensor import RestData
-
-_LOGGER = logging.getLogger(__name__)
+from .data import DEFAULT_TIMEOUT, RestData
 
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
-DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -68,10 +63,10 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -96,18 +91,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = httpx.DigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = (username, password)
     else:
         auth = None
 
     rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
-    rest.update()
+    await rest.async_update()
     if rest.data is None:
         raise PlatformNotReady
 
-    add_entities(
+    async_add_entities(
         [
             RestBinarySensor(
                 hass,
@@ -118,7 +113,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 force_update,
                 resource_template,
             )
-        ]
+        ],
+        True,
     )
 
 
@@ -186,9 +182,13 @@ class RestBinarySensor(BinarySensorEntity):
         """Force update."""
         return self._force_update
 
-    def update(self):
+    async def async_will_remove_from_hass(self):
+        """Shutdown the session."""
+        await self.rest.async_remove()
+
+    async def async_update(self):
         """Get the latest data from REST API and updates the state."""
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.render())
 
-        self.rest.update()
+        await self.rest.async_update()

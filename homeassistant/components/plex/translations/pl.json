@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane.",
+            "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
-            "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",
+            "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "faulty_credentials": "Autoryzacja nie powiod\u0142a si\u0119, sprawd\u017a token",
-            "host_or_token": "Nale\u017cy wprowadzi\u0107 przynajmniej jeden host lub token.",
+            "host_or_token": "Nale\u017cy wprowadzi\u0107 przynajmniej jeden host lub token",
             "no_servers": "Brak serwer\u00f3w po\u0142\u0105czonych z kontem Plex",
             "not_found": "Nie znaleziono serwera Plex",
-            "ssl_error": "Problem z certyfikatem SSL."
+            "ssl_error": "Problem z certyfikatem SSL"
         },
         "flow_title": "{name} ({host})",
         "step": {

@@ -1,14 +1,10 @@
 """Allows to configure a switch using RPi GPIO."""
-import logging
-
 from pi4ioe5v9xxxx import pi4ioe5v9xxxx  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = "pins"
 CONF_INVERT_LOGIC = "invert_logic"

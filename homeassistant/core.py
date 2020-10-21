@@ -153,10 +153,9 @@ def is_callback(func: Callable[..., Any]) -> bool:
 class HassJobType(enum.Enum):
     """Represent a job type."""
 
-    Coroutine = 1
-    Coroutinefunction = 2
-    Callback = 3
-    Executor = 4
+    Coroutinefunction = 1
+    Callback = 2
+    Executor = 3
 
 
 class HassJob:
@@ -171,6 +170,9 @@ class HassJob:
 
     def __init__(self, target: Callable):
         """Create a job object."""
+        if asyncio.iscoroutine(target):
+            raise ValueError("Coroutine not allowed to be passed to HassJob")
+
         self.target = target
         self.job_type = _get_callable_job_type(target)
 
@@ -186,8 +188,6 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutine(check_target):
-        return HassJobType.Coroutine
     if asyncio.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
@@ -352,6 +352,9 @@ class HomeAssistant:
         if target is None:
             raise ValueError("Don't call async_add_job with None")
 
+        if asyncio.iscoroutine(target):
+            return self.async_create_task(cast(Coroutine, target))
+
         return self.async_add_hass_job(HassJob(target), *args)
 
     @callback
@@ -364,9 +367,7 @@ class HomeAssistant:
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
-        if hassjob.job_type == HassJobType.Coroutine:
-            task = self.loop.create_task(hassjob.target)  # type: ignore
-        elif hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
             self.loop.call_soon(hassjob.target, *args)
@@ -445,6 +446,10 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
+        if asyncio.iscoroutine(target):
+            self.async_create_task(cast(Coroutine, target))
+            return
+
         self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -968,6 +973,7 @@ class StateMachine:
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: Dict[str, State] = {}
+        self._reservations: Set[str] = set()
         self._bus = bus
         self._loop = loop
 
@@ -1075,6 +1081,9 @@ class StateMachine:
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
 
+        if entity_id in self._reservations:
+            self._reservations.remove(entity_id)
+
         if old_state is None:
             return False
 
@@ -1110,6 +1119,29 @@ class StateMachine:
             force_update,
             context,
         ).result()
+
+    @callback
+    def async_reserve(self, entity_id: str) -> None:
+        """Reserve a state in the state machine for an entity being added.
+
+        This must not fire an event when the state is reserved.
+
+        This avoids a race condition where multiple entities with the same
+        entity_id are added.
+        """
+        entity_id = entity_id.lower()
+        if entity_id in self._states or entity_id in self._reservations:
+            raise HomeAssistantError(
+                "async_reserve must not be called once the state is in the state machine."
+            )
+
+        self._reservations.add(entity_id)
+
+    @callback
+    def async_available(self, entity_id: str) -> bool:
+        """Check to see if an entity_id is available to be used."""
+        entity_id = entity_id.lower()
+        return entity_id not in self._states and entity_id not in self._reservations
 
     @callback
     def async_set(

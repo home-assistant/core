@@ -11,6 +11,7 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.exceptions import SynologyDSMRequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -101,7 +103,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
-    api = SynoApi(hass, entry)
 
     # Migrate old unique_id
     @callback
@@ -162,7 +163,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
     # Continue setup
-    await api.async_setup()
+    api = SynoApi(hass, entry)
+    try:
+        await api.async_setup()
+    except SynologyDSMRequestException as err:
+        raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -253,10 +258,11 @@ class SynoApi:
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
-            device_token=self._entry.data.get("device_token"),
+        )
+        await self._hass.async_add_executor_job(
+            self.dsm.login, self._entry.data.get("device_token")
         )
 
-        await self._hass.async_add_executor_job(self.dsm.discover_apis)
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
@@ -332,7 +338,6 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
-        self.information.update()
         self.network = self.dsm.network
         self.network.update()
 

@@ -1,13 +1,9 @@
 """Roon (www.roonlabs.com) component."""
-import logging
-
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .server import RoonServer
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):

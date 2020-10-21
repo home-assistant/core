@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
@@ -21,7 +21,7 @@
                 "data": {
                     "discovery": "W\u0142\u0105cz wykrywanie"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
                 "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
             }
         }
@@ -50,8 +50,8 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
-            "bad_will": "Nieprawid\u0142owy temat \"will\".",
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\"",
+            "bad_will": "Nieprawid\u0142owy temat \"will\"",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {

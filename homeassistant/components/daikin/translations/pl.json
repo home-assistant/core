@@ -20,7 +20,7 @@
                     "key": "Klucz API",
                     "password": "Has\u0142o"
                 },
-                "description": "Wprowad\u017a Adres IP\n\nZwr\u00f3\u0107 uwag\u0119, \u017ce Klucz API i Has\u0142o u\u017cywane s\u0105 odpowiednio tylko przez urz\u0105dzenia BRP072Cxx i SKYFi.",
+                "description": "Wprowad\u017a adres IP klimatyzacji Daikin.\n\nZwr\u00f3\u0107 uwag\u0119, \u017ce klucz API oraz has\u0142o u\u017cywane s\u0105 odpowiednio tylko przez urz\u0105dzenia BRP072Cxx i SKYFi.",
                 "title": "Konfiguracja Daikin AC"
             }
         }

@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "setup_network": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Velg tilkoblingsadresse"
             },
@@ -39,9 +39,9 @@
         "error": {
             "already_configured_device": "Enheten er allerede konfigurert",
             "invalid_event_code": "Ugyldig hendelseskode",
-            "invalid_input_2262_off": "Ugyldig inndata for kommando av",
-            "invalid_input_2262_on": "Ugyldig inndata for kommando p\u00e5",
-            "invalid_input_off_delay": "Ugyldig inndata for av forsinkelse",
+            "invalid_input_2262_off": "Ugyldig innputt for kommando av",
+            "invalid_input_2262_on": "Ugyldig innputt for kommando p\u00e5",
+            "invalid_input_off_delay": "Ugyldig innputt for av forsinkelse",
             "unknown": "Uventet feil"
         },
         "step": {
