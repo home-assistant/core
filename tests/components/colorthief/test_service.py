@@ -167,7 +167,7 @@ async def test_url_error(hass, aioclient_mock):
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
-        ATTR_FILE_PATH: "/tmp/logo.png",
+        ATTR_FILE_PATH: "/path/to/an/image.png",
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
         ATTR_BRIGHTNESS_PCT: 100,
     }
