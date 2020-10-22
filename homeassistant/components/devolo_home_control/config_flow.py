@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a devolo HomeControl config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):

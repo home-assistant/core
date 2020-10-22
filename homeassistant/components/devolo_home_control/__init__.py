@@ -1,17 +1,25 @@
 """The devolo_home_control integration."""
 import asyncio
 from functools import partial
+import logging
 
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
@@ -21,19 +29,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    conf = entry.data
     hass.data.setdefault(DOMAIN, {})
-    try:
-        mydevolo = Mydevolo.get_instance()
-    except SyntaxError:
-        mydevolo = Mydevolo()
 
-    mydevolo.user = conf[CONF_USERNAME]
-    mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf[CONF_MYDEVOLO]
+    mydevolo = _mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
-
     if not credentials_valid:
         return False
 
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                         HomeControl,
                         gateway_id=gateway_id,
                         zeroconf_instance=zeroconf_instance,
-                        url=conf[CONF_HOMECONTROL],
+                        url=entry.data[CONF_HOMECONTROL],
                     )
                 )
             )
@@ -76,6 +76,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
+async def async_migrate_entry(hass, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        mydevolo = _mydevolo(entry.data)
+        new = {**entry.data}
+        new[CONF_UNIQUE_ID] = await hass.async_add_executor_job(mydevolo.uuid)
+        entry.data = {**new}
+        entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload = all(
@@ -94,3 +110,17 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     )
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload
+
+
+def _mydevolo(conf: dict) -> Mydevolo:
+    """Configure mydevolo."""
+    try:
+        mydevolo = Mydevolo.get_instance()
+    except SyntaxError:
+        mydevolo = Mydevolo()
+
+    mydevolo.user = conf[CONF_USERNAME]
+    mydevolo.password = conf[CONF_PASSWORD]
+    mydevolo.url = conf[CONF_MYDEVOLO]
+
+    return mydevolo
