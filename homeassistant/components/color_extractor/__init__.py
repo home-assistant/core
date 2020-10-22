@@ -17,9 +17,7 @@ from homeassistant.components.color_extractor.const import (
     SERVICE_PREDOMINANT_COLOR_URL,
 )
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS_PCT,
     ATTR_RGB_COLOR,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
 )
@@ -53,20 +51,17 @@ async def async_setup(hass, hass_config):
 
         return color
 
-    async def _async_set_light(
-        light_entity_id, color, brightness_pct=None, transition=None
-    ):
+    async def _async_set_light(light_entity_id, color, **light_kwargs):
         """Set the given light to our extracted RGB value."""
         service_data = {
             ATTR_ENTITY_ID: light_entity_id,
             ATTR_RGB_COLOR: color,
         }
 
-        if brightness_pct:
-            service_data[ATTR_BRIGHTNESS_PCT] = brightness_pct
+        # Pass the extra service call args into the light turn_on service
+        service_data.update(**light_kwargs)
 
-        if transition:
-            service_data[ATTR_TRANSITION] = transition
+        _LOGGER.debug("Setting %d extra light parameters", len(light_kwargs))
 
         _LOGGER.debug("Setting RGB %s on light %s", color, light_entity_id)
 
@@ -76,21 +71,20 @@ async def async_setup(hass, hass_config):
 
     async def async_predominant_color_url_service(service_call):
         """Handle call for URL based image."""
-        service_data = service_call.data
+        service_data = dict(service_call.data)
 
-        url = service_data.get(ATTR_URL)
+        url = service_data.pop(ATTR_URL)
 
         if not hass.config.is_allowed_external_url(url):
-            _LOGGER.error("External URL is not allowed: %s", url)
+            _LOGGER.error(
+                "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
+                url,
+            )
             return
 
-        light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
-
-        # Optional fields
-        brightness_pct = service_data.get(ATTR_BRIGHTNESS_PCT)
-        transition = service_data.get(ATTR_TRANSITION)
-
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
+
+        light_entity_id = service_data.pop(ATTR_LIGHT_ENTITY_ID)
 
         try:
             session = aiohttp_client.async_get_clientsession(hass)
@@ -111,7 +105,7 @@ async def async_setup(hass, hass_config):
             color = await _async_get_color(_file)
 
         if color:
-            await _async_set_light(light_entity_id, color, brightness_pct, transition)
+            await _async_set_light(light_entity_id, color, **service_data)
 
     hass.services.async_register(
         DOMAIN,
@@ -121,27 +115,26 @@ async def async_setup(hass, hass_config):
 
     async def async_predominant_color_file_service(service_call):
         """Handle call for local file based image."""
-        service_data = service_call.data
+        service_data = dict(service_call.data)
 
-        file_path = service_data.get(ATTR_FILE_PATH)
+        file_path = service_data.pop(ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error("File path is not allowed: '%s'", file_path)
+            _LOGGER.error(
+                "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
+                file_path,
+            )
             return
 
-        light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
-
-        # Optional fields
-        brightness_pct = service_data.get(ATTR_BRIGHTNESS_PCT)
-        transition = service_data.get(ATTR_TRANSITION)
-
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
+
+        light_entity_id = service_data.pop(ATTR_LIGHT_ENTITY_ID)
 
         _file = _get_file(file_path)
         color = await _async_get_color(_file)
 
         if color:
-            await _async_set_light(light_entity_id, color, brightness_pct, transition)
+            await _async_set_light(light_entity_id, color, **service_data)
 
     hass.services.async_register(
         DOMAIN,

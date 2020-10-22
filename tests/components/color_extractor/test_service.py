@@ -101,6 +101,7 @@ async def test_url_success(hass, aioclient_mock):
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 50,
     }
 
@@ -212,6 +213,7 @@ async def test_file(hass):
     service_data = {
         ATTR_FILE_PATH: "/opt/image.png",
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
 
@@ -251,6 +253,7 @@ async def test_file_denied_dir(hass):
     service_data = {
         ATTR_FILE_PATH: "/path/to/a/dir/not/allowed/image.png",
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
 
