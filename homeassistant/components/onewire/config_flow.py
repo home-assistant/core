@@ -174,7 +174,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_mount_dir(platform_config)
 
         # OWFS
-        else:  # pragma: no cover
+        if platform_config[CONF_TYPE] == CONF_TYPE_OWFS:  # pragma: no cover
             # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
             # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
             await self.async_set_unique_id(
@@ -187,9 +187,15 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=platform_config[CONF_MOUNT_DIR], data=platform_config
             )
 
+        raise InvalidOneWireType  # pragma: no cover
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidOneWireType(exceptions.HomeAssistantError):
+    """Error to indicate unknown onewire type."""
 
 
 class InvalidPath(exceptions.HomeAssistantError):
