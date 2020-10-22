@@ -73,18 +73,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-
         except CannotConnect:
             errors["base"] = "cannot_connect"
-
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
-
-        else:    
+        else:
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
