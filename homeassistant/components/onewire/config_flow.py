@@ -85,17 +85,18 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             self.onewire_config.update(user_input)
             owhost = user_input[CONF_HOST]
             owport = user_input[CONF_PORT]
+            existing_entry = self.get_existing_owserver_entry(owhost, owport)
+            if existing_entry is not None:
+                return self.async_abort(reason="already_configured")
             try:
-                existing_entry = self.get_existing_owserver_entry(owhost, owport)
-                if existing_entry is not None:
-                    raise AbortFlow("already_configured")
                 await self.hass.async_add_executor_job(protocol.proxy, owhost, owport)
-                return self.async_create_entry(title=owhost, data=self.onewire_config)
             except (protocol.Error, protocol.ConnError) as exc:
                 _LOGGER.error(
                     "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
                 )
                 errors["base"] = "cannot_connect"
+            if len(errors) == 0:
+                return self.async_create_entry(title=owhost, data=self.onewire_config)
 
         return self.async_show_form(
             step_id="owserver",
