@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "title": "Erneute Authentifizierung"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisation",
+                    "project": "Projekt"
+                }
+            }
+        }
+    }
+}
