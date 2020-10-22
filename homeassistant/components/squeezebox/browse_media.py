@@ -1,7 +1,6 @@
 """Support for media browsing."""
 import asyncio
 import hashlib
-import logging
 from random import SystemRandom
 
 from aiohttp import web
@@ -24,8 +23,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TRACK,
 )
 from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_OK, HTTP_UNAUTHORIZED
-
-_LOGGER = logging.getLogger(__name__)
 
 LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
