@@ -219,17 +219,16 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass, False),
                 )
 
+                # Check if unique ID was found, set unique ID, and abort if a flow with
+                # the same unique ID is already in progress
                 if not unique_id:
                     errors[CONF_HOST] = "cannot_connect"
-                # Set unique ID and abort if a flow with the same unique ID is already in progress
                 elif (
                     await self.async_set_unique_id(
                         unique_id=unique_id, raise_on_progress=True
                     )
                     is not None
                 ):
-                    # If device was discovered, abort if existing entry found, otherwise display an error
-                    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                     errors[CONF_HOST] = "existing_config_entry_found"
 
             if not errors:
