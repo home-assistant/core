@@ -32,7 +32,9 @@ class BMWDeviceTracker(TrackerEntity):
         self._account = account
         self._vehicle = vehicle
         self._unique_id = vehicle.vin
-        self._location = vehicle.state.gps_position
+        self._location = (
+            vehicle.state.gps_position if vehicle.state.gps_position else (None, None)
+        )
         self._name = vehicle.name
 
     @property
