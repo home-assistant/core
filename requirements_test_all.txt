@@ -835,7 +835,7 @@ pysonos==0.0.35
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.1
+pysqueezebox==0.5.2
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.0

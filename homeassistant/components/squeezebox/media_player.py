@@ -47,9 +47,15 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.network import get_url
 from homeassistant.util.dt import utcnow
 
-from .browse_media import build_item_response, generate_playlist, library_payload
+from .browse_media import (
+    SqueezeboxArtworkProxy,
+    build_item_response,
+    generate_playlist,
+    library_payload,
+)
 from .const import (
     DEFAULT_PORT,
     DISCOVERY_TASK,
@@ -168,8 +174,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
+    session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(async_get_clientsession(hass), host, port, username, password)
+    lms = Server(session, host, port, username, password)
+    internal_artwork_url = lms.generate_image_url("")
+    hass.http.register_view(SqueezeboxArtworkProxy(session, internal_artwork_url))
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -192,7 +201,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player, internal_artwork_url)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -255,9 +264,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     Wraps a pysqueezebox.Player() object.
     """
 
-    def __init__(self, player):
+    def __init__(self, player, internal_artwork_url=None):
         """Initialize the SqueezeBox device."""
         self._player = player
+        self._internal_artwork_url = internal_artwork_url
         self._last_update = None
         self._query_result = {}
         self._available = True
@@ -587,4 +597,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self._player, payload)
+        return await build_item_response(
+            self._player, payload, self._internal_artwork_url, get_url(self.hass)
+        )
