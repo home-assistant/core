@@ -47,7 +47,10 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
     MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
     MEDIA_TYPE_GENRE: {"item": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
-    MEDIA_TYPE_PLAYLIST: {"item": MEDIA_CLASS_PLAYLIST, "children": MEDIA_CLASS_TRACK,},
+    MEDIA_TYPE_PLAYLIST: {
+        "item": MEDIA_CLASS_PLAYLIST,
+        "children": MEDIA_CLASS_TRACK,
+    },
 }
 
 CONTENT_TYPE_TO_CHILD_TYPE = {
@@ -78,7 +81,9 @@ async def build_item_response(player, payload):
         browse_id = None
 
     result = await player.async_browse(
-        MEDIA_TYPE_TO_SQUEEZEBOX[search_type], limit=BROWSE_LIMIT, browse_id=browse_id,
+        MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
+        limit=BROWSE_LIMIT,
+        browse_id=browse_id,
     )
 
     children = None
@@ -88,14 +93,7 @@ async def build_item_response(player, payload):
         child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
 
         children = []
-
         for item in result["items"]:
-            thumbnail = item.get("image_url")
-            if thumbnail is not None:
-                thumbnail = thumbnail.replace(
-                    "http://192.168.1.2:9000/music/",
-                    "https://ha.laud.homeip.net/music/",
-                )
             children.append(
                 BrowseMedia(
                     title=item["title"],
@@ -104,7 +102,7 @@ async def build_item_response(player, payload):
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=thumbnail,
+                    thumbnail=item.get("image_url"),
                 )
             )
 
@@ -138,7 +136,10 @@ async def library_payload(player):
 
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
-        result = await player.async_browse(MEDIA_TYPE_TO_SQUEEZEBOX[item], limit=1,)
+        result = await player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[item],
+            limit=1,
+        )
         if result is not None and result.get("items") is not None:
             library_info["children"].append(
                 BrowseMedia(
