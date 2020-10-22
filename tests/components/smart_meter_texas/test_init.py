@@ -45,6 +45,7 @@ async def test_update_failure(hass, config_entry, aioclient_mock):
     """Test that the coordinator handles a bad response."""
     await setup_integration(hass, config_entry, aioclient_mock, bad_reading=True)
     await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
     with patch("smart_meter_texas.Meter.read_meter") as updater:
         await hass.services.async_call(
             HA_DOMAIN,

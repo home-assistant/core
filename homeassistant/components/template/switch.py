@@ -1,5 +1,4 @@
 """Support for switches which integrates with other components."""
-import logging
 
 import voluptuous as vol
 
@@ -30,7 +29,6 @@ from homeassistant.helpers.script import Script
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
-_LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
 ON_ACTION = "turn_on"
@@ -136,7 +134,16 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         if isinstance(result, TemplateError):
             self._state = None
             return
-        self._state = result.lower() in ("true", STATE_ON)
+
+        if isinstance(result, bool):
+            self._state = result
+            return
+
+        if isinstance(result, str):
+            self._state = result.lower() in ("true", STATE_ON)
+            return
+
+        self._state = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""

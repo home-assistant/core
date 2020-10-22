@@ -10,7 +10,18 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "URL",
+                    "password": "Passwort",
                     "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ignore_string": "Zeichenfolge ignorieren"
                 }
             }
         }

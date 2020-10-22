@@ -6,7 +6,7 @@ import time
 
 import av
 
-from .const import MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
+from .const import MAX_TIMESTAMP_GAP, MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,10 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
         segment,
         mode="w",
         format=stream_output.format,
-        container_options=container_options,
+        container_options={
+            "video_track_timescale": str(int(1 / video_stream.time_base)),
+            **container_options,
+        },
     )
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
@@ -74,6 +77,9 @@ def _stream_worker_internal(hass, stream, quit_event):
     # compatible with empty_moov and manual bitstream filters not in PyAV
     if container.format.name in {"hls", "mpegts"}:
         audio_stream = None
+    # Some audio streams do not have a profile and throw errors when remuxing
+    if audio_stream and audio_stream.profile is None:
+        audio_stream = None
 
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
@@ -97,6 +103,7 @@ def _stream_worker_internal(hass, stream, quit_event):
 
     def peek_first_pts():
         nonlocal first_pts, audio_stream
+        missing_dts = False
 
         def empty_stream_dict():
             return {
@@ -110,6 +117,13 @@ def _stream_worker_internal(hass, stream, quit_event):
             # Get to first video keyframe
             while first_packet[video_stream] is None:
                 packet = next(container.demux())
+                if (
+                    packet.dts is None
+                ):  # Allow single packet with no dts, raise error on second
+                    if missing_dts:
+                        raise av.AVError
+                    missing_dts = True
+                    continue
                 if packet.stream == video_stream and packet.is_keyframe:
                     first_packet[video_stream] = packet
                     initial_packets.append(packet)
@@ -118,6 +132,13 @@ def _stream_worker_internal(hass, stream, quit_event):
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
                 packet = next(container.demux((video_stream, audio_stream)))
+                if (
+                    packet.dts is None
+                ):  # Allow single packet with no dts, raise error on second
+                    if missing_dts:
+                        raise av.AVError
+                    missing_dts = True
+                    continue
                 if (
                     first_packet[packet.stream] is None
                 ):  # actually video already found above so only for audio
@@ -146,6 +167,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
+            finalize_stream()
             return False
         return True
 
@@ -188,6 +210,12 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
+    def finalize_stream():
+        if not stream.keepalive:
+            # End of stream, clear listeners and stop thread
+            for fmt in stream.outputs.keys():
+                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+
     if not peek_first_pts():
         container.close()
         return
@@ -210,15 +238,23 @@ def _stream_worker_internal(hass, stream, quit_event):
                 continue
             last_packet_was_without_dts = False
         except (av.AVError, StopIteration) as ex:
-            if not stream.keepalive:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error("Error demuxing stream: %s", str(ex))
+            finalize_stream()
             break
 
         # Discard packet if dts is not monotonic
         if packet.dts <= last_dts[packet.stream]:
+            if (
+                packet.time_base * (last_dts[packet.stream] - packet.dts)
+                > MAX_TIMESTAMP_GAP
+            ):
+                _LOGGER.warning(
+                    "Timestamp overflow detected: last dts %s, dts = %s, resetting stream",
+                    last_dts[packet.stream],
+                    packet.dts,
+                )
+                finalize_stream()
+                break
             continue
 
         # Check for end of segment

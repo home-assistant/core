@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "one": "uno",
+            "other": "altri"
+        },
+        "step": {
+            "one": "uno",
+            "other": "altri"
         }
     }
 }

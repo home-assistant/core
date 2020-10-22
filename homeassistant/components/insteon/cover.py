@@ -1,5 +1,4 @@
 """Support for Insteon covers via PowerLinc Modem."""
-import logging
 import math
 
 from homeassistant.components.cover import (
@@ -15,8 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 

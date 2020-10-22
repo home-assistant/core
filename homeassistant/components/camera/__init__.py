@@ -19,6 +19,7 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
@@ -35,6 +36,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -46,7 +48,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, entity_sources
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
@@ -184,7 +186,7 @@ async def async_get_still_stream(request, image_cb, content_type, interval):
     This method must be run in the event loop.
     """
     response = web.StreamResponse()
-    response.content_type = "multipart/x-mixed-replace; boundary=--frameboundary"
+    response.content_type = CONTENT_TYPE_MULTIPART.format("--frameboundary")
     await response.prepare(request)
 
     async def write_to_mjpeg_stream(img_bytes):
@@ -695,14 +697,47 @@ async def async_handle_play_stream_service(camera, service_call):
         options=camera.stream_options,
     )
     data = {
-        ATTR_ENTITY_ID: entity_ids,
         ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
 
-    await hass.services.async_call(
-        DOMAIN_MP, SERVICE_PLAY_MEDIA, data, blocking=True, context=service_call.context
-    )
+    # It is required to send a different payload for cast media players
+    cast_entity_ids = [
+        entity
+        for entity, source in entity_sources(hass).items()
+        if entity in entity_ids and source["domain"] == "cast"
+    ]
+    other_entity_ids = list(set(entity_ids) - set(cast_entity_ids))
+
+    if cast_entity_ids:
+        await hass.services.async_call(
+            DOMAIN_MP,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: cast_entity_ids,
+                **data,
+                ATTR_MEDIA_EXTRA: {
+                    "stream_type": "LIVE",
+                    "media_info": {
+                        "hlsVideoSegmentFormat": "fmp4",
+                    },
+                },
+            },
+            blocking=True,
+            context=service_call.context,
+        )
+
+    if other_entity_ids:
+        await hass.services.async_call(
+            DOMAIN_MP,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: other_entity_ids,
+                **data,
+            },
+            blocking=True,
+            context=service_call.context,
+        )
 
 
 async def async_handle_record_service(camera, call):

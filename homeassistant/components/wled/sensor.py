@@ -1,6 +1,5 @@
 """Support for WLED sensors."""
 from datetime import timedelta
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
@@ -10,15 +9,14 @@ from homeassistant.const import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN, SIGNAL_DBM
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
 
 
 async def async_setup_entry(
@@ -192,7 +190,7 @@ class WLEDWifiRSSISensor(WLEDSensor):
             icon="mdi:wifi",
             key="wifi_rssi",
             name=f"{coordinator.data.info.name} Wi-Fi RSSI",
-            unit_of_measurement=SIGNAL_DBM,
+            unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         )
 
     @property

@@ -1,6 +1,4 @@
 """Support for LG soundbars."""
-import logging
-
 import temescal
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -11,8 +9,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import STATE_ON
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_LG = (
     SUPPORT_VOLUME_SET

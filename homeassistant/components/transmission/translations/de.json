@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
                     "order": "Reihenfolge",
                     "scan_interval": "Aktualisierungsfrequenz"
                 },

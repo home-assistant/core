@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Elgato Key Light device is already configured.",
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect to Elgato Key Light device."
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect to Elgato Key Light device."
         },
         "flow_title": "Elgato Key Light: {serial_number}",

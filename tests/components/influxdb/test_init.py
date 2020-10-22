@@ -61,10 +61,19 @@ def mock_client_fixture(request):
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
+
+    def v2_call(body, precision):
+        data = {"bucket": DEFAULT_BUCKET, "record": body}
+
+        if precision is not None:
+            data["write_precision"] = precision
+
+        return call(**data)
+
     if request.param == influxdb.API_VERSION_2:
-        return lambda body: call(bucket=DEFAULT_BUCKET, record=body)
+        return lambda body, precision=None: v2_call(body, precision)
     # pylint: disable=unnecessary-lambda
-    return lambda body: call(body)
+    return lambda body, precision=None: call(body, time_precision=precision)
 
 
 def _get_write_api_mock_v1(mock_influx_client):
@@ -1082,6 +1091,79 @@ async def test_event_listener_component_override_measurement(
     ],
     indirect=["mock_client", "get_mock_call"],
 )
+async def test_event_listener_component_measurement_attr(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener with a different measurement_attr."""
+    config = {
+        "measurement_attr": "domain__device_class",
+        "component_config": {
+            "sensor.fake_humidity": {"override_measurement": "humidity"}
+        },
+        "component_config_glob": {
+            "binary_sensor.*motion": {"override_measurement": "motion"}
+        },
+        "component_config_domain": {"climate": {"override_measurement": "hvac"}},
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    test_components = [
+        {
+            "domain": "sensor",
+            "id": "fake_temperature",
+            "attrs": {"device_class": "humidity"},
+            "res": "sensor__humidity",
+        },
+        {"domain": "sensor", "id": "fake_humidity", "attrs": {}, "res": "humidity"},
+        {"domain": "binary_sensor", "id": "fake_motion", "attrs": {}, "res": "motion"},
+        {"domain": "climate", "id": "fake_thermostat", "attrs": {}, "res": "hvac"},
+        {"domain": "other", "id": "just_fake", "attrs": {}, "res": "other"},
+    ]
+    for comp in test_components:
+        state = MagicMock(
+            state=1,
+            domain=comp["domain"],
+            entity_id=f"{comp['domain']}.{comp['id']}",
+            object_id=comp["id"],
+            attributes=comp["attrs"],
+        )
+        event = MagicMock(data={"new_state": state}, time_fired=12345)
+        body = [
+            {
+                "measurement": comp["res"],
+                "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
+                "time": 12345,
+                "fields": {"value": 1},
+            }
+        ]
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api = get_write_api(mock_client)
+        assert write_api.call_count == 1
+        assert write_api.call_args == get_mock_call(body)
+        write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
 async def test_event_listener_ignore_attributes(
     hass, mock_client, config_ext, get_write_api, get_mock_call
 ):
@@ -1474,3 +1556,104 @@ async def test_invalid_inputs_error(
             == 1
         )
         sleep.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call, precision",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "ns",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "ns",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "us",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "us",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "ms",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "ms",
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            "s",
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            "s",
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_precision(
+    hass, mock_client, config_ext, get_write_api, get_mock_call, precision
+):
+    """Test the precision setup."""
+    config = {
+        "precision": precision,
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    value = "1.9"
+    attrs = {
+        "unit_of_measurement": "foobars",
+    }
+    state = MagicMock(
+        state=value,
+        domain="fake",
+        entity_id="fake.entity-id",
+        object_id="entity",
+        attributes=attrs,
+    )
+    event = MagicMock(data={"new_state": state}, time_fired=12345)
+    body = [
+        {
+            "measurement": "foobars",
+            "tags": {"domain": "fake", "entity_id": "entity"},
+            "time": 12345,
+            "fields": {"value": float(value)},
+        }
+    ]
+    handler_method(event)
+    hass.data[influxdb.DOMAIN].block_till_done()
+
+    write_api = get_write_api(mock_client)
+    assert write_api.call_count == 1
+    assert write_api.call_args == get_mock_call(body, precision)
+    write_api.reset_mock()

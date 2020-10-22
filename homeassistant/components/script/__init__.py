@@ -77,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA}
+    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 

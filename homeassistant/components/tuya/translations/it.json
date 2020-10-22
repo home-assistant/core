@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "Autenticazione non valida",
+            "cannot_connect": "Impossibile connettersi",
             "conn_error": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "auth_failed": "Autenticazione non valida"
+            "auth_failed": "Autenticazione non valida",
+            "invalid_auth": "Autenticazione non valida"
         },
         "flow_title": "Configurazione di Tuya",
         "step": {

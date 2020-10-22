@@ -1,5 +1,5 @@
 """Support for monitoring the qBittorrent API."""
-from datetime import timedelta
+
 import logging
 
 from qbittorrent.client import Client, LoginRequired
@@ -20,22 +20,24 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+# from . import QBittorrentEntity
+from .const import (
+    DEFAULT_NAME,
+    SENSOR_TYPE_ACTIVE_TORRENTS,
+    SENSOR_TYPE_COMPLETED_TORRENTS,
+    SENSOR_TYPE_CURRENT_STATUS,
+    SENSOR_TYPE_DOWNLOAD_SPEED,
+    SENSOR_TYPE_DOWNLOADING_TORRENTS,
+    SENSOR_TYPE_INACTIVE_TORRENTS,
+    SENSOR_TYPE_PAUSED_TORRENTS,
+    SENSOR_TYPE_RESUMED_TORRENTS,
+    SENSOR_TYPE_SEEDING_TORRENTS,
+    SENSOR_TYPE_TOTAL_TORRENTS,
+    SENSOR_TYPE_UPLOAD_SPEED,
+    TRIM_SIZE,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPE_CURRENT_STATUS = "current_status"
-SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
-SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
-SENSOR_TYPE_TOTAL_TORRENTS = "total_torrents"
-SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
-SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
-SENSOR_TYPE_DOWNLOADING_TORRENTS = "downloading_torrents"
-SENSOR_TYPE_SEEDING_TORRENTS = "seeding_torrents"
-SENSOR_TYPE_RESUMED_TORRENTS = "resumed_torrents"
-SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
-SENSOR_TYPE_COMPLETED_TORRENTS = "completed_torrents"
-
-DEFAULT_NAME = "qBittorrent"
-TRIM_SIZE = 35
 
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
@@ -51,7 +53,6 @@ SENSOR_TYPES = {
     SENSOR_TYPE_COMPLETED_TORRENTS: ["Completed Torrents", None],
 }
 
-SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["torrents"]): vol.All(
+        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
     }

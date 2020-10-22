@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         temperature_unit,
     )
     try:
-        async with async_timeout.timeout(5):
+        async with async_timeout.timeout(10):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 options,
@@ -86,7 +86,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except aiocoap_error.Error as err:
+        except (aiocoap_error.Error, OSError) as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property

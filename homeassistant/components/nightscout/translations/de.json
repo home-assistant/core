@@ -1,0 +1,12 @@
+{
+    "config": {
+        "flow_title": "Nightscout",
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

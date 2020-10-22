@@ -5,8 +5,10 @@ from homeassistant.const import (
     DEGREE,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    VOLT,
 )
 
 from .entity import (
@@ -52,7 +54,25 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
     ),
+    ("emeter", "voltage"): BlockAttributeDescription(
+        name="Voltage",
+        unit=VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+    ),
+    ("emeter", "powerFactor"): BlockAttributeDescription(
+        name="Power Factor",
+        unit=PERCENTAGE,
+        value=lambda value: round(value * 100, 1),
+        device_class=sensor.DEVICE_CLASS_POWER_FACTOR,
+    ),
     ("relay", "power"): BlockAttributeDescription(
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+    ),
+    ("roller", "rollerPower"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
         value=lambda value: round(value, 1),
@@ -70,6 +90,12 @@ SENSORS = {
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
     ),
+    ("emeter", "energyReturned"): BlockAttributeDescription(
+        name="Energy Returned",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
@@ -78,6 +104,12 @@ SENSORS = {
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 60 / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
@@ -104,7 +136,7 @@ SENSORS = {
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
-        unit="lx",
+        unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),

@@ -18,6 +18,11 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_CHANNELS: MEDIA_CLASS_CHANNEL,
 }
 
+CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
+    MEDIA_TYPE_APPS: MEDIA_CLASS_DIRECTORY,
+    MEDIA_TYPE_CHANNELS: MEDIA_CLASS_DIRECTORY,
+}
+
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
@@ -37,6 +42,7 @@ def build_item_response(coordinator, payload):
     thumbnail = None
     title = None
     media = None
+    children_media_class = None
 
     if search_type == MEDIA_TYPE_APPS:
         title = "Apps"
@@ -44,6 +50,7 @@ def build_item_response(coordinator, payload):
             {"app_id": item.app_id, "title": item.name, "type": MEDIA_TYPE_APP}
             for item in coordinator.data.apps
         ]
+        children_media_class = MEDIA_CLASS_APP
     elif search_type == MEDIA_TYPE_CHANNELS:
         title = "Channels"
         media = [
@@ -54,18 +61,22 @@ def build_item_response(coordinator, payload):
             }
             for item in coordinator.data.channels
         ]
+        children_media_class = MEDIA_CLASS_CHANNEL
 
     if media is None:
         return None
 
     return BrowseMedia(
-        media_class=CONTENT_TYPE_MEDIA_CLASS[search_type],
+        media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
+            search_type, MEDIA_CLASS_DIRECTORY
+        ),
         media_content_id=search_id,
         media_content_type=search_type,
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
         children=[item_payload(item, coordinator) for item in media],
+        children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
 
@@ -138,5 +149,15 @@ def library_payload(coordinator):
                 coordinator,
             )
         )
+
+    if all(
+        child.media_content_type == MEDIA_TYPE_APPS for child in library_info.children
+    ):
+        library_info.children_media_class = MEDIA_CLASS_APP
+    elif all(
+        child.media_content_type == MEDIA_TYPE_CHANNELS
+        for child in library_info.children
+    ):
+        library_info.children_media_class = MEDIA_CLASS_CHANNEL
 
     return library_info

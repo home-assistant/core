@@ -9,6 +9,7 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
+from pysonos.core import PLAY_MODE_BY_MEANING, PLAY_MODES
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -33,6 +34,9 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -40,6 +44,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -86,6 +91,7 @@ SUPPORT_SONOS = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SEEK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
@@ -192,6 +198,14 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
+REPEAT_TO_SONOS = {
+    REPEAT_MODE_OFF: False,
+    REPEAT_MODE_ALL: True,
+    REPEAT_MODE_ONE: "ONE",
+}
+
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
+
 ATTR_SONOS_GROUP = "sonos_group"
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
@@ -220,6 +234,10 @@ ATTR_QUEUE_POSITION = "queue_position"
 ATTR_STATUS_LIGHT = "status_light"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
+
+
+class UnknownMediaType(BrowseError):
+    """Unknown media type."""
 
 
 class SonosData:
@@ -497,7 +515,7 @@ class SonosEntity(MediaPlayerEntity):
         self._player = player
         self._player_volume = None
         self._player_muted = None
-        self._shuffle = None
+        self._play_mode = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -669,7 +687,7 @@ class SonosEntity(MediaPlayerEntity):
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._shuffle = self.soco.shuffle
+            self._play_mode = self.soco.play_mode
             self.update_volume()
             self._set_favorites()
 
@@ -714,7 +732,7 @@ class SonosEntity(MediaPlayerEntity):
         if new_status == "TRANSITIONING":
             return
 
-        self._shuffle = self.soco.shuffle
+        self._play_mode = event.current_play_mode if event else self.soco.play_mode
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -948,7 +966,14 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self._play_mode][0]
+
+    @property
+    @soco_coordinator
+    def repeat(self):
+        """Return current repeat mode."""
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
     @soco_coordinator
@@ -1049,7 +1074,17 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
+
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @soco_coordinator
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        sonos_shuffle = PLAY_MODES[self._play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error()
     def mute_volume(self, mute):
@@ -1148,7 +1183,10 @@ class SonosEntity(MediaPlayerEntity):
         if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    self.soco.add_uri_to_queue(media_id)
+                    if self.soco.is_spotify_uri(media_id):
+                        self.soco.add_spotify_uri_to_queue(media_id)
+                    else:
+                        self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
                     _LOGGER.error(
                         'Error parsing media uri "%s", '
@@ -1157,7 +1195,12 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                self.soco.play_uri(media_id)
+                if self.soco.is_spotify_uri(media_id):
+                    self.soco.clear_queue()
+                    self.soco.add_spotify_uri_to_queue(media_id)
+                    self.soco.play_from_queue(0)
+                else:
+                    self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self._media_library, media_id, media_type)
@@ -1487,7 +1530,20 @@ def build_item_response(media_library, payload):
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
-    media_class = SONOS_TO_MEDIA_CLASSES[MEDIA_TYPES_TO_SONOS[payload["search_type"]]]
+    try:
+        media_class = SONOS_TO_MEDIA_CLASSES[
+            MEDIA_TYPES_TO_SONOS[payload["search_type"]]
+        ]
+    except KeyError:
+        _LOGGER.debug("Unknown media type received %s", payload["search_type"])
+        return None
+
+    children = []
+    for item in media:
+        try:
+            children.append(item_payload(item))
+        except UnknownMediaType:
+            pass
 
     return BrowseMedia(
         title=title,
@@ -1495,7 +1551,7 @@ def build_item_response(media_library, payload):
         media_class=media_class,
         media_content_id=payload["idstring"],
         media_content_type=payload["search_type"],
-        children=[item_payload(item) for item in media],
+        children=children,
         can_play=can_play(payload["search_type"]),
         can_expand=can_expand(payload["search_type"]),
     )
@@ -1507,12 +1563,18 @@ def item_payload(item):
 
     Used by async_browse_media.
     """
+    media_type = get_media_type(item)
+    try:
+        media_class = SONOS_TO_MEDIA_CLASSES[media_type]
+    except KeyError as err:
+        _LOGGER.debug("Unknown media type received %s", media_type)
+        raise UnknownMediaType from err
     return BrowseMedia(
         title=item.title,
         thumbnail=getattr(item, "album_art_uri", None),
-        media_class=SONOS_TO_MEDIA_CLASSES[get_media_type(item)],
+        media_class=media_class,
         media_content_id=get_content_id(item),
-        media_content_type=SONOS_TO_MEDIA_TYPES[get_media_type(item)],
+        media_content_type=SONOS_TO_MEDIA_TYPES[media_type],
         can_play=can_play(item.item_class),
         can_expand=can_expand(item),
     )
@@ -1524,6 +1586,20 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
+    if not media_library.browse_by_idstring(
+        "tracks",
+        "",
+        max_items=1,
+    ):
+        raise BrowseError("Local library not found")
+
+    children = []
+    for item in media_library.browse():
+        try:
+            children.append(item_payload(item))
+        except UnknownMediaType:
+            pass
+
     return BrowseMedia(
         title="Music Library",
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -1531,7 +1607,7 @@ def library_payload(media_library):
         media_content_type="library",
         can_play=False,
         can_expand=True,
-        children=[item_payload(item) for item in media_library.browse()],
+        children=children,
     )
 
 

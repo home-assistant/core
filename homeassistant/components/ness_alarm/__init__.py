@@ -1,7 +1,6 @@
 """Support for Ness D8X/D16X devices."""
 from collections import namedtuple
 import datetime
-import logging
 
 from nessclient import ArmingState, Client
 import voluptuous as vol
@@ -17,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ness_alarm"
 DATA_NESS = "ness_alarm"

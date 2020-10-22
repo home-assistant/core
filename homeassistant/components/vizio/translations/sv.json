@@ -23,6 +23,8 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Appar som ska inkluderas eller exkluderas",
+                    "include_or_exclude": "Inkludera eller exkludera appar?",
                     "volume_step": "Storlek p\u00e5 volymsteg"
                 },
                 "title": "Uppdatera Vizo SmartCast-alternativ"

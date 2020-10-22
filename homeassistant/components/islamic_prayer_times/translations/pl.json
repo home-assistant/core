@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja."
+            "one_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "step": {
             "user": {

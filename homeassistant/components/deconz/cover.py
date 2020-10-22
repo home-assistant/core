@@ -1,6 +1,8 @@
 """Support for deCONZ covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_WINDOW,
+    DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -15,16 +17,13 @@ from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up covers for deCONZ component.
 
-    Covers are based on same device class as lights in deCONZ.
+    Covers are based on the same device class as lights in deCONZ.
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
+    gateway.entities[DOMAIN] = set()
 
     @callback
     def async_add_cover(lights):
@@ -32,10 +31,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for light in lights:
-            if light.type in COVER_TYPES:
+            if (
+                light.type in COVER_TYPES
+                and light.uniqueid not in gateway.entities[DOMAIN]
+            ):
                 entities.append(DeconzCover(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -48,6 +51,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class DeconzCover(DeconzDevice, CoverEntity):
     """Representation of a deCONZ cover."""
+
+    TYPE = DOMAIN
 
     def __init__(self, device, gateway):
         """Set up cover device."""
@@ -74,7 +79,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
         if self._device.type in DAMPERS:
             return "damper"
         if self._device.type in WINDOW_COVERS:
-            return "window"
+            return DEVICE_CLASS_WINDOW
 
     @property
     def supported_features(self):

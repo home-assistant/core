@@ -5,6 +5,7 @@ from typing import Any, Callable, List, Optional, Union
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -121,7 +122,6 @@ class TemplateEntity(Entity):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
-        self._async_update_entity_ids_filter = None
         self._attribute_templates = attribute_templates
         self._attributes = {}
         self._availability_template = availability_template
@@ -130,6 +130,7 @@ class TemplateEntity(Entity):
         self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
+        self._self_ref_update_count = 0
 
     @property
     def should_poll(self):
@@ -212,7 +213,6 @@ class TemplateEntity(Entity):
         attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
-        attribute.async_setup()
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(attribute)
 
@@ -223,8 +223,25 @@ class TemplateEntity(Entity):
         updates: List[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
+
         if event:
             self.async_set_context(event.context)
+
+        entity_id = event and event.data.get(ATTR_ENTITY_ID)
+
+        if entity_id and entity_id == self.entity_id:
+            self._self_ref_update_count += 1
+        else:
+            self._self_ref_update_count = 0
+
+        if self._self_ref_update_count > len(self._template_attrs):
+            for update in updates:
+                _LOGGER.warning(
+                    "Template loop detected while processing event: %s, skipping template render for Template[%s]",
+                    event,
+                    update.template.template,
+                )
+            return
 
         for update in updates:
             for attr in self._template_attrs[update.template]:
@@ -232,29 +249,21 @@ class TemplateEntity(Entity):
                     event, update.template, update.last_result, update.result
                 )
 
-        if self._async_update_entity_ids_filter:
-            self._async_update_entity_ids_filter({self.entity_id})
-
-        if self._async_update:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        # _handle_results will not write state until "_async_update" is set
-        template_var_tups = [
-            TrackTemplate(template, None) for template in self._template_attrs
-        ]
+        template_var_tups = []
+        for template, attributes in self._template_attrs.items():
+            template_var_tups.append(TrackTemplate(template, None))
+            for attribute in attributes:
+                attribute.async_setup()
 
         result_info = async_track_template_result(
             self.hass, template_var_tups, self._handle_results
         )
         self.async_on_remove(result_info.async_remove)
-        result_info.async_refresh()
-        result_info.async_update_entity_ids_filter({self.entity_id})
-        self.async_write_ha_state()
         self._async_update = result_info.async_refresh
-        self._async_update_entity_ids_filter = (
-            result_info.async_update_entity_ids_filter
-        )
+        result_info.async_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

@@ -25,6 +25,12 @@
                 },
                 "description": "Meerdere servers beschikbaar, selecteer er een:",
                 "title": "Selecteer Plex server"
+            },
+            "user": {
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "title": "Plex Media Server"
             }
         }
     },

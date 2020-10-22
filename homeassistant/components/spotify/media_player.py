@@ -105,24 +105,57 @@ LIBRARY_MAP = {
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
-    "current_user_playlists": MEDIA_CLASS_PLAYLIST,
-    "current_user_followed_artists": MEDIA_CLASS_ARTIST,
-    "current_user_saved_albums": MEDIA_CLASS_ALBUM,
-    "current_user_saved_tracks": MEDIA_CLASS_TRACK,
-    "current_user_saved_shows": MEDIA_CLASS_PODCAST,
-    "current_user_recently_played": MEDIA_CLASS_TRACK,
-    "current_user_top_artists": MEDIA_CLASS_ARTIST,
-    "current_user_top_tracks": MEDIA_CLASS_TRACK,
-    "featured_playlists": MEDIA_CLASS_PLAYLIST,
-    "categories": MEDIA_CLASS_GENRE,
-    "category_playlists": MEDIA_CLASS_PLAYLIST,
-    "new_releases": MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
-    MEDIA_TYPE_SHOW: MEDIA_CLASS_PODCAST,
-    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
+    "current_user_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "current_user_followed_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_saved_albums": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ALBUM,
+    },
+    "current_user_saved_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_saved_shows": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PODCAST,
+    },
+    "current_user_recently_played": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "current_user_top_artists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_ARTIST,
+    },
+    "current_user_top_tracks": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    "featured_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "categories": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_GENRE},
+    "category_playlists": {
+        "parent": MEDIA_CLASS_DIRECTORY,
+        "children": MEDIA_CLASS_PLAYLIST,
+    },
+    "new_releases": {"parent": MEDIA_CLASS_DIRECTORY, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_PLAYLIST: {
+        "parent": MEDIA_CLASS_PLAYLIST,
+        "children": MEDIA_CLASS_TRACK,
+    },
+    MEDIA_TYPE_ALBUM: {"parent": MEDIA_CLASS_ALBUM, "children": MEDIA_CLASS_TRACK},
+    MEDIA_TYPE_ARTIST: {"parent": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
+    MEDIA_TYPE_EPISODE: {"parent": MEDIA_CLASS_EPISODE, "children": None},
+    MEDIA_TYPE_SHOW: {"parent": MEDIA_CLASS_PODCAST, "children": MEDIA_CLASS_EPISODE},
+    MEDIA_TYPE_TRACK: {"parent": MEDIA_CLASS_TRACK, "children": None},
 }
 
 
@@ -543,7 +576,8 @@ def build_item_response(spotify, user, payload):
     if media_content_type == "categories":
         media_item = BrowseMedia(
             title=LIBRARY_MAP.get(media_content_id),
-            media_class=media_class,
+            media_class=media_class["parent"],
+            children_media_class=media_class["children"],
             media_content_id=media_content_id,
             media_content_type=media_content_type,
             can_play=False,
@@ -560,6 +594,7 @@ def build_item_response(spotify, user, payload):
                 BrowseMedia(
                     title=item.get("name"),
                     media_class=MEDIA_CLASS_PLAYLIST,
+                    children_media_class=MEDIA_CLASS_TRACK,
                     media_content_id=item_id,
                     media_content_type="category_playlists",
                     thumbnail=fetch_image_url(item, key="icons"),
@@ -575,9 +610,10 @@ def build_item_response(spotify, user, payload):
         else:
             title = LIBRARY_MAP.get(payload["media_content_id"])
 
-    response = {
+    params = {
         "title": title,
-        "media_class": media_class,
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
         "media_content_id": media_content_id,
         "media_content_type": media_content_type,
         "can_play": media_content_type in PLAYABLE_MEDIA_TYPES,
@@ -586,16 +622,16 @@ def build_item_response(spotify, user, payload):
     }
     for item in items:
         try:
-            response["children"].append(item_payload(item))
+            params["children"].append(item_payload(item))
         except (MissingMediaInformation, UnknownMediaType):
             continue
 
     if "images" in media:
-        response["thumbnail"] = fetch_image_url(media)
+        params["thumbnail"] = fetch_image_url(media)
     elif image:
-        response["thumbnail"] = image
+        params["thumbnail"] = image
 
-    return BrowseMedia(**response)
+    return BrowseMedia(**params)
 
 
 def item_payload(item):
@@ -624,15 +660,12 @@ def item_payload(item):
 
     payload = {
         "title": item.get("name"),
+        "media_class": media_class["parent"],
+        "children_media_class": media_class["children"],
         "media_content_id": media_id,
         "media_content_type": media_type,
         "can_play": media_type in PLAYABLE_MEDIA_TYPES,
         "can_expand": can_expand,
-    }
-
-    payload = {
-        **payload,
-        "media_class": media_class,
     }
 
     if "images" in item:
@@ -665,7 +698,9 @@ def library_payload():
                 {"name": item["name"], "type": item["type"], "uri": item["type"]}
             )
         )
-    return BrowseMedia(**library_info)
+    response = BrowseMedia(**library_info)
+    response.children_media_class = MEDIA_CLASS_DIRECTORY
+    return response
 
 
 def fetch_image_url(item, key="images"):

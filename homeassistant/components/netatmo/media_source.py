@@ -5,6 +5,7 @@ import re
 from typing import Optional, Tuple
 
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_VIDEO,
     MEDIA_TYPE_VIDEO,
 )
@@ -79,8 +80,20 @@ class NetatmoSource(MediaSource):
     ) -> BrowseMediaSource:
         if event_id and event_id in self.events[camera_id]:
             created = dt.datetime.fromtimestamp(event_id)
-            thumbnail = self.events[camera_id][event_id].get("snapshot", {}).get("url")
-            message = remove_html_tags(self.events[camera_id][event_id]["message"])
+            if self.events[camera_id][event_id]["type"] == "outdoor":
+                thumbnail = (
+                    self.events[camera_id][event_id]["event_list"][0]
+                    .get("snapshot", {})
+                    .get("url")
+                )
+                message = remove_html_tags(
+                    self.events[camera_id][event_id]["event_list"][0]["message"]
+                )
+            else:
+                thumbnail = (
+                    self.events[camera_id][event_id].get("snapshot", {}).get("url")
+                )
+                message = remove_html_tags(self.events[camera_id][event_id]["message"])
             title = f"{created} - {message}"
         else:
             title = self.hass.data[DOMAIN][DATA_CAMERAS].get(camera_id, MANUFACTURER)
@@ -91,10 +104,12 @@ class NetatmoSource(MediaSource):
         else:
             path = f"{source}/{camera_id}"
 
+        media_class = MEDIA_CLASS_DIRECTORY if event_id is None else MEDIA_CLASS_VIDEO
+
         media = BrowseMediaSource(
             domain=DOMAIN,
             identifier=path,
-            media_class=MEDIA_CLASS_VIDEO,
+            media_class=media_class,
             media_content_type=MEDIA_TYPE_VIDEO,
             title=title,
             can_play=bool(

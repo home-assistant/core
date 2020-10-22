@@ -138,12 +138,12 @@ class MpdDevice(MediaPlayerEntity):
         if position is None:
             position = self._status.get("time")
 
-            if position is not None and ":" in position:
+            if isinstance(position, str) and ":" in position:
                 position = position.split(":")[0]
 
         if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
-            self._media_position = int(position)
+            self._media_position = int(float(position))
 
         self._update_playlists()
 
@@ -159,8 +159,9 @@ class MpdDevice(MediaPlayerEntity):
                 self._connect()
 
             self._fetch_status()
-        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError):
+        except (mpd.ConnectionError, OSError, BrokenPipeError, ValueError) as error:
             # Cleanly disconnect in case connection is not in valid state
+            _LOGGER.debug("Error updating status: %s", error)
             self._disconnect()
 
     @property

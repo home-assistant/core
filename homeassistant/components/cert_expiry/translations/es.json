@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
+            "already_configured": "El servicio ya est\u00e1 configurado",
             "import_failed": "No se pudo importar desde la configuraci\u00f3n"
         },
         "error": {

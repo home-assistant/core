@@ -1,6 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 import numbers
 
 from homeassistant.components.sensor import (
@@ -14,8 +13,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
@@ -25,6 +26,7 @@ from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -42,7 +44,6 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
-_LOGGER = logging.getLogger(__name__)
 
 BATTERY_SIZES = {
     0: "No battery",
@@ -137,7 +138,6 @@ class Sensor(ZhaEntity):
         """Restore previous state."""
         self._state = last_state.state
 
-    @callback
     async def async_state_attr_provider(self):
         """Initialize device state attributes."""
         return {}
@@ -149,6 +149,13 @@ class Sensor(ZhaEntity):
                 float(value * self._multiplier) / self._divisor, self._decimals
             )
         return round(float(value * self._multiplier) / self._divisor)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+class AnalogInput(Sensor):
+    """Sensor that displays analog input values."""
+
+    SENSOR_ATTR = "present_value"
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
@@ -234,7 +241,7 @@ class Illuminance(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_ILLUMINANCE
-    _unit = "lx"
+    _unit = LIGHT_LUX
 
     @staticmethod
     def formatter(value):
@@ -266,7 +273,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _unit = "hPa"
+    _unit = PRESSURE_HPA
 
 
 @STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)

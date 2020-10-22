@@ -111,12 +111,12 @@ async def test_abort_if_already_setup(hass):
     # Should fail, already setup (import)
     result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
     # Should fail, already setup (flow)
     result = await flow.async_step_user({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_not_supports_encryption(hass, not_supports_encryption):
