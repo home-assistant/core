@@ -17,8 +17,8 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DEFAULT_NAME,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    _async_unique_name,
 )
 from . import DOMAIN  # pylint:disable=unused-import
 
@@ -40,8 +40,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._discovered_devices = {}
-        self._host = None
-        self._capabilities = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -49,9 +47,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input.get(CONF_HOST):
                 try:
-                    self._host = user_input[CONF_HOST]
-                    await self._async_try_connect(self._host)
-                    return await self.async_step_name()
+                    await self._async_try_connect(user_input[CONF_HOST])
+                    return self.async_create_entry(
+                        title=user_input[CONF_HOST],
+                        data=user_input,
+                    )
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except AlreadyConfigured:
@@ -72,10 +72,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the step to pick discovered device."""
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
-            self._capabilities = self._discovered_devices[unique_id]
+            capabilities = self._discovered_devices[unique_id]
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
-            return await self.async_step_name()
+            return self.async_create_entry(
+                title=_async_unique_name(capabilities),
+                data={CONF_ID: unique_id},
+            )
 
         configured_devices = {
             entry.data[CONF_ID]
@@ -122,31 +125,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-    async def async_step_name(self, user_input=None):
-        """Handle the step to set name."""
-        if user_input is not None:
-            data = {
-                CONF_NAME: user_input[CONF_NAME],
-            }
-            if self._host:
-                data[CONF_ID] = None
-                data[CONF_HOST] = self._host
-            else:
-                data[CONF_ID] = self._capabilities["id"]
-                data[CONF_HOST] = None
-            return self.async_create_entry(title=user_input[CONF_NAME], data=data)
-
-        name = DEFAULT_NAME
-        if self._capabilities:
-            unique_id = self._capabilities["id"]
-            model = self._capabilities["model"]
-            name = f"yeelight_{model}_{unique_id}"
-
-        return self.async_show_form(
-            step_id="name",
-            data_schema=vol.Schema({vol.Required(CONF_NAME, default=name): str}),
-        )
-
     async def _async_try_connect(self, host):
         """Set up with options."""
         for entry in self._async_current_entries():
@@ -160,7 +138,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
             else:
                 _LOGGER.debug("Get capabilities: %s", capabilities)
-                self._capabilities = capabilities
                 await self.async_set_unique_id(capabilities["id"])
                 self._abort_if_unique_id_configured()
                 return
@@ -188,7 +165,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            options = {**self._config_entry.options}
+            options.update(user_input)
+            return self.async_create_entry(title="", data=options)
 
         options = self._config_entry.options
         return self.async_show_form(

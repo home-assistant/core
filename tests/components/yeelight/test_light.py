@@ -71,7 +71,7 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -91,6 +91,7 @@ from . import (
     MODULE,
     NAME,
     PROPERTIES,
+    UNIQUE_NAME,
     _mocked_bulb,
     _patch_discovery,
 )
@@ -99,9 +100,7 @@ from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_DATA = {
-    CONF_ID: None,
     CONF_HOST: IP_ADDRESS,
-    CONF_NAME: NAME,
     CONF_TRANSITION: DEFAULT_TRANSITION,
     CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
     CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -308,7 +307,7 @@ async def test_device_types(hass: HomeAssistant):
         model,
         target_properties,
         nightlight_properties=None,
-        name=NAME,
+        name=UNIQUE_NAME,
         entity_id=ENTITY_LIGHT,
     ):
         config_entry = MockConfigEntry(
@@ -490,7 +489,7 @@ async def test_device_types(hass: HomeAssistant):
             "rgb_color": bg_rgb_color,
             "xy_color": bg_xy_color,
         },
-        name=f"{NAME} ambilight",
+        name=f"{UNIQUE_NAME} ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 

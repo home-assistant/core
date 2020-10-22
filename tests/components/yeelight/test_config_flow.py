@@ -25,6 +25,7 @@ from . import (
     MODULE,
     MODULE_CONFIG_FLOW,
     NAME,
+    UNIQUE_NAME,
     _mocked_bulb,
     _patch_discovery,
 )
@@ -33,7 +34,6 @@ from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {
-    CONF_NAME: NAME,
     CONF_MODEL: "",
     CONF_TRANSITION: DEFAULT_TRANSITION,
     CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
@@ -60,23 +60,16 @@ async def test_discovery(hass: HomeAssistant):
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: ID}
-    )
-    assert result3["type"] == "form"
-    assert result3["step_id"] == "name"
-    assert not result3["errors"]
-
     with patch(f"{MODULE}.async_setup", return_value=True) as mock_setup, patch(
         f"{MODULE}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: NAME}
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: ID}
         )
-    assert result4["type"] == "create_entry"
-    assert result4["title"] == NAME
-    assert result4["data"] == {CONF_ID: ID, CONF_HOST: None, CONF_NAME: NAME}
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == UNIQUE_NAME
+    assert result3["data"] == {CONF_ID: ID}
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -201,23 +194,19 @@ async def test_manual(hass: HomeAssistant):
 
     # Success
     mocked_bulb = _mocked_bulb()
-    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: IP_ADDRESS}
-        )
-    assert result4["type"] == "form"
-    assert result4["step_id"] == "name"
-    assert not result4["errors"]
-    with patch(f"{MODULE}.async_setup", return_value=True), patch(
+    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ), patch(
         f"{MODULE}.async_setup_entry",
         return_value=True,
     ):
-        result5 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: NAME}
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
-    assert result5["type"] == "create_entry"
-    assert result5["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+    assert result4["type"] == "create_entry"
+    assert result4["title"] == IP_ADDRESS
+    assert result4["data"] == {CONF_HOST: IP_ADDRESS}
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -245,6 +234,7 @@ async def test_options(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     config = {
+        CONF_NAME: NAME,
         CONF_MODEL: "",
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
@@ -259,9 +249,11 @@ async def test_options(hass: HomeAssistant):
     assert result["step_id"] == "init"
 
     config[CONF_NIGHTLIGHT_SWITCH] = True
+    user_input = {**config}
+    user_input.pop(CONF_NAME)
     with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
         result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], config
+            result["flow_id"], user_input
         )
         await hass.async_block_till_done()
     assert result2["type"] == "create_entry"
@@ -281,21 +273,16 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb()
     type(mocked_bulb).get_capabilities = MagicMock(return_value=None)
-    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ), patch(
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     type(mocked_bulb).get_capabilities.assert_called_once()
     type(mocked_bulb).get_properties.assert_called_once()
-    assert result["type"] == "form"
-    assert result["step_id"] == "name"
-    assert not result["errors"]
-    with patch(f"{MODULE}.async_setup", return_value=True), patch(
-        f"{MODULE}.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: NAME}
-        )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_ID: None, CONF_HOST: IP_ADDRESS, CONF_NAME: NAME}
+    assert result["data"] == {CONF_HOST: IP_ADDRESS}

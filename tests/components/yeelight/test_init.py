@@ -14,11 +14,14 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     CONFIG_ENTRY_DATA,
+    ENTITY_AMBILIGHT,
+    ENTITY_BINARY_SENSOR,
+    ENTITY_LIGHT,
+    ENTITY_NIGHTLIGHT,
     ID,
     IP_ADDRESS,
     MODULE,
     MODULE_CONFIG_FLOW,
-    NAME,
     _mocked_bulb,
     _patch_discovery,
 )
@@ -37,13 +40,13 @@ async def test_setup_discovery(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(f"binary_sensor.{NAME}_nightlight") is not None
-    assert hass.states.get(f"light.{NAME}") is not None
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is not None
+    assert hass.states.get(ENTITY_LIGHT) is not None
 
     # Unload
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(f"binary_sensor.{NAME}_nightlight") is None
-    assert hass.states.get(f"light.{NAME}") is None
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
+    assert hass.states.get(ENTITY_LIGHT) is None
 
 
 async def test_setup_import(hass: HomeAssistant):
@@ -93,10 +96,10 @@ async def test_unique_ids_device(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(f"binary_sensor.{NAME}_nightlight").unique_id == ID
-    assert er.async_get(f"light.{NAME}").unique_id == ID
-    assert er.async_get(f"light.{NAME}_nightlight").unique_id == f"{ID}-nightlight"
-    assert er.async_get(f"light.{NAME}_ambilight").unique_id == f"{ID}-ambilight"
+    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == ID
+    assert er.async_get(ENTITY_LIGHT).unique_id == ID
+    assert er.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
+    assert er.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
 async def test_unique_ids_entry(hass: HomeAssistant):
@@ -117,16 +120,12 @@ async def test_unique_ids_entry(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     er = await entity_registry.async_get_registry(hass)
+    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == config_entry.entry_id
+    assert er.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
     assert (
-        er.async_get(f"binary_sensor.{NAME}_nightlight").unique_id
-        == config_entry.entry_id
-    )
-    assert er.async_get(f"light.{NAME}").unique_id == config_entry.entry_id
-    assert (
-        er.async_get(f"light.{NAME}_nightlight").unique_id
+        er.async_get(ENTITY_NIGHTLIGHT).unique_id
         == f"{config_entry.entry_id}-nightlight"
     )
     assert (
-        er.async_get(f"light.{NAME}_ambilight").unique_id
-        == f"{config_entry.entry_id}-ambilight"
+        er.async_get(ENTITY_AMBILIGHT).unique_id == f"{config_entry.entry_id}-ambilight"
     )

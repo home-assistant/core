@@ -29,6 +29,7 @@ CAPABILITIES = {
 }
 
 NAME = "name"
+UNIQUE_NAME = f"yeelight_{MODEL}_{ID}"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -54,9 +55,10 @@ PROPERTIES = {
     "current_brightness": "30",
 }
 
-ENTITY_BINARY_SENSOR = f"binary_sensor.{NAME}_nightlight"
-ENTITY_LIGHT = f"light.{NAME}"
-ENTITY_NIGHTLIGHT = f"light.{NAME}_nightlight"
+ENTITY_BINARY_SENSOR = f"binary_sensor.{UNIQUE_NAME}_nightlight"
+ENTITY_LIGHT = f"light.{UNIQUE_NAME}"
+ENTITY_NIGHTLIGHT = f"light.{UNIQUE_NAME}_nightlight"
+ENTITY_AMBILIGHT = f"light.{UNIQUE_NAME}_ambilight"
 
 YAML_CONFIGURATION = {
     DOMAIN: {
@@ -73,7 +75,6 @@ YAML_CONFIGURATION = {
 
 CONFIG_ENTRY_DATA = {
     CONF_ID: ID,
-    CONF_NAME: NAME,
 }
 
 

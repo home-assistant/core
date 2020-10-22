@@ -7,7 +7,7 @@ from typing import Optional
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -196,9 +196,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data={
                 CONF_HOST: entry.data.get(CONF_HOST),
                 CONF_ID: entry.data.get(CONF_ID),
-                CONF_NAME: entry.data[CONF_NAME],
             },
             options={
+                CONF_NAME: entry.data.get(CONF_NAME, ""),
                 CONF_MODEL: entry.data.get(CONF_MODEL, ""),
                 CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
                 CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
@@ -265,43 +265,18 @@ async def _async_setup_device(
     if capabilities is None:
         capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
 
-    # Migrate name
-    if not entry.data.get(CONF_NAME):
-        _async_migrate_name(hass, entry, capabilities)
-
-    device = YeelightDevice(
-        hass, host, entry.data[CONF_NAME], entry.options, bulb, capabilities
-    )
+    device = YeelightDevice(hass, host, entry.options, bulb, capabilities)
     await hass.async_add_executor_job(device.update)
     await device.async_setup()
     return device
 
 
 @callback
-def _async_migrate_name(
-    hass: HomeAssistant, config_entry: ConfigEntry, capabilities: Optional[dict]
-):
-    """Move name from options to data."""
-    data = {**config_entry.data}
-    options = {**config_entry.options}
-    data[CONF_NAME] = options.pop(CONF_NAME)
-    if not data[CONF_NAME]:
-        # Name not set, generate name from capabilities
-        if capabilities is None:
-            # If the config entry existed and is in old structure
-            # we should be able to get capabilities
-            raise ConfigEntryNotReady
-        model = capabilities["model"]
-        unique_id = capabilities["id"]
-        data[CONF_NAME] = f"yeelight_{model}_{unique_id}"
-    # Disable update listener temporarily to avoid unnecessary reload
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
-        DATA_UNSUB_UPDATE_LISTENER
-    ]()
-    hass.config_entries.async_update_entry(config_entry, data=data, options=options)
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
-        DATA_UNSUB_UPDATE_LISTENER
-    ] = config_entry.add_update_listener(_async_update_listener)
+def _async_unique_name(capabilities: dict) -> str:
+    """Generate name from capabilities."""
+    model = capabilities["model"]
+    unique_id = capabilities["id"]
+    return f"yeelight_{model}_{unique_id}"
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
@@ -389,17 +364,24 @@ class YeelightScanner:
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, host, name, config, bulb, capabilities):
+    def __init__(self, hass, host, config, bulb, capabilities):
         """Initialize device."""
         self._hass = hass
         self._config = config
         self._host = host
-        self._name = name
         self._bulb_device = bulb
         self._capabilities = capabilities or {}
         self._device_type = None
         self._available = False
         self._remove_time_tracker = None
+
+        self._name = host  # Default name is host
+        if capabilities:
+            # Generate name from model and id when capabilities is available
+            self._name = _async_unique_name(capabilities)
+        if config.get(CONF_NAME):
+            # Override default name when name is set in config
+            self._name = config[CONF_NAME]
 
     @property
     def bulb(self):
