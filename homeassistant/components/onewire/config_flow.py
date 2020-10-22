@@ -167,12 +167,6 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                 platform_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
             return await self.async_step_owserver(platform_config)
 
-        # SysBus
-        if platform_config[CONF_TYPE] == CONF_TYPE_SYSBUS:
-            if CONF_MOUNT_DIR not in platform_config:
-                platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
-            return await self.async_step_mount_dir(platform_config)
-
         # OWFS
         if platform_config[CONF_TYPE] == CONF_TYPE_OWFS:  # pragma: no cover
             # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
@@ -187,15 +181,14 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=platform_config[CONF_MOUNT_DIR], data=platform_config
             )
 
-        raise InvalidOneWireType  # pragma: no cover
+        # SysBus
+        if CONF_MOUNT_DIR not in platform_config:
+            platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
+        return await self.async_step_mount_dir(platform_config)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidOneWireType(exceptions.HomeAssistantError):
-    """Error to indicate unknown onewire type."""
 
 
 class InvalidPath(exceptions.HomeAssistantError):
