@@ -14,7 +14,7 @@
                     "client_id": "Client ID",
                     "secret": "Secret"
                 },
-                "description": "Log in to https://open.plantbook.io/ and get you API client id and secret."
+                "description": "Log in to https://open.plantbook.io/apikey/show/ and get you API client id and secret."
             }
         }
     },

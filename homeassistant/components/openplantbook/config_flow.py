@@ -3,9 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 
-from . import OpenPlantBookApi
+from . import CannotConnect, InvalidAuth, OpenPlantBookApi
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,29 +19,30 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # TODO validate the data can be used to set up a connection.
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
-    # hub = PlaceholderHub(data["host"])
     api = OpenPlantBookApi(hass)
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    token = await api.get_plantbook_token(data["client_id"], data["secret"])
-    if not token:
+    try:
+        token = await api.get_plantbook_token(data["client_id"], data["secret"])
+        if not token:
+            raise CannotConnect
+    except CannotConnect:
+        _LOGGER.error("Unable to connect to the OpenPlantbook API")
+        raise CannotConnect
+        return False
+    except InvalidAuth:
+        _LOGGER.error("Authentication failed when connecting to the OpenPlantbook API")
         raise InvalidAuth
+        return False
+    except Exception as e:
+        _LOGGER.error(
+            "Unknown error «%s» when connecting the OpenPlantbook API", str(e)
+        )
+        raise CannotConnect
+        return False
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
     return {"title": "Openplantbook API", "token": token}
 
 
@@ -58,8 +59,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                user_input["token"] = info["token"]
-                return self.async_create_entry(title=info["title"], data=user_input)
+                if info:
+                    user_input["token"] = info["token"]
+                    return self.async_create_entry(title=info["title"], data=user_input)
+                else:
+                    raise CannotConnect
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -71,11 +75,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
