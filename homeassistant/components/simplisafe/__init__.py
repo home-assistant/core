@@ -500,7 +500,7 @@ class SimpliSafe:
 
         async def async_update_system(system):
             """Update a system."""
-            await system.update(cached=False)
+            await system.update(cached=system.version != 3)
             self._async_process_new_notifications(system)
 
         tasks = [async_update_system(system) for system in self.systems.values()]
