@@ -35,6 +35,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory, debounce
 from .const import (
+    ATTR_OBSTRUCTION_DETECTED,
     CHAR_CURRENT_DOOR_STATE,
     CHAR_CURRENT_POSITION,
     CHAR_CURRENT_TILT_ANGLE,
@@ -77,9 +78,6 @@ DOOR_TARGET_HASS_TO_HK = {
     STATE_OPENING: HK_DOOR_OPEN,
     STATE_CLOSING: HK_DOOR_CLOSED,
 }
-
-# Current attribute used by homekit_controller
-ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 _LOGGER = logging.getLogger(__name__)
 

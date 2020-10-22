@@ -14,6 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
 )
 from homeassistant.components.homekit.const import (
+    ATTR_OBSTRUCTION_DETECTED,
     ATTR_VALUE,
     CONF_LINKED_OBSTRUCTION_SENSOR,
     HK_DOOR_CLOSED,
@@ -21,7 +22,6 @@ from homeassistant.components.homekit.const import (
     HK_DOOR_OPEN,
     HK_DOOR_OPENING,
 )
-from homeassistant.components.homekit.type_covers import ATTR_OBSTRUCTION_DETECTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -583,3 +583,7 @@ async def test_garage_door_with_linked_obstruction_sensor(hass, hk_driver, cls, 
     assert acc.char_current_state.value == HK_DOOR_CLOSED
     assert acc.char_target_state.value == HK_DOOR_CLOSED
     assert acc.char_obstruction_detected.value is False
+
+    hass.states.async_remove(entity_id)
+    hass.states.async_remove(linked_obstruction_sensor_entity_id)
+    await hass.async_block_till_done()

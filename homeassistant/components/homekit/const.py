@@ -28,6 +28,8 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
+# Current attribute used by homekit_controller
+ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 # #### Config ####
 CONF_HOMEKIT_MODE = "mode"
