@@ -1,4 +1,4 @@
-"""Support to interface with the Plex API."""
+"""Support to interface with the Roon API."""
 import logging
 
 from homeassistant.components.media_player import BrowseMedia
@@ -87,9 +87,6 @@ def item_payload(roon_server, item, list_image_id):
         can_expand = True
         _LOGGER.warning("Unknown hint %s - %s", title, hint)
 
-    if title in EXCLUDE_ITEMS:
-        return None
-
     payload = {
         "title": display_title,
         "media_class": media_class,
@@ -153,13 +150,14 @@ def library_payload(roon_server, zone_id, media_content_id):
     count = len(items)
 
     if count < total_count:
-        _LOGGER.error(
+        _LOGGER.debug(
             "Exceeded limit of %d, loaded %d/%d", ITEM_LIMIT, count, total_count
         )
 
     for item in items:
-        item = item_payload(roon_server, item, library_image_id)
-        if not (item is None):
-            library_info.children.append(item)
+        if item.get("title") in EXCLUDE_ITEMS:
+            continue
+        entry = item_payload(roon_server, item, library_image_id)
+        library_info.children.append(entry)
 
     return library_info
