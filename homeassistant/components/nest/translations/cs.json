@@ -8,6 +8,9 @@
             "no_flows": "Pot\u0159ebujete nakonfigurovat Nest, abyste se s n\u00edm mohli autentizovat. [P\u0159e\u010dt\u011bte si pros\u00edm pokyny] (https://www.home-assistant.io/components/nest/).",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
+        "create_entry": {
+            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"
+        },
         "error": {
             "internal_error": "Intern\u00ed chyba ov\u011b\u0159en\u00ed k\u00f3du",
             "invalid_code": "Neplatn\u00fd k\u00f3d",
@@ -29,6 +32,9 @@
                 },
                 "description": "Chcete-li propojit \u00fa\u010det Nest, [autorizujte sv\u016fj \u00fa\u010det]({url}). \n\n Po autorizaci zkop\u00edrujte n\u00ed\u017ee uveden\u00fd k\u00f3d PIN.",
                 "title": "Propojit s Nest \u00fa\u010dtem"
+            },
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
             }
         }
     }
