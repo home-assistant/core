@@ -2,28 +2,22 @@
 
 import pytest
 
-from homeassistant.components import light
+from homeassistant.components.light import Profiles
 
 from tests.async_mock import patch
 
-orig_load_profiles = light.Profiles.load_profiles
-
 
 @pytest.fixture(autouse=True)
-def mock_profile_loading():
+def mock_profiles():
     """Mock loading of profiles."""
+    data = {}
 
-    async def fake_load(hass):
-        hass.data[light.DATA_PROFILES] = {}
-        return True
+    def mock_profiles_class(hass):
+        profiles = Profiles(hass)
+        profiles.data = data
+        return profiles
 
     with patch(
-        "homeassistant.components.light.Profiles.load_profiles", side_effect=fake_load
-    ) as mock_load_profiles:
-        yield mock_load_profiles
-
-
-@pytest.fixture()
-def not_mock_profile_loading(mock_profile_loading):
-    """Do not mock the profile loading."""
-    mock_profile_loading.side_effect = orig_load_profiles
+        "homeassistant.components.light.Profiles", side_effect=mock_profiles_class
+    ):
+        yield data

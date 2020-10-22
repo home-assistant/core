@@ -1,6 +1,4 @@
 """The tests for the Light component."""
-# pylint: disable=protected-access
-from io import StringIO
 import os
 
 import pytest
@@ -21,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-import tests.async_mock as mock
 from tests.common import async_mock_service
 
 
@@ -117,7 +114,7 @@ async def test_methods(hass):
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass, not_mock_profile_loading):
+async def test_services(hass, mock_profiles):
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -292,6 +289,7 @@ async def test_services(hass, not_mock_profile_loading):
     assert data == {}
 
     # One of the light profiles
+    mock_profiles["relax"] = (35.932, 69.412, 144, 0)
     prof_name, prof_h, prof_s, prof_bri, prof_t = "relax", 35.932, 69.412, 144, 0
 
     # Test light profiles
@@ -418,24 +416,7 @@ async def test_services(hass, not_mock_profile_loading):
     assert data == {}
 
 
-async def test_broken_light_profiles(hass, mock_storage, not_mock_profile_loading):
-    """Test light profiles."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
-
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-
-    # Setup a wrong light file
-    with open(user_light_file, "w") as user_file:
-        user_file.write("id,x,y,brightness,transition\n")
-        user_file.write("I,WILL,NOT,WORK,EVER\n")
-
-    assert not await async_setup_component(
-        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-    )
-
-
-async def test_light_profiles(hass, mock_storage, not_mock_profile_loading):
+async def test_light_profiles(hass, mock_storage):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -484,9 +465,7 @@ async def test_light_profiles(hass, mock_storage, not_mock_profile_loading):
     assert data == {light.ATTR_TRANSITION: 0}
 
 
-async def test_light_profiles_with_transition(
-    hass, mock_storage, not_mock_profile_loading
-):
+async def test_light_profiles_with_transition(hass, mock_storage):
     """Test light profiles with transition."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -532,33 +511,17 @@ async def test_light_profiles_with_transition(
     assert data == {light.ATTR_TRANSITION: 0}
 
 
-async def test_default_profiles_group(hass, mock_storage, not_mock_profile_loading):
+async def test_default_profiles_group(hass, mock_profiles):
     """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-    real_isfile = os.path.isfile
-    real_open = open
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
 
-    def _mock_isfile(path):
-        if path == user_light_file:
-            return True
-        return real_isfile(path)
-
-    def _mock_open(path, *args, **kwargs):
-        if path == user_light_file:
-            return StringIO(profile_data)
-        return real_open(path, *args, **kwargs)
-
-    profile_data = "id,x,y,brightness,transition\ngroup.all_lights.default,.4,.6,99,2\n"
-    with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
-        "builtins.open", side_effect=_mock_open
-    ):
-        assert await async_setup_component(
-            hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-        )
-        await hass.async_block_till_done()
+    mock_profiles["group.all_lights.default"] = (0.4, 0.6, 99, 2)
 
     ent, _, _ = platform.ENTITIES
     await hass.services.async_call(
@@ -573,37 +536,18 @@ async def test_default_profiles_group(hass, mock_storage, not_mock_profile_loadi
     }
 
 
-async def test_default_profiles_light(hass, mock_storage, not_mock_profile_loading):
+async def test_default_profiles_light(hass, mock_profiles):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-    real_isfile = os.path.isfile
-    real_open = open
-
-    def _mock_isfile(path):
-        if path == user_light_file:
-            return True
-        return real_isfile(path)
-
-    def _mock_open(path, *args, **kwargs):
-        if path == user_light_file:
-            return StringIO(profile_data)
-        return real_open(path, *args, **kwargs)
-
-    profile_data = (
-        "id,x,y,brightness,transition\n"
-        + "group.all_lights.default,.3,.5,200,0\n"
-        + "light.ceiling_2.default,.6,.6,100,3\n"
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
-    with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
-        "builtins.open", side_effect=_mock_open
-    ):
-        assert await async_setup_component(
-            hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-        )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    mock_profiles["group.all_lights.default"] = (0.3, 0.5, 200, 0)
+    mock_profiles["light.ceiling_2.default"] = (0.6, 0.6, 100, 3)
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
     await hass.services.async_call(
