@@ -717,20 +717,37 @@ async def test_unload_switch(hass):
     assert DOMAIN not in hass.data
 
 
-@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF, None])
 async def test_restore_off_state(hass, state):
     """Test that the 'off' and 'on' states are propoperly restored."""
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=State(ENTITY_SWITCH, state),
+        return_value=State(ENTITY_SWITCH, state) if state is not None else None,
     ):
         await hass.async_start()
         await hass.async_block_till_done()
         _, switch = await setup_switch(hass, {})
         if state == STATE_ON:
             assert switch.is_on
-        else:
+        elif state == STATE_OFF:
             assert not switch.is_on
+        elif state is None:
+            assert switch.is_on
+
+        for sw, initial_state in [
+            (switch.sleep_mode_switch, False),
+            (switch.adapt_brightness_switch, True),
+            (switch.adapt_color_switch, True),
+        ]:
+            if state == STATE_ON:
+                assert sw.is_on
+            elif state == STATE_OFF:
+                assert not sw.is_on
+            elif state is None:
+                if initial_state:
+                    assert sw.is_on
+                else:
+                    assert not sw.is_on
 
 
 @pytest.mark.xfail(reason="Offset is larger than half a day")
