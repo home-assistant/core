@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (  # pylint: disable=unused-import
     CONF_MOUNT_DIR,
@@ -110,9 +109,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             self.onewire_config.update(user_input)
             mount_dir = user_input[CONF_MOUNT_DIR]
-            if os.path.isdir(mount_dir):
-                await self.async_set_unique_id(f"{CONF_TYPE_SYSBUS}:{mount_dir}")
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(f"{CONF_TYPE_SYSBUS}:{mount_dir}")
+            self._abort_if_unique_id_configured()
+            if await self.hass.async_add_executor_job(os.path.isdir, mount_dir):
                 return self.async_create_entry(
                     title=mount_dir, data=self.onewire_config
                 )
