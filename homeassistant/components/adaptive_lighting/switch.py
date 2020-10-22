@@ -855,12 +855,11 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
         """Initialize the Adaptive Lighting switch."""
         self.hass = hass
         data = validate(config_entry)
-        self._name = data[CONF_NAME]
         self._icon = ICON
         self._state = None
         self._which = which
         self._unique_id = f"{self._name}_{slugify(self._which)}"
-        self._name = f"Adaptive Lighting {which}: {self._name}"
+        self._name = f"Adaptive Lighting {which}: {data[CONF_NAME]}"
         self._initial_state = initial_state
 
     @property
@@ -886,14 +885,10 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
-        if last_state is None:  # newly added to HA
-            if self._initial_state:
-                await self.async_turn_on()
-            else:
-                await self.async_turn_off()
-        elif STATE_ON:
+        _LOGGER.debug("%s: last state is %s", self._name, last_state)
+        if (last_state is None and self._initial_state) or last_state.state == STATE_ON:
             await self.async_turn_on()
-        elif STATE_OFF:
+        else:
             await self.async_turn_off()
 
     async def async_turn_on(self, **kwargs) -> None:
