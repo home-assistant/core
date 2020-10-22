@@ -15,7 +15,7 @@
         "step": {
             "user": {
                 "description": "Kas alustan seadistamist?",
-                "title": "Vali tuvastsmeetod"
+                "title": "Vali tuvastusmeetod"
             }
         }
     }

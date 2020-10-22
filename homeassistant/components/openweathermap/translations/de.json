@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "auth": "Der API-Schl\u00fcssel ist nicht korrekt."
+            "auth": "Der API-Schl\u00fcssel ist nicht korrekt.",
+            "connection": "Es kann keine Verbindung zur OWM-API hergestellt werden"
         },
         "step": {
             "user": {
@@ -9,7 +10,8 @@
                     "language": "Sprache",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
-                    "mode": "Modus"
+                    "mode": "Modus",
+                    "name": "Name der Integration"
                 },
                 "title": "OpenWeatherMap"
             }

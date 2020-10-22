@@ -131,7 +131,6 @@ omit =
     homeassistant/components/clickatell/notify.py
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
-    homeassistant/components/cloudflare/*
     homeassistant/components/cmus/media_player.py
     homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
@@ -731,6 +730,7 @@ omit =
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/roon/__init__.py
     homeassistant/components/roon/const.py
+    homeassistant/components/roon/media_browser.py
     homeassistant/components/roon/media_player.py
     homeassistant/components/roon/server.py
     homeassistant/components/route53/*
