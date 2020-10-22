@@ -601,5 +601,5 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             self._player,
             payload,
             self._internal_artwork_url,
-            get_url(self.hass, allow_internal=False),
+            get_url(self.hass, prefer_external=True),
         )
