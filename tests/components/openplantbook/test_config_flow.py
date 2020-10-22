@@ -39,7 +39,8 @@ async def test_form(hass):
     assert result2["title"] == "Openplantbook API"
     assert result2["data"] == {
         "client_id": "test-client-id",
-        "secret": "test-client-id",
+        "secret": "test-secret",
+        "token": True,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
