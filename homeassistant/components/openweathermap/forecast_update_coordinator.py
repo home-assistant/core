@@ -1,6 +1,7 @@
 """Forecast data coordinator for the OpenWeatherMap (OWM) service."""
 from datetime import timedelta
 import logging
+import time
 
 import async_timeout
 from pyowm.exceptions.api_call_error import APICallError
@@ -93,7 +94,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_daily_forecast(self, entry):
         return {
-            ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
+            ATTR_FORECAST_TIME: self._convert_time(entry.get_reference_time("unix")),
             ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("day"),
             ATTR_FORECAST_TEMP_LOW: entry.get_temperature("celsius").get("night"),
             ATTR_FORECAST_PRECIPITATION: self._calc_daily_precipitation(
@@ -106,13 +107,17 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_forecast(self, entry):
         return {
-            ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
+            ATTR_FORECAST_TIME: self._convert_time(entry.get_reference_time("unix")),
             ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("temp"),
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(entry),
             ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
             ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
             ATTR_FORECAST_CONDITION: self._get_condition(entry.get_weather_code()),
         }
+
+    @staticmethod
+    def _convert_time(timestamp):
+        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
 
     @staticmethod
     def _calc_daily_precipitation(rain, snow):

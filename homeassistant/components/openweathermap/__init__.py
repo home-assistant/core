@@ -119,7 +119,7 @@ def _import_configs(hass, configs):
 
 
 def _filter_domain_configs(elements, domain):
-    return list(filter(lambda elem: elem["platform"] == domain, elements))
+    return [elem for elem in elements if elem["platform"] == domain]
 
 
 def _get_config_value(config_entry, key):
