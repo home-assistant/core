@@ -254,10 +254,10 @@ async def test_setup_query_params(hass):
     """Test setup with query params."""
     respx.get(
         "http://localhost",
-         status_code=200,
-         headers={"content-type": CONTENT_TYPE_JSON},
-         content=lambda x: x.params
-     )
+        status_code=200,
+        headers={"content-type": CONTENT_TYPE_JSON},
+        content=lambda x: x.params,
+    )
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
@@ -266,9 +266,7 @@ async def test_setup_query_params(hass):
                 "platform": "rest",
                 "resource": "http://localhost",
                 "method": "GET",
-                "params": {
-                    "search": "something"
-                },
+                "params": {"search": "something"},
                 "value_template": "{{ value_json.search }}",
             }
         },
