@@ -568,11 +568,10 @@ class YeelightEntity(Entity):
     def __init__(self, device: YeelightDevice, entry: ConfigEntry):
         """Initialize the entity."""
         self._device = device
+        self._unique_id = entry.entry_id
         if entry.unique_id is not None:
             # Use entry unique id (device id) whenever possible
             self._unique_id = entry.unique_id
-        else:
-            self._unique_id = entry.entry_id
 
     @property
     def unique_id(self) -> str:

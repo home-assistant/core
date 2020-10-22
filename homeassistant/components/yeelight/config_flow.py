@@ -136,12 +136,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_HOST] = None
             return self.async_create_entry(title=user_input[CONF_NAME], data=data)
 
+        name = DEFAULT_NAME
         if self._capabilities:
             unique_id = self._capabilities["id"]
             model = self._capabilities["model"]
             name = f"yeelight_{model}_{unique_id}"
-        else:
-            name = DEFAULT_NAME
+
         return self.async_show_form(
             step_id="name",
             data_schema=vol.Schema({vol.Required(CONF_NAME, default=name): str}),
