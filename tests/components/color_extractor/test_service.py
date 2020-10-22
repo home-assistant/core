@@ -1,11 +1,11 @@
-"""Tests for colorthief component service calls."""
+"""Tests for color_extractor component service calls."""
 import base64
 import io
 
 import aiohttp
 import pytest
 
-from homeassistant.components.colorthief import (
+from homeassistant.components.color_extractor import (
     ATTR_FILE_PATH,
     ATTR_LIGHT_ENTITY_ID,
     ATTR_URL,
@@ -82,10 +82,10 @@ async def test_url_success(hass, aioclient_mock):
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(
         url=service_data["url"],
-        content=base64.b64decode(load_fixture("colorthief_url.txt")),
+        content=base64.b64decode(load_fixture("color_extractor_url.txt")),
     )
 
-    await _async_load_colorthief_url(hass, service_data)
+    await _async_load_color_extractor_url(hass, service_data)
 
     state = hass.states.get(LIGHT_ENTITY)
     assert state
@@ -104,8 +104,8 @@ async def test_url_success(hass, aioclient_mock):
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
 
 
-async def _async_load_colorthief_url(hass, service_data):
-    # Load our ColorThief component
+async def _async_load_color_extractor_url(hass, service_data):
+    # Load our color_extractor component
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -132,7 +132,7 @@ async def test_url_exception(hass, aioclient_mock):
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(url=service_data["url"], exc=aiohttp.ClientError)
 
-    await _async_load_colorthief_url(hass, service_data)
+    await _async_load_color_extractor_url(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -150,7 +150,7 @@ async def test_url_error(hass, aioclient_mock):
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(url=service_data["url"], status=400)
 
-    await _async_load_colorthief_url(hass, service_data)
+    await _async_load_color_extractor_url(hass, service_data)
 
     # Light has not been modified due to failure
     state = hass.states.get(LIGHT_ENTITY)
@@ -162,7 +162,7 @@ async def test_url_error(hass, aioclient_mock):
 @patch("os.access", Mock(return_value=True))
 @patch(
     "builtins.open",
-    mock_open(read_data=base64.b64decode(load_fixture("colorthief_file.txt"))),
+    mock_open(read_data=base64.b64decode(load_fixture("color_extractor_file.txt"))),
     create=True,
 )
 def _get_file_mock(file_path):
@@ -172,7 +172,7 @@ def _get_file_mock(file_path):
     with open(file_path) as file_handler:
         _file = io.BytesIO(file_handler.read())
 
-    _file.name = "colorthief.jpg"
+    _file.name = "color_extractor.jpg"
     _file.seek(0)
 
     return _file
@@ -194,7 +194,7 @@ async def test_file(hass):
     assert state.state == STATE_OFF
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
-    with patch("homeassistant.components.colorthief._get_file", _get_file_mock):
+    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
         await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
         await hass.async_block_till_done()
 
@@ -211,5 +211,4 @@ async def test_file(hass):
     assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
 
     # Ensure the RGB values are correct
-    # TODO: Get this working again...
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))

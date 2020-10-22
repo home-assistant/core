@@ -1,4 +1,4 @@
-"""Module for ColorThief (RGB extraction from images) component."""
+"""Module for color_extractor (RGB extraction from images) component."""
 import asyncio
 import io
 import logging
@@ -8,7 +8,7 @@ import aiohttp
 import async_timeout
 from colorthief import ColorThief
 
-from homeassistant.components.colorthief.const import (
+from homeassistant.components.color_extractor.const import (
     ATTR_FILE_PATH,
     ATTR_LIGHT_ENTITY_ID,
     ATTR_URL,
@@ -34,9 +34,9 @@ def _get_file(file_path):
 
 
 async def async_setup(hass, hass_config):
-    """Set up services for ColorThief integration."""
+    """Set up services for color_extractor integration."""
 
-    _LOGGER.debug("Setting up ColorThief component")
+    _LOGGER.debug("Setting up color_extractor component")
 
     async def _async_get_color(file_handler) -> tuple:
         """Given an image file, extract the predominant color from it."""
