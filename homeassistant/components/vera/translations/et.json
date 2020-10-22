@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller on juba seadistatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "vera_controller_url": "Kontrolleri URL"
+                },
+                "title": "Seadista Vera kontroller"
+            }
+        }
+    }
+}

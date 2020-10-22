@@ -21,6 +21,7 @@ from .const import (
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
+    EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
     MANUFACTURER,
@@ -145,12 +146,13 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._sd_status = None
         self._alim_status = None
         self._is_local = None
+        self._light_state = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
             self._listeners.append(
                 async_dispatcher_connect(
                     self.hass,
@@ -176,6 +178,8 @@ class NetatmoCamera(NetatmoBase, Camera):
             elif data["push_type"] in ["NACamera-on", "NACamera-connection"]:
                 self.is_streaming = True
                 self._status = "on"
+            elif data["push_type"] == "NOC-light_mode":
+                self._light_state = data["sub_type"]
 
             self.async_write_ha_state()
             return
@@ -219,6 +223,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             "is_local": self._is_local,
             "vpn_url": self._vpnurl,
             "local_url": self._localurl,
+            "light_state": self._light_state,
         }
 
     @property

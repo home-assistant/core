@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "no_device": "Nessuno dei tuoi dispositivi ha attivato \"Trova il mio iPhone\""
+            "no_device": "Nessuno dei tuoi dispositivi ha attivato \"Trova il mio iPhone\"",
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
@@ -11,6 +12,13 @@
             "validate_verification_code": "Impossibile verificare il codice di verifica, scegliere un dispositivo attendibile e riavviare la verifica"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
+                "title": "Credenziali iCloud"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Dispositivo attendibile"

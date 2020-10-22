@@ -1,12 +1,8 @@
 """Support for N26 switches."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .const import CARD_STATE_ACTIVE, CARD_STATE_BLOCKED, DATA
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 

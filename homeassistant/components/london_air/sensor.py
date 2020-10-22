@@ -128,19 +128,21 @@ class AirSensor(Entity):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated
-        attrs["sites"] = len(self._site_data)
+        attrs["sites"] = len(self._site_data) if self._site_data is not None else 0
         attrs["data"] = self._site_data
         return attrs
 
     def update(self):
         """Update the sensor."""
-        self._api_data.update()
-        self._site_data = self._api_data.data[self._name]
-        self._updated = self._site_data[0]["updated"]
         sites_status = []
-        for site in self._site_data:
-            if site["pollutants_status"] != "no_species_data":
-                sites_status.append(site["pollutants_status"])
+        self._api_data.update()
+        if self._api_data.data:
+            self._site_data = self._api_data.data[self._name]
+            self._updated = self._site_data[0]["updated"]
+            for site in self._site_data:
+                if site["pollutants_status"] != "no_species_data":
+                    sites_status.append(site["pollutants_status"])
+
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:

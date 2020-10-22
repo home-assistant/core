@@ -33,6 +33,9 @@
         }
     },
     "options": {
+        "error": {
+            "select_single": "W\u00e4hle eine Option aus."
+        },
         "step": {
             "add_override": {
                 "title": "Insteon"

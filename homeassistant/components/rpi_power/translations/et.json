@@ -6,7 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Kas alustame paigaldusega?"
+                "description": "Kas alustada paigaldusega?"
             }
         }
     },

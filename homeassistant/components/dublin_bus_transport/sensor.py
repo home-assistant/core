@@ -5,7 +5,6 @@ For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
 from datetime import datetime, timedelta
-import logging
 
 import requests
 import voluptuous as vol
@@ -16,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
 
 ATTR_STOP_ID = "Stop ID"

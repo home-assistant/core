@@ -50,14 +50,22 @@ DEFAULT_CONFIG = {
         "68": 0,  # Multi-channel PWM instead of a single light
         "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
         "80": 0,  # Blinds and shutters support
+        "82": 0,  # Reduce the CT range from 153..500 to 200.380
     },
+    "ty": 0,  # Tuya MCU
     "lt_st": 0,
     "ver": 1,
 }
 
 
 async def help_test_availability_when_connection_lost(
-    hass, mqtt_client_mock, mqtt_mock, domain, config
+    hass,
+    mqtt_client_mock,
+    mqtt_mock,
+    domain,
+    config,
+    sensor_config=None,
+    entity_id="test",
 ):
     """Test availability after MQTT disconnection.
 
@@ -69,6 +77,13 @@ async def help_test_availability_when_connection_lost(
         json.dumps(config),
     )
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
     # Device online
     async_fire_mqtt_message(
@@ -76,7 +91,8 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-    state = hass.states.get(f"{domain}.test")
+
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     # Disconnected from MQTT server -> state changed to unavailable
@@ -85,7 +101,7 @@ async def help_test_availability_when_connection_lost(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Reconnected to MQTT server -> state still unavailable
@@ -94,7 +110,7 @@ async def help_test_availability_when_connection_lost(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Receive LWT again
@@ -103,7 +119,7 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -112,6 +128,8 @@ async def help_test_availability(
     mqtt_mock,
     domain,
     config,
+    sensor_config=None,
+    entity_id="test",
 ):
     """Test availability.
 
@@ -123,8 +141,15 @@ async def help_test_availability(
         json.dumps(config),
     )
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(
@@ -133,7 +158,7 @@ async def help_test_availability(
         config_get_state_online(config),
     )
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(
@@ -142,7 +167,7 @@ async def help_test_availability(
         config_get_state_offline(config),
     )
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -151,6 +176,8 @@ async def help_test_availability_discovery_update(
     mqtt_mock,
     domain,
     config,
+    sensor_config=None,
+    entity_id="test",
 ):
     """Test update of discovered TasmotaAvailability.
 
@@ -180,16 +207,23 @@ async def help_test_availability_discovery_update(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, online1)
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, offline1)
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Change availability settings
@@ -200,17 +234,24 @@ async def help_test_availability_discovery_update(
     async_fire_mqtt_message(hass, availability_topic1, online1)
     async_fire_mqtt_message(hass, availability_topic1, online2)
     async_fire_mqtt_message(hass, availability_topic2, online1)
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, availability_topic2, online2)
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
 
 async def help_test_availability_poll_state(
-    hass, mqtt_client_mock, mqtt_mock, domain, config, poll_topic, poll_payload
+    hass,
+    mqtt_client_mock,
+    mqtt_mock,
+    domain,
+    config,
+    poll_topic,
+    poll_payload,
+    sensor_config=None,
 ):
     """Test polling of state when device is available.
 
@@ -222,6 +263,13 @@ async def help_test_availability_poll_state(
         json.dumps(config),
     )
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
 
     # Device online, verify poll for state
@@ -265,7 +313,16 @@ async def help_test_availability_poll_state(
 
 
 async def help_test_discovery_removal(
-    hass, mqtt_mock, caplog, domain, config1, config2
+    hass,
+    mqtt_mock,
+    caplog,
+    domain,
+    config1,
+    config2,
+    sensor_config1=None,
+    sensor_config2=None,
+    entity_id="test",
+    name="Test",
 ):
     """Test removal of discovered entity."""
     device_reg = await hass.helpers.device_registry.async_get_registry()
@@ -277,34 +334,56 @@ async def help_test_discovery_removal(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
+    if sensor_config1:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config1[CONF_MAC]}/sensors",
+            json.dumps(sensor_config1),
+        )
+        await hass.async_block_till_done()
 
     # Verify device and entity registry entries are created
     device_entry = device_reg.async_get_device(set(), {("mac", config1[CONF_MAC])})
     assert device_entry is not None
-    entity_entry = entity_reg.async_get(f"{domain}.test")
+    entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
     assert entity_entry is not None
 
     # Verify state is added
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == name
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config2[CONF_MAC]}/config", data2)
     await hass.async_block_till_done()
+    if sensor_config1:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config2[CONF_MAC]}/sensors",
+            json.dumps(sensor_config2),
+        )
+        await hass.async_block_till_done()
 
     # Verify entity registry entries are cleared
     device_entry = device_reg.async_get_device(set(), {("mac", config2[CONF_MAC])})
     assert device_entry is not None
-    entity_entry = entity_reg.async_get(f"{domain}.test")
+    entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state is None
 
 
 async def help_test_discovery_update_unchanged(
-    hass, mqtt_mock, caplog, domain, config, discovery_update
+    hass,
+    mqtt_mock,
+    caplog,
+    domain,
+    config,
+    discovery_update,
+    sensor_config=None,
+    entity_id="test",
+    name="Test",
 ):
     """Test update of discovered component without changes.
 
@@ -313,18 +392,33 @@ async def help_test_discovery_update_unchanged(
     config1 = copy.deepcopy(config)
     config2 = copy.deepcopy(config)
     config2[CONF_PREFIX][PREFIX_CMND] = "cmnd2"
+    config2[CONF_PREFIX][PREFIX_TELE] = "tele2"
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state is not None
-    assert state.name == "Test"
+    assert state.name == name
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
     assert not discovery_update.called
 
@@ -334,7 +428,9 @@ async def help_test_discovery_update_unchanged(
     assert discovery_update.called
 
 
-async def help_test_discovery_device_remove(hass, mqtt_mock, domain, unique_id, config):
+async def help_test_discovery_device_remove(
+    hass, mqtt_mock, domain, unique_id, config, sensor_config=None
+):
     """Test domain entity is removed when device is removed."""
     device_reg = await hass.helpers.device_registry.async_get_registry()
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -344,6 +440,13 @@ async def help_test_discovery_device_remove(hass, mqtt_mock, domain, unique_id, 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
     device = device_reg.async_get_device(set(), {("mac", config[CONF_MAC])})
     assert device is not None
@@ -358,7 +461,7 @@ async def help_test_discovery_device_remove(hass, mqtt_mock, domain, unique_id, 
 
 
 async def help_test_entity_id_update_subscriptions(
-    hass, mqtt_mock, domain, config, topics=None
+    hass, mqtt_mock, domain, config, topics=None, sensor_config=None, entity_id="test"
 ):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -370,22 +473,31 @@ async def help_test_entity_id_update_subscriptions(
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
     if not topics:
         topics = [get_topic_tele_state(config), get_topic_tele_will(config)]
     assert len(topics) > 0
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state is not None
     assert mqtt_mock.async_subscribe.call_count == len(topics)
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
 
-    entity_reg.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
+    entity_reg.async_update_entity(
+        f"{domain}.{entity_id}", new_entity_id=f"{domain}.milk"
+    )
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state is None
 
     state = hass.states.get(f"{domain}.milk")
@@ -394,7 +506,9 @@ async def help_test_entity_id_update_subscriptions(
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
 
 
-async def help_test_entity_id_update_discovery_update(hass, mqtt_mock, domain, config):
+async def help_test_entity_id_update_discovery_update(
+    hass, mqtt_mock, domain, config, sensor_config=None, entity_id="test"
+):
     """Test MQTT discovery update after entity_id is updated."""
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
 
@@ -405,16 +519,25 @@ async def help_test_entity_id_update_discovery_update(hass, mqtt_mock, domain, c
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data)
     await hass.async_block_till_done()
+    if sensor_config:
+        async_fire_mqtt_message(
+            hass,
+            f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/sensors",
+            json.dumps(sensor_config),
+        )
+        await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, topic, config_get_state_online(config))
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, topic, config_get_state_offline(config))
-    state = hass.states.get(f"{domain}.test")
+    state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
-    entity_reg.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
+    entity_reg.async_update_entity(
+        f"{domain}.{entity_id}", new_entity_id=f"{domain}.milk"
+    )
     await hass.async_block_till_done()
     assert hass.states.get(f"{domain}.milk")
 

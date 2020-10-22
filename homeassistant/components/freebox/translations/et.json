@@ -4,7 +4,18 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "register_failed": "\u00dchenduse loomine nurjus. Proovi uuesti"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "register_failed": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "title": ""
+            }
         }
     }
 }

@@ -16,8 +16,6 @@ from .discovery import (
     set_discovery_hash,
 )
 
-DATA_MQTT = "mqtt"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -52,7 +50,7 @@ class TasmotaEntity(Entity):
 
     @callback
     def state_updated(self, state, **kwargs):
-        """Handle new MQTT state messages."""
+        """Handle state updates."""
         self._state = state
         self.async_write_ha_state()
 
@@ -86,7 +84,7 @@ class TasmotaAvailability(TasmotaEntity):
         super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events."""
+        """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)

@@ -6,12 +6,21 @@
         },
         "error": {
             "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa , viz https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Neplatn\u00e9 s\u00ed\u0165ov\u00e9 rozhran\u00ed",
+            "invalid_key": "Neplatn\u00fd kl\u00ed\u010d br\u00e1ny",
             "invalid_mac": "Neplatn\u00e1 MAC adresa"
         },
         "flow_title": "Br\u00e1na Xiaomi Aqara: {name}",
         "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP adresa"
+                },
+                "title": "Vyberte br\u00e1nu Xiaomi Aqara, kterou chcete p\u0159ipojit"
+            },
             "settings": {
                 "data": {
+                    "key": "Kl\u00ed\u010d va\u0161\u00ed br\u00e1ny",
                     "name": "Jm\u00e9no br\u00e1ny"
                 }
             },
