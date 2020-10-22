@@ -36,12 +36,6 @@ async def test_setup_adds_proper_devices(hass):
     assert await async_setup_component(hass, light.DOMAIN, good_config)
 
 
-@pytest.mark.parametrize("brightness", [32, 256, 64])
-async def test_name(light_mock):
-    """Test the name."""
-    assert "fake_light" == light_mock.name
-
-
 @pytest.mark.parametrize(
     "brightness,expected", [(32, "on"), (256, "xdim 255"), (64, "xdim 63")]
 )
@@ -65,7 +59,7 @@ async def test_turn_on_with_brightness(light_mock, expected):
     light_mock.light.send_cmd.assert_has_calls(expected)
 
 
-@pytest.mark.parametrize("brightness", [32, 256, 64])
+@pytest.mark.parametrize("brightness", [32])
 async def test_turn_off(light_mock):
     """Test turn_off."""
     light_mock.turn_off()
