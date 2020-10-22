@@ -598,5 +598,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         }
 
         return await build_item_response(
-            self._player, payload, self._internal_artwork_url, get_url(self.hass)
+            self._player,
+            payload,
+            self._internal_artwork_url,
+            get_url(self.hass, allow_internal=False),
         )
