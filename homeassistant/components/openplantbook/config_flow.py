@@ -33,9 +33,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     except InvalidAuth:
         _LOGGER.error("Authentication failed when connecting to the OpenPlantbook API")
         raise
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.error(
-            "Unknown error «%s» when connecting the OpenPlantbook API", str(e)
+            "Unknown error «%s» when connecting the OpenPlantbook API", str(exception)
         )
         raise CannotConnect
 
@@ -46,7 +46,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenPlantBook."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     async def async_step_user(self, user_input=None):
