@@ -227,7 +227,7 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, controller, default_zone_runtime, scan_interval):
+    def __init__(self, hass, controller, default_zone_runtime):
         """Initialize."""
         self._async_cancel_time_interval_listener = None
         self.controller = controller
