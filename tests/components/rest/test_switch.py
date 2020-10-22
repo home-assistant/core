@@ -28,6 +28,7 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 HEADERS = {"Content-type": CONTENT_TYPE_JSON}
 AUTH = None
+PARAMS = None
 
 
 async def test_setup_missing_config(hass):
@@ -137,6 +138,7 @@ def _setup_test_switch(hass):
         STATE_RESOURCE,
         METHOD,
         HEADERS,
+        PARAMS,
         AUTH,
         body_on,
         body_off,
