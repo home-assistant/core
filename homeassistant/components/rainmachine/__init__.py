@@ -308,9 +308,7 @@ class RainMachine:
         # If this is the first registration we have, start a time interval:
         if not self._async_cancel_time_interval_listener:
             self._async_cancel_time_interval_listener = async_track_time_interval(
-                self.hass,
-                self._async_update_listener_action,
-                DEFAULT_SCAN_INTERVAL,
+                self.hass, self._async_update_listener_action, DEFAULT_SCAN_INTERVAL,
             )
 
         self._api_category_count[api_category] += 1
