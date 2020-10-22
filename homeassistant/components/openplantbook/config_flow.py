@@ -37,7 +37,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error(
             "Unknown error «%s» when connecting the OpenPlantbook API", str(exception)
         )
-        raise CannotConnect
+        raise CannotConnect from exception
 
     return {"title": "Openplantbook API", "token": token}
 
