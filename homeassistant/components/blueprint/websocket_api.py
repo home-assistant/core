@@ -92,7 +92,6 @@ async def ws_import_blueprint(hass, connection, msg):
             "suggested_filename": imported_blueprint.suggested_filename,
             "raw_data": imported_blueprint.raw_data,
             "blueprint": {
-                "name": imported_blueprint.blueprint.name,
                 "metadata": imported_blueprint.blueprint.metadata,
             },
         },

@@ -31,16 +31,15 @@ class Blueprint:
         self,
         data: dict,
         *,
-        override_name: Optional[str] = None,
+        path: Optional[str] = None,
         expected_domain: Optional[str] = None,
     ) -> None:
         """Initialize a blueprint."""
         try:
             data = self.data = BLUEPRINT_SCHEMA(data)
         except vol.Invalid as err:
-            raise InvalidBlueprint(expected_domain, override_name, data, err)
+            raise InvalidBlueprint(expected_domain, path, data, err)
 
-        self.name = override_name or data[CONF_BLUEPRINT][CONF_NAME]
         self.placeholders = placeholder.extract_placeholders(data)
 
         # In future, we will treat this as "incorrect" and allow to recover from this
@@ -48,7 +47,7 @@ class Blueprint:
         if expected_domain is not None and data_domain != expected_domain:
             raise InvalidBlueprint(
                 expected_domain,
-                self.name,
+                path or self.name,
                 data,
                 f"Found incorrect blueprint type {data_domain}, expected {expected_domain}",
             )
@@ -60,10 +59,15 @@ class Blueprint:
         if missing:
             raise InvalidBlueprint(
                 data_domain,
-                self.name,
+                path or self.name,
                 data,
                 f"Missing input definition for {', '.join(missing)}",
             )
+
+    @property
+    def name(self) -> str:
+        """Return blueprint name."""
+        return self.data[CONF_BLUEPRINT][CONF_NAME]
 
     @property
     def metadata(self) -> dict:
@@ -134,19 +138,17 @@ class DomainBlueprints:
         """Reset the blueprint cache."""
         self._blueprints = {}
 
-    def _load_blueprint(self, blueprint_name) -> Blueprint:
+    def _load_blueprint(self, blueprint_path) -> Blueprint:
         """Load a blueprint."""
         try:
             blueprint_data = yaml.load_yaml(
-                self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_name)
+                self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
             )
         except (HomeAssistantError, FileNotFoundError) as err:
-            raise FailedToLoad(self.domain, blueprint_name, err) from err
+            raise FailedToLoad(self.domain, blueprint_path, err) from err
 
         return Blueprint(
-            blueprint_data,
-            expected_domain=self.domain,
-            override_name=blueprint_name,
+            blueprint_data, expected_domain=self.domain, path=blueprint_path
         )
 
     def _load_blueprints(self) -> Dict[str, Union[Blueprint, BlueprintException]]:
@@ -156,19 +158,19 @@ class DomainBlueprints:
         )
         results = {}
 
-        for blueprint_file in blueprint_folder.glob("**/*.yaml"):
-            # blueprint_path = blueprint_folder / blueprint_file
-            if self._blueprints.get(blueprint_file.name) is None:
+        for blueprint_path in blueprint_folder.glob("**/*.yaml"):
+            blueprint_path = str(blueprint_path.relative_to(blueprint_folder))
+            if self._blueprints.get(blueprint_path) is None:
                 try:
-                    self._blueprints[blueprint_file.name] = self._load_blueprint(
-                        blueprint_file.name
+                    self._blueprints[blueprint_path] = self._load_blueprint(
+                        blueprint_path
                     )
                 except BlueprintException as err:
-                    self._blueprints[blueprint_file.name] = None
-                    results[blueprint_file.name] = err
+                    self._blueprints[blueprint_path] = None
+                    results[blueprint_path] = err
                     continue
 
-            results[blueprint_file.name] = self._blueprints[blueprint_file.name]
+            results[blueprint_path] = self._blueprints[blueprint_path]
 
         return results
 

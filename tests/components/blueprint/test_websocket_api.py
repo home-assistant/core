@@ -33,7 +33,14 @@ async def test_list_blueprints(hass, hass_ws_client):
                 "input": {"service_to_call": None, "trigger_event": None},
                 "name": "Call service based on event",
             },
-        }
+        },
+        "in_folder/in_folder_blueprint.yaml": {
+            "metadata": {
+                "domain": "automation",
+                "input": {"action": None, "trigger": None},
+                "name": "In Folder Blueprint",
+            }
+        },
     }
 
 
@@ -66,7 +73,6 @@ async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
         "url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         "raw_data": raw_data,
         "blueprint": {
-            "name": "Call service based on event",
             "metadata": {
                 "domain": "automation",
                 "input": {"service_to_call": None, "trigger_event": None},
