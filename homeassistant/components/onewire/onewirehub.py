@@ -1,5 +1,7 @@
+"""Hub for communication with 1-Wire server or mount_dir."""
 import logging
 import os
+
 from pyownet import protocol
 
 from homeassistant.helpers.typing import HomeAssistantType

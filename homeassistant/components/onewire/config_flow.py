@@ -1,6 +1,4 @@
 """Config flow for 1-Wire component."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -18,7 +16,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from .onwirehub import OneWireHub
+from .onewirehub import OneWireHub
 
 DATA_SCHEMA_USER = vol.Schema(
     {vol.Required(CONF_TYPE): vol.In([CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS])}
