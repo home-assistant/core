@@ -79,6 +79,11 @@ async def async_setup(hass, hass_config):
         service_data = service_call.data
 
         url = service_data.get(ATTR_URL)
+
+        if not hass.config.is_allowed_external_url(url):
+            _LOGGER.error("External URL is not allowed: %s", url)
+            return
+
         light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
 
         # Optional fields
@@ -119,6 +124,11 @@ async def async_setup(hass, hass_config):
         service_data = service_call.data
 
         file_path = service_data.get(ATTR_FILE_PATH)
+
+        if not hass.config.is_allowed_path(file_path):
+            _LOGGER.error("File path is not allowed: '%s'", file_path)
+            return
+
         light_entity_id = service_data.get(ATTR_LIGHT_ENTITY_ID)
 
         # Optional fields

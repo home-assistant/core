@@ -106,7 +106,11 @@ async def test_url_success(hass, aioclient_mock):
 
 async def _async_load_color_extractor_url(hass, service_data):
     # Load our color_extractor component
-    await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {"homeassistant": {"allowlist_external_urls": ["http://example.com/images/"]}},
+    )
     await hass.async_block_till_done()
 
     # Validate pre service call
@@ -129,8 +133,29 @@ async def test_url_exception(hass, aioclient_mock):
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
     }
 
-    # Mock the HTTP Response with a base64 encoded 1x1 pixel
+    # Mock the HTTP Response with an HTTPError
     aioclient_mock.get(url=service_data["url"], exc=aiohttp.ClientError)
+
+    await _async_load_color_extractor_url(hass, service_data)
+
+    # Light has not been modified due to failure
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_url_not_allowed(hass, aioclient_mock):
+    """Test that a not allowed external URL fails to turn light on."""
+    service_data = {
+        ATTR_URL: "http://denied.com/images/logo.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+    }
+
+    # Mock the HTTP Response with a base64 encoded 1x1 pixel
+    aioclient_mock.get(
+        url=service_data["url"],
+        content=base64.b64decode(load_fixture("color_extractor_url.txt")),
+    )
 
     await _async_load_color_extractor_url(hass, service_data)
 
@@ -181,12 +206,15 @@ def _get_file_mock(file_path):
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
-        ATTR_FILE_PATH: "/path/to/an/image.png",
+        ATTR_FILE_PATH: "/opt/image.png",
         ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
         ATTR_BRIGHTNESS_PCT: 100,
     }
 
-    await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(
+        hass, DOMAIN, {"homeassistant": {"allowlist_external_dirs": ["/opt/image.png"]}}
+    )
+    await hass.async_block_till_done()
 
     # Verify pre service check
     state = hass.states.get(LIGHT_ENTITY)
@@ -212,3 +240,32 @@ async def test_file(hass):
 
     # Ensure the RGB values are correct
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
+
+
+async def test_file_denied_dir(hass):
+    """Test that the file only service fails to read an image in a dir not explicitly allowed."""
+    service_data = {
+        ATTR_FILE_PATH: "/path/to/a/dir/not/allowed/image.png",
+        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_BRIGHTNESS_PCT: 100,
+    }
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Verify pre service check
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    # Mock the file handler read with our 1x1 base64 encoded fixture image
+    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
+        await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(LIGHT_ENTITY)
+
+    assert state
+
+    # Ensure it's still off due to access error (dir not explicitly allowed)
+    assert state.state == STATE_OFF
