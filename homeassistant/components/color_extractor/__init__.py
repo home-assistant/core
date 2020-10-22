@@ -7,10 +7,10 @@ from PIL import UnidentifiedImageError
 import aiohttp
 import async_timeout
 from colorthief import ColorThief
+import voluptuous as vol
 
 from homeassistant.components.color_extractor.const import (
     ATTR_FILE_PATH,
-    ATTR_LIGHT_ENTITY_ID,
     ATTR_URL,
     DOMAIN,
     SERVICE_PREDOMINANT_COLOR_FILE,
@@ -19,15 +19,39 @@ from homeassistant.components.color_extractor.const import (
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LIGHT_TURN_ON_SCHEMA,
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+# Extend the existing light.turn_on service schema
+# with the addition of our ATTR_FILE_PATH
+FILE_SERVICE_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIGHT_TURN_ON_SCHEMA,
+        vol.Required(ATTR_ENTITY_ID): cv.string,
+        vol.Required(ATTR_FILE_PATH): cv.string,
+    }
+)
+
+URL_SERVICE_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIGHT_TURN_ON_SCHEMA,
+        vol.Required(ATTR_ENTITY_ID): cv.string,
+        vol.Required(ATTR_URL): cv.string,
+    }
+)
+
 
 def _get_file(file_path):
+    """Get a PIL acceptable input file reference.
+
+    Allows us to mock patch during testing to make BytesIO stream.
+    """
     return file_path
 
 
@@ -51,10 +75,10 @@ async def async_setup(hass, hass_config):
 
         return color
 
-    async def _async_set_light(light_entity_id, color, **light_kwargs):
+    async def _async_set_light(entity_id, color, **light_kwargs):
         """Set the given light to our extracted RGB value."""
         service_data = {
-            ATTR_ENTITY_ID: light_entity_id,
+            ATTR_ENTITY_ID: entity_id,
             ATTR_RGB_COLOR: color,
         }
 
@@ -63,7 +87,7 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Setting %d extra light parameters", len(light_kwargs))
 
-        _LOGGER.debug("Setting RGB %s on light %s", color, light_entity_id)
+        _LOGGER.debug("Setting RGB %s on light %s", color, entity_id)
 
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
@@ -84,7 +108,7 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
-        light_entity_id = service_data.pop(ATTR_LIGHT_ENTITY_ID)
+        entity_id = service_data.pop(ATTR_ENTITY_ID)
 
         try:
             session = aiohttp_client.async_get_clientsession(hass)
@@ -105,12 +129,13 @@ async def async_setup(hass, hass_config):
             color = await _async_get_color(_file)
 
         if color:
-            await _async_set_light(light_entity_id, color, **service_data)
+            await _async_set_light(entity_id, color, **service_data)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PREDOMINANT_COLOR_URL,
         async_predominant_color_url_service,
+        schema=URL_SERVICE_SCHEMA,
     )
 
     async def async_predominant_color_file_service(service_call):
@@ -128,18 +153,19 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
-        light_entity_id = service_data.pop(ATTR_LIGHT_ENTITY_ID)
+        entity_id = service_data.pop(ATTR_ENTITY_ID)
 
         _file = _get_file(file_path)
         color = await _async_get_color(_file)
 
         if color:
-            await _async_set_light(light_entity_id, color, **service_data)
+            await _async_set_light(entity_id, color, **service_data)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PREDOMINANT_COLOR_FILE,
         async_predominant_color_file_service,
+        schema=FILE_SERVICE_SCHEMA,
     )
 
     return True

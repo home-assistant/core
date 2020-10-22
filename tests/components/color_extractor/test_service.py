@@ -5,12 +5,7 @@ import io
 import aiohttp
 import pytest
 
-from homeassistant.components.color_extractor import (
-    ATTR_FILE_PATH,
-    ATTR_LIGHT_ENTITY_ID,
-    ATTR_URL,
-    DOMAIN,
-)
+from homeassistant.components.color_extractor import ATTR_FILE_PATH, ATTR_URL, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -100,7 +95,7 @@ async def test_url_success(hass, aioclient_mock):
     """Test that a successful image GET translate to light RGB."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 50,
     }
@@ -135,7 +130,7 @@ async def test_url_exception(hass, aioclient_mock):
     """Test that a HTTPError fails to turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Mock the HTTP Response with an HTTPError
@@ -153,7 +148,7 @@ async def test_url_not_allowed(hass, aioclient_mock):
     """Test that a not allowed external URL fails to turn light on."""
     service_data = {
         ATTR_URL: "http://denied.com/images/logo.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
@@ -174,7 +169,7 @@ async def test_url_error(hass, aioclient_mock):
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
         ATTR_URL: "http://example.com/images/logo.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
@@ -212,7 +207,7 @@ async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
         ATTR_FILE_PATH: "/opt/image.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
@@ -252,7 +247,7 @@ async def test_file_denied_dir(hass):
     """Test that the file only service fails to read an image in a dir not explicitly allowed."""
     service_data = {
         ATTR_FILE_PATH: "/path/to/a/dir/not/allowed/image.png",
-        ATTR_LIGHT_ENTITY_ID: LIGHT_ENTITY,
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
