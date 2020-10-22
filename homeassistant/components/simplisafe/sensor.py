@@ -16,6 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         [
             SimplisafeFreezeSensor(simplisafe, system, sensor)
             for system in simplisafe.systems.values()
+            if system.version == 3
             for sensor in system.sensors.values()
             if sensor.type == EntityTypes.temperature
         ]
