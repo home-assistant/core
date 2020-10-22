@@ -105,7 +105,7 @@ async def async_setup(hass, hass_config):
         content = await response.content.read()
 
         with io.BytesIO(content) as _file:
-            _file.name = "colorthief.jpg"
+            _file.name = "color_extractor.jpg"
             _file.seek(0)
 
             color = await _async_get_color(_file)

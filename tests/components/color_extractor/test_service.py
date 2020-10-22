@@ -71,6 +71,31 @@ async def setup_light(hass):
     assert state.state == STATE_OFF
 
 
+# TODO: The hass allowlist_* config is being ignored...
+
+
+async def _async_load_color_extractor_url(hass, service_data):
+    # Load our color_extractor component
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    # Validate pre service call
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
+    await hass.services.async_call(
+        DOMAIN, "predominant_color_url", service_data, blocking=True
+    )
+
+    await hass.async_block_till_done()
+
+
 async def test_url_success(hass, aioclient_mock):
     """Test that a successful image GET translate to light RGB."""
     service_data = {
@@ -85,7 +110,8 @@ async def test_url_success(hass, aioclient_mock):
         content=base64.b64decode(load_fixture("color_extractor_url.txt")),
     )
 
-    await _async_load_color_extractor_url(hass, service_data)
+    with patch.object(hass.config, "is_allowed_external_url", return_value=True):
+        await _async_load_color_extractor_url(hass, service_data)
 
     state = hass.states.get(LIGHT_ENTITY)
     assert state
@@ -102,28 +128,6 @@ async def test_url_success(hass, aioclient_mock):
     # Ensure the RGB values are correct
     # TODO: Why does the demo light not set / report the rgb_color correctly!
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
-
-
-async def _async_load_color_extractor_url(hass, service_data):
-    # Load our color_extractor component
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {"homeassistant": {"allowlist_external_urls": ["http://example.com/images/"]}},
-    )
-    await hass.async_block_till_done()
-
-    # Validate pre service call
-    state = hass.states.get(LIGHT_ENTITY)
-    assert state
-    assert state.state == STATE_OFF
-
-    # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
-    await hass.services.async_call(
-        DOMAIN, "predominant_color_url", service_data, blocking=True
-    )
-
-    await hass.async_block_till_done()
 
 
 async def test_url_exception(hass, aioclient_mock):
@@ -211,9 +215,7 @@ async def test_file(hass):
         ATTR_BRIGHTNESS_PCT: 100,
     }
 
-    await async_setup_component(
-        hass, DOMAIN, {"homeassistant": {"allowlist_external_dirs": ["/opt/image.png"]}}
-    )
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify pre service check
@@ -222,7 +224,9 @@ async def test_file(hass):
     assert state.state == STATE_OFF
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
-    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
+    with patch(
+        "homeassistant.components.color_extractor._get_file", _get_file_mock
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
         await hass.async_block_till_done()
 
