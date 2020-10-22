@@ -1,4 +1,5 @@
 """The Tasmota integration."""
+import asyncio
 import logging
 
 from hatasmota.const import (
@@ -21,8 +22,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import discovery
-from .const import CONF_DISCOVERY_PREFIX
+from . import device_automation, discovery
+from .const import CONF_DISCOVERY_PREFIX, DATA_REMOVE_DISCOVER_COMPONENT, PLATFORMS
 from .discovery import TASMOTA_DISCOVERY_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,14 +55,52 @@ async def async_setup_entry(hass, entry):
 
     tasmota_mqtt = TasmotaMQTTClient(_publish, _subscribe_topics, _unsubscribe_topics)
 
-    discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
-    await discovery.async_start(hass, discovery_prefix, entry, tasmota_mqtt)
-
     async def async_discover_device(config, mac):
         """Discover and add a Tasmota device."""
         await async_setup_device(hass, mac, config, entry, tasmota_mqtt)
 
-    async_dispatcher_connect(hass, TASMOTA_DISCOVERY_DEVICE, async_discover_device)
+    hass.data[
+        DATA_REMOVE_DISCOVER_COMPONENT.format("device")
+    ] = async_dispatcher_connect(hass, TASMOTA_DISCOVERY_DEVICE, async_discover_device)
+
+    async def start_platforms():
+        await device_automation.async_setup_entry(hass, entry)
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+
+        discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
+        await discovery.async_start(hass, discovery_prefix, entry, tasmota_mqtt)
+
+    hass.async_create_task(start_platforms())
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+
+    # cleanup platforms
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
+
+    # disable discovery
+    await discovery.async_stop(hass)
+    hass.data.pop(DEVICE_MACS)
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format("device")]()
+    hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation"))()
+    for component in PLATFORMS:
+        hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(component))()
 
     return True
 
