@@ -260,9 +260,10 @@ async def test_setup_query_params(hass):
     )
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        "sensor",
         {
             "sensor": {
+                "name": "foo",
                 "platform": "rest",
                 "resource": "http://localhost",
                 "method": "GET",

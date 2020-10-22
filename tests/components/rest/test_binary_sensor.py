@@ -388,9 +388,10 @@ async def test_setup_query_params(hass):
     )
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        "binary_sensor",
         {
-            "sensor": {
+            "binary_sensor": {
+                "name": "foo",
                 "platform": "rest",
                 "resource": "http://localhost",
                 "method": "GET",
@@ -402,7 +403,7 @@ async def test_setup_query_params(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    state = hass.states.get("sensor.foo")
+    state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_ON
 
 
