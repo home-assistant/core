@@ -1,7 +1,6 @@
 """Support for media browsing."""
 import asyncio
-import hashlib
-from random import SystemRandom
+import secrets
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
@@ -191,9 +190,7 @@ class SqueezeboxArtworkProxy(HomeAssistantView):
     requires_auth = False
     url = "/api/squeezebox_proxy"
     name = "api:squeezebox:image"
-    access_token = hashlib.sha256(
-        SystemRandom().getrandbits(256).to_bytes(32, "little")
-    ).hexdigest()
+    access_token = secrets.token_hex(32)
     internal_artwork_urls = []
 
     def __init__(self, session, artwork_url):
