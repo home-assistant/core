@@ -858,8 +858,9 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
         self._icon = ICON
         self._state = None
         self._which = which
-        self._unique_id = f"{self._name}_{slugify(self._which)}"
-        self._name = f"Adaptive Lighting {which}: {data[CONF_NAME]}"
+        name = data[CONF_NAME]
+        self._unique_id = f"{name}_{slugify(self._which)}"
+        self._name = f"Adaptive Lighting {which}: {name}"
         self._initial_state = initial_state
 
     @property
@@ -886,7 +887,9 @@ class SimpleSwitch(SwitchEntity, RestoreEntity):
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
         _LOGGER.debug("%s: last state is %s", self._name, last_state)
-        if (last_state is None and self._initial_state) or last_state.state == STATE_ON:
+        if (last_state is None and self._initial_state) or (
+            last_state is not None and last_state.state == STATE_ON
+        ):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
