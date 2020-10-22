@@ -19,7 +19,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.openplantbook.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.openplantbook.OpenPlantBookApi.get_plantbook_token",
         return_value=True,
     ), patch(
         "homeassistant.components.openplantbook.async_setup", return_value=True
@@ -30,18 +30,16 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "client_id": "test-client-id",
+                "secret": "test-secret",
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Openplantbook API"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "client_id": "test-client-id",
+        "secret": "test-client-id",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -55,15 +53,14 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.openplantbook.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.openplantbook.OpenPlantBookApi.get_plantbook_token",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "client_id": "test-client-id",
+                "secret": "test-secret",
             },
         )
 
@@ -78,15 +75,14 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.openplantbook.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.openplantbook.OpenPlantBookApi.get_plantbook_token",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                "client_id": "test-client-id",
+                "secret": "test-secret",
             },
         )
 
