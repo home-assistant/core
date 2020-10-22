@@ -38,6 +38,7 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Negeer nieuwe beheerde/gedeelde gebruikers",
                     "use_episode_art": "Gebruik aflevering kunst"
                 },
                 "description": "Opties voor Plex-mediaspelers"
