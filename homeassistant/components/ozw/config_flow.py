@@ -143,7 +143,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except HassioAPIError as err:
                 _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
-                return self.async_abort(reason="addon_info_failed")
+                raise AbortFlow("addon_info_failed") from err
 
         return self.addon_info
 
