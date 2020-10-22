@@ -55,7 +55,12 @@ async def test_user_owserver(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
@@ -68,12 +73,21 @@ async def test_user_owserver(hass):
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
         }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_owserver_duplicate(hass):
     """Test OWServer flow."""
-    await setup_onewire_owserver_integration(hass)
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    with patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await setup_onewire_owserver_integration(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -97,6 +111,9 @@ async def test_user_owserver_duplicate(hass):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_sysbus(hass):
@@ -134,7 +151,12 @@ async def test_user_sysbus(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_MOUNT_DIR: "/sys/bus/directory"},
@@ -146,12 +168,21 @@ async def test_user_sysbus(hass):
         CONF_TYPE: CONF_TYPE_SYSBUS,
         CONF_MOUNT_DIR: "/sys/bus/directory",
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_sysbus_duplicate(hass):
     """Test SysBus duplicate flow."""
-    await setup_onewire_sysbus_integration(hass)
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    with patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await setup_onewire_sysbus_integration(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -180,6 +211,9 @@ async def test_user_sysbus_duplicate(hass):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_sysbus(hass):
@@ -188,7 +222,12 @@ async def test_import_sysbus(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -200,6 +239,9 @@ async def test_import_sysbus(hass):
         CONF_TYPE: CONF_TYPE_SYSBUS,
         CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_sysbus_with_mount_dir(hass):
@@ -208,7 +250,12 @@ async def test_import_sysbus_with_mount_dir(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -223,6 +270,9 @@ async def test_import_sysbus_with_mount_dir(hass):
         CONF_TYPE: CONF_TYPE_SYSBUS,
         CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_owserver(hass):
@@ -231,7 +281,12 @@ async def test_import_owserver(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -247,6 +302,9 @@ async def test_import_owserver(hass):
         CONF_HOST: "1.2.3.4",
         CONF_PORT: DEFAULT_OWSERVER_PORT,
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import_owserver_with_port(hass):
@@ -255,7 +313,12 @@ async def test_import_owserver_with_port(hass):
     with patch(
         "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
         return_value=True,
-    ):
+    ), patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -272,3 +335,6 @@ async def test_import_owserver_with_port(hass):
         CONF_HOST: "1.2.3.4",
         CONF_PORT: "1234",
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
