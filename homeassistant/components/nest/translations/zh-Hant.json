@@ -8,6 +8,9 @@
             "no_flows": "\u5fc5\u9808\u5148\u8a2d\u5b9a Nest \u65b9\u80fd\u9032\u884c\u8a8d\u8b49\u3002[\u8acb\u53c3\u95b1\u6559\u5b78\u6307\u5f15](https://www.home-assistant.io/components/nest/)\u3002",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
+        "create_entry": {
+            "default": "\u5df2\u6210\u529f\u8a8d\u8b49"
+        },
         "error": {
             "internal_error": "\u8a8d\u8b49\u78bc\u5167\u90e8\u932f\u8aa4",
             "invalid_code": "\u8a8d\u8b49\u78bc\u7121\u6548",
@@ -29,6 +32,9 @@
                 },
                 "description": "\u6b32\u9023\u7d50 Nest \u5e33\u865f\uff0c[\u8a8d\u8b49\u5e33\u865f]({url}).\n\n\u65bc\u8a8d\u8b49\u5f8c\uff0c\u8907\u88fd\u4e26\u8cbc\u4e0a\u4e0b\u65b9\u7684\u8a8d\u8b49\u78bc\u3002",
                 "title": "\u9023\u7d50 Nest \u5e33\u865f"
+            },
+            "pick_implementation": {
+                "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
             }
         }
     }
