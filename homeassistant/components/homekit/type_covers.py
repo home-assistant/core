@@ -174,9 +174,9 @@ class GarageDoorOpener(HomeAccessory):
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
 
-        if ATTR_OBSTRUCTION_DETECTED in hass_state.attributes:
+        if ATTR_OBSTRUCTION_DETECTED in new_state.attributes:
             obstruction_detected = (
-                hass_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
+                new_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
             )
             if self.char_obstruction_detected.value != obstruction_detected:
                 self.char_obstruction_detected.set_value(obstruction_detected)
