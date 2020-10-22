@@ -126,11 +126,6 @@ class DecoraLight(LightEntity):
         return SUPPORT_DECORA_LED
 
     @property
-    def should_poll(self):
-        """We can read the device state, so poll."""
-        return True
-
-    @property
     def assumed_state(self):
         """We can read the actual state."""
         return False

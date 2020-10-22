@@ -6,6 +6,7 @@
         "step": {
             "protocol": {
                 "data": {
+                    "device_path": "Ger\u00e4tepfad",
                     "host": "Host",
                     "port": "Port"
                 }

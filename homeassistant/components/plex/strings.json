@@ -41,7 +41,7 @@
       "all_configured": "All linked servers already configured",
       "already_configured": "This Plex server is already configured",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "Successfully reauthenticated",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "token_request_timeout": "Timed out obtaining token",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }

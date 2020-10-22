@@ -1,14 +1,10 @@
 """Support for Verisure binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
 
 from . import CONF_DOOR_WINDOW, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

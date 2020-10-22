@@ -5,11 +5,11 @@
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"
         },
         "create_entry": {
-            "default": "Autenticado correctamente con Home Assistant."
+            "default": "Autenticado correctamente"
         },
         "step": {
             "pick_implementation": {
-                "title": "Selecciona el M\u00e9todo de Autenticaci\u00f3n"
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
             }
         }
     }

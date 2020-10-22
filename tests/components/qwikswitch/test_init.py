@@ -1,6 +1,5 @@
 """Test qwikswitch sensors."""
 import asyncio
-import logging
 
 from aiohttp.client_exceptions import ClientError
 import pytest
@@ -11,8 +10,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock
 from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture

@@ -8,6 +8,7 @@ from homeassistant.components.axis.const import (
     DEFAULT_STREAM_PROFILE,
     DOMAIN as AXIS_DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -16,8 +17,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
-from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_session_request
+from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_request
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -26,13 +32,13 @@ from tests.common import MockConfigEntry
 async def test_flow_manual_configuration(hass):
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -43,7 +49,7 @@ async def test_flow_manual_configuration(hass):
             },
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -58,21 +64,20 @@ async def test_flow_manual_configuration(hass):
 
 async def test_manual_configuration_update_configuration(hass):
     """Test that config flow fails on already configured device."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "axis.vapix.session_request", new=vapix_session_request
-    ):
+    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -84,7 +89,7 @@ async def test_manual_configuration_update_configuration(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -95,13 +100,13 @@ async def test_flow_fails_already_configured(hass):
     await setup_axis_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -112,18 +117,18 @@ async def test_flow_fails_already_configured(hass):
             },
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_flow_fails_faulty_credentials(hass):
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
     with patch(
         "homeassistant.components.axis.config_flow.get_device",
@@ -139,17 +144,17 @@ async def test_flow_fails_faulty_credentials(hass):
             },
         )
 
-    assert result["errors"] == {"base": "faulty_credentials"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_device_unavailable(hass):
-    """Test that config flow fails on device unavailable."""
+async def test_flow_fails_cannot_connect(hass):
+    """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
     with patch(
         "homeassistant.components.axis.config_flow.get_device",
@@ -165,7 +170,7 @@ async def test_flow_fails_device_unavailable(hass):
             },
         )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
@@ -182,13 +187,13 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     entry2.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": "user"}
+        AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -199,7 +204,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
             },
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -224,13 +229,13 @@ async def test_zeroconf_flow(hass):
             "hostname": "name",
             "properties": {"macaddress": MAC},
         },
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.session_request", new=vapix_session_request):
+    with patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -241,7 +246,7 @@ async def test_zeroconf_flow(hass):
             },
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -258,7 +263,8 @@ async def test_zeroconf_flow(hass):
 
 async def test_zeroconf_flow_already_configured(hass):
     """Test that zeroconf doesn't setup already configured devices."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.host == "1.2.3.4"
 
     result = await hass.config_entries.flow.async_init(
@@ -269,17 +275,18 @@ async def test_zeroconf_flow_already_configured(hass):
             "hostname": "name",
             "properties": {"macaddress": MAC},
         },
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "1.2.3.4"
 
 
 async def test_zeroconf_flow_updated_configuration(hass):
     """Test that zeroconf update configuration with new parameters."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.host == "1.2.3.4"
     assert device.config_entry.data == {
         CONF_HOST: "1.2.3.4",
@@ -294,9 +301,7 @@ async def test_zeroconf_flow_updated_configuration(hass):
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "axis.vapix.session_request", new=vapix_session_request
-    ):
+    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
         result = await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data={
@@ -305,11 +310,11 @@ async def test_zeroconf_flow_updated_configuration(hass):
                 "hostname": "name",
                 "properties": {"macaddress": MAC},
             },
-            context={"source": "zeroconf"},
+            context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert device.config_entry.data == {
         CONF_HOST: "2.3.4.5",
@@ -328,10 +333,10 @@ async def test_zeroconf_flow_ignore_non_axis_device(hass):
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
         data={CONF_HOST: "169.254.3.4", "properties": {"macaddress": "01234567890"}},
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "not_axis_device"
 
 
@@ -340,16 +345,17 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
         data={CONF_HOST: "169.254.3.4", "properties": {"macaddress": MAC}},
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "link_local_address"
 
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.option_stream_profile == DEFAULT_STREAM_PROFILE
 
     result = await hass.config_entries.options.async_init(device.config_entry.entry_id)

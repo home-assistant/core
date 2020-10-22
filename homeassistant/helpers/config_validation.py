@@ -98,6 +98,7 @@ TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 positive_int = vol.All(vol.Coerce(int), vol.Range(min=0))
+positive_float = vol.All(vol.Coerce(float), vol.Range(min=0))
 latitude = vol.All(
     vol.Coerce(float), vol.Range(min=-90, max=90), msg="invalid latitude"
 )
@@ -526,8 +527,8 @@ def template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -544,8 +545,8 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
-        template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -828,6 +829,12 @@ def custom_serializer(schema: Any) -> Any:
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
+    if schema is string:
+        return {"type": "string"}
+
+    if schema is boolean:
+        return {"type": "boolean"}
+
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}
 
@@ -929,21 +936,43 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-STATE_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_CONDITION): "state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
-            vol.Optional(CONF_ATTRIBUTE): str,
-            vol.Required(CONF_STATE): vol.Any(str, [str]),
-            vol.Optional(CONF_FOR): positive_time_period,
-            # To support use_trigger_value in automation
-            # Deprecated 2016/04/25
-            vol.Optional("from"): str,
-        }
-    ),
-    key_dependency("for", "state"),
+STATE_CONDITION_BASE_SCHEMA = {
+    vol.Required(CONF_CONDITION): "state",
+    vol.Required(CONF_ENTITY_ID): entity_ids,
+    vol.Optional(CONF_ATTRIBUTE): str,
+    vol.Optional(CONF_FOR): positive_time_period,
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional("from"): str,
+}
+
+STATE_CONDITION_STATE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): vol.Any(str, [str]),
+    }
 )
+
+STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
+    {
+        **STATE_CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_STATE): match_all,
+    }
+)
+
+
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+    """Validate a state condition."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("Expected a dictionary")
+
+    if CONF_ATTRIBUTE in value:
+        validated: dict = STATE_CONDITION_ATTRIBUTE_SCHEMA(value)
+    else:
+        validated = STATE_CONDITION_STATE_SCHEMA(value)
+
+    return key_dependency("for", "state")(validated)
+
 
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema(

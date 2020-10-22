@@ -1,7 +1,6 @@
 """Provide a way to connect devices to one physical location."""
 from asyncio import Event
 from collections import OrderedDict
-import logging
 from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
@@ -11,8 +10,6 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -26,7 +23,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
 
 class AreaRegistry:

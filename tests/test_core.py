@@ -48,43 +48,43 @@ def test_split_entity_id():
     assert ha.split_entity_id("domain.object_id") == ["domain", "object_id"]
 
 
-def test_async_add_job_schedule_callback():
+def test_async_add_hass_job_schedule_callback():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
 
-    ha.HomeAssistant.async_add_job(hass, ha.callback(job))
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_partial_callback():
+def test_async_add_hass_job_schedule_partial_callback():
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
     partial = functools.partial(ha.callback(job))
 
-    ha.HomeAssistant.async_add_job(hass, partial)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_coroutinefunction(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=loop))
 
     async def job():
         pass
 
-    ha.HomeAssistant.async_add_job(hass, job)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_partial_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_partial_coroutinefunction(loop):
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=loop))
 
@@ -93,20 +93,20 @@ def test_async_add_job_schedule_partial_coroutinefunction(loop):
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant.async_add_job(hass, partial)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_add_threaded_job_to_pool():
+def test_async_add_job_add_hass_threaded_job_to_pool():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
 
     def job():
         pass
 
-    ha.HomeAssistant.async_add_job(hass, job)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
@@ -125,7 +125,7 @@ def test_async_create_task_schedule_coroutine(loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_run_job_calls_callback():
+def test_async_run_hass_job_calls_callback():
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -133,12 +133,12 @@ def test_async_run_job_calls_callback():
     def job():
         calls.append(1)
 
-    ha.HomeAssistant.async_run_job(hass, ha.callback(job))
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(calls) == 1
     assert len(hass.async_add_job.mock_calls) == 0
 
 
-def test_async_run_job_delegates_non_async():
+def test_async_run_hass_job_delegates_non_async():
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -146,9 +146,9 @@ def test_async_run_job_delegates_non_async():
     def job():
         calls.append(1)
 
-    ha.HomeAssistant.async_run_job(hass, job)
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(calls) == 0
-    assert len(hass.async_add_job.mock_calls) == 1
+    assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
 def test_stage_shutdown():
@@ -291,7 +291,7 @@ def test_event_repr():
 
 
 def test_event_as_dict():
-    """Test as Event as dictionary."""
+    """Test an Event as dictionary."""
     event_type = "some_type"
     now = dt_util.utcnow()
     data = {"some": "attr"}
@@ -301,7 +301,7 @@ def test_event_as_dict():
         "event_type": event_type,
         "data": data,
         "origin": "LOCAL",
-        "time_fired": now,
+        "time_fired": now.isoformat(),
         "context": {
             "id": event.context.id,
             "parent_id": None,
@@ -309,6 +309,36 @@ def test_event_as_dict():
         },
     }
     assert event.as_dict() == expected
+    # 2nd time to verify cache
+    assert event.as_dict() == expected
+
+
+def test_state_as_dict():
+    """Test a State as dictionary."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "context": {
+            "id": state.context.id,
+            "parent_id": None,
+            "user_id": state.context.user_id,
+        },
+        "entity_id": "happy.happy",
+        "attributes": {"pig": "dog"},
+        "last_changed": last_time.isoformat(),
+        "last_updated": last_time.isoformat(),
+        "state": "on",
+    }
+    assert state.as_dict() == expected
+    # 2nd time to verify cache
+    assert state.as_dict() == expected
+    assert state.as_dict() is state.as_dict()
 
 
 class TestEventBus(unittest.TestCase):
@@ -1492,3 +1522,41 @@ async def test_async_entity_ids_count(hass):
 
     assert hass.states.async_entity_ids_count() == 5
     assert hass.states.async_entity_ids_count("light") == 3
+
+
+async def test_hassjob_forbid_coroutine():
+    """Test hassjob forbids coroutines."""
+
+    async def bla():
+        pass
+
+    coro = bla()
+
+    with pytest.raises(ValueError):
+        ha.HassJob(coro)
+
+    # To avoid warning about unawaited coro
+    await coro
+
+
+async def test_reserving_states(hass):
+    """Test we can reserve a state in the state machine."""
+
+    hass.states.async_reserve("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_set("light.bedroom", "on")
+    assert hass.states.async_available("light.bedroom") is False
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
+    hass.states.async_set("light.bedroom", "on")
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True

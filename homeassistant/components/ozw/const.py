@@ -40,6 +40,7 @@ ATTR_SCENE_VALUE_LABEL = "scene_value_label"
 # Service specific
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 
 # Home Assistant Events

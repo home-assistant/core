@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
         "error": {
             "invalid_zip_code": "Kod pocztowy jest nieprawid\u0142owy"
         },

@@ -5,7 +5,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "flow_title": "Canary: {name}",
         "step": {

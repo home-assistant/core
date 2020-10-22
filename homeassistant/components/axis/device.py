@@ -77,6 +77,8 @@ class AxisNetworkDevice:
         """Return the serial number of this device."""
         return self.config_entry.unique_id
 
+    # Options
+
     @property
     def option_events(self):
         """Config entry option defining if platforms based on events should be created."""
@@ -94,6 +96,8 @@ class AxisNetworkDevice:
         """Config entry option defining minimum number of seconds to keep trigger high."""
         return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
 
+    # Signals
+
     @property
     def signal_reachable(self):
         """Device specific event to signal a change in connection status."""
@@ -108,6 +112,8 @@ class AxisNetworkDevice:
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
         return f"axis_new_address_{self.serial}"
+
+    # Callbacks
 
     @callback
     def async_connection_status_callback(self, status):
@@ -155,9 +161,7 @@ class AxisNetworkDevice:
     async def use_mqtt(self, hass: HomeAssistant, component: str) -> None:
         """Set up to use MQTT."""
         try:
-            status = await hass.async_add_executor_job(
-                self.api.vapix.mqtt.get_client_status
-            )
+            status = await self.api.vapix.mqtt.get_client_status()
         except Unauthorized:
             # This means the user has too low privileges
             status = {}
@@ -174,6 +178,8 @@ class AxisNetworkDevice:
 
         event = mqtt_json_to_event(message.payload)
         self.api.event.process_event(event)
+
+    # Setup and teardown methods
 
     async def async_setup(self):
         """Set up the device."""
@@ -230,14 +236,15 @@ class AxisNetworkDevice:
             )
             self.api.stream.stop()
 
-    @callback
-    def shutdown(self, event):
+    async def shutdown(self, event):
         """Stop the event stream."""
         self.disconnect_from_stream()
+        await self.api.vapix.close()
 
     async def async_reset(self):
         """Reset this device to default state."""
         self.disconnect_from_stream()
+        await self.api.vapix.close()
 
         unload_ok = all(
             await asyncio.gather(
@@ -267,7 +274,7 @@ async def get_device(hass, host, port, username, password):
 
     try:
         with async_timeout.timeout(15):
-            await hass.async_add_executor_job(device.vapix.initialize)
+            await device.vapix.initialize()
 
         return device
 

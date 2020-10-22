@@ -70,7 +70,7 @@ async def test_form_invalid_auth(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_credentials"}
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass):
@@ -89,7 +89,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "connection_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_repeat_identifier(hass):
@@ -110,7 +110,7 @@ async def test_form_repeat_identifier(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_USERNAME: "identifier_exists"}
+    assert result2["errors"] == {CONF_USERNAME: "already_configured"}
 
 
 async def test_import(hass):

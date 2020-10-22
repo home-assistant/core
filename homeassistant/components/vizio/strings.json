@@ -15,7 +15,7 @@
         "title": "Complete Pairing Process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "pairing_complete": {
