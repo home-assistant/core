@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "site_exists": "To site_id jest ju\u017c skonfigurowane."
+            "site_exists": "Ten site_id jest ju\u017c skonfigurowany"
         },
         "error": {
-            "site_exists": "To site_id jest ju\u017c skonfigurowane."
+            "site_exists": "Ten site_id jest ju\u017c skonfigurowany"
         },
         "step": {
             "user": {

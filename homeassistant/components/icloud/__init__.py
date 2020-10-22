@@ -1,6 +1,5 @@
 """The iCloud component."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -86,8 +85,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up iCloud from legacy config file."""
@@ -131,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         with_family,
         max_interval,
         gps_accuracy_threshold,
+        entry,
     )
     await hass.async_add_executor_job(account.setup)
 

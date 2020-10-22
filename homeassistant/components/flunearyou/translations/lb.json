@@ -4,7 +4,8 @@
             "already_configured": "D\u00ebs Koordinate si scho registr\u00e9iert"
         },
         "error": {
-            "general_error": "Onbekannten Feeler"
+            "general_error": "Onbekannten Feeler",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

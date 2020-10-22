@@ -7,8 +7,8 @@ from Plugwise_Smile.Smile import Smile
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 
-from . import SmileGateway
 from .const import COORDINATOR, DOMAIN
+from .gateway import SmileGateway
 
 _LOGGER = logging.getLogger(__name__)
 

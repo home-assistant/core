@@ -1,6 +1,4 @@
 """Support for Shiftr.io."""
-import logging
-
 import paho.mqtt.client as mqtt
 import voluptuous as vol
 
@@ -12,8 +10,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "shiftr"
 

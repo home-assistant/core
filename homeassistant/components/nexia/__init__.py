@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def _async_update_data():
         """Fetch data from API endpoint."""
-        return await hass.async_add_job(nexia_home.update)
+        return await hass.async_add_executor_job(nexia_home.update)
 
     coordinator = DataUpdateCoordinator(
         hass,

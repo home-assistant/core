@@ -103,6 +103,8 @@ def _get_mock_thermostat_schedule_temporary_hold():
         target_celsius=43,
         target_fahrenheit=99,
         target_temperature=3729,
+        max_temperature=5000,
+        min_temperature=1,
     )
 
     thermostat.get_data = Mock()

@@ -3,7 +3,9 @@
         "error": {
             "already_configured": "Account is already configured",
             "authorization_error": "Authorization error. Check your credentials.",
-            "connection_error": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {

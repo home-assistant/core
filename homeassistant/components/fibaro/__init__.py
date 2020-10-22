@@ -508,7 +508,7 @@ class FibaroDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
+        attr = {"fibaro_id": self.fibaro_device.id}
 
         try:
             if "battery" in self.fibaro_device.interfaces:
@@ -528,5 +528,4 @@ class FibaroDevice(Entity):
         except (ValueError, KeyError):
             pass
 
-        attr["fibaro_id"] = self.fibaro_device.id
         return attr

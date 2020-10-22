@@ -1,6 +1,4 @@
 """Support for KEBA charging station binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PLUG,
@@ -10,8 +8,6 @@ from homeassistant.components.binary_sensor import (
 )
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "See SimpliSafe'i konto on juba kasutusel.",
+            "reauth_successful": "Taasautentimine \u00f5nnestus"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Juurdep\u00e4\u00e4suluba on aegunud v\u00f5i see on t\u00fchistatud. Konto uuesti linkimiseks sisesta oma parool.",
+                "title": "Taastuvasta SimpliSafe'i konto"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "E-post"
+                }
+            }
+        }
+    }
+}

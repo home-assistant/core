@@ -1,6 +1,4 @@
 """Support for Homekit lights."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.light import (
@@ -15,8 +13,6 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

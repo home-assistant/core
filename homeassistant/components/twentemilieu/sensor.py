@@ -1,5 +1,4 @@
 """Support for Twente Milieu sensors."""
-import logging
 from typing import Any, Dict
 
 from twentemilieu import (
@@ -19,8 +18,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 

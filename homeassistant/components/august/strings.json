@@ -7,7 +7,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "Re-authentication was successful"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "step": {
       "validation": {

@@ -1,5 +1,4 @@
 """Support for WLED switches."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.switch import SwitchEntity
@@ -15,8 +14,6 @@ from .const import (
     ATTR_UDP_PORT,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 

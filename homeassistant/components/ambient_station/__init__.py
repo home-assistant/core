@@ -311,9 +311,10 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, ambient.client.websocket.disconnect()
-    )
+    async def _async_disconnect_websocket(*_):
+        await ambient.client.websocket.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
 
     return True
 
