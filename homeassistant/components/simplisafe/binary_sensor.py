@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import callback
 
 from . import SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     EntityTypes.carbon_monoxide,
@@ -48,15 +48,18 @@ SENSOR_MODELS = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe binary sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
     sensors = []
+
     for system in simplisafe.systems.values():
-        if system.version == 3:
-            for sensor in system.sensors.values():
-                if sensor.type in SUPPORTED_SENSOR_TYPES:
-                    sensors.append(SimpliSafeBinarySensor(simplisafe, system, sensor))
-                if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
-                    sensors.append(SimpliSafeSensorBattery(simplisafe, system, sensor))
+        if system.version == 2:
+            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            continue
+
+        for sensor in system.sensors.values():
+            if sensor.type in SUPPORTED_SENSOR_TYPES:
+                sensors.append(SimpliSafeBinarySensor(simplisafe, system, sensor))
+            if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
+                sensors.append(SimpliSafeSensorBattery(simplisafe, system, sensor))
 
     async_add_entities(sensors)
 
