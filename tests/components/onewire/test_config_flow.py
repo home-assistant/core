@@ -1,6 +1,4 @@
 """Tests for 1-Wire config flow."""
-from pyownet import protocol
-
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
@@ -41,8 +39,8 @@ async def test_user_owserver(hass):
 
     # Invalid server
     with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
-        side_effect=protocol.ConnError,
+        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -55,7 +53,8 @@ async def test_user_owserver(hass):
 
     # Valid server
     with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
+        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -92,13 +91,10 @@ async def test_user_owserver_duplicate(hass):
     assert not result["errors"]
 
     # Duplicate server
-    with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
@@ -122,7 +118,8 @@ async def test_user_sysbus(hass):
 
     # Invalid path
     with patch(
-        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=False
+        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -135,7 +132,8 @@ async def test_user_sysbus(hass):
 
     # Valid path
     with patch(
-        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -172,7 +170,8 @@ async def test_user_sysbus_duplicate(hass):
 
     # Valid path
     with patch(
-        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -187,7 +186,8 @@ async def test_import_sysbus(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -196,15 +196,18 @@ async def test_import_sysbus(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_SYSBUS_MOUNT_DIR
-    assert result["data"][CONF_TYPE] == CONF_TYPE_SYSBUS
-    assert result["data"][CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_SYSBUS,
+        CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
+    }
 
 
 async def test_import_sysbus_with_mount_dir(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -216,15 +219,18 @@ async def test_import_sysbus_with_mount_dir(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_SYSBUS_MOUNT_DIR
-    assert result["data"][CONF_TYPE] == CONF_TYPE_SYSBUS
-    assert result["data"][CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_SYSBUS,
+        CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
+    }
 
 
 async def test_import_owserver(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
+        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -236,16 +242,19 @@ async def test_import_owserver(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "1.2.3.4"
-    assert result["data"][CONF_TYPE] == CONF_TYPE_OWSERVER
-    assert result["data"][CONF_HOST] == "1.2.3.4"
-    assert result["data"][CONF_PORT] == DEFAULT_OWSERVER_PORT
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_OWSERVER,
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: DEFAULT_OWSERVER_PORT,
+    }
 
 
 async def test_import_owserver_with_port(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
+        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -258,6 +267,8 @@ async def test_import_owserver_with_port(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "1.2.3.4"
-    assert result["data"][CONF_TYPE] == CONF_TYPE_OWSERVER
-    assert result["data"][CONF_HOST] == "1.2.3.4"
-    assert result["data"][CONF_PORT] == "1234"
+    assert result["data"] == {
+        CONF_TYPE: CONF_TYPE_OWSERVER,
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: "1234",
+    }

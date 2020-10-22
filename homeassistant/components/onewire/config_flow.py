@@ -1,12 +1,12 @@
 """Config flow for 1-Wire component."""
 import logging
-import os
 
-from pyownet import protocol
 import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (  # pylint: disable=unused-import
     CONF_MOUNT_DIR,
@@ -18,6 +18,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
+from .onwirehub import OneWireHub
 
 DATA_SCHEMA_USER = vol.Schema(
     {vol.Required(CONF_TYPE): vol.In([CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS])}
@@ -34,7 +35,49 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
+
+async def validate_input_owserver(hass: HomeAssistantType, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA_OWSERVER with values provided by the user.
+    """
+
+    hub = OneWireHub(hass)
+
+    host = data[CONF_HOST]
+    port = data[CONF_PORT]
+    if not await hub.can_connect(host, port):
+        raise CannotConnect
+
+    # Return info that you want to store in the config entry.
+    return {"title": host}
+
+
+def is_duplicate_owserver_entry(hass: HomeAssistantType, user_input):
+    """Check existing entries for matching host and port."""
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
+            and config_entry.data[CONF_HOST] == user_input[CONF_HOST]
+            and config_entry.data[CONF_PORT] == str(user_input[CONF_PORT])
+        ):
+            return True
+    return False
+
+
+async def validate_input_mount_dir(hass: HomeAssistantType, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA_MOUNTDIR with values provided by the user.
+    """
+    hub = OneWireHub(hass)
+
+    mount_dir = data[CONF_MOUNT_DIR]
+    if not await hub.is_valid_mount_dir(mount_dir):
+        raise InvalidPath
+
+    # Return info that you want to store in the config entry.
+    return {"title": mount_dir}
 
 
 class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -66,36 +109,24 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def get_existing_owserver_entry(self, host: str, port: int):
-        """Get existing entry with matching host and port."""
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
-                and config_entry.data[CONF_HOST] == host
-                and config_entry.data[CONF_PORT] == str(port)
-            ):
-                return config_entry
-        return None
-
     async def async_step_owserver(self, user_input=None):
         """Handle OWServer configuration."""
         errors = {}
         if user_input:
-            self.onewire_config.update(user_input)
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
-            existing_entry = self.get_existing_owserver_entry(host, port)
-            if existing_entry is not None:
+            # Prevent duplicate entries
+            if is_duplicate_owserver_entry(self.hass, user_input):
                 return self.async_abort(reason="already_configured")
+
+            self.onewire_config.update(user_input)
+
             try:
-                await self.hass.async_add_executor_job(protocol.proxy, host, port)
-            except (protocol.Error, protocol.ConnError) as exc:
-                _LOGGER.error(
-                    "Cannot connect to owserver on %s:%d, got: %s", host, port, exc
+                info = await validate_input_owserver(self.hass, user_input)
+
+                return self.async_create_entry(
+                    title=info["title"], data=self.onewire_config
                 )
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
-            if not errors:
-                return self.async_create_entry(title=host, data=self.onewire_config)
 
         return self.async_show_form(
             step_id="owserver",
@@ -107,16 +138,22 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle SysBus configuration."""
         errors = {}
         if user_input:
-            self.onewire_config.update(user_input)
-            mount_dir = user_input[CONF_MOUNT_DIR]
-            await self.async_set_unique_id(f"{CONF_TYPE_SYSBUS}:{mount_dir}")
+            # Prevent duplicate entries
+            await self.async_set_unique_id(
+                f"{CONF_TYPE_SYSBUS}:{user_input[CONF_MOUNT_DIR]}"
+            )
             self._abort_if_unique_id_configured()
-            if await self.hass.async_add_executor_job(os.path.isdir, mount_dir):
+
+            self.onewire_config.update(user_input)
+
+            try:
+                info = await validate_input_mount_dir(self.hass, user_input)
+
                 return self.async_create_entry(
-                    title=mount_dir, data=self.onewire_config
+                    title=info["title"], data=self.onewire_config
                 )
-            _LOGGER.error("Cannot find SysBus directory %s", mount_dir)
-            errors["base"] = "invalid_path"
+            except InvalidPath:
+                errors["base"] = "invalid_path"
 
         return self.async_show_form(
             step_id="mount_dir",
@@ -151,3 +188,11 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=platform_config[CONF_MOUNT_DIR], data=platform_config
             )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidPath(exceptions.HomeAssistantError):
+    """Error to indicate the path is invalid."""
