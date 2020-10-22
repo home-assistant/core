@@ -22,6 +22,7 @@ from homeassistant.components.ozw.websocket_api import (
     ATTR_NODE_BASIC_STRING,
     ATTR_NODE_BAUD_RATE,
     ATTR_NODE_GENERIC_STRING,
+    ATTR_NODE_NAME,
     ATTR_NODE_QUERY_STAGE,
     ATTR_NODE_SPECIFIC_STRING,
     ID,
@@ -71,6 +72,7 @@ async def test_websocket_api(hass, generic_data, hass_ws_client):
 
     assert result[OZW_INSTANCE] == 1
     assert result[NODE_ID] == 32
+    assert result[ATTR_NODE_NAME] == "Lounge smart plug"
     assert result[ATTR_NODE_QUERY_STAGE] == "Complete"
     assert result[ATTR_IS_ZWAVE_PLUS]
     assert result[ATTR_IS_AWAKE]

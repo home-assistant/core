@@ -45,6 +45,7 @@ ATTR_NODE_SPECIFIC_STRING = "node_specific_string"
 ATTR_NODE_MANUFACTURER_NAME = "node_manufacturer_name"
 ATTR_NODE_PRODUCT_NAME = "node_product_name"
 ATTR_NEIGHBORS = "neighbors"
+ATTR_NODE_NAME = "node_name"
 
 
 @callback
@@ -137,6 +138,7 @@ def websocket_get_nodes(hass, connection, msg):
             {
                 ATTR_NODE_QUERY_STAGE: node.node_query_stage,
                 NODE_ID: node.node_id,
+                ATTR_NODE_NAME: node.node_name,
                 ATTR_IS_ZWAVE_PLUS: node.is_zwave_plus,
                 ATTR_IS_AWAKE: node.is_awake,
                 ATTR_IS_FAILED: node.is_failed,
