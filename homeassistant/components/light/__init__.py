@@ -3,7 +3,6 @@ import csv
 from datetime import timedelta
 import logging
 import os
-from typing import Dict, Optional, Tuple
 
 import voluptuous as vol
 
@@ -28,6 +27,7 @@ import homeassistant.util.color as color_util
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
+DATA_PROFILES = "light_profiles"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -140,9 +140,9 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def preprocess_turn_on_alternatives(params):
+def preprocess_turn_on_alternatives(hass, params):
     """Process extra data for turn light on request."""
-    profile = Profiles.get(params.pop(ATTR_PROFILE, None))
+    profile = Profiles.get(hass, params.pop(ATTR_PROFILE, None))
     if profile is not None:
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
@@ -212,7 +212,7 @@ async def async_setup(hass, config):
             if entity_field in data
         }
 
-        base["params"] = preprocess_turn_on_alternatives(data)
+        base["params"] = preprocess_turn_on_alternatives(hass, data)
         return base
 
     async def async_handle_light_on_service(light, call):
@@ -223,11 +223,11 @@ async def async_setup(hass, config):
         params = call.data["params"]
 
         if not params:
-            default_profile = Profiles.get_default(light.entity_id)
+            default_profile = Profiles.get_default(hass, light.entity_id)
 
             if default_profile is not None:
                 params = {ATTR_PROFILE: default_profile}
-                preprocess_turn_on_alternatives(params)
+                preprocess_turn_on_alternatives(hass, params)
 
         elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
             brightness = light.brightness if light.is_on else 0
@@ -295,71 +295,71 @@ async def async_unload_entry(hass, entry):
 class Profiles:
     """Representation of available color profiles."""
 
-    _all: Optional[Dict[str, Tuple[float, float, int]]] = None
+    @staticmethod
+    def _load_profile_data(hass):
+        """Load built-in profiles and custom profiles."""
+        profile_paths = [
+            os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
+            hass.config.path(LIGHT_PROFILES_FILE),
+        ]
+        profiles = {}
+
+        for profile_path in profile_paths:
+            if not os.path.isfile(profile_path):
+                continue
+            with open(profile_path) as inp:
+                reader = csv.reader(inp)
+
+                # Skip the header
+                next(reader, None)
+
+                try:
+                    for rec in reader:
+                        (
+                            profile,
+                            color_x,
+                            color_y,
+                            brightness,
+                            *transition,
+                        ) = PROFILE_SCHEMA(rec)
+
+                        transition = transition[0] if transition else 0
+
+                        profiles[profile] = (
+                            color_x,
+                            color_y,
+                            brightness,
+                            transition,
+                        )
+                except vol.MultipleInvalid as ex:
+                    _LOGGER.error(
+                        "Error parsing light profile from %s: %s", profile_path, ex
+                    )
+                    return None
+        return profiles
 
     @classmethod
     async def load_profiles(cls, hass):
         """Load and cache profiles."""
+        hass.data[DATA_PROFILES] = await hass.async_add_executor_job(
+            cls._load_profile_data, hass
+        )
+        return hass.data[DATA_PROFILES] is not None
 
-        def load_profile_data(hass):
-            """Load built-in profiles and custom profiles."""
-            profile_paths = [
-                os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
-                hass.config.path(LIGHT_PROFILES_FILE),
-            ]
-            profiles = {}
-
-            for profile_path in profile_paths:
-                if not os.path.isfile(profile_path):
-                    continue
-                with open(profile_path) as inp:
-                    reader = csv.reader(inp)
-
-                    # Skip the header
-                    next(reader, None)
-
-                    try:
-                        for rec in reader:
-                            (
-                                profile,
-                                color_x,
-                                color_y,
-                                brightness,
-                                *transition,
-                            ) = PROFILE_SCHEMA(rec)
-
-                            transition = transition[0] if transition else 0
-
-                            profiles[profile] = (
-                                color_x,
-                                color_y,
-                                brightness,
-                                transition,
-                            )
-                    except vol.MultipleInvalid as ex:
-                        _LOGGER.error(
-                            "Error parsing light profile from %s: %s", profile_path, ex
-                        )
-                        return None
-            return profiles
-
-        cls._all = await hass.async_add_executor_job(load_profile_data, hass)
-        return cls._all is not None
-
-    @classmethod
-    def get(cls, name):
+    @staticmethod
+    def get(hass, name):
         """Return a named profile."""
-        return cls._all.get(name)
+        return hass.data[DATA_PROFILES].get(name)
 
-    @classmethod
-    def get_default(cls, entity_id):
+    @staticmethod
+    def get_default(hass, entity_id):
         """Return the default turn-on profile for the given light."""
         # pylint: disable=unsupported-membership-test
         name = f"{entity_id}.default"
-        if name in cls._all:
+        if name in hass.data[DATA_PROFILES]:
             return name
         name = "group.all_lights.default"
-        if name in cls._all:
+        if name in hass.data[DATA_PROFILES]:
             return name
         return None
 

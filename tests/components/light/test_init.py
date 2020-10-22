@@ -117,7 +117,7 @@ async def test_methods(hass):
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass):
+async def test_services(hass, not_mock_profile_loading):
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -418,7 +418,7 @@ async def test_services(hass):
     assert data == {}
 
 
-async def test_broken_light_profiles(hass, mock_storage):
+async def test_broken_light_profiles(hass, mock_storage, not_mock_profile_loading):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -435,7 +435,7 @@ async def test_broken_light_profiles(hass, mock_storage):
     )
 
 
-async def test_light_profiles(hass, mock_storage):
+async def test_light_profiles(hass, mock_storage, not_mock_profile_loading):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -484,7 +484,9 @@ async def test_light_profiles(hass, mock_storage):
     assert data == {light.ATTR_TRANSITION: 0}
 
 
-async def test_light_profiles_with_transition(hass, mock_storage):
+async def test_light_profiles_with_transition(
+    hass, mock_storage, not_mock_profile_loading
+):
     """Test light profiles with transition."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -530,7 +532,7 @@ async def test_light_profiles_with_transition(hass, mock_storage):
     assert data == {light.ATTR_TRANSITION: 0}
 
 
-async def test_default_profiles_group(hass, mock_storage):
+async def test_default_profiles_group(hass, mock_storage, not_mock_profile_loading):
     """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -571,7 +573,7 @@ async def test_default_profiles_group(hass, mock_storage):
     }
 
 
-async def test_default_profiles_light(hass, mock_storage):
+async def test_default_profiles_light(hass, mock_storage, not_mock_profile_loading):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
