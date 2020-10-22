@@ -1,11 +1,7 @@
 """Support for AIS dom MQTT sensors."""
+import json
 import logging
 from typing import Optional
-import json
-
-from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 
 from homeassistant.components.mqtt import (
     CONF_QOS,
@@ -13,6 +9,9 @@ from homeassistant.components.mqtt import (
     CONF_UNIQUE_ID,
     subscription,
 )
+from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 G_RF_CODES = []
@@ -24,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_NAME: "Ais Dom Mqtt RF Sensor",
         CONF_UNIQUE_ID: "ais_dom_mqtt_rf_sensor",
         CONF_QOS: 0,
-        CONF_STATE_TOPIC: "+/tele/RESULT",
+        CONF_STATE_TOPIC: "tele/+/RESULT",
     }
     async_add_entities([MqttAisDomSensor(config_entry, "ais_dom_mqtt_sensor")])
 

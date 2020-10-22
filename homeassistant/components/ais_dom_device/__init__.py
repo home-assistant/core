@@ -106,24 +106,17 @@ async def async_setup(hass, config):
 
 
 async def _async_start_rf_sniffing(hass):
-    # beep (00C0 is the length of the sound)
+    # beep
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 192}
     )
     # set Portisch firmware support and messages
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 1}
     )
     # start Bucket sniffing
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
-    )
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
-    )
-    await asyncio.sleep(2)
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 177}
     )
     # say info
     await hass.services.async_call(
@@ -134,24 +127,17 @@ async def _async_start_rf_sniffing(hass):
 
 
 async def _async_stop_rf_sniffing(hass, clear):
-    # beep (00C0 is the length of the sound)
+    # beep
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 192}
     )
     # set Portisch firmware support and messages
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 1}
     )
     #  bucket Transmitting using command 0xB0
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
-    )
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB055"}
-    )
-    await asyncio.sleep(2)
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 176}
     )
     # say info
     await hass.services.async_call(
