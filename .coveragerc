@@ -108,9 +108,6 @@ omit =
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
     homeassistant/components/bmw_connected_drive/sensor.py
-    homeassistant/components/bom/camera.py
-    homeassistant/components/bom/sensor.py
-    homeassistant/components/bom/weather.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
