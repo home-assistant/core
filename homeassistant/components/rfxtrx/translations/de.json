@@ -4,6 +4,9 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "step": {
+            "setup_network": {
+                "title": "Verbindungsadresse ausw\u00e4hlen"
+            },
             "setup_serial": {
                 "data": {
                     "device": "Ger\u00e4t w\u00e4hlen"
@@ -18,6 +21,15 @@
                     "type": "Verbindungstyp"
                 },
                 "title": "Verbindungstyp ausw\u00e4hlen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "debug": "Debugging aktivieren"
+                }
             }
         }
     }
