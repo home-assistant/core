@@ -144,6 +144,7 @@ class TestRestSwitch:
         self.resource = "http://localhost/"
         self.state_resource = self.resource
         self.headers = {"Content-type": CONTENT_TYPE_JSON}
+        self.params = None
         self.auth = None
         self.body_on = Template("on", self.hass)
         self.body_off = Template("off", self.hass)
@@ -153,6 +154,7 @@ class TestRestSwitch:
             self.state_resource,
             self.method,
             self.headers,
+            self.params,
             self.auth,
             self.body_on,
             self.body_off,
