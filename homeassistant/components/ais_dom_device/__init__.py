@@ -4,17 +4,17 @@ Support for interacting with Ais Dom devices.
 For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import logging
 import asyncio
 import json
+import logging
 
-from homeassistant.core import callback
-from .config_flow import configured_service
-from .const import DOMAIN
 from homeassistant.components.mqtt import discovery as mqtt_disco
+from homeassistant.core import callback
 from homeassistant.util.json import load_json, save_json
 
 from . import sensor
+from .config_flow import configured_service
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,6 +179,9 @@ async def _async_send_rf_code(hass, long_topic, b0_code):
 
 async def _async_remove_ais_dom_entity(hass, entity_id):
     ent_registry = await hass.helpers.entity_registry.async_get_registry()
+    platform = ""
+    domain = ""
+    unique_id = ""
     if ent_registry.async_is_registered(entity_id):
         entity_entry = ent_registry.async_get(entity_id)
         unique_id = entity_entry.unique_id
