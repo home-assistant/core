@@ -792,11 +792,10 @@ class _TrackTemplateResultInfo:
 
     @callback
     def _setup_time_listener(self, template: Template, has_time: bool) -> None:
-        if template in self._time_listeners:
-            self._time_listeners.pop(template)()
-
-        # now() or utcnow() has left the scope of the template
         if not has_time:
+            if template in self._time_listeners:
+                # now() or utcnow() has left the scope of the template
+                self._time_listeners.pop(template)()
             return
 
         track_templates = [
@@ -809,9 +808,10 @@ class _TrackTemplateResultInfo:
         def _refresh_from_time(now: datetime) -> None:
             self._refresh(None, track_templates=track_templates)
 
-        self._time_listeners[template] = async_call_later(
-            self.hass, 60.45, _refresh_from_time
-        )
+        if template not in self._time_listeners:
+            self._time_listeners[template] = async_track_utc_time_change(
+                self.hass, _refresh_from_time, second=0
+            )
 
     @callback
     def _update_time_listeners(self) -> None:
