@@ -64,6 +64,9 @@ class AreaRegistry:
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry.async_clear_area_id(area_id)
+
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_clear_area_id(area_id)
 
