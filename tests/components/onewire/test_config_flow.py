@@ -1,4 +1,6 @@
 """Tests for 1-Wire config flow."""
+from pyownet import protocol
+
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
@@ -39,8 +41,8 @@ async def test_user_owserver(hass):
 
     # Invalid server
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
-        return_value=False,
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        side_effect=protocol.ConnError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -52,10 +54,7 @@ async def test_user_owserver(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
     # Valid server
-    with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
-        return_value=True,
-    ), patch(
+    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
@@ -135,7 +134,7 @@ async def test_user_sysbus(hass):
 
     # Invalid path
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -149,7 +148,7 @@ async def test_user_sysbus(hass):
 
     # Valid path
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
@@ -201,7 +200,7 @@ async def test_user_sysbus_duplicate(hass):
 
     # Valid path
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -220,7 +219,7 @@ async def test_import_sysbus(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
@@ -248,7 +247,7 @@ async def test_import_sysbus_with_mount_dir(hass):
     """Test import step."""
 
     with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.is_valid_mount_dir",
+        "homeassistant.components.onewire.onewirehub.os.path.isdir",
         return_value=True,
     ), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
@@ -278,10 +277,7 @@ async def test_import_sysbus_with_mount_dir(hass):
 async def test_import_owserver(hass):
     """Test import step."""
 
-    with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
-        return_value=True,
-    ), patch(
+    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
@@ -310,10 +306,7 @@ async def test_import_owserver(hass):
 async def test_import_owserver_with_port(hass):
     """Test import step."""
 
-    with patch(
-        "homeassistant.components.onewire.config_flow.OneWireHub.can_connect",
-        return_value=True,
-    ), patch(
+    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy",), patch(
         "homeassistant.components.onewire.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.onewire.async_setup_entry",
