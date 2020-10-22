@@ -153,6 +153,12 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             )
         )
 
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        clear_discovery_hash(self.hass, self._discovery_hash)
+        super().add_to_platform_abort()
+
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""
         if not self._removed_from_hass:
