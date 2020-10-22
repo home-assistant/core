@@ -593,7 +593,7 @@ async def test_effect_service_error(
 async def test_preset_service(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the prest service of a WLED light."""
+    """Test the preset service of a WLED light."""
     await init_integration(hass, aioclient_mock)
 
     with patch("wled.WLED.preset") as light_mock:
