@@ -12,6 +12,7 @@ from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 
 from tests.async_mock import AsyncMock, Mock, patch
+from tests.components.light.conftest import mock_profile_loading  # noqa
 
 
 @pytest.fixture(autouse=True)

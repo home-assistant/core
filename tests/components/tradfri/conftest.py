@@ -4,6 +4,7 @@ import pytest
 from . import MOCK_GATEWAY_ID
 
 from tests.async_mock import Mock, patch
+from tests.components.light.conftest import mock_profile_loading  # noqa
 
 # pylint: disable=protected-access
 

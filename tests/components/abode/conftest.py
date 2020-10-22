@@ -3,6 +3,7 @@ import abodepy.helpers.constants as CONST
 import pytest
 
 from tests.common import load_fixture
+from tests.components.light.conftest import mock_profile_loading  # noqa
 
 
 @pytest.fixture(autouse=True)

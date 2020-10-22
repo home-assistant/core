@@ -1,2 +1,2 @@
-"""Test fixtures for mqtt component."""
+"""group conftest."""
 from tests.components.light.conftest import mock_profile_loading  # noqa
