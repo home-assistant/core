@@ -730,7 +730,7 @@ jobs:
             -n auto \
             --dist=loadfile \
             --test-group-count 4 \
-            --test-group=${{ matrix.group }} \
+            --test-group=3 \
             --cov homeassistant \
             -o console_output_style=count \
             -p no:sugar \

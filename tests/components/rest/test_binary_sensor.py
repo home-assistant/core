@@ -381,30 +381,23 @@ async def test_reload(hass):
 async def test_setup_query_params(hass):
     """Test setup with query params."""
     respx.get(
-        "http://localhost",
+        "http://localhost?search=something",
         status_code=200,
-        headers={"content-type": CONTENT_TYPE_JSON},
-        content=lambda x: x.params,
     )
     assert await async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
-                "name": "foo",
                 "platform": "rest",
                 "resource": "http://localhost",
                 "method": "GET",
-                "params": {"search": "true"},
-                "value_template": "{{ value_json.search }}",
+                "params": {"search": "something"},
             }
         },
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
-
-    state = hass.states.get("binary_sensor.foo")
-    assert state.state == STATE_ON
 
 
 def _get_fixtures_base_path():

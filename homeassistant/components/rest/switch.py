@@ -226,7 +226,10 @@ class RestSwitch(SwitchEntity):
 
         with async_timeout.timeout(self._timeout):
             req = await websession.get(
-                self._state_resource, auth=self._auth, headers=self._headers
+                self._state_resource,
+                auth=self._auth,
+                headers=self._headers,
+                params=self._params,
             )
             text = await req.text()
 
