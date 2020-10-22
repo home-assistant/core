@@ -119,12 +119,12 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input_owserver(self.hass, user_input)
-
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
                 return self.async_create_entry(
                     title=info["title"], data=self.onewire_config
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="owserver",
@@ -146,12 +146,12 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input_mount_dir(self.hass, user_input)
-
+            except InvalidPath:
+                errors["base"] = "invalid_path"
+            else:
                 return self.async_create_entry(
                     title=info["title"], data=self.onewire_config
                 )
-            except InvalidPath:
-                errors["base"] = "invalid_path"
 
         return self.async_show_form(
             step_id="mount_dir",
