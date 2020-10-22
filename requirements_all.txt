@@ -221,7 +221,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.3.4
+aioshelly==0.4.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -248,7 +248,7 @@ ambiclimate==0.2.1
 amcrest==1.7.0
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.51
+androidtv[async]==0.0.52
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -679,6 +679,9 @@ google-cloud-pubsub==0.39.1
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
+
+# homeassistant.components.nest
+google-nest-sdm==0.1.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1285,7 +1288,7 @@ pybotvac==0.0.17
 pycarwings2==2.9
 
 # homeassistant.components.cloudflare
-pycfdns==0.0.1
+pycfdns==1.1.1
 
 # homeassistant.components.channels
 pychannels==1.0.0
@@ -1793,7 +1796,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.synology_dsm
-python-synology==0.9.0
+python-synology==1.0.0
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -1996,7 +1999,7 @@ sense-hat==2.2.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.18.0
+sentry-sdk==0.19.1
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8

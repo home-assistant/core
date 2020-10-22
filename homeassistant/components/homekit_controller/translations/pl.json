@@ -5,7 +5,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "already_paired": "To akcesorium jest ju\u017c sparowane z innym urz\u0105dzeniem. Zresetuj akcesorium i spr\u00f3buj ponownie.",
-            "ignored_model": "Obs\u0142uga HomeKit dla tego modelu jest zablokowana, poniewa\u017c dost\u0119pna jest pe\u0142niejsza integracja natywna.",
+            "ignored_model": "Obs\u0142uga HomeKit dla tego modelu jest zablokowana, poniewa\u017c dost\u0119pna jest pe\u0142niejsza integracja natywna",
             "invalid_config_entry": "To urz\u0105dzenie jest wy\u015bwietlane jako gotowe do sparowania, ale istnieje ju\u017c konfliktowy wpis konfiguracyjny dla niego w Home Assistant, kt\u00f3ry musi zosta\u0107 najpierw usuni\u0119ty.",
             "invalid_properties": "Urz\u0105dzenie zg\u0142osi\u0142o nieprawid\u0142owe w\u0142a\u015bciwo\u015bci",
             "no_devices": "Nie znaleziono niesparowanych urz\u0105dze\u0144"
