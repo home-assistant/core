@@ -37,16 +37,12 @@ def client(fake_zones):
     Yields:
         MagicMock: Client Mock
     """
-    _mock_client = mock.patch.object(nx584_client, "Client")
-    _mock_client.start()
+    with mock.patch.object(nx584_client, "Client") as _mock_client:
+        client = nx584_client.Client.return_value
+        client.list_zones.return_value = fake_zones
+        client.get_version.return_value = "1.1"
 
-    client = nx584_client.Client.return_value
-    client.list_zones.return_value = fake_zones
-    client.get_version.return_value = "1.1"
-
-    yield _mock_client
-
-    _mock_client.stop()
+        yield _mock_client
 
 
 @pytest.mark.usefixtures("client")
