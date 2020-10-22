@@ -6,6 +6,7 @@
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat",
             "unknown": "Tundmatu viga"
         },
         "step": {

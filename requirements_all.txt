@@ -1061,8 +1061,6 @@ orvibo==1.1.1
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
-paho-mqtt==1.5.0
-
 # homeassistant.components.shiftr
 paho-mqtt==1.5.1
 
@@ -1381,7 +1379,7 @@ pyflunearyou==1.0.7
 pyfnip==0.2
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.10
+pyforked-daapd==0.1.11
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
@@ -1591,7 +1589,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.2
+pypck==0.7.4
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1947,7 +1945,7 @@ rokuecp==0.6.0
 roombapy==1.6.1
 
 # homeassistant.components.roon
-roonapi==0.0.21
+roonapi==0.0.23
 
 # homeassistant.components.rova
 rova==0.1.0
@@ -2005,7 +2003,7 @@ sharkiqpy==0.1.8
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.23.0
+shodan==1.24.0
 
 # homeassistant.components.sighthound
 simplehound==0.3

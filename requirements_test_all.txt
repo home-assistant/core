@@ -505,7 +505,8 @@ openerz-api==0.1.0
 ovoenergy==1.1.7
 
 # homeassistant.components.mqtt
-paho-mqtt==1.5.0
+# homeassistant.components.shiftr
+paho-mqtt==1.5.1
 
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.6
@@ -669,7 +670,7 @@ pyflume==0.5.5
 pyflunearyou==1.0.7
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.10
+pyforked-daapd==0.1.11
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
@@ -928,7 +929,7 @@ rokuecp==0.6.0
 roombapy==1.6.1
 
 # homeassistant.components.roon
-roonapi==0.0.21
+roonapi==0.0.23
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.0.3
