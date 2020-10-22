@@ -48,7 +48,12 @@
             "connected": "{entity_name} \u5df2\u8fde\u63a5",
             "gas": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u71c3\u6c14\u6cc4\u6f0f",
             "hot": "{entity_name} \u53d8\u70ed",
-            "light": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u5149\u7ebf"
+            "light": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u5149\u7ebf",
+            "motion": "{entity_name} \u68c0\u6d4b\u5230\u6709\u4eba",
+            "no_motion": "{entity_name} \u672a\u68c0\u6d4b\u5230\u6709\u4eba",
+            "not_opened": "{entity_name}\u5df2\u5173\u95ed",
+            "turned_off": "{entity_name} \u88ab\u5173\u95ed",
+            "turned_on": "{entity_name} \u88ab\u6253\u5f00"
         }
     },
     "state": {

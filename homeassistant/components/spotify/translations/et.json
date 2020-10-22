@@ -12,7 +12,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Valige autentimismeetod"
+                "title": "Vali tuvastusmeetod"
             },
             "reauth_confirm": {
                 "description": "Spotify konto: {account} sidumine tuleb uuesti autentida",
