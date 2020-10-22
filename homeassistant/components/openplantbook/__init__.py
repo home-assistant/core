@@ -65,10 +65,8 @@ class OpenPlantBookApi:
                     return token
 
                 raise InvalidAuth
-        except InvalidAuth:
-            raise InvalidAuth
-        except Exception:
-            raise CannotConnect
+        except Exception:  # pylint: disable=broad-except
+            raise
 
     async def get_plantbook_data(self, species):
         """Get information about the plant from the openplantbook API."""
@@ -85,7 +83,7 @@ class OpenPlantBookApi:
                 _LOGGER.debug("Fetched data from %s", url)
                 res = await result.json()
                 return res
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             _LOGGER.error("Unable to get plant from plantbook API: %s", str(e))
         return False
 
