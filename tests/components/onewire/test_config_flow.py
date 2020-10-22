@@ -28,7 +28,7 @@ async def test_user_owserver(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -37,7 +37,7 @@ async def test_user_owserver(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "owserver"
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     # Invalid server
     with patch(
@@ -80,7 +80,7 @@ async def test_user_owserver_duplicate(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -89,7 +89,7 @@ async def test_user_owserver_duplicate(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "owserver"
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     # Duplicate server
     with patch(
@@ -109,7 +109,7 @@ async def test_user_sysbus(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -118,7 +118,7 @@ async def test_user_sysbus(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "mount_dir"
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     # Invalid path
     with patch(
@@ -159,7 +159,7 @@ async def test_user_sysbus_duplicate(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -168,7 +168,7 @@ async def test_user_sysbus_duplicate(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "mount_dir"
-    assert result["errors"] == {}
+    assert not result["errors"]
 
     # Valid path
     with patch(

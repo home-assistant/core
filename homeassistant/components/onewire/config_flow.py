@@ -94,7 +94,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                     "Cannot connect to owserver on %s:%d, got: %s", host, port, exc
                 )
                 errors["base"] = "cannot_connect"
-            if len(errors) == 0:
+            if not errors:
                 return self.async_create_entry(title=host, data=self.onewire_config)
 
         return self.async_show_form(
