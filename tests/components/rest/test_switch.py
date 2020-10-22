@@ -8,9 +8,9 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PLATFORM,
     CONF_RESOURCE,
-    CONF_PARAMS,
     CONTENT_TYPE_JSON,
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
