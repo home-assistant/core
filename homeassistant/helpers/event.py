@@ -798,6 +798,9 @@ class _TrackTemplateResultInfo:
                 self._time_listeners.pop(template)()
             return
 
+        if template in self._time_listeners:
+            return
+
         track_templates = [
             track_template_
             for track_template_ in self._track_templates
@@ -808,10 +811,9 @@ class _TrackTemplateResultInfo:
         def _refresh_from_time(now: datetime) -> None:
             self._refresh(None, track_templates=track_templates)
 
-        if template not in self._time_listeners:
-            self._time_listeners[template] = async_track_utc_time_change(
-                self.hass, _refresh_from_time, second=0
-            )
+        self._time_listeners[template] = async_track_utc_time_change(
+            self.hass, _refresh_from_time, second=0
+        )
 
     @callback
     def _update_time_listeners(self) -> None:
