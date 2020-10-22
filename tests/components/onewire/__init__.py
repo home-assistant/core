@@ -36,24 +36,24 @@ async def setup_onewire_sysbus_integration(hass):
 
 async def setup_onewire_owserver_integration(hass):
     """Create the 1-Wire integration."""
-    with patch(
-        "homeassistant.components.onewire.config_flow.protocol.proxy",
-    ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            source="user",
-            data={
-                CONF_TYPE: CONF_TYPE_OWSERVER,
-                CONF_HOST: "1.2.3.4",
-                CONF_PORT: "1234",
-            },
-            unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
-            connection_class=CONN_CLASS_LOCAL_POLL,
-            options={},
-            entry_id="2",
-        )
-        config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source="user",
+        data={
+            CONF_TYPE: CONF_TYPE_OWSERVER,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: "1234",
+        },
+        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
+        connection_class=CONN_CLASS_LOCAL_POLL,
+        options={},
+        entry_id="2",
+    )
+    config_entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.onewire.sensor.protocol.proxy",
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
