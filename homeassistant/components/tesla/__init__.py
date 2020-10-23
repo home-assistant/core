@@ -310,4 +310,5 @@ class TeslaDevice(CoordinatorEntity):
         This assumes the coordinator has updated the controller.
         """
         self.tesla_device.refresh()
+        self._attributes = self.tesla_device.attrs.copy()
         self.async_write_ha_state()
