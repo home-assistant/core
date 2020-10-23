@@ -1,7 +1,7 @@
 """The OpenPlantBook integration."""
 import logging
 
-from openplantbook import OpenPlantBookApi
+from pyopenplantbook import OpenPlantBookApi
 import voluptuous as vol
 
 from homeassistant import exceptions
