@@ -18,7 +18,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_HYPERION_URL,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -27,6 +26,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
+
+# TODO: Redraw this
 
 #     +-----------------------+
 #     |Step: SSDP             |
@@ -262,7 +263,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="create_token",
                 description_placeholders={
                     CONF_AUTH_ID: self._auth_id,
-                    CONF_HYPERION_URL: self._get_hyperion_url(),
                 },
             )
 

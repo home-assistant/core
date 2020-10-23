@@ -9,7 +9,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
-    CONF_HYPERION_URL,
     CONF_PRIORITY,
     DOMAIN,
     SOURCE_IMPORT,
@@ -28,7 +27,6 @@ from . import (
     TEST_CONFIG_ENTRY_ID,
     TEST_ENTITY_ID_1,
     TEST_HOST,
-    TEST_HYPERION_URL,
     TEST_INSTANCE,
     TEST_PORT,
     TEST_PORT_UI,
@@ -324,7 +322,6 @@ async def test_auth_create_token_approval_declined(hass):
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
-            CONF_HYPERION_URL: TEST_HYPERION_URL,
         }
 
         result = await _configure_flow(hass, result)
@@ -363,7 +360,6 @@ async def test_auth_create_token_when_issued_token_fails(hass):
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
-            CONF_HYPERION_URL: TEST_HYPERION_URL,
         }
 
         result = await _configure_flow(hass, result)
@@ -404,7 +400,6 @@ async def test_auth_create_token_success(hass):
         assert result["step_id"] == "create_token"
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
-            CONF_HYPERION_URL: TEST_HYPERION_URL,
         }
 
         result = await _configure_flow(hass, result)
@@ -505,7 +500,6 @@ async def test_ssdp_failure_bad_port_ui(hass):
         # Verify a working URL is used despite the bad port number
         assert result["description_placeholders"] == {
             CONF_AUTH_ID: TEST_AUTH_ID,
-            CONF_HYPERION_URL: TEST_HYPERION_URL,
         }
 
 

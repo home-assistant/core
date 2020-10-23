@@ -19,7 +19,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import PlatformNotReady
@@ -31,7 +30,6 @@ import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, split_hyperion_unique_id
 from .const import (
-    CONF_INSTANCE,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -140,11 +138,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # The unique_id needs to be updated, then the config_flow should do the rest.
     registry = await async_get_registry(hass)
     for entity_id, entity in registry.entities.items():
-        if entity.config_entry_id is None and entity.platform == DOMAIN:
-            result = re.search(r"([^:]+):(\d+)-%i" % instance, entity.unique_id)
-            if result and result.group(1) == host and int(result.group(2)) == port:
-                registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
-                break
+        if entity.config_entry_id is not None or entity.platform != DOMAIN:
+            continue
+        result = re.search(r"([^:]+):(\d+)-%i" % instance, entity.unique_id)
+        if result and result.group(1) == host and int(result.group(2)) == port:
+            registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
+            break
     else:
         # Possibility 3: This is the first upgrade to the new Hyperion component.
         # No config entry and no entity_registry entry, in which case the CONF_NAME
@@ -309,21 +308,11 @@ async def _async_create_connect_client(
     host: str, port: int, instance: int = const.DEFAULT_INSTANCE, token: str = None
 ):
     """Create and connect a Hyperion Client."""
-    hyperion_client = client.HyperionClient(
-        host,
-        port,
-        **{CONF_TOKEN: token, CONF_INSTANCE: instance},
-    )
+    hyperion_client = client.HyperionClient(host, port, token=token, instance=instance)
 
     if not await hyperion_client.async_client_connect():
         return None
     return hyperion_client
-
-
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    hyperion_client = hass.data[DOMAIN].pop(entry.entry_id)
-    return await hyperion_client.async_client_disconnect()
 
 
 class Hyperion(LightEntity):
