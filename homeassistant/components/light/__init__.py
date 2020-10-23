@@ -344,7 +344,6 @@ class Profiles:
         name = "group.all_lights.default"
         if name in self.data:
             self.apply_profile(name, params)
-            return
 
     @callback
     def apply_profile(self, name, params):
