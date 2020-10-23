@@ -1,4 +1,4 @@
-"""UK Environment Agency Flood Monitoring Integration."""
+"""UK Environment Agency Flood Monitoring Integration (England Only)."""
 
 from .const import DOMAIN
 
