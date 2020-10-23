@@ -205,6 +205,7 @@ class EntityRegistry:
         # Data that we want entry to have
         config_entry: Optional["ConfigEntry"] = None,
         device_id: Optional[str] = None,
+        area_id: Optional[str] = None,
         capabilities: Optional[Dict[str, Any]] = None,
         supported_features: Optional[int] = None,
         device_class: Optional[str] = None,
@@ -224,6 +225,7 @@ class EntityRegistry:
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
+                area_id=area_id or _UNDEF,
                 capabilities=capabilities or _UNDEF,
                 supported_features=supported_features or _UNDEF,
                 device_class=device_class or _UNDEF,
@@ -254,6 +256,7 @@ class EntityRegistry:
             entity_id=entity_id,
             config_entry_id=config_entry_id,
             device_id=device_id,
+            area_id=area_id,
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
