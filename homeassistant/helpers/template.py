@@ -1262,7 +1262,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def __init__(self, hass):
         """Initialise template environment."""
-        super().__init__(loader=jinja2.FileSystemLoader("/config/templates"))
+        if hass:
+            super().__init__(loader=jinja2.FileSystemLoader(hass.config.config_dir+"templates"))
+        else:
+            super().__init__()
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
