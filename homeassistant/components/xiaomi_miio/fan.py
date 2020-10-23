@@ -185,7 +185,6 @@ ATTR_DEPTH = "depth"
 ATTR_DRY = "dry"
 
 # Air Humidifier CA4
-ATTR_WATER_LEVEL = "water_level"
 ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_FAHRENHEIT = "fahrenheit"
 ATTR_FAULT = "fault"
@@ -343,7 +342,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_DRY: "dry",
     ATTR_FAHRENHEIT: "fahrenheit",
     ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_WATER_LEVEL: "water_level",
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
