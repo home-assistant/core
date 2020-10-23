@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig legitimasjon",
+            "invalid_credentials": "Ugyldige innloggingsopplysninger",
             "user_already_configured": "Kontoen er allerede konfigurert"
         },
         "create_entry": {
@@ -10,7 +10,7 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig legitimasjon",
+            "invalid_credentials": "Ugyldige innloggingsopplysninger",
             "invalid_username": "Ugyldig brukernavn",
             "unexpected": "Uventet feil under kommunikasjon med Life360-servern",
             "user_already_configured": "Kontoen er allerede konfigurert"

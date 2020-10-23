@@ -56,8 +56,8 @@
             "side_5": "strona 5",
             "side_6": "strona 6",
             "top_buttons": "g\u00f3rne przyciski",
-            "turn_off": "wy\u0142\u0105cz",
-            "turn_on": "w\u0142\u0105cz"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",

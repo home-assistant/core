@@ -56,17 +56,17 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "button1": "Przycisk 1",
-            "button10": "Przycisk 10",
-            "button2": "Przycisk 2",
-            "button3": "Przycisk 3",
-            "button4": "Przycisk 4",
-            "button5": "Przycisk 5",
-            "button6": "Przycisk 6",
-            "button7": "Przycisk 7",
-            "button8": "Przycisk 8",
-            "button9": "Przycisk 9",
-            "doorbell": "Dzwonek do drzwi"
+            "button1": "przycisk 1",
+            "button10": "przycisk 10",
+            "button2": "przycisk 2",
+            "button3": "przycisk 3",
+            "button4": "przycisk 4",
+            "button5": "przycisk 5",
+            "button6": "przycisk 6",
+            "button7": "przycisk 7",
+            "button8": "przycisk 8",
+            "button9": "przycisk 9",
+            "doorbell": "dzwonek do drzwi"
         },
         "trigger_type": {
             "double_press": "\"{subtype}\" naci\u015bni\u0119ty dwukrotnie",
