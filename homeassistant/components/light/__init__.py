@@ -206,24 +206,22 @@ async def async_setup(hass, config):
 
         if not params:
             profiles.apply_default(light.entity_id, params)
+
+        # Only process params once we processed brightness step
+        if params and (
+            ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
+        ):
+            brightness = light.brightness if light.is_on else 0
+
+            if ATTR_BRIGHTNESS_STEP in params:
+                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+
+            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+
             preprocess_turn_on_alternatives(hass, params)
-
-        if params:
-            # Only process params once we processed with brightness step
-            if ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
-                brightness = light.brightness if light.is_on else 0
-
-                if ATTR_BRIGHTNESS_STEP in params:
-                    brightness += params.pop(ATTR_BRIGHTNESS_STEP)
-
-                else:
-                    brightness += round(
-                        params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255
-                    )
-
-                params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
-
-                preprocess_turn_on_alternatives(hass, params)
 
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:
@@ -232,10 +230,7 @@ async def async_setup(hass, config):
             await light.async_turn_on(**params)
 
     async def async_handle_toggle_service(light, call):
-        """Handle toggling a light.
-
-        If brightness is set to 0, this service will turn the light off.
-        """
+        """Handle toggling a light."""
         if light.is_on:
             off_params = filter_turn_off_params(call.data)
             await light.async_turn_off(**off_params)
