@@ -151,8 +151,6 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     chromecast = get_fake_chromecast(info)
     zconf = get_fake_zconf(host=info.host, port=info.port)
 
-    cast.CastStatusListener = MagicMock(wraps=cast.CastStatusListener)
-
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_service",
         return_value=chromecast,
@@ -171,25 +169,20 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         )
         await hass.async_block_till_done()
 
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
         discovery_callback = cast_listener.call_args[0][0]
 
-        def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
-            """Discover a chromecast device."""
-            listener.services[info.uuid] = (
-                {service_name},
-                info.uuid,
-                info.model_name,
-                info.friendly_name,
-            )
-            discovery_callback(info.uuid, service_name)
+        service_name = "the-service"
+        listener.services[info.uuid] = (
+            {service_name},
+            info.uuid,
+            info.model_name,
+            info.friendly_name,
+        )
+        discovery_callback(info.uuid, service_name)
 
-        discover_chromecast("the-service", info)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert get_chromecast.call_count == 1
-        assert cast.CastStatusListener.call_count == 1
         return chromecast
 
 
