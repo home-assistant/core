@@ -1263,7 +1263,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def __init__(self, hass):
         """Initialise template environment."""
         if hass:
-            super().__init__(loader=jinja2.FileSystemLoader(hass.config.config_dir+"templates"))
+            super().__init__(
+                loader=jinja2.FileSystemLoader(hass.config.config_dir + "templates")
+            )
         else:
             super().__init__()
         self.hass = hass
