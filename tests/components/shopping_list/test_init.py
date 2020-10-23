@@ -1,6 +1,6 @@
 """Test shopping list component."""
 
-from homeassistant.components.websocket_api.const import TYPE_RESULT, ERR_INVALID_FORMAT
+from homeassistant.components.websocket_api.const import ERR_INVALID_FORMAT, TYPE_RESULT
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.helpers import intent
 
