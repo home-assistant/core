@@ -24,8 +24,8 @@ async def validate_user_config(hass: core.HomeAssistant, data):
 
     # Current Weather
     try:
-        weather_data = await fmi_client.async_weather_by_coordinates(
-            latitude, longitude
+        weather_data = await hass.async_add_executor_job(
+            fmi_client.weather_by_coordinates, latitude, longitude
         )
     except ClientError as err:
         err_string = (
@@ -63,11 +63,8 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
             )
             self._abort_if_unique_id_configured()
 
-            try:
-                valid = await validate_user_config(self.hass, user_input)
-                return self.async_create_entry(title=valid["place"], data=user_input)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Exception occurred in connection!")
+            valid = await validate_user_config(self.hass, user_input)
+            return self.async_create_entry(title=valid["place"], data=user_input)
 
         data_schema = vol.Schema(
             {

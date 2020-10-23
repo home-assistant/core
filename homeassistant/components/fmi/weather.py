@@ -43,8 +43,14 @@ class FMIWeatherEntity(CoordinatorEntity, WeatherEntity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        """Return the name of the place based on Lat/Long."""
+        if self._fmi is None:
+            return self._name
+
+        if self._fmi.current is None:
+            return self._name
+
+        return self._fmi.current.place
 
     @property
     def attribution(self):

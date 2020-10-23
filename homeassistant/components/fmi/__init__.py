@@ -102,6 +102,7 @@ class FMIDataUpdateCoordinator(DataUpdateCoordinator):
         self.time_step = time_step
         self.current = None
         self.forecast = None
+        self._hass = hass
 
         _LOGGER.debug("Data will be updated every %s min", MIN_TIME_BETWEEN_UPDATES)
 
@@ -113,11 +114,14 @@ class FMIDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via Open API."""
         try:
             async with timeout(10):
-                self.current = await fmi.async_weather_by_coordinates(
-                    self.latitude, self.longitude
+                self.current = await self._hass.async_add_executor_job(
+                    fmi.weather_by_coordinates, self.latitude, self.longitude
                 )
-                self.forecast = await fmi.async_forecast_by_coordinates(
-                    self.latitude, self.longitude, timestep_hours=self.time_step
+                self.forecast = await self._hass.async_add_executor_job(
+                    fmi.forecast_by_coordinates,
+                    self.latitude,
+                    self.longitude,
+                    self.time_step,
                 )
         except (ClientError, ServerError) as error:
             raise UpdateFailed(error) from error
