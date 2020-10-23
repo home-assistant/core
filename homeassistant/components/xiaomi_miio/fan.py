@@ -1166,17 +1166,19 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
-    mode_mapping = {
+    MODE_MAPPING = {
         AirhumidifierMiotOperationMode.Low: SPEED_LOW,
         AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
         AirhumidifierMiotOperationMode.High: SPEED_HIGH,
     }
 
+    REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
+
     @property
     def speed(self):
         """Return the current speed."""
         if self._state:
-            return self.mode_mapping.get(
+            return self.MODE_MAPPING.get(
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
             )
 
@@ -1195,12 +1197,10 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
 
-        reverse_mode_mapping = {v: k for k, v in self.mode_mapping.items()}
-
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            reverse_mode_mapping[speed],
+            self.REVERSE_MODE_MAPPING[speed],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
