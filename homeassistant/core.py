@@ -403,7 +403,6 @@ class HomeAssistant:
         self, target: Callable[..., T], *args: Any
     ) -> Awaitable[T]:
         """Add an executor job from within the event loop."""
-        _LOGGER.warning("async_add_executor_job: %s", target)
         task = self.loop.run_in_executor(None, target, *args)
 
         # If a task is scheduled
@@ -716,10 +715,7 @@ class EventBus:
             return
 
         for job in listeners:
-            try:
-                self._hass.async_run_hass_job(job, event)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error while processing event %s", event)
+            self._hass.async_add_hass_job(job, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.

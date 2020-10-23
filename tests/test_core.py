@@ -169,8 +169,7 @@ def test_stage_shutdown():
     hass.stop()
 
     assert len(test_stop) == 1
-    # since get_test_home_assistant will call clear_instance
-    # we will never see the close event
+    assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
 
