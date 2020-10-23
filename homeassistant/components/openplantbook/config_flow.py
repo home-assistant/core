@@ -19,27 +19,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    api = OpenPlantBookApi(hass)
     if DOMAIN not in hass.data:
+        _LOGGER.debug("Creating domain in config flow")
         hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]["API"] = OpenPlantBookApi(data["client_id"], data["secret"])
 
-    try:
-        token = await api.get_plantbook_token(data["client_id"], data["secret"])
-        if not token:
-            raise CannotConnect
-    except CannotConnect:
-        _LOGGER.error("Unable to connect to the OpenPlantbook API")
-        raise
-    except InvalidAuth:
-        _LOGGER.error("Authentication failed when connecting to the OpenPlantbook API")
-        raise
-    except Exception as exception:  # pylint: disable=broad-except
-        _LOGGER.error(
-            "Unknown error «%s» when connecting the OpenPlantbook API", str(exception)
-        )
-        raise CannotConnect from exception
-
-    return {"title": "Openplantbook API", "token": token}
+    return {"title": "Openplantbook API"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,7 +40,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 if info:
-                    user_input["token"] = info["token"]
                     return self.async_create_entry(title=info["title"], data=user_input)
                 raise CannotConnect
             except CannotConnect:
