@@ -75,10 +75,14 @@ async def test_setup_entry_encrypted(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_encrypted_missing_device_info(hass):
@@ -103,10 +107,14 @@ async def test_setup_entry_encrypted_missing_device_info(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
         assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_encrypted_missing_device_info_none(hass):
@@ -131,10 +139,14 @@ async def test_setup_entry_encrypted_missing_device_info_none(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] is None
         assert mock_entry.unique_id == MOCK_CONFIG_DATA[CONF_HOST]
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_unencrypted(hass):
@@ -156,10 +168,14 @@ async def test_setup_entry_unencrypted(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_unencrypted_missing_device_info(hass):
@@ -184,10 +200,14 @@ async def test_setup_entry_unencrypted_missing_device_info(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
         assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_unencrypted_missing_device_info_none(hass):
@@ -212,10 +232,14 @@ async def test_setup_entry_unencrypted_missing_device_info_none(hass):
         assert mock_entry.data[ATTR_DEVICE_INFO] is None
         assert mock_entry.unique_id == MOCK_CONFIG_DATA[CONF_HOST]
 
-        state = hass.states.get("media_player.panasonic_viera_tv")
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-        assert state
-        assert state.name == DEFAULT_NAME
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_config_flow_initiated(hass):
@@ -253,6 +277,8 @@ async def test_setup_unload_entry(hass):
 
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
 
-    state = hass.states.get("media_player.panasonic_viera_tv")
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    state_remote = hass.states.get("media_player.panasonic_viera_remote")
 
-    assert state is None
+    assert state_tv is None
+    assert state_remote is None
