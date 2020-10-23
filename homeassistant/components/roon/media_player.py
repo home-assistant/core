@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -36,9 +37,11 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .media_browser import browse_media
 
 SUPPORT_ROON = (
-    SUPPORT_PAUSE
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_STOP
     | SUPPORT_PREVIOUS_TRACK
@@ -496,6 +499,8 @@ class RoonDevice(MediaPlayerEntity):
             self._server.roonapi.queue_playlist(self.zone_id, media_id)
         elif media_type == "genre":
             self._server.roonapi.play_genre(self.zone_id, media_id)
+        elif media_type in ("library", "track"):
+            self._server.roonapi.play_id(self.zone_id, media_id)
         else:
             _LOGGER.error(
                 "Playback requested of unsupported type: %s --> %s",
@@ -606,3 +611,14 @@ class RoonDevice(MediaPlayerEntity):
 
         _LOGGER.info("Transferring from %s to %s", self.name, name)
         self._server.roonapi.transfer_zone(self._zone_id, transfer_id)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.zone_id,
+            self._server,
+            media_content_type,
+            media_content_id,
+        )
+

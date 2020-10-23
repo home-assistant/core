@@ -60,7 +60,8 @@
             "already_configured": "Insteoni modemi \u00fchendus on juba seadistatud"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "input_error": "Vigane sisestus, kontrolli andmeid"
         },
         "step": {
             "add_override": {

@@ -6,10 +6,14 @@
         },
         "error": {
             "identifier_exists": "\u00da\u010det je ji\u017e zaregistrov\u00e1n",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "mfa": {
+                "title": "V\u00edcefaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed SimpliSafe"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"

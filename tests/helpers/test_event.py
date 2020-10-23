@@ -1545,7 +1545,12 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     await hass.async_block_till_done()
     info.async_refresh()
 
-    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": True,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     await hass.async_block_till_done()
 
     assert refresh_runs == [0]
@@ -1557,7 +1562,12 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     hass.states.async_set("sensor.two", "any")
     await hass.async_block_till_done()
     # Should be suppressed during the rate limit
-    assert info.listeners == {"all": False, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     assert refresh_runs == [0, 1]
     next_time = dt_util.utcnow() + timedelta(seconds=0.125)
     with patch(
@@ -1566,7 +1576,12 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
     # Rate limit released and the all listener returns
-    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": True,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     assert refresh_runs == [0, 1, 2]
     hass.states.async_set("sensor.three", "any")
     await hass.async_block_till_done()
@@ -1575,7 +1590,12 @@ async def test_track_template_rate_limit_suppress_listener(hass):
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2]
     # Rate limit hit and the all listener is shut off
-    assert info.listeners == {"all": False, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     next_time = dt_util.utcnow() + timedelta(seconds=0.125 * 2)
     with patch(
         "homeassistant.helpers.ratelimit.dt_util.utcnow", return_value=next_time
@@ -1583,12 +1603,22 @@ async def test_track_template_rate_limit_suppress_listener(hass):
         async_fire_time_changed(hass, next_time)
         await hass.async_block_till_done()
     # Rate limit released and the all listener returns
-    assert info.listeners == {"all": True, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": True,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     assert refresh_runs == [0, 1, 2, 4]
     hass.states.async_set("sensor.five", "any")
     await hass.async_block_till_done()
     # Rate limit hit and the all listener is shut off
-    assert info.listeners == {"all": False, "domains": set(), "entities": set()}
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": set(),
+        "time": False,
+    }
     assert refresh_runs == [0, 1, 2, 4]
 
 
@@ -2142,15 +2172,17 @@ async def test_track_template_with_time_that_leaves_scope(hass):
         "time": True,
     }
 
-    # Verify we do not update a second time
-    # if the state change happens
+    # Verify we do not update before the minute rolls over
     callback_count_before_time_change = len(specific_runs)
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=59))
+    test_time = dt_util.utcnow().replace(second=1)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, test_time + timedelta(seconds=58))
     await hass.async_block_till_done()
     assert len(specific_runs) == callback_count_before_time_change
 
-    # Verify we do update on the next time change
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+    # Verify we do update on the next change of minute
+    async_fire_time_changed(hass, test_time + timedelta(seconds=59))
     await hass.async_block_till_done()
     assert len(specific_runs) == callback_count_before_time_change + 1
 
