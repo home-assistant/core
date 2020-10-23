@@ -163,6 +163,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self._form_error = None
 
     def _get_form_error(self):
+        """Set the error to be shown in the options form."""
         errors = {}
         if self._form_error:
             errors["base"] = self._form_error
@@ -170,7 +171,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return errors
 
     def _get_config_devices(self):
-        """Prepare the schema to select Tuya device to configure."""
+        """Get the list of Tuya device to configure."""
         config_list = {}
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
         devices_list = tuya.get_all_devices()
@@ -183,6 +184,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return config_list
 
     def _get_device(self, dev_id):
+        """Get specific device from tuya library."""
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
         return tuya.get_device_by_id(dev_id)
 
