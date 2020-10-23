@@ -28,6 +28,7 @@ import homeassistant.util.color as color_util
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
+DATA_PROFILES = "light_profiles"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -131,9 +132,17 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def preprocess_turn_on_alternatives(params):
-    """Process extra data for turn light on request."""
-    assert ATTR_PROFILE not in params
+def preprocess_turn_on_alternatives(hass, params):
+    """Process extra data for turn light on request.
+
+    Async friendly.
+    """
+    # Bail out, we process this later.
+    if ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+        return
+
+    if ATTR_PROFILE in params:
+        hass.data[DATA_PROFILES].apply_profile(params.pop(ATTR_PROFILE), params)
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
@@ -160,8 +169,6 @@ def preprocess_turn_on_alternatives(params):
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
-    return params
-
 
 def filter_turn_off_params(params):
     """Filter out params not used in turn off."""
@@ -175,32 +182,36 @@ async def async_setup(hass, config):
     )
     await component.async_setup(config)
 
-    profiles = Profiles(hass)
+    profiles = hass.data[DATA_PROFILES] = Profiles(hass)
+    await profiles.async_initialize()
+
+    def preprocess_data(data):
+        """Preprocess the service data."""
+        base = {
+            entity_field: data.pop(entity_field)
+            for entity_field in cv.ENTITY_SERVICE_FIELDS
+            if entity_field in data
+        }
+
+        preprocess_turn_on_alternatives(hass, data)
+        base["params"] = data
+        return base
 
     async def async_handle_light_on_service(light, call):
         """Handle turning a light on.
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = {
-            key: value
-            for key, value in call.data.items()
-            if key not in cv.ENTITY_SERVICE_FIELDS
-        }
+        params = call.data["params"]
 
         if not params:
-            await profiles.load_and_apply_default(light.entity_id, params)
-
-        elif ATTR_PROFILE in params:
-            await profiles.load_and_apply_profile(params.pop(ATTR_PROFILE), params)
+            profiles.apply_default(light.entity_id, params)
+            preprocess_turn_on_alternatives(hass, params)
 
         if params:
-            preprocess_turn_on_alternatives(params)
-
+            # Only process params once we processed with brightness step
             if ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
                 brightness = light.brightness if light.is_on else 0
-
-                params = params.copy()
 
                 if ATTR_BRIGHTNESS_STEP in params:
                     brightness += params.pop(ATTR_BRIGHTNESS_STEP)
@@ -211,6 +222,8 @@ async def async_setup(hass, config):
                     )
 
                 params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+
+                preprocess_turn_on_alternatives(hass, params)
 
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:
@@ -233,7 +246,7 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        LIGHT_TURN_ON_SCHEMA,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_light_on_service,
     )
 
@@ -245,7 +258,7 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        LIGHT_TURN_ON_SCHEMA,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_toggle_service,
     )
 
@@ -308,9 +321,9 @@ class Profiles:
 
                         transition = transition[0] if transition else 0
 
-                        profiles[profile] = (
-                            color_x,
-                            color_y,
+                        profiles[profile] = color_util.color_xy_to_hs(
+                            color_x, color_y
+                        ) + (
                             brightness,
                             transition,
                         )
@@ -321,23 +334,13 @@ class Profiles:
                     continue
         return profiles
 
-    async def _load_profiles(self):
+    async def async_initialize(self):
         """Load and cache profiles."""
-        return await self.hass.async_add_executor_job(self._load_profile_data)
+        self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
-    async def load_and_apply_profile(self, name, params):
-        """Apply a profile to params."""
-        if self.data is None:
-            self.data = await self._load_profiles()
-
-        self.apply_profile(name, params)
-
-    async def load_and_apply_default(self, entity_id, params):
+    @callback
+    def apply_default(self, entity_id, params):
         """Return the default turn-on profile for the given light."""
-        if self.data is None:
-            self.data = await self._load_profiles()
-
-        # pylint: disable=unsupported-membership-test
         name = f"{entity_id}.default"
         if name in self.data:
             self.apply_profile(name, params)
@@ -356,7 +359,7 @@ class Profiles:
         if profile is None:
             return
 
-        params.setdefault(ATTR_XY_COLOR, profile[:2])
+        params.setdefault(ATTR_HS_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
         params.setdefault(ATTR_TRANSITION, profile[3])
 
