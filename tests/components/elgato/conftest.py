@@ -1,2 +1,2 @@
-"""Test fixtures for mqtt component."""
+"""elgato conftest."""
 from tests.components.light.conftest import mock_light_profiles  # noqa
