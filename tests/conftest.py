@@ -132,6 +132,9 @@ def hass(loop, hass_storage, request):
 
     loop.run_until_complete(hass.async_stop(force=True))
     for ex in exceptions:
+        import pprint
+
+        pprint.pprint([request.module.__name__, request.function.__name__])
         if (
             request.module.__name__,
             request.function.__name__,
