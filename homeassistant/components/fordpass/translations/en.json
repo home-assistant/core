@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This vehicle is already configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "cannot_connect": "Could not connect to FordPass",
-            "invalid_auth": "Authentication failed to FordPass",
-            "unknown": "An unknown error occured"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
