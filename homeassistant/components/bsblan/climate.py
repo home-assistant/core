@@ -94,7 +94,7 @@ class BSBLanClimate(ClimateEntity):
         """Initialize BSBLan climate device."""
         self._current_temperature: Optional[float] = None
         self._available = True
-        self._hvac_mode: Optional[int] = None
+        self._hvac_mode: Optional[str] = None
         self._target_temperature: Optional[float] = None
         self._temperature_unit = None
         self._preset_mode = None
