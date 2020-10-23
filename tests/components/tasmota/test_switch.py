@@ -80,7 +80,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     # Turn the switch on and verify MQTT message is sent
     await common.async_turn_on(hass, "switch.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/POWER1", "ON", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -91,7 +91,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     # Turn the switch off and verify MQTT message is sent
     await common.async_turn_off(hass, "switch.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/POWER1", "OFF", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
     )
 
     state = hass.states.get("switch.test")
