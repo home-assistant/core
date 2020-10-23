@@ -118,7 +118,7 @@ def library_payload(roon_server, zone_id, media_content_id):
         content_id = media_content_id
 
     result_header = roon_server.roonapi.browse_browse(opts)
-    _LOGGER.debug("Result_header %s", result_header)
+    _LOGGER.debug("Result header %s", result_header)
 
     header = result_header["list"]
     title = header.get("title")
@@ -144,7 +144,7 @@ def library_payload(roon_server, zone_id, media_content_id):
     )
 
     result_detail = roon_server.roonapi.browse_load(opts)
-    _LOGGER.debug("result_detail %s", result_detail)
+    _LOGGER.debug("Result detail %s", result_detail)
 
     items = result_detail["items"]
     count = len(items)
