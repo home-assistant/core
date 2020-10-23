@@ -13,14 +13,13 @@ from homeassistant.components.color_extractor.const import (
     ATTR_PATH,
     ATTR_URL,
     DOMAIN,
-    SERVICE_PREDOMINANT_COLOR_FILE,
-    SERVICE_PREDOMINANT_COLOR_URL,
+    SERVICE_TURN_ON,
 )
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SERVICE_TURN_ON,
+    SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
@@ -59,10 +58,27 @@ async def async_setup(hass, hass_config):
 
         return color
 
-    async def async_predominant_color_url_service(service_call):
-        """Handle call for URL based image."""
+    async def async_handle_service(service_call):
+        """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
 
+        if ATTR_URL in service_data:
+            await _async_url_service(service_data)
+        elif ATTR_PATH in service_data:
+            await _async_file_service(service_data)
+        else:
+            _LOGGER.error("Missing either required url or path key")
+            return None
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_service,
+        schema=SERVICE_SCHEMA,
+    )
+
+    async def _async_url_service(service_data):
+        """Handle call for URL based image."""
         url = service_data.pop(ATTR_URL)
 
         if not hass.config.is_allowed_external_url(url):
@@ -70,7 +86,7 @@ async def async_setup(hass, hass_config):
                 "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
                 url,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -99,26 +115,16 @@ async def async_setup(hass, hass_config):
                     url,
                     ex,
                 )
-
                 return None
 
         service_data[ATTR_RGB_COLOR] = color
 
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
         )
 
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PREDOMINANT_COLOR_URL,
-        async_predominant_color_url_service,
-        schema=SERVICE_SCHEMA,
-    )
-
-    async def async_predominant_color_file_service(service_call):
+    async def _async_file_service(service_data):
         """Handle call for local file based image."""
-        service_data = dict(service_call.data)
-
         file_path = service_data.pop(ATTR_PATH)
 
         if not hass.config.is_allowed_path(file_path):
@@ -126,7 +132,7 @@ async def async_setup(hass, hass_config):
                 "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
                 file_path,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
@@ -140,7 +146,6 @@ async def async_setup(hass, hass_config):
                 file_path,
                 ex,
             )
-
             return None
 
         service_data[ATTR_RGB_COLOR] = color
@@ -148,12 +153,5 @@ async def async_setup(hass, hass_config):
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PREDOMINANT_COLOR_FILE,
-        async_predominant_color_file_service,
-        schema=SERVICE_SCHEMA,
-    )
 
     return True

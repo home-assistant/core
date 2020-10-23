@@ -9,15 +9,14 @@ from homeassistant.components.color_extractor import (
     ATTR_PATH,
     ATTR_URL,
     DOMAIN,
-    SERVICE_PREDOMINANT_COLOR_FILE,
-    SERVICE_PREDOMINANT_COLOR_URL,
+    SERVICE_TURN_ON,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
+    SERVICE_TURN_OFF as LIGHT_SERVICE_TURN_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -62,12 +61,44 @@ async def setup_light(hass):
     assert state.attributes.get(ATTR_RGB_COLOR) == (255, 63, 111)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: LIGHT_ENTITY}, blocking=True
+        LIGHT_DOMAIN,
+        LIGHT_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
 
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_missing_url_and_path(hass):
+    """Test that nothing happens when url and path are missing."""
+    # Load our color_extractor component
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    # Validate pre service call
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+    # Missing url and path attributes, should cause error log
+    service_data = {
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
+    await hass.async_block_till_done()
+
+    # check light is still off, unchanged due to bad parameters on service call
+    state = hass.states.get(LIGHT_ENTITY)
     assert state
     assert state.state == STATE_OFF
 
@@ -86,9 +117,9 @@ async def _async_load_color_extractor_url(hass, service_data):
     assert state
     assert state.state == STATE_OFF
 
-    # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
-    await hass.services.async_call(
-        DOMAIN, SERVICE_PREDOMINANT_COLOR_URL, service_data, blocking=True
+    # Call the shared service, our above mock should return the base64 decoded fixture 1x1 pixel
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
     )
 
     await hass.async_block_till_done()
@@ -131,6 +162,21 @@ async def test_url_success(hass, aioclient_mock):
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
 
 
+async def test_url_not_allowed(hass, aioclient_mock):
+    """Test that a not allowed external URL fails to turn light on."""
+    service_data = {
+        ATTR_URL: "http://denied.com/images/logo.png",
+        ATTR_ENTITY_ID: LIGHT_ENTITY,
+    }
+
+    await _async_load_color_extractor_url(hass, service_data)
+
+    # Light has not been modified due to failure
+    state = hass.states.get(LIGHT_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_url_exception(hass, aioclient_mock):
     """Test that a HTTPError fails to turn light on."""
     service_data = {
@@ -152,27 +198,6 @@ async def test_url_exception(hass, aioclient_mock):
     assert state.state == STATE_OFF
 
 
-async def test_url_not_allowed(hass, aioclient_mock):
-    """Test that a not allowed external URL fails to turn light on."""
-    service_data = {
-        ATTR_URL: "http://denied.com/images/logo.png",
-        ATTR_ENTITY_ID: LIGHT_ENTITY,
-    }
-
-    # Mock the HTTP Response with a base64 encoded 1x1 pixel
-    aioclient_mock.get(
-        url=service_data[ATTR_URL],
-        content=base64.b64decode(load_fixture("color_extractor_url.txt")),
-    )
-
-    await _async_load_color_extractor_url(hass, service_data)
-
-    # Light has not been modified due to failure
-    state = hass.states.get(LIGHT_ENTITY)
-    assert state
-    assert state.state == STATE_OFF
-
-
 async def test_url_error(hass, aioclient_mock):
     """Test that a HTTP Error (non 200) doesn't turn light on."""
     service_data = {
@@ -183,7 +208,7 @@ async def test_url_error(hass, aioclient_mock):
     # Don't let the URL not being allowed sway our exception test
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
-    # Mock the HTTP Response with a base64 encoded 1x1 pixel
+    # Mock the HTTP Response with a 400 Bad Request error
     aioclient_mock.get(url=service_data[ATTR_URL], status=400)
 
     await _async_load_color_extractor_url(hass, service_data)
@@ -236,9 +261,7 @@ async def test_file(hass):
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
     with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_PREDOMINANT_COLOR_FILE, service_data
-        )
+        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
         await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
@@ -278,9 +301,7 @@ async def test_file_denied_dir(hass):
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
     with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
-        await hass.services.async_call(
-            DOMAIN, SERVICE_PREDOMINANT_COLOR_FILE, service_data
-        )
+        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
         await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
