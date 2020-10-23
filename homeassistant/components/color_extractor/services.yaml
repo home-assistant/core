@@ -1,4 +1,4 @@
-predominant_color_url:
+predominant_color_url_turn_on:
   description: Set the light RGB to the predominant color found in the image provided by url.
   fields:
     url:
@@ -8,7 +8,7 @@ predominant_color_url:
       description: The entity we want to set our RGB color on.
       example: "light.living_room_shelves"
 
-predominant_color_file:
+predominant_color_file_turn_on:
   description: Set the light RGB to the predominant color found in the image stored on disk.
   fields:
     path:

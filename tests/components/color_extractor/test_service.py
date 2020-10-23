@@ -5,7 +5,13 @@ import io
 import aiohttp
 import pytest
 
-from homeassistant.components.color_extractor import ATTR_PATH, ATTR_URL, DOMAIN
+from homeassistant.components.color_extractor import (
+    ATTR_PATH,
+    ATTR_URL,
+    DOMAIN,
+    SERVICE_PREDOMINANT_COLOR_FILE,
+    SERVICE_PREDOMINANT_COLOR_URL,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -82,7 +88,7 @@ async def _async_load_color_extractor_url(hass, service_data):
 
     # Call the URL specific service, our above mock should return the base64 decoded fixture 1x1 pixel
     await hass.services.async_call(
-        DOMAIN, "predominant_color_url", service_data, blocking=True
+        DOMAIN, SERVICE_PREDOMINANT_COLOR_URL, service_data, blocking=True
     )
 
     await hass.async_block_till_done()
@@ -230,7 +236,9 @@ async def test_file(hass):
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
     with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
-        await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PREDOMINANT_COLOR_FILE, service_data
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
@@ -270,7 +278,9 @@ async def test_file_denied_dir(hass):
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
     with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
-        await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PREDOMINANT_COLOR_FILE, service_data
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get(LIGHT_ENTITY)
