@@ -1166,25 +1166,19 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
+    mode_mapping = {
+        AirhumidifierMiotOperationMode.Low: SPEED_LOW,
+        AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
+        AirhumidifierMiotOperationMode.High: SPEED_HIGH,
+    }
+
     @property
     def speed(self):
         """Return the current speed."""
         if self._state:
-            if (
+            return self.mode_mapping.get(
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-                == AirhumidifierMiotOperationMode.Low
-            ):
-                return SPEED_LOW
-            if (
-                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-                == AirhumidifierMiotOperationMode.Mid
-            ):
-                return SPEED_MEDIUM
-            if (
-                AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
-                == AirhumidifierMiotOperationMode.High
-            ):
-                return SPEED_HIGH
+            )
 
         return None
 
@@ -1201,21 +1195,12 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
 
-        translated_speed = 0
-
-        if speed == SPEED_LOW:
-            translated_speed = AirhumidifierMiotOperationMode.Low
-        elif speed == SPEED_MEDIUM:
-            translated_speed = AirhumidifierMiotOperationMode.Mid
-        elif speed == SPEED_HIGH:
-            translated_speed = AirhumidifierMiotOperationMode.High
-        else:
-            return None
+        reverse_mode_mapping = {v: k for k, v in self.mode_mapping.items()}
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            translated_speed,
+            reverse_mode_mapping[speed],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
