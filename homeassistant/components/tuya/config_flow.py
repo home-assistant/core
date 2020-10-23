@@ -224,12 +224,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_init()
 
         self._conf_devs_id = conf_devs_id
+        device_name = "(multiple devices selected)" if count > 1 else device.name()
+
         return self.async_show_form(
             step_id="device",
             data_schema=config_schema,
             description_placeholders={
                 "device_type": device_type,
-                "device_name": device.name(),
+                "device_name": device_name,
             },
         )
 
