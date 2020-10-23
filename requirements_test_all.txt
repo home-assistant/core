@@ -364,7 +364,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.19
+hatasmota==0.0.20
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -1110,7 +1110,7 @@ zha-quirks==0.0.45
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.10.0
+zigpy-deconz==0.11.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0

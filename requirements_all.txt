@@ -729,7 +729,7 @@ hass-nabucasa==0.37.1
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.19
+hatasmota==0.0.20
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.5
@@ -2338,7 +2338,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.10.0
+zigpy-deconz==0.11.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0

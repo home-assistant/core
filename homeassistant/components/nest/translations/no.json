@@ -8,6 +8,9 @@
             "no_flows": "Du m\u00e5 konfigurere Nest f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/).",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
         "error": {
             "internal_error": "Intern feil ved validering av kode",
             "invalid_code": "Ugyldig kode",
@@ -29,6 +32,9 @@
                 },
                 "description": "For \u00e5 koble din Nest-konto, [bekreft kontoen din]({url}). \n\nEtter bekreftelse, kopier og lim inn den oppgitte PIN koden nedenfor.",
                 "title": "Koble til Nest konto"
+            },
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
             }
         }
     }
