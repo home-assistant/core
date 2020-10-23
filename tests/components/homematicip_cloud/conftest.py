@@ -24,6 +24,7 @@ from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
 from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(name="mock_connection")

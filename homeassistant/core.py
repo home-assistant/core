@@ -716,7 +716,10 @@ class EventBus:
             return
 
         for job in listeners:
-            self._hass.async_add_hass_job(job, event)
+            try:
+                self._hass.async_run_hass_job(job, event)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error while processing event %s", event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.

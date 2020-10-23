@@ -119,7 +119,6 @@ omit =
     homeassistant/components/buienradar/weather.py
     homeassistant/components/caldav/calendar.py
     homeassistant/components/canary/camera.py
-    homeassistant/components/cast/*
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
     homeassistant/components/circuit/*
