@@ -164,7 +164,7 @@ async def test_form_connection_error(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "serial_error"}
+    assert result2["errors"] == {"base": "timeout"}
     assert len(mock_connect.mock_calls) == 1
 
 
