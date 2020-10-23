@@ -10,7 +10,7 @@ from colorthief import ColorThief
 import voluptuous as vol
 
 from homeassistant.components.color_extractor.const import (
-    ATTR_FILE_PATH,
+    ATTR_PATH,
     ATTR_URL,
     DOMAIN,
     SERVICE_PREDOMINANT_COLOR_FILE,
@@ -22,27 +22,17 @@ from homeassistant.components.light import (
     LIGHT_TURN_ON_SCHEMA,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
-# with the addition of our ATTR_FILE_PATH
-FILE_SERVICE_SCHEMA = cv.make_entity_service_schema(
+SERVICE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIGHT_TURN_ON_SCHEMA,
-        vol.Required(ATTR_ENTITY_ID): cv.string,
-        vol.Required(ATTR_FILE_PATH): cv.string,
-    }
-)
-
-URL_SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIGHT_TURN_ON_SCHEMA,
-        vol.Required(ATTR_ENTITY_ID): cv.string,
-        vol.Required(ATTR_URL): cv.string,
+        vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+        vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
     }
 )
 
@@ -58,12 +48,10 @@ def _get_file(file_path):
 async def async_setup(hass, hass_config):
     """Set up services for color_extractor integration."""
 
-    _LOGGER.debug("Setting up color_extractor component")
-
-    async def _async_get_color(file_handler) -> tuple:
+    def _get_color(file_handler) -> tuple:
         """Given an image file, extract the predominant color from it."""
         try:
-            color_thief = await hass.async_add_executor_job(ColorThief, file_handler)
+            color_thief = ColorThief(file_handler)
         except UnidentifiedImageError as ex:
             _LOGGER.error("Bad image file provided, are you sure it's an image? %s", ex)
             return
@@ -74,24 +62,6 @@ async def async_setup(hass, hass_config):
         _LOGGER.debug("Extracted RGB color %s from image", color)
 
         return color
-
-    async def _async_set_light(entity_id, color, **light_kwargs):
-        """Set the given light to our extracted RGB value."""
-        service_data = {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_RGB_COLOR: color,
-        }
-
-        # Pass the extra service call args into the light turn_on service
-        service_data.update(**light_kwargs)
-
-        _LOGGER.debug("Setting %d extra light parameters", len(light_kwargs))
-
-        _LOGGER.debug("Setting RGB %s on light %s", color, entity_id)
-
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
-        )
 
     async def async_predominant_color_url_service(service_call):
         """Handle call for URL based image."""
@@ -108,8 +78,7 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
-        entity_id = service_data.pop(ATTR_ENTITY_ID)
-
+        # Download the image into a buffer for ColorThief to check against
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
@@ -126,23 +95,27 @@ async def async_setup(hass, hass_config):
             _file.name = "color_extractor.jpg"
             _file.seek(0)
 
-            color = await _async_get_color(_file)
+            color = _get_color(_file)
 
         if color:
-            await _async_set_light(entity_id, color, **service_data)
+            service_data[ATTR_RGB_COLOR] = color
+
+            await hass.services.async_call(
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PREDOMINANT_COLOR_URL,
         async_predominant_color_url_service,
-        schema=URL_SERVICE_SCHEMA,
+        schema=SERVICE_SCHEMA,
     )
 
     async def async_predominant_color_file_service(service_call):
         """Handle call for local file based image."""
         service_data = dict(service_call.data)
 
-        file_path = service_data.pop(ATTR_FILE_PATH)
+        file_path = service_data.pop(ATTR_PATH)
 
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error(
@@ -153,19 +126,21 @@ async def async_setup(hass, hass_config):
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
-        entity_id = service_data.pop(ATTR_ENTITY_ID)
-
         _file = _get_file(file_path)
-        color = await _async_get_color(_file)
+        color = _get_color(_file)
 
         if color:
-            await _async_set_light(entity_id, color, **service_data)
+            service_data[ATTR_RGB_COLOR] = color
+
+            await hass.services.async_call(
+                LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+            )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_PREDOMINANT_COLOR_FILE,
         async_predominant_color_file_service,
-        schema=FILE_SERVICE_SCHEMA,
+        schema=SERVICE_SCHEMA,
     )
 
     return True

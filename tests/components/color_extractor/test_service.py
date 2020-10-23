@@ -5,7 +5,7 @@ import io
 import aiohttp
 import pytest
 
-from homeassistant.components.color_extractor import ATTR_FILE_PATH, ATTR_URL, DOMAIN
+from homeassistant.components.color_extractor import ATTR_PATH, ATTR_URL, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -66,9 +66,6 @@ async def setup_light(hass):
     assert state.state == STATE_OFF
 
 
-# TODO: The hass allowlist_* config is being ignored...
-
-
 async def _async_load_color_extractor_url(hass, service_data):
     # Load our color_extractor component
     await async_setup_component(
@@ -106,8 +103,10 @@ async def test_url_success(hass, aioclient_mock):
         content=base64.b64decode(load_fixture("color_extractor_url.txt")),
     )
 
-    with patch.object(hass.config, "is_allowed_external_url", return_value=True):
-        await _async_load_color_extractor_url(hass, service_data)
+    # Allow access to this URL using the proper mechanism
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+
+    await _async_load_color_extractor_url(hass, service_data)
 
     state = hass.states.get(LIGHT_ENTITY)
     assert state
@@ -132,6 +131,9 @@ async def test_url_exception(hass, aioclient_mock):
         ATTR_URL: "http://example.com/images/logo.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
+
+    # Don't let the URL not being allowed sway our exception test
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
 
     # Mock the HTTP Response with an HTTPError
     aioclient_mock.get(url=service_data["url"], exc=aiohttp.ClientError)
@@ -172,6 +174,9 @@ async def test_url_error(hass, aioclient_mock):
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
+    # Don't let the URL not being allowed sway our exception test
+    hass.config.allowlist_external_urls.add("http://example.com/images/")
+
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(url=service_data["url"], status=400)
 
@@ -183,8 +188,6 @@ async def test_url_error(hass, aioclient_mock):
     assert state.state == STATE_OFF
 
 
-@patch("os.path.isfile", Mock(return_value=True))
-@patch("os.access", Mock(return_value=True))
 @patch(
     "builtins.open",
     mock_open(read_data=base64.b64decode(load_fixture("color_extractor_file.txt"))),
@@ -203,14 +206,19 @@ def _get_file_mock(file_path):
     return _file
 
 
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
 async def test_file(hass):
     """Test that the file only service reads a file and translates to light RGB."""
     service_data = {
-        ATTR_FILE_PATH: "/opt/image.png",
+        ATTR_PATH: "/opt/image.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,
     }
+
+    # Add our /opt/ path to the allowed list of paths
+    hass.config.allowlist_external_dirs.add("/opt/")
 
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -221,9 +229,7 @@ async def test_file(hass):
     assert state.state == STATE_OFF
 
     # Mock the file handler read with our 1x1 base64 encoded fixture image
-    with patch(
-        "homeassistant.components.color_extractor._get_file", _get_file_mock
-    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+    with patch("homeassistant.components.color_extractor._get_file", _get_file_mock):
         await hass.services.async_call(DOMAIN, "predominant_color_file", service_data)
         await hass.async_block_till_done()
 
@@ -243,10 +249,12 @@ async def test_file(hass):
     # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
 
 
+@patch("os.path.isfile", Mock(return_value=True))
+@patch("os.access", Mock(return_value=True))
 async def test_file_denied_dir(hass):
     """Test that the file only service fails to read an image in a dir not explicitly allowed."""
     service_data = {
-        ATTR_FILE_PATH: "/path/to/a/dir/not/allowed/image.png",
+        ATTR_PATH: "/path/to/a/dir/not/allowed/image.png",
         ATTR_ENTITY_ID: LIGHT_ENTITY,
         # Standard light service data which we pass
         ATTR_BRIGHTNESS_PCT: 100,

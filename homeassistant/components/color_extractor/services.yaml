@@ -2,18 +2,18 @@ predominant_color_url:
   description: Set the light RGB to the predominant color found in the image provided by url.
   fields:
     url:
-      description: The URL of the image we want to extract RGB values from.
+      description: The URL of the image we want to extract RGB values from. Must be allowed in allowlist_external_urls.
       example: https://www.example.com/images/logo.png
-    light_entity_id:
+    entity_id:
       description: The entity we want to set our RGB color on.
       example: "light.living_room_shelves"
 
 predominant_color_file:
   description: Set the light RGB to the predominant color found in the image stored on disk.
   fields:
-    file_path:
-      description: The full system path to the image we want to extract RGB values from.
+    path:
+      description: The full system path to the image we want to extract RGB values from. Must be allowed in allowlist_external_dirs.
       example: /opt/images/logo.png
-    light_entity_id:
+    entity_id:
       description: The entity we want to set our RGB color on.
       example: "light.living_room_shelves"
