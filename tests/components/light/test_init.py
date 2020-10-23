@@ -105,7 +105,7 @@ async def test_methods(hass):
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass, mock_profiles):
+async def test_services(hass, mock_light_profiles):
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -280,7 +280,7 @@ async def test_services(hass, mock_profiles):
     assert data == {}
 
     # One of the light profiles
-    mock_profiles["relax"] = (35.932, 69.412, 144, 0)
+    mock_light_profiles["relax"] = (35.932, 69.412, 144, 0)
     prof_name, prof_h, prof_s, prof_bri, prof_t = "relax", 35.932, 69.412, 144, 0
 
     # Test light profiles
@@ -407,13 +407,13 @@ async def test_services(hass, mock_profiles):
     assert data == {}
 
 
-async def test_light_profiles(hass, mock_profiles):
+async def test_light_profiles(hass, mock_light_profiles):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    mock_profiles["test"] = color.color_xy_to_hs(0.4, 0.6) + (100, 0)
-    mock_profiles["test_off"] = 0, 0, 0, 0
+    mock_light_profiles["test"] = color.color_xy_to_hs(0.4, 0.6) + (100, 0)
+    mock_light_profiles["test_off"] = 0, 0, 0, 0
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -452,7 +452,7 @@ async def test_light_profiles(hass, mock_profiles):
     assert data == {light.ATTR_TRANSITION: 0}
 
 
-async def test_default_profiles_group(hass, mock_profiles):
+async def test_default_profiles_group(hass, mock_light_profiles):
     """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -462,7 +462,10 @@ async def test_default_profiles_group(hass, mock_profiles):
     )
     await hass.async_block_till_done()
 
-    mock_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.4, 0.6) + (99, 2)
+    mock_light_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.4, 0.6) + (
+        99,
+        2,
+    )
 
     ent, _, _ = platform.ENTITIES
     await hass.services.async_call(
@@ -477,7 +480,7 @@ async def test_default_profiles_group(hass, mock_profiles):
     }
 
 
-async def test_default_profiles_light(hass, mock_profiles):
+async def test_default_profiles_light(hass, mock_light_profiles):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -487,11 +490,14 @@ async def test_default_profiles_light(hass, mock_profiles):
     )
     await hass.async_block_till_done()
 
-    mock_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.3, 0.5) + (
+    mock_light_profiles["group.all_lights.default"] = color.color_xy_to_hs(0.3, 0.5) + (
         200,
         0,
     )
-    mock_profiles["light.ceiling_2.default"] = color.color_xy_to_hs(0.6, 0.6) + (100, 3)
+    mock_light_profiles["light.ceiling_2.default"] = color.color_xy_to_hs(0.6, 0.6) + (
+        100,
+        3,
+    )
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
     await hass.services.async_call(
