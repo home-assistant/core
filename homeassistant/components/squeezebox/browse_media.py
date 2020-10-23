@@ -1,12 +1,4 @@
 """Support for media browsing."""
-import asyncio
-import secrets
-
-from aiohttp import web
-from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
-import async_timeout
-
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -21,7 +13,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_OK, HTTP_UNAUTHORIZED
+from homeassistant.helpers.network import get_url
 
 LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
@@ -74,7 +66,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 BROWSE_LIMIT = 500
 
 
-async def build_item_response(player, payload, internal_artwork_url, base_url):
+async def build_item_response(entity, payload):
     """Create response payload for search described by payload."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -86,7 +78,7 @@ async def build_item_response(player, payload, internal_artwork_url, base_url):
     else:
         browse_id = None
 
-    result = await player.async_browse(
+    result = await entity._player.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
         limit=BROWSE_LIMIT,
         browse_id=browse_id,
@@ -97,14 +89,16 @@ async def build_item_response(player, payload, internal_artwork_url, base_url):
     if result is not None and result.get("items"):
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
         child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
-        token = SqueezeboxArtworkProxy.access_token
+        token = entity.access_token
+        base_url = get_url(entity.hass, prefer_external=True)
 
         children = []
         for item in result["items"]:
             thumbnail = item.get("image_url")
-            if thumbnail and thumbnail.startswith(internal_artwork_url):
+            if thumbnail and thumbnail.startswith(entity._internal_artwork_url):
                 thumbnail = (
-                    f"{base_url}/api/squeezebox_proxy?token={token}&artwork={thumbnail}"
+                    f"{base_url}/api/media_player_proxy/{entity.entity_id}"
+                    f"?token={token}&browse_image={thumbnail}"
                 )
 
             children.append(
@@ -182,58 +176,3 @@ async def generate_playlist(player, payload):
         "titles", limit=BROWSE_LIMIT, browse_id=browse_id
     )
     return result.get("items")
-
-
-class SqueezeboxArtworkProxy(HomeAssistantView):
-    """View to proxy album art."""
-
-    requires_auth = False
-    url = "/api/squeezebox_proxy"
-    name = "api:squeezebox:image"
-    access_token = secrets.token_hex(32)
-    internal_artwork_urls = []
-
-    def __init__(self, session, artwork_url):
-        """Initialize a Squeezebox view."""
-        self.session = session
-        if artwork_url not in self.internal_artwork_urls:
-            self.internal_artwork_urls.append(artwork_url)
-
-    async def get(self, request):
-        """Start a get request."""
-        authenticated = (
-            request[KEY_AUTHENTICATED]
-            or request.query.get("token") == self.access_token
-        )
-
-        if not authenticated:
-            return web.Response(status=HTTP_UNAUTHORIZED)
-
-        data, content_type = await self.async_get_artwork(request.query.get("artwork"))
-
-        if data is None:
-            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
-
-        headers = {CACHE_CONTROL: "max-age=3600"}
-        return web.Response(body=data, content_type=content_type, headers=headers)
-
-    async def async_get_artwork(self, artwork):
-        """Get album art from Squeezebox server."""
-        is_internal = next(
-            (True for url in self.internal_artwork_urls if artwork.startswith(url)),
-            False,
-        )
-        if is_internal:
-            try:
-                with async_timeout.timeout(5):
-                    response = await self.session.get(artwork)
-
-                    if response.status == HTTP_OK:
-                        content = await response.read()
-                        content_type = response.headers.get(CONTENT_TYPE)
-                        if content_type:
-                            content_type = content_type.split(";")[0]
-                        return (content, content_type)
-            except asyncio.TimeoutError:
-                pass
-        return (None, None)

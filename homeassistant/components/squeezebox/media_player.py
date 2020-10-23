@@ -3,6 +3,8 @@ import asyncio
 import json
 import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
+import async_timeout
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -35,6 +37,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
+    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -47,15 +50,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.network import get_url
 from homeassistant.util.dt import utcnow
 
-from .browse_media import (
-    SqueezeboxArtworkProxy,
-    build_item_response,
-    generate_playlist,
-    library_payload,
-)
+from .browse_media import build_item_response, generate_playlist, library_payload
 from .const import (
     DEFAULT_PORT,
     DISCOVERY_TASK,
@@ -178,7 +175,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(session, host, port, username, password)
     internal_artwork_url = lms.generate_image_url("")
-    hass.http.register_view(SqueezeboxArtworkProxy(session, internal_artwork_url))
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -597,9 +593,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(
-            self._player,
-            payload,
-            self._internal_artwork_url,
-            get_url(self.hass, prefer_external=True),
-        )
+        return await build_item_response(self, payload)
+
+    async def async_get_browse_image(self, image_url):
+        """Get album art from Squeezebox server."""
+        if image_url.startswith(self._internal_artwork_url):
+            try:
+                session = async_get_clientsession(self.hass)
+                with async_timeout.timeout(5):
+                    response = await session.get(image_url)
+
+                    if response.status == HTTP_OK:
+                        content = await response.read()
+                        content_type = response.headers.get(CONTENT_TYPE)
+                        if content_type:
+                            content_type = content_type.split(";")[0]
+                        return (content, content_type)
+            except asyncio.TimeoutError:
+                pass
+        return (None, None)

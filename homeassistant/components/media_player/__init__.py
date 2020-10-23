@@ -6,7 +6,7 @@ from datetime import timedelta
 import functools as ft
 import hashlib
 import logging
-from random import SystemRandom
+import secrets
 from typing import List, Optional
 from urllib.parse import urlparse
 
@@ -119,7 +119,6 @@ from .errors import BrowseError
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -365,9 +364,7 @@ class MediaPlayerEntity(Entity):
     def access_token(self) -> str:
         """Access token for this media player."""
         if self._access_token is None:
-            self._access_token = hashlib.sha256(
-                _RND.getrandbits(256).to_bytes(32, "little")
-            ).hexdigest()
+            self._access_token = secrets.token_hex(32)
         return self._access_token
 
     @property
@@ -890,7 +887,7 @@ async def _async_fetch_image(hass, url):
 
 
 class MediaPlayerImageView(HomeAssistantView):
-    """Media player view to serve an image."""
+    """Media player view to serve currently playing image."""
 
     requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
@@ -915,7 +912,12 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=HTTP_UNAUTHORIZED)
 
-        data, content_type = await player.async_get_media_image()
+        browse_image = request.query.get("browse_image")
+
+        if browse_image:
+            data, content_type = await player.async_get_browse_image(browse_image)
+        else:
+            data, content_type = await player.async_get_media_image()
 
         if data is None:
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
