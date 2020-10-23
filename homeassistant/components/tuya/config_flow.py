@@ -11,10 +11,12 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
+    ENTITY_MATCH_NONE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 # pylint:disable=unused-import
 from .const import (
@@ -52,6 +54,7 @@ DATA_SCHEMA_USER = vol.Schema(
     }
 )
 
+ERROR_DEV_MULTI_TYPE = "dev_multi_type"
 ERROR_DEV_NOT_CONFIG = "dev_not_config"
 ERROR_DEV_NOT_FOUND = "dev_not_found"
 
@@ -155,8 +158,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._conf_dev_id = None
-        self._conf_dev_option = {}
+        self._conf_devs_id = None
+        self._conf_devs_option = {}
         self._form_error = None
 
     def _get_form_error(self):
@@ -166,7 +169,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._form_error = None
         return errors
 
-    def _get_devices_schema(self):
+    def _get_config_devices(self):
         """Prepare the schema to select Tuya device to configure."""
         config_list = {}
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
@@ -174,14 +177,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         for device in devices_list:
             dev_type = device.device_type()
             if dev_type in TUYA_TYPE_CONFIG:
-                if not config_list:
-                    config_list["0"] = "Save configuration"
                 dev_id = f"{dev_type}-{device.object_id()}"
                 config_list[dev_id] = f"{device.name()} ({dev_type})"
 
-        if not config_list:
-            return None
-        return {vol.Required(CONF_LIST_DEVICES, default="0"): vol.In(config_list)}
+        return config_list
 
     def _get_device(self, dev_id):
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
@@ -191,31 +190,40 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Save the updated options."""
         curr_conf = self.config_entry.options.copy()
         curr_conf.update(data)
-        curr_conf.update(self._conf_dev_option)
+        curr_conf.update(self._conf_devs_option)
 
         return self.async_create_entry(title="", data=curr_conf)
 
-    async def _async_device_form(self, dev_id):
+    async def _async_device_form(self, devs_id):
         """Return configuration form for devices."""
-        device_info = dev_id.split("-")
-        device_type = device_info[0]
-        device_id = device_info[1]
+        count = 0
+        conf_devs_id = []
+        for dev_id in devs_id:
+            device_info = dev_id.split("-")
+            if count == 0:
+                device_type = device_info[0]
+                device_id = device_info[1]
+            elif device_type != device_info[0]:
+                self._form_error = ERROR_DEV_MULTI_TYPE
+                return await self.async_step_init()
+            conf_devs_id.append(device_info[1])
+            count += 1
 
         device = self._get_device(device_id)
         if not device:
             self._form_error = ERROR_DEV_NOT_FOUND
             return await self.async_step_init()
 
-        curr_conf = self._conf_dev_option.get(
+        curr_conf = self._conf_devs_option.get(
             device_id, self.config_entry.options.get(device_id, {})
         )
 
-        config_schema = self._get_device_schema(device_type, curr_conf, device)
+        config_schema = await self._get_device_schema(device_type, curr_conf, device)
         if not config_schema:
             self._form_error = ERROR_DEV_NOT_CONFIG
             return await self.async_step_init()
 
-        self._conf_dev_id = device_id
+        self._conf_devs_id = conf_devs_id
         return self.async_show_form(
             step_id="device",
             data_schema=config_schema,
@@ -228,11 +236,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            dev_id = user_input.get(CONF_LIST_DEVICES, "0")
-            if dev_id != "0":
-                return await self._async_device_form(dev_id)
+            dev_ids = user_input.get(CONF_LIST_DEVICES)
+            if dev_ids:
+                return await self._async_device_form(dev_ids)
 
-            user_input.pop(CONF_LIST_DEVICES, "")
+            user_input.pop(CONF_LIST_DEVICES, [])
             return self._save_config(data=user_input)
 
         data_schema = vol.Schema(
@@ -252,9 +260,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        device_list = self._get_devices_schema()
-        if device_list:
-            data_schema = data_schema.extend(device_list)
+        devices_list = self._get_config_devices()
+        if devices_list:
+            data_schema = data_schema.extend(
+                {vol.Optional(CONF_LIST_DEVICES): cv.multi_select(devices_list)}
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -264,18 +274,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_device(self, user_input=None):
         """Handle options flow for device."""
-        device_id = self._conf_dev_id
         if user_input is not None:
-            self._conf_dev_option[device_id] = user_input
+            for device_id in self._conf_devs_id:
+                self._conf_devs_option[device_id] = user_input
 
         return await self.async_step_init()
 
-    def _get_device_schema(self, device_type, curr_conf, device):
+    async def _get_device_schema(self, device_type, curr_conf, device):
         """Return option schema for device."""
         if device_type == "light":
             return self._get_light_schema(curr_conf, device)
         if device_type == "climate":
-            return self._get_climate_schema(curr_conf, device)
+            entities_list = await _get_entities_matching_domains(self.hass, ["sensor"])
+            return self._get_climate_schema(curr_conf, device, entities_list)
         return None
 
     @staticmethod
@@ -319,10 +330,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return config_schema
 
     @staticmethod
-    def _get_climate_schema(curr_conf, device):
+    def _get_climate_schema(curr_conf, device, entities_list):
         """Create option schema for climate device."""
         unit = device.temperature_unit()
         def_unit = TEMP_FAHRENHEIT if unit == "FAHRENHEIT" else TEMP_CELSIUS
+        entities_list.insert(0, ENTITY_MATCH_NONE)
 
         config_schema = vol.Schema(
             {
@@ -348,9 +360,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): int,
                 vol.Optional(
                     CONF_EXT_TEMP_SENSOR,
-                    default=curr_conf.get(CONF_EXT_TEMP_SENSOR, ""),
-                ): str,
+                    default=curr_conf.get(CONF_EXT_TEMP_SENSOR, ENTITY_MATCH_NONE),
+                ): vol.In(entities_list),
             }
         )
 
         return config_schema
+
+
+async def _get_entities_matching_domains(hass, domains):
+    """List entities in the given domains."""
+    included_domains = set(domains)
+    entity_ids = [state.entity_id for state in hass.states.async_all(included_domains)]
+    entity_ids.sort()
+    return entity_ids

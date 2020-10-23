@@ -30,7 +30,7 @@
         "data": {
           "discovery_interval": "Discovery device polling interval in seconds",
           "query_interval": "Query device polling interval in seconds",
-          "list_devices": "Select the device to configure or select `Save Configuration` to complete the flow"
+          "list_devices": "Select the devices to configure or leave empty to save configuration"
         }
       },
       "device": {
@@ -47,11 +47,12 @@
           "curr_temp_divider": "Current Temperature value divider (0 = use default)",
           "min_temp": "Minimum temperature (leave min and max = 0 for default)",
           "max_temp": "Maximum temperature (leave min and max = 0 for default)",
-          "ext_temp_sensor": "Sensor for current temperature (empty = none)"
+          "ext_temp_sensor": "Sensor for current temperature"
         }
       }
     },
     "error": {
+      "dev_multi_type": "Multiple selected devices to configure must be of the same type",
       "dev_not_config": "Device type not configurable",
       "dev_not_found": "Device not found"
     }

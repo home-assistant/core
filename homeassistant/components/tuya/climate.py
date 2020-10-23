@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
+    ENTITY_MATCH_NONE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
@@ -273,7 +274,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         return super().max_temp
 
     def _get_ext_temperature(self):
-        if not self._temp_entity:
+        if not self._temp_entity or self._temp_entity == ENTITY_MATCH_NONE:
             return None
 
         def _log_error(error_msg):
