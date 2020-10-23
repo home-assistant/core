@@ -1,12 +1,20 @@
 """deCONZ binary sensor platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
-import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_VIBRATION,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_CLIP_SENSOR,
+    CONF_ALLOW_NEW_DEVICES,
+    DOMAIN as DECONZ_DOMAIN,
+)
+from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -56,17 +64,16 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": deconz.DOMAIN}}
+            hass, BINARY_SENSOR_DOMAIN, {"binary_sensor": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_binary_sensors(hass):
     """Test that no sensors in deconz results in no sensor entities."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
+    await setup_deconz_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
@@ -74,25 +81,17 @@ async def test_binary_sensors(hass):
     """Test successful creation of binary sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.clip_presence_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+
     assert len(hass.states.async_all()) == 3
-
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
-    assert presence_sensor.state == "off"
+    assert presence_sensor.state == STATE_OFF
     assert presence_sensor.attributes["device_class"] == DEVICE_CLASS_MOTION
-
-    temperature_sensor = hass.states.get("binary_sensor.temperature_sensor")
-    assert temperature_sensor is None
-
-    clip_presence_sensor = hass.states.get("binary_sensor.clip_presence_sensor")
-    assert clip_presence_sensor is None
-
+    assert hass.states.get("binary_sensor.temperature_sensor") is None
+    assert hass.states.get("binary_sensor.clip_presence_sensor") is None
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
-    assert vibration_sensor.state == "on"
+    assert vibration_sensor.state == STATE_ON
     assert vibration_sensor.attributes["device_class"] == DEVICE_CLASS_VIBRATION
 
     state_changed_event = {
@@ -105,10 +104,9 @@ async def test_binary_sensors(hass):
     gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
-    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
-    assert presence_sensor.state == "on"
+    assert hass.states.get("binary_sensor.presence_sensor").state == STATE_ON
 
-    await gateway.async_reset()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert len(hass.states.async_all()) == 0
 
@@ -117,56 +115,44 @@ async def test_allow_clip_sensor(hass):
     """Test that CLIP sensors can be allowed."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
+    config_entry = await setup_deconz_integration(
         hass,
-        options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
+        options={CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
-    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.clip_presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
+
     assert len(hass.states.async_all()) == 4
+    assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.temperature_sensor") is None
+    assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
+    assert hass.states.get("binary_sensor.vibration_sensor").state == STATE_ON
 
-    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
-    assert presence_sensor.state == "off"
-
-    temperature_sensor = hass.states.get("binary_sensor.temperature_sensor")
-    assert temperature_sensor is None
-
-    clip_presence_sensor = hass.states.get("binary_sensor.clip_presence_sensor")
-    assert clip_presence_sensor.state == "off"
-
-    vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
-    assert vibration_sensor.state == "on"
+    # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
-    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.clip_presence_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 3
+    assert hass.states.get("binary_sensor.clip_presence_sensor") is None
+
+    # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
-    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
-    assert "binary_sensor.clip_presence_sensor" in gateway.deconz_ids
-    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
+    assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
 
 
 async def test_add_new_binary_sensor(hass):
     """Test that adding a new binary sensor works."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
+    config_entry = await setup_deconz_integration(hass)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+    assert len(hass.states.async_all()) == 0
 
     state_added_event = {
         "t": "event",
@@ -178,7 +164,32 @@ async def test_add_new_binary_sensor(hass):
     gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
-    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
 
-    presence_sensor = hass.states.get("binary_sensor.presence_sensor")
-    assert presence_sensor.state == "off"
+
+async def test_add_new_binary_sensor_ignored(hass):
+    """Test that adding a new binary sensor is not allowed."""
+    config_entry = await setup_deconz_integration(
+        hass,
+        options={CONF_ALLOW_NEW_DEVICES: False},
+    )
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+    assert len(hass.states.async_all()) == 0
+
+    state_added_event = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": deepcopy(SENSORS["1"]),
+    }
+    gateway.api.event_handler(state_added_event)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    assert (
+        len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
+    )

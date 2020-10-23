@@ -1,6 +1,4 @@
 """Support for Homekit Alarm Control Panel."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
@@ -22,8 +20,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 ICON = "mdi:security"
-
-_LOGGER = logging.getLogger(__name__)
 
 CURRENT_STATE_MAP = {
     0: STATE_ALARM_ARMED_HOME,
@@ -110,10 +106,8 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        attributes = {}
-
         battery_level = self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
-        if battery_level:
-            attributes[ATTR_BATTERY_LEVEL] = battery_level
 
-        return attributes
+        if not battery_level:
+            return {}
+        return {ATTR_BATTERY_LEVEL: battery_level}

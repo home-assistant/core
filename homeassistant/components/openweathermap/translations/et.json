@@ -5,7 +5,9 @@
         },
         "error": {
             "auth": "API v\u00f5ti on vale.",
-            "connection": "OWM API-ga ei saa \u00fchendust luua"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection": "OWM API-ga ei saa \u00fchendust luua",
+            "invalid_api_key": "Vigane API v\u00f5ti"
         },
         "step": {
             "user": {

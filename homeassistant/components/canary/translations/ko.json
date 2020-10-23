@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328"
         },
+        "flow_title": "Canary: {name}",
         "step": {
             "user": {
                 "data": {

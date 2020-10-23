@@ -9,6 +9,7 @@ from typing import Optional
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.controllers.plex import PlexController
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
@@ -19,8 +20,9 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components import media_source, zeroconf
 from homeassistant.components.http.auth import async_sign_path
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
@@ -37,8 +39,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
-    CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -57,7 +60,6 @@ from homeassistant.util.logging import async_create_catching_coro
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
-    DEFAULT_PORT,
     DOMAIN as CAST_DOMAIN,
     KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
@@ -85,22 +87,9 @@ SUPPORT_CAST = (
 
 
 ENTITY_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
     vol.Schema(
         {
-            vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
-            vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
-            vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
-        }
-    ),
-)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
-            vol.Exclusive(CONF_UUID, "device_identifier"): cv.string,
+            vol.Optional(CONF_UUID): cv.string,
             vol.Optional(CONF_IGNORE_CEC): vol.All(cv.ensure_list, [cv.string]),
         }
     ),
@@ -129,21 +118,6 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
     return CastDevice(info)
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up the Cast platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Setting configuration for Cast via platform is deprecated. "
-        "Configure via Cast integration instead."
-        "This option will become invalid in version 0.116"
-    )
-    await _async_setup_platform(hass, config, async_add_entities, discovery_info)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     config = hass.data[CAST_DOMAIN].get("media_player") or {}
@@ -153,11 +127,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # no pending task
     done, _ = await asyncio.wait(
         [
-            _async_setup_platform(hass, ENTITY_SCHEMA(cfg), async_add_entities, None)
+            _async_setup_platform(hass, ENTITY_SCHEMA(cfg), async_add_entities)
             for cfg in config
         ]
     )
-    if any([task.exception() for task in done]):
+    if any(task.exception() for task in done):
         exceptions = [task.exception() for task in done]
         for exception in exceptions:
             _LOGGER.debug("Failed to setup chromecast", exc_info=exception)
@@ -165,32 +139,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info
+    hass: HomeAssistantType, config: ConfigType, async_add_entities
 ):
     """Set up the cast platform."""
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, dict())
+    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
     info = None
-    if discovery_info is not None:
-        info = ChromecastInfo(
-            host=discovery_info["host"], port=discovery_info["port"], services=None
-        )
-    elif CONF_UUID in config:
+    if CONF_UUID in config:
         info = ChromecastInfo(uuid=config[CONF_UUID], services=None)
-    elif CONF_HOST in config:
-        info = ChromecastInfo(host=config[CONF_HOST], port=DEFAULT_PORT, services=None)
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
-        if info is not None and (
-            (info.uuid is not None and info.uuid != discover.uuid)
-            or (info.host is not None and info.host_port != discover.host_port)
-        ):
-            # Waiting for a specific cast device, this is not it.
+        # If info is set, we're handling a specific cast device identified by UUID
+        if info is not None and (info.uuid is not None and info.uuid != discover.uuid):
+            # UUID not matching, this is not it.
             return
 
         cast_device = _async_create_cast_device(hass, discover)
@@ -541,7 +507,7 @@ class CastDevice(MediaPlayerEntity):
             hass_url = get_url(self.hass, prefer_external=True)
             media_id = f"{hass_url}{media_id}"
 
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
@@ -573,8 +539,19 @@ class CastDevice(MediaPlayerEntity):
                 quick_play(self._chromecast, app_name, app_data)
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
+        # Handle plex
+        elif media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            if media is None:
+                return
+            controller = PlexController()
+            self._chromecast.register_handler(controller)
+            controller.play_media(media)
         else:
-            self._chromecast.media_controller.play_media(media_id, media_type)
+            self._chromecast.media_controller.play_media(
+                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
+            )
 
     # ========== Properties ==========
     @property

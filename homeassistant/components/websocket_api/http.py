@@ -130,7 +130,7 @@ class WebSocketHandler:
         request = self.request
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         await wsock.prepare(request)
-        self._logger.debug("Connected")
+        self._logger.debug("Connected from %s", request.remote)
         self._handle_task = asyncio.current_task()
 
         @callback

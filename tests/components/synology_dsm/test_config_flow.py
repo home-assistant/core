@@ -1,6 +1,4 @@
 """Tests for the Synology DSM config flow."""
-import logging
-
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
@@ -38,9 +36,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 HOST = "nas.meontheinternet.com"
 SERIAL = "mySerial"
@@ -290,7 +285,7 @@ async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USERNAME: "login"}
+    assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
 async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
@@ -306,7 +301,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "connection"}
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
 async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):

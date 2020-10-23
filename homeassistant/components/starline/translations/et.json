@@ -1,6 +1,12 @@
 {
     "config": {
+        "error": {
+            "error_auth_user": "Vale kasutajanimi v\u00f5i salas\u00f5na"
+        },
         "step": {
+            "auth_captcha": {
+                "title": ""
+            },
             "auth_mfa": {
                 "title": "Kaheastmeline autoriseerimine"
             },

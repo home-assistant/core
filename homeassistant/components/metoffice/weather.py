@@ -1,5 +1,4 @@
 """Support for UK Met Office weather service."""
-
 import logging
 
 from homeassistant.components.weather import (
@@ -29,8 +28,6 @@ from .const import (
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

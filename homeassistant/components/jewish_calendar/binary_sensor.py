@@ -1,14 +1,10 @@
 """Support for Jewish Calendar binary sensors."""
-import logging
-
 import hdate
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

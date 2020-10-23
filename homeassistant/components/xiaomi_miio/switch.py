@@ -96,7 +96,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
@@ -234,11 +234,6 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def should_poll(self):
-        """Poll the plug."""
-        return True
 
     @property
     def unique_id(self):

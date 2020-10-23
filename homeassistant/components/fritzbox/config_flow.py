@@ -31,8 +31,8 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
     }
 )
 
-RESULT_AUTH_FAILED = "auth_failed"
-RESULT_NOT_FOUND = "not_found"
+RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_NO_DEVICES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
@@ -73,11 +73,11 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fritzbox.logout()
             return RESULT_SUCCESS
         except LoginError:
-            return RESULT_AUTH_FAILED
+            return RESULT_INVALID_AUTH
         except HTTPError:
             return RESULT_NOT_SUPPORTED
         except OSError:
-            return RESULT_NOT_FOUND
+            return RESULT_NO_DEVICES_FOUND
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -102,7 +102,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            if result != RESULT_AUTH_FAILED:
+            if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
@@ -150,7 +150,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            if result != RESULT_AUTH_FAILED:
+            if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
 

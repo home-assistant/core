@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nessun dispositivo iZone trovato in rete.",
-            "single_instance_allowed": "\u00c8 necessaria una sola configurazione di iZone."
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "step": {
             "confirm": {

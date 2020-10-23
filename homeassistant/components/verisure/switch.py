@@ -1,12 +1,9 @@
 """Support for Verisure Smartplugs."""
-import logging
 from time import monotonic
 
 from homeassistant.components.switch import SwitchEntity
 
 from . import CONF_SMARTPLUGS, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

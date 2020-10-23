@@ -1,5 +1,4 @@
 """Support for the Torque OBD application."""
-import logging
 import re
 
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 API_PATH = "/api/torque"
 

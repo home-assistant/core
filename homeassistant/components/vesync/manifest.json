@@ -8,7 +8,7 @@
     "@thegardenmonkey"
   ],
   "requirements": [
-    "pyvesync==1.1.0"
+    "pyvesync==1.2.0"
   ],
   "config_flow": true
 }

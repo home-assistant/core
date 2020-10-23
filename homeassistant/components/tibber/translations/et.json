@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus",
+            "connection_error": "\u00dchendamine nurjus",
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
+                },
+                "title": ""
+            }
+        }
+    },
+    "title": ""
+}

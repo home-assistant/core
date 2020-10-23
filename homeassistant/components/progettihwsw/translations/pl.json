@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "unknown": "Nieoczekiwany b\u0142\u0105d"
+            "unknown": "Nieoczekiwany b\u0142\u0105d",
+            "wrong_info_relay_modes": "Tryb przeka\u017anika musi by\u0107 monostabilny lub bistabilny"
         },
         "step": {
             "relay_modes": {
@@ -26,14 +27,17 @@
                     "relay_7": "Przeka\u017anik 7",
                     "relay_8": "Przeka\u017anik 8",
                     "relay_9": "Przeka\u017anik 9"
-                }
+                },
+                "title": "Konfiguracja przeka\u017anik\u00f3w"
             },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
-                }
+                },
+                "title": "Konfiguracja uk\u0142adu"
             }
         }
-    }
+    },
+    "title": "Automatyzacja ProgettiHWSW"
 }

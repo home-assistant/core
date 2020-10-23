@@ -1,7 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat"
+        },
         "error": {
-            "unexpected_error": "Ootamatu t\u00f5rge"
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat",
+            "unexpected_error": "Ootamatu t\u00f5rge",
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {

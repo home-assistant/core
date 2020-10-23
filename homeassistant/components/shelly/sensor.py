@@ -8,6 +8,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    VOLT,
 )
 
 from .entity import (
@@ -53,6 +54,18 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_POWER,
     ),
+    ("emeter", "voltage"): BlockAttributeDescription(
+        name="Voltage",
+        unit=VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+    ),
+    ("emeter", "powerFactor"): BlockAttributeDescription(
+        name="Power Factor",
+        unit=PERCENTAGE,
+        value=lambda value: round(value * 100, 1),
+        device_class=sensor.DEVICE_CLASS_POWER_FACTOR,
+    ),
     ("relay", "power"): BlockAttributeDescription(
         name="Power",
         unit=POWER_WATT,
@@ -73,6 +86,12 @@ SENSORS = {
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda value: round(value / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+    ),
+    ("emeter", "energyReturned"): BlockAttributeDescription(
+        name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,

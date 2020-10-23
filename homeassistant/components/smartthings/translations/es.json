@@ -30,8 +30,8 @@
                 "title": "Seleccionar Ubicaci\u00f3n"
             },
             "user": {
-                "description": "Por favor, introduce el [token de acceso personal]({token_url}) de SmartThings que se haya creado seg\u00fan las [instrucciones]({component_url}).",
-                "title": "Introduce el token de acceso personal"
+                "description": "Los SmartThings se configurar\u00e1n para enviar las actualizaciones a Home Assistant en:\n> {webhook_url}\n\nSi esto no es correcto, por favor, actualiza tu configuraci\u00f3n, reinicia Home Assistant e int\u00e9ntalo de nuevo.",
+                "title": "Confirmar URL de devoluci\u00f3n de llamada"
             }
         }
     }

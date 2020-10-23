@@ -1,6 +1,4 @@
 """Config flow for Speedtest.net."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,8 +16,6 @@ from .const import (
 )
 from .const import DOMAIN  # pylint: disable=unused-import
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Speedtest.net config flow."""
@@ -36,7 +32,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")

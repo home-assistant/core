@@ -1,6 +1,7 @@
 """Support for FRITZ!Box routers."""
 import logging
 
+from fritzconnection.core import exceptions as fritzexceptions
 from fritzconnection.lib.fritzhosts import FritzHosts
 import voluptuous as vol
 
@@ -81,7 +82,15 @@ class FritzBoxScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the attributes (ip, mac) of the given device or None if is not known."""
-        ip_device = self.fritz_box.get_specific_host_entry(device).get("NewIPAddress")
+        ip_device = None
+        try:
+            ip_device = self.fritz_box.get_specific_host_entry(device).get(
+                "NewIPAddress"
+            )
+        except fritzexceptions.FritzLookUpError as fritz_lookup_error:
+            _LOGGER.warning(
+                "Host entry for %s not found: %s", device, fritz_lookup_error
+            )
 
         if not ip_device:
             return {}

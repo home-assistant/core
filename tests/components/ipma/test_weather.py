@@ -24,7 +24,12 @@ from homeassistant.util.dt import now
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
-TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}
+TEST_CONFIG = {
+    "name": "HomeTown",
+    "latitude": "40.00",
+    "longitude": "-8.00",
+    "mode": "daily",
+}
 
 
 class MockLocation:
