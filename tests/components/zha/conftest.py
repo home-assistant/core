@@ -15,7 +15,7 @@ from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
 from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_profile_loading  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"

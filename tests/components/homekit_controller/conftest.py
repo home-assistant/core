@@ -8,7 +8,7 @@ import pytest
 import homeassistant.util.dt as dt_util
 
 import tests.async_mock
-from tests.components.light.conftest import mock_profile_loading  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture

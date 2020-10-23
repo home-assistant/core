@@ -8,7 +8,7 @@ from tests.async_mock import AsyncMock, patch
 
 
 @pytest.fixture(autouse=True)
-def mock_profiles():
+def mock_light_profiles():
     """Mock loading of profiles."""
     data = {}
 

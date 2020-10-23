@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.zwave import const
 
 from tests.async_mock import AsyncMock, MagicMock, patch
-from tests.components.light.conftest import mock_profile_loading  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa
 from tests.mock.zwave import MockNetwork, MockNode, MockOption, MockValue
 
 

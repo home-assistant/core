@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, PropertyMock, patch
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_profile_loading  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 def patch_product_identify(path=None, **kwargs):
