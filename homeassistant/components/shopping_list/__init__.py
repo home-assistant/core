@@ -31,7 +31,6 @@ WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
 WS_TYPE_SHOPPING_LIST_UPDATE_ITEM = "shopping_list/items/update"
 WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS = "shopping_list/items/clear"
-WS_TYPE_SHOPPING_LIST_REORDER_ITEMS = "shopping_list/items/reorder"
 
 SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_ITEMS}
@@ -52,13 +51,6 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_SHOPPING_LIST_CLEAR_ITEMS}
-)
-
-SCHEMA_WEBSOCKET_REORDER_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SHOPPING_LIST_REORDER_ITEMS,
-        vol.Required("item_ids"): [str],
-    }
 )
 
 
@@ -136,11 +128,7 @@ async def async_setup_entry(hass, config_entry):
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SHOPPING_LIST_REORDER_ITEMS,
-        websocket_handle_reorder,
-        SCHEMA_WEBSOCKET_REORDER_ITEMS,
-    )
+    websocket_api.async_register_command(hass, websocket_handle_reorder)
 
     return True
 
@@ -322,7 +310,12 @@ def websocket_handle_clear(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "shopping_list/items/reorder",
+        vol.Required("item_ids"): [str],
+    }
+)
 def websocket_handle_reorder(hass, connection, msg):
     """Handle reordering shopping_list items."""
     msg_id = msg.pop("id")
