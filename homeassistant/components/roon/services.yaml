@@ -1,28 +1,29 @@
-sync:
-  description: >
-    Add another player to this player's sync group.
+join:
+  description: Group players together.
   fields:
+    master_id:
+      description: Entity ID of the player that should become the coordinator of the group.
+      example: "media_player.living_room"
     entity_id:
-      description: Id of the Roon player which will have an extra player added.
-      example: "media_player.bedroom"
-    link_name:
-      description: Roon name of the player to add to the group.
-      example: "study"
-unsync:
-  description: Remove this player from a sync group.
+      description: Name(s) of entities that will join the master.
+      example: "media_player.study"
+
+unjoin:
+  description: Unjoin the player from a group.
   fields:
+    master_id:
+      description: Entity ID of the player that is the coordinator of the group.
+      example: "media_player.living_room"
     entity_id:
-      description: Id of the Roon player which will have players removed.
-      example: "media_player.bedroom"
-    unlink_name:
-      description: Roon name of the player to remove from the group.
-      example: "study"
+      description: Name(s) of entities that will be unjoined from their group.
+      example: "media_player.study"
+
 transfer:
   description: Transfer playback from one roon player to another.
   fields:
     entity_id:
-      description: Id of the Roon entity source player.
+      description: Entity ID of the source player.
       example: "media_player.bedroom"
-    transfer_name:
-      description: Roon name of the Roon entity destination player.
-      example: "study"
+    transfer_id:
+      description: Entity of the destination player.
+      example: "media_player.study"

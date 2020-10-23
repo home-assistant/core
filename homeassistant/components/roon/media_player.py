@@ -55,13 +55,12 @@ SUPPORT_ROON = (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SYNC = "sync"
-SERVICE_UNSYNC = "unsync"
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
 SERVICE_TRANSFER = "transfer"
 
-ATTR_LINK_NAME = "link_name"
-ATTR_UNLINK_NAME = "unlink_name"
-ATTR_TRANSFER_NAME = "transfer_name"
+ATTR_MASTER = "master_id"
+ATTR_TRANSFER = "transfer_id"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -72,18 +71,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Register entity services
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_SYNC,
-        {vol.Required(ATTR_LINK_NAME): cv.string},
-        "async_sync",
+        SERVICE_JOIN,
+        {vol.Required(ATTR_MASTER): cv.entity_id},
+        "async_join",
     )
     platform.async_register_entity_service(
-        SERVICE_UNSYNC,
-        {vol.Required(ATTR_UNLINK_NAME): cv.string},
-        "async_unsync",
+        SERVICE_UNJOIN,
+        {vol.Required(ATTR_MASTER): cv.entity_id},
+        "async_unjoin",
     )
     platform.async_register_entity_service(
         SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER_NAME): cv.string},
+        {vol.Required(ATTR_TRANSFER): cv.entity_id},
         "async_transfer",
     )
 
@@ -144,6 +143,7 @@ class RoonDevice(MediaPlayerEntity):
                 self.async_update_callback,
             )
         )
+        self._server.add_player_id(self.entity_id, self.name)
 
     @callback
     def async_update_callback(self, player_data):
@@ -502,10 +502,10 @@ class RoonDevice(MediaPlayerEntity):
                 media_id,
             )
 
-    async def async_sync(self, link_name):
+    async def async_join(self, master_id):
         """Add another Roon player to this player's sync group."""
 
-        link_name = link_name.lower()
+        link_name = self._server.roon_name(master_id)
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
         if zone_data is None:
             _LOGGER.error("No zone data for %s", self.name)
@@ -520,7 +520,7 @@ class RoonDevice(MediaPlayerEntity):
                     in self.player_data["can_group_with_output_ids"]
                     and zone["display_name"] not in sync_available.keys()
                 ):
-                    sync_available[zone["display_name"].lower()] = output["output_id"]
+                    sync_available[zone["display_name"]] = output["output_id"]
 
         if link_name not in sync_available.keys():
             _LOGGER.error(
@@ -531,22 +531,22 @@ class RoonDevice(MediaPlayerEntity):
             )
             return
 
-        _LOGGER.info("Linking %s to %s", link_name, self.name.lower())
+        _LOGGER.info("Linking %s to %s", link_name, self.name)
         self._server.roonapi.group_outputs(
             [self._output_id] + [sync_available[link_name]]
         )
 
-    async def async_unsync(self, unlink_name):
+    async def async_unjoin(self, master_id):
         """Remove a Roon player to this player's sync group."""
 
-        unlink_name = unlink_name.lower()
+        unlink_name = self._server.roon_name(master_id)
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
         if zone_data is None:
             _LOGGER.error("No zone data for %s", self.name)
             return
 
         sync_group = {
-            output["display_name"].lower(): output["output_id"]
+            output["display_name"]: output["output_id"]
             for output in zone_data["outputs"]
             if output["display_name"] != self.name
         }
@@ -560,15 +560,15 @@ class RoonDevice(MediaPlayerEntity):
             )
             return
 
-        _LOGGER.info("Uninking %s from %s", unlink_name, self.name.lower())
+        _LOGGER.info("Uninking %s from %s", unlink_name, self.name)
         self._server.roonapi.ungroup_outputs([sync_group[unlink_name]])
 
-    async def async_transfer(self, transfer_name):
+    async def async_transfer(self, transfer_id):
         """Transfer playback from this roon player to another."""
 
-        transfer_name = transfer_name.lower()
+        transfer_name = transfer_id
         zone_ids = {
-            output["display_name"].lower(): output["zone_id"]
+            output["display_name"]: output["zone_id"]
             for output in self._server.zones.values()
             if output["display_name"] != self.name
         }
@@ -583,5 +583,5 @@ class RoonDevice(MediaPlayerEntity):
                 list(zone_ids.keys()),
             )
 
-        _LOGGER.info("Transferring from %s to %s", self.name.lower(), transfer_name)
+        _LOGGER.info("Transferring from %s to %s", self.name, transfer_name)
         self._server.roonapi.transfer_zone(self._zone_id, transfer_id)
