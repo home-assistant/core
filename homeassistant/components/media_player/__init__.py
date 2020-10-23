@@ -432,6 +432,14 @@ class MediaPlayerEntity(Entity):
 
         return await _async_fetch_image(self.hass, url)
 
+    async def async_get_browse_image(self, browse_image):
+        """
+        Optionally fetch internally accessible image for media browser.
+
+        Must be implemented by integration.
+        """
+        return None, None
+
     @property
     def media_title(self):
         """Title of current playing media."""
