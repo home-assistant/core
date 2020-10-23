@@ -92,7 +92,7 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("name", "icon", "disabled_by"):
+    for key in ("name", "icon", "area_id", "disabled_by"):
         if key in msg:
             changes[key] = msg[key]
 
