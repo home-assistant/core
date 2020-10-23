@@ -1,6 +1,6 @@
 """Constants for the color_extractor component."""
-ATTR_PATH = "path"
-ATTR_URL = "url"
+ATTR_PATH = "color_extract_path"
+ATTR_URL = "color_extract_url"
 
 DOMAIN = "color_extractor"
 

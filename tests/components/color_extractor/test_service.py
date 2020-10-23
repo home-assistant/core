@@ -99,7 +99,7 @@ async def test_url_success(hass, aioclient_mock):
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(
-        url=service_data["url"],
+        url=service_data[ATTR_URL],
         content=base64.b64decode(load_fixture("color_extractor_url.txt")),
     )
 
@@ -136,7 +136,7 @@ async def test_url_exception(hass, aioclient_mock):
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
     # Mock the HTTP Response with an HTTPError
-    aioclient_mock.get(url=service_data["url"], exc=aiohttp.ClientError)
+    aioclient_mock.get(url=service_data[ATTR_URL], exc=aiohttp.ClientError)
 
     await _async_load_color_extractor_url(hass, service_data)
 
@@ -155,7 +155,7 @@ async def test_url_not_allowed(hass, aioclient_mock):
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
     aioclient_mock.get(
-        url=service_data["url"],
+        url=service_data[ATTR_URL],
         content=base64.b64decode(load_fixture("color_extractor_url.txt")),
     )
 
@@ -178,7 +178,7 @@ async def test_url_error(hass, aioclient_mock):
     hass.config.allowlist_external_urls.add("http://example.com/images/")
 
     # Mock the HTTP Response with a base64 encoded 1x1 pixel
-    aioclient_mock.get(url=service_data["url"], status=400)
+    aioclient_mock.get(url=service_data[ATTR_URL], status=400)
 
     await _async_load_color_extractor_url(hass, service_data)
 
