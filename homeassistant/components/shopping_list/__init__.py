@@ -331,5 +331,7 @@ def websocket_handle_reorder(hass, connection, msg):
         )
     except vol.Invalid as err:
         connection.send_message(
-            websocket_api.error_message(msg_id, "bad_request", f"{err}")
+            websocket_api.error_message(
+                msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}"
+            )
         )
