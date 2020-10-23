@@ -74,6 +74,8 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -135,7 +137,7 @@ async def test_derivative():
 
     config = {"platform": "dsmr"}
 
-    entity = DerivativeDSMREntity("test", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
@@ -184,6 +186,8 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "4",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -239,6 +243,8 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "5",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -294,6 +300,8 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -346,6 +354,8 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
@@ -383,6 +393,8 @@ async def test_tcp(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     mock_entry = MockConfigEntry(
@@ -407,6 +419,8 @@ async def test_connection_errors_retry(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # override the mock to have it fail the first time and succeed after
@@ -442,6 +456,8 @@ async def test_reconnect(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # mock waiting coroutine while connection lasts
