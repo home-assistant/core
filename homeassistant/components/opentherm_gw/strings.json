@@ -13,7 +13,6 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "id_exists": "Gateway id already exists",
-      "serial_error": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },

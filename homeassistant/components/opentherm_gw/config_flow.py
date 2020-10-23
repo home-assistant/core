@@ -58,10 +58,8 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 res = await asyncio.wait_for(test_connection(), timeout=10)
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, SerialException) as e:
                 return self._show_form({"base": "timeout"})
-            except SerialException:
-                return self._show_form({"base": "serial_error"})
 
             if res:
                 return self._create_entry(gw_id, name, device)
