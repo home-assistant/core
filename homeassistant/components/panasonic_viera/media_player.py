@@ -26,6 +26,8 @@ from .const import (
     ATTR_MODEL_NUMBER,
     ATTR_REMOTE,
     ATTR_UDN,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
     DOMAIN,
 )
 
@@ -83,8 +85,10 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return {
             "name": self._name,
             "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info[ATTR_MANUFACTURER],
-            "model": self._device_info[ATTR_MODEL_NUMBER],
+            "manufacturer": self._device_info.get(
+                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
+            ),
+            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
         }
 
     @property

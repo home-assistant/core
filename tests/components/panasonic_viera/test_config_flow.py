@@ -12,6 +12,8 @@ from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -42,8 +44,8 @@ def get_mock_remote(
     app_id=None,
     encryption_key=None,
     name=DEFAULT_NAME,
-    manufacturer="mock-manufacturer",
-    model_number="mock-model-number",
+    manufacturer=DEFAULT_MANUFACTURER,
+    model_number=DEFAULT_MODEL_NUMBER,
     unique_id="mock-unique-id",
 ):
     """Return a mock remote."""
@@ -110,8 +112,8 @@ async def test_flow_non_encrypted(hass):
         CONF_ON_ACTION: None,
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -208,8 +210,8 @@ async def test_flow_encrypted_valid_pin_code(hass):
         CONF_ENCRYPTION_KEY: "test-encryption-key",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -392,8 +394,8 @@ async def test_imported_flow_non_encrypted(hass):
         CONF_ON_ACTION: "test-on-action",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -442,8 +444,8 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         CONF_ENCRYPTION_KEY: "test-encryption-key",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
