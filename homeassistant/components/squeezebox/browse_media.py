@@ -77,7 +77,7 @@ async def build_item_response(entity, payload):
     else:
         browse_id = None
 
-    result = await entity._player.async_browse(
+    result = await entity.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
         limit=BROWSE_LIMIT,
         browse_id=browse_id,

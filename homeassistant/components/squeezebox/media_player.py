@@ -624,3 +624,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 f"?token={self.access_token}&browse_image={thumbnail}"
             )
         return thumbnail
+
+    async def async_browse(self, *args, **kwargs):
+        """Browse player's media library."""
+        return await self._player.async_browse(*args, **kwargs)
