@@ -7,17 +7,7 @@ sensor:
     sensors:
       daytodisplay:
         friendly_name: 'Data'
-        value_template: '{{ as_timestamp(now()) | timestamp_custom("%d/%m", True) }}'
-  - platform: template
-    sensors:
-       dayofyear:
-         friendly_name: 'Numer dnia w roku'
-         value_template: "{{ now().strftime('%j') }}"
-  - platform: template
-    sensors:
-       weekofyear:
-         friendly_name: 'Numer tygodnia w roku'
-         value_template: "{{ now().isocalendar()[1] }}"
+        value_template: "{{ as_timestamp(states('sensor.date')) | timestamp_custom('%-d/%-m')  }}"
 binary_sensor:
   - platform: workday
     name: "Dzień pracujący"

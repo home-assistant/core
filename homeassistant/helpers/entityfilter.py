@@ -188,8 +188,6 @@ def convert_include_exclude_filter(
             "group.audiobooks_player",
             "input_select.podcast_type",
             "input_select.radio_type",
-            "sensor.dayofyear",
-            "sensor.weekofyear",
             "sensor.daytodisplay",
             "group.day_info",
             "group.local_audio",

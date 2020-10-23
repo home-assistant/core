@@ -150,14 +150,14 @@ async def _async_stop_rf_sniffing(hass, clear):
 
 async def _async_send_rf_code(hass, long_topic, b0_code):
     # get the first part of topic
-    topic = long_topic.split("/")[0]
+    topic = long_topic.split("/")[1]
     # the command is like
     # cmnd/sonoffRFBridge/Backlog RfRaw AAB0210314016703F9241110011001010110011010110010101100255; RfRaw 0; RfRaw 1
     await hass.services.async_call(
         "mqtt",
         "publish",
         {
-            "topic": topic + "/cmnd/Backlog",
+            "topic": "/cmnd" + topic + "/Backlog",
             "payload": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
         },
     )
@@ -216,7 +216,7 @@ async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entit
     device = registry.async_get(device_id)
 
     # 1. get topic from payload
-    unique_topic = topic.split("/")[0]
+    unique_topic = topic.split("/")[1]
 
     # 2. execute the discovery for each code from json
     l_identifiers = list(device.identifiers)
@@ -228,7 +228,7 @@ async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entit
         disco_topic = "homeassistant/switch/" + uniq_id + "/config"
         payload = {
             "name": name,
-            "command_topic": unique_topic + "/cmnd/Backlog",
+            "command_topic": "cmnd/" + unique_topic + "/Backlog",
             "uniq_id": uniq_id,
             "payload_on": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
             "payload_off": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
