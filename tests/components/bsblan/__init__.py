@@ -5,7 +5,13 @@ from homeassistant.components.bsblan.const import (
     CONF_PASSKEY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -31,6 +37,8 @@ async def init_integration(
         unique_id="RVS21.831F/127",
         data={
             CONF_HOST: "example.local",
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
             CONF_PASSKEY: "1234",
             CONF_PORT: 80,
             CONF_DEVICE_IDENT: "RVS21.831F/127",

@@ -43,7 +43,13 @@ async def test_connection_error(
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.local", CONF_PASSKEY: "1234", CONF_PORT: 80},
+        data={
+            CONF_HOST: "example.local",
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
+            CONF_PASSKEY: "1234",
+            CONF_PORT: 80,
+        },
     )
 
     assert result["errors"] == {"base": "cannot_connect"}
@@ -60,7 +66,13 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.local", CONF_PASSKEY: "1234", CONF_PORT: 80},
+        data={
+            CONF_HOST: "example.local",
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
+            CONF_PASSKEY: "1234",
+            CONF_PORT: 80,
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
