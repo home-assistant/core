@@ -5,7 +5,13 @@ from homeassistant import data_entry_flow
 from homeassistant.components.bsblan import config_flow
 from homeassistant.components.bsblan.const import CONF_DEVICE_IDENT, CONF_PASSKEY
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -80,10 +86,18 @@ async def test_full_user_flow_implementation(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "example.local", CONF_PASSKEY: "1234", CONF_PORT: 80},
+        user_input={
+            CONF_HOST: "example.local",
+            CONF_USERNAME: "nobody",
+            CONF_PASSWORD: "qwerty",
+            CONF_PASSKEY: "1234",
+            CONF_PORT: 80,
+        },
     )
 
     assert result["data"][CONF_HOST] == "example.local"
+    assert result["data"][CONF_USERNAME] == "nobody"
+    assert result["data"][CONF_PASSWORD] == "qwerty"
     assert result["data"][CONF_PASSKEY] == "1234"
     assert result["data"][CONF_PORT] == 80
     assert result["data"][CONF_DEVICE_IDENT] == "RVS21.831F/127"
