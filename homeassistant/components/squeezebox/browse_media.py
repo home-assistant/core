@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
+from homeassistant.helpers.network import get_url
 
 LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
@@ -47,10 +48,7 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_ARTIST: {"item": MEDIA_CLASS_ARTIST, "children": MEDIA_CLASS_ALBUM},
     MEDIA_TYPE_TRACK: {"item": MEDIA_CLASS_TRACK, "children": None},
     MEDIA_TYPE_GENRE: {"item": MEDIA_CLASS_GENRE, "children": MEDIA_CLASS_ARTIST},
-    MEDIA_TYPE_PLAYLIST: {
-        "item": MEDIA_CLASS_PLAYLIST,
-        "children": MEDIA_CLASS_TRACK,
-    },
+    MEDIA_TYPE_PLAYLIST: {"item": MEDIA_CLASS_PLAYLIST, "children": MEDIA_CLASS_TRACK},
 }
 
 CONTENT_TYPE_TO_CHILD_TYPE = {
@@ -68,7 +66,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 BROWSE_LIMIT = 500
 
 
-async def build_item_response(player, payload):
+async def build_item_response(entity, payload):
     """Create response payload for search described by payload."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -80,7 +78,7 @@ async def build_item_response(player, payload):
     else:
         browse_id = None
 
-    result = await player.async_browse(
+    result = await entity._player.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
         limit=BROWSE_LIMIT,
         browse_id=browse_id,
@@ -91,9 +89,18 @@ async def build_item_response(player, payload):
     if result is not None and result.get("items"):
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
         child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+        token = entity.access_token
+        base_url = get_url(entity.hass, prefer_external=True)
 
         children = []
         for item in result["items"]:
+            thumbnail = item.get("image_url")
+            if thumbnail and thumbnail.startswith(entity._internal_artwork_url):
+                thumbnail = (
+                    f"{base_url}/api/media_player_proxy/{entity.entity_id}"
+                    f"?token={token}&browse_image={thumbnail}"
+                )
+
             children.append(
                 BrowseMedia(
                     title=item["title"],
@@ -102,7 +109,7 @@ async def build_item_response(player, payload):
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=item.get("image_url"),
+                    thumbnail=thumbnail,
                 )
             )
 

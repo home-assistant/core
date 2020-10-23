@@ -3,6 +3,8 @@ import asyncio
 import json
 import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
+import async_timeout
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -36,6 +38,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
+    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -173,8 +176,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
+    session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(async_get_clientsession(hass), host, port, username, password)
+    lms = Server(session, host, port, username, password)
+    internal_artwork_url = lms.generate_image_url("")
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -197,7 +202,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player, internal_artwork_url)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -291,9 +296,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     Wraps a pysqueezebox.Player() object.
     """
 
-    def __init__(self, player):
+    def __init__(self, player, internal_artwork_url=None):
         """Initialize the SqueezeBox device."""
         self._player = player
+        self._internal_artwork_url = internal_artwork_url
         self._last_update = None
         self._query_result = {}
         self._available = True
@@ -665,4 +671,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self._player, payload)
+        return await build_item_response(self, payload)
+
+    async def async_get_browse_image(self, image_url):
+        """Get album art from Squeezebox server."""
+        if image_url.startswith(self._internal_artwork_url):
+            try:
+                session = async_get_clientsession(self.hass)
+                with async_timeout.timeout(5):
+                    response = await session.get(image_url)
+
+                    if response.status == HTTP_OK:
+                        content = await response.read()
+                        content_type = response.headers.get(CONTENT_TYPE)
+                        if content_type:
+                            content_type = content_type.split(";")[0]
+                        return (content, content_type)
+            except asyncio.TimeoutError:
+                pass
+        return (None, None)
