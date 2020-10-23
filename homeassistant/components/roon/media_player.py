@@ -59,7 +59,8 @@ SERVICE_JOIN = "join"
 SERVICE_UNJOIN = "unjoin"
 SERVICE_TRANSFER = "transfer"
 
-ATTR_MASTER = "master_id"
+ATTR_JOIN = "join_ids"
+ATTR_UNJOIN = "unjoin_ids"
 ATTR_TRANSFER = "transfer_id"
 
 
@@ -72,12 +73,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
         SERVICE_JOIN,
-        {vol.Required(ATTR_MASTER): cv.entity_id},
+        {vol.Required(ATTR_JOIN): vol.All(cv.ensure_list, [cv.entity_id])},
         "async_join",
     )
     platform.async_register_entity_service(
         SERVICE_UNJOIN,
-        {vol.Required(ATTR_MASTER): cv.entity_id},
+        {vol.Optional(ATTR_UNJOIN): vol.All(cv.ensure_list, [cv.entity_id])},
         "async_unjoin",
     )
     platform.async_register_entity_service(
@@ -502,10 +503,9 @@ class RoonDevice(MediaPlayerEntity):
                 media_id,
             )
 
-    async def async_join(self, master_id):
-        """Add another Roon player to this player's sync group."""
+    async def async_join(self, join_ids):
+        """Add another Roon player to this player's join group."""
 
-        link_name = self._server.roon_name(master_id)
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
         if zone_data is None:
             _LOGGER.error("No zone data for %s", self.name)
@@ -522,66 +522,87 @@ class RoonDevice(MediaPlayerEntity):
                 ):
                     sync_available[zone["display_name"]] = output["output_id"]
 
-        if link_name not in sync_available.keys():
-            _LOGGER.error(
-                "Can't sync player %s with %s because it's not in the sync available list %s",
-                link_name,
-                self.name,
-                list(sync_available.keys()),
-            )
-            return
+        names = []
+        for entity_id in join_ids:
+            name = self._server.roon_name(entity_id)
+            if name is None:
+                _LOGGER.error("No roon player found for %s", entity_id)
+                return
+            if name not in sync_available.keys():
+                _LOGGER.error(
+                    "Can't join player %s with %s because it's not in the join available list %s",
+                    name,
+                    self.name,
+                    list(sync_available.keys()),
+                )
+                return
+            names.append(name)
 
-        _LOGGER.info("Linking %s to %s", link_name, self.name)
+        _LOGGER.info("Joining %s to %s", names, self.name)
         self._server.roonapi.group_outputs(
-            [self._output_id] + [sync_available[link_name]]
+            [self._output_id] + [sync_available[name] for name in names]
         )
 
-    async def async_unjoin(self, master_id):
-        """Remove a Roon player to this player's sync group."""
+    async def async_unjoin(self, unjoin_ids=None):
+        """Remove a Roon player to this player's join group."""
 
-        unlink_name = self._server.roon_name(master_id)
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
         if zone_data is None:
             _LOGGER.error("No zone data for %s", self.name)
             return
 
-        sync_group = {
+        join_group = {
             output["display_name"]: output["output_id"]
             for output in zone_data["outputs"]
             if output["display_name"] != self.name
         }
 
-        if unlink_name not in sync_group.keys():
-            _LOGGER.error(
-                "Can't unsync player %s from %s because it's not in sync group %s",
-                unlink_name,
-                self.name,
-                list(sync_group.keys()),
-            )
-            return
+        if unjoin_ids is None:
+            # unjoin everything
+            names = list(join_group.keys())
+        else:
+            names = []
+            for entity_id in unjoin_ids:
+                name = self._server.roon_name(entity_id)
+                if name is None:
+                    _LOGGER.error("No roon player found for %s", entity_id)
+                    return
 
-        _LOGGER.info("Uninking %s from %s", unlink_name, self.name)
-        self._server.roonapi.ungroup_outputs([sync_group[unlink_name]])
+                if name not in join_group.keys():
+                    _LOGGER.error(
+                        "Can't unjoin player %s from %s because it's not in the joined group %s",
+                        name,
+                        self.name,
+                        list(join_group.keys()),
+                    )
+                    return
+                names.append(name)
+
+        _LOGGER.info("Unjoining %s from %s", names, self.name)
+        self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
 
     async def async_transfer(self, transfer_id):
         """Transfer playback from this roon player to another."""
 
-        transfer_name = transfer_id
+        name = self._server.roon_name(transfer_id)
+        if name is None:
+            _LOGGER.error("No roon player found for %s", transfer_id)
+            return
+
         zone_ids = {
             output["display_name"]: output["zone_id"]
             for output in self._server.zones.values()
             if output["display_name"] != self.name
         }
-        _LOGGER.warning(zone_ids)
 
-        transfer_id = zone_ids.get(transfer_name)
+        transfer_id = zone_ids.get(name)
         if transfer_id is None:
             _LOGGER.error(
-                "Can't transfer from %s to %s because destination not in known zones %s",
+                "Can't transfer from %s to %s because destination is not known %s",
                 self.name,
-                transfer_name,
+                transfer_id,
                 list(zone_ids.keys()),
             )
 
-        _LOGGER.info("Transferring from %s to %s", self.name, transfer_name)
+        _LOGGER.info("Transferring from %s to %s", self.name, name)
         self._server.roonapi.transfer_zone(self._zone_id, transfer_id)

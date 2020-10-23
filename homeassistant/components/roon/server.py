@@ -76,7 +76,7 @@ class RoonServer:
 
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
-        return self._roon_name_by_id[id]
+        return self._roon_name_by_id[entity_id]
 
     def stop_roon(self):
         """Stop background worker."""
