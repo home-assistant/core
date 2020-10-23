@@ -210,7 +210,7 @@ broadlink==0.15.0
 brother==0.1.18
 
 # homeassistant.components.bsblan
-bsblan==0.3.7
+bsblan==0.4.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -385,7 +385,7 @@ hole==0.5.1
 holidays==0.10.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201021.1
+home-assistant-frontend==20201021.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1113,7 +1113,7 @@ zha-quirks==0.0.45
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.10.0
+zigpy-deconz==0.11.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0
