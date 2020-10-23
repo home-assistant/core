@@ -94,14 +94,13 @@ class BSBLanClimate(ClimateEntity):
         """Initialize BSBLan climate device."""
         self._current_temperature: Optional[float] = None
         self._available = True
-        self._current_hvac_mode: Optional[int] = None
+        self._hvac_mode: Optional[int] = None
         self._target_temperature: Optional[float] = None
-        self._info: Info = info
-        self.bsblan = bsblan
         self._temperature_unit = None
-        self._hvac_mode = None
         self._preset_mode = None
         self._store_hvac_mode = None
+        self._info: Info = info
+        self.bsblan = bsblan
 
     @property
     def name(self) -> str:
