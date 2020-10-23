@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import STATE_ON
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
@@ -42,7 +41,7 @@ class ChargerSwitch(TeslaDevice, SwitchEntity):
         """Get whether the switch is in on state."""
         if self.tesla_device.is_charging() is None:
             return None
-        return self.tesla_device.is_charging() == STATE_ON
+        return self.tesla_device.is_charging()
 
 
 class RangeSwitch(TeslaDevice, SwitchEntity):
