@@ -502,6 +502,35 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EFFECT
     assert entity_state.attributes["effect"] == effect
 
+    # On (=), 100% (=), [0,0,255] (!)
+    # Ensure changing the color will move the effect to 'Solid' automatically.
+    hs_color = (240.0, 100.0)
+    client.async_send_set_color = AsyncMock(return_value=True)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: hs_color},
+        blocking=True,
+    )
+
+    assert client.async_send_set_color.call_args == call(
+        **{
+            const.KEY_PRIORITY: TEST_PRIORITY,
+            const.KEY_COLOR: (0, 0, 255),
+            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+        }
+    )
+    # Simulate a state callback from Hyperion.
+    client.visible_priority = {
+        const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
+        const.KEY_VALUE: {const.KEY_RGB: (0, 0, 255)},
+    }
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state.attributes["hs_color"] == hs_color
+    assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
+    assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
+
     # No calls if disconnected.
     client.has_loaded_state = False
     _call_registered_callback(client, "client-update", {"loaded-state": False})
@@ -626,6 +655,13 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
     assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
     assert entity_state.attributes["hs_color"] == (180.0, 100.0)
+
+    # Update priorities (None)
+    client.visible_priority = None
+
+    _call_registered_callback(client, "priorities-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state.state == "off"
 
     # Update effect list
     effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
