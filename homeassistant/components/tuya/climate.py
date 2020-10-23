@@ -192,4 +192,4 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._tuya.max_temp()
+        return 30 #self._tuya.max_temp()
