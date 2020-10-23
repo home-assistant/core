@@ -6,7 +6,12 @@ import time
 
 import av
 
-from .const import MAX_TIMESTAMP_GAP, MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
+from .const import (
+    MAX_MISSING_DTS_PEEK,
+    MAX_TIMESTAMP_GAP,
+    MIN_SEGMENT_DURATION,
+    PACKETS_TO_WAIT_FOR_AUDIO,
+)
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +108,7 @@ def _stream_worker_internal(hass, stream, quit_event):
 
     def peek_first_pts():
         nonlocal first_pts, audio_stream
-        missing_dts = False
+        missing_dts = 0
 
         def empty_stream_dict():
             return {
@@ -120,9 +125,11 @@ def _stream_worker_internal(hass, stream, quit_event):
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
-                    if missing_dts:
-                        raise av.AVError
-                    missing_dts = True
+                    if missing_dts >= MAX_MISSING_DTS_PEEK:
+                        raise StopIteration(
+                            f"Invalid data - got {MAX_MISSING_DTS_PEEK} packets with missing DTS while initializing"
+                        )
+                    missing_dts += 1
                     continue
                 if packet.stream == video_stream and packet.is_keyframe:
                     first_packet[video_stream] = packet
@@ -135,9 +142,11 @@ def _stream_worker_internal(hass, stream, quit_event):
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
-                    if missing_dts:
-                        raise av.AVError
-                    missing_dts = True
+                    if missing_dts >= MAX_MISSING_DTS_PEEK:
+                        raise StopIteration(
+                            f"Invalid data - got {MAX_MISSING_DTS_PEEK} packets with missing DTS while initializing"
+                        )
+                    missing_dts += 1
                     continue
                 if (
                     first_packet[packet.stream] is None
