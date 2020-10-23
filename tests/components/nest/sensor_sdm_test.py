@@ -41,6 +41,8 @@ CONFIG_ENTRY_DATA = {
     },
 }
 
+THERMOSTAT_TYPE = "sdm.devices.types.THERMOSTAT"
+
 
 class FakeDeviceManager(DeviceManager):
     """Fake DeviceManager that can supply a list of devices and structures."""
@@ -114,7 +116,7 @@ async def test_thermostat_device(hass):
         "some-device-id": Device.MakeDevice(
             {
                 "name": "some-device-id",
-                "type": "sdm.devices.types.Thermostat",
+                "type": THERMOSTAT_TYPE,
                 "traits": {
                     "sdm.devices.traits.Info": {
                         "customName": "My Sensor",
@@ -140,6 +142,18 @@ async def test_thermostat_device(hass):
     assert humidity is not None
     assert humidity.state == "35.0"
 
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("sensor.my_sensor_temperature")
+    assert entry.unique_id == "some-device-id-temperature"
+    assert entry.original_name == "My Sensor Temperature"
+    assert entry.domain == "sensor"
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(entry.device_id)
+    assert device.name == "My Sensor"
+    assert device.model == "Thermostat"
+    assert device.identifiers == {("nest", "some-device-id")}
+
 
 async def test_no_devices(hass):
     """Test no devices returned by the api."""
@@ -158,7 +172,7 @@ async def test_device_no_sensor_traits(hass):
         "some-device-id": Device.MakeDevice(
             {
                 "name": "some-device-id",
-                "type": "sdm.devices.types.Thermostat",
+                "type": THERMOSTAT_TYPE,
                 "traits": {},
             },
             auth=None,
@@ -179,7 +193,7 @@ async def test_device_name_from_structure(hass):
         "some-device-id": Device.MakeDevice(
             {
                 "name": "some-device-id",
-                "type": "sdm.devices.types.Thermostat",
+                "type": THERMOSTAT_TYPE,
                 "traits": {
                     "sdm.devices.traits.Temperature": {
                         "ambientTemperatureCelsius": 25.2,
@@ -205,7 +219,7 @@ async def test_event_updates_sensor(hass):
         "some-device-id": Device.MakeDevice(
             {
                 "name": "some-device-id",
-                "type": "sdm.devices.types.Thermostat",
+                "type": THERMOSTAT_TYPE,
                 "traits": {
                     "sdm.devices.traits.Info": {
                         "customName": "My Sensor",

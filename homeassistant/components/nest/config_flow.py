@@ -23,7 +23,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, InvalidStateError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.json import load_json
 
@@ -111,7 +111,7 @@ class NestFlowHandler(
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if self.is_sdm_api():
-            return None
+            raise InvalidStateError("Step only supported for legacy API")
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -142,7 +142,7 @@ class NestFlowHandler(
         deliver the authentication code.
         """
         if self.is_sdm_api():
-            return None
+            raise InvalidStateError("Step only supported for legacy API")
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
 
@@ -185,7 +185,7 @@ class NestFlowHandler(
     async def async_step_import(self, info):
         """Import existing auth from Nest."""
         if self.is_sdm_api():
-            return None
+            raise InvalidStateError("Step only supported for legacy API")
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
