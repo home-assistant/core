@@ -3,6 +3,7 @@ from datetime import datetime
 import math
 import random
 
+import jinja2
 import pytest
 import pytz
 
@@ -2651,3 +2652,36 @@ async def test_legacy_templates(hass):
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
     )
+
+
+async def test_jinja_import_include(hass):
+    """Test jinja's import and include methods."""
+    with patch(
+        "jinja2.FileSystemLoader",
+        return_value=jinja2.DictLoader(
+            {
+                "macros.html": "{% macro test_macro() -%} This is a test macro! {%- endmacro %}",
+                "include.html": "This is include.html",
+            }
+        ),
+    ):
+        assert (
+            template.Template(
+                "{% import 'macros.html' as macros %} {{ macros.test_macro() }}", hass
+            ).async_render()
+            == "This is a test macro!"
+        )
+
+        assert (
+            template.Template("{% include 'include.html' %}", hass).async_render()
+            == "This is include.html"
+        )
+
+        with pytest.raises(TemplateError):
+            template.Template(
+                "{% import 'does_not_exist.html' as macros %} {{ macros.test_macros() }}",
+                hass,
+            ).async_render()
+
+        with pytest.raises(TemplateError):
+            template.Template("{% include 'does_not_exist.html'%}", hass).async_render()
