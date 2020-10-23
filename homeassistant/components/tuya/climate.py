@@ -30,7 +30,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import callback, valid_entity_id
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
@@ -274,6 +274,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         return super().max_temp
 
     def _get_ext_temperature(self):
+        """Get external temperature entity current state."""
         if not self._temp_entity or self._temp_entity == ENTITY_MATCH_NONE:
             return None
 
@@ -287,24 +288,16 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
                 self._temp_entity_error = True
 
         try:
-            attr_list = self._temp_entity.split(".", 2)
-            if len(attr_list) < 2:
+            entity_name = self._temp_entity
+            if not valid_entity_id(entity_name):
                 _log_error("entity name is invalid")
                 return None
-            entity_name = f"{attr_list[0]}.{attr_list[1]}"
-            entity_attr = None
-            if len(attr_list) > 2:
-                entity_attr = attr_list[2]
 
             state_obj = self.hass.states.get(entity_name)
             if state_obj:
-                if entity_attr:
-                    temp = state_obj.attributes.get(entity_attr)
-                else:
-                    temp = state_obj.state
+                temp = state_obj.state
                 if temp is None or not isinstance(temp, Number):
-                    msg = f"attribute {entity_attr}" if entity_attr else "state"
-                    _log_error(f"entity {msg} is not available or is not a number")
+                    _log_error("entity state is not available or is not a number")
                     return None
 
                 self._temp_entity_error = False

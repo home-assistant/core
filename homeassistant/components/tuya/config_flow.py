@@ -198,9 +198,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def _async_device_form(self, devs_id):
         """Return configuration form for devices."""
-        count = 0
         conf_devs_id = []
-        for dev_id in devs_id:
+        for count, dev_id in enumerate(devs_id):
             device_info = dev_id.split("-")
             if count == 0:
                 device_type = device_info[0]
@@ -209,7 +208,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self._form_error = ERROR_DEV_MULTI_TYPE
                 return await self.async_step_init()
             conf_devs_id.append(device_info[1])
-            count += 1
 
         device = self._get_device(device_id)
         if not device:
@@ -254,13 +252,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=900)),
                 vol.Optional(
                     CONF_QUERY_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=240)),
             }
         )
 

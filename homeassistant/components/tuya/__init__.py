@@ -83,7 +83,7 @@ def _update_discovery_interval(hass, interval):
         return
 
     try:
-        tuya.discovery_interval = float(interval)
+        tuya.discovery_interval = interval
         _LOGGER.info("Tuya discovery device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
@@ -95,7 +95,7 @@ def _update_query_interval(hass, interval):
         return
 
     try:
-        tuya.query_interval = float(interval)
+        tuya.query_interval = interval
         _LOGGER.info("Tuya query device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
@@ -241,12 +241,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN]["listener"]()
-        hass.data[DOMAIN]["listener"] = None
-        hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
         hass.data[DOMAIN][TUYA_TRACKER]()
-        hass.data[DOMAIN][TUYA_TRACKER] = None
-        hass.data[DOMAIN][TUYA_DATA] = None
-        hass.data[DOMAIN].pop(TUYA_DEVICES_CONF)
         hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
         hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
         hass.data.pop(DOMAIN)
