@@ -75,7 +75,7 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
                 vol.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_OFFSET, default=0): vol.In(FORECAST_OFFSET),
+                vol.Optional(CONF_OFFSET, default=1): vol.In(FORECAST_OFFSET),
             }
         )
 
