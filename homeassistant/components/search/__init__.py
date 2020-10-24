@@ -122,7 +122,7 @@ class Searcher:
         """Resolve an area."""
         for device in device_registry.async_entries_for_area(self._device_reg, area_id):
             self._add_or_resolve("device", device.id)
-        for entity in entity_registry.async_entries_for_area(self._entity_reg, area_id):
+        for entity_entry in entity_registry.async_entries_for_area(self._entity_reg, area_id):
             self._add_or_resolve("entity", entity.entity_id)
 
     @callback
