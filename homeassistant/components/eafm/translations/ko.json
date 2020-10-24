@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "no_stations": "\ud64d\uc218 \ubaa8\ub2c8\ud130\ub9c1 \uc2a4\ud14c\uc774\uc158\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "\uc2a4\ud14c\uc774\uc158"
+                },
+                "description": "\ubaa8\ub2c8\ud130\ub9c1\ud560 \uc2a4\ud14c\uc774\uc158 \uc120\ud0dd",
+                "title": "\ud64d\uc218 \ubaa8\ub2c8\ud130\ub9c1 \uc2a4\ud14c\uc774\uc158 \ucd94\uc801"
+            }
+        }
+    }
+}

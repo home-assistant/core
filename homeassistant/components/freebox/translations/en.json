@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "connection_failed": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "register_failed": "Failed to register, please try again",
-            "unknown": "Unknown error: please retry later"
+            "unknown": "Unexpected error"
         },
         "step": {
             "link": {

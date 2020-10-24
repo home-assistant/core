@@ -1,8 +1,6 @@
 """The exceptions used by Home Assistant."""
 from typing import TYPE_CHECKING, Optional
 
-import jinja2
-
 if TYPE_CHECKING:
     from .core import Context  # noqa: F401 pylint: disable=unused-import
 
@@ -22,7 +20,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: jinja2.TemplateError) -> None:
+    def __init__(self, exception: Exception) -> None:
         """Init the error."""
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 
@@ -54,6 +52,10 @@ class Unauthorized(HomeAssistantError):
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)
         self.context = context
+
+        if user_id is None and context is not None:
+            user_id = context.user_id
+
         self.user_id = user_id
         self.entity_id = entity_id
         self.config_entry_id = config_entry_id

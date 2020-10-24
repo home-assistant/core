@@ -75,7 +75,8 @@ async def test_offline(hass):
     twitch_mock.streams.get_stream_by_user.return_value = None
 
     with patch(
-        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient",
+        return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
@@ -94,7 +95,8 @@ async def test_streaming(hass):
     twitch_mock.streams.get_stream_by_user.return_value = STREAM_OBJECT_ONLINE
 
     with patch(
-        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient",
+        return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
         await hass.async_block_till_done()
@@ -118,7 +120,8 @@ async def test_oauth_without_sub_and_follow(hass):
     twitch_mock.users.check_follows_channel.side_effect = HTTPError()
 
     with patch(
-        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient",
+        return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
         await hass.async_block_till_done()
@@ -140,7 +143,8 @@ async def test_oauth_with_sub(hass):
     twitch_mock.users.check_follows_channel.side_effect = HTTPError()
 
     with patch(
-        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient",
+        return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
         await hass.async_block_till_done()
@@ -164,7 +168,8 @@ async def test_oauth_with_follow(hass):
     twitch_mock.users.check_follows_channel.return_value = FOLLOW_ACTIVE
 
     with patch(
-        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient",
+        return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH)
         await hass.async_block_till_done()

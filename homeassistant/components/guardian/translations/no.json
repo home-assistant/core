@@ -1,8 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Guardian-enheten er allerede konfigurert.",
-            "already_in_progress": "Konfigurasjon av Guardian-enheter er allerede i gang.",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kan ikke koble til Guardian-enheten."
         },
         "step": {
@@ -18,5 +19,5 @@
             }
         }
     },
-    "title": "Elexa Guardian"
+    "title": ""
 }

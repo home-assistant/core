@@ -5,7 +5,8 @@
             "not_forked_daapd": "\u8a2d\u5099\u4e26\u975e forked-daapd \u4f3a\u670d\u5668\u3002"
         },
         "error": {
-            "unknown_error": "\u672a\u77e5\u932f\u8aa4\u3002",
+            "forbidden": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d forked-daapd \u7db2\u8def\u6b0a\u9650\u3002",
+            "unknown_error": "\u672a\u9810\u671f\u932f\u8aa4",
             "websocket_not_enabled": "forked-daapd \u4f3a\u670d\u5668 websocket \u672a\u958b\u555f\u3002",
             "wrong_host_or_port": "\u7121\u6cd5\u9023\u7dda\uff0c\u8acb\u78ba\u8a8d\u4e3b\u6a5f\u8207\u901a\u8a0a\u57e0\u3002",
             "wrong_password": "\u5bc6\u78bc\u932f\u8aa4\u3002",

@@ -44,7 +44,9 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         for entry_config in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config,
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=entry_config,
                 )
             )
 
@@ -57,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await dtv.update()
-    except DIRECTVError:
-        raise ConfigEntryNotReady
+    except DIRECTVError as err:
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = dtv
 

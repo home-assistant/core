@@ -550,7 +550,7 @@ class TestTemplateLight:
         )
         self.hass.block_till_done()
         assert len(self.calls) == 1
-        assert self.calls[0].data["white_value"] == "124"
+        assert self.calls[0].data["white_value"] == 124
 
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
@@ -649,7 +649,7 @@ class TestTemplateLight:
         common.turn_on(self.hass, "light.test_template_light", **{ATTR_BRIGHTNESS: 124})
         self.hass.block_till_done()
         assert len(self.calls) == 1
-        assert self.calls[0].data["brightness"] == "124"
+        assert self.calls[0].data["brightness"] == 124
 
         state = self.hass.states.get("light.test_template_light")
         _LOGGER.info(str(state.attributes))
@@ -802,7 +802,7 @@ class TestTemplateLight:
         common.turn_on(self.hass, "light.test_template_light", **{ATTR_COLOR_TEMP: 345})
         self.hass.block_till_done()
         assert len(self.calls) == 1
-        assert self.calls[0].data["color_temp"] == "345"
+        assert self.calls[0].data["color_temp"] == 345
 
         state = self.hass.states.get("light.test_template_light")
         _LOGGER.info(str(state.attributes))
@@ -1008,18 +1008,18 @@ class TestTemplateLight:
         )
         self.hass.block_till_done()
         assert len(self.calls) == 2
-        assert self.calls[0].data["h"] == "40"
-        assert self.calls[0].data["s"] == "50"
-        assert self.calls[1].data["h"] == "40"
-        assert self.calls[1].data["s"] == "50"
+        assert self.calls[0].data["h"] == 40
+        assert self.calls[0].data["s"] == 50
+        assert self.calls[1].data["h"] == 40
+        assert self.calls[1].data["s"] == 50
 
         state = self.hass.states.get("light.test_template_light")
         _LOGGER.info(str(state.attributes))
         assert state is not None
-        assert self.calls[0].data["h"] == "40"
-        assert self.calls[0].data["s"] == "50"
-        assert self.calls[1].data["h"] == "40"
-        assert self.calls[1].data["s"] == "50"
+        assert self.calls[0].data["h"] == 40
+        assert self.calls[0].data["s"] == 50
+        assert self.calls[1].data["h"] == 40
+        assert self.calls[1].data["s"] == 50
 
     @pytest.mark.parametrize(
         "expected_hs,template",
@@ -1164,3 +1164,46 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one light per id."""
+    await setup.async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                    },
+                    "test_template_light_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

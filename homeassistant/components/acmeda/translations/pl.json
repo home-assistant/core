@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Nie wykryto hub\u00f3w Pulse."
+            "all_configured": "Nie wykryto hub\u00f3w Pulse",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
         },
         "step": {
             "user": {

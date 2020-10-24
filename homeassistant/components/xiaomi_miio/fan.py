@@ -449,7 +449,7 @@ SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): vol.All(vol.Coerce(int), vol.Range(min=0))}
+    {vol.Required(ATTR_FEATURES): cv.positive_int}
 )
 
 SERVICE_SCHEMA_TARGET_HUMIDITY = AIRPURIFIER_SERVICE_SCHEMA.extend(
@@ -523,8 +523,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_info.firmware_version,
                 device_info.hardware_version,
             )
-        except DeviceException:
-            raise PlatformNotReady
+        except DeviceException as ex:
+            raise PlatformNotReady from ex
 
     if model in PURIFIER_MIOT:
         air_purifier = AirPurifierMiot(host, token)

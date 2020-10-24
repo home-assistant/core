@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "adguard_home_addon_outdated": "Denne integrasjonen krever AdGuard Home {minimal_version} eller h\u00f8yere, du har {current_version}. Vennligst oppdater Hass.io AdGuard Home-tillegget.",
-            "adguard_home_outdated": "Denne integrasjonen krever AdGuard Home {minimal_version} eller h\u00f8yere, du har {current_version}.",
             "existing_instance_updated": "Oppdatert eksisterende konfigurasjon.",
-            "single_instance_allowed": "Kun en konfigurasjon av AdGuard Hjemer tillatt."
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Tilkobling mislyktes."
         },
         "step": {
@@ -17,9 +16,11 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "",
-                    "ssl": "AdGuard Hjem bruker et SSL-sertifikat",
-                    "verify_ssl": "AdGuard Home bruker et riktig sertifikat"
+                    "password": "Passord",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "description": "Sett opp din AdGuard Hjem instans for \u00e5 tillate overv\u00e5king og kontroll."
             }

@@ -2,13 +2,28 @@
 
 from typing import Any, Callable, Dict, List, Optional
 
-from dynalite_devices_lib.dynalite_devices import DynaliteBaseDevice, DynaliteDevices
+from dynalite_devices_lib.dynalite_devices import (
+    CONF_AREA as dyn_CONF_AREA,
+    CONF_PRESET as dyn_CONF_PRESET,
+    NOTIFICATION_PACKET,
+    NOTIFICATION_PRESET,
+    DynaliteBaseDevice,
+    DynaliteDevices,
+    DynaliteNotification,
+)
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ENTITY_PLATFORMS, LOGGER
+from .const import (
+    ATTR_AREA,
+    ATTR_HOST,
+    ATTR_PACKET,
+    ATTR_PRESET,
+    ENTITY_PLATFORMS,
+    LOGGER,
+)
 from .convert_config import convert_config
 
 
@@ -26,6 +41,7 @@ class DynaliteBridge:
         self.dynalite_devices = DynaliteDevices(
             new_device_func=self.add_devices_when_registered,
             update_device_func=self.update_device,
+            notification_func=self.handle_notification,
         )
         self.dynalite_devices.configure(convert_config(config))
 
@@ -60,6 +76,27 @@ class DynaliteBridge:
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))
+
+    @callback
+    def handle_notification(self, notification: DynaliteNotification) -> None:
+        """Handle a notification from the platform and issue events."""
+        if notification.notification == NOTIFICATION_PACKET:
+            self.hass.bus.async_fire(
+                "dynalite_packet",
+                {
+                    ATTR_HOST: self.host,
+                    ATTR_PACKET: notification.data[NOTIFICATION_PACKET],
+                },
+            )
+        if notification.notification == NOTIFICATION_PRESET:
+            self.hass.bus.async_fire(
+                "dynalite_preset",
+                {
+                    ATTR_HOST: self.host,
+                    ATTR_AREA: notification.data[dyn_CONF_AREA],
+                    ATTR_PRESET: notification.data[dyn_CONF_PRESET],
+                },
+            )
 
     @callback
     def register_add_devices(self, platform: str, async_add_devices: Callable) -> None:

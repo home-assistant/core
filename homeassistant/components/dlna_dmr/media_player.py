@@ -182,8 +182,8 @@ async def async_setup_platform(
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise PlatformNotReady() from err
 
     # wrap with DmrDevice
     dlna_device = DmrDevice(upnp_device, event_handler)

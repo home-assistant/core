@@ -2,6 +2,6 @@
   "domain": "skybell",
   "name": "SkyBell",
   "documentation": "https://www.home-assistant.io/integrations/skybell",
-  "requirements": ["skybellpy==0.4.0"],
+  "requirements": ["skybellpy==0.6.1"],
   "codeowners": []
 }

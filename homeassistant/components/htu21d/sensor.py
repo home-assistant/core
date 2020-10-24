@@ -8,7 +8,7 @@ import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -41,16 +41,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     temp_unit = hass.config.units.temperature_unit
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
-    sensor = await hass.async_add_job(partial(HTU21D, bus, logger=_LOGGER))
+    sensor = await hass.async_add_executor_job(partial(HTU21D, bus, logger=_LOGGER))
     if not sensor.sample_ok:
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
 
-    sensor_handler = await hass.async_add_job(HTU21DHandler, sensor)
+    sensor_handler = await hass.async_add_executor_job(HTU21DHandler, sensor)
 
     dev = [
         HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
-        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, UNIT_PERCENTAGE),
+        HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, PERCENTAGE),
     ]
 
     async_add_entities(dev)
@@ -98,7 +98,7 @@ class HTU21DSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the HTU21D sensor and update the state."""
-        await self.hass.async_add_job(self._client.update)
+        await self.hass.async_add_executor_job(self._client.update)
         if self._client.sensor.sample_ok:
             if self._variable == SENSOR_TEMPERATURE:
                 value = round(self._client.sensor.temperature, 1)

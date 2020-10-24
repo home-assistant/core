@@ -8,10 +8,16 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import CONF_CONTROLLER, DOMAIN
+from .const import (  # pylint: disable=unused-import
+    CONF_CONTROLLER,
+    CONF_LEGACY_UNIQUE_ID,
+    DOMAIN,
+)
 
 LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
@@ -42,10 +48,12 @@ def options_schema(options: dict = None) -> dict:
     options = options or {}
     return {
         vol.Optional(
-            CONF_LIGHTS, default=list_to_str(options.get(CONF_LIGHTS, [])),
+            CONF_LIGHTS,
+            default=list_to_str(options.get(CONF_LIGHTS, [])),
         ): str,
         vol.Optional(
-            CONF_EXCLUDE, default=list_to_str(options.get(CONF_EXCLUDE, [])),
+            CONF_EXCLUDE,
+            default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
     }
 
@@ -61,14 +69,17 @@ def options_data(user_input: dict) -> dict:
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: dict = None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=options_data(user_input),)
+            return self.async_create_entry(
+                title="",
+                data=options_data(user_input),
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -81,21 +92,19 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: dict = None):
         """Handle user initiated flow."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
-
         if user_input is not None:
             return await self.async_step_finish(
                 {
                     **user_input,
                     **options_data(user_input),
                     **{CONF_SOURCE: config_entries.SOURCE_USER},
+                    **{CONF_LEGACY_UNIQUE_ID: False},
                 }
             )
 
@@ -108,8 +117,29 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict):
         """Handle a flow initialized by import."""
+
+        # If there are entities with the legacy unique_id, then this imported config
+        # should also use the legacy unique_id for entity creation.
+        entity_registry: EntityRegistry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
+        use_legacy_unique_id = (
+            len(
+                [
+                    entry
+                    for entry in entity_registry.entities.values()
+                    if entry.platform == DOMAIN and entry.unique_id.isdigit()
+                ]
+            )
+            > 0
+        )
+
         return await self.async_step_finish(
-            {**config, **{CONF_SOURCE: config_entries.SOURCE_IMPORT}}
+            {
+                **config,
+                **{CONF_SOURCE: config_entries.SOURCE_IMPORT},
+                **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
+            }
         )
 
     async def async_step_finish(self, config: dict):

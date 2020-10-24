@@ -97,11 +97,13 @@ def mock_connection(
     )
 
     aioclient_mock.post(
-        re.compile(f"{roku_url}/keypress/.*"), text="OK",
+        re.compile(f"{roku_url}/keypress/.*"),
+        text="OK",
     )
 
     aioclient_mock.post(
-        re.compile(f"{roku_url}/launch/.*"), text="OK",
+        re.compile(f"{roku_url}/launch/.*"),
+        text="OK",
     )
 
     aioclient_mock.post(f"{roku_url}/search", text="OK")

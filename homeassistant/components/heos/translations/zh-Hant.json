@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Heos \u9023\u7dda\uff0c\u5c07\u652f\u63f4\u7db2\u8def\u4e2d\u6240\u6709\u5c0d\u61c9\u8a2d\u5099\u3002"
+            "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Heos \u9023\u7dda\uff0c\u5c07\u652f\u63f4\u7db2\u8def\u4e2d\u6240\u6709\u5c0d\u61c9\u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_failure": "\u7121\u6cd5\u9023\u7dda\u81f3\u6307\u5b9a\u4e3b\u6a5f\u7aef\u3002"
         },
         "step": {

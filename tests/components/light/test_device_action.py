@@ -107,7 +107,10 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(
-        DOMAIN, "test", "5678", device_id=device_entry.id,
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
     )
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)

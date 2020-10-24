@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "user": {
@@ -9,7 +9,7 @@
                     "blid": "BLID",
                     "continuous": "Continuo",
                     "delay": "Retardo",
-                    "host": "Nombre del host o direcci\u00f3n IP",
+                    "host": "Host",
                     "password": "Contrase\u00f1a"
                 },
                 "description": "Actualmente recuperar el BLID y la contrase\u00f1a es un proceso manual. Sigue los pasos descritos en la documentaci\u00f3n en: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",

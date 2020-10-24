@@ -9,6 +9,7 @@
     "history",
     "logbook",
     "map",
+    "media_source",
     "mobile_app",
     "person",
     "scene",
@@ -16,6 +17,7 @@
     "ssdp",
     "sun",
     "system_health",
+    "tag",
     "updater",
     "zeroconf",
     "zone",
@@ -23,7 +25,9 @@
     "input_datetime",
     "input_text",
     "input_number",
-    "input_select"
+    "input_select",
+    "counter",
+    "timer"
   ],
   "codeowners": []
 }

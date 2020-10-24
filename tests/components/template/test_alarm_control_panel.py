@@ -1,11 +1,10 @@
 """The tests for the Template alarm control panel platform."""
-import logging
-
 from homeassistant import setup
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -13,8 +12,6 @@ from homeassistant.const import (
 
 from tests.common import async_mock_service
 from tests.components.alarm_control_panel import common
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_template_state_text(hass):
@@ -75,6 +72,12 @@ async def test_template_state_text(hass):
 
     state = hass.states.get("alarm_control_panel.test_template_panel")
     assert state.state == STATE_ALARM_ARMED_NIGHT
+
+    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_ARMING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == STATE_ALARM_ARMING
 
     hass.states.async_set("alarm_control_panel.test", STATE_ALARM_DISARMED)
     await hass.async_block_till_done()
@@ -148,6 +151,7 @@ async def test_optimistic_states(hass):
     await common.async_alarm_arm_away(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -201,6 +205,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_away(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -208,6 +213,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_home(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -215,6 +221,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_arm_night(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -222,6 +229,7 @@ async def test_no_action_scripts(hass):
     await common.async_alarm_disarm(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
+    await hass.async_block_till_done()
     state = hass.states.get("alarm_control_panel.test_template_panel")
     await hass.async_block_till_done()
     assert state.state == STATE_ALARM_ARMED_AWAY
@@ -341,7 +349,9 @@ async def test_invalid_panel_does_not_create(hass, caplog):
 async def test_no_panels_does_not_create(hass, caplog):
     """Test if there are no panels -> no creation."""
     await setup.async_setup_component(
-        hass, "alarm_control_panel", {"alarm_control_panel": {"platform": "template"}},
+        hass,
+        "alarm_control_panel",
+        {"alarm_control_panel": {"platform": "template"}},
     )
 
     await hass.async_block_till_done()
@@ -586,3 +596,32 @@ async def test_disarm_action(hass):
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one alarm control panel per id."""
+    await setup.async_setup_component(
+        hass,
+        "alarm_control_panel",
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {
+                    "test_template_alarm_control_panel_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_alarm_control_panel_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

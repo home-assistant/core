@@ -1,18 +1,17 @@
 """The devolo_home_control integration."""
+import asyncio
 from functools import partial
 
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
-from homeassistant.components import switch as ha_switch
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
-
-SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
 
 
 async def async_setup(hass, config):
@@ -32,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
     mydevolo.url = conf[CONF_MYDEVOLO]
-    mydevolo.mprm = conf[CONF_HOMECONTROL]
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -43,15 +41,23 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
-    gateway_id = gateway_ids[0]
-    mprm_url = mydevolo.mprm
 
     try:
-        hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
-            partial(HomeControl, gateway_id=gateway_id, url=mprm_url)
-        )
-    except ConnectionError:
-        raise ConfigEntryNotReady
+        zeroconf_instance = await zeroconf.async_get_instance(hass)
+        hass.data[DOMAIN][entry.entry_id] = []
+        for gateway_id in gateway_ids:
+            hass.data[DOMAIN][entry.entry_id].append(
+                await hass.async_add_executor_job(
+                    partial(
+                        HomeControl,
+                        gateway_id=gateway_id,
+                        zeroconf_instance=zeroconf_instance,
+                        url=conf[CONF_HOMECONTROL],
+                    )
+                )
+            )
+    except ConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -59,9 +65,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
 
     def shutdown(event):
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect(
-            f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
-        )
+        for gateway in hass.data[DOMAIN][entry.entry_id]:
+            gateway.websocket_disconnect(
+                f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
+            )
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
@@ -69,14 +76,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload = await hass.config_entries.async_forward_entry_unload(
-        config_entry, "switch"
+    unload = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
     )
-
-    await hass.async_add_executor_job(
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect
+    await asyncio.gather(
+        *[
+            hass.async_add_executor_job(gateway.websocket_disconnect)
+            for gateway in hass.data[DOMAIN][entry.entry_id]
+        ]
     )
-    del hass.data[DOMAIN]["homecontrol"]
+    hass.data[DOMAIN].pop(entry.entry_id)
     return unload

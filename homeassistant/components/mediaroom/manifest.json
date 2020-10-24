@@ -2,6 +2,6 @@
   "domain": "mediaroom",
   "name": "Mediaroom",
   "documentation": "https://www.home-assistant.io/integrations/mediaroom",
-  "requirements": ["pymediaroom==0.6.4"],
+  "requirements": ["pymediaroom==0.6.4.1"],
   "codeowners": ["@dgomes"]
 }

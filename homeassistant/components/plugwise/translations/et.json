@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "\u00dchenduse t\u00fc\u00fcp",
+                    "host": "IP aadress",
+                    "password": "Smile ID",
+                    "port": "Smile pordi number"
+                }
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Smile ID",
+                    "port": "Port"
+                },
+                "description": "Palun sisesta:",
+                "title": "Loo \u00fchendus Smile-ga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Kohanda Plugwise s\u00e4tteid"
+            }
+        }
+    }
+}

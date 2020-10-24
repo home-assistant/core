@@ -2,20 +2,17 @@
 from functools import partial
 from itertools import chain
 import json
-import logging
 import re
 from typing import Dict
 
-from script.translations import upload
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
+from script.translations import upload
 
 from .model import Config, Integration
-
-_LOGGER = logging.getLogger(__name__)
 
 UNDEFINED = 0
 REQUIRED = 1

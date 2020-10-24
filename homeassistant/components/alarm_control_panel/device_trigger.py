@@ -8,9 +8,11 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
-from homeassistant.components.automation import AutomationActionType, state
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -63,7 +65,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entity_state is None:
             continue
 
-        supported_features = entity_state.attributes["supported_features"]
+        supported_features = entity_state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add triggers for each entity that belongs to this integration
         triggers += [
@@ -151,13 +153,13 @@ async def async_attach_trigger(
         to_state = STATE_ALARM_ARMED_NIGHT
 
     state_config = {
-        state.CONF_PLATFORM: "state",
+        state_trigger.CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_TO: to_state,
+        state_trigger.CONF_TO: to_state,
     }
     if from_state:
-        state_config[state.CONF_FROM] = from_state
-    state_config = state.TRIGGER_SCHEMA(state_config)
-    return await state.async_attach_trigger(
+        state_config[state_trigger.CONF_FROM] = from_state
+    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

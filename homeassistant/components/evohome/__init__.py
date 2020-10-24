@@ -107,7 +107,7 @@ def _dt_aware_to_naive(dt_aware: dt) -> dt:
     return dt_naive.replace(microsecond=0)
 
 
-def convert_until(status_dict: dict, until_key: str) -> str:
+def convert_until(status_dict: dict, until_key: str) -> None:
     """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict:  # only present for certain modes
         dt_utc_naive = dt_util.parse_datetime(status_dict[until_key])
@@ -614,13 +614,14 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of a Zone."""
-        if not self._evo_device.temperatureStatus["isAvailable"]:
-            return None
-
-        if self._evo_broker.temps:
+        if (
+            self._evo_broker.temps
+            and self._evo_broker.temps[self._evo_device.zoneId] != 128
+        ):
             return self._evo_broker.temps[self._evo_device.zoneId]
 
-        return self._evo_device.temperatureStatus["temperature"]
+        if self._evo_device.temperatureStatus["isAvailable"]:
+            return self._evo_device.temperatureStatus["temperature"]
 
     @property
     def setpoints(self) -> Dict[str, Any]:

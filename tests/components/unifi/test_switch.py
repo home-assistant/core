@@ -265,7 +265,8 @@ async def test_platform_manually_configured(hass):
 async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
-        hass, options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
+        hass,
+        options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
     )
 
     assert len(controller.mock_requests) == 4
@@ -517,21 +518,24 @@ async def test_option_block_clients(hass):
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
+        controller.config_entry,
+        options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # Enable one and remove another one
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
+        controller.config_entry,
+        options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     # Remove one
     hass.config_entries.async_update_entry(
-        controller.config_entry, options={CONF_BLOCK_CLIENT: []},
+        controller.config_entry,
+        options={CONF_BLOCK_CLIENT: []},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -604,7 +608,9 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     clients will be transparently marked as having POE as well.
     """
     controller = await setup_unifi_integration(
-        hass, clients_response=POE_SWITCH_CLIENTS, devices_response=[DEVICE_1],
+        hass,
+        clients_response=POE_SWITCH_CLIENTS,
+        devices_response=[DEVICE_1],
     )
 
     assert len(controller.mock_requests) == 4

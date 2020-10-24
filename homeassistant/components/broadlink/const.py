@@ -1,41 +1,15 @@
-"""Constants for broadlink platform."""
-from datetime import timedelta
-
-CONF_PACKET = "packet"
-
-DEFAULT_NAME = "Broadlink"
-DEFAULT_PORT = 80
-DEFAULT_RETRY = 3
-DEFAULT_TIMEOUT = 5
+"""Constants for the Broadlink integration."""
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "broadlink"
 
-LEARNING_TIMEOUT = timedelta(seconds=30)
+DOMAINS_AND_TYPES = (
+    (REMOTE_DOMAIN, ("RM2", "RM4")),
+    (SENSOR_DOMAIN, ("A1", "RM2", "RM4")),
+    (SWITCH_DOMAIN, ("MP1", "RM2", "RM4", "SP1", "SP2")),
+)
 
-SERVICE_LEARN = "learn"
-SERVICE_SEND = "send"
-
-A1_TYPES = ["a1"]
-MP1_TYPES = ["mp1"]
-RM_TYPES = [
-    "rm",
-    "rm2",
-    "rm_mini",
-    "rm_mini_shate",
-    "rm_pro_phicomm",
-    "rm2_home_plus",
-    "rm2_home_plus_gdt",
-    "rm2_pro_plus",
-    "rm2_pro_plus2",
-    "rm2_pro_plus_bl",
-]
-RM4_TYPES = [
-    "rm_mini3_newblackbean",
-    "rm_mini3_redbean",
-    "rm4_mini",
-    "rm4_pro",
-    "rm4c_mini",
-    "rm4c_pro",
-]
-SP1_TYPES = ["sp1"]
-SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+DEFAULT_PORT = 80
+DEFAULT_TIMEOUT = 5

@@ -1,6 +1,5 @@
 """The tests for the utility_meter component."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
@@ -12,6 +11,7 @@ from homeassistant.components.utility_meter.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
 )
@@ -19,8 +19,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_services(hass):
@@ -41,7 +39,9 @@ async def test_services(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
-    hass.states.async_set(entity_id, 1, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR})
+    hass.states.async_set(
+        entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -49,7 +49,7 @@ async def test_services(hass):
         hass.states.async_set(
             entity_id,
             3,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -70,7 +70,7 @@ async def test_services(hass):
         hass.states.async_set(
             entity_id,
             4,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -91,7 +91,7 @@ async def test_services(hass):
         hass.states.async_set(
             entity_id,
             5,
-            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
             force_update=True,
         )
         await hass.async_block_till_done()

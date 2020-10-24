@@ -199,7 +199,9 @@ async def test_refresh_weather_forecast_exception() -> None:
     with patch.object(
         hass.helpers.event, "async_call_later"
     ) as call_later, patch.object(
-        weather, "get_weather_forecast", side_effect=SmhiForecastException(),
+        weather,
+        "get_weather_forecast",
+        side_effect=SmhiForecastException(),
     ):
         await weather.async_update()
         assert len(call_later.mock_calls) == 1

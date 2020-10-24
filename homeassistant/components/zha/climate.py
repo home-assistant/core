@@ -7,7 +7,6 @@ at https://home-assistant.io/components/zha.climate/
 from datetime import datetime, timedelta
 import enum
 import functools
-import logging
 from random import randint
 from typing import List, Optional, Tuple
 
@@ -144,8 +143,6 @@ SYSTEM_MODE_2_HVAC = {
 }
 
 ZCL_TEMP = 100
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -393,7 +390,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._thrm, SIGNAL_ATTR_UPDATED, self.async_attribute_updated
         )
 

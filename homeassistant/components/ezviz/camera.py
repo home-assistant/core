@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+# pylint: disable=import-error
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from pyezviz.camera import EzvizCamera
 from pyezviz.client import EzvizClient, PyEzvizError

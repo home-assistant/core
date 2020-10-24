@@ -43,7 +43,9 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session)
+        client = Client(
+            user_input[CONF_API_KEY], user_input[CONF_APP_KEY], session=session
+        )
 
         try:
             devices = await client.api.get_devices()

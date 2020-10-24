@@ -102,12 +102,12 @@ INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
 )
 
 
-def _glob_to_re(glob: str) -> Pattern:
+def _glob_to_re(glob: str) -> Pattern[str]:
     """Translate and compile glob string into pattern."""
     return re.compile(fnmatch.translate(glob))
 
 
-def _test_against_patterns(patterns: List[Pattern], entity_id: str) -> bool:
+def _test_against_patterns(patterns: List[Pattern[str]], entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
     for pattern in patterns:
         if pattern.match(entity_id):

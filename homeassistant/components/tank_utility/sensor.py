@@ -8,7 +8,7 @@ from tank_utility import auth, device as tank_monitor
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, UNIT_PERCENTAGE
+from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -73,7 +73,7 @@ class TankUtilitySensor(Entity):
         self._device = device
         self._state = None
         self._name = f"Tank Utility {self.device}"
-        self._unit_of_measurement = UNIT_PERCENTAGE
+        self._unit_of_measurement = PERCENTAGE
         self._attributes = {}
 
     @property

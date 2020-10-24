@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "step": {
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "invalid_event_code": "Code d'\u00e9v\u00e9nement non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "set_device_options": {
+                "data": {
+                    "replace_device": "S\u00e9lectionnez l'appareil \u00e0 remplacer",
+                    "signal_repetitions": "Nombre de r\u00e9p\u00e9titions du signal"
+                },
+                "title": "Configurer les options de l'appareil"
+            }
+        }
+    },
+    "title": "Rfxtrx"
+}

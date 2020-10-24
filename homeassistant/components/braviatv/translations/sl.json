@@ -10,9 +10,6 @@
         },
         "step": {
             "authorize": {
-                "data": {
-                    "pin": "PIN koda"
-                },
                 "description": "Vnesite kodo PIN, ki je prikazana na Sony Bravia TVju. \n\n \u010ce koda PIN ni prikazana, morate na televizorju odjaviti Home Assistant, pojdite na: Nastavitve - > Omre\u017eje - > Nastavitve oddaljenih naprav - > Odjavite oddaljeno napravo.",
                 "title": "Pooblastite Sony Bravia TV"
             },

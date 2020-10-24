@@ -6,6 +6,16 @@
             "toggle": "Commuta {entity_name}",
             "turn_off": "Disattivare {entity_name}",
             "turn_on": "Attivare {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 specifica",
+            "is_off": "{entity_name} \u00e8 spento",
+            "is_on": "{entity_name} \u00e8 acceso"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} umidit\u00e0 target modificata",
+            "turned_off": "{entity_name} disattivato",
+            "turned_on": "{entity_name} attivato"
         }
     },
     "state": {

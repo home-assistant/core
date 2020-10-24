@@ -1,6 +1,7 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
 from homeassistant.const import (
+    CURRENCY_EURO,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     VOLT,
@@ -166,17 +167,17 @@ DEFINITIONS = {
     "dsmr/day-consumption/electricity1_cost": {
         "name": "Low tariff cost",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/electricity2_cost": {
         "name": "High tariff cost",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/electricity_cost_merged": {
         "name": "Power total cost",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/gas": {
         "name": "Gas usage",
@@ -186,37 +187,37 @@ DEFINITIONS = {
     "dsmr/day-consumption/gas_cost": {
         "name": "Gas cost",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/total_cost": {
         "name": "Total cost",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/energy_supplier_price_electricity_delivered_1": {
         "name": "Low tariff delivered price",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/energy_supplier_price_electricity_delivered_2": {
         "name": "High tariff delivered price",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/energy_supplier_price_electricity_returned_1": {
         "name": "Low tariff returned price",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/energy_supplier_price_electricity_returned_2": {
         "name": "High tariff returned price",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/day-consumption/energy_supplier_price_gas": {
         "name": "Gas price",
         "icon": "mdi:currency-eur",
-        "unit": "€",
+        "unit": CURRENCY_EURO,
     },
     "dsmr/meter-stats/dsmr_version": {
         "name": "DSMR version",

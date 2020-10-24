@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "TelldusLive je \u017ee konfiguriran",
             "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje URL-ja je potekla.",
             "unknown": "Pri\u0161lo je do neznane napake"

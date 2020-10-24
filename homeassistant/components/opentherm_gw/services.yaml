@@ -7,6 +7,22 @@ reset_gateway:
       description: The gateway_id of the OpenTherm Gateway.
       example: "opentherm_gateway"
 
+set_central_heating_ovrd:
+  description: >
+    Set the central heating override option on the gateway.
+    When overriding the control setpoint (via a set_control_setpoint service call with a value other than 0), the gateway automatically enables the central heating override to start heating.
+    This service can then be used to control the central heating override status.
+    To return control of the central heating to the thermostat, call the set_control_setpoint service with temperature value 0.
+    You will only need this if you are writing your own software thermostat.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: "opentherm_gateway"
+    ch_override:
+      description: >
+        The desired boolean value for the central heating override.
+      example: "on"
+
 set_clock:
   description: Set the clock and day of the week on the connected thermostat.
   fields:

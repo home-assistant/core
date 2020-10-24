@@ -16,7 +16,7 @@
                 "data": {
                     "password": "Senha",
                     "ssl": "O AdGuard Home usa um certificado SSL",
-                    "username": "Nome de usu\u00e1rio",
+                    "username": "Usu\u00e1rio",
                     "verify_ssl": "O AdGuard Home usa um certificado apropriado"
                 },
                 "description": "Configure sua inst\u00e2ncia do AdGuard Home para permitir o monitoramento e o controle."

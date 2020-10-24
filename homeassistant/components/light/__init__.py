@@ -3,7 +3,6 @@ import csv
 from datetime import timedelta
 import logging
 import os
-from typing import Dict, Optional, Tuple
 
 import voluptuous as vol
 
@@ -13,6 +12,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -28,6 +28,7 @@ import homeassistant.util.color as color_util
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
+DATA_PROFILES = "light_profiles"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -115,16 +116,12 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
     ),
-    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
 
-
-PROFILE_SCHEMA = vol.Schema(
-    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,12 +132,17 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def preprocess_turn_on_alternatives(params):
-    """Process extra data for turn light on request."""
-    profile = Profiles.get(params.pop(ATTR_PROFILE, None))
-    if profile is not None:
-        params.setdefault(ATTR_XY_COLOR, profile[:2])
-        params.setdefault(ATTR_BRIGHTNESS, profile[2])
+def preprocess_turn_on_alternatives(hass, params):
+    """Process extra data for turn light on request.
+
+    Async friendly.
+    """
+    # Bail out, we process this later.
+    if ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+        return
+
+    if ATTR_PROFILE in params:
+        hass.data[DATA_PROFILES].apply_profile(params.pop(ATTR_PROFILE), params)
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
@@ -167,22 +169,10 @@ def preprocess_turn_on_alternatives(params):
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
-    return params
-
 
 def filter_turn_off_params(params):
     """Filter out params not used in turn off."""
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
-
-
-def preprocess_turn_off(params):
-    """Process data for turning light off if brightness is 0."""
-    if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
-        # Zero brightness: Light will be turned off
-        params = filter_turn_off_params(params)
-        return (True, params)  # Light should be turned off
-
-    return (False, None)  # Light should be turned on
 
 
 async def async_setup(hass, config):
@@ -192,10 +182,8 @@ async def async_setup(hass, config):
     )
     await component.async_setup(config)
 
-    # load profiles from files
-    profiles_valid = await Profiles.load_profiles(hass)
-    if not profiles_valid:
-        return False
+    profiles = hass.data[DATA_PROFILES] = Profiles(hass)
+    await profiles.async_initialize()
 
     def preprocess_data(data):
         """Preprocess the service data."""
@@ -205,7 +193,8 @@ async def async_setup(hass, config):
             if entity_field in data
         }
 
-        base["params"] = preprocess_turn_on_alternatives(data)
+        preprocess_turn_on_alternatives(hass, data)
+        base["params"] = data
         return base
 
     async def async_handle_light_on_service(light, call):
@@ -216,16 +205,13 @@ async def async_setup(hass, config):
         params = call.data["params"]
 
         if not params:
-            default_profile = Profiles.get_default(light.entity_id)
+            profiles.apply_default(light.entity_id, params)
 
-            if default_profile is not None:
-                params = {ATTR_PROFILE: default_profile}
-                preprocess_turn_on_alternatives(params)
-
-        elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+        # Only process params once we processed brightness step
+        if params and (
+            ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
+        ):
             brightness = light.brightness if light.is_on else 0
-
-            params = params.copy()
 
             if ATTR_BRIGHTNESS_STEP in params:
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
@@ -235,19 +221,18 @@ async def async_setup(hass, config):
 
             params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
-        turn_light_off, off_params = preprocess_turn_off(params)
-        if turn_light_off:
-            await light.async_turn_off(**off_params)
+            preprocess_turn_on_alternatives(hass, params)
+
+        # Zero brightness: Light will be turned off
+        if params.get(ATTR_BRIGHTNESS) == 0:
+            await light.async_turn_off(**filter_turn_off_params(params))
         else:
             await light.async_turn_on(**params)
 
     async def async_handle_toggle_service(light, call):
-        """Handle toggling a light.
-
-        If brightness is set to 0, this service will turn the light off.
-        """
+        """Handle toggling a light."""
         if light.is_on:
-            off_params = filter_turn_off_params(call.data["params"])
+            off_params = filter_turn_off_params(call.data)
             await light.async_turn_off(**off_params)
         else:
             await async_handle_light_on_service(light, call)
@@ -288,59 +273,89 @@ async def async_unload_entry(hass, entry):
 class Profiles:
     """Representation of available color profiles."""
 
-    _all: Optional[Dict[str, Tuple[float, float, int]]] = None
+    SCHEMA = vol.Schema(
+        vol.Any(
+            vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte)),
+            vol.ExactSequence(
+                (str, cv.small_float, cv.small_float, cv.byte, cv.positive_int)
+            ),
+        )
+    )
 
-    @classmethod
-    async def load_profiles(cls, hass):
-        """Load and cache profiles."""
+    def __init__(self, hass):
+        """Initialize profiles."""
+        self.hass = hass
+        self.data = None
 
-        def load_profile_data(hass):
-            """Load built-in profiles and custom profiles."""
-            profile_paths = [
-                os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
-                hass.config.path(LIGHT_PROFILES_FILE),
-            ]
-            profiles = {}
+    def _load_profile_data(self):
+        """Load built-in profiles and custom profiles."""
+        profile_paths = [
+            os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
+            self.hass.config.path(LIGHT_PROFILES_FILE),
+        ]
+        profiles = {}
 
-            for profile_path in profile_paths:
-                if not os.path.isfile(profile_path):
-                    continue
-                with open(profile_path) as inp:
-                    reader = csv.reader(inp)
+        for profile_path in profile_paths:
+            if not os.path.isfile(profile_path):
+                continue
+            with open(profile_path) as inp:
+                reader = csv.reader(inp)
 
-                    # Skip the header
-                    next(reader, None)
+                # Skip the header
+                next(reader, None)
 
-                    try:
-                        for rec in reader:
-                            profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
-                            profiles[profile] = (color_x, color_y, brightness)
-                    except vol.MultipleInvalid as ex:
-                        _LOGGER.error(
-                            "Error parsing light profile from %s: %s", profile_path, ex
+                try:
+                    for rec in reader:
+                        (
+                            profile,
+                            color_x,
+                            color_y,
+                            brightness,
+                            *transition,
+                        ) = Profiles.SCHEMA(rec)
+
+                        transition = transition[0] if transition else 0
+
+                        profiles[profile] = color_util.color_xy_to_hs(
+                            color_x, color_y
+                        ) + (
+                            brightness,
+                            transition,
                         )
-                        return None
-            return profiles
+                except vol.MultipleInvalid as ex:
+                    _LOGGER.error(
+                        "Error parsing light profile from %s: %s", profile_path, ex
+                    )
+                    continue
+        return profiles
 
-        cls._all = await hass.async_add_job(load_profile_data, hass)
-        return cls._all is not None
+    async def async_initialize(self):
+        """Load and cache profiles."""
+        self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
-    @classmethod
-    def get(cls, name):
-        """Return a named profile."""
-        return cls._all.get(name)
-
-    @classmethod
-    def get_default(cls, entity_id):
+    @callback
+    def apply_default(self, entity_id, params):
         """Return the default turn-on profile for the given light."""
-        # pylint: disable=unsupported-membership-test
         name = f"{entity_id}.default"
-        if name in cls._all:
-            return name
+        if name in self.data:
+            self.apply_profile(name, params)
+            return
+
         name = "group.all_lights.default"
-        if name in cls._all:
-            return name
-        return None
+        if name in self.data:
+            self.apply_profile(name, params)
+
+    @callback
+    def apply_profile(self, name, params):
+        """Apply a profile."""
+        profile = self.data.get(name)
+
+        if profile is None:
+            return
+
+        params.setdefault(ATTR_HS_COLOR, profile[:2])
+        params.setdefault(ATTR_BRIGHTNESS, profile[2])
+        params.setdefault(ATTR_TRANSITION, profile[3])
 
 
 class LightEntity(ToggleEntity):
@@ -421,7 +436,6 @@ class LightEntity(ToggleEntity):
             data[ATTR_COLOR_TEMP] = self.color_temp
 
         if supported_features & SUPPORT_COLOR and self.hs_color:
-            # pylint: disable=unsubscriptable-object,not-an-iterable
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
             data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
@@ -448,5 +462,6 @@ class Light(LightEntity):
         """Print deprecation warning."""
         super().__init_subclass__(**kwargs)
         _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+            "Light is deprecated, modify %s to extend LightEntity",
+            cls.__name__,
         )

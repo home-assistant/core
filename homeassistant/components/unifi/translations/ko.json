@@ -54,7 +54,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c"
+                    "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c",
+                    "allow_uptime_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8\ub97c \uc704\ud55c \uac00\ub3d9 \uc2dc\uac04 \uc13c\uc11c"
                 },
                 "description": "\ud1b5\uacc4 \uc13c\uc11c \uad6c\uc131",
                 "title": "UniFi \uc635\uc158 3/3"

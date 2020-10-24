@@ -1,11 +1,14 @@
 """Test Konnected setup process."""
+from datetime import timedelta
+
 import pytest
 
 from homeassistant.components.konnected import config_flow, panel
 from homeassistant.setup import async_setup_component
+from homeassistant.util import utcnow
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_panel")
@@ -221,9 +224,9 @@ async def test_create_and_setup_pro(hass, mock_panel):
                 "2": "Binary Sensor",
                 "6": "Binary Sensor",
                 "10": "Binary Sensor",
+                "11": "Binary Sensor",
                 "3": "Digital Sensor",
                 "7": "Digital Sensor",
-                "11": "Digital Sensor",
                 "4": "Switchable Output",
                 "8": "Switchable Output",
                 "out1": "Switchable Output",
@@ -233,11 +236,11 @@ async def test_create_and_setup_pro(hass, mock_panel):
                 {"zone": "2", "type": "door"},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door"},
+                {"zone": "11", "type": "window"},
             ],
             "sensors": [
-                {"zone": "3", "type": "dht"},
+                {"zone": "3", "type": "dht", "poll_interval": 5},
                 {"zone": "7", "type": "ds18b20", "name": "temper"},
-                {"zone": "11", "type": "dht", "poll_interval": 5},
             ],
             "switches": [
                 {"zone": "4"},
@@ -291,17 +294,14 @@ async def test_create_and_setup_pro(hass, mock_panel):
     # confirm the settings are sent to the panel
     # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
-        "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}],
+        "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}, {"zone": "11"}],
         "actuators": [
             {"trigger": 1, "zone": "4"},
             {"trigger": 0, "zone": "8"},
             {"trigger": 1, "zone": "out1"},
             {"trigger": 1, "zone": "alarm1"},
         ],
-        "dht_sensors": [
-            {"poll_interval": 3, "zone": "3"},
-            {"poll_interval": 5, "zone": "11"},
-        ],
+        "dht_sensors": [{"poll_interval": 5, "zone": "3"}],
         "ds18b20_sensors": [{"zone": "7"}],
         "auth_token": "11223344556677889900",
         "blink": True,
@@ -312,6 +312,12 @@ async def test_create_and_setup_pro(hass, mock_panel):
     # confirm the device settings are saved in hass.data
     assert device.stored_configuration == {
         "binary_sensors": {
+            "11": {
+                "inverse": False,
+                "name": "Konnected 445566 Zone 11",
+                "state": None,
+                "type": "window",
+            },
             "10": {
                 "inverse": False,
                 "name": "Konnected 445566 Zone 10",
@@ -334,17 +340,11 @@ async def test_create_and_setup_pro(hass, mock_panel):
         "sensors": [
             {
                 "name": "Konnected 445566 Sensor 3",
-                "poll_interval": 3,
+                "poll_interval": 5,
                 "type": "dht",
                 "zone": "3",
             },
             {"name": "temper", "poll_interval": 3, "type": "ds18b20", "zone": "7"},
-            {
-                "name": "Konnected 445566 Sensor 11",
-                "poll_interval": 5,
-                "type": "dht",
-                "zone": "11",
-            },
         ],
         "switches": [
             {
@@ -551,3 +551,118 @@ async def test_default_options(hass, mock_panel):
             },
         ],
     }
+
+
+async def test_connect_retry(hass, mock_panel):
+    """Test that we create a Konnected Panel and save the data."""
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
+        {
+            "host": "1.2.3.4",
+            "port": 1234,
+            "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "11223344556677889900",
+            "default_options": config_flow.OPTIONS_SCHEMA(
+                {
+                    "io": {
+                        "1": "Binary Sensor",
+                        "2": "Binary Sensor",
+                        "3": "Binary Sensor",
+                        "4": "Digital Sensor",
+                        "5": "Digital Sensor",
+                        "6": "Switchable Output",
+                        "out": "Switchable Output",
+                    },
+                    "binary_sensors": [
+                        {"zone": "1", "type": "door"},
+                        {
+                            "zone": "2",
+                            "type": "window",
+                            "name": "winder",
+                            "inverse": True,
+                        },
+                        {"zone": "3", "type": "door"},
+                    ],
+                    "sensors": [
+                        {"zone": "4", "type": "dht"},
+                        {"zone": "5", "type": "ds18b20", "name": "temper"},
+                    ],
+                    "switches": [
+                        {
+                            "zone": "out",
+                            "name": "switcher",
+                            "activation": "low",
+                            "momentary": 50,
+                            "pause": 100,
+                            "repeat": 4,
+                        },
+                        {"zone": "6"},
+                    ],
+                }
+            ),
+        }
+    )
+
+    entry = MockConfigEntry(
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data=device_config,
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    # fail first 2 attempts, and succeed the third
+    mock_panel.get_status.side_effect = [
+        mock_panel.ClientError,
+        mock_panel.ClientError,
+        {
+            "hwVersion": "2.3.0",
+            "swVersion": "2.3.1",
+            "heap": 10000,
+            "uptime": 12222,
+            "ip": "192.168.1.90",
+            "port": 9123,
+            "sensors": [],
+            "actuators": [],
+            "dht_sensors": [],
+            "ds18b20_sensors": [],
+            "mac": "11:22:33:44:55:66",
+            "model": "Konnected Pro",
+            "settings": {},
+        },
+    ]
+
+    # setup the integration and inspect panel behavior
+    assert (
+        await async_setup_component(
+            hass,
+            panel.DOMAIN,
+            {
+                panel.DOMAIN: {
+                    panel.CONF_ACCESS_TOKEN: "arandomstringvalue",
+                    panel.CONF_API_HOST: "http://192.168.1.1:8123",
+                }
+            },
+        )
+        is True
+    )
+
+    # confirm switch is unavailable after initial attempt
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.konnected_445566_actuator_6").state == "unavailable"
+
+    # confirm switch is unavailable after second attempt
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+    await hass.helpers.entity_component.async_update_entity(
+        "switch.konnected_445566_actuator_6"
+    )
+    assert hass.states.get("switch.konnected_445566_actuator_6").state == "unavailable"
+
+    # confirm switch is available after third attempt
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=21))
+    await hass.async_block_till_done()
+    await hass.helpers.entity_component.async_update_entity(
+        "switch.konnected_445566_actuator_6"
+    )
+    assert hass.states.get("switch.konnected_445566_actuator_6").state == "off"

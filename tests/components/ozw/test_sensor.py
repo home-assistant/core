@@ -74,3 +74,24 @@ async def test_sensor_enabled(hass, generic_data, sensor_msg):
     assert state is not None
     assert state.state == "0"
     assert state.attributes["label"] == "Clear"
+
+
+async def test_string_sensor(hass, string_sensor_data):
+    """Test so the returned type is a string sensor."""
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "1-49-73464969749610519",
+        suggested_object_id="id_150_z_wave_module_user_code",
+        disabled_by=None,
+    )
+
+    await setup_ozw(hass, fixture=string_sensor_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "asdfgh"

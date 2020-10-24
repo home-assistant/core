@@ -1,14 +1,10 @@
 """Support for Aqualink pool feature switches."""
-import logging
-
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity, refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

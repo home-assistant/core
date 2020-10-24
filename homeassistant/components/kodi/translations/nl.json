@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "host": {
+                "data": {
+                    "port": "Poort"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort",
+                    "ssl": "Maak verbinding via SSL"
+                }
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Poort"
+                }
+            }
+        }
+    }
+}

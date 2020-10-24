@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_ICON,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -21,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -28,7 +30,8 @@ from . import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
+    DOMAIN,
+    PLATFORMS,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -66,7 +69,8 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT sensors through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -78,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
+                hass, config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
@@ -90,10 +94,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config: ConfigType, async_add_entities, config_entry=None, discovery_data=None
+    hass, config: ConfigType, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(config, config_entry, discovery_data)])
+    async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
 class MqttSensor(
@@ -101,9 +105,9 @@ class MqttSensor(
 ):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the sensor."""
-        self._config = config
+        self.hass = hass
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = None
         self._sub_state = None
@@ -114,6 +118,10 @@ class MqttSensor(
             self._expired = True
         else:
             self._expired = None
+
+        # Load config
+        self._setup_from_config(config)
+
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)
@@ -129,18 +137,22 @@ class MqttSensor(
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
+        self._setup_from_config(config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
 
-    async def _subscribe_topics(self):
-        """(Re)Subscribe to topics."""
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+        self._config = config
         template = self._config.get(CONF_VALUE_TEMPLATE)
         if template is not None:
             template.hass = self.hass
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -165,6 +177,7 @@ class MqttSensor(
                     self.hass, self._value_is_expired, expiration_at
                 )
 
+            template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
                     payload, self._state

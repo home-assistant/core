@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "C\u00f3digo postal j\u00e1 registado",
             "invalid_zip_code": "C\u00f3digo postal inv\u00e1lido"
         },
         "step": {

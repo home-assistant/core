@@ -2,6 +2,7 @@
 DOMAIN = "blink"
 DEVICE_ID = "Home Assistant"
 
+CONF_MIGRATE = "migrate"
 CONF_CAMERA = "camera"
 CONF_ALARM_CONTROL_PANEL = "alarm_control_panel"
 
