@@ -237,7 +237,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             else:
                 packet = next(container_packets)
             if packet.dts is None:
-                # Allow MAX_MISSING_DTS consective packets without dts before terminating the stream.
+                # Allow MAX_MISSING_DTS consecutive packets without dts before terminating the stream.
                 if missing_dts >= MAX_MISSING_DTS:
                     raise StopIteration(
                         f"No dts in {MAX_MISSING_DTS} consecutive packets"
