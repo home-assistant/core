@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ SERVICE_UNSET = "unset"
 SERVICE_RESET = "reset"
 SERVICE_RECONFIG = "reconfig"
 
-MIDNIGHT = datetime.time.fromisoformat("00:00:00")
+MIDNIGHT = datetime.time()
 
 
 class StateType(enum.Enum):
@@ -229,7 +230,7 @@ class InputTimeTable(RestoreEntity):
         """Return the state based on the timetable events."""
         if not self._timetable:
             return STATE_OFF
-        now = datetime.datetime.now().time()
+        now = dt_util.now().time()
         prev = StateEvent(MIDNIGHT, self._timetable[-1].state)
         for event in self._timetable:
             if prev.time <= now < event.time:
@@ -329,7 +330,7 @@ class InputTimeTable(RestoreEntity):
         if not self._timetable or len(self._timetable) == 1:
             return
 
-        now = datetime.datetime.now()
+        now = dt_util.now()
         time = now.time()
         today = now.date()
         prev = MIDNIGHT
