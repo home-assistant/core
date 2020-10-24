@@ -162,7 +162,6 @@ async def test_user_existing_id_abort(hass):
     result = await _init_flow(hass)
 
     await _create_mock_entry(hass)
-
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
@@ -229,7 +228,6 @@ async def test_user_noauth_flow_success(hass):
     client = create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        result = await _configure_flow(hass, result)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
@@ -252,42 +250,32 @@ async def test_user_auth_required(hass):
     assert result["step_id"] == "auth"
 
 
-async def test_auth_static_token(hass):
-    """Verify correct behaviour with a static token."""
+async def test_auth_static_token_auth_required_fail(hass):
+    """Verify correct behaviour with a failed auth required call."""
     result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.async_is_auth_required = CoroutineMock(return_value=None)
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "auth_required_error"
+
+
+async def test_auth_static_token_success(hass):
+    """Test a successful flow with a static token."""
+    result = await _init_flow(hass)
+    assert result["step_id"] == "user"
 
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-
-    def get_client_check_token(*args, **kwargs):
-        assert kwargs[CONF_TOKEN] == TEST_TOKEN
-        return client
-
-    # First, fail the auth connection (should return be to the auth window)
-    client.async_client_connect = CoroutineMock(return_value=False)
-    with patch("hyperion.client.HyperionClient", side_effect=get_client_check_token):
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"]["base"] == "auth_error"
-
-    # Now succeed, should create an entry.
-    client.async_client_connect = CoroutineMock(return_value=True)
-    with patch("hyperion.client.HyperionClient", side_effect=get_client_check_token):
-        result = await _configure_flow(
-            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
-        )
-
-    # Accept the confirmation.
-    with patch("hyperion.client.HyperionClient", return_value=client):
-        result = await _configure_flow(hass, result)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["handler"] == DOMAIN
@@ -407,8 +395,6 @@ async def test_auth_create_token_success(hass):
         assert result["step_id"] == "create_token_external"
 
         # The flow will be automatically advanced by the auth token response.
-
-        result = await _configure_flow(hass, result)
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["handler"] == DOMAIN
