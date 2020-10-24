@@ -38,11 +38,12 @@ class TasmotaEntity(Entity):
         await self._tasmota_entity.unsubscribe_topics()
         await super().async_will_remove_from_hass()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
         self._tasmota_entity.config_update(update)
         await self._subscribe_topics()
-        self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
