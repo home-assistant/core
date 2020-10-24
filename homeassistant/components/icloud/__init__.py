@@ -187,7 +187,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         icloud_account = hass.data[DOMAIN].get(account_identifier)
         if icloud_account is None:
             for account in hass.data[DOMAIN].values():
-                if account.name == account_identifier:
+                if account.username == account_identifier:
                     icloud_account = account
 
         if icloud_account is None:
