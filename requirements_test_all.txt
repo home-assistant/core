@@ -1047,6 +1047,9 @@ twentemilieu==0.3.0
 # homeassistant.components.twilio
 twilio==6.32.0
 
+# homeassistant.components.ultrasync
+ultrasync==0.8.0
+
 # homeassistant.components.upb
 upb_lib==0.4.11
 
