@@ -1,0 +1,32 @@
+{
+  "config": {
+    "flow_title": "UltraSync Hub: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to UltraSync Hub",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "id": "[%key:common::config_flow::data::id%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Update frequency (seconds)"
+        }
+      }
+    }
+  }
+}

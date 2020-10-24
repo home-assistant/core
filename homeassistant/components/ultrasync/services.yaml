@@ -1,0 +1,10 @@
+# Describes the format for available ultrasync services
+
+away:
+  description: Set Alarm to Away
+
+stay:
+  description: Set the Alarm to Stay
+
+disarm:
+  description: Disarm the Alarm
