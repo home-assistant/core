@@ -2,6 +2,7 @@ import pytest
 
 from homeassistant.components import history
 from homeassistant.setup import setup_component
+
 from tests.components.recorder.conftest import hass_recorder
 
 
