@@ -100,11 +100,6 @@ class SensorBase(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-
-        async def subscribe_callback():
-            """Update sensor state."""
-            self.async_write_ha_state()
-
         # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
         # here to re-fresh the signals from _device.  Unregister this callback
         # when the entity is removed.
@@ -112,7 +107,7 @@ class SensorBase(Entity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_NEST_UPDATE,
-                subscribe_callback,
+                self.async_write_ha_state,
             )
         )
 
