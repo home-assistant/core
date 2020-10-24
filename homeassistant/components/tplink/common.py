@@ -23,6 +23,8 @@ CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
 
+UNAVAILABLE_RETRY_DELAY = 60
+
 
 class SmartDevices:
     """Hold different kinds of devices."""
@@ -127,3 +129,22 @@ def get_static_devices(config_data) -> SmartDevices:
                     "Failed to setup device %s due to %s; not retrying", host, sde
                 )
     return SmartDevices(lights, switches)
+
+
+def get_devices_sysinfo(devices, device_class):
+    """Get sysinfo for all devices."""
+    entities_ready = []
+    entities_unavailable = []
+    for device in devices:
+        try:
+            device.get_sysinfo()
+            entities_ready.append(device_class(device))
+        except SmartDeviceException as ex:
+            entities_unavailable.append(device)
+            _LOGGER.warning(
+                "Unable to communicate with device %s: %s",
+                device.host,
+                ex,
+            )
+
+    return entities_ready, entities_unavailable

@@ -10,11 +10,12 @@ from homeassistant.components.switch import (
     ATTR_TODAY_ENERGY_KWH,
     SwitchEntity,
 )
-from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.const import ATTR_VOLTAGE, EVENT_HOMEASSISTANT_STARTED
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
+from .common import UNAVAILABLE_RETRY_DELAY, get_devices_sysinfo
 
 PARALLEL_UPDATES = 0
 
@@ -30,27 +31,31 @@ SLEEP_TIME = 2
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     devices = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    entities = []
+    entities_ready = []
+    entities_unavailable = []
 
-    await hass.async_add_executor_job(get_devices_sysinfo, devices)
-    for device in devices:
-        entities.append(SmartPlugSwitch(device))
+    entities_ready, entities_unavailable = await hass.async_add_executor_job(
+        get_devices_sysinfo, devices, SmartPlugSwitch
+    )
+    async_add_entities(entities_ready, update_before_add=True)
 
-    async_add_entities(entities, update_before_add=True)
-
-
-def get_devices_sysinfo(devices):
-    """Get sysinfo for all devices."""
-    for device in devices:
-        try:
-            device.get_sysinfo()
-        except SmartDeviceException as ex:
-            _LOGGER.warning(
-                "Unable to communicate with device %s due to: %s",
-                device.host,
-                ex,
+    async def async_retry_setup_entry(_):
+        entities_unavailable = hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"]
+        entities_ready, entities_unavailable = await hass.async_add_executor_job(
+            get_devices_sysinfo, entities_unavailable, SmartPlugSwitch
+        )
+        if entities_ready:
+            async_add_entities(entities_ready, update_before_add=True)
+        if entities_unavailable:
+            hass.helpers.event.async_call_later(
+                UNAVAILABLE_RETRY_DELAY, async_retry_setup_entry
             )
-            devices.remove(device)
+
+    if entities_unavailable:
+        hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"] = entities_unavailable
+
+        _LOGGER.warning("Scheduling a retry for unavailable devices")
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_retry_setup_entry)
 
 
 class SmartPlugSwitch(SwitchEntity):
