@@ -325,11 +325,9 @@ def websocket_handle_reorder(hass, connection, msg):
         connection.send_result(msg_id)
     except KeyError:
         connection.send_error(
-            msg_id, websocket_api.ERR_NOT_FOUND, "One or more item id(s) not found."
+            msg_id,
+            websocket_api.const.ERR_NOT_FOUND,
+            "One or more item id(s) not found.",
         )
     except vol.Invalid as err:
-        connection.send_message(
-            websocket_api.error_message(
-                msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}"
-            )
-        )
+        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
