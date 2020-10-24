@@ -2,6 +2,8 @@
 import copy
 import json
 
+from hatasmota.const import CONF_MAC
+
 from homeassistant.components import light
 from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
@@ -714,6 +716,38 @@ async def test_unlinked_light2(hass, mqtt_mock, setup_tasmota):
     config["lt_st"] = 5  # 5 channel light (RGBCW)
 
     await _test_unlinked_light(hass, mqtt_mock, config, 2)
+
+
+async def test_discovery_update_reconfigure_light(
+    hass, mqtt_mock, caplog, setup_tasmota
+):
+    """Test reconfigure of discovered light."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 2
+    config["lt_st"] = 1  # 1 channel light (Dimmer)
+    config2 = copy.deepcopy(DEFAULT_CONFIG)
+    config2["rl"][0] = 2
+    config2["lt_st"] = 3  # 3 channel light (RGB)
+    data1 = json.dumps(config)
+    data2 = json.dumps(config2)
+
+    # Simple dimmer
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data1)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test")
+    assert (
+        state.attributes.get("supported_features")
+        == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    )
+
+    # Reconfigure as RGB light
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", data2)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test")
+    assert (
+        state.attributes.get("supported_features")
+        == SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT | SUPPORT_TRANSITION
+    )
 
 
 async def test_availability_when_connection_lost(
