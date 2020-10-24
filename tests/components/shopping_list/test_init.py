@@ -1,6 +1,10 @@
 """Test shopping list component."""
 
-from homeassistant.components.websocket_api.const import ERR_INVALID_FORMAT, TYPE_RESULT
+from homeassistant.components.websocket_api.const import (
+    ERR_INVALID_FORMAT,
+    ERR_NOT_FOUND,
+    TYPE_RESULT,
+)
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.helpers import intent
 
@@ -420,7 +424,7 @@ async def test_ws_reorder_items_failure(hass, hass_ws_client, sl_setup):
     )
     msg = await client.receive_json()
     assert msg["success"] is False
-    assert msg["error"]["code"] == "item_not_found"
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
     # Testing not sending all unchecked item ids.
     await client.send_json(
