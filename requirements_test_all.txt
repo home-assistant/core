@@ -278,7 +278,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.4
+elkm1-lib==0.8.5
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
