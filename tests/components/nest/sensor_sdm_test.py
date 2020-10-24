@@ -106,7 +106,7 @@ async def setup_sensor(hass, devices={}, structures={}):
         "homeassistant.components.nest.GoogleNestSubscriber", return_value=subscriber
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     return subscriber
 
 
