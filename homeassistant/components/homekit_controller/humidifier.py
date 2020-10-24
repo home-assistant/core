@@ -208,17 +208,146 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
         return self.service[self._char_threshold_for_current_mode()].maxValue
 
 
+class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
+    """Representation of a HomeKit Controller Humidifier."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        return [
+            CharacteristicsTypes.ACTIVE,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
+            CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
+            CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
+            CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
+        ]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the device."""
+        return DEVICE_CLASS_HUMIDIFIER
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.service.value(CharacteristicsTypes.ACTIVE)
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the specified valve on."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the specified valve off."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+
+    @property
+    def capability_attributes(self) -> Dict[str, Any]:
+        """Return capability attributes."""
+        data = {
+            ATTR_MIN_HUMIDITY: self.min_humidity,
+            ATTR_MAX_HUMIDITY: self.max_humidity,
+            ATTR_AVAILABLE_MODES: self.available_modes,
+        }
+
+        return data
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes."""
+        data = {
+            ATTR_HUMIDITY: self.service.value(
+                CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
+            )
+            * 20,
+        }
+
+        return data
+
+    @property
+    def available_modes(self) -> Optional[List[str]]:
+        """Return a list of available modes.
+
+        Requires SUPPORT_MODES.
+        """
+        return []
+
+    @property
+    def target_humidity(self) -> Optional[int]:
+        """Return the humidity we try to reach."""
+        return (
+            self.service.value(
+                CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
+            )
+            * 20
+        )
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        if humidity < 20:
+            await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+        else:
+            await self.async_put_characteristics(
+                {
+                    CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: humidity
+                    / 20
+                }
+            )
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return 0
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return 100
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit humidifer."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def get_accessory(conn, aid):
+        for acc in conn.accessories:
+            if acc.get("aid") == aid:
+                return acc
+        return None
+
+    def get_service(acc, iid):
+        for serv in acc.get("services"):
+            if serv.get("iid") == iid:
+                return serv
+        return None
+
+    def get_char(serv, iid):
+        for char in serv.get("characteristics"):
+            if char.get("type") == iid:
+                return char
+        return None
 
     @callback
     def async_add_service(aid, service):
         if service["stype"] != "humidifier-dehumidifier":
             return False
         info = {"aid": aid, "iid": service["iid"]}
-        async_add_entities([HomeKitHumidifierDehumidifier(conn, info)], True)
+
+        acc = get_accessory(conn, aid)
+        serv = get_service(acc, service["iid"])
+        char = get_char(
+            serv, CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
+        )
+
+        if char is not None:
+            async_add_entities([HomeKitDiffuser(conn, info)], True)
+        else:
+            async_add_entities([HomeKitHumidifierDehumidifier(conn, info)], True)
+
         return True
 
     conn.add_listener(async_add_service)
