@@ -86,6 +86,8 @@ def _stream_worker_internal(hass, stream, quit_event):
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
+    # Iterator for demuxing
+    container_packets = None
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
     first_pts = {}
@@ -107,7 +109,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
 
     def peek_first_pts():
-        nonlocal first_pts, audio_stream
+        nonlocal first_pts, audio_stream, container_packets
         missing_dts = 0
 
         def empty_stream_dict():
@@ -117,11 +119,12 @@ def _stream_worker_internal(hass, stream, quit_event):
             }
 
         try:
+            container_packets = container.demux((video_stream, audio_stream))
             first_packet = empty_stream_dict()
             first_pts = empty_stream_dict()
             # Get to first video keyframe
             while first_packet[video_stream] is None:
-                packet = next(container.demux())
+                packet = next(container_packets)
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
@@ -138,7 +141,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             while any(
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
-                packet = next(container.demux((video_stream, audio_stream)))
+                packet = next(container_packets)
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
@@ -232,7 +235,7 @@ def _stream_worker_internal(hass, stream, quit_event):
             if len(initial_packets) > 0:
                 packet = initial_packets.popleft()
             else:
-                packet = next(container.demux((video_stream, audio_stream)))
+                packet = next(container_packets)
             if packet.dts is None:
                 _LOGGER.error("Stream packet without dts detected, skipping...")
                 # Allow a single packet without dts before terminating the stream.
