@@ -4,14 +4,14 @@ import pytest
 
 from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 from tests.common import mock_registry
 
 MOCK_CONFIG = {
-    "sensor": {
+    SENSOR_DOMAIN: {
         "platform": DOMAIN,
         "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
         "names": {
@@ -30,6 +30,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": 25.123,
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -43,6 +44,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": FileNotFoundError,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -55,6 +57,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": InvalidCRCException,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -66,6 +69,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": 29.993,
                 "result": "30.0",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -77,6 +81,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": UnsupportResponseException,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -120,5 +125,6 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_sensor["unique_id"]
         assert registry_entry.unit_of_measurement == expected_sensor["unit"]
+        assert registry_entry.device_class == expected_sensor["class"]
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
