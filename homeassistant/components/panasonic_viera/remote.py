@@ -46,7 +46,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         """Return the unique ID of the device."""
         if self._device_info is None:
             return None
-        return self._device_info.get(ATTR_UDN)
+        return self._device_info[ATTR_UDN]
 
     @property
     def device_info(self):

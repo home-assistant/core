@@ -71,7 +71,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         self._device_info = device_info
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return the unique ID of the device."""
         if self._device_info is None:
             return None
