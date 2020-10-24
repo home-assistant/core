@@ -37,7 +37,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 host=user_input[CONF_HOST],
                 port=user_input[CONF_PORT],
                 passkey=user_input.get(CONF_PASSKEY),
-                username=user_input.get[CONF_USERNAME],
+                username=user_input.get(CONF_USERNAME),
                 password=user_input.get(CONF_PASSWORD),
             )
         except BSBLanError:
