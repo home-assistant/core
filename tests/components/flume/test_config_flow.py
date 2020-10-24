@@ -51,6 +51,7 @@ async def test_form(hass):
                 CONF_CLIENT_SECRET: "client_secret",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
@@ -60,7 +61,6 @@ async def test_form(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -92,6 +92,7 @@ async def test_form_import(hass):
                 CONF_CLIENT_SECRET: "client_secret",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
@@ -101,7 +102,6 @@ async def test_form_import(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
