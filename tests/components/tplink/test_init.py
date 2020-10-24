@@ -239,6 +239,7 @@ async def test_async_setup_entry_default(hass, caplog):
 
     await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
     assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+    assert "Unable to communicate with device 123.123.123.123: Communication error"
     assert "Scheduling a retry for unavailable devices" in caplog.text
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
