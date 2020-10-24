@@ -236,9 +236,9 @@ async def async_extract_entity_ids(
         )
 
         extracted.update(
-            entity.entity_id
+            entry.entity_id
             for area_id in area_ids
-            for entity in hass.helpers.entity_registry.async_entries_for_area(
+            for entry in hass.helpers.entity_registry.async_entries_for_area(
                 ent_reg, area_id
             )
         )
@@ -251,12 +251,12 @@ async def async_extract_entity_ids(
             )
         ]
         extracted.update(
-            entity.entity_id
+            entry.entity_id
             for device in devices
-            for entity in hass.helpers.entity_registry.async_entries_for_device(
+            for entry in hass.helpers.entity_registry.async_entries_for_device(
                 ent_reg, device.id
             )
-            if not entity.area_id
+            if not entry.area_id
         )
 
     return extracted
