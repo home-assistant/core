@@ -7,13 +7,19 @@ from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_BLUEPRINT, CONF_INPUT
+from .const import CONF_BLUEPRINT, CONF_INPUT, CONF_USE_BLUEPRINT
 
 
 @callback
 def is_blueprint_config(config: Any) -> bool:
     """Return if it is a blueprint config."""
     return isinstance(config, dict) and CONF_BLUEPRINT in config
+
+
+@callback
+def is_blueprint_instance_config(config: Any) -> bool:
+    """Return if it is a blueprint instance config."""
+    return isinstance(config, dict) and CONF_USE_BLUEPRINT in config
 
 
 BLUEPRINT_SCHEMA = vol.Schema(
@@ -40,7 +46,7 @@ def validate_yaml_suffix(value):
 
 BLUEPRINT_INSTANCE_FIELDS = vol.Schema(
     {
-        vol.Required(CONF_BLUEPRINT): vol.Schema(
+        vol.Required(CONF_USE_BLUEPRINT): vol.Schema(
             {
                 vol.Required(CONF_PATH): vol.All(cv.path, validate_yaml_suffix),
                 vol.Required(CONF_INPUT): {str: cv.match_all},

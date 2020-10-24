@@ -10,7 +10,7 @@ from .errors import (  # noqa
     MissingPlaceholder,
 )
 from .models import Blueprint, BlueprintInputs, DomainBlueprints  # noqa
-from .schemas import is_blueprint_config  # noqa
+from .schemas import is_blueprint_instance_config  # noqa
 
 
 async def async_setup(hass, config):

@@ -1241,7 +1241,7 @@ async def test_blueprint_automation(hass, calls):
         "automation",
         {
             "automation": {
-                "blueprint": {
+                "use_blueprint": {
                     "path": "test_event_service.yaml",
                     "input": {
                         "trigger_event": "blueprint_event",

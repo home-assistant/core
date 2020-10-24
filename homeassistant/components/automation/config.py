@@ -30,7 +30,7 @@ from . import (
 
 async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
-    if blueprint.is_blueprint_config(config):
+    if blueprint.is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
         return await blueprints.async_inputs_from_config(config)
 

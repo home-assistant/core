@@ -13,7 +13,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import placeholder
 from homeassistant.util import yaml
 
-from .const import BLUEPRINT_FOLDER, CONF_BLUEPRINT, CONF_INPUT, CONF_SOURCE_URL, DOMAIN
+from .const import (
+    BLUEPRINT_FOLDER,
+    CONF_BLUEPRINT,
+    CONF_INPUT,
+    CONF_SOURCE_URL,
+    CONF_USE_BLUEPRINT,
+    DOMAIN,
+)
 from .errors import (
     BlueprintException,
     FailedToLoad,
@@ -93,7 +100,7 @@ class BlueprintInputs:
     @property
     def inputs(self):
         """Return the inputs."""
-        return self.config_with_inputs[CONF_BLUEPRINT][CONF_INPUT]
+        return self.config_with_inputs[CONF_USE_BLUEPRINT][CONF_INPUT]
 
     def validate(self) -> None:
         """Validate the inputs."""
@@ -111,6 +118,9 @@ class BlueprintInputs:
         """Get the blueprint value with the inputs substituted."""
         processed = placeholder.substitute(self.blueprint.data, self.inputs)
         combined = {**self.config_with_inputs, **processed}
+        # From config_with_inputs
+        combined.pop(CONF_USE_BLUEPRINT)
+        # From blueprint
         combined.pop(CONF_BLUEPRINT)
         return combined
 
@@ -213,7 +223,7 @@ class DomainBlueprints:
                 self.domain, humanize_error(config_with_blueprint, err)
             )
 
-        bp_conf = config_with_blueprint[CONF_BLUEPRINT]
+        bp_conf = config_with_blueprint[CONF_USE_BLUEPRINT]
         blueprint = await self.async_get_blueprint(bp_conf[CONF_PATH])
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
