@@ -1,0 +1,29 @@
+{
+    "config": {
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Ger\u00e4te"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "ip_address": "IP-Addresse"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "save_on_change": "Status bei \u00c4nderung speichern",
+                    "transition": "\u00dcbergangszeit (ms)",
+                    "use_music_mode": "Musik-Modus aktivieren"
+                }
+            }
+        }
+    },
+    "title": "Yeelight"
+}

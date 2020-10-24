@@ -24,10 +24,10 @@ import homeassistant.helpers.template as template
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ATTACHMENTS = "attachments"
 ATTR_BLOCKS = "blocks"
 ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
+ATTR_ICON = "icon"
 ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"
@@ -53,7 +53,8 @@ DATA_FILE_SCHEMA = vol.Schema(
 
 DATA_TEXT_ONLY_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_ATTACHMENTS): list,
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_ICON): cv.string,
         vol.Optional(ATTR_BLOCKS): list,
         vol.Optional(ATTR_BLOCKS_TEMPLATE): list,
     }
@@ -197,19 +198,27 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Error while uploading file message: %s", err)
 
     async def _async_send_text_only_message(
-        self, targets, message, title, attachments, blocks
+        self, targets, message, title, blocks, username, icon
     ):
         """Send a text-only message."""
+        message_dict = {
+            "blocks": blocks,
+            "link_names": True,
+            "text": message,
+            "username": username,
+        }
+
+        icon = icon or self._icon
+        if icon:
+            if icon.lower().startswith(("http://", "https://")):
+                icon_type = "url"
+            else:
+                icon_type = "emoji"
+
+            message_dict[f"icon_{icon_type}"] = icon
+
         tasks = {
-            target: self._client.chat_postMessage(
-                channel=target,
-                text=message,
-                attachments=attachments,
-                blocks=blocks,
-                icon_emoji=self._icon,
-                link_names=True,
-                username=self._username,
-            )
+            target: self._client.chat_postMessage(**message_dict, channel=target)
             for target in targets
         }
 
@@ -224,7 +233,10 @@ class SlackNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message to Slack."""
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA)
+
+        if data is None:
+            data = {}
 
         try:
             DATA_SCHEMA(data)
@@ -239,15 +251,6 @@ class SlackNotificationService(BaseNotificationService):
 
         # Message Type 1: A text-only message
         if ATTR_FILE not in data:
-            attachments = data.get(ATTR_ATTACHMENTS, {})
-            if attachments:
-                _LOGGER.warning(
-                    "Attachments are deprecated and part of Slack's legacy API; "
-                    "support for them will be dropped in 0.114.0. In most cases, "
-                    "Blocks should be used instead: "
-                    "https://www.home-assistant.io/integrations/slack/"
-                )
-
             if ATTR_BLOCKS_TEMPLATE in data:
                 blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
             elif ATTR_BLOCKS in data:
@@ -256,7 +259,12 @@ class SlackNotificationService(BaseNotificationService):
                 blocks = {}
 
             return await self._async_send_text_only_message(
-                targets, message, title, attachments, blocks
+                targets,
+                message,
+                title,
+                blocks,
+                username=data.get(ATTR_USERNAME, self._username),
+                icon=data.get(ATTR_ICON, self._icon),
             )
 
         # Message Type 2: A message that uploads a remote file

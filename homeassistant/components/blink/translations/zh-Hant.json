@@ -4,6 +4,8 @@
             "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_access_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
@@ -12,7 +14,7 @@
                 "data": {
                     "2fa": "\u96d9\u91cd\u9a57\u8b49\u78bc"
                 },
-                "description": "\u8f38\u5165\u90f5\u4ef6\u6240\u6536\u5230 PIN \u78bc\uff0c\u5047\u5982\u90f5\u4ef6\u4e2d\u6c92\u6709 PIN \u78bc\uff0c\u8acb\u4fdd\u7559\u7a7a\u767d",
+                "description": "\u8f38\u5165\u90f5\u4ef6\u6240\u6536\u5230 PIN \u78bc",
                 "title": "\u96d9\u91cd\u9a57\u8b49"
             },
             "user": {

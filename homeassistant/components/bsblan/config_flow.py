@@ -39,7 +39,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 passkey=user_input.get(CONF_PASSKEY),
             )
         except BSBLanError:
-            return self._show_setup_form({"base": "connection_error"})
+            return self._show_setup_form({"base": "cannot_connect"})
 
         # Check if already configured
         await self.async_set_unique_id(info.device_identification)
@@ -75,7 +75,5 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get device information from an BSBLan device."""
         session = async_get_clientsession(self.hass)
         _LOGGER.debug("request bsblan.info:")
-        bsblan = BSBLan(
-            host, passkey=passkey, port=port, session=session, loop=self.hass.loop
-        )
+        bsblan = BSBLan(host, passkey=passkey, port=port, session=session)
         return await bsblan.info()

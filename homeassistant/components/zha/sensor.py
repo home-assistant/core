@@ -1,6 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 import numbers
 
 from homeassistant.components.sensor import (
@@ -14,10 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -25,6 +26,7 @@ from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -42,7 +44,6 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
-_LOGGER = logging.getLogger(__name__)
 
 BATTERY_SIZES = {
     0: "No battery",
@@ -98,10 +99,10 @@ class Sensor(ZhaEntity):
         await super().async_added_to_hass()
         self._device_state_attributes.update(await self.async_state_attr_provider())
 
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
-        await self.async_accept_signal(
+        self.async_accept_signal(
             self._channel, SIGNAL_STATE_ATTR, self.async_update_state_attribute
         )
 
@@ -137,7 +138,6 @@ class Sensor(ZhaEntity):
         """Restore previous state."""
         self._state = last_state.state
 
-    @callback
     async def async_state_attr_provider(self):
         """Initialize device state attributes."""
         return {}
@@ -151,13 +151,20 @@ class Sensor(ZhaEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+class AnalogInput(Sensor):
+    """Sensor that displays analog input values."""
+
+    SENSOR_ATTR = "present_value"
+
+
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -210,6 +217,12 @@ class ElectricalMeasurement(Sensor):
             return round(value, self._decimals)
         return round(value)
 
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await super().async_update()
+
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
 @STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
@@ -219,7 +232,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = UNIT_PERCENTAGE
+    _unit = PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
@@ -228,7 +241,7 @@ class Illuminance(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_ILLUMINANCE
-    _unit = "lx"
+    _unit = LIGHT_LUX
 
     @staticmethod
     def formatter(value):
@@ -260,7 +273,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _unit = "hPa"
+    _unit = PRESSURE_HPA
 
 
 @STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)

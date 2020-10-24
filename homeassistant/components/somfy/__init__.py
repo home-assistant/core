@@ -28,7 +28,7 @@ DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 CONF_OPTIMISTIC = "optimistic"
@@ -82,11 +82,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, "auth_implementation": DOMAIN}
         )
 
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
     )
 
     hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
+    hass.data[DOMAIN][DEVICES] = []
 
     await update_all_devices(hass)
 

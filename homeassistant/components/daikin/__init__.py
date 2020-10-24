@@ -9,7 +9,7 @@ from pydaikin.daikin_base import Appliance
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_HOSTS, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa: F401
-from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
-        conf.get(CONF_KEY),
+        conf.get(CONF_API_KEY),
         conf.get(CONF_UUID),
         conf.get(CONF_PASSWORD),
     )
@@ -114,12 +114,12 @@ async def daikin_api_setup(hass, host, key, uuid, password):
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
-        raise ConfigEntryNotReady
-    except ClientConnectionError:
+        raise ConfigEntryNotReady from err
+    except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Unexpected error creating device %s", host)
         return None

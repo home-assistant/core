@@ -2,7 +2,7 @@
   "title": "Avri",
   "config": {
     "abort": {
-      "already_configured": "This address is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
       "invalid_house_number": "Invalid house number.",

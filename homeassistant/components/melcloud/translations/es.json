@@ -11,8 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Contrase\u00f1a de MELCloud.",
-                    "username": "Correo electr\u00f3nico utilizado para iniciar sesi\u00f3n en MELCloud."
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico"
                 },
                 "description": "Con\u00e9ctate usando tu cuenta de MELCloud.",
                 "title": "Con\u00e9ctese a MELCloud"

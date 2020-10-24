@@ -20,7 +20,6 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "url": "URL",
                     "username": "Nombre de usuario"
                 },
                 "description": "Ingrese los detalles de acceso del dispositivo. Especificar nombre de usuario y contrase\u00f1a es opcional, pero habilita el soporte para m\u00e1s funciones de integraci\u00f3n. Por otro lado, el uso de una conexi\u00f3n autorizada puede causar problemas para acceder a la interfaz web del dispositivo desde fuera de Home Assistant mientras la integraci\u00f3n est\u00e1 activa y viceversa.",

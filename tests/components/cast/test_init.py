@@ -13,7 +13,9 @@ async def test_creating_entry_sets_up_media_player(hass):
         "homeassistant.components.cast.media_player.async_setup_entry",
         return_value=True,
     ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=True
+        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
+    ), patch(
+        "pychromecast.discovery.stop_discovery"
     ):
         result = await hass.config_entries.flow.async_init(
             cast.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -34,9 +36,7 @@ async def test_configuring_cast_creates_entry(hass):
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=True
-    ):
+    ) as mock_setup:
         await async_setup_component(
             hass, cast.DOMAIN, {"cast": {"some_config": "to_trigger_import"}}
         )
@@ -49,9 +49,7 @@ async def test_not_configuring_cast_not_creates_entry(hass):
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True
-    ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=True
-    ):
+    ) as mock_setup:
         await async_setup_component(hass, cast.DOMAIN, {})
         await hass.async_block_till_done()
 

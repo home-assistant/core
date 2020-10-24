@@ -1,8 +1,12 @@
 {
     "config": {
         "error": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "already_configured_account": "La cuenta ya ha sido configurada",
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "Error de conexi\u00f3n; comprueba la red y vuelve a intentarlo",
             "identifier_exists": "Correo electr\u00f3nico ya registrado",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_credentials": "Credenciales no v\u00e1lidas",
             "unknown_error": "Error desconocido, por favor reporte la informaci\u00f3n de registro"
         },
@@ -10,7 +14,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                    "username": "Correo electr\u00f3nico"
                 },
                 "description": "Por favor, introduzca su informaci\u00f3n.",
                 "title": "Tesla - Configuraci\u00f3n"

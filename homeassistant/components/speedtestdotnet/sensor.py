@@ -1,9 +1,8 @@
 """Support for Speedtest.net internet speed testing sensor."""
-import logging
-
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_BYTES_RECEIVED,
@@ -12,14 +11,11 @@ from .const import (
     ATTR_SERVER_ID,
     ATTR_SERVER_NAME,
     ATTRIBUTION,
-    CONF_MANUAL,
     DEFAULT_NAME,
     DOMAIN,
     ICON,
     SENSOR_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -34,13 +30,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SpeedtestSensor(RestoreEntity):
+class SpeedtestSensor(CoordinatorEntity, RestoreEntity):
     """Implementation of a speedtest.net sensor."""
 
     def __init__(self, coordinator, sensor_type):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
-        self.coordinator = coordinator
         self.type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._state = None
@@ -71,11 +67,6 @@ class SpeedtestSensor(RestoreEntity):
         return ICON
 
     @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if not self.coordinator.data:
@@ -97,10 +88,9 @@ class SpeedtestSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self.coordinator.config_entry.options[CONF_MANUAL]:
-            state = await self.async_get_last_state()
-            if state:
-                self._state = state.state
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state
 
         @callback
         def update():
@@ -120,7 +110,3 @@ class SpeedtestSensor(RestoreEntity):
                 self._state = round(self.coordinator.data["download"] / 10 ** 6, 2)
             elif self.type == "upload":
                 self._state = round(self.coordinator.data["upload"] / 10 ** 6, 2)
-
-    async def async_update(self):
-        """Request coordinator to update data."""
-        await self.coordinator.async_request_refresh()

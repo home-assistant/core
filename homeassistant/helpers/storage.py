@@ -20,7 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @bind_hass
 async def async_migrator(
-    hass, old_path, store, *, old_conf_load_func=None, old_conf_migrate_func=None,
+    hass,
+    old_path,
+    store,
+    *,
+    old_conf_load_func=None,
+    old_conf_migrate_func=None,
 ):
     """Migrate old data to a store and then load data.
 
@@ -95,8 +100,7 @@ class Store:
         the second call will wait and return the result of the first call.
         """
         if self._load_task is None:
-            self._load_task = self.hass.async_add_job(self._async_load())
-            assert self._load_task is not None
+            self._load_task = self.hass.async_create_task(self._async_load())
 
         return await self._load_task
 

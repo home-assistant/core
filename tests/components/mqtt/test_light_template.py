@@ -47,6 +47,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -316,6 +317,14 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                         "{{ blue|d }}",
                         "command_off_template": "off",
                         "effect_list": ["colorloop", "random"],
+                        "optimistic": True,
+                        "state_template": '{{ value.split(",")[0] }}',
+                        "color_temp_template": '{{ value.split(",")[2] }}',
+                        "white_value_template": '{{ value.split(",")[3] }}',
+                        "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
+                        "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
+                        "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+                        "effect_template": '{{ value.split(",")[5] }}',
                         "qos": 2,
                     }
                 },
@@ -324,7 +333,6 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 95
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
     assert state.attributes.get("color_temp") == 100
@@ -365,7 +373,6 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 255
 
     # Full brightness - no scaling of RGB values sent over MQTT
     await common.async_turn_on(
@@ -398,7 +405,6 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 128
 
     # Half brightness - scaling of RGB values sent over MQTT
     await common.async_turn_on(
@@ -921,6 +927,24 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
     )
+
+
+async def test_discovery_update_unchanged_light(hass, mqtt_mock, caplog):
+    """Test update of discovered light."""
+    data1 = (
+        '{ "name": "Beer",'
+        '  "schema": "template",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "test_topic",'
+        '  "command_on_template": "on",'
+        '  "command_off_template": "off"}'
+    )
+    with patch(
+        "homeassistant.components.mqtt.light.schema_template.MqttLightTemplate.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, light.DOMAIN, data1, discovery_update
+        )
 
 
 @pytest.mark.no_fail_on_log_exception

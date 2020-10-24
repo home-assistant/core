@@ -2,7 +2,7 @@
 from homematicip.base.enums import ValveState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.device import (
+from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
     ATTR_DEVICE_OVERLOADED,
@@ -24,10 +24,12 @@ from homeassistant.components.homematicip_cloud.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 
@@ -44,8 +46,8 @@ async def test_manually_configured_platform(hass):
 
 async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     """Test HomematicipSwitch."""
-    entity_id = "sensor.access_point"
-    entity_name = "Access Point"
+    entity_id = "sensor.access_point_duty_cycle"
+    entity_name = "Access Point Duty Cycle"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
@@ -56,7 +58,7 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     )
     assert hmip_device
     assert ha_state.state == "8.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
 
     await async_manipulate_test_data(hass, hmip_device, "dutyCycle", 17.3)
 
@@ -78,7 +80,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.37)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "37"
@@ -112,7 +114,7 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "40"
-    assert ha_state.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert ha_state.attributes["unit_of_measurement"] == PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "humidity", 45)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "45"
@@ -247,7 +249,7 @@ async def test_hmip_illuminance_sensor1(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "4890.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
     await async_manipulate_test_data(hass, hmip_device, "illumination", 231)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "231"
@@ -267,7 +269,7 @@ async def test_hmip_illuminance_sensor2(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "807.3"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LIGHT_LUX
     await async_manipulate_test_data(hass, hmip_device, "averageIllumination", 231)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "231"
@@ -337,7 +339,7 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "3.9"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "mm"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_MILLIMETERS
     await async_manipulate_test_data(hass, hmip_device, "todayRainCounter", 14.2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "14.2"

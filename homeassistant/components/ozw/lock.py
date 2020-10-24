@@ -1,7 +1,9 @@
 """Representation of Z-Wave locks."""
 import logging
 
-from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import ATTR_CODE_SLOT
+from openzwavemqtt.exceptions import BaseOZWError
+from openzwavemqtt.util.lock import clear_usercode, set_usercode
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
@@ -12,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
 
-ATTR_CODE_SLOT = "code_slot"
 ATTR_USERCODE = "usercode"
 
 SERVICE_SET_USERCODE = "set_usercode"
@@ -54,6 +55,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
+def _call_util_lock_function(function, *args):
+    """Call an openzwavemqtt.util.lock function and return success of call."""
+    try:
+        function(*args)
+    except BaseOZWError as err:
+        _LOGGER.error("%s: %s", type(err), err.args[0])
+        return False
+
+    return True
+
+
 class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     """Representation of a Z-Wave lock."""
 
@@ -73,35 +85,15 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
     @callback
     def async_set_usercode(self, code_slot, usercode):
         """Set the usercode to index X on the lock."""
-        lock_node = self.values.primary.node.values()
-
-        for value in lock_node:
-            if (
-                value.command_class == CommandClass.USER_CODE
-                and value.index == code_slot
-            ):
-                if len(str(usercode)) < 4:
-                    _LOGGER.error(
-                        "Invalid code provided: (%s) user code must be at least 4 digits",
-                        usercode,
-                    )
-                    break
-                value.send_value(usercode)
-                _LOGGER.debug("User code at slot %s set", code_slot)
-                break
+        if _call_util_lock_function(
+            set_usercode, self.values.primary.node, code_slot, usercode
+        ):
+            _LOGGER.debug("User code at slot %s set", code_slot)
 
     @callback
     def async_clear_usercode(self, code_slot):
         """Clear usercode in slot X on the lock."""
-        lock_node = self.values.primary.node.values()
-
-        for value in lock_node:
-            if (
-                value.command_class == CommandClass.USER_CODE
-                and value.label == "Remove User Code"
-            ):
-                value.send_value(code_slot)
-                # Sending twice because the first time it doesn't take
-                value.send_value(code_slot)
-                _LOGGER.info("Usercode at slot %s is cleared", code_slot)
-                break
+        if _call_util_lock_function(
+            clear_usercode, self.values.primary.node, code_slot
+        ):
+            _LOGGER.info("Usercode at slot %s is cleared", code_slot)

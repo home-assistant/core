@@ -29,7 +29,6 @@ from homeassistant.components.mqtt import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
@@ -44,6 +43,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
+    CONF_UNIQUE_ID,
     CONF_WHITE_VALUE,
     CONF_XY,
     STATE_ON,
@@ -125,7 +125,7 @@ PLATFORM_SCHEMA_JSON = (
 
 
 async def async_setup_entity_json(
-    config: ConfigType, async_add_entities, config_entry, discovery_data
+    hass, config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
     async_add_entities([MqttLightJson(config, config_entry, discovery_data)])
@@ -192,35 +192,6 @@ class MqttLightJson(
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
 
-        brightness = config[CONF_BRIGHTNESS]
-        if brightness:
-            self._brightness = 255
-        else:
-            self._brightness = None
-
-        color_temp = config[CONF_COLOR_TEMP]
-        if color_temp:
-            self._color_temp = 150
-        else:
-            self._color_temp = None
-
-        effect = config[CONF_EFFECT]
-        if effect:
-            self._effect = "none"
-        else:
-            self._effect = None
-
-        white_value = config[CONF_WHITE_VALUE]
-        if white_value:
-            self._white_value = 255
-        else:
-            self._white_value = None
-
-        if config[CONF_HS] or config[CONF_RGB] or config[CONF_XY]:
-            self._hs = [0, 0]
-        else:
-            self._hs = None
-
         self._flash_times = {
             key: config.get(key)
             for key in (CONF_FLASH_TIME_SHORT, CONF_FLASH_TIME_LONG)
@@ -228,10 +199,10 @@ class MqttLightJson(
 
         self._supported_features = SUPPORT_TRANSITION | SUPPORT_FLASH
         self._supported_features |= config[CONF_RGB] and SUPPORT_COLOR
-        self._supported_features |= brightness and SUPPORT_BRIGHTNESS
-        self._supported_features |= color_temp and SUPPORT_COLOR_TEMP
-        self._supported_features |= effect and SUPPORT_EFFECT
-        self._supported_features |= white_value and SUPPORT_WHITE_VALUE
+        self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
+        self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
+        self._supported_features |= config[CONF_EFFECT] and SUPPORT_EFFECT
+        self._supported_features |= config[CONF_WHITE_VALUE] and SUPPORT_WHITE_VALUE
         self._supported_features |= config[CONF_XY] and SUPPORT_COLOR
         self._supported_features |= config[CONF_HS] and SUPPORT_COLOR
 
@@ -250,7 +221,7 @@ class MqttLightJson(
             elif values["state"] == "OFF":
                 self._state = False
 
-            if self._hs is not None:
+            if self._supported_features and SUPPORT_COLOR:
                 try:
                     red = int(values["color"]["r"])
                     green = int(values["color"]["g"])
@@ -282,7 +253,7 @@ class MqttLightJson(
                 except ValueError:
                     _LOGGER.warning("Invalid HS color value received")
 
-            if self._brightness is not None:
+            if self._supported_features and SUPPORT_BRIGHTNESS:
                 try:
                     self._brightness = int(
                         values["brightness"]
@@ -294,7 +265,7 @@ class MqttLightJson(
                 except (TypeError, ValueError):
                     _LOGGER.warning("Invalid brightness value received")
 
-            if self._color_temp is not None:
+            if self._supported_features and SUPPORT_COLOR_TEMP:
                 try:
                     self._color_temp = int(values["color_temp"])
                 except KeyError:
@@ -302,13 +273,13 @@ class MqttLightJson(
                 except ValueError:
                     _LOGGER.warning("Invalid color temp value received")
 
-            if self._effect is not None:
+            if self._supported_features and SUPPORT_EFFECT:
                 try:
                     self._effect = values["effect"]
                 except KeyError:
                     pass
 
-            if self._white_value is not None:
+            if self._supported_features and SUPPORT_WHITE_VALUE:
                 try:
                     self._white_value = int(values["white_value"])
                 except KeyError:
@@ -440,7 +411,7 @@ class MqttLightJson(
             if self._config[CONF_RGB]:
                 # If there's a brightness topic set, we don't want to scale the
                 # RGB values given using the brightness.
-                if self._brightness is not None:
+                if self._config[CONF_BRIGHTNESS]:
                     brightness = 255
                 else:
                     brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
@@ -473,7 +444,7 @@ class MqttLightJson(
         if ATTR_TRANSITION in kwargs:
             message["transition"] = kwargs[ATTR_TRANSITION]
 
-        if ATTR_BRIGHTNESS in kwargs and self._brightness is not None:
+        if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
             brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
             brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
             device_brightness = min(

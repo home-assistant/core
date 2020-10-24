@@ -1,6 +1,6 @@
 # Describes the format for available group services
 reload:
-  description: Reload group configuration.
+  description: Reload group configuration, entities, and notify services.
 
 set:
   description: Create/Update a user group.

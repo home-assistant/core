@@ -51,7 +51,11 @@ LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     bridge = NukiBridge(
-        config[CONF_HOST], config[CONF_TOKEN], config[CONF_PORT], True, DEFAULT_TIMEOUT,
+        config[CONF_HOST],
+        config[CONF_TOKEN],
+        config[CONF_PORT],
+        True,
+        DEFAULT_TIMEOUT,
     )
 
     devices = [NukiLockEntity(lock) for lock in bridge.locks]
@@ -67,7 +71,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             lock.lock_n_go(unlatch=unlatch)
 
     hass.services.register(
-        DOMAIN, SERVICE_LOCK_N_GO, service_handler, schema=LOCK_N_GO_SERVICE_SCHEMA,
+        DOMAIN,
+        SERVICE_LOCK_N_GO,
+        service_handler,
+        schema=LOCK_N_GO_SERVICE_SCHEMA,
     )
 
     devices.extend([NukiOpenerEntity(opener) for opener in bridge.openers])

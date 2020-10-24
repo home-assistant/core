@@ -55,10 +55,12 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.roomba.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roomba.async_setup_entry", return_value=True,
+        "homeassistant.components.roomba.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], VALID_CONFIG,
+            result["flow_id"],
+            VALID_CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -94,7 +96,8 @@ async def test_form_cannot_connect(hass):
         return_value=mocked_roomba,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], VALID_CONFIG,
+            result["flow_id"],
+            VALID_CONFIG,
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -115,7 +118,8 @@ async def test_form_import(hass):
     ), patch(
         "homeassistant.components.roomba.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.roomba.async_setup_entry", return_value=True,
+        "homeassistant.components.roomba.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

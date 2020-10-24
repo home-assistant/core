@@ -77,7 +77,7 @@ async def async_setup_entry(
     except (SongpalException, asyncio.TimeoutError) as ex:
         _LOGGER.warning("[%s(%s)] Unable to connect", name, endpoint)
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     songpal_entity = SongpalEntity(name, device)
     async_add_entities([songpal_entity], True)

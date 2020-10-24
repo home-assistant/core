@@ -1,6 +1,4 @@
 """Support for Homekit covers."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.cover import (
@@ -21,8 +19,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 STATE_STOPPED = "stopped"
-
-_LOGGER = logging.getLogger(__name__)
 
 CURRENT_GARAGE_STATE_MAP = {
     0: STATE_OPEN,
@@ -117,15 +113,10 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        attributes = {}
-
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            attributes["obstruction-detected"] = obstruction_detected
-
-        return attributes
+        return {"obstruction-detected": obstruction_detected is True}
 
 
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
@@ -249,12 +240,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        attributes = {}
-
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
         )
-        if obstruction_detected:
-            attributes["obstruction-detected"] = obstruction_detected
-
-        return attributes
+        if not obstruction_detected:
+            return {}
+        return {"obstruction-detected": obstruction_detected}

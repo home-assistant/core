@@ -4,13 +4,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant import data_entry_flow
 from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -50,11 +44,11 @@ async def test_invalid_password(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login",
+        "regenmaschine.client.Client.load_local",
         side_effect=RainMachineError,
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_show_form(hass):
@@ -69,37 +63,6 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_step_import(hass):
-    """Test that the import step works."""
-    conf = {
-        CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
-        CONF_SCAN_INTERVAL: 60,
-    }
-
-    flow = config_flow.RainMachineFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    with patch(
-        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
-    ):
-        result = await flow.async_step_import(import_config=conf)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "192.168.1.100"
-        assert result["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 8080,
-            CONF_SSL: True,
-            CONF_SCAN_INTERVAL: 60,
-            CONF_ZONE_RUN_TIME: 600,
-        }
-
-
 async def test_step_user(hass):
     """Test that the user step works."""
     conf = {
@@ -107,7 +70,6 @@ async def test_step_user(hass):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
-        CONF_SCAN_INTERVAL: 60,
     }
 
     flow = config_flow.RainMachineFlowHandler()
@@ -115,7 +77,8 @@ async def test_step_user(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
+        "regenmaschine.client.Client.load_local",
+        return_value=True,
     ):
         result = await flow.async_step_user(user_input=conf)
 
@@ -126,6 +89,5 @@ async def test_step_user(hass):
             CONF_PASSWORD: "password",
             CONF_PORT: 8080,
             CONF_SSL: True,
-            CONF_SCAN_INTERVAL: 60,
             CONF_ZONE_RUN_TIME: 600,
         }

@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_CH_OVRD,
     ATTR_DHW_OVRD,
     ATTR_GW_ID,
     ATTR_LEVEL,
@@ -39,6 +40,7 @@ from .const import (
     DATA_OPENTHERM_GW,
     DOMAIN,
     SERVICE_RESET_GATEWAY,
+    SERVICE_SET_CH_OVRD,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
     SERVICE_SET_GPIO_MODE,
@@ -125,6 +127,14 @@ def register_services(hass):
             vol.Required(ATTR_GW_ID): vol.All(
                 cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
             )
+        }
+    )
+    service_set_central_heating_ovrd_schema = vol.Schema(
+        {
+            vol.Required(ATTR_GW_ID): vol.All(
+                cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
+            ),
+            vol.Required(ATTR_CH_OVRD): cv.boolean,
         }
     )
     service_set_clock_schema = vol.Schema(
@@ -233,6 +243,18 @@ def register_services(hass):
 
     hass.services.async_register(
         DOMAIN, SERVICE_RESET_GATEWAY, reset_gateway, service_reset_schema
+    )
+
+    async def set_ch_ovrd(call):
+        """Set the central heating override on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        await gw_dev.gateway.set_ch_enable_bit(1 if call.data[ATTR_CH_OVRD] else 0)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CH_OVRD,
+        set_ch_ovrd,
+        service_set_central_heating_ovrd_schema,
     )
 
     async def set_control_setpoint(call):

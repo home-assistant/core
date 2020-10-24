@@ -5,7 +5,17 @@
         },
         "step": {
             "confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
                 "description": "Voc\u00ea quer configurar o {name}?"
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
             }
         }
     }

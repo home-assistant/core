@@ -4,6 +4,7 @@ from collections import OrderedDict
 import pytest
 
 from homeassistant.components.config import entity_registry
+from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from tests.common import MockEntity, MockEntityPlatform, mock_registry
@@ -140,7 +141,7 @@ async def test_update_entity(hass, client):
     state = hass.states.get("test_domain.world")
     assert state is not None
     assert state.name == "before update"
-    assert state.attributes["icon"] == "icon:before update"
+    assert state.attributes[ATTR_ICON] == "icon:before update"
 
     # UPDATE NAME & ICON
     await client.send_json(
@@ -171,7 +172,7 @@ async def test_update_entity(hass, client):
 
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
-    assert state.attributes["icon"] == "icon:after update"
+    assert state.attributes[ATTR_ICON] == "icon:after update"
 
     # UPDATE DISABLED_BY TO USER
     await client.send_json(

@@ -29,10 +29,24 @@ async def test_setup(hass, legacy_patchable_time):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
-        "1234", "Title 1", 15.5, (38.0, -3.0), attribution="Attribution 1",
+        "1234",
+        "Title 1",
+        15.5,
+        (38.0, -3.0),
+        attribution="Attribution 1",
     )
-    mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (38.1, -3.1),)
-    mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (38.2, -3.2),)
+    mock_entry_2 = _generate_mock_feed_entry(
+        "2345",
+        "Title 2",
+        20.5,
+        (38.1, -3.1),
+    )
+    mock_entry_3 = _generate_mock_feed_entry(
+        "3456",
+        "Title 3",
+        25.5,
+        (38.2, -3.2),
+    )
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (38.3, -3.3))
 
     # Patching 'utcnow' to gain more control over the timed update.

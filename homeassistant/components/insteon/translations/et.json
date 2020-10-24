@@ -1,0 +1,83 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Insteoni modemi \u00fchendus on juba seadistatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "hub1": {
+                "title": ""
+            },
+            "hub2": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": ""
+            },
+            "hubv1": {
+                "data": {
+                    "host": "IP aagress",
+                    "port": ""
+                },
+                "description": "Insteon Hub ver 1 seadistamine (enne 2104).",
+                "title": ""
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Insteon Hub ver 2 seadistamine.",
+                "title": ""
+            },
+            "init": {
+                "title": ""
+            },
+            "plm": {
+                "data": {
+                    "device": "USB seadme rada"
+                },
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modemi mudel."
+                },
+                "description": "Vali Insteoni modemi mudel.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Insteoni modemi \u00fchendus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "input_error": "Vigane sisestus, kontrolli andmeid"
+        },
+        "step": {
+            "add_override": {
+                "title": ""
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP aadress",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "remove_x10": {
+                "title": ""
+            }
+        }
+    }
+}

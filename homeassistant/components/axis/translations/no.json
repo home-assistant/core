@@ -8,11 +8,13 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyt for enhet p\u00e5g\u00e5r allerede.",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
             "device_unavailable": "Enheten er ikke tilgjengelig",
-            "faulty_credentials": "Ugyldig brukerlegitimasjon"
+            "faulty_credentials": "Ugyldig brukerlegitimasjon",
+            "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "Akse-enhet: {Name} ({Host})",
+        "flow_title": "Axis enhet: {name} ({host})",
         "step": {
             "user": {
                 "data": {

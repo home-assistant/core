@@ -1,43 +1,42 @@
 """Tests for the CoinMarketCap sensor platform."""
 import json
-import unittest
 
-import homeassistant.components.sensor as sensor
-from homeassistant.setup import setup_component
+import pytest
+
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
+from tests.common import assert_setup_component, load_fixture
 
 VALID_CONFIG = {
-    "platform": "coinmarketcap",
-    "currency_id": 1027,
-    "display_currency": "EUR",
-    "display_currency_decimals": 3,
+    DOMAIN: {
+        "platform": "coinmarketcap",
+        "currency_id": 1027,
+        "display_currency": "EUR",
+        "display_currency_decimals": 3,
+    }
 }
 
 
-class TestCoinMarketCapSensor(unittest.TestCase):
-    """Test the CoinMarketCap sensor."""
+@pytest.fixture
+async def setup_sensor(hass):
+    """Set up demo sensor component."""
+    with assert_setup_component(1, DOMAIN):
+        with patch(
+            "coinmarketcap.Market.ticker",
+            return_value=json.loads(load_fixture("coinmarketcap.json")),
+        ):
+            await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+            await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
-        self.addCleanup(self.hass.stop)
 
-    @patch(
-        "coinmarketcap.Market.ticker",
-        return_value=json.loads(load_fixture("coinmarketcap.json")),
-    )
-    def test_setup(self, mock_request):
-        """Test the setup with custom settings."""
-        with assert_setup_component(1, sensor.DOMAIN):
-            assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
-            self.hass.block_till_done()
+async def test_setup(hass, setup_sensor):
+    """Test the setup with custom settings."""
+    state = hass.states.get("sensor.ethereum")
+    assert state is not None
 
-        state = self.hass.states.get("sensor.ethereum")
-        assert state is not None
-
-        assert state.state == "493.455"
-        assert state.attributes.get("symbol") == "ETH"
-        assert state.attributes.get("unit_of_measurement") == "EUR"
+    assert state.name == "Ethereum"
+    assert state.state == "493.455"
+    assert state.attributes.get("symbol") == "ETH"
+    assert state.attributes.get("unit_of_measurement") == "EUR"

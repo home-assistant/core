@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "Invalid authentication",
+            "cannot_connect": "Failed to connect",
             "conn_error": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "auth_failed": "Invalid authentication"
+            "auth_failed": "Invalid authentication",
+            "invalid_auth": "Invalid authentication"
         },
         "flow_title": "Tuya configuration",
         "step": {

@@ -1,7 +1,6 @@
 """Classes to help gather user submissions."""
 import abc
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional, cast
 import uuid
 
@@ -9,8 +8,6 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-
-_LOGGER = logging.getLogger(__name__)
 
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
@@ -51,7 +48,10 @@ class AbortFlow(FlowError):
 class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass: HomeAssistant,) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
         self._initializing: Dict[str, List[asyncio.Future]] = {}
@@ -261,11 +261,17 @@ class FlowHandler:
     @property
     def source(self) -> Optional[str]:
         """Source that initialized the flow."""
+        if not hasattr(self, "context"):
+            return None
+
         return self.context.get("source", None)
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
+        if not hasattr(self, "context"):
+            return False
+
         return self.context.get("show_advanced_options", False)
 
     @callback

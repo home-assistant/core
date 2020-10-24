@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -135,7 +135,7 @@ class TtnDataStorage:
             _LOGGER.error("The device is not available: %s", self._device_id)
             return None
 
-        if status == 401:
+        if status == HTTP_UNAUTHORIZED:
             _LOGGER.error("Not authorized for Application ID: %s", self._app_id)
             return None
 

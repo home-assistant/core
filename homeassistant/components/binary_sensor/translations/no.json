@@ -95,11 +95,11 @@
             "on": "P\u00e5"
         },
         "battery": {
-            "off": "Normalt",
+            "off": "Normal",
             "on": "Lavt"
         },
         "cold": {
-            "off": "",
+            "off": "Normal",
             "on": "Kald"
         },
         "connectivity": {
@@ -115,11 +115,11 @@
             "on": "\u00c5pen"
         },
         "gas": {
-            "off": "Klar",
+            "off": "Klart",
             "on": "Oppdaget"
         },
         "heat": {
-            "off": "",
+            "off": "Normal",
             "on": "Varm"
         },
         "lock": {
@@ -168,7 +168,7 @@
         },
         "window": {
             "off": "Lukket",
-            "on": "\u00c5pen"
+            "on": "\u00c5pent"
         }
     },
     "title": "Bin\u00e6r sensor"

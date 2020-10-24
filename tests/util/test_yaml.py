@@ -354,7 +354,7 @@ class TestSecrets(unittest.TestCase):
         assert expected == self._yaml["component"]
 
     def test_secrets_from_parent_folder(self):
-        """Test loading secrets from parent foler."""
+        """Test loading secrets from parent folder."""
         expected = {"api_password": "pwhttp"}
         self._yaml = load_yaml(
             os.path.join(self._sub_folder_path, "sub.yaml"),

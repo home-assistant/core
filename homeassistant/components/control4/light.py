@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4Entity, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE, DOMAIN
+from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
 from .director_utils import director_update_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +36,8 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug(
-        "Scan interval = %s", scan_interval,
+        "Scan interval = %s",
+        scan_interval,
     )
 
     async def async_update_data_non_dimmer():
@@ -44,14 +45,14 @@ async def async_setup_entry(
         try:
             return await director_update_data(hass, entry, CONTROL4_NON_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     async def async_update_data_dimmer():
         """Fetch data from Control4 director for dimmer lights."""
         try:
             return await director_update_data(hass, entry, CONTROL4_DIMMER_VAR)
         except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     non_dimmer_coordinator = DataUpdateCoordinator(
         hass,
@@ -73,40 +74,65 @@ async def async_setup_entry(
     await dimmer_coordinator.async_refresh()
 
     items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
+
+    entity_list = []
     for item in items_of_category:
-        if item["type"] == CONTROL4_ENTITY_TYPE:
-            item_name = item["name"]
-            item_id = item["id"]
-            item_parent_id = item["parentId"]
-            item_is_dimmer = item["capabilities"]["dimmer"]
+        try:
+            if item["type"] == CONTROL4_ENTITY_TYPE:
+                item_name = item["name"]
+                item_id = item["id"]
+                item_parent_id = item["parentId"]
 
-            if item_is_dimmer:
-                item_coordinator = dimmer_coordinator
+                item_manufacturer = None
+                item_device_name = None
+                item_model = None
+
+                for parent_item in items_of_category:
+                    if parent_item["id"] == item_parent_id:
+                        item_manufacturer = parent_item["manufacturer"]
+                        item_device_name = parent_item["name"]
+                        item_model = parent_item["model"]
             else:
-                item_coordinator = non_dimmer_coordinator
-
-            for parent_item in items_of_category:
-                if parent_item["id"] == item_parent_id:
-                    item_manufacturer = parent_item["manufacturer"]
-                    item_device_name = parent_item["name"]
-                    item_model = parent_item["model"]
-            async_add_entities(
-                [
-                    Control4Light(
-                        entry_data,
-                        entry,
-                        item_coordinator,
-                        item_name,
-                        item_id,
-                        item_device_name,
-                        item_manufacturer,
-                        item_model,
-                        item_parent_id,
-                        item_is_dimmer,
-                    )
-                ],
-                True,
+                continue
+        except KeyError:
+            _LOGGER.exception(
+                "Unknown device properties received from Control4: %s",
+                item,
             )
+            continue
+
+        if item_id in dimmer_coordinator.data:
+            item_is_dimmer = True
+            item_coordinator = dimmer_coordinator
+        elif item_id in non_dimmer_coordinator.data:
+            item_is_dimmer = False
+            item_coordinator = non_dimmer_coordinator
+        else:
+            director = entry_data[CONF_DIRECTOR]
+            item_variables = await director.getItemVariables(item_id)
+            _LOGGER.warning(
+                "Couldn't get light state data for %s, skipping setup. Available variables from Control4: %s",
+                item_name,
+                item_variables,
+            )
+            continue
+
+        entity_list.append(
+            Control4Light(
+                entry_data,
+                entry,
+                item_coordinator,
+                item_name,
+                item_id,
+                item_device_name,
+                item_manufacturer,
+                item_model,
+                item_parent_id,
+                item_is_dimmer,
+            )
+        )
+
+    async_add_entities(entity_list, True)
 
 
 class Control4Light(Control4Entity, LightEntity):
@@ -138,23 +164,24 @@ class Control4Light(Control4Entity, LightEntity):
             device_id,
         )
         self._is_dimmer = is_dimmer
-        self._c4_light = None
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._c4_light = C4Light(self.director, self._idx)
+    def create_api_object(self):
+        """Create a pyControl4 device object.
+
+        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        """
+        return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
 
     @property
     def is_on(self):
         """Return whether this light is on or off."""
-        return self._coordinator.data[self._idx]["value"] > 0
+        return self.coordinator.data[self._idx]["value"] > 0
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._is_dimmer:
-            return round(self._coordinator.data[self._idx]["value"] * 2.55)
+            return round(self.coordinator.data[self._idx]["value"] * 2.55)
         return None
 
     @property
@@ -167,6 +194,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
@@ -176,31 +204,32 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await self._c4_light.rampToLevel(brightness, transition_length)
+            await c4_light.rampToLevel(brightness, transition_length)
         else:
             transition_length = 0
-            await self._c4_light.setLevel(100)
+            await c4_light.setLevel(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
         _LOGGER.debug("Delaying light update by %s seconds", delay_time)
         await asyncio.sleep(delay_time)
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
+        c4_light = self.create_api_object()
         if self._is_dimmer:
             if ATTR_TRANSITION in kwargs:
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = 0
-            await self._c4_light.rampToLevel(0, transition_length)
+            await c4_light.rampToLevel(0, transition_length)
         else:
             transition_length = 0
-            await self._c4_light.setLevel(0)
+            await c4_light.setLevel(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7
         _LOGGER.debug("Delaying light update by %s seconds", delay_time)
         await asyncio.sleep(delay_time)
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()

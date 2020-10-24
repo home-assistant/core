@@ -94,10 +94,10 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                 return await self._create_entry()
 
             except AuthenticationRequired:
-                errors["base"] = "faulty_credentials"
+                errors["base"] = "invalid_auth"
 
             except CannotConnect:
-                errors["base"] = "device_unavailable"
+                errors["base"] = "cannot_connect"
 
         data = self.discovery_schema or {
             vol.Required(CONF_HOST): str,

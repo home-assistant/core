@@ -57,6 +57,7 @@ ATTR_USER_ID = "user_id"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
+CONF_PICTURE = "picture"
 
 DOMAIN = "person"
 
@@ -73,6 +74,7 @@ PERSON_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_TRACKERS, default=[]): vol.All(
             cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
         ),
+        vol.Optional(CONF_PICTURE): cv.string,
     }
 )
 
@@ -129,6 +131,7 @@ CREATE_FIELDS = {
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
+    vol.Optional(CONF_PICTURE): vol.Any(str, None),
 }
 
 
@@ -138,6 +141,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
+    vol.Optional(CONF_PICTURE): vol.Any(str, None),
 }
 
 
@@ -371,6 +375,11 @@ class Person(RestoreEntity):
     def name(self):
         """Return the name of the entity."""
         return self._config[CONF_NAME]
+
+    @property
+    def entity_picture(self) -> Optional[str]:
+        """Return entity picture."""
+        return self._config.get(CONF_PICTURE)
 
     @property
     def should_poll(self):

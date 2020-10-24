@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "DirecTV-mottaker er allerede konfigurert",
+            "already_configured": "Enheten er allerede konfigurert",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling feilet"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "flow_title": "",
         "step": {

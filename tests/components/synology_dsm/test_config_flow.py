@@ -1,6 +1,4 @@
 """Tests for the Synology DSM config flow."""
-import logging
-
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
@@ -19,6 +17,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -30,15 +29,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
 
 HOST = "nas.meontheinternet.com"
 SERIAL = "mySerial"
@@ -288,7 +285,7 @@ async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USERNAME: "login"}
+    assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
 async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
@@ -304,7 +301,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "connection"}
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
 async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
@@ -421,15 +418,19 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     # Scan interval
     # Default
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    assert config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 2, CONF_TIMEOUT: 30},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
+    assert config_entry.options[CONF_TIMEOUT] == 30

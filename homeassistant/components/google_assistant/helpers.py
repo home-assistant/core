@@ -208,7 +208,11 @@ class AbstractConfig(ABC):
             return
 
         webhook.async_register(
-            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook,
+            self.hass,
+            DOMAIN,
+            "Local Support",
+            webhook_id,
+            self._handle_local_webhook,
         )
 
         self._local_sdk_active = True
@@ -339,6 +343,15 @@ class GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if not isinstance(features, int):
+            _LOGGER.warning(
+                "Entity %s contains invalid supported_features value %s",
+                self.entity_id,
+                features,
+            )
+            return []
+
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         self._traits = [

@@ -1,7 +1,11 @@
 """Class to hold all cover accessories."""
 import logging
 
-from pyhap.const import CATEGORY_GARAGE_DOOR_OPENER, CATEGORY_WINDOW_COVERING
+from pyhap.const import (
+    CATEGORY_GARAGE_DOOR_OPENER,
+    CATEGORY_WINDOW,
+    CATEGORY_WINDOW_COVERING,
+)
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -22,21 +26,26 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_CLOSING,
+    STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory, debounce
 from .const import (
+    ATTR_OBSTRUCTION_DETECTED,
     CHAR_CURRENT_DOOR_STATE,
     CHAR_CURRENT_POSITION,
     CHAR_CURRENT_TILT_ANGLE,
     CHAR_HOLD_POSITION,
+    CHAR_OBSTRUCTION_DETECTED,
     CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE,
     CHAR_TARGET_POSITION,
     CHAR_TARGET_TILT_ANGLE,
+    CONF_LINKED_OBSTRUCTION_SENSOR,
     DEVICE_PRECISION_LEEWAY,
     HK_DOOR_CLOSED,
     HK_DOOR_CLOSING,
@@ -46,6 +55,7 @@ from .const import (
     HK_POSITION_GOING_TO_MIN,
     HK_POSITION_STOPPED,
     SERV_GARAGE_DOOR_OPENER,
+    SERV_WINDOW,
     SERV_WINDOW_COVERING,
 )
 
@@ -68,7 +78,6 @@ DOOR_TARGET_HASS_TO_HK = {
     STATE_OPENING: HK_DOOR_OPEN,
     STATE_CLOSING: HK_DOOR_CLOSED,
 }
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +102,54 @@ class GarageDoorOpener(HomeAccessory):
         self.char_target_state = serv_garage_door.configure_char(
             CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
         )
+        self.char_obstruction_detected = serv_garage_door.configure_char(
+            CHAR_OBSTRUCTION_DETECTED, value=False
+        )
+
+        self.linked_obstruction_sensor = self.config.get(CONF_LINKED_OBSTRUCTION_SENSOR)
+        if self.linked_obstruction_sensor:
+            self._async_update_obstruction_state(
+                self.hass.states.get(self.linked_obstruction_sensor)
+            )
+
         self.async_update_state(state)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self.linked_obstruction_sensor:
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_obstruction_sensor],
+                self._async_update_obstruction_event,
+            )
+
+        await super().run_handler()
+
+    @callback
+    def _async_update_obstruction_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_obstruction_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_obstruction_state(self, new_state):
+        """Handle linked obstruction sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
+        detected = new_state.state == STATE_ON
+        if self.char_obstruction_detected.value == detected:
+            return
+
+        self.char_obstruction_detected.set_value(detected)
+        _LOGGER.debug(
+            "%s: Set linked obstruction %s sensor to %d",
+            self.entity_id,
+            self.linked_obstruction_sensor,
+            detected,
+        )
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
@@ -116,6 +172,13 @@ class GarageDoorOpener(HomeAccessory):
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
 
+        if ATTR_OBSTRUCTION_DETECTED in new_state.attributes:
+            obstruction_detected = (
+                new_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
+            )
+            if self.char_obstruction_detected.value != obstruction_detected:
+                self.char_obstruction_detected.set_value(obstruction_detected)
+
         if (
             target_door_state is not None
             and self.char_target_state.value != target_door_state
@@ -128,16 +191,16 @@ class GarageDoorOpener(HomeAccessory):
             self.char_current_state.set_value(current_door_state)
 
 
-class WindowCoveringBase(HomeAccessory):
+class OpeningDeviceBase(HomeAccessory):
     """Generate a base Window accessory for a cover entity.
 
     This class is used for WindowCoveringBasic and
     WindowCovering
     """
 
-    def __init__(self, *args, category):
-        """Initialize a WindowCoveringBase accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+    def __init__(self, *args, category, service):
+        """Initialize a OpeningDeviceBase accessory object."""
+        super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -151,7 +214,7 @@ class WindowCoveringBase(HomeAccessory):
         if self._supports_tilt:
             self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
 
-        self.serv_cover = self.add_preload_service(SERV_WINDOW_COVERING, self.chars)
+        self.serv_cover = self.add_preload_service(service, self.chars)
 
         if self._supports_stop:
             self.char_hold_position = self.serv_cover.configure_char(
@@ -211,16 +274,15 @@ class WindowCoveringBase(HomeAccessory):
                 self._homekit_target_tilt = None
 
 
-@TYPES.register("WindowCovering")
-class WindowCovering(WindowCoveringBase, HomeAccessory):
-    """Generate a Window accessory for a cover entity.
+class OpeningDevice(OpeningDeviceBase, HomeAccessory):
+    """Generate a Window/WindowOpening accessory for a cover entity.
 
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, category, service):
         """Initialize a WindowCovering accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
         self._homekit_target = None
 
@@ -278,8 +340,34 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
         super().async_update_state(new_state)
 
 
+@TYPES.register("Window")
+class Window(OpeningDevice):
+    """Generate a Window accessory for a cover entity with DEVICE_CLASS_WINDOW.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Window accessory object."""
+        super().__init__(*args, category=CATEGORY_WINDOW, service=SERV_WINDOW)
+
+
+@TYPES.register("WindowCovering")
+class WindowCovering(OpeningDevice):
+    """Generate a WindowCovering accessory for a cover entity.
+
+    The entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a WindowCovering accessory object."""
+        super().__init__(
+            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
+        )
+
+
 @TYPES.register("WindowCoveringBasic")
-class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
+class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
     The cover entity must support: open_cover, close_cover,
@@ -287,8 +375,10 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
     """
 
     def __init__(self, *args):
-        """Initialize a WindowCovering accessory object."""
-        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        """Initialize a WindowCoveringBasic accessory object."""
+        super().__init__(
+            *args, category=CATEGORY_WINDOW_COVERING, service=SERV_WINDOW_COVERING
+        )
         state = self.hass.states.get(self.entity_id)
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0

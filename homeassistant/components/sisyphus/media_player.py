@@ -1,6 +1,4 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
-import logging
-
 import aiohttp
 from sisyphus_control import Track
 
@@ -27,8 +25,6 @@ from homeassistant.exceptions import PlatformNotReady
 
 from . import DATA_SISYPHUS
 
-_LOGGER = logging.getLogger(__name__)
-
 MEDIA_TYPE_TRACK = "sisyphus_track"
 
 SUPPORTED_FEATURES = (
@@ -50,8 +46,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         table_holder = hass.data[DATA_SISYPHUS][host]
         table = await table_holder.get_table()
-    except aiohttp.ClientError:
-        raise PlatformNotReady()
+    except aiohttp.ClientError as err:
+        raise PlatformNotReady() from err
 
     add_entities([SisyphusPlayer(table_holder.name, host, table)], True)
 

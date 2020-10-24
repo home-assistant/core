@@ -147,7 +147,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         influx = get_influx_connection(config, test_read=True)
     except ConnectionError as exc:
         _LOGGER.error(exc)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from exc
 
     entities = []
     if CONF_QUERIES_FLUX in config:
@@ -223,11 +223,6 @@ class InfluxSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     def update(self):
         """Get the latest data from Influxdb and updates the states."""

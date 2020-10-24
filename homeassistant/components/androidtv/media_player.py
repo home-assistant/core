@@ -5,7 +5,6 @@ import logging
 import os
 
 from adb_shell.auth.keygen import keygen
-from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from adb_shell.exceptions import (
     AdbTimeoutError,
     InvalidChecksumError,
@@ -14,6 +13,7 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv import ha_state_detection_rules_validator
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 from androidtv.setup_async import setup
@@ -40,6 +40,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -175,9 +176,7 @@ def setup_androidtv(hass, config):
             keygen(adbkey)
 
         # Load the ADB key
-        with open(adbkey) as priv_key:
-            priv = priv_key.read()
-        signer = PythonRSASigner("", priv)
+        signer = ADBPythonSync.load_adbkey(adbkey)
         adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
     else:
@@ -229,6 +228,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Could not connect to %s at %s %s", device_name, address, adb_log
         )
         raise PlatformNotReady
+
+    async def _async_close(event):
+        """Close the ADB socket connection when HA stops."""
+        await aftv.adb_close()
+
+    # Close the ADB connection when HA stops
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
 
     device_args = [
         aftv,
@@ -368,8 +374,14 @@ def adb_decorator(override_available=False):
                     err,
                 )
                 await self.aftv.adb_close()
-                self._available = False  # pylint: disable=protected-access
+                self._available = False
                 return None
+            except Exception:
+                # An unforeseen exception occurred. Close the ADB connection so that
+                # it doesn't happen over and over again, then raise the exception.
+                await self.aftv.adb_close()
+                self._available = False
+                raise
 
         return _adb_exception_catcher
 
@@ -415,10 +427,8 @@ class ADBDevice(MediaPlayerEntity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AdbTimeoutError,
-                AttributeError,
                 BrokenPipeError,
                 ConnectionResetError,
-                TypeError,
                 ValueError,
                 InvalidChecksumError,
                 InvalidCommandError,
@@ -467,11 +477,6 @@ class ADBDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
     def source(self):
         """Return the current app."""
         return self._app_id_to_name.get(self._current_app, self._current_app)
@@ -492,14 +497,23 @@ class ADBDevice(MediaPlayerEntity):
         return self._unique_id
 
     @adb_decorator()
+    async def _adb_screencap(self):
+        """Take a screen capture from the device."""
+        return await self.aftv.adb_screencap()
+
     async def async_get_media_image(self):
         """Fetch current playing image."""
         if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
             return None, None
 
-        media_data = await self.aftv.adb_screencap()
+        media_data = await self._adb_screencap()
         if media_data:
             return media_data, "image/png"
+
+        # If an exception occurred and the device is no longer available, write the state
+        if not self.available:
+            self.async_write_ha_state()
+
         return None, None
 
     @adb_decorator()
@@ -591,7 +605,8 @@ class ADBDevice(MediaPlayerEntity):
 
             msg = f"Output from service '{SERVICE_LEARN_SENDEVENT}' from {self.entity_id}: '{output}'"
             self.hass.components.persistent_notification.async_create(
-                msg, title="Android TV",
+                msg,
+                title="Android TV",
             )
             _LOGGER.info("%s", msg)
 

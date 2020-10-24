@@ -31,7 +31,8 @@ async def webhook_id_with_api_key(hass):
     )
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": "user"}
@@ -50,7 +51,8 @@ async def webhook_id_without_api_key(hass):
     await async_setup_component(hass, mailgun.DOMAIN, {})
 
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": "user"}

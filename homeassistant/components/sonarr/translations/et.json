@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "reauth_successful": "Taastuvastamine oli edukas",
+            "unknown": "Tundmatu viga"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Sonarr-i sidumine tuleb k\u00e4sitsi taastuvastada Sonarr API abil: {host}",
+                "title": "Autentige uuesti Sonarriga"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": "",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                }
+            }
+        }
+    },
+    "title": ""
+}

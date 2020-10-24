@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chave de API"
+                }
+            }
+        }
+    }
+}

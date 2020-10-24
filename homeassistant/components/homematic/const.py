@@ -25,6 +25,7 @@ ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
 ATTR_PARAMSET = "paramset"
+ATTR_RX_MODE = "rx_mode"
 ATTR_DISCOVERY_TYPE = "discovery_type"
 ATTR_LOW_BAT = "LOW_BAT"
 ATTR_LOWBAT = "LOWBAT"
@@ -57,6 +58,8 @@ HM_DEVICE_TYPES = {
         "IPKeySwitchLevel",
         "IPMultiIO",
         "IPWSwitch",
+        "IOSwitchWireless",
+        "IPWIODevice",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -66,6 +69,7 @@ HM_DEVICE_TYPES = {
         "ColorEffectLight",
         "IPKeySwitchLevel",
         "ColdWarmDimmer",
+        "IPWDimmer",
     ],
     DISCOVER_SENSORS: [
         "SwitchPowermeter",
@@ -110,6 +114,7 @@ HM_DEVICE_TYPES = {
         "IPThermostatWall2",
         "IPRemoteMotionV2",
         "HBUNISenWEA",
+        "PresenceIPW",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -151,8 +156,18 @@ HM_DEVICE_TYPES = {
         "IPContact",
         "IPRemoteMotionV2",
         "IPWInputDevice",
+        "IPWMotionDection",
+        "IPAlarmSensor",
     ],
-    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt", "IPGarage"],
+    DISCOVER_COVER: [
+        "Blind",
+        "KeyBlind",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
+        "IPGarage",
+        "IPKeyBlindMulti",
+        "IPWKeyBlindMulti",
+    ],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
 

@@ -7,13 +7,11 @@ from regenmaschine import Client
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
 )
 from homeassistant.core import callback
@@ -33,8 +31,6 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DATA_ZONES_DETAILS,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_ZONE_RUN,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
@@ -44,13 +40,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
@@ -76,50 +72,12 @@ SERVICE_STOP_PROGRAM_SCHEMA = vol.Schema(
 
 SERVICE_STOP_ZONE_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
 
-CONTROLLER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, lambda value: value.total_seconds()
-        ),
-        vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONTROLLERS): vol.All(
-                    cv.ensure_list, [CONTROLLER_SCHEMA]
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    for controller in conf[CONF_CONTROLLERS]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=controller
-            )
-        )
-
+    hass.data[DOMAIN] = {DATA_CLIENT: {}}
     return True
 
 
@@ -133,7 +91,7 @@ async def async_setup_entry(hass, config_entry):
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(websession)
+    client = Client(session=websession)
 
     try:
         await client.load_local(
@@ -144,7 +102,7 @@ async def async_setup_entry(hass, config_entry):
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     else:
         # regenmaschine can load multiple controllers at once, but we only grab the one
         # we loaded above:
@@ -154,9 +112,6 @@ async def async_setup_entry(hass, config_entry):
             hass,
             controller,
             config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
-            config_entry.data.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
-            ),
         )
 
     # Update the data object, which at this point (prior to any sensors registering
@@ -272,10 +227,9 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, controller, default_zone_runtime, scan_interval):
+    def __init__(self, hass, controller, default_zone_runtime):
         """Initialize."""
         self._async_cancel_time_interval_listener = None
-        self._scan_interval_seconds = scan_interval
         self.controller = controller
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
@@ -337,7 +291,7 @@ class RainMachine:
             self._async_cancel_time_interval_listener = async_track_time_interval(
                 self.hass,
                 self._async_update_listener_action,
-                timedelta(seconds=self._scan_interval_seconds),
+                DEFAULT_SCAN_INTERVAL,
             )
 
         self._api_category_count[api_category] += 1

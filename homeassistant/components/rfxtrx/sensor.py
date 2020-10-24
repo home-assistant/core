@@ -9,18 +9,26 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import (
+    CONF_DEVICES,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_VOLTAGE,
+)
 from homeassistant.core import callback
 
 from . import (
     CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     DATA_TYPES,
     SIGNAL_EVENT,
     RfxtrxEntity,
     get_device_id,
     get_rfx_object,
 )
-from .const import DATA_RFXTRX_CONFIG
+from .const import ATTR_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +37,7 @@ def _battery_convert(value):
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
-    return value * 10
+    return (value + 1) * 10
 
 
 def _rssi_convert(value):
@@ -40,10 +48,17 @@ def _rssi_convert(value):
 
 
 DEVICE_CLASSES = {
+    "Barometer": DEVICE_CLASS_PRESSURE,
     "Battery numeric": DEVICE_CLASS_BATTERY,
-    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
+    "Current Ch. 1": DEVICE_CLASS_CURRENT,
+    "Current Ch. 2": DEVICE_CLASS_CURRENT,
+    "Current Ch. 3": DEVICE_CLASS_CURRENT,
+    "Energy usage": DEVICE_CLASS_POWER,
     "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
     "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Total usage": DEVICE_CLASS_ENERGY,
+    "Voltage": DEVICE_CLASS_VOLTAGE,
 }
 
 
@@ -54,17 +69,19 @@ CONVERT_FUNCTIONS = {
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up platform."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     data_ids = set()
 
     def supported(event):
         return isinstance(event, (ControlEvent, SensorEvent))
 
     entities = []
-    for packet_id in discovery_info[CONF_DEVICES]:
+    for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
         event = get_rfx_object(packet_id)
         if event is None:
             _LOGGER.error("Invalid device: %s", packet_id)
@@ -72,7 +89,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         for data_type in set(event.values) & set(DATA_TYPES):
             data_id = (*device_id, data_type)
             if data_id in data_ids:
@@ -119,12 +138,23 @@ class RfxtrxSensor(RfxtrxEntity):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._unit_of_measurement = DATA_TYPES.get(data_type)
         self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 
         self._device_class = DEVICE_CLASSES.get(data_type)
         self._convert_fun = CONVERT_FUNCTIONS.get(data_type, lambda x: x)
+
+    async def async_added_to_hass(self):
+        """Restore device state."""
+        await super().async_added_to_hass()
+
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                event = old_state.attributes.get(ATTR_EVENT)
+                if event:
+                    self._apply_event(get_rfx_object(event))
 
     @property
     def state(self):
@@ -157,9 +187,6 @@ class RfxtrxSensor(RfxtrxEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if not isinstance(event, SensorEvent):
-            return
-
         if device_id != self._device_id:
             return
 

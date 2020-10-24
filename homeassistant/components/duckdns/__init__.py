@@ -9,7 +9,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
@@ -120,7 +120,7 @@ def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
                 failed = 0
         finally:
             delay = intervals[failed] if failed < len(intervals) else intervals[-1]
-            remove = async_track_point_in_utc_time(hass, interval_listener, now + delay)
+            remove = async_call_later(hass, delay.total_seconds(), interval_listener)
 
     hass.async_run_job(interval_listener, dt_util.utcnow())
 

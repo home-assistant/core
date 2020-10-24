@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Solo puede configurar una \u00fanica conexi\u00f3n iAqualink."
+            "already_setup": "Solo puede configurar una \u00fanica conexi\u00f3n iAqualink.",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_failure": "No se puede conectar a iAqualink. Verifica tu nombre de usuario y contrase\u00f1a."
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario / correo electr\u00f3nico"
+                    "username": "Usuario"
                 },
                 "description": "Por favor, introduzca el nombre de usuario y la contrase\u00f1a de su cuenta de iAqualink.",
                 "title": "Con\u00e9ctese a iAqualink"

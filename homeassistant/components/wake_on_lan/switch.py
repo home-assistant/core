@@ -81,7 +81,10 @@ class WolSwitch(SwitchEntity):
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
-        self._off_script = Script(hass, off_action) if off_action else None
+        domain = __name__.split(".")[-2]
+        self._off_script = (
+            Script(hass, off_action, name, domain) if off_action else None
+        )
         self._state = False
 
     @property
@@ -114,7 +117,7 @@ class WolSwitch(SwitchEntity):
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
-            self._off_script.run()
+            self._off_script.run(context=self._context)
 
     def update(self):
         """Check if device is on and update the state."""

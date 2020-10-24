@@ -14,7 +14,7 @@ from .const import LOGGER
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
+class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator with some Guardian goodies."""
 
     def __init__(
@@ -45,5 +45,5 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 resp = await self._api_coro()
             except GuardianError as err:
-                raise UpdateFailed(err)
+                raise UpdateFailed(err) from err
         return resp["data"]
