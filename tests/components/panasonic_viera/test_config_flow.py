@@ -39,6 +39,7 @@ def panasonic_viera_setup_fixture():
 
 def get_mock_remote(
     host="1.2.3.4",
+    request_error=None,
     authorize_error=None,
     encrypted=False,
     app_id=None,
@@ -56,7 +57,8 @@ def get_mock_remote(
     mock_remote.enc_key = encryption_key
 
     def request_pin_code(name=None):
-        return
+        if request_error is not None:
+            raise request_error
 
     mock_remote.request_pin_code = request_pin_code
 
@@ -156,6 +158,56 @@ async def test_flow_unknown_abort(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
+async def test_flow_encrypted_not_connected_pin_code_request(hass):
+    """Test flow with encryption and PIN code request connection error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=TimeoutError)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_encrypted_unknown_pin_code_request(hass):
+    """Test flow with encryption and PIN code request unknown error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=Exception)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
