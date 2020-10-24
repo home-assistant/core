@@ -5,7 +5,7 @@
             "cannot_connect": "Failed to connect",
             "conn_error": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "single_instance_allowed": "Already configured. Only a single configuration is possible."
         },
         "error": {
             "auth_failed": "Invalid authentication",
@@ -15,9 +15,9 @@
         "step": {
             "user": {
                 "data": {
-                    "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
+                    "country_code": "Your account phone country code (e.g., 1 for USA or 86 for China)",
                     "password": "Password",
-                    "platform": "The app where your account register",
+                    "platform": "The app where your account was registered",
                     "username": "Username"
                 },
                 "description": "Enter your Tuya credential.",
