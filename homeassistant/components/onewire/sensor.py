@@ -206,10 +206,6 @@ def get_entities(config):
                 "model": device_type,
                 "name": sensor_id,
             }
-            _LOGGER.info(
-                "Built device info: %s",
-                device_info,
-            )
             for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
                 if "moisture" in sensor_key:
                     s_id = sensor_key.split("_")[1]
