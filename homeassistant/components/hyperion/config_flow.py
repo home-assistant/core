@@ -63,20 +63,17 @@ _LOGGER.setLevel(logging.DEBUG)
 #           v<------------------+
 #           |
 #           v
-#     +-------------+
-#     |Step: Confirm|
-#     +-------------+
-#           |
-#           v Source SSDP? Explicit confirm
-#           +---------------------------->+
-#           |                             |
-#           v Otherwise, auto confirm     |
-#           +---------------------------->+
-#                                         |
-#                                         v
-#                               +----------------+
-#                               |    Create!     |
-#                               +----------------+
+#     +-------------+  Confirm not required?
+#     |Step: Confirm|---------------------->+
+#     +-------------+                       |
+#           |                               |
+#           v SSDP: Explicit confirm        |
+#           +------------------------------>+
+#                                           |
+#                                           v
+#                                 +----------------+
+#                                 |    Create!     |
+#                                 +----------------+
 
 # A note on choice of discovery mechanisms: Hyperion supports both Zeroconf and SSDP out
 # of the box. This config flow needs two port numbers from the Hyperion instance, the
