@@ -104,11 +104,11 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power Consumption"
+    assert entry.unique_id == "1234_Power_Consumption"
 
     entry = registry.async_get("sensor.gas_consumption")
     assert entry
-    assert entry.unique_id == "5678_Gas Consumption"
+    assert entry.unique_id == "5678_Gas_Consumption"
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -164,7 +164,7 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power Consumption"
+    assert entry.unique_id == "1234_Power_Consumption"
 
     entry = registry.async_get("sensor.gas_consumption")
     assert not entry

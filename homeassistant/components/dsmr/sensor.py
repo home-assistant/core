@@ -239,7 +239,7 @@ class DSMREntity(Entity):
 
         self._device_name = device_name
         self._device_serial = device_serial
-        self._unique_id = f"{device_serial}_{name}"
+        self._unique_id = f"{device_serial}_{name}".replace(' ', '_')
 
     @callback
     def update_data(self, telegram):
