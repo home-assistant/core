@@ -7,7 +7,7 @@ import time
 import av
 
 from .const import (
-    MAX_MISSING_DTS_PEEK,
+    MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
@@ -94,7 +94,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     # The decoder timestamps of the latest packet in each stream we processed
     last_dts = None
     # Keep track of consecutive packets without a dts to detect end of stream.
-    last_packet_was_without_dts = False
+    missing_dts = 0
     # Holds the buffers for each stream provider
     outputs = None
     # Keep track of the number of segments we've processed
@@ -128,9 +128,9 @@ def _stream_worker_internal(hass, stream, quit_event):
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
-                    if missing_dts >= MAX_MISSING_DTS_PEEK:
+                    if missing_dts >= MAX_MISSING_DTS:
                         raise StopIteration(
-                            f"Invalid data - got {MAX_MISSING_DTS_PEEK} packets with missing DTS while initializing"
+                            f"Invalid data - got {MAX_MISSING_DTS} packets with missing DTS while initializing"
                         )
                     missing_dts += 1
                     continue
@@ -145,9 +145,9 @@ def _stream_worker_internal(hass, stream, quit_event):
                 if (
                     packet.dts is None
                 ):  # Allow single packet with no dts, raise error on second
-                    if missing_dts >= MAX_MISSING_DTS_PEEK:
+                    if missing_dts >= MAX_MISSING_DTS:
                         raise StopIteration(
-                            f"Invalid data - got {MAX_MISSING_DTS_PEEK} packets with missing DTS while initializing"
+                            f"Invalid data - got {MAX_MISSING_DTS} packets with missing DTS while initializing"
                         )
                     missing_dts += 1
                     continue
@@ -237,14 +237,14 @@ def _stream_worker_internal(hass, stream, quit_event):
             else:
                 packet = next(container_packets)
             if packet.dts is None:
-                _LOGGER.error("Stream packet without dts detected, skipping...")
-                # Allow a single packet without dts before terminating the stream.
-                if last_packet_was_without_dts:
-                    # If we get a "flushing" packet, the stream is done
-                    raise StopIteration("No dts in consecutive packets")
-                last_packet_was_without_dts = True
+                # Allow MAX_MISSING_DTS consective packets without dts before terminating the stream.
+                if missing_dts >= MAX_MISSING_DTS:
+                    raise StopIteration(
+                        f"No dts in {MAX_MISSING_DTS} consecutive packets"
+                    )
+                missing_dts += 1
                 continue
-            last_packet_was_without_dts = False
+            missing_dts = 0
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             finalize_stream()
