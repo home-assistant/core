@@ -61,6 +61,10 @@ class CodeInvalid(NestAuthError):
     """Raised when invalid authorization code."""
 
 
+class UnexpectedStateError(HomeAssistantError):
+    """Raised when the config flow is invoked in a 'should not happen' case."""
+
+
 @config_entries.HANDLERS.register(DOMAIN)
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -111,7 +115,7 @@ class NestFlowHandler(
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         if self.is_sdm_api():
-            return None
+            raise UnexpectedStateError("Step only supported for legacy API")
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -142,7 +146,7 @@ class NestFlowHandler(
         deliver the authentication code.
         """
         if self.is_sdm_api():
-            return None
+            raise UnexpectedStateError("Step only supported for legacy API")
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
 
@@ -185,7 +189,7 @@ class NestFlowHandler(
     async def async_step_import(self, info):
         """Import existing auth from Nest."""
         if self.is_sdm_api():
-            return None
+            raise UnexpectedStateError("Step only supported for legacy API")
 
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
