@@ -621,4 +621,3 @@ class RoonDevice(MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
-
