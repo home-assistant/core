@@ -50,6 +50,7 @@ CONF_TRUSTED_PROXIES = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED = "ip_ban_enabled"
 CONF_SSL_PROFILE = "ssl_profile"
+CONF_FOLLOW_SYMLINKS = "follow_symlinks"
 
 SSL_MODERN = "modern"
 SSL_INTERMEDIATE = "intermediate"
@@ -93,6 +94,7 @@ HTTP_SCHEMA = vol.All(
             vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
+            vol.Optional(CONF_FOLLOW_SYMLINKS, default=False): cv.boolean,
         }
     ),
 )
@@ -205,6 +207,7 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    follow_symlinks = conf[CONF_FOLLOW_SYMLINKS]
 
     server = HomeAssistantHTTP(
         hass,
@@ -219,6 +222,7 @@ async def async_setup(hass, config):
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         ssl_profile=ssl_profile,
+        follow_symlinks=follow_symlinks,
     )
 
     startup_listeners = []
@@ -289,6 +293,7 @@ class HomeAssistantHTTP:
         login_threshold,
         is_ban_enabled,
         ssl_profile,
+        follow_symlinks,
     ):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
@@ -320,6 +325,7 @@ class HomeAssistantHTTP:
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
+        self.follow_symlinks = follow_symlinks
         self._handler = None
         self.runner = None
         self.site = None
@@ -368,7 +374,9 @@ class HomeAssistantHTTP:
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
+            self.app.router.register_resource(
+                resource(url_path, path, follow_symlinks=self.follow_symlinks)
+            )
             return
 
         if cache_headers:
