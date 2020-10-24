@@ -322,12 +322,10 @@ def websocket_handle_reorder(hass, connection, msg):
     try:
         hass.data[DOMAIN].async_reorder(msg.pop("item_ids"))
         hass.bus.async_fire(EVENT, {"action": "reorder"})
-        connection.send_message(websocket_api.result_message(msg_id))
+        connection.send_result(msg_id)
     except KeyError:
-        connection.send_message(
-            websocket_api.error_message(
-                msg_id, "item_not_found", "One or more item id(s) not found."
-            )
+        connection.send_error(
+            msg_id, websocket_api.ERR_NOT_FOUND, "One or more item id(s) not found."
         )
     except vol.Invalid as err:
         connection.send_message(
