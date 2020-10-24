@@ -18,6 +18,13 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, SIGNAL_NEST_UPDATE
 
+DEVICE_TYPE_MAP = {
+    "sdm.devices.types.CAMERA": "Camera",
+    "sdm.devices.types.DISPLAY": "Display",
+    "sdm.devices.types.DOORBELL": "Doorbell",
+    "sdm.devices.types.THERMOSTAT": "Thermostat",
+}
+
 
 async def async_setup_sdm_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -46,7 +53,7 @@ class SensorBase(Entity):
         self._device = device
 
     @property
-    def should_pool(self) -> bool:
+    def should_poll(self) -> bool:
         """Disable polling since entities have state pushed via pubsub."""
         return False
 
@@ -89,28 +96,19 @@ class SensorBase(Entity):
         # The API intentionally returns minimal information about specific
         # devices, instead relying on traits, but we can infer a generic model
         # name based on the type
-        if self._device.type == "sdm.devices.types.CAMERA":
-            return "Camera"
-        if self._device.type == "sdm.devices.types.DISPLAY":
-            return "Display"
-        if self._device.type == "sdm.devices.types.DOORBELL":
-            return "Doorbell"
-        if self._device.type == "sdm.devices.types.THERMOSTAT":
-            return "Thermostat"
-        return None
+        return DEVICE_TYPE_MAP.get(self._device.type)
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
-
-        async def async_update_state():
-            """Update sensor state."""
-            await self.async_update_ha_state(True)
-
         # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
         # here to re-fresh the signals from _device.  Unregister this callback
         # when the entity is removed.
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_NEST_UPDATE,
+                self.async_write_ha_state,
+            )
         )
 
 
