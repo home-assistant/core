@@ -20,16 +20,25 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
+import homeassistant.util.color as color_util
 
 from tests.async_mock import Mock, mock_open, patch
 from tests.common import load_fixture
 
 LIGHT_ENTITY = "light.kitchen_lights"
-CLOSE_THRESHOLD = 5
+CLOSE_THRESHOLD = 10
 
 
 def _close_enough(actual_rgb, testing_rgb):
     """Validate the given RGB value is in acceptable tolerance."""
+    # Convert the given RGB values to hue / saturation and then back again
+    # as it wasn't reading the same RGB value set against it.
+    actual_hs = color_util.color_RGB_to_hs(*actual_rgb)
+    actual_rgb = color_util.color_hs_to_RGB(*actual_hs)
+
+    testing_hs = color_util.color_RGB_to_hs(*testing_rgb)
+    testing_rgb = color_util.color_hs_to_RGB(*testing_hs)
+
     actual_red, actual_green, actual_blue = actual_rgb
     testing_red, testing_green, testing_blue = testing_rgb
 
@@ -154,12 +163,8 @@ async def test_url_success(hass, aioclient_mock):
     # Brightness has changed, optional service call field
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
-    # RGB has changed though
-    assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
-
     # Ensure the RGB values are correct
-    # TODO: Why does the demo light not set / report the rgb_color correctly!
-    # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
+    assert _close_enough(state.attributes[ATTR_RGB_COLOR], (50, 100, 150))
 
 
 async def test_url_not_allowed(hass, aioclient_mock):
@@ -274,10 +279,8 @@ async def test_file(hass):
     # And set the brightness
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
-    assert state.attributes.get(ATTR_RGB_COLOR) != (255, 63, 111)
-
     # Ensure the RGB values are correct
-    # assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
+    assert _close_enough(state.attributes[ATTR_RGB_COLOR], (25, 75, 125))
 
 
 @patch("os.path.isfile", Mock(return_value=True))
