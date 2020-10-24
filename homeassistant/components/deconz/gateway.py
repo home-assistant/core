@@ -121,9 +121,13 @@ class DeconzGateway:
         async_dispatcher_send(self.hass, self.signal_reachable, True)
 
     @callback
-    def async_add_device_callback(self, device_type, device) -> None:
+    def async_add_device_callback(self, device_type, device=None) -> None:
         """Handle event of new device creation in deCONZ."""
         if not self.option_allow_new_devices:
+            return
+
+        if device is None:
+            async_dispatcher_send(self.hass, self.async_signal_new_device(device_type))
             return
 
         if not isinstance(device, list):
@@ -178,7 +182,7 @@ class DeconzGateway:
                 )
             )
 
-        self.hass.async_create_task(async_setup_events(self))
+        await async_setup_events(self)
 
         self.api.start()
 
@@ -208,7 +212,7 @@ class DeconzGateway:
         deconz_ids = []
 
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(NEW_SENSOR, list(self.api.sensors.values()))
+            self.async_add_device_callback(NEW_SENSOR)
 
         else:
             deconz_ids += [
@@ -218,7 +222,7 @@ class DeconzGateway:
             ]
 
         if self.option_allow_deconz_groups:
-            self.async_add_device_callback(NEW_GROUP, list(self.api.groups.values()))
+            self.async_add_device_callback(NEW_GROUP)
 
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]

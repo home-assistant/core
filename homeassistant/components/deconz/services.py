@@ -146,10 +146,10 @@ async def async_refresh_devices_service(hass, data):
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    gateway.async_add_device_callback(NEW_GROUP, list(gateway.api.groups.values()))
-    gateway.async_add_device_callback(NEW_LIGHT, list(gateway.api.lights.values()))
-    gateway.async_add_device_callback(NEW_SCENE, list(gateway.api.scenes.values()))
-    gateway.async_add_device_callback(NEW_SENSOR, list(gateway.api.sensors.values()))
+    gateway.async_add_device_callback(NEW_GROUP)
+    gateway.async_add_device_callback(NEW_LIGHT)
+    gateway.async_add_device_callback(NEW_SCENE)
+    gateway.async_add_device_callback(NEW_SENSOR)
 
 
 async def async_remove_orphaned_entries_service(hass, data):
