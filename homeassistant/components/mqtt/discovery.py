@@ -34,6 +34,7 @@ SUPPORTED_COMPONENTS = [
     "climate",
     "cover",
     "device_automation",
+    "device_tracker",
     "fan",
     "light",
     "lock",
