@@ -496,7 +496,7 @@ class EntityRegistry:
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
-        for entity_id, entity in self.entities.items():
+        for entity_id, entry in self.entities.items():
             if area_id == entity.area_id:
                 self._async_update_entity(entity_id, area_id=None)  # type: ignore
 
