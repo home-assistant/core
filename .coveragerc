@@ -314,6 +314,7 @@ omit =
     homeassistant/components/garmin_connect/__init__.py
     homeassistant/components/garmin_connect/const.py
     homeassistant/components/garmin_connect/sensor.py
+    homeassistant/components/garmin_connect/alarm_util.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/geizhals/sensor.py

@@ -8,9 +8,11 @@ from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_TYPE,
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -29,6 +31,7 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    DOMAIN,
     PRESSURE_CBAR,
 )
 
@@ -125,36 +128,44 @@ def hb_info_from_type(dev_type="std"):
         return HOBBYBOARD_EF
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up 1-Wire platform."""
+    if config.get(CONF_HOST):
+        config[CONF_TYPE] = CONF_TYPE_OWSERVER
+    elif config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
+        config[CONF_TYPE] = CONF_TYPE_SYSBUS
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+        config[CONF_TYPE] = CONF_TYPE_OWFS
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up 1-Wire platform."""
-    entities = get_entities(config)
-    add_entities(entities, True)
+    entities = await hass.async_add_executor_job(get_entities, config_entry.data)
+    async_add_entities(entities, True)
 
 
 def get_entities(config):
     """Get a list of entities."""
-    base_dir = config[CONF_MOUNT_DIR]
-    owhost = config.get(CONF_HOST)
-    owport = config[CONF_PORT]
-
-    # Ensure type is configured
-    if owhost:
-        conf_type = CONF_TYPE_OWSERVER
-    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
-        conf_type = CONF_TYPE_SYSBUS
-    else:  # pragma: no cover
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        conf_type = CONF_TYPE_OWFS
-
     entities = []
     device_names = {}
     if CONF_NAMES in config:
         if isinstance(config[CONF_NAMES], dict):
             device_names = config[CONF_NAMES]
 
+    conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
+        owhost = config[CONF_HOST]
+        owport = config[CONF_PORT]
+
         _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -163,7 +174,7 @@ def get_entities(config):
             _LOGGER.error(
                 "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
-            devices = []
+            return entities
         for device in devices:
             _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
@@ -200,8 +211,9 @@ def get_entities(config):
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
-        _LOGGER.debug("Initializing using SysBus")
-        for p1sensor in Pi1Wire().find_all_sensors():
+        base_dir = config[CONF_MOUNT_DIR]
+        _LOGGER.debug("Initializing using SysBus %s", base_dir)
+        for p1sensor in Pi1Wire(base_dir).find_all_sensors():
             family = p1sensor.mac_address[:2]
             sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:
@@ -232,6 +244,7 @@ def get_entities(config):
     else:  # pragma: no cover
         # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+        base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
         _LOGGER.warning(
             "The OWFS implementation of 1-Wire sensors is deprecated, "

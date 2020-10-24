@@ -76,6 +76,7 @@ async def test_form(
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input=user_input
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
@@ -83,7 +84,6 @@ async def test_form(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -144,6 +144,7 @@ async def test_import(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=user_input
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
@@ -151,7 +152,6 @@ async def test_import(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -216,6 +216,7 @@ async def test_ssdp_discovery(
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
@@ -224,6 +225,5 @@ async def test_ssdp_discovery(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Na pewno chcesz skonfigurowa\u0107 OwnTracks?",
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
                 "title": "Konfiguracja  OwnTracks"
             }
         }
