@@ -2,6 +2,7 @@
 from datetime import datetime, time, timedelta
 from unittest import mock
 
+from miio import DeviceException
 import pytest
 from pytz import utc
 
@@ -52,6 +53,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
 
@@ -191,25 +193,36 @@ def mirobo_is_on_fixture():
         yield mock_vacuum
 
 
-@pytest.fixture(name="mock_mirobo_errors")
-def mirobo_errors_fixture():
-    """Mock mock_mirobo_errors to simulate a bad vacuum status request."""
-    mock_vacuum = MagicMock()
-    mock_vacuum.status.side_effect = OSError()
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
-        yield mock_vacuum
-
-
-async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
-    """Test vacuum supported features."""
+async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_is_on):
+    """Test error logging on exceptions."""
     entity_name = "test_vacuum_cleaner_error"
-    await setup_component(hass, entity_name)
+    entity_id = await setup_component(hass, entity_name)
 
+    def is_available():
+        state = hass.states.get(entity_id)
+        return state.state != STATE_UNAVAILABLE
+
+    # The initial setup has to be done successfully
     assert "Initializing with host 192.168.1.100 (token 12345...)" in caplog.text
-    assert mock_mirobo_errors.status.call_count == 1
-    assert "ERROR" in caplog.text
-    assert "Got OSError while fetching the state" in caplog.text
+    assert "WARNING" not in caplog.text
+    assert is_available()
+
+    # Second update causes an exception, which should be logged
+    mock_mirobo_is_on.status.side_effect = DeviceException("dummy exception")
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    assert "WARNING" in caplog.text
+    assert "Got exception while fetching the state" in caplog.text
+    assert not is_available()
+
+    # Third update does not get logged as the device is already unavailable,
+    # so we clear the log and reset the status to test that
+    caplog.clear()
+    mock_mirobo_is_on.status.reset_mock()
+
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    assert "Got exception while fetching the state" not in caplog.text
+    assert not is_available()
+    assert mock_mirobo_is_on.status.call_count == 1
 
 
 async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
