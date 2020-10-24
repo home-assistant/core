@@ -43,7 +43,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Konfiguracja Huba Insteon \u2014 wersja 2.",
+                "description": "Konfiguracja Huba Insteon \u2014 wersja 2",
                 "title": "Hub Insteon \u2014 wersja 2"
             },
             "init": {
