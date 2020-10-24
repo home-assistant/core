@@ -29,8 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_HOST],
         passkey=entry.data[CONF_PASSKEY],
         port=entry.data[CONF_PORT],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
+        username=entry.data.get[CONF_USERNAME],
+        password=entry.data.get[CONF_PASSWORD],
         session=session,
     )
 
