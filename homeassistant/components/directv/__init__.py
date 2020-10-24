@@ -22,7 +22,7 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.120")
 
 PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
