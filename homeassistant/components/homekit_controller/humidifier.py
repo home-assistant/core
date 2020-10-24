@@ -265,6 +265,9 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
             * 20,
         }
 
+        if not self.is_on:
+            data[ATTR_HUMIDITY] = 0
+
         return data
 
     @property
@@ -278,6 +281,9 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> Optional[int]:
         """Return the humidity we try to reach."""
+        if not self.is_on:
+            return 0
+
         return (
             self.service.value(
                 CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL
@@ -287,9 +293,15 @@ class HomeKitDiffuser(HomeKitEntity, HumidifierEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
+
         if humidity < 20:
             await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
         else:
+            if not self.is_on:
+                await self.async_put_characteristics(
+                    {CharacteristicsTypes.ACTIVE: True}
+                )
+
             await self.async_put_characteristics(
                 {
                     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: humidity
