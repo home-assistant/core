@@ -74,6 +74,8 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -97,6 +99,16 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get("sensor.power_consumption")
+    assert entry
+    assert entry.unique_id == "1234_Power_Consumption"
+
+    entry = registry.async_get("sensor.gas_consumption")
+    assert entry
+    assert entry.unique_id == "5678_Gas_Consumption"
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -129,13 +141,42 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
 
 
+async def test_setup_only_energy(hass, dsmr_connection_fixture):
+    """Test the default setup."""
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get("sensor.power_consumption")
+    assert entry
+    assert entry.unique_id == "1234_Power_Consumption"
+
+    entry = registry.async_get("sensor.gas_consumption")
+    assert not entry
+
+
 async def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
 
     config = {"platform": "dsmr"}
 
-    entity = DerivativeDSMREntity("test", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
@@ -184,6 +225,8 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "4",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -239,6 +282,8 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "5",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -294,6 +339,8 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {
@@ -346,6 +393,8 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
         "dsmr_version": "5B",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
@@ -383,6 +432,8 @@ async def test_tcp(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     mock_entry = MockConfigEntry(
@@ -407,6 +458,8 @@ async def test_connection_errors_retry(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # override the mock to have it fail the first time and succeed after
@@ -442,6 +495,8 @@ async def test_reconnect(hass, dsmr_connection_fixture):
         "dsmr_version": "2.2",
         "precision": 4,
         "reconnect_interval": 0,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
     }
 
     # mock waiting coroutine while connection lasts
