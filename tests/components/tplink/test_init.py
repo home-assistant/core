@@ -1,4 +1,5 @@
 """Tests for the TP-Link component."""
+import logging
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
@@ -13,9 +14,10 @@ from homeassistant.components.tplink.common import (
     CONF_LIGHT,
     CONF_SWITCH,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock
 from tests.common import MockConfigEntry, mock_coro
 
 
@@ -219,6 +221,28 @@ async def test_platforms_are_initialized(hass):
     assert discover.call_count == 0
     assert light_setup.call_count == 1
     assert switch_setup.call_count == 1
+
+
+async def test_async_setup_entry_default(hass, caplog):
+    """Test async_setup_entry."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+        }
+    }
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await async_setup_component(hass, tplink.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
+    assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+    assert "Scheduling a retry for unavailable devices" in caplog.text
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
 
 
 async def test_no_config_creates_no_entry(hass):
