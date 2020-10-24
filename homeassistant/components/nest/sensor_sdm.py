@@ -96,7 +96,7 @@ class SensorBase(Entity):
         # The API intentionally returns minimal information about specific
         # devices, instead relying on traits, but we can infer a generic model
         # name based on the type
-        return DEVICE_TYPE_MAP.get(self._device.type, None)
+        return DEVICE_TYPE_MAP.get(self._device.type)
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""

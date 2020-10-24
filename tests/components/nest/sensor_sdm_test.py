@@ -260,3 +260,41 @@ async def test_event_updates_sensor(hass):
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
     assert temperature.state == "26.2"
+
+
+async def test_device_with_unknown_type(hass):
+    """Test a device without a custom name, inferring name from structure."""
+    devices = {
+        "some-device-id": Device.MakeDevice(
+            {
+                "name": "some-device-id",
+                "type": "some-unknown-type",
+                "traits": {
+                    "sdm.devices.traits.Info": {
+                        "customName": "My Sensor",
+                    },
+                    "sdm.devices.traits.Temperature": {
+                        "ambientTemperatureCelsius": 25.1,
+                    },
+                },
+            },
+            auth=None,
+        )
+    }
+    await setup_sensor(hass, devices)
+
+    temperature = hass.states.get("sensor.my_sensor_temperature")
+    assert temperature is not None
+    assert temperature.state == "25.1"
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("sensor.my_sensor_temperature")
+    assert entry.unique_id == "some-device-id-temperature"
+    assert entry.original_name == "My Sensor Temperature"
+    assert entry.domain == "sensor"
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(entry.device_id)
+    assert device.name == "My Sensor"
+    assert device.model is None
+    assert device.identifiers == {("nest", "some-device-id")}
