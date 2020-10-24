@@ -1,13 +1,17 @@
+"""Fixtures for history tests."""
+
 import pytest
 
 from homeassistant.components import history
 from homeassistant.setup import setup_component
 
-from tests.components.recorder.conftest import hass_recorder
+from tests.components.recorder.conftest import hass_recorder  # noqa: F401
+from tests.conftest import hass_client  # noqa: F401
 
 
 @pytest.fixture
-def hass_history(hass_recorder):
+def hass_history(hass_recorder):  # noqa: F811
+    """Home Assistant fixture with history."""
     hass = hass_recorder()
 
     config = history.CONFIG_SCHEMA(
