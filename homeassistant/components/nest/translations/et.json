@@ -8,6 +8,9 @@
             "no_flows": "Enne tuvastamist pead Nesti konfigureerima. [Palun lugege juhiseid] (https://www.home-assistant.io/components/nest/).",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
         "error": {
             "internal_error": "Sisemine viga tuvastuskoodi kinnitamisel",
             "invalid_code": "Kehtetu kood",
