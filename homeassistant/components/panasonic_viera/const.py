@@ -19,6 +19,6 @@ ATTR_MODEL_NUMBER = "modelNumber"
 ATTR_UDN = "UDN"
 
 DEFAULT_MANUFACTURER = "Panasonic"
-DEFAULT_MODEL_NUMBER = "Panasonic Viera"
+DEFAULT_MODEL_NUMBER = "Viera"
 
 ERROR_INVALID_PIN_CODE = "invalid_pin_code"
