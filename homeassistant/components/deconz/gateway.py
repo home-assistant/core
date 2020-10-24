@@ -55,9 +55,6 @@ class DeconzGateway:
         self.events = []
         self.listeners = []
 
-        self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
-        self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
-
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
@@ -210,29 +207,21 @@ class DeconzGateway:
         """Manage entities affected by config entry options."""
         deconz_ids = []
 
-        if self._current_option_allow_clip_sensor != self.option_allow_clip_sensor:
-            self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
+        if self.option_allow_clip_sensor:
+            self.async_add_device_callback(NEW_SENSOR, list(self.api.sensors.values()))
 
-            sensors = [
-                sensor
+        else:
+            deconz_ids += [
+                sensor.deconz_id
                 for sensor in self.api.sensors.values()
                 if sensor.type.startswith("CLIP")
             ]
 
-            if self.option_allow_clip_sensor:
-                self.async_add_device_callback(NEW_SENSOR, sensors)
-            else:
-                deconz_ids += [sensor.deconz_id for sensor in sensors]
+        if self.option_allow_deconz_groups:
+            self.async_add_device_callback(NEW_GROUP, list(self.api.groups.values()))
 
-        if self._current_option_allow_deconz_groups != self.option_allow_deconz_groups:
-            self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
-
-            groups = list(self.api.groups.values())
-
-            if self.option_allow_deconz_groups:
-                self.async_add_device_callback(NEW_GROUP, groups)
-            else:
-                deconz_ids += [group.deconz_id for group in groups]
+        else:
+            deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
 

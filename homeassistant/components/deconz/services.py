@@ -1,4 +1,7 @@
 """deCONZ services."""
+
+import asyncio
+
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
@@ -155,8 +158,10 @@ async def async_remove_orphaned_entries_service(hass, data):
     if CONF_BRIDGE_ID in data:
         gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry, entity_registry = await asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+    )
 
     entity_entries = async_entries_for_config_entry(
         entity_registry, gateway.config_entry.entry_id
