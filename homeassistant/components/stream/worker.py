@@ -127,10 +127,10 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet = next(container_packets)
                 if (
                     packet.dts is None
-                ):  # Allow single packet with no dts, raise error on second
+                ):  # Allow MAX_MISSING_DTS packets with no dts, raise error on the next one
                     if missing_dts >= MAX_MISSING_DTS:
                         raise StopIteration(
-                            f"Invalid data - got {MAX_MISSING_DTS} packets with missing DTS while initializing"
+                            f"Invalid data - got {MAX_MISSING_DTS+1} packets with missing DTS while initializing"
                         )
                     missing_dts += 1
                     continue
@@ -144,10 +144,10 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet = next(container_packets)
                 if (
                     packet.dts is None
-                ):  # Allow single packet with no dts, raise error on second
+                ):  # Allow MAX_MISSING_DTS packet with no dts, raise error on the next one
                     if missing_dts >= MAX_MISSING_DTS:
                         raise StopIteration(
-                            f"Invalid data - got {MAX_MISSING_DTS} packets with missing DTS while initializing"
+                            f"Invalid data - got {MAX_MISSING_DTS+1} packets with missing DTS while initializing"
                         )
                     missing_dts += 1
                     continue
@@ -237,10 +237,10 @@ def _stream_worker_internal(hass, stream, quit_event):
             else:
                 packet = next(container_packets)
             if packet.dts is None:
-                # Allow MAX_MISSING_DTS consecutive packets without dts before terminating the stream.
+                # Allow MAX_MISSING_DTS consecutive packets without dts. Terminate the stream on the next one.
                 if missing_dts >= MAX_MISSING_DTS:
                     raise StopIteration(
-                        f"No dts in {MAX_MISSING_DTS} consecutive packets"
+                        f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
                     )
                 missing_dts += 1
                 continue
