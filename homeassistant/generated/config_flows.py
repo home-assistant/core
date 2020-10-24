@@ -36,6 +36,7 @@ FLOWS = [
     "cast",
     "cert_expiry",
     "cloudflare",
+    "connectedcars",
     "control4",
     "coolmaster",
     "coronavirus",

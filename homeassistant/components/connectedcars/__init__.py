@@ -4,7 +4,9 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from connectedcars import ConnectedCarsClient, ConnectedCarsException
+from connectedcars.client import ConnectedCarsClient
+from connectedcars.constants import QUERY_COMPLETE
+from connectedcars.exceptions import ConnectedCarsException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +31,6 @@ from .const import (
     ATTR_API_VEHICLE_POS_LONGITUDE,
     ATTR_API_VEHICLE_VIN,
     ATTR_API_VEHICLE_VOLTAGE,
-    COMPLETE_QUERY,
     CONF_NAMESPACE,
     DOMAIN,
 )
@@ -99,7 +100,7 @@ class ConnectedCarsDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         with async_timeout.timeout(20):
             try:
-                response = await self.ccah.async_query(COMPLETE_QUERY)
+                response = await self.ccah.async_query(QUERY_COMPLETE)
             except ConnectedCarsException as error:
                 raise UpdateFailed(error)
 

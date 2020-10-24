@@ -7,7 +7,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_NAME,
     LENGTH_KILOMETERS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     VOLT,
     VOLUME_LITERS,
 )
@@ -52,7 +52,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:gas-station",
         ATTR_LABEL: ATTR_API_VEHICLE_FUELPERCENTAGE,
-        ATTR_UNIT: UNIT_PERCENTAGE,
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_API_VEHICLE_VOLTAGE: {
         ATTR_DEVICE_CLASS: None,

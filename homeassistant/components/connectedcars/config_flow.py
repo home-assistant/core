@@ -1,17 +1,14 @@
 """Config flow for ConnectedCars.io integration."""
 import logging
 
-from connectedcars import ConnectedCarsClient, ConnectedCarsException
+from connectedcars.client import ConnectedCarsClient
+from connectedcars.constants import QUERY_USER, QUERY_VEHICLE_VIN
+from connectedcars.exceptions import ConnectedCarsException
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import (  # pylint:disable=unused-import
-    COMPLETE_QUERY_USER,
-    COMPLETE_QUERY_VIN,
-    DEFAULT_NAMESPACE,
-    DOMAIN,
-)
+from .const import DEFAULT_NAMESPACE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +38,7 @@ class ConnectedcarsApiHandler:
 
         self.client = client
 
-        self.user_data = await client.async_query(COMPLETE_QUERY_USER)
+        self.user_data = await client.async_query(QUERY_USER)
 
         return True
 
@@ -49,7 +46,7 @@ class ConnectedcarsApiHandler:
         """Will get the email address of the account holder."""
 
         if not self.user_data:
-            self.user_data = await self.client.async_query(COMPLETE_QUERY_USER)
+            self.user_data = await self.client.async_query(QUERY_USER)
 
         email = self.user_data["data"]["viewer"]["email"]
 
@@ -59,7 +56,7 @@ class ConnectedcarsApiHandler:
         """Will get the vin identifier of the car."""
 
         if not self.vin:
-            response = await self.client.async_query(COMPLETE_QUERY_VIN)
+            response = await self.client.async_query(QUERY_VEHICLE_VIN)
             # This needs to lookup the "userinput_vin" to see if it can be found in the result, not just take the first car
             vin = response["data"]["viewer"]["vehicles"][0]["vehicle"]["vin"]
             self.vin = vin
