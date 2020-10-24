@@ -57,13 +57,13 @@ async def test_form(hass):
             result["flow_id"],
             {"host": "1.1.1.1"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,13 +102,13 @@ async def test_title_without_name_and_prefix(hass):
             result["flow_id"],
             {"host": "1.1.1.1"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "shelly1pm-12345"
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -151,6 +151,7 @@ async def test_form_auth(hass):
             result2["flow_id"],
             {"username": "test username", "password": "test password"},
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == "Test name"
@@ -159,7 +160,6 @@ async def test_form_auth(hass):
         "username": "test username",
         "password": "test password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -323,13 +323,13 @@ async def test_zeroconf(hass):
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -480,6 +480,7 @@ async def test_zeroconf_require_auth(hass):
             result2["flow_id"],
             {"username": "test username", "password": "test password"},
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == "Test name"
@@ -488,7 +489,6 @@ async def test_zeroconf_require_auth(hass):
         "username": "test username",
         "password": "test password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

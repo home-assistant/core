@@ -57,6 +57,7 @@ async def test_form_zeroconf(hass):
             result2["flow_id"],
             {"resources": ["battery.voltage", "ups.status", "ups.status.display"]},
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == "192.168.1.5:1234"
@@ -68,7 +69,6 @@ async def test_form_zeroconf(hass):
         "username": "test-username",
     }
     assert result3["result"].unique_id is None
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -116,6 +116,7 @@ async def test_form_user_one_ups(hass):
             result2["flow_id"],
             {"resources": ["battery.voltage", "ups.status", "ups.status.display"]},
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == "1.1.1.1:2222"
@@ -126,7 +127,6 @@ async def test_form_user_one_ups(hass):
         "resources": ["battery.voltage", "ups.status", "ups.status.display"],
         "username": "test-username",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -195,6 +195,7 @@ async def test_form_user_multiple_ups(hass):
             result3["flow_id"],
             {"resources": ["battery.voltage"]},
         )
+        await hass.async_block_till_done()
 
     assert result4["type"] == "create_entry"
     assert result4["title"] == "ups2@1.1.1.1:2222"
@@ -206,7 +207,6 @@ async def test_form_user_multiple_ups(hass):
         "resources": ["battery.voltage"],
         "username": "test-username",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -239,6 +239,7 @@ async def test_form_import(hass):
                 "resources": ["battery.charge"],
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "localhost:123"
@@ -248,7 +249,6 @@ async def test_form_import(hass):
         "name": "name",
         "resources": ["battery.charge"],
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
