@@ -179,7 +179,9 @@ def test_home_assistant_start_stop_grouped(hass_):
     )
 
     assert len(entries) == 1
-    assert_entry(entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN)
+    assert_entry(
+        entries[0], name="Home Assistant", message="restarted", domain=ha.DOMAIN
+    )
 
 
 def test_home_assistant_start(hass_):
@@ -235,7 +237,9 @@ def test_process_custom_logbook_entries(hass_):
 
 
 # pylint: disable=no-self-use
-def assert_entry(entry, when=None, name=None, message=None, domain=None, entity_id=None):
+def assert_entry(
+    entry, when=None, name=None, message=None, domain=None, entity_id=None
+):
     """Assert an entry is what is expected."""
     return _assert_entry(entry, when, name, message, domain, entity_id)
 
