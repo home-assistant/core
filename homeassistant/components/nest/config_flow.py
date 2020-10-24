@@ -61,7 +61,7 @@ class CodeInvalid(NestAuthError):
     """Raised when invalid authorization code."""
 
 
-class UnexpectedStateError(NestAuthError):
+class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
