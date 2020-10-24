@@ -80,10 +80,11 @@ class TasmotaLight(
 
         self._setup_from_entity()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
+        await super().discovery_update(update, write_state=False)
         self._setup_from_entity()
-        await super().discovery_update(update)
+        self.async_write_ha_state()
 
     def _setup_from_entity(self):
         """(Re)Setup the entity."""
