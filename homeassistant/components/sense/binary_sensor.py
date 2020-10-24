@@ -134,7 +134,7 @@ class SenseDevice(BinarySensorEntity):
     def _async_update_from_data(self):
         """Get the latest data, update state. Must not do I/O."""
         new_state = bool(self._sense_devices_data.get_device_by_id(self._id))
-        if not self._available or self._state != new_state:
+        if self._available and self._state == new_state:
             return
         self._available = True
         self._state = new_state

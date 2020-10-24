@@ -200,7 +200,7 @@ class SenseActiveSensor(Entity):
             if self._is_production
             else self._data.active_power
         )
-        if not self._available or self._state != new_state:
+        if self._available and self._state == new_state:
             return
         self._state = new_state
         self._available = True
@@ -280,7 +280,7 @@ class SenseVoltageSensor(Entity):
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(self._data.active_voltage[self._voltage_index], 1)
-        if not self._available or self._state != new_state:
+        if self._available and self._state == new_state:
             return
         self._available = True
         self._state = new_state
@@ -447,7 +447,7 @@ class SenseEnergyDevice(Entity):
             new_state = 0
         else:
             new_state = int(device_data["w"])
-        if not self._available or self._state != new_state:
+        if self._available and self._state == new_state:
             return
         self._state = new_state
         self._available = True
