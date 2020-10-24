@@ -2,28 +2,28 @@ join:
   description: Group players together.
   fields:
     entity_id:
-      description: Entity ID of the player that will be the master of the group.
+      description: id of the player that will be the master of the group.
       example: "media_player.study"
     join_ids:
-      description: Entity ID(s) of entities that will join the master.
+      description: id(s) of the players that will join the master.
       example: "['media_player.bedroom', 'media_player.kitchen']"
 
 unjoin:
-  description: Unjoin the player from a group.
+  description: Remove players from a group.
   fields:
     entity_id:
-      description: Entity ID of the player that is the master of the group.
+      description: id of the player that is the master of the group..
       example: "media_player.study"
     unjoin_ids:
-      description: Optional ID(s) of entities that will be unjoined from the group. If not included, all currently joined players will be unjoined
+      description: Optional id(s) of the players that will be unjoined from the group. If not specified, all players will be unjoined from the master.
       example: "['media_player.bedroom', 'media_player.kitchen']"
 
 transfer:
-  description: Transfer playback from one roon player to another.
+  description: Transfer playback from one player to another.
   fields:
     entity_id:
-      description: Entity ID of the source player.
+      description: id of the source player.
       example: "media_player.bedroom"
     transfer_id:
-      description: Entity ID of the destination player.
+      description: id of the destination player.
       example: "media_player.study"
