@@ -11,6 +11,7 @@ from .const import (
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
 
@@ -67,7 +68,7 @@ def stream_worker(hass, stream, quit_event):
 def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
-    container = av.open(stream.source, options=stream.options)
+    container = av.open(stream.source, options=stream.options, timeout=STREAM_TIMEOUT)
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):

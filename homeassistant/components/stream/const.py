@@ -22,3 +22,4 @@ PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audi
 MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably reasonable
 
 MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
+STREAM_TIMEOUT = 5  # Timeout for reading stream
