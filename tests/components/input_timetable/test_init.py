@@ -124,14 +124,10 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes[ATTR_EDITABLE]
 
 
-async def test_set(hass, caplog):
-    """Test set method."""
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
-    entity_id = "input_timetable.test"
-
-    test_cases = [
+@pytest.mark.parametrize(
+    ["config", "timetable"],
+    [
         (
-            "single",
             [("01:02:03", STATE_ON)],
             [
                 {
@@ -141,7 +137,6 @@ async def test_set(hass, caplog):
             ],
         ),
         (
-            "multiple",
             [("04:05:06", STATE_ON), ("01:02:03", STATE_OFF)],
             [
                 {
@@ -155,7 +150,6 @@ async def test_set(hass, caplog):
             ],
         ),
         (
-            "override",
             [("01:02:03", STATE_ON), ("01:02:03", STATE_OFF)],
             [
                 {
@@ -164,34 +158,34 @@ async def test_set(hass, caplog):
                 },
             ],
         ),
-    ]
-
-    for test_case in test_cases:
-        await call_reset(hass, entity_id)
-        for event in test_case[1]:
-            time = datetime.time.fromisoformat(event[0])
-            state = event[1]
-            await call_set(hass, entity_id, time, state)
-        state = hass.states.get(entity_id)
-        assert (
-            state.attributes[ATTR_TIMETABLE] == test_case[2]
-        ), f"'{test_case[0]}' test case failed: timetable is '{state.attributes[ATTR_TIMETABLE]}' but expecting '{test_case[2]}''"
-
-
-async def test_unset(hass, caplog):
-    """Test unset method."""
+    ],
+    ids=[
+        "single",
+        "multiple",
+        "override",
+    ],
+)
+async def test_set(hass, config, timetable):
+    """Test set method."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
     entity_id = "input_timetable.test"
+    for event in config:
+        time = datetime.time.fromisoformat(event[0])
+        state = event[1]
+        await call_set(hass, entity_id, time, state)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TIMETABLE] == timetable
 
-    test_cases = [
+
+@pytest.mark.parametrize(
+    ["config", "unset", "timetable"],
+    [
         (
-            "single",
             [("01:02:03", STATE_ON)],
             "01:02:03",
             [],
         ),
         (
-            "multiple",
             [("04:05:06", STATE_ON), ("01:02:03", STATE_OFF)],
             "04:05:06",
             [
@@ -202,7 +196,6 @@ async def test_unset(hass, caplog):
             ],
         ),
         (
-            "none",
             [("01:02:03", STATE_ON)],
             "04:05:06",
             [
@@ -212,20 +205,25 @@ async def test_unset(hass, caplog):
                 },
             ],
         ),
-    ]
-
-    for test_case in test_cases:
-        await call_reset(hass, entity_id)
-        for event in test_case[1]:
-            time = datetime.time.fromisoformat(event[0])
-            state = event[1]
-            await call_set(hass, entity_id, time, state)
-        time = datetime.time.fromisoformat(test_case[2])
-        await call_unset(hass, entity_id, time)
-        state = hass.states.get(entity_id)
-        assert (
-            state.attributes[ATTR_TIMETABLE] == test_case[3]
-        ), f"'{test_case[0]}' test case failed: timetable is '{state.attributes[ATTR_TIMETABLE]}' but expecting '{test_case[3]}''"
+    ],
+    ids=[
+        "single",
+        "multiple",
+        "none",
+    ],
+)
+async def test_unset(hass, config, unset, timetable):
+    """Test unset method."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
+    entity_id = "input_timetable.test"
+    for event in config:
+        time = datetime.time.fromisoformat(event[0])
+        state = event[1]
+        await call_set(hass, entity_id, time, state)
+    time = datetime.time.fromisoformat(unset)
+    await call_unset(hass, entity_id, time)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TIMETABLE] == timetable
 
 
 async def test_reset(hass, caplog):
