@@ -27,8 +27,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-# TODO: Redraw this
-
 #  +------------------+    +------------------+    +--------------------+
 #  |Step: SSDP        |    |Step: user        |    |Step: import        |
 #  |                  |    |                  |    |                    |
@@ -36,17 +34,17 @@ _LOGGER.setLevel(logging.DEBUG)
 #  +------------------+    +------------------+    +--------------------+
 #           v                      v                       v
 #           +----------------------+-----------------------+
-#           |
-#           |    Auth        +------------+
-#           v    required?   |Step: auth  |
-#           +--------------->|            |
-# Auth not  |                |Input: token|
-# required? |                +------------+
+#                                  |
+#                Auth not    +------------+
+#                required?   |Step: auth  |
+#           +<---------------|            |
+#           |                |Input: token|
+#           |                +------------+
 #           |    Static         |
-#           v    token?         |
+#           v    token          |
 #            <------------------+
 #           |                   |
-#           |                   |New token?
+#           |                   |New token
 #           |                   v
 #           |            +------------------+
 #           |            |Step: create_token|
@@ -62,16 +60,23 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |            |Step: create_token_external_success|
 #           |            +-----------------------------------+
 #           |                   |
-#           v                   |
-#     +----------------+        |
-#     | Step: Confirm  |        |
-#     | (SSDP only)    |<-------+
-#     +----------------+
+#           v<------------------+
 #           |
 #           v
-#     +----------------+
-#     |    Create!     |
-#     +----------------+
+#     +-------------+
+#     |Step: Confirm|
+#     +-------------+
+#           |
+#           v Source SSDP? Explicit confirm
+#           +---------------------------->+
+#           |                             |
+#           v Otherwise, auto confirm     |
+#           +---------------------------->+
+#                                         |
+#                                         v
+#                               +----------------+
+#                               |    Create!     |
+#                               +----------------+
 
 # A note on choice of discovery mechanisms: Hyperion supports both Zeroconf and SSDP out
 # of the box. This config flow needs two port numbers from the Hyperion instance, the
