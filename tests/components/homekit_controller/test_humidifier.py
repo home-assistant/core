@@ -91,6 +91,42 @@ async def test_humidifier_read_humidity(hass, utcnow):
     assert state.state == "off"
     assert state.attributes["humidity"] == 10
 
+    helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 3
+    helper.characteristics[RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD].value = 40
+    state = await helper.poll_and_get_state()
+    assert state.attributes["humidity"] == 40
+
+
+async def test_humidifier_set_humidity(hass, utcnow):
+    """Test that we can set the state of a HomeKit diffuser accessory."""
+    helper = await setup_test_component(hass, create_humidifier_dehumidifier_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_humidity",
+        {"entity_id": helper.entity_id, "humidity": 20},
+        blocking=True,
+    )
+    assert helper.characteristics[RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD].value == 20
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_mode",
+        {"entity_id": helper.entity_id, "mode": "dehumidifying"},
+        blocking=True,
+    )
+    assert helper.characteristics[TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE].value == 2
+
+    helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 3
+    await helper.poll_and_get_state()
+    await hass.services.async_call(
+        DOMAIN,
+        "set_humidity",
+        {"entity_id": helper.entity_id, "humidity": 70},
+        blocking=True,
+    )
+    assert helper.characteristics[RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD].value == 70
+
 
 async def test_humidifier_read_only_mode(hass, utcnow):
     """Test that we can read the state of a HomeKit humidifier accessory."""
