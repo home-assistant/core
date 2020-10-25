@@ -14,13 +14,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ACCUWEATHER_API_WINDOW,
+    ACCUWEATHER_API_WINDOW_REQUESTS
     ATTR_FORECAST,
     CONF_FORECAST,
     COORDINATOR,
     DOMAIN,
     UNDO_UPDATE_LISTENER,
-    ACCUWEATHER_API_WINDOW,
-    ACCUWEATHER_API_WINDOW_REQUESTS
 )
 
 _LOGGER = logging.getLogger(__name__)
