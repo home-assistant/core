@@ -26,9 +26,7 @@ client_key_coordinator = "client_key_coordinator"
 
 
 import asyncio
-import aiohttp
 from functools import wraps, partial
-import random
 
 def async_wrap(func):
     @wraps(func)
@@ -60,8 +58,6 @@ def create_client_wrap_async(username, password):
 
 
 async def login_to_honeywell(username, password):
-    #if random.random() > 0.5:
-    #    raise somecomfort.client.APIRateLimited
     try:
         client = await create_client_wrap_async(username, password)
     except somecomfort.AuthError as e:
@@ -98,9 +94,6 @@ async def async_setup(hass, config):
     async def async_update_data():
         """Fetch data from API endpoint."""
         _LOGGER.info("attempting to update honeywell data")
-        #if random.random() > 0.5:
-        #    raise UpdateFailed
-
 
         # if the login didn't work during async_setup due to rate limiting, try again here
         nonlocal client
