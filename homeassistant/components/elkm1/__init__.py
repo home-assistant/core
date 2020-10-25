@@ -19,7 +19,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -326,14 +326,14 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     try:
         with async_timeout.timeout(timeout):
             await event.wait()
-    except asyncio.TimeoutError as exc:
+    except asyncio.TimeoutError:
         _LOGGER.error(
             "Timed out after %d seconds while trying to sync with ElkM1 at %s",
             SYNC_TIMEOUT,
             conf_host,
         )
         elk.disconnect()
-        raise ConfigEntryNotReady from exc
+        raise
 
     return success
 
