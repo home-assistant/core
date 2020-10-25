@@ -134,7 +134,7 @@ async def setup_lights(hass):
         DemoLight(
             unique_id="light_3",
             name="Kitchen Lights",
-            state=True,
+            state=False,
             hs_color=(345, 75),
             ct=240,
         ),
@@ -527,17 +527,62 @@ async def test_manual_control(hass):
 
 async def test_apply_service(hass):
     """Test adaptive_lighting.apply service."""
-    await setup_lights_and_switch(hass)
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_APPLY,
-        {
-            ATTR_ENTITY_ID: ENTITY_SWITCH,
-            CONF_LIGHTS: [ENTITY_LIGHT],
-            CONF_TURN_ON_LIGHTS: True,
-        },
-        blocking=True,
-    )
+    switch, (_, _, light) = await setup_lights_and_switch(hass)
+    entity_id = light.entity_id
+    assert entity_id not in switch._lights
+
+    def increased_brightness():
+        return (light._brightness + 100) % 255
+
+    def increased_color_temp():
+        return max((light._ct + 100) % light.max_mireds, light.min_mireds)
+
+    async def change_light():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: increased_brightness(),
+                ATTR_COLOR_TEMP: increased_color_temp(),
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    async def apply(**kwargs):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPLY,
+            {
+                ATTR_ENTITY_ID: ENTITY_SWITCH,
+                CONF_LIGHTS: [entity_id],
+                CONF_TURN_ON_LIGHTS: True,
+                **kwargs,
+            },
+            blocking=True,
+        )
+
+    # Test turn on with defaults
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await apply()
+    assert hass.states.get(entity_id).state == STATE_ON
+    await change_light()
+
+    # Test only changing color
+    old_state = hass.states.get(entity_id).attributes
+    await apply(adapt_color=True, adapt_brightness=False)
+    new_state = hass.states.get(entity_id).attributes
+    assert old_state[ATTR_BRIGHTNESS] == new_state[ATTR_BRIGHTNESS]
+    assert old_state[ATTR_COLOR_TEMP] != new_state[ATTR_COLOR_TEMP]
+
+    # Test only changing brightness
+    await change_light()
+    old_state = hass.states.get(entity_id).attributes
+    await apply(adapt_color=False, adapt_brightness=True)
+    new_state = hass.states.get(entity_id).attributes
+    assert old_state[ATTR_BRIGHTNESS] != new_state[ATTR_BRIGHTNESS]
+    assert old_state[ATTR_COLOR_TEMP] == new_state[ATTR_COLOR_TEMP]
 
 
 async def test_switch_off_on_off(hass):

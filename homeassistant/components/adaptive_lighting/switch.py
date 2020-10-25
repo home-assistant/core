@@ -194,6 +194,7 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
                 data[CONF_TRANSITION],
                 data[ATTR_ADAPT_BRIGHTNESS],
                 data[ATTR_ADAPT_COLOR],
+                data[CONF_PREFER_RGB_COLOR],
                 force=True,
             )
 
@@ -274,6 +275,7 @@ async def async_setup_entry(
             ): VALID_TRANSITION,
             vol.Optional(ATTR_ADAPT_BRIGHTNESS, default=True): cv.boolean,
             vol.Optional(ATTR_ADAPT_COLOR, default=True): cv.boolean,
+            vol.Optional(CONF_PREFER_RGB_COLOR, default=False): cv.boolean,
             vol.Optional(CONF_TURN_ON_LIGHTS, default=False): cv.boolean,
         },
         handle_apply,
@@ -655,6 +657,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         transition: Optional[int] = None,
         adapt_brightness: Optional[bool] = None,
         adapt_color: Optional[bool] = None,
+        prefer_rgb_color: Optional[bool] = None,
         force: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -671,6 +674,8 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             adapt_brightness = self.adapt_brightness_switch.is_on
         if adapt_color is None:
             adapt_color = self.adapt_color_switch.is_on
+        if prefer_rgb_color is None:
+            prefer_rgb_color = self._prefer_rgb_color
 
         if "transition" in features:
             service_data[ATTR_TRANSITION] = transition
@@ -682,7 +687,7 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
         if (
             "color_temp" in features
             and adapt_color
-            and not (self._prefer_rgb_color and "color" in features)
+            and not (prefer_rgb_color and "color" in features)
         ):
             attributes = self.hass.states.get(light).attributes
             min_mireds, max_mireds = attributes["min_mireds"], attributes["max_mireds"]

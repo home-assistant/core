@@ -13,12 +13,12 @@ apply:
     adapt_brightness:
       description: "Adapt the 'brightness', default: true"
       example: true
-    adapt_color_temp:
-      description: "Adapt the 'color_temp', default: true"
+    adapt_color:
+      description: "Adapt the color_temp/color_rgb, default: true"
       example: true
-    adapt_rgb_color:
-      description: "Adapt the 'rgb_color', default: true"
-      example: true
+    prefer_rgb_color:
+      description: "Prefer to use color_rgb over color_temp if possible, default: false"
+      example: false
     turn_on_lights:
       description: "Turn on the lights that are off, default: false"
       example: false
