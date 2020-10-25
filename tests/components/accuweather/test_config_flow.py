@@ -179,3 +179,4 @@ async def test_options_flow(hass):
 
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
