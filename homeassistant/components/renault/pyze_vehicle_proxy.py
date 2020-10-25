@@ -12,7 +12,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
 
 
-class PyzeVehicleProxy:
+class PyZEVehicleProxy:
     """Handle vehicle communication with Renault servers via PyZE."""
 
     def __init__(self, hass, vehicle_link, pyze_vehicle: Vehicle):
@@ -22,7 +22,6 @@ class PyzeVehicleProxy:
         self._pyze_vehicle = pyze_vehicle
         self._device_info = None
         self.coordinators = {}
-        self.async_initialise = self._async_initialise()
 
     @property
     def device_info(self):
@@ -39,7 +38,7 @@ class PyzeVehicleProxy:
         """Return the VIN of the vehicle."""
         return self._vehicle_link["vin"]
 
-    async def _async_initialise(self):
+    async def async_initialise(self):
         """Load available sensors."""
         brand = self._vehicle_link["brand"]
         model_label = self._vehicle_link["vehicleDetails"]["model"]["label"]

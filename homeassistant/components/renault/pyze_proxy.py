@@ -1,7 +1,9 @@
 """Proxy to handle account communication with Renault servers via PyZE."""
 import asyncio
 import logging
+from typing import Dict
 
+import aiohttp
 from pyze.api import BasicCredentialStore, Gigya, Kamereon, Vehicle
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -12,17 +14,72 @@ from .const import (
     CONF_KAMEREON_APIKEY,
     CONF_LOCALE,
 )
-from .pyzevehicleproxy import PyzeVehicleProxy
+from .pyze_vehicle_proxy import PyZEVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
+# Awaiting PR on parent package
+# https://github.com/jamesremuscat/pyze/pull/89
+AVAILABLE_LOCALES = [
+    "bg_BG",
+    "cs_CZ",
+    "da_DK",
+    "de_DE",
+    "de_AT",
+    "de_CH",
+    "en_GB",
+    "en_IE",
+    "es_ES",
+    "es_MX",
+    "fi_FI",
+    "fr_FR",
+    "fr_BE",
+    "fr_CH",
+    "fr_LU",
+    "hr_HR",
+    "hu_HU",
+    "it_IT",
+    "it_CH",
+    "nl_NL",
+    "nl_BE",
+    "no_NO",
+    "pl_PL",
+    "pt_PT",
+    "ro_RO",
+    "ru_RU",
+    "sk_SK",
+    "sl_SI",
+    "sv_SE",
+]
 
-class PyzeProxy:
+
+# Awaiting PR on parent package
+# https://github.com/jamesremuscat/pyze/pull/85
+async def get_api_keys_from_myrenault(
+    session: aiohttp.ClientSession, locale: str
+) -> Dict:
+    """Handle loading of Renault localised API keys."""
+    url = f"https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_{locale}.json"
+    async with session.get(url) as response:
+        response.raise_for_status()
+        response_body = await response.json()
+
+        LOGGER.debug("Received api keys from myrenault response: % s", response_body)
+
+        servers = response_body["servers"]
+        return {
+            "gigya-api-key": servers["gigyaProd"]["apikey"],
+            "gigya-api-url": servers["gigyaProd"]["target"],
+            "kamereon-api-key": servers["wiredProd"]["apikey"],
+            "kamereon-api-url": servers["wiredProd"]["target"],
+        }
+
+
+class PyZEProxy:
     """Handle account communication with Renault servers via PyZE."""
 
     def __init__(self, hass):
         """Initialise proxy."""
-        LOGGER.debug("Creating PyzeProxy")
         self._hass = hass
         self._gigya = None
         self._kamereon = None
@@ -84,7 +141,8 @@ class PyzeProxy:
             accounts.append(account_details["accountId"])
         return accounts
 
-    def get_vehicle_links(self):
+    @property
+    def vehicle_links(self):
         """Get list of vehicles."""
         return self._vehicle_links
 
@@ -102,7 +160,7 @@ class PyzeProxy:
         async with self._vehicles_lock:
             pyze_vehicle_proxy = self._vehicle_proxies.get(vin)
             if pyze_vehicle_proxy is None:
-                pyze_vehicle_proxy = PyzeVehicleProxy(
+                pyze_vehicle_proxy = PyZEVehicleProxy(
                     self._hass,
                     vehicle_link,
                     Vehicle(vehicle_link["vin"], self._kamereon),

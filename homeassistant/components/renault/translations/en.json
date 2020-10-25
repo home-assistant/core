@@ -4,8 +4,7 @@
             "kamereon_no_account": "Unable to find Kamereon account."
           },
         "error": {
-            "invalid_credentials": "Invalid credentials.",
-            "preload_failed": "Unable to preload Renault keys."
+            "invalid_credentials": "Invalid credentials."
         },
         "step": {
             "credentials": {
@@ -24,11 +23,10 @@
             "user": {
                 "data": {
                     "locale": "Locale",
-                    "gigya-api-key": "Gigya API Key",
-                    "kamereon-api-key": "Kamereon API Key"
+                    "username": "Email",
+                    "password": "Password"
                 },
-                "title": "Set API keys",
-                "description": "For instructions to gather API keys, check https://github.com/jamesremuscat/pyze#obtaining-api-keys"
+                "title": "Set MyRenault credentials"
             }
         }
     }

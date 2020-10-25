@@ -9,9 +9,9 @@ from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from .const import DOMAIN
-from .pyzeproxy import PyzeProxy
-from .pyzevehicleproxy import PyzeVehicleProxy
-from .renaultentity import RenaultBatteryDataEntity
+from .pyze_proxy import PyZEProxy
+from .pyze_vehicle_proxy import PyZEVehicleProxy
+from .renault_entity import RenaultBatteryDataEntity
 
 ATTR_BATTERY_AVAILABLE_ENERGY = "battery_available_energy"
 ATTR_BATTERY_TEMPERATURE = "battery_temperature"
@@ -23,10 +23,6 @@ ATTR_PLUG_STATUS = "plug_status"
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Renault entities from config entry."""
     proxy = hass.data[DOMAIN][config_entry.unique_id]
@@ -35,16 +31,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-async def get_entities(hass, proxy: PyzeProxy):
+async def get_entities(hass, proxy: PyZEProxy):
     """Create Renault entities for all vehicles."""
     entities = []
-    for vehicle_link in proxy.get_vehicle_links():
+    for vehicle_link in proxy.vehicle_links():
         vehicle_proxy = await proxy.get_vehicle_proxy(vehicle_link)
         entities.extend(await get_vehicle_entities(hass, vehicle_proxy))
     return entities
 
 
-async def get_vehicle_entities(hass, vehicle_proxy: PyzeVehicleProxy):
+async def get_vehicle_entities(hass, vehicle_proxy: PyZEVehicleProxy):
     """Create Renault entities for single vehicle."""
     entities = []
     entities.append(RenaultBatteryLevelSensor(vehicle_proxy, "Battery Level"))
@@ -65,6 +61,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
         if "batteryLevel" in data:
             return data.get("batteryLevel")
         LOGGER.warning("batteryLevel not available in coordinator data %s", data)
+        return None
 
     @property
     def device_class(self):
@@ -121,6 +118,7 @@ class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
         LOGGER.debug(
             "chargingInstantaneousPower not available in coordinator data %s", data
         )
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -142,6 +140,7 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity):
                 plug_state = PlugState.NOT_AVAILABLE
             return plug_state.name
         LOGGER.debug("plugStatus not available in coordinator data %s", data)
+        return None
 
     @property
     def icon(self):
@@ -165,6 +164,7 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity):
                 charge_state = ChargeState.NOT_AVAILABLE
             return charge_state.name
         LOGGER.debug("chargingStatus not available in coordinator data %s", data)
+        return None
 
     @property
     def icon(self):
@@ -187,6 +187,7 @@ class RenaultRangeSensor(RenaultBatteryDataEntity):
                 autonomy = IMPERIAL_SYSTEM.length(autonomy, METRIC_SYSTEM.length_unit)
             return autonomy
         LOGGER.debug("batteryAutonomy not available in coordinator data %s", data)
+        return None
 
     @property
     def unit_of_measurement(self):

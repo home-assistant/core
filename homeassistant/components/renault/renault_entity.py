@@ -3,7 +3,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .pyzeproxy import PyzeVehicleProxy
+from .pyze_proxy import PyZEVehicleProxy
 
 ATTR_LAST_UPDATE = "last_update"
 
@@ -11,7 +11,7 @@ ATTR_LAST_UPDATE = "last_update"
 class RenaultDataEntity(CoordinatorEntity, Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
-    def __init__(self, proxy: PyzeVehicleProxy, entity_type: str, coordinator_key: str):
+    def __init__(self, proxy: PyZEVehicleProxy, entity_type: str, coordinator_key: str):
         """Initialise entity."""
         super().__init__(proxy.coordinators[coordinator_key])
         self.proxy = proxy
@@ -36,7 +36,7 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
 class RenaultBatteryDataEntity(RenaultDataEntity):
     """Implementation of a Renault entity with battery coordinator."""
 
-    def __init__(self, proxy: PyzeVehicleProxy, entity_type: str):
+    def __init__(self, proxy: PyZEVehicleProxy, entity_type: str):
         """Initialise entity."""
         super().__init__(proxy, entity_type, "battery")
 
