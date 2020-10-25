@@ -102,11 +102,17 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         self.accuweather = AccuWeather(api_key, session, location_key=self.location_key)
         # placeholder for previous requests remaining for recalculating update interval
         self.requests_remaining = ACCUWEATHER_API_WINDOW_REQUESTS
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=self.calculate_update_interval())
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=self.calculate_update_interval()
+        )
 
     def calculate_update_interval(self):
         """Calculate update interval to prevent hitting the rate limit as best as we can."""
-        interval = ACCUWEATHER_API_WINDOW / self.requests_remaining / (2 if self.forecast else 1)
+        interval = (
+            ACCUWEATHER_API_WINDOW
+            / self.requests_remaining
+            / (2 if self.forecast else 1)
+        )        
         _LOGGER.debug("Data will be update every %.1f minutes", interval)
         return interval
 
@@ -129,7 +135,11 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %s", self.accuweather.requests_remaining)
         # Asjust update interval if we have more requests available (due to reset of counter) or our requests are consumed quicker than we expect
-        if self.accuweather.requests_remaining > self.requests_remaining or self.requests_remaining - self.accuweather.requests_remaining > (2 if self.forecast else 1):
+        if (
+            self.accuweather.requests_remaining > self.requests_remaining
+            or self.requests_remaining - self.accuweather.requests_remaining
+            > (2 if self.forecast else 1)
+        ):            
             self.requests_remaining = self.accuweather.requests_remaining
             self.update_interval = self.calculate_update_interval()
 
