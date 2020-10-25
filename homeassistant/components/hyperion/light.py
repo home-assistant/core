@@ -246,7 +246,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             hyperion_client = await async_create_connect_client(
                 host, port, instance=instance_id, token=token
             )
-            # TODO: If a connection fails, you need it to retry...
             if not hyperion_client:
                 continue
             current_entities[unique_id] = Hyperion(
