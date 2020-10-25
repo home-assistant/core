@@ -21,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import (
-    TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
     TEST_ENTITY_ID_3,
@@ -112,10 +111,6 @@ async def test_setup_yaml_old_style_unique_id(hass):
     entry_id = next(iter(hass.data[DOMAIN]))
     assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
     assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
-    assert (
-        TEST_CONFIG_ENTRY_OPTIONS
-        == hass.config_entries.async_get_entry(entry_id).options
-    )
 
 
 async def test_setup_yaml_new_style_unique_id_wo_config(hass):
@@ -150,10 +145,6 @@ async def test_setup_yaml_new_style_unique_id_wo_config(hass):
     entry_id = next(iter(hass.data[DOMAIN]))
     assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
     assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
-    assert (
-        TEST_CONFIG_ENTRY_OPTIONS
-        == hass.config_entries.async_get_entry(entry_id).options
-    )
 
 
 async def test_setup_yaml_no_registry_entity(hass):
@@ -179,10 +170,6 @@ async def test_setup_yaml_no_registry_entity(hass):
     entry_id = next(iter(hass.data[DOMAIN]))
     assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
     assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
-    assert (
-        TEST_CONFIG_ENTRY_OPTIONS
-        == hass.config_entries.async_get_entry(entry_id).options
-    )
 
 
 async def test_setup_yaml_not_ready(hass):
