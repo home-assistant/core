@@ -35,10 +35,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_SERVER,
@@ -190,7 +187,7 @@ async def async_setup_entry(hass, entry):
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
         elif signal == SIGNAL_DATA:
-            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            hass.async_create_task(plex_server.async_update_session(data))
 
     session = async_get_clientsession(hass)
     verify_ssl = server_config.get(CONF_VERIFY_SSL)

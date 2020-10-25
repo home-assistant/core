@@ -37,6 +37,7 @@ from .const import (
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
+    PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     PLEXTV_THROTTLE,
@@ -71,6 +72,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self.hass = hass
         self.entry_id = entry_id
+        self.active_sessions = {}
         self._plex_account = None
         self._plex_server = None
         self._created_clients = set()
@@ -242,6 +244,39 @@ class PlexServer:
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
+        )
+
+    async def async_update_session(self, payload):
+        """Process a session payload received from a websocket callback."""
+        try:
+            session_payload = payload["PlaySessionStateNotification"][0]
+        except KeyError:
+            await self.async_update_platforms()
+            return
+
+        state = session_payload["state"]
+        if state == "buffering":
+            return
+
+        session_key = int(session_payload["sessionKey"])
+        offset = int(session_payload["viewOffset"])
+        rating_key = int(session_payload["ratingKey"])
+        playqueue_item_id = session_payload.get("playQueueItemID")
+        if playqueue_item_id:
+            playqueue_item_id = int(playqueue_item_id)
+
+        unique_id = self.active_sessions.get(session_key, {}).get("unique_id")
+        if not unique_id:
+            await self.async_update_platforms()
+            return
+
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(unique_id),
+            state,
+            offset,
+            rating_key,
+            playqueue_item_id,
         )
 
     def _fetch_platform_data(self):

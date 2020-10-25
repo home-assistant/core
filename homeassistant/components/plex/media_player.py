@@ -36,6 +36,7 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
+    PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
@@ -119,6 +120,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._device_version = None
         self._name = None
         self._previous_volume_level = 1  # Used in fake muting
+        self._session_key = None
         self._session_username = None
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
@@ -155,6 +157,14 @@ class PlexMediaPlayer(MediaPlayerEntity):
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
+        unsub = async_dispatcher_connect(
+            self.hass,
+            PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(self.unique_id),
+            self.async_update_media_player_session,
+        )
+        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+        self.async_schedule_update_ha_state(True)
+
     @callback
     def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
@@ -162,6 +172,22 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self.device = device
         self.session = session
         self.async_schedule_update_ha_state(True)
+
+    async def async_update_media_player_session(
+        self, state, offset, rating_key, playqueue_item_id
+    ):
+        """Update session details and write the entity state."""
+        media = None
+
+        if self.media_content_id != rating_key and state in ["playing", "paused"]:
+            media = await self.hass.async_add_executor_job(
+                self.plex_server.fetch_item, rating_key
+            )
+            self.set_media_details(media)
+
+        self.state = state
+        self.media_position = offset
+        self.async_schedule_update_ha_state()
 
     def _clear_media_details(self):
         """Set all Media Items to None."""
@@ -207,6 +233,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._device_protocol_capabilities = self.device.protocolCapabilities
 
         if self.session:
+            self.session_key = self.session.sessionKey
             session_device = next(
                 (
                     p
@@ -304,7 +331,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def force_idle(self):
         """Force client to idle."""
         self._state = STATE_IDLE
+        self.plex_server.active_sessions.pop(self.session_key, None)
         self.session = None
+        self.session_key = None
         self._clear_media_details()
 
     @property
@@ -365,6 +394,27 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def is_player_active(self):
         """Report if the client is playing media."""
         return self.state in [STATE_PLAYING, STATE_PAUSED]
+
+    @property
+    def session_key(self):
+        """Return the key of the player's session."""
+        return self._session_key
+
+    @session_key.setter
+    def session_key(self, new_key):
+        """Set the key of the player's session."""
+        self._session_key = new_key
+
+        # A Plex client can only have one active session
+        for key in list(self.plex_server.active_sessions):
+            if (
+                key != new_key
+                and self.plex_server.active_sessions[key]["unique_id"] == self.unique_id
+            ):
+                self.plex_server.active_sessions.pop(key)
+
+        if new_key is not None:
+            self.plex_server.active_sessions[new_key] = {"unique_id": self.unique_id}
 
     @property
     def _active_media_plexapi_type(self):
