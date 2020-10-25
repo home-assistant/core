@@ -10,4 +10,9 @@ CONF_CREATE_TOKEN = "create_token"
 CONF_INSTANCE = "instance"
 CONF_PRIORITY = "priority"
 
+CONF_ROOT_CLIENT = "ROOT_CLIENT"
+CONF_DISPATCHER_UNSUB = "DISPATCHER_UNSUB"
+
+SIGNAL_INSTANCES_UPDATED = f"{DOMAIN}_update_instances_signal." "{}"
+
 SOURCE_IMPORT = "import"

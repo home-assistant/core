@@ -1,10 +1,9 @@
 """Support for Hyperion-NG remotes."""
-from functools import partial
 import logging
 import re
 from typing import Any, Dict, List, Set
 
-from hyperion import client, const
+from hyperion import const
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -19,21 +18,29 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
-from homeassistant.core import split_entity_id
+from homeassistant.const import (
+    CONF_ENTITIES,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import get_hyperion_unique_id, split_hyperion_unique_id
+from . import async_create_connect_client, get_hyperion_unique_id
 from .const import (
+    CONF_DISPATCHER_UNSUB,
     CONF_PRIORITY,
+    CONF_ROOT_CLIENT,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
+    SIGNAL_INSTANCES_UPDATED,
     SOURCE_IMPORT,
 )
 
@@ -113,7 +120,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # First, connect to the server and get the server id (which will be unique_id on a config_entry
     # if there is one).
-    hyperion_client = await _async_create_connect_client(host, port)
+    hyperion_client = await async_create_connect_client(host, port)
     if not hyperion_client:
         raise PlatformNotReady
     hyperion_id = await hyperion_client.async_id()
@@ -154,13 +161,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         # This also covers the case that should not occur in the wild (no config entry,
         # but new style unique_id).
-        current_platform = entity_platform.current_platform.get()
         registry.async_get_or_create(
             domain=LIGHT_DOMAIN,
             platform=DOMAIN,
             unique_id=future_unique_id,
             suggested_object_id=config[CONF_NAME],
-            known_object_ids=current_platform.entities.keys(),
         )
 
     async def migrate_yaml_to_config_entry_and_options(host, port, priority):
@@ -208,111 +213,86 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     port = config_entry.data[CONF_PORT]
     token = config_entry.data.get(CONF_TOKEN)
 
-    async def async_instances_to_entities(
-        platform: entity_platform.EntityPlatform,
-        response: Dict[str, Any],
-    ):
+    async def async_instances_to_entities(response: Dict[str, Any]) -> None:
         if not response or const.KEY_DATA not in response:
             return
-        return await async_instances_to_entities_raw(
-            platform,
-            response[const.KEY_DATA],
-        )
+        return await async_instances_to_entities_raw(response[const.KEY_DATA])
 
-    async def async_instances_to_entities_raw(
-        platform: entity_platform.EntityPlatform,
-        instances: Dict[str, Any],
-    ):
+    async def async_instances_to_entities_raw(instances: Dict[str, Any]) -> None:
         registry = await async_get_registry(hass)
         entities_to_add: List[Hyperion] = []
-        desired_instance_ids: Set[int] = set()
+        desired_unique_ids: Set[str] = set()
+        current_entities = hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN][
+            CONF_ENTITIES
+        ]
+        server_id = config_entry.unique_id
 
         # In practice, an instance can be in 3 states as seen by this function:
         #
         #    * Exists, and is running: Add it to hass.
-        #    * Exists, but is not running: Cannot add yet, but should not delete it either. It will show up as "unavailable".
+        #    * Exists, but is not running: Cannot add yet, but should not delete it either.
+        #      It will show up as "unavailable".
         #    * No longer exists: Delete it from hass.
 
-        # Add instances that are missing (instance must be running)
+        # Add instances that are missing.
         for instance in instances:
             instance_id = instance.get(const.KEY_INSTANCE)
             if instance_id is None or not instance.get(const.KEY_RUNNING, False):
                 continue
-            desired_instance_ids.add(instance_id)
             unique_id = get_hyperion_unique_id(server_id, instance_id)
-            entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
-            if entity_id is not None and entity_id in platform.entities:
+            desired_unique_ids.add(unique_id)
+            if unique_id in current_entities:
                 continue
-            hyperion_client = await _async_create_connect_client(
+            hyperion_client = await async_create_connect_client(
                 host, port, instance=instance_id, token=token
             )
+            # TODO: If a connection fails, you need it to retry...
             if not hyperion_client:
                 continue
-            entity_name = instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
-            entities_to_add.append(
-                Hyperion(unique_id, entity_name, config_entry.options, hyperion_client)
+            current_entities[unique_id] = Hyperion(
+                unique_id,
+                instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
+                config_entry.options,
+                hyperion_client,
             )
+            entities_to_add.append(current_entities[unique_id])
 
         # Delete instances that are no longer present on this server.
-        hyperion_entity_ids = list(platform.entities.keys())
-        for entity_id in hyperion_entity_ids:
-            entity_server_id, instance_id = split_hyperion_unique_id(
-                platform.entities[entity_id].unique_id
-            )
-            if (
-                split_entity_id(entity_id)[0] != LIGHT_DOMAIN
-                or server_id != entity_server_id
-            ):
-                continue
-            if instance_id not in desired_instance_ids:
-                await platform.async_remove_entity(entity_id)
-                if entity_id in registry.entities:
-                    registry.async_remove(entity_id)
+        for unique_id in set(current_entities) - desired_unique_ids:
+            entity = current_entities.pop(unique_id)
+            await entity.async_remove()
+            entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
+            if entity_id:
+                registry.async_remove(entity_id)
 
         async_add_entities(entities_to_add)
 
-    hyperion_client = await _async_create_connect_client(host, port, token=token)
-    if not hyperion_client:
-        raise PlatformNotReady
-    server_id = await hyperion_client.async_id()
-    if not server_id:
-        await hyperion_client.async_client_disconnect()
-        raise PlatformNotReady
-    hass.data[DOMAIN][config_entry.entry_id] = hyperion_client
-
-    current_platform = entity_platform.current_platform.get()
-
-    hyperion_client.set_callbacks(
-        {
-            f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}": partial(
-                async_instances_to_entities,
-                current_platform,
-            )
-        }
-    )
-
-    config_entry.add_update_listener(_async_options_updated)
+    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN] = {CONF_ENTITIES: {}}
 
     await async_instances_to_entities_raw(
-        current_platform,
-        hyperion_client.instances,
+        hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
     )
+    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN][
+        CONF_DISPATCHER_UNSUB
+    ] = async_dispatcher_connect(
+        hass,
+        SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
+        async_instances_to_entities,
+    )
+
+    # TODO: Remove when options removed for future PR.
+    config_entry.add_update_listener(_async_options_updated)
+
+
+async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigType):
+    """Unload a config entry."""
+    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN].pop(CONF_DISPATCHER_UNSUB)()
+    hass.data[DOMAIN][config_entry.entry_id].pop(LIGHT_DOMAIN)
 
 
 async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
-
-
-async def _async_create_connect_client(
-    host: str, port: int, instance: int = const.DEFAULT_INSTANCE, token: str = None
-):
-    """Create and connect a Hyperion Client."""
-    hyperion_client = client.HyperionClient(host, port, token=token, instance=instance)
-
-    if not await hyperion_client.async_client_connect():
-        return None
-    return hyperion_client
 
 
 class Hyperion(LightEntity):

@@ -10,7 +10,7 @@ from homeassistant.components.hyperion import (
     get_hyperion_unique_id,
     light as hyperion_light,
 )
-from homeassistant.components.hyperion.const import DOMAIN
+from homeassistant.components.hyperion.const import CONF_ROOT_CLIENT, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -21,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from . import (
-    TEST_CONFIG_ENTRY_ID,
     TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
@@ -111,11 +110,11 @@ async def test_setup_yaml_old_style_unique_id(hass):
 
     # There should be a config entry with the correct server unique_id.
     entry_id = next(iter(hass.data[DOMAIN]))
-    assert hass.data[DOMAIN][entry_id] == client
-    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
+    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
     assert (
-        hass.config_entries.async_get_entry(entry_id).options
-        == TEST_CONFIG_ENTRY_OPTIONS
+        TEST_CONFIG_ENTRY_OPTIONS
+        == hass.config_entries.async_get_entry(entry_id).options
     )
 
 
@@ -149,11 +148,11 @@ async def test_setup_yaml_new_style_unique_id_wo_config(hass):
 
     # There should be a config entry with the correct server unique_id.
     entry_id = next(iter(hass.data[DOMAIN]))
-    assert hass.data[DOMAIN][entry_id] == client
-    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
+    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
     assert (
-        hass.config_entries.async_get_entry(entry_id).options
-        == TEST_CONFIG_ENTRY_OPTIONS
+        TEST_CONFIG_ENTRY_OPTIONS
+        == hass.config_entries.async_get_entry(entry_id).options
     )
 
 
@@ -178,11 +177,11 @@ async def test_setup_yaml_no_registry_entity(hass):
 
     # There should be a config entry with the correct server unique_id.
     entry_id = next(iter(hass.data[DOMAIN]))
-    assert hass.data[DOMAIN][entry_id] == client
-    assert hass.config_entries.async_get_entry(entry_id).unique_id == TEST_SERVER_ID
+    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
+    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
     assert (
-        hass.config_entries.async_get_entry(entry_id).options
-        == TEST_CONFIG_ENTRY_OPTIONS
+        TEST_CONFIG_ENTRY_OPTIONS
+        == hass.config_entries.async_get_entry(entry_id).options
     )
 
 
@@ -225,7 +224,8 @@ async def test_setup_config_entry_dynamic_instances(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert master_client == hass.data[DOMAIN][TEST_CONFIG_ENTRY_ID]
+    assert master_client == hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT]
+
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert hass.states.get(TEST_ENTITY_ID_2) is not None
 
@@ -235,7 +235,7 @@ async def test_setup_config_entry_dynamic_instances(hass):
         f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}"
     ]
     with patch("hyperion.client.HyperionClient", return_value=entity_client):
-        await instance_callback(
+        instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [TEST_INSTANCE_2, TEST_INSTANCE_3],
@@ -249,7 +249,7 @@ async def test_setup_config_entry_dynamic_instances(hass):
 
     # Inject a new instances update (re-add instance 1, but not running)
     with patch("hyperion.client.HyperionClient", return_value=entity_client):
-        await instance_callback(
+        instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [
@@ -267,7 +267,7 @@ async def test_setup_config_entry_dynamic_instances(hass):
 
     # Inject a new instances update (re-add instance 1, running)
     with patch("hyperion.client.HyperionClient", return_value=entity_client):
-        await instance_callback(
+        instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [TEST_INSTANCE_1, TEST_INSTANCE_2, TEST_INSTANCE_3],
@@ -651,9 +651,10 @@ async def test_unload_entry(hass):
 
     entry = await setup_test_config_entry(hass)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
-    client = hass.data[DOMAIN][entry.entry_id]
+    client = hass.data[DOMAIN][entry.entry_id][CONF_ROOT_CLIENT]
     assert client.async_client_connect.called
     assert not client.async_client_disconnect.called
 
     assert await async_unload_entry(hass, entry)
     assert client.async_client_disconnect.called
+    assert entry.entry_id not in hass.data[DOMAIN]
