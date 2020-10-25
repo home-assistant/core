@@ -29,7 +29,7 @@ from homeassistant.setup import async_setup_component
 
 # pylint: disable=protected-access
 from tests.async_mock import patch
-from tests.common import mock_restore_cache
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.fixture(name="storage_setup")
@@ -260,85 +260,75 @@ async def test_reconfig(hass, caplog):
     )
 
 
-async def test_state(hass, caplog):
+@patch("homeassistant.util.dt.now")
+async def test_state(mock_now, hass):
     """Test state attribute."""
+    mock_now.return_value = datetime.datetime.fromisoformat("2000-01-01 23:50:01")
+
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
     entity_id = "input_timetable.test"
-
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-    now = datetime.datetime.now().replace(microsecond=0)
-    in_5_minutes = now + datetime.timedelta(minutes=5)
-    in_10_minutes = now + datetime.timedelta(minutes=10)
-    previous_10_minutes = now + datetime.timedelta(minutes=-10)
-    previous_5_minutes = now + datetime.timedelta(minutes=-5)
-
-    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_ON)
+    await call_reconfig(
+        hass,
+        entity_id,
+        [
+            {ATTR_TIME: "23:50:00", ATTR_STATE: STATE_ON},
+            {ATTR_TIME: "23:55:00", ATTR_STATE: STATE_OFF},
+            {ATTR_TIME: "00:00:00", ATTR_STATE: STATE_ON},
+            {ATTR_TIME: "00:05:00", ATTR_STATE: STATE_OFF},
+        ],
+    )
     assert hass.states.get(entity_id).state == STATE_ON
-    await call_reset(hass, entity_id)
 
-    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_ON)
-    assert hass.states.get(entity_id).state == STATE_ON
-    await call_reset(hass, entity_id)
-
-    await call_set(hass, entity_id, previous_10_minutes.time().isoformat(), STATE_ON)
-    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_OFF)
-    assert hass.states.get(entity_id).state == STATE_OFF
-    await call_reset(hass, entity_id)
-
-    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_ON)
-    await call_set(hass, entity_id, in_10_minutes.time().isoformat(), STATE_OFF)
-    assert hass.states.get(entity_id).state == STATE_OFF
-    await call_reset(hass, entity_id)
-
-    await call_set(hass, entity_id, previous_5_minutes.time().isoformat(), STATE_ON)
-    await call_set(hass, entity_id, in_5_minutes.time().isoformat(), STATE_OFF)
-    assert hass.states.get(entity_id).state == STATE_ON
-    await call_reset(hass, entity_id)
+    state = STATE_OFF
+    for _ in range(3):
+        mock_now.return_value += datetime.timedelta(minutes=5)
+        async_fire_time_changed(hass, mock_now.return_value)
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == state
+        state = STATE_ON if state == STATE_OFF else STATE_OFF
 
 
-async def test_state_update(hass, caplog):
+@patch("homeassistant.util.dt.now")
+@patch("homeassistant.helpers.event.async_track_point_in_time")
+async def test_state_update(async_track_point_in_time, mock_now, hass):
     """Test next update time."""
-    with patch(
-        "homeassistant.helpers.event.async_track_point_in_time"
-    ) as async_track_point_in_time:
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
-        entity_id = f"{DOMAIN}.test"
+    mock_now.return_value = datetime.datetime.fromisoformat("2000-01-01")
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})
+    entity_id = f"{DOMAIN}.test"
 
-        now = datetime.datetime.now().replace(microsecond=0)
-        in_5_minutes = now + datetime.timedelta(minutes=5)
-        in_10_minutes = now + datetime.timedelta(minutes=10)
-        previous_5_minutes = now + datetime.timedelta(minutes=-5)
-        previous_10_minutes = now + datetime.timedelta(minutes=-10)
+    in_5_minutes = mock_now.return_value + datetime.timedelta(minutes=5)
+    in_10_minutes = mock_now.return_value + datetime.timedelta(minutes=10)
+    previous_5_minutes = mock_now.return_value + datetime.timedelta(minutes=-5)
+    previous_10_minutes = mock_now.return_value + datetime.timedelta(minutes=-10)
 
-        # No events => no updates.
-        assert async_track_point_in_time.call_count == 0
+    # No events => no updates.
+    assert async_track_point_in_time.call_count == 0
 
-        # One event => no updates.
-        await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
-        assert async_track_point_in_time.call_count == 0
-        await call_reset(hass, entity_id)
+    # One event => no updates.
+    await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
+    assert async_track_point_in_time.call_count == 0
+    await call_reset(hass, entity_id)
 
-        # Between 2 events.
-        await call_set(hass, entity_id, previous_5_minutes.time(), STATE_ON)
-        await call_set(hass, entity_id, in_5_minutes.time(), STATE_OFF)
-        next_update = async_track_point_in_time.call_args[0][2]
-        assert next_update == in_5_minutes
-        await call_reset(hass, entity_id)
+    # Between 2 events.
+    await call_set(hass, entity_id, previous_5_minutes.time(), STATE_ON)
+    await call_set(hass, entity_id, in_5_minutes.time(), STATE_OFF)
+    next_update = async_track_point_in_time.call_args[0][2]
+    assert next_update == in_5_minutes
+    await call_reset(hass, entity_id)
 
-        # After any event.
-        await call_set(hass, entity_id, previous_10_minutes.time(), STATE_ON)
-        await call_set(hass, entity_id, previous_5_minutes.time(), STATE_OFF)
-        next_update = async_track_point_in_time.call_args[0][2]
-        assert next_update == previous_10_minutes + datetime.timedelta(days=1)
-        await call_reset(hass, entity_id)
+    # After any event.
+    await call_set(hass, entity_id, previous_10_minutes.time(), STATE_ON)
+    await call_set(hass, entity_id, previous_5_minutes.time(), STATE_OFF)
+    next_update = async_track_point_in_time.call_args[0][2]
+    assert next_update == previous_10_minutes + datetime.timedelta(days=1)
+    await call_reset(hass, entity_id)
 
-        # Before any event.
-        await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
-        await call_set(hass, entity_id, in_10_minutes.time(), STATE_OFF)
-        next_update = async_track_point_in_time.call_args[0][2]
-        assert next_update == in_5_minutes
-        await call_reset(hass, entity_id)
+    # Before any event.
+    await call_set(hass, entity_id, in_5_minutes.time(), STATE_ON)
+    await call_set(hass, entity_id, in_10_minutes.time(), STATE_OFF)
+    next_update = async_track_point_in_time.call_args[0][2]
+    assert next_update == in_5_minutes
+    await call_reset(hass, entity_id)
 
 
 async def test_restore_state(hass):
