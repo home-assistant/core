@@ -66,7 +66,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     if DATA_BLACKBIRD not in hass.data:
         hass.data[DATA_BLACKBIRD] = {}
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_BLACKBIRD][unique_id] = device
         devices.append(device)
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
     def service_handle(service):
         """Handle for services."""
@@ -123,7 +123,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if service.service == SERVICE_SETALLZONES:
                 device.set_all_zones(source)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SETALLZONES, service_handle, schema=BLACKBIRD_SETALLZONES_SCHEMA
     )
 

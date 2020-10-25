@@ -1,7 +1,5 @@
 """The tests for the Monoprice Blackbird media player platform."""
 from collections import defaultdict
-import unittest
-from unittest import mock
 
 import pytest
 import voluptuous as vol
@@ -10,7 +8,7 @@ from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
 from homeassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD,
     PLATFORM_SCHEMA,
-    setup_platform,
+    async_setup_platform,
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
@@ -20,6 +18,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_OFF, STATE_ON
 
 import tests.common
+from tests.async_mock import patch
 
 
 class AttrDict(dict):
@@ -60,7 +59,7 @@ class MockBlackbird:
         self.zones[3].av = source_idx
 
 
-class TestBlackbirdSchema(unittest.TestCase):
+class TestBlackbirdSchema:
     """Test Blackbird schema."""
 
     def test_valid_serial_schema(self):
@@ -171,172 +170,190 @@ class TestBlackbirdSchema(unittest.TestCase):
                 PLATFORM_SCHEMA(value)
 
 
-class TestBlackbirdMediaPlayer(unittest.TestCase):
-    """Test the media_player module."""
+@pytest.fixture
+def blackbird():
+    """Fixture to mock Blackbird."""
+    yield MockBlackbird()
 
-    def setUp(self):
-        """Set up the test case."""
-        self.blackbird = MockBlackbird()
-        self.hass = tests.common.get_test_home_assistant()
-        self.hass.start()
-        # Note, source dictionary is unsorted!
-        with mock.patch(
-            "homeassistant.components.blackbird.media_player.get_blackbird",
-            new=lambda *a: self.blackbird,
-        ):
-            setup_platform(
-                self.hass,
-                {
-                    "platform": "blackbird",
-                    "port": "/dev/ttyUSB0",
-                    "zones": {3: {"name": "Zone name"}},
-                    "sources": {
-                        1: {"name": "one"},
-                        3: {"name": "three"},
-                        2: {"name": "two"},
-                    },
+
+@pytest.fixture
+async def media_player(hass, blackbird):
+    """Fixture to provide test instance for media_player"""
+    # Note, source dictionary is unsorted!
+    with patch(
+        "homeassistant.components.blackbird.media_player.get_blackbird",
+        new=lambda *a: blackbird,
+    ):
+        await async_setup_platform(
+            hass,
+            {
+                "platform": "blackbird",
+                "port": "/dev/ttyUSB0",
+                "zones": {3: {"name": "Zone name"}},
+                "sources": {
+                    1: {"name": "one"},
+                    3: {"name": "three"},
+                    2: {"name": "two"},
                 },
-                lambda *args, **kwargs: None,
-                {},
-            )
-            self.hass.block_till_done()
-        self.media_player = self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
-        self.media_player.hass = self.hass
-        self.media_player.entity_id = "media_player.zone_3"
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Tear down the test case."""
-        self.hass.stop()
-
-    def test_setup_platform(self, *args):
-        """Test setting up platform."""
-        # One service must be registered
-        assert self.hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
-        assert len(self.hass.data[DATA_BLACKBIRD]) == 1
-        assert self.hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
-
-    def test_setallzones_service_call_with_entity_id(self):
-        """Test set all zone source service call with entity id."""
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
-
-        # Call set all zones service
-        self.hass.services.call(
-            DOMAIN,
-            SERVICE_SETALLZONES,
-            {"entity_id": "media_player.zone_3", "source": "three"},
-            blocking=True,
+            },
+            lambda *args, **kwargs: None,
+            {},
         )
+        await hass.async_block_till_done()
+    media_player = hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
+    media_player.hass = hass
+    media_player.entity_id = "media_player.zone_3"
+    yield media_player
 
-        # Check that source was changed
-        assert 3 == self.blackbird.zones[3].av
-        self.media_player.update()
-        assert "three" == self.media_player.source
 
-    def test_setallzones_service_call_without_entity_id(self):
-        """Test set all zone source service call without entity id."""
-        self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
+@pytest.fixture
+async def setup_test_case(media_player):
+    """Set up the test case."""
+    pass
 
-        # Call set all zones service
-        self.hass.services.call(
-            DOMAIN, SERVICE_SETALLZONES, {"source": "three"}, blocking=True
-        )
 
-        # Check that source was changed
-        assert 3 == self.blackbird.zones[3].av
-        self.media_player.update()
-        assert "three" == self.media_player.source
+async def test_setup_platform(setup_test_case, hass):
+    """Test setting up platform."""
+    # One service must be registered
+    assert hass.services.has_service(DOMAIN, SERVICE_SETALLZONES)
+    assert len(hass.data[DATA_BLACKBIRD]) == 1
+    assert hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"].name == "Zone name"
 
-    def test_update(self):
-        """Test updating values from blackbird."""
-        assert self.media_player.state is None
-        assert self.media_player.source is None
 
-        self.media_player.update()
+async def test_setallzones_service_call_with_entity_id(hass, blackbird, media_player):
+    """Test set all zone source service call with entity id."""
+    media_player.update()
 
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
+    assert "Zone name" == media_player.name
+    assert STATE_ON == media_player.state
+    assert "one" == media_player.source
 
-    def test_name(self):
-        """Test name property."""
-        assert "Zone name" == self.media_player.name
+    # Call set all zones service
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SETALLZONES,
+        {"entity_id": "media_player.zone_3", "source": "three"},
+        blocking=True,
+    )
 
-    def test_state(self):
-        """Test state property."""
-        assert self.media_player.state is None
+    # Check that source was changed
+    assert 3 == blackbird.zones[3].av
+    media_player.update()
+    assert "three" == media_player.source
 
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
 
-        self.blackbird.zones[3].power = False
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+async def test_setallzones_service_call_without_entity_id(
+    hass, blackbird, media_player
+):
+    """Test set all zone source service call without entity id."""
+    media_player.update()
+    assert "Zone name" == media_player.name
+    assert STATE_ON == media_player.state
+    assert "one" == media_player.source
 
-    def test_supported_features(self):
-        """Test supported features property."""
-        assert (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-            == self.media_player.supported_features
-        )
+    # Call set all zones service
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SETALLZONES, {"source": "three"}, blocking=True
+    )
 
-    def test_source(self):
-        """Test source property."""
-        assert self.media_player.source is None
-        self.media_player.update()
-        assert "one" == self.media_player.source
+    # Check that source was changed
+    assert 3 == blackbird.zones[3].av
+    media_player.update()
+    assert "three" == media_player.source
 
-    def test_media_title(self):
-        """Test media title property."""
-        assert self.media_player.media_title is None
-        self.media_player.update()
-        assert "one" == self.media_player.media_title
 
-    def test_source_list(self):
-        """Test source list property."""
-        # Note, the list is sorted!
-        assert ["one", "two", "three"] == self.media_player.source_list
+async def test_update(media_player):
+    """Test updating values from blackbird."""
+    assert media_player.state is None
+    assert media_player.source is None
 
-    def test_select_source(self):
-        """Test source selection methods."""
-        self.media_player.update()
+    media_player.update()
 
-        assert "one" == self.media_player.source
+    assert STATE_ON == media_player.state
+    assert "one" == media_player.source
 
-        self.media_player.select_source("two")
-        assert 2 == self.blackbird.zones[3].av
-        self.media_player.update()
-        assert "two" == self.media_player.source
 
-        # Trying to set unknown source.
-        self.media_player.select_source("no name")
-        assert 2 == self.blackbird.zones[3].av
-        self.media_player.update()
-        assert "two" == self.media_player.source
+async def test_name(media_player):
+    """Test name property."""
+    assert "Zone name" == media_player.name
 
-    def test_turn_on(self):
-        """Testing turning on the zone."""
-        self.blackbird.zones[3].power = False
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
 
-        self.media_player.turn_on()
-        assert self.blackbird.zones[3].power
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
+async def test_state(blackbird, media_player):
+    """Test state property."""
+    assert media_player.state is None
 
-    def test_turn_off(self):
-        """Testing turning off the zone."""
-        self.blackbird.zones[3].power = True
-        self.media_player.update()
-        assert STATE_ON == self.media_player.state
+    media_player.update()
+    assert STATE_ON == media_player.state
 
-        self.media_player.turn_off()
-        assert not self.blackbird.zones[3].power
-        self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+    blackbird.zones[3].power = False
+    media_player.update()
+    assert STATE_OFF == media_player.state
+
+
+async def test_supported_features(media_player):
+    """Test supported features property."""
+    assert (
+        SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+        == media_player.supported_features
+    )
+
+
+async def test_source(media_player):
+    """Test source property."""
+    assert media_player.source is None
+    media_player.update()
+    assert "one" == media_player.source
+
+
+async def test_media_title(media_player):
+    """Test media title property."""
+    assert media_player.media_title is None
+    media_player.update()
+    assert "one" == media_player.media_title
+
+
+async def test_source_list(media_player):
+    """Test source list property."""
+    # Note, the list is sorted!
+    assert ["one", "two", "three"] == media_player.source_list
+
+
+async def test_select_source(blackbird, media_player):
+    """Test source selection methods."""
+    media_player.update()
+    assert "one" == media_player.source
+
+    media_player.select_source("two")
+    assert 2 == blackbird.zones[3].av
+    media_player.update()
+    assert "two" == media_player.source
+
+    # Trying to set unknown source.
+    media_player.select_source("no name")
+    assert 2 == blackbird.zones[3].av
+    media_player.update()
+    assert "two" == media_player.source
+
+
+async def test_turn_on(blackbird, media_player):
+    """Testing turning on the zone."""
+    blackbird.zones[3].power = False
+    media_player.update()
+    assert STATE_OFF == media_player.state
+
+    media_player.turn_on()
+    assert blackbird.zones[3].power
+    media_player.update()
+    assert STATE_ON == media_player.state
+
+
+async def test_turn_off(blackbird, media_player):
+    """Testing turning off the zone."""
+    blackbird.zones[3].power = True
+    media_player.update()
+    assert STATE_ON == media_player.state
+
+    media_player.turn_off()
+    assert not blackbird.zones[3].power
+    media_player.update()
+    assert STATE_OFF == media_player.state
