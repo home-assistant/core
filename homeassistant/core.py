@@ -367,6 +367,7 @@ class HomeAssistant:
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
+        _LOGGER.warning("async_add_hass_job: %s", hassjob)
         if hassjob.job_type == HassJobType.Coroutinefunction:
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
@@ -403,6 +404,7 @@ class HomeAssistant:
         self, target: Callable[..., T], *args: Any
     ) -> Awaitable[T]:
         """Add an executor job from within the event loop."""
+        _LOGGER.warning("async_add_executor_job: %s", target)
         task = self.loop.run_in_executor(None, target, *args)
 
         # If a task is scheduled
@@ -431,6 +433,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if hassjob.job_type == HassJobType.Callback:
+            _LOGGER.warning("async_run_hass_job: %s", hassjob)
             hassjob.target(*args)
         else:
             self.async_add_hass_job(hassjob, *args)
