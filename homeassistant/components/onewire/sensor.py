@@ -45,8 +45,14 @@ DEVICE_SENSORS = {
             "path": "TAI8570/temperature",
             "name": "Temperature",
             "type": SENSOR_TYPE_TEMPERATURE,
+            "default_disabled": True,
         },
-        {"path": "TAI8570/pressure", "name": "Pressure", "type": SENSOR_TYPE_PRESSURE},
+        {
+            "path": "TAI8570/pressure",
+            "name": "Pressure",
+            "type": SENSOR_TYPE_PRESSURE,
+            "default_disabled": True,
+        },
     ],
     "22": [
         {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
@@ -58,21 +64,25 @@ DEVICE_SENSORS = {
             "path": "HIH3600/humidity",
             "name": "Humidity HIH3600",
             "type": SENSOR_TYPE_HUMIDITY,
+            "default_disabled": True,
         },
         {
             "path": "HIH4000/humidity",
             "name": "Humidity HIH4000",
             "type": SENSOR_TYPE_HUMIDITY,
+            "default_disabled": True,
         },
         {
             "path": "HIH5030/humidity",
             "name": "Humidity HIH5030",
             "type": SENSOR_TYPE_HUMIDITY,
+            "default_disabled": True,
         },
         {
             "path": "HTM1735/humidity",
             "name": "Humidity HTM1735",
             "type": SENSOR_TYPE_HUMIDITY,
+            "default_disabled": True,
         },
         {"path": "B1-R1-A/pressure", "name": "Pressure", "type": SENSOR_TYPE_PRESSURE},
         {
@@ -247,6 +257,7 @@ def get_entities(onewirehub: OneWireHub, config):
                         device_sensor["type"],
                         device_sensor["name"],
                         device_info,
+                        device_sensor.get("default_disabled", False),
                         onewirehub.owproxy,
                     )
                 )

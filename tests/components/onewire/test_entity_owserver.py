@@ -84,6 +84,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.12_111111111111_pressure",
@@ -92,6 +93,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "1025.1",
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                "disabled": True,
             },
         ],
     },
@@ -187,6 +189,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "74.8",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih5030",
@@ -195,6 +198,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "75.8",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_htm1735",
@@ -203,6 +207,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "unknown",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_pressure",
@@ -418,7 +423,13 @@ async def test_owserver_setup_valid_device(hass, device_id):
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
 
-    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
+    with patch.dict(
+        "homeassistant.components.onewire.sensor.DEVICE_SENSORS"
+    ) as device_specs, patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy"
+    ) as owproxy:
+        # Ignore disable_startup for testing
+        device_specs["26"][2]["default_disabled"] = False
         owproxy.return_value.dir.return_value = dir_return_value
         owproxy.return_value.read.side_effect = read_side_effect
 
@@ -444,5 +455,9 @@ async def test_owserver_setup_valid_device(hass, device_id):
         assert registry_entry.unique_id == expected_sensor["unique_id"]
         assert registry_entry.unit_of_measurement == expected_sensor["unit"]
         assert registry_entry.device_class == expected_sensor["class"]
+        assert registry_entry.disabled == expected_sensor.get("disabled", False)
         state = hass.states.get(entity_id)
-        assert state.state == expected_sensor["result"]
+        if registry_entry.disabled:
+            assert state is None
+        else:
+            assert state.state == expected_sensor["result"]
