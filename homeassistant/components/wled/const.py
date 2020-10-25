@@ -29,3 +29,4 @@ CURRENT_MA = "mA"
 
 # Services
 SERVICE_EFFECT = "effect"
+SERVICE_PRESET = "preset"
