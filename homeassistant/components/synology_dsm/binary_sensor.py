@@ -77,6 +77,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
         """Return the state."""
         return getattr(self._api.storage, self.entity_type)(self._device_id)
 
+
 class SynoDSMUpgradeBinarySensor(SynologyDSMEntity, BinarySensorEntity):
     """Representation a Synology Upgrade binary sensor."""
 

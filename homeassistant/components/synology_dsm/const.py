@@ -48,7 +48,7 @@ UPGRADE_BINARY_SENSORS = {
     f"{SynoCoreUpgrade.API_KEY}:update_available": {
         ENTITY_NAME: "Update available",
         ENTITY_UNIT: None,
-        ENTITY_ICON: 'mdi:update',
+        ENTITY_ICON: "mdi:update",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },

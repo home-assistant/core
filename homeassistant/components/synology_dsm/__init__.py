@@ -311,9 +311,7 @@ class SynoApi:
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
-        self._with_upgrade = bool(
-            self._fetching_entities.get(SynoCoreUpgrade.API_KEY)
-        )
+        self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
