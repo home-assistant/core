@@ -102,7 +102,7 @@ class ConnectedCarsDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 response = await self.ccah.async_query(QUERY_COMPLETE)
             except ConnectedCarsException as error:
-                raise UpdateFailed(error)
+                raise UpdateFailed(error) from error
 
         data = response["data"]
         viewer = data["viewer"]
