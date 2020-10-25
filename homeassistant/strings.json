@@ -42,6 +42,7 @@
         "verify_ssl": "Verify SSL certificate",
         "longitude": "Longitude",
         "latitude": "Latitude",
+        "location": "Location",
         "pin": "PIN Code"
       },
       "create_entry": {
