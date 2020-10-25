@@ -37,7 +37,7 @@ class FakeHarmonyStates:
         self._client_mock.callbacks.new_activity_starting(activity_tuple)
         self._client_mock.callbacks.new_activity(activity_tuple)
 
-        return AsyncMock(return_value=True)
+        return AsyncMock(return_value=(True, "unused message"))
 
     def get_activity_id(self, activity_name):
         """Return the mapping of an activity name to the internal id."""
