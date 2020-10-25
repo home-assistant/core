@@ -8,6 +8,9 @@
             "no_flows": "Debes configurar Nest antes de poder autenticarte con \u00e9l. [Lee las instrucciones](https://www.home-assistant.io/components/nest/).",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito"
+        },
         "error": {
             "internal_error": "Error interno validando el c\u00f3digo",
             "invalid_code": "C\u00f3digo inv\u00e1lido",
@@ -29,6 +32,9 @@
                 },
                 "description": "Para vincular tu cuenta de Nest, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo pin a continuaci\u00f3n.",
                 "title": "Vincular cuenta de Nest"
+            },
+            "pick_implementation": {
+                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
             }
         }
     }

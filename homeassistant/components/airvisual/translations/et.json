@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud v\u00f5i Node/Pro ID on juba registreeritud."
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud v\u00f5i Node/Pro ID on juba registreeritud.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -30,7 +31,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API v\u00f5ti"
-                }
+                },
+                "title": "Taastuvasta AirVisual"
             },
             "user": {
                 "data": {

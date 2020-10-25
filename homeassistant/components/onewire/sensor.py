@@ -2,15 +2,24 @@
 from glob import glob
 import logging
 import os
+from typing import Any, Dict, Optional
 
 from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_TYPE,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRICAL_CURRENT_AMPERE,
     LIGHT_LUX,
     PERCENTAGE,
@@ -20,6 +29,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -29,6 +39,7 @@ from .const import (
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
+    DOMAIN,
     PRESSURE_CBAR,
 )
 
@@ -80,31 +91,31 @@ HOBBYBOARD_EF = {
 }
 
 SENSOR_TYPES = {
-    # SensorType: [ Measured unit, Unit ]
-    "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", PERCENTAGE],
-    "humidity_hih3600": ["humidity", PERCENTAGE],
-    "humidity_hih4000": ["humidity", PERCENTAGE],
-    "humidity_hih5030": ["humidity", PERCENTAGE],
-    "humidity_htm1735": ["humidity", PERCENTAGE],
-    "humidity_raw": ["humidity", PERCENTAGE],
-    "pressure": ["pressure", PRESSURE_MBAR],
-    "illuminance": ["illuminance", LIGHT_LUX],
-    "wetness_0": ["wetness", PERCENTAGE],
-    "wetness_1": ["wetness", PERCENTAGE],
-    "wetness_2": ["wetness", PERCENTAGE],
-    "wetness_3": ["wetness", PERCENTAGE],
-    "moisture_0": ["moisture", PRESSURE_CBAR],
-    "moisture_1": ["moisture", PRESSURE_CBAR],
-    "moisture_2": ["moisture", PRESSURE_CBAR],
-    "moisture_3": ["moisture", PRESSURE_CBAR],
-    "counter_a": ["counter", "count"],
-    "counter_b": ["counter", "count"],
-    "HobbyBoard": ["none", "none"],
-    "voltage": ["voltage", VOLT],
-    "voltage_VAD": ["voltage", VOLT],
-    "voltage_VDD": ["voltage", VOLT],
-    "current": ["current", ELECTRICAL_CURRENT_AMPERE],
+    # SensorType: [ Measured unit, Unit, DeviceClass ]
+    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "humidity_hih3600": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "humidity_hih4000": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "humidity_hih5030": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "humidity_htm1735": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "humidity_raw": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "pressure": ["pressure", PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
+    "illuminance": ["illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
+    "wetness_0": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "wetness_1": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "wetness_2": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "wetness_3": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "moisture_0": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
+    "moisture_1": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
+    "moisture_2": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
+    "moisture_3": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
+    "counter_a": ["counter", "count", None],
+    "counter_b": ["counter", "count", None],
+    "HobbyBoard": ["none", "none", None],
+    "voltage": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
+    "voltage_VAD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
+    "voltage_VDD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
+    "current": ["current", ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -125,36 +136,44 @@ def hb_info_from_type(dev_type="std"):
         return HOBBYBOARD_EF
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up 1-Wire platform."""
+    if config.get(CONF_HOST):
+        config[CONF_TYPE] = CONF_TYPE_OWSERVER
+    elif config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
+        config[CONF_TYPE] = CONF_TYPE_SYSBUS
+    else:  # pragma: no cover
+        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
+        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+        config[CONF_TYPE] = CONF_TYPE_OWFS
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up 1-Wire platform."""
-    entities = get_entities(config)
-    add_entities(entities, True)
+    entities = await hass.async_add_executor_job(get_entities, config_entry.data)
+    async_add_entities(entities, True)
 
 
 def get_entities(config):
     """Get a list of entities."""
-    base_dir = config[CONF_MOUNT_DIR]
-    owhost = config.get(CONF_HOST)
-    owport = config[CONF_PORT]
-
-    # Ensure type is configured
-    if owhost:
-        conf_type = CONF_TYPE_OWSERVER
-    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
-        conf_type = CONF_TYPE_SYSBUS
-    else:  # pragma: no cover
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        conf_type = CONF_TYPE_OWFS
-
     entities = []
     device_names = {}
     if CONF_NAMES in config:
         if isinstance(config[CONF_NAMES], dict):
             device_names = config[CONF_NAMES]
 
+    conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
+        owhost = config[CONF_HOST]
+        owport = config[CONF_PORT]
+
         _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -163,14 +182,16 @@ def get_entities(config):
             _LOGGER.error(
                 "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
-            devices = []
+            return entities
         for device in devices:
             _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
+            device_type = owproxy.read(f"{device}type").decode()
+            sensor_id = os.path.split(os.path.split(device)[0])[1]
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
-                family = owproxy.read(f"{device}type").decode()
+                family = device_type
 
             if family not in hb_info_from_type(dev_type):
                 _LOGGER.warning(
@@ -179,6 +200,12 @@ def get_entities(config):
                     device,
                 )
                 continue
+            device_info = {
+                "identifiers": {(DOMAIN, sensor_id)},
+                "manufacturer": "Maxim Integrated",
+                "model": device_type,
+                "name": sensor_id,
+            }
             for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
                 if "moisture" in sensor_key:
                     s_id = sensor_key.split("_")[1]
@@ -187,21 +214,22 @@ def get_entities(config):
                     )
                     if is_leaf:
                         sensor_key = f"wetness_{s_id}"
-                sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
                 entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
                         device_file,
                         sensor_key,
+                        device_info,
                         owproxy,
                     )
                 )
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
-        _LOGGER.debug("Initializing using SysBus")
-        for p1sensor in Pi1Wire().find_all_sensors():
+        base_dir = config[CONF_MOUNT_DIR]
+        _LOGGER.debug("Initializing using SysBus %s", base_dir)
+        for p1sensor in Pi1Wire(base_dir).find_all_sensors():
             family = p1sensor.mac_address[:2]
             sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:
@@ -212,12 +240,19 @@ def get_entities(config):
                 )
                 continue
 
+            device_info = {
+                "identifiers": {(DOMAIN, sensor_id)},
+                "manufacturer": "Maxim Integrated",
+                "model": family,
+                "name": sensor_id,
+            }
             device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
             entities.append(
                 OneWireDirect(
                     device_names.get(sensor_id, sensor_id),
                     device_file,
                     "temperature",
+                    device_info,
                     p1sensor,
                 )
             )
@@ -232,7 +267,15 @@ def get_entities(config):
     else:  # pragma: no cover
         # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
         # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
+        base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using OWFS %s", base_dir)
+        _LOGGER.warning(
+            "The OWFS implementation of 1-Wire sensors is deprecated, "
+            "and should be migrated to OWServer (on localhost:4304). "
+            "If migration to OWServer is not feasible on your installation, "
+            "please raise an issue at https://github.com/home-assistant/core/issues/new"
+            "?title=Unable%20to%20migrate%20onewire%20from%20OWFS%20to%20OWServer",
+        )
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
                 family = family_file.read()
@@ -258,48 +301,60 @@ def get_entities(config):
 class OneWire(Entity):
     """Implementation of a 1-Wire sensor."""
 
-    def __init__(self, name, device_file, sensor_type):
+    def __init__(self, name, device_file, sensor_type, device_info=None):
         """Initialize the sensor."""
         self._name = f"{name} {sensor_type.capitalize()}"
         self._device_file = device_file
+        self._device_class = SENSOR_TYPES[sensor_type][2]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._device_info = device_info
         self._state = None
         self._value_raw = None
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state of the sensor."""
         if "count" in self._unit_of_measurement:
             return int(self._state)
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device."""
+        return self._device_class
+
+    @property
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the sensor."""
         return {"device_file": self._device_file, "raw_value": self._value_raw}
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
         return self._device_file
+
+    @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return device specific attributes."""
+        return self._device_info
 
 
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
 
-    def __init__(self, name, device_file, sensor_type, owproxy):
+    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type)
+        super().__init__(name, device_file, sensor_type, device_info)
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
@@ -324,9 +379,9 @@ class OneWireProxy(OneWire):
 class OneWireDirect(OneWire):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
-    def __init__(self, name, device_file, sensor_type, owsensor):
+    def __init__(self, name, device_file, sensor_type, device_info, owsensor):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type)
+        super().__init__(name, device_file, sensor_type, device_info)
         self._owsensor = owsensor
 
     def update(self):

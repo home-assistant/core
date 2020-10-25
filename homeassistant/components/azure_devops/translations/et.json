@@ -6,7 +6,9 @@
         },
         "error": {
             "authorization_error": "Tuvastusviga. Kontrolli kas sul on juurdep\u00e4\u00e4s projektile ja kas sul on \u00f5iged volitused.",
+            "cannot_connect": "\u00dchendus nurjus",
             "connection_error": "Azure DevOpsiga ei saanud \u00fchendust luua.",
+            "invalid_auth": "Tuvastamise viga",
             "project_error": "Projekti teavet ei \u00f5nnestunud hankida."
         },
         "flow_title": "Azure DevOps: {project_url}",

@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
 )
 from homeassistant.core import callback
@@ -32,7 +31,6 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DATA_ZONES_DETAILS,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_ZONE_RUN,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
@@ -48,6 +46,7 @@ CONF_ZONE_ID = "zone_id"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
@@ -113,9 +112,6 @@ async def async_setup_entry(hass, config_entry):
             hass,
             controller,
             config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
-            config_entry.data.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
-            ),
         )
 
     # Update the data object, which at this point (prior to any sensors registering
@@ -231,10 +227,9 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, controller, default_zone_runtime, scan_interval):
+    def __init__(self, hass, controller, default_zone_runtime):
         """Initialize."""
         self._async_cancel_time_interval_listener = None
-        self._scan_interval_seconds = scan_interval
         self.controller = controller
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
@@ -296,7 +291,7 @@ class RainMachine:
             self._async_cancel_time_interval_listener = async_track_time_interval(
                 self.hass,
                 self._async_update_listener_action,
-                timedelta(seconds=self._scan_interval_seconds),
+                DEFAULT_SCAN_INTERVAL,
             )
 
         self._api_category_count[api_category] += 1
