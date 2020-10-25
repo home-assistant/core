@@ -111,7 +111,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._app_name = ""
         self._available = False
         self._device_protocol_capabilities = None
-        self._is_player_active = False
         self._machine_identifier = device.machineIdentifier
         self._make = ""
         self._device_platform = None
@@ -119,7 +118,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._device_title = None
         self._device_version = None
         self._name = None
-        self._player_state = "idle"
         self._previous_volume_level = 1  # Used in fake muting
         self._session_type = None
         self._session_username = None
@@ -191,11 +189,16 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     def update(self):
         """Refresh key device data."""
-        self._clear_media_details()
+        if not self.session:
+            self.force_idle()
+            if not self.device:
+                self._available = False
+                return
 
-        self._available = self.device or self.session
+        self._available = True
 
         if self.device:
+            new_state = self.device.state
             try:
                 device_url = self.device.url("/")
             except plexapi.exceptions.BadRequest:
@@ -207,11 +210,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._device_title = self.device.title
             self._device_version = self.device.version
             self._device_protocol_capabilities = self.device.protocolCapabilities
-            self._player_state = self.device.state
 
-        if not self.session:
-            self.force_idle()
-        else:
+        if self.session:
             session_device = next(
                 (
                     p
@@ -222,13 +222,15 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
             if session_device:
                 self._make = session_device.device or ""
-                self._player_state = session_device.state
                 self._device_platform = self._device_platform or session_device.platform
                 self._device_product = self._device_product or session_device.product
                 self._device_title = self._device_title or session_device.title
                 self._device_version = self._device_version or session_device.version
+                new_state = session_device.state
             else:
                 _LOGGER.warning("No player associated with active session")
+
+            self.state = new_state
 
             if self.session.usernames:
                 self._session_username = self.session.usernames[0]
@@ -245,6 +247,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
             else:
                 self._media_position_updated_at = now
                 self._media_position = position
+        else:
+            self.state = new_state
 
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
@@ -257,7 +261,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
             # Prepend username for shared/managed clients
             name_parts.insert(0, self.username)
         self._name = NAME_FORMAT.format(" - ".join(name_parts))
-        self._set_player_state()
 
         if self._is_player_active and self.session is not None:
             self._session_type = self.session.type
@@ -301,20 +304,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         self._media_image_url = thumb_url
 
-    def _set_player_state(self):
-        if self._player_state == "playing":
-            self._is_player_active = True
-            self._state = STATE_PLAYING
-        elif self._player_state == "paused":
-            self._is_player_active = True
-            self._state = STATE_PAUSED
-        elif self.device:
-            self._is_player_active = False
-            self._state = STATE_IDLE
-        else:
-            self._is_player_active = False
-            self._state = STATE_OFF
-
     def _set_media_type(self):
         if self._session_type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
@@ -354,7 +343,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     def force_idle(self):
         """Force client to idle."""
-        self._player_state = STATE_IDLE
         self._state = STATE_IDLE
         self.session = None
         self._clear_media_details()
@@ -398,6 +386,25 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @state.setter
+    def state(self, new_state):
+        """Set the state of the device."""
+        if new_state == "playing":
+            self._state = STATE_PLAYING
+        elif new_state == "paused":
+            self._state = STATE_PAUSED
+        elif new_state == "stopped":
+            self.force_idle()
+        elif self.device:
+            self._state = STATE_IDLE
+        else:
+            self._state = STATE_OFF
+
+    @property
+    def is_player_active(self):
+        """Report if the client is playing media."""
+        return self.state in [STATE_PLAYING, STATE_PAUSED]
 
     @property
     def _active_media_plexapi_type(self):
@@ -516,7 +523,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def volume_level(self):
         """Return the volume level of the client (0..1)."""
         if (
-            self._is_player_active
+            self.is_player_active
             and self.device
             and "playback" in self._device_protocol_capabilities
         ):
@@ -525,7 +532,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        if self._is_player_active and self.device:
+        if self.is_player_active and self.device:
             return self._volume_muted
 
     def mute_volume(self, mute):
