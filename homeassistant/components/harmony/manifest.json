@@ -10,5 +10,6 @@
       "deviceType": "urn:myharmony-com:device:harmony:1"
     }
   ],
+  "dependencies": ["remote", "switch"],
   "config_flow": true
 }
