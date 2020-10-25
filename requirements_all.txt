@@ -1412,7 +1412,7 @@ pyhaversion==3.4.2
 pyheos==0.6.0
 
 # homeassistant.components.hikvision
-pyhik==0.2.7
+pyhik==0.2.8
 
 # homeassistant.components.hive
 pyhiveapi==0.2.20.2
