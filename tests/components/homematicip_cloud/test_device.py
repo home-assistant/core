@@ -264,12 +264,8 @@ async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
     # get the device
     device_registry = await dr.async_get_registry(hass)
     device = device_registry.async_get(entity.device_id)
-    assert device.name == entity_name
-
-    # get the base device
-    via_device = device_registry.async_get(device.via_device_id)
-    assert via_device.name == "Wired Eingangsmodul – 32-fach"
+    assert device.name == "Wired Eingangsmodul – 32-fach"
 
     # get the hap
-    hap_device = device_registry.async_get(via_device.via_device_id)
+    hap_device = device_registry.async_get(device.via_device_id)
     assert hap_device.name == "Access Point"
