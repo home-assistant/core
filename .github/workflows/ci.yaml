@@ -722,6 +722,8 @@ jobs:
           pip install pytest-github-actions-annotate-failures
       - name: Block outgoing connections
         run: |
+          whoami
+          find /sbin
           iptables -I OUTPUT -p tcp -m state --state NEW -j REJECT
       - name: Run pytest
         run: |
