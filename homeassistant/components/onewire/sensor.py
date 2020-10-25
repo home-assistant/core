@@ -2,35 +2,17 @@
 from glob import glob
 import logging
 import os
-from typing import Any, Dict, Optional
 
 from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
+from homeassistant.components.onewire.onewireentity import OneWire, OneWireProxy
 from homeassistant.components.onewire.onewirehub import OneWireHub
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TYPE,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRICAL_CURRENT_AMPERE,
-    LIGHT_LUX,
-    PERCENTAGE,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
-    VOLT,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -41,34 +23,82 @@ from .const import (
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
-    PRESSURE_CBAR,
+    SENSOR_TYPE_COUNT,
+    SENSOR_TYPE_CURRENT,
+    SENSOR_TYPE_HUMIDITY,
+    SENSOR_TYPE_ILLUMINANCE,
+    SENSOR_TYPE_MOISTURE,
+    SENSOR_TYPE_PRESSURE,
+    SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPE_VOLTAGE,
+    SENSOR_TYPE_WETNESS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
-    "10": {"temperature": "temperature"},
-    "12": {"temperature": "TAI8570/temperature", "pressure": "TAI8570/pressure"},
-    "22": {"temperature": "temperature"},
-    "26": {
-        "temperature": "temperature",
-        "humidity": "humidity",
-        "humidity_hih3600": "HIH3600/humidity",
-        "humidity_hih4000": "HIH4000/humidity",
-        "humidity_hih5030": "HIH5030/humidity",
-        "humidity_htm1735": "HTM1735/humidity",
-        "pressure": "B1-R1-A/pressure",
-        "illuminance": "S3-R1-A/illuminance",
-        "voltage_VAD": "VAD",
-        "voltage_VDD": "VDD",
-        "current": "IAD",
-    },
-    "28": {"temperature": "temperature"},
-    "3B": {"temperature": "temperature"},
-    "42": {"temperature": "temperature"},
-    "1D": {"counter_a": "counter.A", "counter_b": "counter.B"},
-    "EF": {"HobbyBoard": "special"},
+    "10": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
+    ],
+    "12": [
+        {
+            "path": "TAI8570/temperature",
+            "name": "Temperature",
+            "type": SENSOR_TYPE_TEMPERATURE,
+        },
+        {"path": "TAI8570/pressure", "name": "Pressure", "type": SENSOR_TYPE_PRESSURE},
+    ],
+    "22": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
+    ],
+    "26": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE},
+        {"path": "humidity", "name": "Humidity", "type": SENSOR_TYPE_HUMIDITY},
+        {
+            "path": "HIH3600/humidity",
+            "name": "Humidity HIH3600",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {
+            "path": "HIH4000/humidity",
+            "name": "Humidity HIH4000",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {
+            "path": "HIH5030/humidity",
+            "name": "Humidity HIH5030",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {
+            "path": "HTM1735/humidity",
+            "name": "Humidity HTM1735",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {"path": "B1-R1-A/pressure", "name": "Pressure", "type": SENSOR_TYPE_PRESSURE},
+        {
+            "path": "S3-R1-A/illuminance",
+            "name": "Illuminance",
+            "type": SENSOR_TYPE_ILLUMINANCE,
+        },
+        {"path": "VAD", "name": "Voltage VAD", "type": SENSOR_TYPE_VOLTAGE},
+        {"path": "VDD", "name": "Voltage VDD", "type": SENSOR_TYPE_VOLTAGE},
+        {"path": "IAD", "name": "Current", "type": SENSOR_TYPE_CURRENT},
+    ],
+    "28": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
+    ],
+    "3B": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
+    ],
+    "42": [
+        {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
+    ],
+    "1D": [
+        {"path": "counter.A", "name": "Counter A", "type": SENSOR_TYPE_COUNT},
+        {"path": "counter.B", "name": "Counter B", "type": SENSOR_TYPE_COUNT},
+    ],
+    "EF": [],  # "HobbyBoard": special
 }
 
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
@@ -78,45 +108,45 @@ DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 # via owserver (network protocol)
 
 HOBBYBOARD_EF = {
-    "HobbyBoards_EF": {
-        "humidity": "humidity/humidity_corrected",
-        "humidity_raw": "humidity/humidity_raw",
-        "temperature": "humidity/temperature",
-    },
-    "HB_MOISTURE_METER": {
-        "moisture_0": "moisture/sensor.0",
-        "moisture_1": "moisture/sensor.1",
-        "moisture_2": "moisture/sensor.2",
-        "moisture_3": "moisture/sensor.3",
-    },
-}
-
-SENSOR_TYPES = {
-    # SensorType: [ Measured unit, Unit, DeviceClass ]
-    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih3600": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih4000": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih5030": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_htm1735": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_raw": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "pressure": ["pressure", PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
-    "illuminance": ["illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
-    "wetness_0": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_1": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_2": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_3": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "moisture_0": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_1": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_2": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_3": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "counter_a": ["counter", "count", None],
-    "counter_b": ["counter", "count", None],
-    "HobbyBoard": ["none", "none", None],
-    "voltage": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VAD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VDD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "current": ["current", ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
+    "HobbyBoards_EF": [
+        {
+            "path": "humidity/humidity_corrected",
+            "name": "Humidity",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {
+            "path": "humidity/humidity_raw",
+            "name": "Humidity Raw",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+        {
+            "path": "humidity/temperature",
+            "name": "Temperature",
+            "type": SENSOR_TYPE_TEMPERATURE,
+        },
+    ],
+    "HB_MOISTURE_METER": [
+        {
+            "path": "moisture/sensor.0",
+            "name": "Moisture 0",
+            "type": SENSOR_TYPE_MOISTURE,
+        },
+        {
+            "path": "moisture/sensor.1",
+            "name": "Moisture 1",
+            "type": SENSOR_TYPE_MOISTURE,
+        },
+        {
+            "path": "moisture/sensor.2",
+            "name": "Moisture 2",
+            "type": SENSOR_TYPE_MOISTURE,
+        },
+        {
+            "path": "moisture/sensor.3",
+            "name": "Moisture 3",
+            "type": SENSOR_TYPE_MOISTURE,
+        },
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -197,24 +227,26 @@ def get_entities(onewirehub: OneWireHub, config):
                 "model": device_type,
                 "name": sensor_id,
             }
-            for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
-                if "moisture" in sensor_key:
-                    s_id = sensor_key.split("_")[1]
+            for device_sensor in hb_info_from_type(dev_type)[family]:
+                if device_sensor["type"] == SENSOR_TYPE_MOISTURE:
+                    s_id = device_sensor["path"].split(".")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
                             f"{device['path']}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
-                        sensor_key = f"wetness_{s_id}"
+                        device_sensor["type"] = SENSOR_TYPE_WETNESS
+                        device_sensor["name"] = f"Wetness {s_id}"
                 device_file = os.path.join(
-                    os.path.split(device["path"])[0], sensor_value
+                    os.path.split(device["path"])[0], device_sensor["path"]
                 )
                 entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
                         device_file,
-                        sensor_key,
+                        device_sensor["type"],
+                        device_sensor["name"],
                         device_info,
                         onewirehub.owproxy,
                     )
@@ -246,7 +278,6 @@ def get_entities(onewirehub: OneWireHub, config):
                 OneWireDirect(
                     device_names.get(sensor_id, sensor_id),
                     device_file,
-                    "temperature",
                     device_info,
                     p1sensor,
                 )
@@ -293,90 +324,12 @@ def get_entities(onewirehub: OneWireHub, config):
     return entities
 
 
-class OneWire(Entity):
-    """Implementation of a 1-Wire sensor."""
-
-    def __init__(self, name, device_file, sensor_type, device_info=None):
-        """Initialize the sensor."""
-        self._name = f"{name} {sensor_type.capitalize()}"
-        self._device_file = device_file
-        self._device_class = SENSOR_TYPES[sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._device_info = device_info
-        self._state = None
-        self._value_raw = None
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the sensor."""
-        if "count" in self._unit_of_measurement:
-            return int(self._state)
-        return self._state
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self) -> Optional[str]:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the sensor."""
-        return {"device_file": self._device_file, "raw_value": self._value_raw}
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._device_file
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        """Return device specific attributes."""
-        return self._device_info
-
-
-class OneWireProxy(OneWire):
-    """Implementation of a 1-Wire sensor through owserver."""
-
-    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
-        """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, device_info)
-        self._owproxy = owproxy
-
-    def _read_value_ownet(self):
-        """Read a value from the owserver."""
-        return self._owproxy.read(self._device_file).decode().lstrip()
-
-    def update(self):
-        """Get the latest data from the device."""
-        value = None
-        value_read = False
-        try:
-            value_read = self._read_value_ownet()
-        except protocol.Error as exc:
-            _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        if value_read:
-            value = round(float(value_read), 1)
-            self._value_raw = float(value_read)
-
-        self._state = value
-
-
 class OneWireDirect(OneWire):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
-    def __init__(self, name, device_file, sensor_type, device_info, owsensor):
+    def __init__(self, name, device_file, device_info, owsensor):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, device_info)
+        super().__init__(name, device_file, "temperature", "Temperature", device_info)
         self._owsensor = owsensor
 
     def update(self):
