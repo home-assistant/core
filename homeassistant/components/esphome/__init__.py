@@ -450,6 +450,7 @@ async def platform_async_setup_entry(
                 "async_entity_state DIFFER",
                 old_state,
                 state
+            )
         entry_data.state[component_key][state.key] = state
         entry_data.async_update_entity(hass, component_key, state.key)
 
