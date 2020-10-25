@@ -14,7 +14,7 @@ from homeassistant.components.tplink.common import (
     CONF_LIGHT,
     CONF_SWITCH,
 )
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock
