@@ -44,13 +44,6 @@ from .const import (
 from .media_browser import browse_media
 
 LIVE_TV_SECTION = "-4"
-PLAYLISTS_BROWSE_PAYLOAD = {
-    "title": "Playlists",
-    "media_content_id": "all",
-    "media_content_type": "playlists",
-    "can_play": False,
-    "can_expand": True,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
