@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, PropertyMock, patch
+from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 
 
 class LightMockData(NamedTuple):
@@ -577,3 +577,26 @@ async def test_update_failure(
             in caplog.text
         )
         assert "Device 123.123.123.123|light1 responded after " in caplog.text
+
+
+async def test_async_setup_entry_unavailable(hass, caplog):
+    """Test async_setup_entry."""
+    config = {
+        tplink.DOMAIN: {
+            CONF_DISCOVERY: False,
+            CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+        }
+    }
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await async_setup_component(hass, tplink.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
+    assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+    assert (
+        "Unable to communicate with device 123.123.123.123: Communication error"
+        in caplog.text
+    )
+    assert "Scheduling a retry for unavailable devices" in caplog.text
