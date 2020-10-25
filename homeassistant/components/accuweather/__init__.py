@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ACCUWEATHER_API_WINDOW,
-    ACCUWEATHER_API_WINDOW_REQUESTS
+    ACCUWEATHER_API_WINDOW_REQUESTS,
     ATTR_FORECAST,
     CONF_FORECAST,
     COORDINATOR,
