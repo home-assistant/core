@@ -2,7 +2,7 @@
 import logging
 from typing import Callable, NamedTuple
 
-from pyHS100 import SmartBulb, SmartDeviceException
+from pyHS100 import SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
@@ -455,75 +455,6 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     assert state.attributes["brightness"] == 232
 
 
-async def test_get_light_state_retry(
-    hass: HomeAssistant, light_mock_data: LightMockData
-) -> None:
-    """Test function."""
-    # Setup test for retries for sysinfo.
-    get_sysinfo_call_count = 0
-
-    def get_sysinfo_side_effect():
-        nonlocal get_sysinfo_call_count
-        get_sysinfo_call_count += 1
-
-        # Need to fail on the 2nd call because the first call is used to
-        # determine if the device is online during the light platform's
-        # setup hook.
-        if get_sysinfo_call_count == 2:
-            raise SmartDeviceException()
-
-        return light_mock_data.sys_info
-
-    light_mock_data.get_sysinfo_mock.side_effect = get_sysinfo_side_effect
-
-    # Setup test for retries of setting state information.
-    set_state_call_count = 0
-
-    def set_light_state_side_effect(state_data: dict):
-        nonlocal set_state_call_count, light_mock_data
-        set_state_call_count += 1
-
-        if set_state_call_count == 1:
-            raise SmartDeviceException()
-
-        return light_mock_data.set_light_state(state_data)
-
-    light_mock_data.set_light_state_mock.side_effect = set_light_state_side_effect
-
-    # Setup component.
-    await async_setup_component(hass, HA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    await async_setup_component(
-        hass,
-        tplink.DOMAIN,
-        {
-            tplink.DOMAIN: {
-                CONF_DISCOVERY: False,
-                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.light1"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await update_entity(hass, "light.light1")
-
-    assert light_mock_data.get_sysinfo_mock.call_count > 1
-    assert light_mock_data.get_light_state_mock.call_count > 1
-    assert light_mock_data.set_light_state_mock.call_count > 1
-
-    assert light_mock_data.get_sysinfo_mock.call_count < 40
-    assert light_mock_data.get_light_state_mock.call_count < 40
-    assert light_mock_data.set_light_state_mock.call_count < 10
-
-
 async def test_update_failure(
     hass: HomeAssistant, light_mock_data: LightMockData, caplog
 ):
@@ -588,19 +519,11 @@ async def test_async_setup_entry_unavailable(hass, caplog):
         }
     }
 
-    entities_ready = []
-    entities_unavailable = [SmartBulb("123.123.123.123")]
-
-    with patch(
-        "homeassistant.components.tplink.common.get_devices_sysinfo",
-        return_value=(entities_ready, entities_unavailable),
-    ) as mock_activate:
-        caplog.clear()
-        caplog.set_level(logging.WARNING)
-        await async_setup_component(hass, tplink.DOMAIN, config)
-        await hass.async_block_till_done()
-
-        await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await async_setup_component(hass, tplink.DOMAIN, config)
+    await hass.async_block_till_done()
+    await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
 
     assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
     assert (
