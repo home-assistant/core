@@ -19,7 +19,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -249,8 +249,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for keypad in elk.keypads:  # pylint: disable=no-member
         keypad.add_callback(_element_changed)
 
-    if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
-        return False
+    try:
+        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+            return False
+    except asyncio.TimeoutError as exc:
+        raise ConfigEntryNotReady from exc
 
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
