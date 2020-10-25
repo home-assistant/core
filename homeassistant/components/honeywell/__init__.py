@@ -132,7 +132,7 @@ async def async_setup(hass, config):
         name="honeywell_update_coordinator",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=12),
+        update_interval=timedelta(seconds=300),
     )
     
     
