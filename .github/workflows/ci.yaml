@@ -723,8 +723,8 @@ jobs:
       - name: Block outgoing connections
         run: |
           apt-get -y update
-          apt-get -y install iptables-nftables-compat
-          /sbin/iptables -I OUTPUT -p tcp -m conntrack –ctstate NEW -j REJECT
+          apt-get -y install iptables
+          nft add rule filter output ct state new reject
       - name: Run pytest
         run: |
           . venv/bin/activate
@@ -742,7 +742,7 @@ jobs:
             tests
       - name: Restore outgoing connections
         run: |
-          /sbin/iptables -D OUTPUT -p tcp -m conntrack –ctstate NEW -j REJECT
+          nft delete rule filter output ct state new reject
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.0
         with:
