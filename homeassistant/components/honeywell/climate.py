@@ -110,7 +110,6 @@ HW_FAN_MODE_TO_HA = {
 }
 
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
     username = config.get(CONF_USERNAME)
@@ -118,15 +117,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("honeywell setup_platform")
 
     coordinator = hass.data[client_key_coordinator]
-    
+
     # try updating during component setup, but if it fails, just let it retry later
-    
+
     if coordinator.data is None:
         await coordinator.async_refresh()
     client = coordinator.data
     if client is None:
         raise PlatformNotReady
-
 
     dev_id = config.get(CONF_DEV_ID)
     loc_id = config.get(CONF_LOC_ID)
@@ -134,12 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
 
     thermostats_list = [
-        HoneywellUSThermostat(
-            coordinator,
-            device,
-            cool_away_temp,
-            heat_away_temp
-        )
+        HoneywellUSThermostat(coordinator, device, cool_away_temp, heat_away_temp)
         for location in client.locations_by_id.values()
         for device in location.devices_by_id.values()
         if (
@@ -147,23 +140,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             and (not dev_id or device.deviceid == dev_id)
         )
     ]
-    
+
     sensors_list = []
-    
+
     entities_list = thermostats_list + sensors_list
-    
+
     async_add_entities(entities_list)
-
-
-
 
 
 class HoneywellUSThermostat(ClimateEntity, HoneywellDevice):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(
-        self, coordinator, device, cool_away_temp, heat_away_temp
-    ):
+    def __init__(self, coordinator, device, cool_away_temp, heat_away_temp):
         """Initialize the thermostat."""
         HoneywellDevice.__init__(self, coordinator, device)
         self._cool_away_temp = cool_away_temp
@@ -415,7 +403,3 @@ class HoneywellUSThermostat(ClimateEntity, HoneywellDevice):
             self.set_hvac_mode(HVAC_MODE_HEAT)
         else:
             self.set_hvac_mode(HVAC_MODE_OFF)
-
-
-
-
