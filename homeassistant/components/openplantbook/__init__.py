@@ -7,8 +7,9 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import async_generate_entity_id
 
-from .const import DOMAIN, ATTR_SPECIES, ATTR_ALIAS
+from .const import ATTR_ALIAS, ATTR_SPECIES, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
@@ -30,27 +31,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data.get("client_id"), entry.data.get("secret")
         )
 
-    def get_plant(call):
+    async def get_plant(call):
         species = call.data.get(ATTR_SPECIES)
         if species:
-            plant_data = hass.data[DOMAIN]["API"].get_plantbook_data(species)
-            hass.states.set(f"{DOMAIN}.plant_data", plant_data['display_pid'], plant_data.items())
+            plant_data = await hass.data[DOMAIN]["API"].get_plantbook_data(species)
+            attrs = {}
+            for var, val in plant_data.items():
+                attrs[var] = val
+            entity_id = async_generate_entity_id(
+                f"{DOMAIN}" + ".{}", plant_data["pid"], hass=hass
+            )
+            hass.states.async_set(entity_id, plant_data["display_pid"], attrs)
 
-    def search_plantbook(call):
+    async def search_plantbook(call):
         alias = call.data.get(ATTR_ALIAS)
         if alias:
-            plant_data = hass.data[DOMAIN]["API"].search_plantbook(alias)
-            state = len(plant_data['results'])
+            plant_data = await hass.data[DOMAIN]["API"].search_plantbook(alias)
+            state = len(plant_data["results"])
             attrs = {}
-            for plant in plant_data['results']:
-                pid = plant['pid']
-                attrs[pid] = plant['display_pid']
-            hass.states.set(f"{DOMAIN}.search_result", state, attrs)
+            for plant in plant_data["results"]:
+                pid = plant["pid"]
+                attrs[pid] = plant["display_pid"]
+            hass.states.async_set(f"{DOMAIN}.search_result", state, attrs)
 
-    hass.services.register(DOMAIN, "search", search_plantbook)
-    hass.services.register(DOMAIN, "get", get_plant)
-    hass.states.set(f"{DOMAIN}.search_result", 0)
-    hass.states.set(f"{DOMAIN}.plant_data", "")
+    hass.services.async_register(DOMAIN, "search", search_plantbook)
+    hass.services.async_register(DOMAIN, "get", get_plant)
+    hass.states.async_set(f"{DOMAIN}.search_result", 0)
 
     return True
 
