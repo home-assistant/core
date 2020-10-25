@@ -129,7 +129,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %s", self.accuweather.requests_remaining)
         # Asjust update interval if we have more requests available (due to reset of counter) or our requests are consumed quicker than we expect
-        if (self.accuweather.requests_remaining > self.requests_remaining or self.requests_remaining - self.accuweather.requests_remaining > (2 if self.forecast else 1):
+        if self.accuweather.requests_remaining > self.requests_remaining or self.requests_remaining - self.accuweather.requests_remaining > (2 if self.forecast else 1):
             self.requests_remaining = self.accuweather.requests_remaining
             self.update_interval = self.calculate_update_interval()
         
