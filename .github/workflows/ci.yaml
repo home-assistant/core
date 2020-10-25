@@ -724,7 +724,7 @@ jobs:
         run: |
           apt-get -y update
           apt-get -y install iptables
-          nft --debug add rule filter output ct state new reject
+          nft --debug all add rule filter output ct state new reject
       - name: Run pytest
         run: |
           . venv/bin/activate
