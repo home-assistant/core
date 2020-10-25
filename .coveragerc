@@ -541,6 +541,7 @@ omit =
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/switch.py
+    homeassistant/components/modbus/sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py

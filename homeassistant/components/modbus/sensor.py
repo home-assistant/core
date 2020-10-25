@@ -266,6 +266,10 @@ class ModbusRegisterSensor(RestoreEntity):
                 # Apply scale and precision to floats and ints
                 if isinstance(val, (float, int)):
                     val = self._scale * val + self._offset
+
+                    # We could convert int to float, and the code would still work; however
+                    # we lose some precision, and unit tests will fail. Therefore, we do
+                    # the conversion only when it's absolutely necessary.
                     if isinstance(val, int) and self._precision == 0:
                         self._value = str(val)
                     else:
