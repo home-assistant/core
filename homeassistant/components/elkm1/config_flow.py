@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
@@ -103,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(user_input)
 
-            except exceptions.ConfigEntryNotReady:
+            except asyncio.TimeoutError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"

@@ -249,8 +249,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for keypad in elk.keypads:  # pylint: disable=no-member
         keypad.add_callback(_element_changed)
 
-    if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
-        return False
+    try:
+        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+            return False
+    except asyncio.TimeoutError as exc:
+        raise ConfigEntryNotReady from exc
 
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
@@ -326,14 +329,14 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     try:
         with async_timeout.timeout(timeout):
             await event.wait()
-    except asyncio.TimeoutError as exc:
+    except asyncio.TimeoutError:
         _LOGGER.error(
             "Timed out after %d seconds while trying to sync with ElkM1 at %s",
             SYNC_TIMEOUT,
             conf_host,
         )
         elk.disconnect()
-        raise ConfigEntryNotReady from exc
+        raise
 
     return success
 
