@@ -403,6 +403,7 @@ class TestPilightCallrateThrottler(unittest.TestCase):
         for i in range(3):
             action(i)
 
+        async_fire_time_changed(self.hass, dt_util.utcnow())
         self.hass.block_till_done()
         assert runs == [0]
 
