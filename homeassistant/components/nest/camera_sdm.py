@@ -106,3 +106,10 @@ class NestCamera(Camera):
                 self.hass, SIGNAL_NEST_UPDATE, self.async_write_ha_state
             )
         )
+
+    async def async_camera_image(self):
+        """Return bytes of camera image."""
+        # No support for still images yet.  Still images are only available
+        # in response to an event on the feed.  For now, suppress a
+        # NotImplementedError in the parent class.
+        return None
