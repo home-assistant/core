@@ -723,7 +723,7 @@ jobs:
       - name: Block outgoing connections
         run: |
           apt-get -y update
-          apt-get -y install iptables
+          apt-get -y install iptables-nftables-compat
           /sbin/iptables -I OUTPUT -p tcp -m conntrack –ctstate NEW -j REJECT
       - name: Run pytest
         run: |
