@@ -18,7 +18,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.async_mock import patch
-import tests.common
 
 
 class AttrDict(dict):
@@ -178,7 +177,7 @@ def blackbird():
 
 @pytest.fixture
 async def media_player(hass, blackbird):
-    """Fixture to provide test instance for media_player"""
+    """Fixture to provide test instance for media_player."""
     # Note, source dictionary is unsorted!
     with patch(
         "homeassistant.components.blackbird.media_player.get_blackbird",
