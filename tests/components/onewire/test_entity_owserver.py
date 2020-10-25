@@ -2,10 +2,13 @@
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.onewire.binary_sensor import DEVICE_BINARY_SENSORS
 from homeassistant.components.onewire.const import (
     DEFAULT_OWSERVER_PORT,
     DOMAIN,
     PRESSURE_CBAR,
+    SUPPORTED_PLATFORMS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -19,6 +22,8 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
+    STATE_OFF,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLT,
 )
@@ -76,6 +81,24 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS2406",
             "name": "12.111111111111",
         },
+        "binary_sensors": [
+            {
+                "entity_id": "binary_sensor.12_111111111111_sensed_a",
+                "unique_id": "/12.111111111111/sensed.A",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+            },
+            {
+                "entity_id": "binary_sensor.12_111111111111_sensed_b",
+                "unique_id": "/12.111111111111/sensed.B",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+            },
+        ],
         "sensors": [
             {
                 "entity_id": "sensor.12_111111111111_temperature",
@@ -279,6 +302,90 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "29.111111111111": {
+        "inject_reads": [
+            b"DS2408",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "29.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2408",
+            "name": "29.111111111111",
+        },
+        "binary_sensors": [
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_0",
+                "unique_id": "/29.111111111111/sensed.0",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_1",
+                "unique_id": "/29.111111111111/sensed.1",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_2",
+                "unique_id": "/29.111111111111/sensed.2",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_3",
+                "unique_id": "/29.111111111111/sensed.3",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_4",
+                "unique_id": "/29.111111111111/sensed.4",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_5",
+                "unique_id": "/29.111111111111/sensed.5",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_6",
+                "unique_id": "/29.111111111111/sensed.6",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_7",
+                "unique_id": "/29.111111111111/sensed.7",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+            },
+        ],
+    },
     "3B.111111111111": {
         "inject_reads": [
             b"DS1825",  # read device type
@@ -411,30 +518,37 @@ MOCK_DEVICE_SENSORS = {
 
 
 @pytest.mark.parametrize("device_id", MOCK_DEVICE_SENSORS.keys())
-async def test_owserver_setup_valid_device(hass, device_id):
+@pytest.mark.parametrize("platform", SUPPORTED_PLATFORMS)
+async def test_owserver_setup_valid_device(hass, device_id, platform):
     """Test for 1-Wire device.
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
+    await async_setup_component(hass, "persistent_notification", {})
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
     mock_device_sensor = MOCK_DEVICE_SENSORS[device_id]
 
+    device_family = device_id[0:2]
     dir_return_value = [f"/{device_id}/"]
-    read_side_effect = [device_id[0:2].encode()]
+    read_side_effect = [device_family.encode()]
     if "inject_reads" in mock_device_sensor:
         read_side_effect += mock_device_sensor["inject_reads"]
 
-    expected_sensors = mock_device_sensor["sensors"]
+    expected_sensors = mock_device_sensor.get(f"{platform}s", [])
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
 
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
 
-    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy"
+    ) as owproxy, patch(
+        "homeassistant.components.onewire.SUPPORTED_PLATFORMS", [platform]
+    ):
         owproxy.return_value.dir.return_value = dir_return_value
         owproxy.return_value.read.side_effect = read_side_effect
 
