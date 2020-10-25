@@ -42,7 +42,8 @@
         "verify_ssl": "Verify SSL certificate",
         "longitude": "Longitude",
         "latitude": "Latitude",
-        "pin": "PIN Code"
+        "pin": "PIN Code",
+        "mode": "Mode"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
