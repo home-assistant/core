@@ -1,0 +1,14 @@
+{
+  "domain": "openplantbook",
+  "name": "OpenPlantBook",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/openplantbook",
+  "requirements": ["pyopenplantbook==0.0.4"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Olen"
+  ]
+}

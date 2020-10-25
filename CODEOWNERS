@@ -309,6 +309,7 @@ homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opengarage/* @danielhiversen
+homeassistant/components/openplantbook/* @Olen
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff @freekode

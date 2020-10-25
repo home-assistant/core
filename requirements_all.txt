@@ -1562,6 +1562,9 @@ pyobihai==1.2.3
 # homeassistant.components.ombi
 pyombi==0.1.10
 
+# homeassistant.components.openplantbook
+pyopenplantbook==0.0.4
+
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 

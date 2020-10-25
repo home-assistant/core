@@ -1,0 +1,13 @@
+search:
+  description: Searches Openplantbook for a plant
+  fields:
+    alias:
+      description: The string to search for
+      example: Capsicum
+
+get:
+  description: Fetches data for a single species
+  fields:
+    species:
+      description: The name of the species as written in "pid" in Openplantbook
+      example: coleus 'marble'

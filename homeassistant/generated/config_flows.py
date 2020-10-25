@@ -134,6 +134,7 @@ FLOWS = [
     "omnilogic",
     "onewire",
     "onvif",
+    "openplantbook",
     "opentherm_gw",
     "openuv",
     "openweathermap",
