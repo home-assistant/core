@@ -326,14 +326,14 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     try:
         with async_timeout.timeout(timeout):
             await event.wait()
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as exc:
         _LOGGER.error(
             "Timed out after %d seconds while trying to sync with ElkM1 at %s",
             SYNC_TIMEOUT,
             conf_host,
         )
         elk.disconnect()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from exc
 
     return success
 
