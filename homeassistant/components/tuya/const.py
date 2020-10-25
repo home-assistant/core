@@ -9,6 +9,7 @@ CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_KELVIN = "min_kelvin"
 CONF_MIN_TEMP = "min_temp"
+CONF_QUERY_DEVICE = "query_device"
 CONF_QUERY_INTERVAL = "query_interval"
 CONF_SUPPORT_COLOR = "support_color"
 CONF_TEMP_DIVIDER = "temp_divider"
@@ -33,3 +34,5 @@ TUYA_PLATFORMS = {
     "smart_life": "Smart Life",
     "jinvoo_smart": "Jinvoo Smart",
 }
+
+TUYA_TYPE_NOT_QUERY = ["scene", "switch"]

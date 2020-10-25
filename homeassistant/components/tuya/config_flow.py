@@ -29,6 +29,7 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_KELVIN,
     CONF_MIN_TEMP,
+    CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
     CONF_TEMP_DIVIDER,
@@ -39,6 +40,7 @@ from .const import (
     DOMAIN,
     TUYA_DATA,
     TUYA_PLATFORMS,
+    TUYA_TYPE_NOT_QUERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,16 +172,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._form_error = None
         return errors
 
-    def _get_config_devices(self):
-        """Get the list of Tuya device to configure."""
+    def _get_tuya_devices_filtered(self, types, exclude_mode=False, type_prefix=True):
+        """Get the list of Tuya device to filtered by types."""
         config_list = {}
+        types_filter = set(types)
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
         devices_list = tuya.get_all_devices()
         for device in devices_list:
             dev_type = device.device_type()
-            if dev_type in TUYA_TYPE_CONFIG:
-                dev_id = f"{dev_type}-{device.object_id()}"
-                config_list[dev_id] = f"{device.name()} ({dev_type})"
+            exclude = (
+                dev_type in types_filter
+                if exclude_mode
+                else dev_type not in types_filter
+            )
+            if exclude:
+                continue
+            dev_id = device.object_id()
+            if type_prefix:
+                dev_id = f"{dev_type}-{dev_id}"
+            config_list[dev_id] = f"{device.name()} ({dev_type})"
 
         return config_list
 
@@ -198,9 +209,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def _async_device_form(self, devs_id):
         """Return configuration form for devices."""
-        count = 0
         conf_devs_id = []
-        for dev_id in devs_id:
+        for count, dev_id in enumerate(devs_id):
             device_info = dev_id.split("-")
             if count == 0:
                 device_type = device_info[0]
@@ -209,7 +219,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self._form_error = ERROR_DEV_MULTI_TYPE
                 return await self.async_step_init()
             conf_devs_id.append(device_info[1])
-            count += 1
 
         device = self._get_device(device_id)
         if not device:
@@ -226,7 +235,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_init()
 
         self._conf_devs_id = conf_devs_id
-        device_name = "(multiple devices selected)" if count > 1 else device.name()
+        device_name = (
+            "(multiple devices selected)" if len(conf_devs_id) > 1 else device.name()
+        )
 
         return self.async_show_form(
             step_id="device",
@@ -254,20 +265,35 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
-                vol.Optional(
-                    CONF_QUERY_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=900)),
             }
         )
 
-        devices_list = self._get_config_devices()
-        if devices_list:
+        query_devices = self._get_tuya_devices_filtered(
+            TUYA_TYPE_NOT_QUERY, True, False
+        )
+        if query_devices:
+            devices = {ENTITY_MATCH_NONE: "Default"}
+            devices.update(query_devices)
+            def_val = self.config_entry.options.get(CONF_QUERY_DEVICE)
+            if not def_val or not query_devices.get(def_val):
+                def_val = ENTITY_MATCH_NONE
             data_schema = data_schema.extend(
-                {vol.Optional(CONF_LIST_DEVICES): cv.multi_select(devices_list)}
+                {
+                    vol.Optional(
+                        CONF_QUERY_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=240)),
+                    vol.Optional(CONF_QUERY_DEVICE, default=def_val): vol.In(devices),
+                }
+            )
+
+        config_devices = self._get_tuya_devices_filtered(TUYA_TYPE_CONFIG, False, True)
+        if config_devices:
+            data_schema = data_schema.extend(
+                {vol.Optional(CONF_LIST_DEVICES): cv.multi_select(config_devices)}
             )
 
         return self.async_show_form(
@@ -375,6 +401,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 async def _get_entities_matching_domains(hass, domains):
     """List entities in the given domains."""
     included_domains = set(domains)
-    entity_ids = [state.entity_id for state in hass.states.async_all(included_domains)]
+    entity_ids = hass.states.async_entity_ids(included_domains)
     entity_ids.sort()
     return entity_ids

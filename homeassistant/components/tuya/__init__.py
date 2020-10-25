@@ -27,6 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_COUNTRYCODE,
     CONF_DISCOVERY_INTERVAL,
+    CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
@@ -38,6 +39,7 @@ from .const import (
     TUYA_DEVICES_CONF,
     TUYA_DISCOVERY_NEW,
     TUYA_PLATFORMS,
+    TUYA_TYPE_NOT_QUERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +85,7 @@ def _update_discovery_interval(hass, interval):
         return
 
     try:
-        tuya.discovery_interval = float(interval)
+        tuya.discovery_interval = interval
         _LOGGER.info("Tuya discovery device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
@@ -95,7 +97,7 @@ def _update_query_interval(hass, interval):
         return
 
     try:
-        tuya.query_interval = float(interval)
+        tuya.query_interval = interval
         _LOGGER.info("Tuya query device poll interval set to %s seconds", interval)
     except ValueError as ex:
         _LOGGER.warning(ex)
@@ -241,12 +243,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN]["listener"]()
-        hass.data[DOMAIN]["listener"] = None
-        hass.data[DOMAIN][ENTRY_IS_SETUP] = set()
         hass.data[DOMAIN][TUYA_TRACKER]()
-        hass.data[DOMAIN][TUYA_TRACKER] = None
-        hass.data[DOMAIN][TUYA_DATA] = None
-        hass.data[DOMAIN].pop(TUYA_DEVICES_CONF)
         hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
         hass.services.async_remove(DOMAIN, SERVICE_PULL_DEVICES)
         hass.data.pop(DOMAIN)
@@ -290,7 +287,7 @@ class TuyaDevice(Entity):
     def _device_can_query(self):
         """Check if device can also use query method."""
         dev_type = self._tuya.device_type()
-        return dev_type not in ["scene", "switch"]
+        return dev_type not in TUYA_TYPE_NOT_QUERY
 
     def _inc_device_count(self):
         """Increment static variable device count."""
@@ -370,8 +367,12 @@ class TuyaDevice(Entity):
 
     def update(self):
         """Refresh Tuya device data."""
+        query_dev = self.hass.data[DOMAIN][TUYA_DEVICES_CONF].get(CONF_QUERY_DEVICE, "")
+        use_discovery = (
+            TuyaDevice._dev_can_query_count > 1 and self.object_id != query_dev
+        )
         try:
-            self._tuya.update(use_discovery=(TuyaDevice._dev_can_query_count > 1))
+            self._tuya.update(use_discovery=use_discovery)
         except TuyaFrequentlyInvokeException as exc:
             _LOGGER.error(exc)
 
