@@ -18,13 +18,17 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
+
 
 _LOGGER = logging.getLogger(__name__)
 client_key_coordinator = "client_key_coordinator"
 
 
 import asyncio
+import aiohttp
 from functools import wraps, partial
+import random
 
 def async_wrap(func):
     @wraps(func)
@@ -38,19 +42,6 @@ def async_wrap(func):
 @async_wrap
 def some_comfort_refresh_async_wrap(device):
     device.refresh()
-
-
-class SomeComfortWrap():
-
-    def __init__(self, username, password):
-        self._username = username
-        self._password = password
-        
-        self._client = somecomfort.SomeComfort(username, password)
-
-        
-    def retry(self):
-        self._client = somecomfort.SomeComfort(self._username, self._password)
 
 
 
@@ -68,7 +59,26 @@ def create_client_wrap_async(username, password):
 
 
 
+async def login_to_honeywell(username, password):
+    #if random.random() > 0.5:
+    #    raise somecomfort.client.APIRateLimited
+    try:
+        client = await create_client_wrap_async(username, password)
+    except somecomfort.AuthError as e:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        raise e
+    except somecomfort.SomeComfortError:
+        _LOGGER.error(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
+        )
+        raise e
+        
+    return client
+
 async def async_setup(hass, config):
+
 
     # get the username and password from the climate integration
     # it is required to be present in the climate schema
@@ -78,44 +88,46 @@ async def async_setup(hass, config):
             username = climate_config[CONF_USERNAME]
             password = climate_config[CONF_PASSWORD]
     
+    client = None
     try:
-        client = await create_client_wrap_async(username, password)
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        )
-        return
+        client = await login_to_honeywell(username, password)
+    except somecomfort.client.APIRateLimited as e:
+        _LOGGER.error("Failed to login to honeywell account during setup due to rate limit.")
+        _LOGGER.error(" Will retry in async_setup_platform")
             
     async def async_update_data():
         """Fetch data from API endpoint."""
-        retries = 3
-        while retries > 0:
+        _LOGGER.info("attempting to update honeywell data")
+        #if random.random() > 0.5:
+        #    raise UpdateFailed
+
+
+        # if the login didn't work during async_setup due to rate limiting, try again here
+        nonlocal client
+        if client is None:
             try:
-                for location in client.locations_by_id.values():
-                    for device in location.devices_by_id.values():
-                        await some_comfort_refresh_async_wrap(device)
-                        _LOGGER.debug(
-                            "latestData = %s ", device._data  # pylint: disable=protected-access
-                        )
-                break
-            except (
-                somecomfort.client.APIRateLimited,
-                OSError,
-                requests.exceptions.ReadTimeout,
-            ) as exp:
-                retries -= 1
-                if retries == 0:
-                    raise exp
-                if not self._retry():
-                    raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
+                client = await login_to_honeywell(username, password)
+            except somecomfort.client.APIRateLimited as e:
+                _LOGGER.error("Failed to login to honeywell account during async_update_data due to rate limit.")
+                _Logger.error(" Will retry later")
 
-
+        # assuming we got a working login, try getting the data
+        try:
+            # we have to make a different request for each device
+            for location in client.locations_by_id.values():
+                for device in location.devices_by_id.values():
+                    await some_comfort_refresh_async_wrap(device)
+                    _LOGGER.debug(
+                        "latestData = %s ", device._data  # pylint: disable=protected-access
+                    )
+        except (
+            somecomfort.client.APIRateLimited,
+            OSError,
+            requests.exceptions.ReadTimeout,
+        ) as exp:
+            _LOGGER.error("SomeComfort update failed - Error: %s", exp)
+            raise UpdateFailed(str(exp))
+            
         
         return client
     
@@ -127,10 +139,9 @@ async def async_setup(hass, config):
         name="honeywell_update_coordinator",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=120),
+        update_interval=timedelta(seconds=12),
     )
     
-    await coordinator.async_refresh()
     
     hass.data[client_key_coordinator] = coordinator
     

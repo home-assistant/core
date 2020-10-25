@@ -12,6 +12,7 @@ from . import HoneywellDevice
 
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -117,7 +118,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("honeywell setup_platform")
 
     coordinator = hass.data[client_key_coordinator]
+    
+    # try updating during component setup, but if it fails, just let it retry later
+    
+    if coordinator.data is None:
+        await coordinator.async_refresh()
     client = coordinator.data
+    if client is None:
+        raise PlatformNotReady
 
 
     dev_id = config.get(CONF_DEV_ID)

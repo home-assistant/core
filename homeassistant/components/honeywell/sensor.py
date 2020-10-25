@@ -15,6 +15,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
 
 
 from homeassistant.const import (
@@ -107,6 +108,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     
     coordinator = hass.data[client_key_coordinator]
     client = coordinator.data
+    
+    if coordinator.data is None:
+        await coordinator.async_refresh()
+    client = coordinator.data
+    if client is None:
+        raise PlatformNotReady
     
     dev_id = config.get(CONF_DEV_ID)
     loc_id = config.get(CONF_LOC_ID)
