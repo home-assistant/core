@@ -53,15 +53,9 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
         ]
 
     def _char_threshold_for_current_mode(self):
-        if self.device_class == DEVICE_CLASS_DEHUMIDIFIER:
-            return CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-
-        if self.device_class == DEVICE_CLASS_HUMIDIFIER:
-            return CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-
         return (
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-            if self.mode == "dehumidifying"
+            if self.device_class == DEVICE_CLASS_DEHUMIDIFIER or self.mode == "dehumidifying"
             else CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
         )
 
