@@ -25,15 +25,6 @@ from .const import (
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
-SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(FORECAST_MODES),
-        vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
-    }
-)
-
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
@@ -73,7 +64,9 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-        return self.async_show_form(step_id="user", data_schema=SCHEMA, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=self._get_schema(), errors=errors
+        )
 
     async def async_step_import(self, import_input=None):
         """Set the config entry up from yaml."""
@@ -89,6 +82,26 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_LANGUAGE not in config:
             config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
         return await self.async_step_user(config)
+
+    def _get_schema(self):
+        return vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+                vol.Required(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Required(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Required(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
+                    FORECAST_MODES
+                ),
+                vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+                    LANGUAGES
+                ),
+            }
+        )
 
 
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
