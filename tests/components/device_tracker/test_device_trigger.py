@@ -1,10 +1,11 @@
 """The tests for Device Tracker device triggers."""
 import pytest
+import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, device_trigger
 import homeassistant.components.zone as zone
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -169,3 +170,36 @@ async def test_if_fires_on_zone_change(hass, calls):
     assert calls[1].data["some"] == "leave - device - {} - -117.238 - -117.235".format(
         "device_tracker.entity"
     )
+
+
+async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a device_tracker trigger."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "enters",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "zone",
+            "required": True,
+            "type": "select",
+            "options": [("zone.test", "zone.test"), ("zone.home", "zone.home")],
+        }
+    ]
