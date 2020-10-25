@@ -43,8 +43,23 @@ HA_MODE_TO_HK = {
 }
 
 
-class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
+class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
+
+    def __init__(self, accessory, devinfo):
+        """Initialize a HomeKit humidifier entity."""
+        super().__init__(accessory, devinfo)
+
+        dehumidifier_threshold = self.service.value(
+            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+        )
+
+        humidifier_threshold = self.service.value(
+            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+        )
+
+        self._has_dehumidifier_threshold = dehumidifier_threshold is not None
+        self._has_humidifier_threshold = humidifier_threshold is not None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
@@ -68,20 +83,13 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of the device."""
-        dehumidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        )
-        humidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        )
-
-        if dehumidifier_threshold is not None and humidifier_threshold is not None:
+        if self._has_dehumidifier_threshold and self._has_humidifier_threshold:
             return None
 
-        if dehumidifier_threshold is not None:
+        if self._has_dehumidifier_threshold:
             return DEVICE_CLASS_DEHUMIDIFIER
 
-        if humidifier_threshold is not None:
+        if self._has_humidifier_threshold:
             return DEVICE_CLASS_HUMIDIFIER
 
         return None
@@ -126,17 +134,15 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
             ),
         }
 
-        dehumidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        )
-        if dehumidifier_threshold is not None:
-            data[ATTR_DEHUMIDIFIER_THRESHOLD] = dehumidifier_threshold
+        if self._has_dehumidifier_threshold:
+            data[ATTR_DEHUMIDIFIER_THRESHOLD] = self.service.value(
+                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+            )
 
-        humidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        )
-        if humidifier_threshold is not None:
-            data[ATTR_HUMIDIFIER_THRESHOLD] = humidifier_threshold
+        if self._has_humidifier_threshold:
+            data[ATTR_HUMIDIFIER_THRESHOLD] = self.service.value(
+                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+            )
 
         return data
 
@@ -166,16 +172,10 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
             MODE_OFF,
             MODE_AUTO,
         ]
-        humidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        )
-        if humidifier_threshold is not None:
+        if self._has_humidifier_threshold:
             available_modes.append(MODE_HUMIDIFYING)
 
-        dehumidifier_threshold = self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        )
-        if dehumidifier_threshold is not None:
+        if self._has_dehumidifier_threshold:
             available_modes.append(MODE_DEHUMIDIFYING)
 
         return available_modes
@@ -218,7 +218,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if service["stype"] != "humidifier-dehumidifier":
             return False
         info = {"aid": aid, "iid": service["iid"]}
-        async_add_entities([HomeKitHumidifierDehumidifier(conn, info)], True)
+        async_add_entities([HomeKitHumidifier(conn, info)], True)
         return True
 
     conn.add_listener(async_add_service)
