@@ -1,18 +1,17 @@
 """Tests for 1-Wire devices connected on SysBus."""
-from unittest.mock import patch
-
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import pytest
 
 from homeassistant.components.onewire.const import DEFAULT_SYSBUS_MOUNT_DIR, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import mock_registry
 
 MOCK_CONFIG = {
-    "sensor": {
+    SENSOR_DOMAIN: {
         "platform": DOMAIN,
         "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
         "names": {
@@ -31,9 +30,11 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": 25.123,
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
+    "12-111111111111": {"sensors": []},
     "1D-111111111111": {"sensors": []},
     "22-111111111111": {
         "sensors": [
@@ -43,9 +44,11 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": FileNotFoundError,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
+    "26-111111111111": {"sensors": []},
     "28-111111111111": {
         "sensors": [
             {
@@ -54,6 +57,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": InvalidCRCException,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -65,6 +69,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": 29.993,
                 "result": "30.0",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -76,6 +81,7 @@ MOCK_DEVICE_SENSORS = {
                 "injected_value": UnsupportResponseException,
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
             },
         ]
     },
@@ -99,6 +105,9 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
 
+    # Ensure enough read side effect
+    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
+
     with patch(
         "homeassistant.components.onewire.sensor.os.path.isdir", return_value=True
     ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
@@ -116,5 +125,6 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         assert registry_entry is not None
         assert registry_entry.unique_id == expected_sensor["unique_id"]
         assert registry_entry.unit_of_measurement == expected_sensor["unit"]
+        assert registry_entry.device_class == expected_sensor["class"]
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
