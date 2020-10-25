@@ -29,6 +29,7 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_KELVIN,
     CONF_MIN_TEMP,
+    CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
     CONF_TEMP_DIVIDER,
@@ -39,6 +40,7 @@ from .const import (
     DOMAIN,
     TUYA_DATA,
     TUYA_PLATFORMS,
+    TUYA_TYPE_NOT_QUERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,16 +172,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self._form_error = None
         return errors
 
-    def _get_config_devices(self):
-        """Get the list of Tuya device to configure."""
+    def _get_tuya_devices_filtered(self, types, exclude_mode=False, type_prefix=True):
+        """Get the list of Tuya device to filtered by types."""
         config_list = {}
+        types_filter = set(types)
         tuya = self.hass.data[DOMAIN][TUYA_DATA]
         devices_list = tuya.get_all_devices()
         for device in devices_list:
             dev_type = device.device_type()
-            if dev_type in TUYA_TYPE_CONFIG:
-                dev_id = f"{dev_type}-{device.object_id()}"
-                config_list[dev_id] = f"{device.name()} ({dev_type})"
+            exclude = (
+                dev_type in types_filter
+                if exclude_mode
+                else dev_type not in types_filter
+            )
+            if exclude:
+                continue
+            dev_id = device.object_id()
+            if type_prefix:
+                dev_id = f"{dev_type}-{dev_id}"
+            config_list[dev_id] = f"{device.name()} ({dev_type})"
 
         return config_list
 
@@ -255,19 +266,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_DISCOVERY_INTERVAL, DEFAULT_DISCOVERY_INTERVAL
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=900)),
-                vol.Optional(
-                    CONF_QUERY_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=240)),
             }
         )
 
-        devices_list = self._get_config_devices()
-        if devices_list:
+        query_devices = self._get_tuya_devices_filtered(
+            TUYA_TYPE_NOT_QUERY, True, False
+        )
+        if query_devices:
+            devices = {ENTITY_MATCH_NONE: "Default"}
+            devices.update(query_devices)
+            def_val = self.config_entry.options.get(CONF_QUERY_DEVICE)
+            if not def_val or not query_devices.get(def_val):
+                def_val = ENTITY_MATCH_NONE
             data_schema = data_schema.extend(
-                {vol.Optional(CONF_LIST_DEVICES): cv.multi_select(devices_list)}
+                {
+                    vol.Optional(
+                        CONF_QUERY_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_QUERY_INTERVAL, DEFAULT_QUERY_INTERVAL
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Clamp(min=30, max=240)),
+                    vol.Optional(CONF_QUERY_DEVICE, default=def_val): vol.In(devices),
+                }
+            )
+
+        config_devices = self._get_tuya_devices_filtered(TUYA_TYPE_CONFIG, False, True)
+        if config_devices:
+            data_schema = data_schema.extend(
+                {vol.Optional(CONF_LIST_DEVICES): cv.multi_select(config_devices)}
             )
 
         return self.async_show_form(

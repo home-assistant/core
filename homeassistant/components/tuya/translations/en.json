@@ -31,9 +31,10 @@
         "step": {
             "init": {
                 "title": "Configure Tuya Options",
-                "description": "Do not set discovery and query polling interval values too low or the calls will fail generating error message in the log",
+                "description": "Do not set pollings interval values too low or the calls will fail generating error message in the log",
                 "data": {
                     "discovery_interval": "Discovery device polling interval in seconds",
+                    "query_device": "Select device that will use query method for faster status update",
                     "query_interval": "Query device polling interval in seconds",
                     "list_devices": "Select the devices to configure or leave empty to save configuration"
                 }

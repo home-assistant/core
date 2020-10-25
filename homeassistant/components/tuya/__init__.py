@@ -27,6 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_COUNTRYCODE,
     CONF_DISCOVERY_INTERVAL,
+    CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
@@ -38,6 +39,7 @@ from .const import (
     TUYA_DEVICES_CONF,
     TUYA_DISCOVERY_NEW,
     TUYA_PLATFORMS,
+    TUYA_TYPE_NOT_QUERY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -285,7 +287,7 @@ class TuyaDevice(Entity):
     def _device_can_query(self):
         """Check if device can also use query method."""
         dev_type = self._tuya.device_type()
-        return dev_type not in ["scene", "switch"]
+        return dev_type not in TUYA_TYPE_NOT_QUERY
 
     def _inc_device_count(self):
         """Increment static variable device count."""
@@ -365,8 +367,12 @@ class TuyaDevice(Entity):
 
     def update(self):
         """Refresh Tuya device data."""
+        query_dev = self.hass.data[DOMAIN][TUYA_DEVICES_CONF].get(CONF_QUERY_DEVICE, "")
+        use_discovery = (
+            TuyaDevice._dev_can_query_count > 1 and self.object_id != query_dev
+        )
         try:
-            self._tuya.update(use_discovery=(TuyaDevice._dev_can_query_count > 1))
+            self._tuya.update(use_discovery=use_discovery)
         except TuyaFrequentlyInvokeException as exc:
             _LOGGER.error(exc)
 
