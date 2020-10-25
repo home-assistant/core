@@ -36,7 +36,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   themes: !include_dir_merge_named themes
 
 
@@ -91,3 +91,6 @@ ais_auto_proxy:
 ais_web_zigbee2mqtt:
   host: localhost
   port: 8099
+
+# ais tts
+ais_tts:

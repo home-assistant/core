@@ -1,0 +1,9 @@
+{
+  "domain": "ais_tts",
+  "name": "AIS TTS",
+  "documentation": "https://ai-speaker.com",
+  "dependencies": ["http"],
+  "codeowners": [],
+  "config_flow": false,
+  "quality_scale": "internal"
+}
