@@ -12,6 +12,7 @@ from homeassistant.components.humidifier.const import (
     ATTR_MODE,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
+    MODE_AUTO,
     SUPPORT_MODES,
 )
 from homeassistant.core import callback
@@ -24,17 +25,21 @@ ATTR_DEHUMIDIFIER_THRESHOLD = "dehumidifier_threshold"
 ATTR_HUMIDIFIER_THRESHOLD = "humidifier_threshold"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 
+MODE_OFF = "off"
+MODE_HUMIDIFYING = "humidifying"
+MODE_DEHUMIDIFYING = "dehumidifying"
+
 HK_MODE_TO_HA = {
-    0: "off",
-    1: "auto",
-    2: "humidifying",
-    3: "dehumidifying",
+    0: MODE_OFF,
+    1: MODE_AUTO,
+    2: MODE_HUMIDIFYING,
+    3: MODE_DEHUMIDIFYING,
 }
 
 HA_MODE_TO_HK = {
-    "auto": 0,
-    "humidifying": 1,
-    "dehumidifying": 2,
+    MODE_AUTO: 0,
+    MODE_HUMIDIFYING: 1,
+    MODE_DEHUMIDIFYING: 2,
 }
 
 
@@ -55,7 +60,8 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
     def _char_threshold_for_current_mode(self):
         return (
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-            if self.device_class == DEVICE_CLASS_DEHUMIDIFIER or self.mode == "dehumidifying"
+            if self.device_class == DEVICE_CLASS_DEHUMIDIFIER
+            or self.mode == MODE_DEHUMIDIFYING
             else CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
         )
 
@@ -157,20 +163,20 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
         Requires SUPPORT_MODES.
         """
         available_modes = [
-            "off",
-            "auto",
+            MODE_OFF,
+            MODE_AUTO,
         ]
         humidifier_threshold = self.service.value(
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
         )
         if humidifier_threshold is not None:
-            available_modes.append("humidifying")
+            available_modes.append(MODE_HUMIDIFYING)
 
         dehumidifier_threshold = self.service.value(
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
         )
         if dehumidifier_threshold is not None:
-            available_modes.append("dehumidifying")
+            available_modes.append(MODE_DEHUMIDIFYING)
 
         return available_modes
 
@@ -183,7 +189,7 @@ class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""
 
-        if mode == "off":
+        if mode == MODE_OFF:
             await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
         else:
             new_mode = HA_MODE_TO_HK.get(mode, "unknown")
