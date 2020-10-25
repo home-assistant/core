@@ -69,7 +69,7 @@ async def test_invalid_identifier(hass):
     }
 
     with patch(
-        "pyairvisual.air_quality.AirQuality",
+        "pyairvisual.air_quality.AirQuality.nearest_city",
         side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
