@@ -104,7 +104,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         self.requests_remaining = ACCUWEATHER_API_WINDOW_REQUESTS
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=self.calculate_update_interval())
         
-    def calculate_update_interval(self)
+    def calculate_update_interval(self):
         """Calculate update interval to prevent hitting the rate limit as best as we can"""
         interval = ACCUWEATHER_API_WINDOW / self.requests_remaining / (2 if self.forecast else 1)
         _LOGGER.debug("Data will be update every %.1f minutes", interval)
