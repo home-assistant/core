@@ -119,7 +119,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self._device_version = None
         self._name = None
         self._previous_volume_level = 1  # Used in fake muting
-        self._session_type = None
         self._session_username = None
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
@@ -205,10 +204,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
-            self._device_platform = self.device.platform
-            self._device_product = self.device.product
-            self._device_title = self.device.title
-            self._device_version = self.device.version
             self._device_protocol_capabilities = self.device.protocolCapabilities
 
         if self.session:
@@ -222,36 +217,30 @@ class PlexMediaPlayer(MediaPlayerEntity):
             )
             if session_device:
                 self._make = session_device.device or ""
-                self._device_platform = self._device_platform or session_device.platform
-                self._device_product = self._device_product or session_device.product
-                self._device_title = self._device_title or session_device.title
-                self._device_version = self._device_version or session_device.version
                 new_state = session_device.state
             else:
                 _LOGGER.warning("No player associated with active session")
 
             self.state = new_state
+            self.set_device_details(session_device)
 
             if self.session.usernames:
                 self._session_username = self.session.usernames[0]
 
-            # Calculate throttled position for proper progress display.
-            position = int(self.session.viewOffset / 1000)
-            now = dt_util.utcnow()
-            if self._media_position is not None:
-                pos_diff = position - self._media_position
-                time_diff = now - self._media_position_updated_at
-                if pos_diff != 0 and abs(time_diff.total_seconds() - pos_diff) > 5:
-                    self._media_position_updated_at = now
-                    self._media_position = position
-            else:
-                self._media_position_updated_at = now
-                self._media_position = position
+            if self.is_player_active or not self.state:
+                self.set_media_details(self.session)
         else:
             self.state = new_state
+            self.set_device_details()
 
-            self._media_content_id = self.session.ratingKey
-            self._media_content_rating = getattr(self.session, "contentRating", None)
+    def set_device_details(self, session_device=None):
+        """Set the device details from player and session objects."""
+        for device in filter(None, [self.device, session_device]):
+            _LOGGER.warning("DEVICE: %s", device)
+            self._device_platform = self._device_platform or device.platform
+            self._device_product = self._device_product or device.product
+            self._device_title = self._device_title or device.title
+            self._device_version = self._device_version or device.version
 
         name_parts = [self._device_product, self._device_title or self._device_platform]
         if (self._device_product in COMMON_PLAYERS) and self.make:
@@ -262,84 +251,55 @@ class PlexMediaPlayer(MediaPlayerEntity):
             name_parts.insert(0, self.username)
         self._name = NAME_FORMAT.format(" - ".join(name_parts))
 
-        if self._is_player_active and self.session is not None:
-            self._session_type = self.session.type
-            if self.session.duration:
-                self._media_duration = int(self.session.duration / 1000)
-            else:
-                self._media_duration = None
-            #  title (movie name, tv episode name, music song name)
-            self._media_summary = self.session.summary
-            self._media_title = self.session.title
-            # media type
-            self._set_media_type()
-            if self.session.librarySectionID == LIVE_TV_SECTION:
-                self._app_name = "Live TV"
-            else:
-                self._app_name = (
-                    self.session.section().title
-                    if self.session.section() is not None
-                    else ""
-                )
-            self._set_media_image()
+    def set_media_details(self, media):
+        """Set various details based on active media."""
+        self._clear_media_details()
+
+        self._media_content_id = self.session.ratingKey
+        self._media_content_rating = getattr(self.session, "contentRating", None)
+        self._media_summary = media.summary
+        self._media_title = media.title
+
+        self.media_duration = self.session.duration
+        self.media_position = self.session.viewOffset
+
+        if media.librarySectionID == LIVE_TV_SECTION:
+            self._app_name = "Live TV"
         else:
-            self._session_type = None
-
-    def _set_media_image(self):
-        thumb_url = self.session.thumbUrl
-        if (
-            self.media_content_type is MEDIA_TYPE_TVSHOW
-            and not self.plex_server.option_use_episode_art
-        ):
-            if self.session.librarySectionID == LIVE_TV_SECTION:
-                thumb_url = self.session.grandparentThumb
-            else:
-                thumb_url = self.session.url(self.session.grandparentThumb)
-
-        if thumb_url is None:
-            _LOGGER.debug(
-                "Using media art because media thumb was not found: %s", self.name
+            self._app_name = (
+                media.section().title if media.section() is not None else ""
             )
-            thumb_url = self.session.url(self.session.art)
 
-        self._media_image_url = thumb_url
-
-    def _set_media_type(self):
-        if self._session_type == "episode":
+        if media.type == "episode":
             self._media_content_type = MEDIA_TYPE_TVSHOW
-
-            # season number (00)
-            self._media_season = self.session.seasonNumber
-            # show name
-            self._media_series_title = self.session.grandparentTitle
-            # episode number (00)
-            if self.session.index is not None:
-                self._media_episode = self.session.index
-
-        elif self._session_type == "movie":
+            self._media_season = media.seasonNumber
+            self._media_series_title = media.grandparentTitle
+            if media.index is not None:
+                self._media_episode = media.index
+        elif media.type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
-            if self.session.year is not None and self._media_title is not None:
-                self._media_title += f" ({self.session.year!s})"
+            if media.year is not None and self._media_title is not None:
+                self._media_title += f" ({media.year!s})"
 
-        elif self._session_type == "track":
+        elif media.type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC
-            self._media_album_name = self.session.parentTitle
-            self._media_album_artist = self.session.grandparentTitle
-            self._media_track = self.session.index
-            self._media_artist = self.session.originalTitle
-            # use album artist if track artist is missing
+            self._media_album_name = media.parentTitle
+            self._media_album_artist = media.grandparentTitle
+            self._media_track = media.index
+            self._media_artist = media.originalTitle
             if self._media_artist is None:
                 _LOGGER.debug(
                     "Using album artist because track artist was not found: %s",
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
-
-        elif self._session_type == "clip":
+        elif media.type == "clip":
             _LOGGER.debug(
                 "Clip content type detected, compatibility may vary: %s", self.name
             )
             self._media_content_type = MEDIA_TYPE_VIDEO
+
+        self.media_image_url = media
 
     def force_idle(self):
         """Force client to idle."""
@@ -449,10 +409,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Return the duration of current playing media in seconds."""
         return self._media_duration
 
+    @media_duration.setter
+    def media_duration(self, duration):
+        """Return the duration of current playing media in seconds."""
+        self._media_duration = int(duration / 1000)
+
     @property
     def media_position(self):
         """Return the duration of current playing media in seconds."""
         return self._media_position
+
+    @media_position.setter
+    def media_position(self, position):
+        """Return the duration of current playing media in seconds."""
+        self._media_position = int(position / 1000)
+        self._media_position_updated_at = dt_util.utcnow()
 
     @property
     def media_position_updated_at(self):
@@ -463,6 +434,27 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self._media_image_url
+
+    @media_image_url.setter
+    def media_image_url(self, media):
+        """Set the image URL from current playing media."""
+        thumb_url = media.thumbUrl
+        if (
+            self.media_content_type is MEDIA_TYPE_TVSHOW
+            and not self.plex_server.option_use_episode_art
+        ):
+            if self.session.librarySectionID == LIVE_TV_SECTION:
+                thumb_url = media.grandparentThumb
+            else:
+                thumb_url = media.url(self.session.grandparentThumb)
+
+        if thumb_url is None:
+            _LOGGER.debug(
+                "Using media art because media thumb was not found: %s", self.name
+            )
+            thumb_url = media.url(media.art)
+
+        self._media_image_url = thumb_url
 
     @property
     def media_summary(self):
