@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
+from tests.async_mock import Mock, PropertyMock, patch
 
 
 class LightMockData(NamedTuple):
