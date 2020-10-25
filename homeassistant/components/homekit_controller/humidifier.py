@@ -43,7 +43,7 @@ HA_MODE_TO_HK = {
 }
 
 
-class HomeKitHumidifierDehumidifier(HomeKitEntity, HumidifierEntity):
+class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
     """Representation of a HomeKit Controller Humidifier."""
 
     def get_characteristic_types(self):
