@@ -46,8 +46,10 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
             get_devices_sysinfo, entities_unavailable, SmartPlugSwitch
         )
         if entities_ready:
+            _LOGGER.debug("Adding additional entries")
             async_add_entities(entities_ready, update_before_add=True)
         if entities_unavailable:
+            _LOGGER.debug("Rescheduling retry for unavailable devices")
             hass.helpers.event.async_call_later(
                 UNAVAILABLE_RETRY_DELAY, async_retry_setup_entry
             )

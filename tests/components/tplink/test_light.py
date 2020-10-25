@@ -25,6 +25,7 @@ from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -579,23 +580,74 @@ async def test_update_failure(
         assert "Device 123.123.123.123|light1 responded after " in caplog.text
 
 
-async def test_async_setup_entry_unavailable(hass, caplog):
-    """Test async_setup_entry."""
-    config = {
-        tplink.DOMAIN: {
-            CONF_DISCOVERY: False,
-            CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
-        }
-    }
-
+async def test_async_setup_entry_unavailable(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test unavailable devices trigger a later retry."""
     caplog.clear()
     caplog.set_level(logging.WARNING)
-    await async_setup_component(hass, tplink.DOMAIN, config)
+
+    with patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        side_effect=SmartDeviceException,
+    ):
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await async_setup_component(
+            hass,
+            tplink.DOMAIN,
+            {
+                tplink.DOMAIN: {
+                    CONF_DISCOVERY: False,
+                    CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+        assert "Unable to communicate with device 123.123.123.123" in caplog.text
+        assert "Scheduling a retry for unavailable devices" in caplog.text
+        caplog.clear()
+        caplog.set_level(logging.DEBUG)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        with patch("homeassistant.components.tplink.common", UNAVAILABLE_RETRY_DELAY=0):
+            assert "Rescheduling retry for unavailable devices" in caplog.text
+
+
+async def test_async_setup_entry_rescheduled(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test async_setup_entry is rescheduled."""
+
+    with patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        side_effect=SmartDeviceException,
+    ):
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await async_setup_component(
+            hass,
+            tplink.DOMAIN,
+            {
+                tplink.DOMAIN: {
+                    CONF_DISCOVERY: False,
+                    CONF_LIGHT: [{CONF_HOST: "123.123.123.124"}],
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
-    assert (
-        "Unable to communicate with device 123.123.123.123: Communication error"
-        in caplog.text
-    )
-    assert "Scheduling a retry for unavailable devices" in caplog.text
+    with patch("homeassistant.components.tplink.common", UNAVAILABLE_RETRY_DELAY=0):
+
+        assert "Adding additional entries" in caplog.text
