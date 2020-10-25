@@ -179,6 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         for ha_type, dev_ids in device_type_list.items():
             config_entries_key = f"{ha_type}.tuya"
+            _LOGGER.warning("ha_type: %s, dev_ids: %s", ha_type, dev_ids)
             if config_entries_key not in hass.data[DOMAIN][ENTRY_IS_SETUP]:
                 hass.data[DOMAIN]["pending"][ha_type] = dev_ids
                 hass.async_create_task(
