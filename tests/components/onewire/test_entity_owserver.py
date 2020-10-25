@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import mock_registry
+from tests.common import mock_device_registry, mock_registry
 
 MOCK_CONFIG = {
     SENSOR_DOMAIN: {
@@ -39,8 +39,22 @@ MOCK_CONFIG = {
 }
 
 MOCK_DEVICE_SENSORS = {
-    "00.111111111111": {"sensors": []},
+    "00.111111111111": {
+        "inject_reads": [
+            b"",  # read device type
+        ],
+        "sensors": [],
+    },
     "10.111111111111": {
+        "inject_reads": [
+            b"DS18S20",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "10.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS18S20",
+            "name": "10.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.my_ds18b20_temperature",
@@ -50,9 +64,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
-        ]
+        ],
     },
     "12.111111111111": {
+        "inject_reads": [
+            b"DS2406",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "12.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2406",
+            "name": "12.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.12_111111111111_temperature",
@@ -70,9 +93,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
             },
-        ]
+        ],
     },
     "1D.111111111111": {
+        "inject_reads": [
+            b"DS2423",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "1D.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2423",
+            "name": "1D.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.1d_111111111111_counter_a",
@@ -90,9 +122,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": "count",
                 "class": None,
             },
-        ]
+        ],
     },
     "22.111111111111": {
+        "inject_reads": [
+            b"DS1822",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "22.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS1822",
+            "name": "22.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.22_111111111111_temperature",
@@ -102,9 +143,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
-        ]
+        ],
     },
     "26.111111111111": {
+        "inject_reads": [
+            b"DS2438",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "26.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2438",
+            "name": "26.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.26_111111111111_temperature",
@@ -194,9 +244,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": ELECTRICAL_CURRENT_AMPERE,
                 "class": DEVICE_CLASS_CURRENT,
             },
-        ]
+        ],
     },
     "28.111111111111": {
+        "inject_reads": [
+            b"DS18B20",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "28.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS18B20",
+            "name": "28.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.28_111111111111_temperature",
@@ -206,9 +265,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
-        ]
+        ],
     },
     "3B.111111111111": {
+        "inject_reads": [
+            b"DS1825",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "3B.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS1825",
+            "name": "3B.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.3b_111111111111_temperature",
@@ -218,9 +286,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
-        ]
+        ],
     },
     "42.111111111111": {
+        "inject_reads": [
+            b"DS28EA00",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "42.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS28EA00",
+            "name": "42.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.42_111111111111_temperature",
@@ -230,12 +307,18 @@ MOCK_DEVICE_SENSORS = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
-        ]
+        ],
     },
     "EF.111111111111": {
         "inject_reads": [
             b"HobbyBoards_EF",  # read type
         ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "EF.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "HobbyBoards_EF",
+            "name": "EF.111111111111",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.ef_111111111111_humidity",
@@ -271,6 +354,12 @@ MOCK_DEVICE_SENSORS = {
             b"         0",  # read is_leaf_2
             b"         0",  # read is_leaf_3
         ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "EF.111111111112")},
+            "manufacturer": "Maxim Integrated",
+            "model": "HB_MOISTURE_METER",
+            "name": "EF.111111111112",
+        },
         "sensors": [
             {
                 "entity_id": "sensor.ef_111111111112_wetness_0",
@@ -313,13 +402,16 @@ MOCK_DEVICE_SENSORS = {
 async def test_owserver_setup_valid_device(hass, device_id):
     """Test for 1-Wire device."""
     entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
+    mock_device_sensor = MOCK_DEVICE_SENSORS[device_id]
 
     dir_return_value = [f"/{device_id}/"]
     read_side_effect = [device_id[0:2].encode()]
-    if "inject_reads" in MOCK_DEVICE_SENSORS[device_id]:
-        read_side_effect += MOCK_DEVICE_SENSORS[device_id]["inject_reads"]
+    if "inject_reads" in mock_device_sensor:
+        read_side_effect += mock_device_sensor["inject_reads"]
 
-    expected_sensors = MOCK_DEVICE_SENSORS[device_id]["sensors"]
+    expected_sensors = mock_device_sensor["sensors"]
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
 
@@ -334,6 +426,16 @@ async def test_owserver_setup_valid_device(hass, device_id):
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_sensors)
+
+    if len(expected_sensors) > 0:
+        device_info = mock_device_sensor["device_info"]
+        assert len(device_registry.devices) == 1
+        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)}, set())
+        assert registry_entry is not None
+        assert registry_entry.identifiers == {(DOMAIN, device_id)}
+        assert registry_entry.manufacturer == device_info["manufacturer"]
+        assert registry_entry.name == device_info["name"]
+        assert registry_entry.model == device_info["model"]
 
     for expected_sensor in expected_sensors:
         entity_id = expected_sensor["entity_id"]
