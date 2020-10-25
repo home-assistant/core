@@ -78,7 +78,7 @@ async def async_setup_entry(
         SERVICE_PRESET,
         {
             vol.Required(ATTR_PRESET): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=16)
+                vol.Coerce(int), vol.Range(min=-1, max=65535)
             ),
         },
         "async_preset",
