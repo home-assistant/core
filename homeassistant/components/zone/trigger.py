@@ -32,7 +32,9 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type: str = "zone"
+):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
@@ -70,7 +72,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 job,
                 {
                     "trigger": {
-                        "platform": "zone",
+                        "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
                         "to_state": to_s,
