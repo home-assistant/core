@@ -32,7 +32,7 @@ async def async_setup_sdm_entry(
     """Set up the sensors."""
 
     subscriber = hass.data[DOMAIN][entry.entry_id]
-    device_manager = await subscriber.async_device_manager
+    device_manager = await subscriber.async_get_device_manager()
 
     # Fetch initial data so we have data when entities subscribe.
 

@@ -678,7 +678,7 @@ google-cloud-pubsub==0.39.1
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.6
+google-nest-sdm==0.1.9
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1346,7 +1346,7 @@ pyeconet==0.0.11
 pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.1.4
+pyeight==0.1.5
 
 # homeassistant.components.emby
 pyemby==1.7

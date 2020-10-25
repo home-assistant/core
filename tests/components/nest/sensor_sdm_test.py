@@ -79,8 +79,7 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Return the fake device manager."""
         return self._device_manager
 
-    @property
-    async def async_device_manager(self) -> DeviceManager:
+    async def async_get_device_manager(self) -> DeviceManager:
         """Return the fake device manager."""
         return self._device_manager
 
