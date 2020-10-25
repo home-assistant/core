@@ -38,6 +38,7 @@ async def test_webhook_json(hass, aiohttp_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -71,6 +72,7 @@ async def test_webhook_post(hass, aiohttp_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -104,6 +106,7 @@ async def test_webhook_query(hass, aiohttp_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -137,6 +140,7 @@ async def test_webhook_reload(hass, aiohttp_client):
             }
         },
     )
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -163,6 +167,7 @@ async def test_webhook_reload(hass, aiohttp_client):
             "reload",
             blocking=True,
         )
+        await hass.async_block_till_done()
 
     await client.post("/api/webhook/post_webhook", data={"hello": "world"})
 
