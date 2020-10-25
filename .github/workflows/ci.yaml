@@ -722,9 +722,8 @@ jobs:
           pip install pytest-github-actions-annotate-failures
       - name: Block outgoing connections
         run: |
-          whoami
-          find /sbin
-          iptables -I OUTPUT -p tcp -m state --state NEW -j REJECT
+          apt-get -y install iptables
+          /sbin/iptables -I OUTPUT -p tcp -m state --state NEW -j REJECT
       - name: Run pytest
         run: |
           . venv/bin/activate
@@ -742,7 +741,7 @@ jobs:
             tests
       - name: Restore outgoing connections
         run: |
-          iptables -D OUTPUT -p tcp -m state --state NEW -j REJECT
+          /sbin/iptables -D OUTPUT -p tcp -m state --state NEW -j REJECT
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.0
         with:
