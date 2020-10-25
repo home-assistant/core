@@ -19,6 +19,8 @@ from .const import (
     COORDINATOR,
     DOMAIN,
     UNDO_UPDATE_LISTENER,
+    ACCUWEATHER_API_WINDOW,
+    ACCUWEATHER_API_WINDOW_REQUESTS
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,18 +100,15 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         self.forecast = forecast
         self.is_metric = hass.config.units.is_metric
         self.accuweather = AccuWeather(api_key, session, location_key=self.location_key)
-
-        # Enabling the forecast download increases the number of requests per data
-        # update, we use 32 minutes for current condition only and 64 minutes for
-        # current condition and forecast as update interval to not exceed allowed number
-        # of requests. We have 50 requests allowed per day, so we use 45 and leave 5 as
-        # a reserve for restarting HA.
-        update_interval = (
-            timedelta(minutes=64) if self.forecast else timedelta(minutes=32)
-        )
-        _LOGGER.debug("Data will be update every %s", update_interval)
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        # placeholder for previous requests remaining for recalculating update interval
+        self.requests_remaining = ACCUWEATHER_API_WINDOW_REQUESTS
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=self.calculate_update_interval())
+        
+    def calculate_update_interval(self)
+        """Calculate update interval to prevent hitting the rate limit as best as we can"""
+        interval = ACCUWEATHER_API_WINDOW / self.requests_remaining / (2 if self.forecast else 1)
+        _LOGGER.debug("Data will be update every %.1f minutes", interval)
+        return interval
 
     async def _async_update_data(self):
         """Update data via library."""
@@ -129,4 +128,9 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         ) as error:
             raise UpdateFailed(error) from error
         _LOGGER.debug("Requests remaining: %s", self.accuweather.requests_remaining)
+        # Asjust update interval if we have more requests available (due to reset of counter) or our requests are consumed quicker than we expect
+        if (self.accuweather.requests_remaining > self.requests_remaining or self.requests_remaining - self.accuweather.requests_remaining > (2 if self.forecast else 1):
+            self.requests_remaining = self.accuweather.requests_remaining
+            self.update_interval = self.calculate_update_interval()
+        
         return {**current, **{ATTR_FORECAST: forecast}}
