@@ -223,7 +223,7 @@ async def test_platforms_are_initialized(hass):
     assert switch_setup.call_count == 1
 
 
-async def test_async_setup_entry_default(hass, caplog):
+async def test_async_setup_entry_unavailable(hass, caplog):
     """Test async_setup_entry."""
     config = {
         tplink.DOMAIN: {
@@ -244,9 +244,6 @@ async def test_async_setup_entry_default(hass, caplog):
         in caplog.text
     )
     assert "Scheduling a retry for unavailable devices" in caplog.text
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
 
 
 async def test_no_config_creates_no_entry(hass):

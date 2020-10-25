@@ -37,7 +37,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     entities_ready, entities_unavailable = await hass.async_add_executor_job(
         get_devices_sysinfo, devices, SmartPlugSwitch
     )
-    async_add_entities(entities_ready, update_before_add=True)
+    if entities_ready:
+        async_add_entities(entities_ready, update_before_add=True)
 
     async def async_retry_setup_entry(_):
         entities_unavailable = hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"]
