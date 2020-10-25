@@ -2,7 +2,7 @@
 import logging
 from typing import Callable, NamedTuple
 
-from pyHS100 import SmartDeviceException
+from pyHS100 import SmartBulb, SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
@@ -588,12 +588,20 @@ async def test_async_setup_entry_unavailable(hass, caplog):
         }
     }
 
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-    await async_setup_component(hass, tplink.DOMAIN, config)
-    await hass.async_block_till_done()
+    entities_ready = []
+    entities_unavailable = [SmartBulb("123.123.123.123")]
 
-    await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
+    with patch(
+        "homeassistant.components.tplink.common.get_devices_sysinfo",
+        return_value=(entities_ready, entities_unavailable),
+    ) as mock_activate:
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+        await async_setup_component(hass, tplink.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        await tplink.light.async_setup_entry(hass, Mock(), MagicMock())
+
     assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
     assert (
         "Unable to communicate with device 123.123.123.123: Communication error"
