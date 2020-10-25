@@ -11,33 +11,53 @@ ACTIVITIES_TO_IDS = {
     "Play Music": PLAY_MUSIC_ACTIVITY_ID,
 }
 
-# class FakeHarmonyStates:
-# def __init__(self):
-# self._activity_name = "Watch TV"
+IDS_TO_ACTIVITIES = {
+    WATCH_TV_ACTIVITY_ID: "Watch TV",
+    PLAY_MUSIC_ACTIVITY_ID: "Play Music",
+}
 
-# def get_activity_name(self, *args):
-# return self._activity_name
 
-# async def start_activity(self, *args, **kwargs):
-# print(args)
-# print(kwargs)
-# fut = asyncio.Future()
-# fut.return_value=True
-# return await fut
+class FakeHarmonyStates:
+    """Class to keep track of activity states based on calls to the client mock."""
+
+    def __init__(self, client_mock):
+        """Initialize FakeHarmonyStates class."""
+        self._activity_name = "Watch TV"
+        self._client_mock = client_mock
+
+    def get_activity_name(self, *args):
+        """Return the current activity."""
+        return self._activity_name
+
+    def start_activity(self, *args, **kwargs):
+        """Update the current activity and call the appropriate callbacks."""
+        activity_id = kwargs["activity_id"]
+        self._activity_name = IDS_TO_ACTIVITIES.get(activity_id)
+        activity_tuple = (activity_id, self._activity_name)
+        self._client_mock.callbacks.new_activity_starting(activity_tuple)
+        self._client_mock.callbacks.new_activity(activity_tuple)
+
+        return AsyncMock(return_value=True)
+
+    def get_activity_id(self, activity_name):
+        """Return the mapping of an activity name to the internal id."""
+        return ACTIVITIES_TO_IDS.get(activity_name)
 
 
 @pytest.fixture()
 def mock_harmonyclient():
     """Create a mock HarmonyClient."""
-    # stateHandler = FakeHarmonyStates()
     harmonyclient_mock = MagicMock()
+    stateHandler = FakeHarmonyStates(harmonyclient_mock)
     type(harmonyclient_mock).connect = AsyncMock()
     type(harmonyclient_mock).close = AsyncMock()
-    # type(harmonyclient_mock).get_activity_name = MagicMock(side_effect=stateHandler.get_activity_name)
-    type(harmonyclient_mock).get_activity_name = MagicMock(return_value="Watch TV")
-    type(harmonyclient_mock).get_activity_id = _get_activity_id
-    # type(harmonyclient_mock).start_activity = AsyncMock(side_effect=stateHandler.start_activity, return_value=True)
-    type(harmonyclient_mock).start_activity = AsyncMock()
+    type(harmonyclient_mock).get_activity_name = MagicMock(
+        side_effect=stateHandler.get_activity_name
+    )
+    type(harmonyclient_mock).get_activity_id = stateHandler.get_activity_id
+    type(harmonyclient_mock).start_activity = AsyncMock(
+        side_effect=stateHandler.start_activity
+    )
     type(harmonyclient_mock.hub_config).activities = PropertyMock(
         return_value=[
             {"name": "Watch TV", "id": WATCH_TV_ACTIVITY_ID},
@@ -59,7 +79,3 @@ def mock_harmonyclient():
     )
 
     yield harmonyclient_mock
-
-
-def _get_activity_id(_, activity_name):
-    return ACTIVITIES_TO_IDS.get(activity_name)

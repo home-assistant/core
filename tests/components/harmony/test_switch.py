@@ -24,7 +24,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-from tests.components.harmony.conftest import PLAY_MUSIC_ACTIVITY_ID
+from tests.components.harmony.conftest import (
+    PLAY_MUSIC_ACTIVITY_ID,
+    WATCH_TV_ACTIVITY_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,11 +173,13 @@ async def test_switch_toggles(hass, mock_harmonyclient):
     )
 
     # TODO test turning on and off watch tv
-    # await hass.services.async_call(
-    # SWITCH_DOMAIN,
-    # SERVICE_TURN_OFF,
-    # {ATTR_ENTITY_ID: ENTITY_PLAY_MUSIC},
-    # blocking=True,
-    # )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_WATCH_TV},
+        blocking=True,
+    )
 
-    # mock_harmonyclient.start_activity.assert_awaited_with(activity_id=PLAY_MUSIC_ACTIVITY_ID)
+    mock_harmonyclient.start_activity.assert_awaited_with(
+        activity_id=WATCH_TV_ACTIVITY_ID
+    )
