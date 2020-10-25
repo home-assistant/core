@@ -1,0 +1,51 @@
+{
+  "title": "Adaptiv Ljussättning",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Välj ett namn för Adaptiv Ljussättning",
+        "description": "Varje konfiguration kan innehålla flera ljuskällor!",
+        "data": {
+          "name": "Namn"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Enheten är redan konfiguerad"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Adaptiv Ljussättning Inställningar",
+        "description": "Alla inställningar för en Adaptiv Ljussättning komponent. Titeln på inställningarna är desamma som i YAML konfigurationen. Inga inställningar visas om enheten redan är konfigurerad i YAML.",
+        "data": {
+          "lights": "lights, ljuskällor",
+          "adapt_brightness": "adapt_brightness, Adaptiv ljusstyrka",
+          "adapt_color_temp": "adapt_color_temp, Justera färgtemperatur genom att använda 'color_temp' om möjligt",
+          "adapt_rgb_color": "adapt_rgb_color, Justera färgtemperatur genom att använda RGB/XY om möjligt",
+          "initial_transition": "initial_transition, när ljuskällorna går från 'av' till 'på' eller när 'sleep_state' ändras",
+          "interval": "interval, Tid mellan uppdateringar i sekunder",
+          "max_brightness": "max_brightness, i procent %",
+          "max_color_temp": "max_color_temp, i Kelvin",
+          "min_brightness": "min_brightness, i %",
+          "min_color_temp": "min_color_temp, i Kelvin",
+          "only_once": "only_once, Adaptivt justera endast ljuskällorna när de sätts från 'av' till 'på'",
+          "prefer_rgb_color": "prefer_rgb_color, Använd 'rgb_color' över 'color_temp' om möjligt",
+          "sleep_brightness": "sleep_brightness, i %",
+          "sleep_color_temp": "sleep_color_temp, i Kelvin",
+          "sunrise_offset": "sunrise_offset, i +/- sekunder",
+          "sunrise_time": "sunrise_time, i 'HH:MM:SS' format (om 'None', används den faktiskta soluppgången för din position)",
+          "sunset_offset": "sunset_offset, i +/- sekunder",
+          "sunset_time": "sunset_time, i 'HH:MM:SS' format (om 'None', används den faktiskta solnedgången för din position)",
+          "take_over_control": "take_over_control, om något utöver 'Adaptiv Ljussättning' komponenten kallar på 'light.turn_on' när en ljuskälla redan är på, stängs den adaptiva justeringen av tills ljuskällan stängs av -> på igen, alternativt switchen för konfigurationen",
+          "detect_non_ha_changes": "detect_non_ha_changes, Upptäcker alla ändringar större än 5% gjorda på ljuskällorna som inte kommer från HA. Kräver att 'take_over_control' är påslaget.(Kallar på 'homeassistant.update_entity' vid varje 'interval'!)",
+          "transition": "transition, i sekunder"
+        }
+      }
+    },
+    "error": {
+      "option_error": "Ogiltlig inställning"
+    }
+  }
+}
