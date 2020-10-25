@@ -5,8 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
-from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE
-from homeassistant.components.zone import trigger as zone
+from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE, trigger as zone
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
