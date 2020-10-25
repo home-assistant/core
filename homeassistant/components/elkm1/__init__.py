@@ -249,17 +249,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for keypad in elk.keypads:  # pylint: disable=no-member
         keypad.add_callback(_element_changed)
 
-    if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT):
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            SYNC_TIMEOUT,
-            conf[CONF_HOST],
-        )
-        elk.disconnect()
-        raise ConfigEntryNotReady
-
-    if elk.invalid_auth:
-        _LOGGER.error("Authentication failed for ElkM1")
+    if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
         return False
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -312,16 +302,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(elk, timeout):
-    """Wait until the elk system has finished sync."""
+async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
+    """Wait until the elk has finished sync. Can fail login or timeout."""
+
+    def login_status(succeeded):
+        nonlocal success
+
+        success = succeeded
+        if succeeded:
+            _LOGGER.info("ElkM1 login succeeded.")
+        else:
+            elk.disconnect()
+            _LOGGER.error("ElkM1 login failed; invalid username or password.")
+            event.set()
+
+    def sync_complete():
+        event.set()
+
+    success = True
+    event = asyncio.Event()
+    elk.add_handler("login", login_status)
+    elk.add_handler("sync_complete", sync_complete)
     try:
         with async_timeout.timeout(timeout):
-            await elk.sync_complete()
-            return True
-    except asyncio.TimeoutError:
+            await event.wait()
+    except asyncio.TimeoutError as exc:
+        _LOGGER.error(
+            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
+            SYNC_TIMEOUT,
+            conf_host,
+        )
         elk.disconnect()
+        raise ConfigEntryNotReady from exc
 
-    return False
+    return success
 
 
 def _create_elk_services(hass):
