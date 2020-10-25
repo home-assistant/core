@@ -47,7 +47,7 @@ class DeviceInfo:
             items = sorted(parent_relations.items())
             names = [name for id, name in items]
             return " ".join(names)
-        return self.unique_id
+        return self.device_model
 
     @property
     def device_model(self):
