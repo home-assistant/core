@@ -264,7 +264,7 @@ class ModbusRegisterSensor(RestoreEntity):
                 val = val[0]
 
                 # Apply scale and precision to floats and ints
-                if isinstance(val, int) or isinstance(val, float):
+                if isinstance(val, (float, int)):
                     val = self._scale * val + self._offset
                     if isinstance(val, int) and self._precision == 0:
                         self._value = str(val)
