@@ -17,8 +17,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 
-import tests.common
 from tests.async_mock import patch
+import tests.common
 
 
 class AttrDict(dict):
