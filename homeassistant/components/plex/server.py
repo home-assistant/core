@@ -472,7 +472,6 @@ class PlexServer:
         async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
-            sessions,
         )
 
     @property
@@ -607,3 +606,11 @@ class PlexServer:
         except MediaNotFound as failed_item:
             _LOGGER.error("%s not found in %s", failed_item, library_name)
             return None
+
+    @property
+    def sensor_attributes(self):
+        """Return active session information for use in activity sensor."""
+        _LOGGER.info("Active sessions: %s", self.active_sessions)
+        return {
+            x["sensor_user"]: x["sensor_title"] for x in self.active_sessions.values()
+        }

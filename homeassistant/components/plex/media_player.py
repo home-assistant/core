@@ -24,7 +24,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util import dt as dt_util
@@ -38,6 +38,7 @@ from .const import (
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
+    PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
 from .media_browser import browse_media
@@ -303,10 +304,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._media_series_title = media.grandparentTitle
             if media.index is not None:
                 self._media_episode = media.index
+            sensor_title = f"{self.media_series_title} - {media.seasonEpisode} - {self.media_title}"
         elif media.type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
             if media.year is not None and self._media_title is not None:
                 self._media_title += f" ({media.year!s})"
+            sensor_title = self.media_title
 
         elif media.type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC
@@ -320,13 +323,30 @@ class PlexMediaPlayer(MediaPlayerEntity):
                     self.name,
                 )
                 self._media_artist = self._media_album_artist
+            sensor_title = (
+                f"{self.media_artist} - {self.media_album_name} - {self.media_title}"
+            )
         elif media.type == "clip":
             _LOGGER.debug(
                 "Clip content type detected, compatibility may vary: %s", self.name
             )
             self._media_content_type = MEDIA_TYPE_VIDEO
+            sensor_title = self.media_title
+        else:
+            sensor_title = "Unknown"
 
         self.media_image_url = media
+        self.plex_server.active_sessions[self.session_key][
+            "sensor_title"
+        ] = sensor_title
+        self.plex_server.active_sessions[self.session_key][
+            "sensor_user"
+        ] = f"{self.username} - {self._device_title}"
+
+        dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
+        )
 
     def force_idle(self):
         """Force client to idle."""
@@ -335,6 +355,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self.session = None
         self.session_key = None
         self._clear_media_details()
+
+        dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
+        )
 
     @property
     def should_poll(self):
