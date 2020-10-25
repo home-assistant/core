@@ -229,8 +229,8 @@ async def test_issur_melacha_sensor(
         "result",
     ],
     [
-        make_nyc_test_params(dt(2020, 10, 23, 17, 46), [STATE_OFF, STATE_ON]),
-        make_nyc_test_params(dt(2020, 10, 24, 18, 44), [STATE_ON, STATE_OFF]),
+        make_nyc_test_params(dt(2020, 10, 23, 17, 46, 59), [STATE_OFF, STATE_ON]),
+        make_nyc_test_params(dt(2020, 10, 24, 18, 44, 59), [STATE_ON, STATE_OFF]),
     ],
     ids=["before_candle_lighting", "before_havdalah"],
 )
@@ -275,7 +275,7 @@ async def test_issur_melacha_sensor_update(
             == result[0]
         )
 
-    test_time += timedelta(seconds=61)
+    test_time += timedelta(seconds=2)
     with alter_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
