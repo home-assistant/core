@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE
 from homeassistant.components.zone import trigger as zone
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -27,7 +28,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_ZONE): cv.entity_id,
+        vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN_ZONE),
     }
 )
 
@@ -79,7 +80,7 @@ async def async_attach_trigger(
         event = zone.EVENT_LEAVE
 
     zone_config = {
-        CONF_PLATFORM: "zone",
+        CONF_PLATFORM: DOMAIN_ZONE,
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         CONF_ZONE: config[CONF_ZONE],
         CONF_EVENT: event,
@@ -88,3 +89,15 @@ async def async_attach_trigger(
     return await zone.async_attach_trigger(
         hass, zone_config, action, automation_info, platform_type="device"
     )
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: ConfigType):
+    """List trigger capabilities."""
+    zones = hass.states.async_entity_ids(DOMAIN_ZONE)
+    return {
+        "extra_fields": vol.Schema(
+            {
+                vol.Required(CONF_ZONE): vol.In(zones),
+            }
+        )
+    }

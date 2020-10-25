@@ -6,8 +6,8 @@
       "is_not_home": "{entity_name} is not home"
     },
     "trigger_type": {
-      "enters": "{entity_name} enters {zone_name}",
-      "leaves": "{entity_name} leaves {zone_name}"
+      "enters": "{entity_name} enters a zone",
+      "leaves": "{entity_name} leaves a zone"
     }
   },
   "state": {
