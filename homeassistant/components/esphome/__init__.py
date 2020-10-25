@@ -438,6 +438,12 @@ async def platform_async_setup_entry(
             entry_data.state[component_key].get(state.key),
             state,
         )
+        if entry_data.state[component_key].get(state.key) == state:
+            _LOGGER.warning(
+                "async_entity_state MATCH",
+                entry_data.state[component_key].get(state.key),
+                state,
+            )
         entry_data.state[component_key][state.key] = state
         entry_data.async_update_entity(hass, component_key, state.key)
 
