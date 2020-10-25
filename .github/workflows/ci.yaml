@@ -720,6 +720,9 @@ jobs:
           # However this plugin is fairly new and doesn't run correctly
           # on a non-GitHub environment.
           pip install pytest-github-actions-annotate-failures
+      - name: Block outgoing connections
+        run: |
+          sudo iptables -I OUTPUT -p tcp -m state --state NEW -j REJECT
       - name: Run pytest
         run: |
           . venv/bin/activate
@@ -735,6 +738,9 @@ jobs:
             -o console_output_style=count \
             -p no:sugar \
             tests
+      - name: Restore outgoing connections
+        run: |
+          sudo iptables -D OUTPUT -p tcp -m state --state NEW -j REJECT
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.0
         with:
