@@ -433,6 +433,11 @@ async def platform_async_setup_entry(
         """Notify the appropriate entity of an updated state."""
         if not isinstance(state, state_type):
             return
+        _LOGGER.warning(
+            "async_entity_state old_state=%s new_state=%s",
+            entry_data.state[component_key].get(state.key),
+            state,
+        )
         entry_data.state[component_key][state.key] = state
         entry_data.async_update_entity(hass, component_key, state.key)
 
