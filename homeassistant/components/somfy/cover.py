@@ -58,15 +58,15 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
+        self.cover.close()
         if self.optimistic:
             self._closed = True
-        self.cover.close()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
+        self.cover.open()
         if self.optimistic:
             self._closed = False
-        self.cover.open()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -127,15 +127,11 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         if self.optimistic:
             # Restore the last state if we use optimistic
             last_state = await self.async_get_last_state()
-            _LOGGER.debug("Last state was: %s", last_state)
 
             if last_state is not None and last_state.state in (
                 STATE_OPEN,
                 STATE_CLOSED,
             ):
                 self._closed = last_state.state == STATE_CLOSED
-                _LOGGER.debug("%s: closed: %s", self.entity_id, self._closed)
 
         await self.async_update()
-
-        _LOGGER.debug("%s: (after_update) closed: %s", self.entity_id, self._closed)
