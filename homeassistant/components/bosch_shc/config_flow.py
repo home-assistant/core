@@ -5,7 +5,7 @@ from boschshcpy import SHCSession
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -14,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Bosch SHC"): str,
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_SSL_CERTIFICATE): str,
         vol.Required(CONF_SSL_KEY): str,
@@ -40,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": data[CONF_NAME]}
+    return {"title": "Bosch SHC"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -21,7 +20,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_NAME, default="Bosch SHC"): cv.string,
                 vol.Required(CONF_IP_ADDRESS): cv.string,
                 vol.Required(CONF_SSL_CERTIFICATE): cv.isfile,
                 vol.Required(CONF_SSL_KEY): cv.isfile,
@@ -87,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, data[CONF_IP_ADDRESS])},
         manufacturer="Bosch",
-        name=data[CONF_NAME],
+        name=entry.title,
         model="SmartHomeController",
         sw_version=shc_info.version,
     )
