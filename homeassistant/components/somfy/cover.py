@@ -7,6 +7,8 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverEntity,
 )
+from homeassistant.const import STATE_CLOSED
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
@@ -32,10 +34,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if categories & set(cover.categories)
         ]
 
-    async_add_entities(await hass.async_add_executor_job(get_covers), True)
+    async_add_entities(await hass.async_add_executor_job(get_covers))
 
 
-class SomfyCover(SomfyEntity, CoverEntity):
+class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     """Representation of a Somfy cover device."""
 
     def __init__(self, device, api, optimistic):
@@ -114,3 +116,13 @@ class SomfyCover(SomfyEntity, CoverEntity):
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
         self.cover.stop()
+
+    async def async_added_to_hass(self):
+        """Complete the initialization."""
+        await super().async_added_to_hass()
+        if self.optimistic:
+            # Restore the last state if we use optimistic
+            last_state = await self.async_get_last_state()
+            if last_state:
+                self._closed == last_state.state == STATE_CLOSED
+        await self.async_update()
