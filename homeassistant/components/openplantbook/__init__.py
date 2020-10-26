@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             # The first process creates an empty dict, and access the API
             # Later requests for the same species either wait for the first one to complete
             # or they returns immediately if we already have the data we need
-            # TODO: Cache invalidation...
             _LOGGER.debug("get_plant %s", species)
             if species not in hass.data[DOMAIN]["SPECIES"]:
                 _LOGGER.debug("I am the first process %s", species)
