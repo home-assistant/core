@@ -121,7 +121,7 @@ async def async_setup(hass, config):
             requests.exceptions.ReadTimeout,
         ) as exp:
             _LOGGER.error("SomeComfort update failed - Error: %s", exp)
-            raise UpdateFailed(str(exp))
+            raise UpdateFailed(str(exp)) from exp
 
         return client
 

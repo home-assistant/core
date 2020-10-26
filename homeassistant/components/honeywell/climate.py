@@ -41,7 +41,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from . import HoneywellDevice, CLIENT_KEY_COORDINATOR
+from . import CLIENT_KEY_COORDINATOR, HoneywellDevice
 
 _LOGGER = logging.getLogger(__name__)
 

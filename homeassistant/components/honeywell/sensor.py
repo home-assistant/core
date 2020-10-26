@@ -17,7 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from . import HoneywellDevice, CLIENT_KEY_COORDINATOR
+from . import CLIENT_KEY_COORDINATOR, HoneywellDevice
 
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
@@ -38,10 +38,10 @@ PLATFORM_SCHEMA = vol.All(
 class ThermostatSensor(HoneywellDevice, Entity):
     """Base class for honeywell thermostat sensor."""
 
-    def __init__(self, coordinator, device, sensor_type, display_name):
+    def __init__(self, coordinator, device, get_data_function, display_name):
         """Init the sensor, pass in reference to coordinator, somecomfort device, the type str of this sensor, and entity display name."""
         HoneywellDevice.__init__(self, coordinator, device)
-        self._sensor_type = sensor_type
+        self._get_data_function = get_data_function
         self._display_name = display_name
 
     @property
@@ -52,15 +52,11 @@ class ThermostatSensor(HoneywellDevice, Entity):
     @property
     def state(self):
         """Return the current state of the entity."""
-        return self._device._data["uiData"][self._sensor_type]
+        return self._device.get_data_function()
 
 
 class TemperatureSensor(ThermostatSensor):
     """Honeywell temperature sensor class."""
-
-    def __init__(self, coordinator, device, sensor_type, display_name):
-        """Init the sensor. options are passed through to the base class."""
-        super().__init__(coordinator, device, sensor_type, display_name)
 
     @property
     def unit_of_measurement(self):
@@ -80,10 +76,6 @@ class TemperatureSensor(ThermostatSensor):
 
 class HumiditySensor(ThermostatSensor):
     """Honeywell humidity sensor class."""
-
-    def __init__(self, coordinator, device, sensor_type, display_name):
-        """Init the sensor. options are passed through to the base class."""
-        super().__init__(coordinator, device, sensor_type, display_name)
 
     @property
     def unit_of_measurement(self):
@@ -123,31 +115,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if (not loc_id or location.locationid == loc_id) and (
                 not dev_id or device.deviceid == dev_id
             ):
-                if device._data["uiData"]["DispTemperatureAvailable"]:
-                    sensors_list.append(
-                        TemperatureSensor(
-                            coordinator, device, "DispTemperature", "Indoor Temperature"
-                        )
+                sensors_list.append(
+                    TemperatureSensor(
+                        coordinator,
+                        device,
+                        device.current_temperature,
+                        "Indoor Temperature",
                     )
-                if device._data["uiData"]["IndoorHumiditySensorAvailable"]:
-                    sensors_list.append(
-                        HumiditySensor(
-                            coordinator, device, "IndoorHumidity", "Indoor Humidity"
-                        )
+                )
+                sensors_list.append(
+                    HumiditySensor(
+                        coordinator, device, device.current_humidity, "Indoor Humidity"
                     )
-                if device._data["uiData"]["OutdoorTemperatureAvailable"]:
+                )
+                if not device.outdoor_temperature() is None:
                     sensors_list.append(
                         TemperatureSensor(
                             coordinator,
                             device,
-                            "OutdoorTemperature",
+                            device.outdoor_temperature,
                             "Outdoor Temperature",
                         )
                     )
-                if device._data["uiData"]["OutdoorHumidityAvailable"]:
+                if not device.outdoor_humidity() is None:
                     sensors_list.append(
                         HumiditySensor(
-                            coordinator, device, "OutdoorHumidity", "Outdoor Humidity"
+                            coordinator,
+                            device,
+                            device.outdoor_humidity,
+                            "Outdoor Humidity",
                         )
                     )
 
