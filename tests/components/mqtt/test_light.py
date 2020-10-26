@@ -760,11 +760,11 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
         [
             call("test_light_rgb/set", "on", 2, False),
             call("test_light_rgb/rgb/set", "255,128,0", 2, False),
-            call("test_light_rgb/brightness/set", 50, 2, False),
+            call("test_light_rgb/brightness/set", "50", 2, False),
             call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
-            call("test_light_rgb/white_value/set", 80, 2, False),
+            call("test_light_rgb/white_value/set", "80", 2, False),
             call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
-            call("test_light_rgb/color_temp/set", 125, 2, False),
+            call("test_light_rgb/color_temp/set", "125", 2, False),
         ],
         any_order=True,
     )
@@ -841,7 +841,7 @@ async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_color_temp/set", "on", 0, False),
-            call("test_light_color_temp/color_temp/set", 10, 0, False),
+            call("test_light_color_temp/color_temp/set", "10", 0, False),
         ],
         any_order=True,
     )
@@ -877,7 +877,7 @@ async def test_on_command_first(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/set", "ON", 0, False),
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
         ],
     )
     mqtt_mock.async_publish.reset_mock()
@@ -911,7 +911,7 @@ async def test_on_command_last(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
             call("test_light/set", "ON", 0, False),
         ],
     )
@@ -946,7 +946,9 @@ async def test_on_command_brightness(hass, mqtt_mock):
 
     # Should get the following MQTT messages.
     #    test_light/bright: 255
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 255, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "255", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -957,7 +959,7 @@ async def test_on_command_brightness(hass, mqtt_mock):
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 50, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "50", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -969,7 +971,7 @@ async def test_on_command_brightness(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
         ],
         any_order=True,
     )
@@ -1000,7 +1002,9 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
 
     # Should get the following MQTT messages.
     #    test_light/bright: 100
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1011,19 +1015,21 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 20, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "20", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ max brightness
     await common.async_turn_on(hass, "light.test", brightness=255)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ min brightness
     await common.async_turn_on(hass, "light.test", brightness=1)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 1, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "1", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1035,7 +1041,7 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", 1, 0, False),
+            call("test_light/bright", "1", 0, False),
         ],
         any_order=True,
     )
