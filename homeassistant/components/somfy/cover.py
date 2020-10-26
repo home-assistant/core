@@ -16,9 +16,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
-BLIND_DEVICE_CATAGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
-SHUTTER_DEVICE_CATAGORIES = {Category.EXTERIOR_BLIND.value}
-SUPPORTED_CATAGORIES = {
+BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
+SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}
+SUPPORTED_CATEGORIES = {
     Category.ROLLER_SHUTTER.value,
     Category.INTERIOR_BLIND.value,
     Category.EXTERIOR_BLIND.value,
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
             )
             for cover in devices
-            if SUPPORTED_CATAGORIES & set(cover.categories)
+            if SUPPORTED_CATEGORIES & set(cover.categories)
         ]
 
     async_add_entities(await hass.async_add_executor_job(get_covers))
@@ -100,9 +100,9 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        if self.categories & BLIND_DEVICE_CATAGORIES:
+        if self.categories & BLIND_DEVICE_CATEGORIES:
             return DEVICE_CLASS_BLIND
-        if self.categories & SHUTTER_DEVICE_CATAGORIES:
+        if self.categories & SHUTTER_DEVICE_CATEGORIES:
             return DEVICE_CLASS_SHUTTER
         return None
 
