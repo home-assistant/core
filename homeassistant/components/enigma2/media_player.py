@@ -131,7 +131,10 @@ class Enigma2Device(MediaPlayerEntity):
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
-        return STATE_OFF if self.e2_box.in_standby else STATE_ON
+        elif self.e2_box.in_standby or self.e2_box.is_offline:
+            return STATE_OFF
+        else:
+            return STATE_ON
 
     @property
     def supported_features(self):
@@ -249,7 +252,7 @@ class Enigma2Device(MediaPlayerEntity):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        if self.e2_box.in_standby:
+        if self.e2_box.in_standby or self.e2_box.is_offline:
             return {}
         return {
             ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
