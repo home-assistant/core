@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED
+from homeassistant.const import STATE_CLOSED, STATUS_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
@@ -129,7 +129,10 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
             last_state = await self.async_get_last_state()
             _LOGGER.debug("Last state was: %s", last_state)
 
-            if last_state is not None:
+            if last_state is not None and last_state.state in (
+                STATUS_OPEN,
+                STATE_CLOSED,
+            ):
                 self._closed = last_state.state == STATE_CLOSED
                 _LOGGER.debug("%s: closed: %s", self.entity_id, self._closed)
 
