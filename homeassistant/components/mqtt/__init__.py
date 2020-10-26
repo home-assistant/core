@@ -322,7 +322,7 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 MQTT_PUBLISH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
+        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
         vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,

@@ -1497,3 +1497,46 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
         "time": start_dt,
         "topic": "sensor/abc",
     } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+
+
+async def test_publish_json_from_template(hass, mqtt_mock):
+    """Test the publishing of call to services."""
+    test_str = "{'valid': 'python', 'invalid': 'json'}"
+
+    await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script_payload": {
+                    "sequence": {
+                        "service": "mqtt.publish",
+                        "data": {"topic": "test-topic", "payload": test_str},
+                    }
+                },
+                "test_script_payload_template": {
+                    "sequence": {
+                        "service": "mqtt.publish",
+                        "data": {"topic": "test-topic", "payload_template": test_str},
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.services.async_call("script", "test_script_payload", blocking=True)
+    await hass.async_block_till_done()
+
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == test_str
+
+    mqtt_mock.async_publish.reset_mock()
+    assert not mqtt_mock.async_publish.called
+
+    await hass.services.async_call(
+        "script", "test_script_payload_template", blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == test_str
