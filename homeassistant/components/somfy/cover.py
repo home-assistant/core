@@ -1,4 +1,6 @@
 """Support for Somfy Covers."""
+import logging
+
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
 
@@ -11,6 +13,8 @@ from homeassistant.const import STATE_CLOSED
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -123,6 +127,10 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         if self.optimistic:
             # Restore the last state if we use optimistic
             last_state = await self.async_get_last_state()
-            if last_state:
+            _LOGGER.debug("Last state was: %s", last_state)
+
+            if last_state is not None:
                 self._closed == last_state.state == STATE_CLOSED
+                _LOGGER.debug("%s: closed: %s", self.entity_id, self._closed)
+
         await self.async_update()
