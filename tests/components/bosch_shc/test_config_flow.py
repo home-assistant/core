@@ -16,6 +16,9 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
+        "homeassistant.components.bosch_shc.config_flow.validate_input",
+        return_value={"title": "Bosch SHC"},
+    ), patch(
         "homeassistant.components.bosch_shc.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
