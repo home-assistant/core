@@ -14,7 +14,7 @@
                     "name": "Nazwa",
                     "upnp_bind_multicast": "Powi\u0105\u017c multicast (prawda/fa\u0142sz)"
                 },
-                "title": "Zdefiniuj konfiguracj\u0119 serwera"
+                "title": "Definiowanie konfiguracji serwera"
             }
         }
     },
