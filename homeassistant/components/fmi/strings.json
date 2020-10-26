@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Latitude and longitude will be used for weather coordinates",
+        "title": "Connect to the Finnish Meteorological Institute",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "offset": "Forecast Interval"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "FMI Options",
+        "description": "Forecast interval.",
+        "data": {
+          "offset": "Forecast Interval"
+        }
+      }
+    }
+  }
+}

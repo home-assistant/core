@@ -611,6 +611,9 @@ fixerio==1.0.0a0
 # homeassistant.components.flux_led
 flux_led==0.22
 
+# homeassistant.components.fmi
+fmi-weather-client==0.1.0
+
 # homeassistant.components.homekit
 fnvhash==0.1.0
 
