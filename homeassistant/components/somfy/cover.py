@@ -71,7 +71,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         except requests.exceptions.HTTPError:
             raise
         finally:
-            self._is_closing = False
+            self._is_closing = None
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -83,7 +83,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         except requests.exceptions.HTTPError:
             raise
         finally:
-            self._is_opening = False
+            self._is_opening = None
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -133,6 +133,17 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         elif self.optimistic:
             is_closed = self._closed
         return is_closed
+
+    @property
+    def assumed_state(self):
+        """Return if the cover has an assumed state."""
+        if not self.optimistic:
+            return None
+        return (
+            self._is_closing is not None
+            or self._is_opening is not None
+            or self._closed is not None
+        )
 
     @property
     def current_cover_tilt_position(self):
