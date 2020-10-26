@@ -41,7 +41,7 @@ class OneWireHub:
             raise InvalidPath
 
     async def initialize(self, config_entry: ConfigEntry) -> None:
-        """Initialize a config entry"""
+        """Initialize a config entry."""
         _LOGGER.debug("Initialising config entry %s", config_entry.data)
         if config_entry.data[CONF_TYPE] == CONF_TYPE_SYSBUS:
             await self.check_mount_dir(config_entry.data[CONF_MOUNT_DIR])
