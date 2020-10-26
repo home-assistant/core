@@ -255,11 +255,15 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        if isinstance(result, (TemplateError, ResultWrapper)):
+        if isinstance(result, TemplateError):
             self._position = None
             return
 
-        state = str(result).lower()
+        if isinstance(result, ResultWrapper):
+            state = result.render_result.lower()
+        else:
+            state = str(result).lower()
+
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
                 self._position = 100
