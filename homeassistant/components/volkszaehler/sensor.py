@@ -36,6 +36,7 @@ SENSOR_TYPES = {
     "consumption": ["Consumption", ENERGY_WATT_HOUR, "mdi:power-plug"],
     "max": ["Max", POWER_WATT, "mdi:arrow-up"],
     "min": ["Min", POWER_WATT, "mdi:arrow-down"],
+    "last": ["Last", POWER_WATT, "mdi:flash"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
