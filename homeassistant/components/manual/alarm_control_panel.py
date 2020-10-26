@@ -265,7 +265,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         return self._arming_time_by_state[state]
 
     def _delay_time(self, state):
-        """Get the pending time."""
+        """Get the delay delta from the per state configuration."""
         return self._delay_time_by_state[self._previous_state]
 
     def _within_arming_time(self, state):
