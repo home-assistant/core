@@ -85,3 +85,8 @@ class SynoDSMUpgradeBinarySensor(SynologyDSMEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the state."""
         return getattr(self._api.upgrade, self.entity_type)
+
+    @property
+    def available(self) -> bool:
+    """Return True if entity is available."""
+        return bool(self._api.upgrade)
