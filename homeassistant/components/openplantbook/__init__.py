@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up OpenPlantBook from a config entry."""
 
     if DOMAIN not in hass.data:
-        _LOGGER.debug("Creating domain in init")
         hass.data[DOMAIN] = {}
     if "API" not in hass.data[DOMAIN]:
         hass.data[DOMAIN]["API"] = OpenPlantBookApi(

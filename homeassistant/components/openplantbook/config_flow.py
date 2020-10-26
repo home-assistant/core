@@ -20,7 +20,6 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     if DOMAIN not in hass.data:
-        _LOGGER.debug("Creating domain in config flow")
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["API"] = OpenPlantBookApi(data["client_id"], data["secret"])
 
