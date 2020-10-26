@@ -1771,7 +1771,7 @@ async def test_specifically_referenced_entity_is_not_rate_limited(hass):
 
 async def test_track_two_templates_with_different_rate_limits(hass):
     """Test two templates with different rate limits."""
-    template_one = Template("{{ states | count }} ", hass)
+    template_one = Template("{{ (states | count) + 0 }}", hass)
     template_five = Template("{{ states | count }}", hass)
 
     refresh_runs = {

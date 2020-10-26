@@ -988,7 +988,7 @@ def async_track_template_result(
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
 ) -> _TrackTemplateResultInfo:
-    """Add a listener that fires when a the result of a template changes.
+    """Add a listener that fires when the result of a template changes.
 
     The action will fire with the initial result from the template, and
     then whenever the output from the template changes. The template will
