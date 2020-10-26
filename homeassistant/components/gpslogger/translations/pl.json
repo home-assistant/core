@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
-                "title": "Konfiguracja Geofency Webhook"
+                "title": "Konfiguracja GPSLogger Webhook"
             }
         }
     }
