@@ -30,10 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN]["API"] = OpenPlantBookApi(
             entry.data.get("client_id"), entry.data.get("secret")
         )
+    if "SPECIES" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["SPECIES"] = {}
 
     async def get_plant(call):
-        if "SPECIES" not in hass.data[DOMAIN]:
-            hass.data[DOMAIN]["SPECIES"] = {}
         species = call.data.get(ATTR_SPECIES)
         if species:
             # Here we try to ensure that we only run one API request for each species
