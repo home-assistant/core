@@ -157,7 +157,7 @@ class SomfyEntity(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         """Return the unique id base on the id returned by Somfy."""
-        return self.device.id
+        return self._id
 
     @property
     def name(self):
