@@ -139,9 +139,6 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh.async_cancel()
 
-        if self.hass.is_stopping:
-            return
-
         try:
             start = monotonic()
             self.data = await self._async_update_data()

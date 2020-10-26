@@ -29,8 +29,6 @@ from .entity_platform import EntityPlatform
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
@@ -310,14 +308,6 @@ class EntityComponent:
         """Initialize an entity platform."""
         if scan_interval is None:
             scan_interval = self.scan_interval
-
-        _LOGGER.debug(
-            "_async_init_entity_platform: domain:%s platform_type:%s platform:%s entity_namespace:%s",
-            self.domain,
-            platform_type,
-            platform,
-            entity_namespace,
-        )
 
         return EntityPlatform(
             hass=self.hass,
