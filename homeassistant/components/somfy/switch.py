@@ -11,19 +11,17 @@ from .const import API, COORDINATOR, DOMAIN
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy switch platform."""
 
-    def get_shutters():
-        """Retrieve switches."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-        return [
+    async_add_entities(
+        [
             SomfyCameraShutter(coordinator, device_id, api)
             for device_id, device in coordinator.data.items()
             if Category.CAMERA.value in device.categories
         ]
-
-    async_add_entities(await hass.async_add_executor_job(get_shutters), True)
+    )
 
 
 class SomfyCameraShutter(SomfyEntity, SwitchEntity):
