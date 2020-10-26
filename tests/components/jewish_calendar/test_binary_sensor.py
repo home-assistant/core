@@ -275,7 +275,7 @@ async def test_issur_melacha_sensor_update(
             == result[0]
         )
 
-    test_time += timedelta(seconds=2)
+    test_time += timedelta(seconds=1)
     with alter_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
