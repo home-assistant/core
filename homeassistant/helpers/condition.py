@@ -462,7 +462,7 @@ def async_template(
         return value
 
     if isinstance(value, str):
-        return str(value).lower() == "true"
+        return value.lower() == "true"
 
     if isinstance(value, ResultWrapper):
         return value.render_result.lower() == "true"
