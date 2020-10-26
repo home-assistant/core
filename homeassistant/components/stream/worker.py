@@ -107,6 +107,11 @@ def _stream_worker_internal(hass, stream, quit_event):
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
 
     def peek_first_pts():
+        """Initialize by peeking into the first few packets of the stream.
+
+        Deal with problem #1 above (bad first packet pts/dts) by recalculating using pts/dts from second packet.
+        Also load the first video keyframe pts into segment_start_pts and check if the audio stream really exists.
+        """
         nonlocal segment_start_pts, audio_stream, container_packets
         missing_dts = 0
         found_audio = False
