@@ -4,7 +4,7 @@ import asyncio
 import base64
 import collections.abc
 from datetime import datetime, timedelta
-from functools import wraps
+from functools import partial, wraps
 import json
 import logging
 import math
@@ -360,28 +360,36 @@ class Template:
 
         return extract_entities(self.hass, self.template, variables)
 
-    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+    def render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         """Render given template."""
         if self.is_static:
-            if self.hass.config.legacy_templates:
+            if self.hass.config.legacy_templates or not parse_result:
                 return self.template
             return self._parse_result(self.template)
 
-        if variables is not None:
-            kwargs.update(variables)
-
         return run_callback_threadsafe(
-            self.hass.loop, self.async_render, kwargs
+            self.hass.loop,
+            partial(self.async_render, variables, parse_result, **kwargs),
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> Any:
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
         """
         if self.is_static:
-            if self.hass.config.legacy_templates:
+            if self.hass.config.legacy_templates or not parse_result:
                 return self.template
             return self._parse_result(self.template)
 
@@ -397,7 +405,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if self.hass.config.legacy_templates:
+        if self.hass.config.legacy_templates or not parse_result:
             return render_result
 
         return self._parse_result(render_result)
