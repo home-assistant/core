@@ -1,4 +1,5 @@
 """The OpenPlantBook integration."""
+import asyncio
 import logging
 
 from pyopenplantbook import OpenPlantBookApi
@@ -34,9 +35,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if "SPECIES" not in hass.data[DOMAIN]:
             hass.data[DOMAIN]["SPECIES"] = {}
         species = call.data.get(ATTR_SPECIES)
-        if species and species not in hass.data[DOMAIN]["SPECIES"]:
+        if species:
+            # Here we try to ensure that we only run one API request for each species
+            # The first process creates an empty dict, and access the API
+            # Later requests for the same species either wait for the first one to complete
+            # or they returns immediately if we already have the data we need
+            # TODO: Cache invalidation...
+            _LOGGER.debug("get_plant %s", species)
+            if species not in hass.data[DOMAIN]["SPECIES"]:
+                _LOGGER.debug("I am the first process %s", species)
+                hass.data[DOMAIN]["SPECIES"][species] = {}
+            elif "pid" not in hass.data[DOMAIN]["SPECIES"][species]:
+                # If more than one "get_plant" is triggered for the same species, we wait for up to
+                # 10 seconds for the first process to complete the API request.
+                # We don't want to return immediately, as we want the state object to be set by
+                # the running process before we return from this call
+                _LOGGER.debug(
+                    "Another process is currently trying to get the data for %s...",
+                    species,
+                )
+                wait = 0
+                while "pid" not in hass.data[DOMAIN]["SPECIES"][species]:
+                    _LOGGER.debug("Waiting...")
+                    wait = wait + 1
+                    if wait == 10:
+                        _LOGGER.error("Giving up waiting for OpenPlantBook")
+                        return False
+                    await asyncio.sleep(1)
+                _LOGGER.debug("The other process completed successfully")
+                return True
+            else:
+                # We already have the data we need, so let's just return
+                _LOGGER.debug("We already have data for %s", species)
+                return True
+
             plant_data = await hass.data[DOMAIN]["API"].get_plantbook_data(species)
             if plant_data:
+                _LOGGER.debug("Got data for %s", species)
                 hass.data[DOMAIN]["SPECIES"][species] = plant_data
                 attrs = {}
                 for var, val in plant_data.items():
