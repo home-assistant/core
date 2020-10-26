@@ -6,6 +6,10 @@
         "description": "Do you want to use the OpenZWave Supervisor add-on?",
         "data": {"use_addon": "Use the OpenZWave Supervisor add-on"}
       },
+      "show_install_info": {
+        "title": "The OpenZWave add-on installation has started",
+        "description": "Please wait while the OpenZWave add-on installation finishes. This can take several minutes."
+      },
       "start_addon": {
         "title": "Enter the OpenZWave add-on configuration",
         "data": {"usb_path": "[%key:common::config_flow::data::usb_path%]", "network_key": "Network Key"}

@@ -36,6 +36,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.use_addon = False
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
+        self.install_task = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -93,16 +94,25 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_install_addon()
 
-    async def async_step_install_addon(self):
+    async def async_step_install_addon(self, user_input=None):
         """Install OpenZWave add-on."""
+        if not self.install_task:
+            self.install_task = self.hass.async_create_task(self._async_install_addon())
+
+            return self.async_show_progress(step_id="install_addon")
+
         try:
-            await self.hass.components.hassio.async_install_addon("core_zwave")
-        except self.hass.components.hassio.HassioAPIError as err:
-            _LOGGER.error("Failed to install OpenZWave add-on: %s", err)
-            return self.async_abort(reason="addon_install_failed")
+            await self.install_task
+        except self.hass.components.hassio.HassioAPIError:
+            return self.async_show_progress_done(next_step_id="install_failed")
+
         self.integration_created_addon = True
 
-        return await self.async_step_start_addon()
+        return self.async_show_progress_done(next_step_id="start_addon")
+
+    async def async_step_install_failed(self, user_input=None):
+        """Add-on installation failed."""
+        return self.async_abort(reason="addon_install_failed")
 
     async def async_step_start_addon(self, user_input=None):
         """Ask for config and start OpenZWave add-on."""
@@ -181,3 +191,13 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to set OpenZWave add-on config: %s", err)
             raise AbortFlow("addon_set_config_failed") from err
+
+    async def _async_install_addon(self):
+        """Install the OpenZWave add-on."""
+        try:
+            await self.hass.components.hassio.async_install_addon("core_zwave")
+        except self.hass.components.hassio.HassioAPIError as err:
+            _LOGGER.error("Failed to install OpenZWave add-on: %s", err)
+            raise
+        finally:
+            await self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
