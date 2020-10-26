@@ -183,3 +183,8 @@ class SomfyEntity(CoordinatorEntity, Entity):
         """Test if device has a capability."""
         capabilities = self.device.capabilities
         return bool([c for c in capabilities if c.name == capability])
+
+    @property
+    def assumed_state(self):
+        """Return if the device has an assumed state."""
+        return not bool(self.device.states)
