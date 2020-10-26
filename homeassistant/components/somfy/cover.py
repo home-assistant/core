@@ -134,3 +134,5 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
                 _LOGGER.debug("%s: closed: %s", self.entity_id, self._closed)
 
         await self.async_update()
+
+        _LOGGER.debug("%s: (after_update) closed: %s", self.entity_id, self._closed)
