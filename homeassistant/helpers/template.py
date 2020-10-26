@@ -4,7 +4,7 @@ import asyncio
 import base64
 import collections.abc
 from datetime import datetime, timedelta
-from functools import wraps
+from functools import partial, wraps
 import json
 import logging
 import math
@@ -372,11 +372,9 @@ class Template:
                 return self.template
             return self._parse_result(self.template)
 
-        if variables is not None:
-            kwargs.update(variables)
-
         return run_callback_threadsafe(
-            self.hass.loop, self.async_render, None, parse_result, kwargs
+            self.hass.loop,
+            partial(self.async_render, variables, parse_result, **kwargs),
         ).result()
 
     @callback
