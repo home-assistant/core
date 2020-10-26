@@ -58,6 +58,7 @@ FLOWS = [
     "flo",
     "flume",
     "flunearyou",
+    "fmi",
     "forked_daapd",
     "freebox",
     "fritzbox",

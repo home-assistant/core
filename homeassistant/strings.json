@@ -25,6 +25,7 @@
         "confirm_setup": "Do you want to start set up?"
       },
       "data": {
+        "name": "Name",
         "email": "Email",
         "username": "Username",
         "password": "Password",
@@ -34,7 +35,9 @@
         "url": "URL",
         "usb_path": "USB Device Path",
         "access_token": "Access Token",
-        "api_key": "API Key"
+        "api_key": "API Key",
+        "latitude": "Latitude",
+        "longitude": "Longitude"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
