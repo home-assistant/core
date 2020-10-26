@@ -3,16 +3,9 @@ import datetime
 import logging
 from typing import Any, Dict, List, Optional
 
-import requests
 import somecomfort
 import voluptuous as vol
 
-from . import client_key_coordinator
-from . import HoneywellDevice
-
-
-from homeassistant.helpers.entity import Entity
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -45,7 +38,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from . import HoneywellDevice, client_key_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,8 +108,6 @@ HW_FAN_MODE_TO_HA = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
     _LOGGER.info("honeywell setup_platform")
 
     coordinator = hass.data[client_key_coordinator]

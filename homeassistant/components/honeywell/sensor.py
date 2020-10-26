@@ -1,32 +1,23 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems sensors."""
 
 
-from . import climate
 import logging
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import TEMP_CELSIUS
-import somecomfort
-from . import client_key_coordinator
-from . import HoneywellDevice
-
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.exceptions import PlatformNotReady
-
-
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
     CONF_REGION,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from . import HoneywellDevice, client_key_coordinator
 
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
@@ -45,60 +36,73 @@ PLATFORM_SCHEMA = vol.All(
 
 
 class ThermostatSensor(HoneywellDevice, Entity):
+    """Base class for honeywell thermostat sensor."""
+
     def __init__(self, coordinator, device, sensor_type, display_name):
+        """Init the sensor, pass in reference to coordinator, somecomfort device, the type str of this sensor, and entity display name."""
         HoneywellDevice.__init__(self, coordinator, device)
         self._sensor_type = sensor_type
         self._display_name = display_name
 
     @property
     def name(self):
+        """Return the display name of the sensor entity."""
         return self._display_name + " " + self._device.name
 
     @property
     def state(self):
+        """Return the current state of the entity."""
         return self._device._data["uiData"][self._sensor_type]
 
 
 class TemperatureSensor(ThermostatSensor):
+    """Honeywell temperature sensor class."""
+
     def __init__(self, coordinator, device, sensor_type, display_name):
+        """Init the sensor. options are passed through to the base class."""
         super().__init__(coordinator, device, sensor_type, display_name)
-        self._sensor_type = sensor_type
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement, either C or F."""
         return TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
 
     @property
     def icon(self):
+        """Set the default icon to be a thermometer."""
         return "mdi:thermometer"
 
     @property
     def device_class(self):
+        """Set the device class as a temperature sensor."""
         return DEVICE_CLASS_TEMPERATURE
 
 
 class HumiditySensor(ThermostatSensor):
+    """Honeywell humidity sensor class."""
+
     def __init__(self, coordinator, device, sensor_type, display_name):
+        """Init the sensor. options are passed through to the base class."""
         super().__init__(coordinator, device, sensor_type, display_name)
-        self._sensor_type = sensor_type
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement, % for relative humidity."""
         return "%"
 
     @property
     def icon(self):
+        """Set the default icon to be a water droplet with % label."""
         return "mdi:water-percent"
 
     @property
     def device_class(self):
+        """Set the device class as a humidity sensor."""
         return DEVICE_CLASS_HUMIDITY
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Honeywell thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    """Set up sensors."""
     _LOGGER.info("setting up honeywell sensors")
 
     coordinator = hass.data[client_key_coordinator]
