@@ -2,7 +2,6 @@
 
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
-import requests
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -69,8 +68,6 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
             # Blocks until the close command is sent
             self.cover.close()
             self._closed = True
-        except requests.exceptions.HTTPError:
-            raise
         finally:
             self._is_closing = None
             self.schedule_update_ha_state()
@@ -83,8 +80,6 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
             # Blocks until the open command is sent
             self.cover.open()
             self._closed = False
-        except requests.exceptions.HTTPError:
-            raise
         finally:
             self._is_opening = None
             self.schedule_update_ha_state()
