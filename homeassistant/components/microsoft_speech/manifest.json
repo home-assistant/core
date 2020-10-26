@@ -1,0 +1,7 @@
+{
+  "domain": "microsoft_speech",
+  "name": "Microsoft Speech - Text-to-Speech (TTS)",
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_speech",
+  "requirements": ["azure-cognitiveservices-speech==1.13.0"],
+  "codeowners": ["@DevSecNinja"]
+}
