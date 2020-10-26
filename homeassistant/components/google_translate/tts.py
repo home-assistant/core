@@ -123,9 +123,14 @@ class GoogleProvider(Provider):
 
         data = b""
         for idx, part in enumerate(message_parts):
-            part_token = await self.hass.async_add_executor_job(
-                token.calculate_token, part
-            )
+            try:
+                part_token = await self.hass.async_add_executor_job(
+                    token.calculate_token, part
+                )
+            except ValueError as err:
+                # If token seed fetching fails.
+                _LOGGER.warning(err)
+                return None, None
 
             url_param = {
                 "ie": "UTF-8",
