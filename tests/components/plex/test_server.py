@@ -26,7 +26,7 @@ from homeassistant.components.plex.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
-from .helpers import trigger_plex_update
+from .helpers import trigger_plex_update, wait_for_sensor_debouncer
 from .mock_classes import (
     MockGDM,
     MockPlexAccount,
@@ -62,6 +62,8 @@ async def test_new_users_available(hass, entry, mock_websocket, setup_plex_serve
     ignored_users = [x for x in monitored_users if not monitored_users[x]["enabled"]]
     assert len(monitored_users) == 1
     assert len(ignored_users) == 0
+
+    await wait_for_sensor_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
@@ -100,6 +102,8 @@ async def test_new_ignored_users_available(
             in caplog.text
         )
 
+    await wait_for_sensor_debouncer(hass)
+
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
@@ -113,6 +117,8 @@ async def test_network_error_during_refresh(
 
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
+
+    await wait_for_sensor_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
@@ -136,6 +142,8 @@ async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
         trigger_plex_update(mock_websocket)
         await hass.async_block_till_done()
 
+    await wait_for_sensor_debouncer(hass)
+
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
@@ -152,6 +160,8 @@ async def test_mark_sessions_idle(hass, mock_plex_server, mock_websocket):
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
 
+    await wait_for_sensor_debouncer(hass)
+
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
@@ -160,6 +170,8 @@ async def test_mark_sessions_idle(hass, mock_plex_server, mock_websocket):
 
     await loaded_server._async_update_platforms()
     await hass.async_block_till_done()
+
+    await wait_for_sensor_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == "0"
@@ -182,6 +194,8 @@ async def test_ignore_plex_web_client(hass, entry, mock_websocket):
 
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
+
+    await wait_for_sensor_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))

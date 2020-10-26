@@ -36,7 +36,7 @@ from homeassistant.const import (
 )
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .helpers import trigger_plex_update
+from .helpers import trigger_plex_update, wait_for_sensor_debouncer
 from .mock_classes import (
     MockGDM,
     MockPlexAccount,
@@ -452,6 +452,8 @@ async def test_option_flow_new_users_available(
     new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
     assert len(monitored_users) == 1
     assert len(new_users) == 2
+
+    await wait_for_sensor_debouncer(hass)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
