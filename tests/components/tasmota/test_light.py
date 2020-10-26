@@ -3,6 +3,11 @@ import copy
 import json
 
 from hatasmota.const import CONF_MAC
+from hatasmota.utils import (
+    get_topic_stat_result,
+    get_topic_tele_state,
+    get_topic_tele_will,
+)
 
 from homeassistant.components import light
 from homeassistant.components.light import (
@@ -310,6 +315,16 @@ async def test_controlling_state_via_mqtt_on_off(hass, mqtt_mock, setup_tasmota)
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
 
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
 
 async def test_controlling_state_via_mqtt_ct(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
@@ -431,6 +446,16 @@ async def test_controlling_state_via_mqtt_rgbww(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("effect") == "Cycle down"
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
 
 
 async def test_sending_mqtt_commands_on_off(hass, mqtt_mock, setup_tasmota):
@@ -914,8 +939,13 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 2
     config["lt_st"] = 1  # 1 channel light (Dimmer)
+    topics = [
+        get_topic_stat_result(config),
+        get_topic_tele_state(config),
+        get_topic_tele_will(config),
+    ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, light.DOMAIN, config
+        hass, mqtt_mock, light.DOMAIN, config, topics
     )
 
 

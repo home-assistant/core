@@ -2,6 +2,12 @@
 import copy
 import json
 
+from hatasmota.utils import (
+    get_topic_stat_result,
+    get_topic_tele_state,
+    get_topic_tele_will,
+)
+
 from homeassistant.components import switch
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
@@ -52,6 +58,16 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
@@ -211,8 +227,13 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
+    topics = [
+        get_topic_stat_result(config),
+        get_topic_tele_state(config),
+        get_topic_tele_will(config),
+    ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, switch.DOMAIN, config
+        hass, mqtt_mock, switch.DOMAIN, config, topics
     )
 
 
