@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from pymfy.api.devices.category import Category
-from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
@@ -17,21 +16,18 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import api
-from .const import DOMAIN
-
-API = "api"
-
-DEVICES = "devices"
+from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-
-CONF_OPTIMISTIC = "optimistic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -88,15 +84,32 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
 
-    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
-    hass.data[DOMAIN][DEVICES] = []
+    data = hass.data[DOMAIN]
+    data[API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
 
-    await update_all_devices(hass)
+    async def _update_all_devices():
+        """Update all the devices."""
+        devices = await hass.async_add_executor_job(data[API].get_devices)
+        return {dev.id: dev for dev in devices}
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="somfy device update",
+        update_method=_update_all_devices,
+        update_interval=SCAN_INTERVAL,
+    )
+    data[COORDINATOR] = coordinator
+
+    await coordinator.async_refresh()
 
     device_registry = await dr.async_get_registry(hass)
 
-    devices = hass.data[DOMAIN][DEVICES]
-    hubs = [device for device in devices if Category.HUB.value in device.categories]
+    hubs = [
+        device
+        for device in coordinator.data.values()
+        if Category.HUB.value in device.categories
+    ]
 
     for hub in hubs:
         device_registry.async_get_or_create(
@@ -127,18 +140,24 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-class SomfyEntity(Entity):
+class SomfyEntity(CoordinatorEntity, Entity):
     """Representation of a generic Somfy device."""
 
-    def __init__(self, device, somfy_api):
+    def __init__(self, coordinator, device_id, somfy_api):
         """Initialize the Somfy device."""
-        self.device = device
+        super().__init__(coordinator)
+        self._id = device_id
         self.api = somfy_api
+
+    @property
+    def device(self):
+        """Return data for the device id."""
+        return self.coordinator.data[self._id]
 
     @property
     def unique_id(self):
         """Return the unique id base on the id returned by Somfy."""
-        return self.device.id
+        return self._id
 
     @property
     def name(self):
@@ -160,12 +179,6 @@ class SomfyEntity(Entity):
             "manufacturer": "Somfy",
         }
 
-    async def async_update(self):
-        """Update the device with the latest data."""
-        await update_all_devices(self.hass)
-        devices = self.hass.data[DOMAIN][DEVICES]
-        self.device = next((d for d in devices if d.id == self.device.id), self.device)
-
     def has_capability(self, capability):
         """Test if device has a capability."""
         capabilities = self.device.capabilities
@@ -175,13 +188,3 @@ class SomfyEntity(Entity):
     def assumed_state(self):
         """Return if the device has an assumed state."""
         return not bool(self.device.states)
-
-
-@Throttle(SCAN_INTERVAL)
-async def update_all_devices(hass):
-    """Update all the devices."""
-    try:
-        data = hass.data[DOMAIN]
-        data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
-    except HTTPError as err:
-        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
