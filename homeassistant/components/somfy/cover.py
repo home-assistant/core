@@ -64,6 +64,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def close_cover(self, **kwargs):
         """Close the cover."""
         self._is_closing = True
+        self.schedule_update_ha_state()
         try:
             # Blocks until the close command is sent
             self.cover.close()
@@ -72,10 +73,12 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
             raise
         finally:
             self._is_closing = None
+            self.schedule_update_ha_state()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
         self._is_opening = True
+        self.schedule_update_ha_state()
         try:
             # Blocks until the open command is sent
             self.cover.open()
@@ -84,6 +87,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
             raise
         finally:
             self._is_opening = None
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
