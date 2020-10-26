@@ -163,8 +163,6 @@ async def test_form_user_with_serial_elk(hass):
 
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    from asyncio import TimeoutError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -175,8 +173,8 @@ async def test_form_cannot_connect(hass):
         "homeassistant.components.elkm1.config_flow.elkm1.Elk",
         return_value=mocked_elk,
     ), patch(
-        "homeassistant.components.elkm1.async_timeout.timeout",
-        side_effect=TimeoutError,
+        "homeassistant.components.elkm1.config_flow.VALIDATE_TIMEOUT",
+        0,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
