@@ -37,7 +37,14 @@ SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 SCHEMA_WEBSOCKET_ADD_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_AISTTS_ADD_ITEM, vol.Required("name"): str}
+    {
+        vol.Required("type"): WS_TYPE_AISTTS_ADD_ITEM,
+        vol.Required("name"): str,
+        vol.Required("pitch"): str,
+        vol.Required("rate"): str,
+        vol.Required("language"): str,
+        vol.Required("voice"): str,
+    }
 )
 
 SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -64,8 +71,12 @@ async def async_setup(hass, config):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
+        pitch = all.data.get("pitch")
+        rate = all.data.get("rate")
+        language = all.data.get("language")
+        voice = all.data.get("voice")
         if name is not None:
-            data.async_add(name)
+            data.async_add(name, pitch, rate, language, voice)
 
     async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
@@ -99,7 +110,7 @@ async def async_setup(hass, config):
         "aistts",
         require_admin=True,
         sidebar_title="AIS TTS",
-        sidebar_icon="mdi:account-voice",
+        sidebar_icon="mdi:bullhorn-outline",
         update=True,
     )
 
@@ -132,9 +143,17 @@ class AisTtsData:
         self.items = []
 
     @callback
-    def async_add(self, name):
+    def async_add(self, name, pitch, rate, language, voice):
         """Add a ais tts item."""
-        item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
+        item = {
+            "name": name,
+            "pitch": pitch,
+            "rate": rate,
+            "language": language,
+            "voice": voice,
+            "id": uuid.uuid4().hex,
+            "complete": False,
+        }
         self.items.append(item)
         self.hass.async_add_job(self.save)
         return item
@@ -244,7 +263,9 @@ def websocket_handle_items(hass, connection, msg):
 @callback
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to ais tts."""
-    item = hass.data[DOMAIN].async_add(msg["name"])
+    item = hass.data[DOMAIN].async_add(
+        msg["name"], msg["pitch"], msg["rate"], msg["language"], msg["voice"]
+    )
     hass.bus.async_fire(EVENT, {"action": "add", "item": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
