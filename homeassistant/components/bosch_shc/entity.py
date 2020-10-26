@@ -11,11 +11,11 @@ _LOGGER = logging.getLogger(__name__)
 class SHCEntity(Entity):
     """Representation of a SHC base entity."""
 
-    def __init__(self, device, room_name: str, controller_ip: str):
+    def __init__(self, device, room_name: str, shc_uid: str):
         """Initialize the generic SHC device."""
         self._device = device
         self._room_name = room_name
-        self._controller_ip = controller_ip
+        self._shc_uid = shc_uid
 
     async def async_added_to_hass(self):
         """Subscribe to SHC events."""
@@ -51,7 +51,7 @@ class SHCEntity(Entity):
             "name": self.name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.device_model,
-            "via_device": (DOMAIN, self._controller_ip),
+            "via_device": (DOMAIN, self._shc_uid),
         }
 
     @property
