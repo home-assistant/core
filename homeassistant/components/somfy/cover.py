@@ -164,14 +164,13 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Complete the initialization."""
         await super().async_added_to_hass()
-        if self.optimistic:
-            # Restore the last state if we use optimistic
-            last_state = await self.async_get_last_state()
+        if not self.optimistic:
+            return
+        # Restore the last state if we use optimistic
+        last_state = await self.async_get_last_state()
 
-            if last_state is not None and last_state.state in (
-                STATE_OPEN,
-                STATE_CLOSED,
-            ):
-                self._closed = last_state.state == STATE_CLOSED
-
-        await self.async_update()
+        if last_state is not None and last_state.state in (
+            STATE_OPEN,
+            STATE_CLOSED,
+        ):
+            self._closed = last_state.state == STATE_CLOSED

@@ -329,7 +329,9 @@ async def async_setup(hass, config):
                 else:
                     attribute_templ.hass = hass
                     try:
-                        data[attribute] = attribute_templ.async_render()
+                        data[attribute] = attribute_templ.async_render(
+                            parse_result=False
+                        )
                     except TemplateError as exc:
                         _LOGGER.error(
                             "TemplateError in %s: %s -> %s",

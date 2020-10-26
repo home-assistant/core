@@ -8,6 +8,7 @@ from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
+from homeassistant.components.onewire.onewirehub import OneWireHub
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -156,11 +157,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up 1-Wire platform."""
-    entities = await hass.async_add_executor_job(get_entities, config_entry.data)
+    onewirehub = hass.data[DOMAIN][config_entry.unique_id]
+    entities = await hass.async_add_executor_job(
+        get_entities, onewirehub, config_entry.data
+    )
     async_add_entities(entities, True)
 
 
-def get_entities(config):
+def get_entities(onewirehub: OneWireHub, config):
     """Get a list of entities."""
     entities = []
     device_names = {}
@@ -174,19 +178,17 @@ def get_entities(config):
         owhost = config[CONF_HOST]
         owport = config[CONF_PORT]
 
-        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
-            owproxy = protocol.proxy(host=owhost, port=owport)
-            devices = owproxy.dir()
-        except protocol.Error as exc:
+            devices = onewirehub.owproxy.dir()
+        except protocol.OwnetError as exc:
             _LOGGER.error(
-                "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
+                "Failed to list devices on %s:%d, got: %s", owhost, owport, exc
             )
             return entities
         for device in devices:
             _LOGGER.debug("Found device: %s", device)
-            family = owproxy.read(f"{device}family").decode()
-            device_type = owproxy.read(f"{device}type").decode()
+            family = onewirehub.owproxy.read(f"{device}family").decode()
+            device_type = onewirehub.owproxy.read(f"{device}type").decode()
             sensor_id = os.path.split(os.path.split(device)[0])[1]
             dev_type = "std"
             if "EF" in family:
@@ -210,7 +212,9 @@ def get_entities(config):
                 if "moisture" in sensor_key:
                     s_id = sensor_key.split("_")[1]
                     is_leaf = int(
-                        owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
+                        onewirehub.owproxy.read(
+                            f"{device}moisture/is_leaf.{s_id}"
+                        ).decode()
                     )
                     if is_leaf:
                         sensor_key = f"wetness_{s_id}"
@@ -221,7 +225,7 @@ def get_entities(config):
                         device_file,
                         sensor_key,
                         device_info,
-                        owproxy,
+                        onewirehub.owproxy,
                     )
                 )
 
