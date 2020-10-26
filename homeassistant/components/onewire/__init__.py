@@ -2,10 +2,11 @@
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, SUPPORTED_PLATFORMS
-from .onewirehub import OneWireHub
+from .onewirehub import CannotConnect, OneWireHub
 
 
 async def async_setup(hass, config):
@@ -18,7 +19,10 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
     onewirehub = OneWireHub(hass)
-    await onewirehub.initialize(config_entry)
+    try:
+        await onewirehub.initialize(config_entry)
+    except CannotConnect as exc:
+        raise ConfigEntryNotReady() from exc
 
     hass.data[DOMAIN][config_entry.unique_id] = onewirehub
 

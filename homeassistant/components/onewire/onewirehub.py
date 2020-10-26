@@ -5,7 +5,7 @@ from pyownet import protocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS
@@ -40,10 +40,7 @@ class OneWireHub:
         elif config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
             host = config_entry.data[CONF_HOST]
             port = config_entry.data[CONF_PORT]
-            try:
-                await self.connect(host, port)
-            except CannotConnect as exc:
-                raise PlatformNotReady() from exc
+            await self.connect(host, port)
 
 
 class CannotConnect(HomeAssistantError):
