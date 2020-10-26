@@ -143,11 +143,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Return if the cover has an assumed state."""
         if not self.optimistic:
             return None
-        return (
-            self._is_closing is not None
-            or self._is_opening is not None
-            or self._closed is not None
-        )
+        return bool(self.device.states)
 
     @property
     def current_cover_tilt_position(self):
