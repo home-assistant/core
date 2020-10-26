@@ -7,7 +7,7 @@ from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
+    ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
@@ -41,7 +41,7 @@ async def test_owserver_platform_not_ready(hass):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry_owserver.state == ENTRY_STATE_SETUP_ERROR
+    assert config_entry_owserver.state == ENTRY_STATE_SETUP_RETRY
     assert not hass.data.get(DOMAIN)
 
 
