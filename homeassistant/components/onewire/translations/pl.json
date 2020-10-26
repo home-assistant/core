@@ -18,7 +18,8 @@
             "user": {
                 "data": {
                     "type": "Rodzaj po\u0142\u0105czenia"
-                }
+                },
+                "title": "Konfiguracja 1-Wire"
             }
         }
     }
