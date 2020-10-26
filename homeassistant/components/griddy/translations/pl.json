@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta strefa obci\u0105\u017cenia jest ju\u017c skonfigurowana."
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
@@ -13,7 +13,7 @@
                     "loadzone": "Strefa obci\u0105\u017cenia (punkt rozliczenia)"
                 },
                 "description": "Twoja strefa obci\u0105\u017cenia znajduje si\u0119 na twoim koncie Griddy w sekcji \"Konto > Licznik > Strefa obci\u0105\u017cenia\".",
-                "title": "Konfigurowanie strefy obci\u0105\u017cenia Griddy"
+                "title": "Konfiguracja strefy obci\u0105\u017cenia Griddy"
             }
         }
     }

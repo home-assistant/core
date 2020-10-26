@@ -1,4 +1,5 @@
 """Services for the Plex integration."""
+import json
 import logging
 
 from plexapi.exceptions import NotFound
@@ -73,19 +74,47 @@ def get_plex_server(hass, plex_server_name=None):
     plex_servers = hass.data[DOMAIN][SERVERS].values()
 
     if plex_server_name:
-        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
-        if not plex_server:
-            _LOGGER.error(
-                "Requested Plex server '%s' not found in %s",
-                plex_server_name,
-                [x.friendly_name for x in plex_servers],
-            )
-            return None
-    elif len(plex_servers) == 1:
+        plex_server = next(
+            (x for x in plex_servers if x.friendly_name == plex_server_name), None
+        )
+        if plex_server is not None:
+            return plex_server
+        _LOGGER.error(
+            "Requested Plex server '%s' not found in %s",
+            plex_server_name,
+            [x.friendly_name for x in plex_servers],
+        )
+        return None
+
+    if len(plex_servers) == 1:
         return next(iter(plex_servers))
 
     _LOGGER.error(
-        "Multiple Plex servers configured and no selection made: %s",
+        "Multiple Plex servers configured, choose with 'plex_server' key: %s",
         [x.friendly_name for x in plex_servers],
     )
     return None
+
+
+def lookup_plex_media(hass, content_type, content_id):
+    """Look up Plex media using media_player.play_media service payloads."""
+    content = json.loads(content_id)
+
+    if isinstance(content, int):
+        content = {"plex_key": content}
+        content_type = DOMAIN
+
+    plex_server_name = content.pop("plex_server", None)
+    shuffle = content.pop("shuffle", 0)
+
+    plex_server = get_plex_server(hass, plex_server_name=plex_server_name)
+    if not plex_server:
+        return (None, None)
+
+    media = plex_server.lookup_media(content_type, **content)
+    if media is None:
+        _LOGGER.error("Media could not be found: %s", content)
+        return (None, None)
+
+    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
+    return (playqueue, plex_server)

@@ -1,6 +1,5 @@
 """The iCloud component."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -85,8 +84,6 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -190,7 +187,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         icloud_account = hass.data[DOMAIN].get(account_identifier)
         if icloud_account is None:
             for account in hass.data[DOMAIN].values():
-                if account.name == account_identifier:
+                if account.username == account_identifier:
                     icloud_account = account
 
         if icloud_account is None:

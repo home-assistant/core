@@ -1,6 +1,5 @@
 """Channels module for Zigbee Home Automation."""
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import zigpy.zcl.clusters.closures
@@ -30,7 +29,6 @@ from .. import (
     typing as zha_typing,
 )
 
-_LOGGER = logging.getLogger(__name__)
 ChannelsDict = Dict[str, zha_typing.ChannelType]
 
 

@@ -8,7 +8,8 @@
             "permanent": "Trval\u00fd",
             "standby": "Pohotovostn\u00ed re\u017eim",
             "start": "Start",
-            "storung": "Chyba"
+            "storung": "Chyba",
+            "urlaubsmodus": "Pr\u00e1zdninov\u00fd re\u017eim"
         }
     }
 }

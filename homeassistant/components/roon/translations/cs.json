@@ -9,10 +9,14 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "link": {
+                "title": "Autorizujte HomeAssistant v Roon"
+            },
             "user": {
                 "data": {
                     "host": "Hostitel"
                 },
+                "description": "Zadejte pros\u00edm n\u00e1zev hostitele nebo IP adresu va\u0161eho Roon serveru.",
                 "title": "Nastaven\u00ed serveru Roon"
             }
         }

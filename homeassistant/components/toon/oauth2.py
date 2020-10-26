@@ -1,5 +1,4 @@
 """OAuth2 implementations for Toon."""
-import logging
 from typing import Any, Optional, cast
 
 from homeassistant.core import HomeAssistant
@@ -7,8 +6,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import config_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def register_oauth2_implementations(

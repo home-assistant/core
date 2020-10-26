@@ -1,6 +1,4 @@
 """Support for Homematic thermostats."""
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -16,8 +14,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 HM_TEMP_MAP = ["ACTUAL_TEMPERATURE", "TEMPERATURE"]
 

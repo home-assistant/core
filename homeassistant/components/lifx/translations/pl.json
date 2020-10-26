@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
-            "single_instance_allowed": "[%key::common::config_flow::abort::single_instance_allowed%]"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 LIFX?"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
     }

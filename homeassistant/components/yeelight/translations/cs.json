@@ -27,7 +27,8 @@
             "init": {
                 "data": {
                     "model": "Model (voliteln\u00fd)",
-                    "save_on_change": "Ulo\u017eit stav p\u0159i zm\u011bn\u011b"
+                    "save_on_change": "Ulo\u017eit stav p\u0159i zm\u011bn\u011b",
+                    "transition": "\u010cas p\u0159echodu (v ms)"
                 }
             }
         }

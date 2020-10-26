@@ -8,7 +8,7 @@ from homeassistant.helpers import collection, entity, entity_component, storage
 
 from tests.common import flush_store
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def track_changes(coll: collection.ObservableCollection):
@@ -85,7 +85,7 @@ def test_id_manager():
 
 async def test_observable_collection():
     """Test observerable collection."""
-    coll = collection.ObservableCollection(LOGGER)
+    coll = collection.ObservableCollection(_LOGGER)
     assert coll.async_items() == []
     coll.data["bla"] = 1
     assert coll.async_items() == [1]
@@ -99,7 +99,7 @@ async def test_observable_collection():
 async def test_yaml_collection():
     """Test a YAML collection."""
     id_manager = collection.IDManager()
-    coll = collection.YamlCollection(LOGGER, id_manager)
+    coll = collection.YamlCollection(_LOGGER, id_manager)
     changes = track_changes(coll)
     await coll.async_load(
         [{"id": "mock-1", "name": "Mock 1"}, {"id": "mock-2", "name": "Mock 2"}]
@@ -144,7 +144,7 @@ async def test_yaml_collection_skipping_duplicate_ids():
     """Test YAML collection skipping duplicate IDs."""
     id_manager = collection.IDManager()
     id_manager.add_collection({"existing": True})
-    coll = collection.YamlCollection(LOGGER, id_manager)
+    coll = collection.YamlCollection(_LOGGER, id_manager)
     changes = track_changes(coll)
     await coll.async_load(
         [{"id": "mock-1", "name": "Mock 1"}, {"id": "existing", "name": "Mock 2"}]
@@ -169,7 +169,7 @@ async def test_storage_collection(hass):
         }
     )
     id_manager = collection.IDManager()
-    coll = MockStorageCollection(store, LOGGER, id_manager)
+    coll = MockStorageCollection(store, _LOGGER, id_manager)
     changes = track_changes(coll)
 
     await coll.async_load()
@@ -222,8 +222,8 @@ async def test_storage_collection(hass):
 
 async def test_attach_entity_component_collection(hass):
     """Test attaching collection to entity component."""
-    ent_comp = entity_component.EntityComponent(LOGGER, "test", hass)
-    coll = collection.ObservableCollection(LOGGER)
+    ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    coll = collection.ObservableCollection(_LOGGER)
     collection.attach_entity_component_collection(ent_comp, coll, MockEntity)
 
     await coll.notify_change(
@@ -252,7 +252,7 @@ async def test_attach_entity_component_collection(hass):
 async def test_storage_collection_websocket(hass, hass_ws_client):
     """Test exposing a storage collection via websockets."""
     store = storage.Store(hass, 1, "test-data")
-    coll = MockStorageCollection(store, LOGGER)
+    coll = MockStorageCollection(store, _LOGGER)
     changes = track_changes(coll)
     collection.StorageCollectionWebsocket(
         coll,

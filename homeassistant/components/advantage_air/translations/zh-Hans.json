@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP\u5730\u5740"
+                }
+            }
+        }
+    }
+}

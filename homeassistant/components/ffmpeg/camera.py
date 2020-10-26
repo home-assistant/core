@@ -1,6 +1,5 @@
 """Support for Cameras with FFmpeg as decoder."""
 import asyncio
-import logging
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
@@ -12,8 +11,6 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "FFmpeg"
 DEFAULT_ARGUMENTS = "-pred 1"

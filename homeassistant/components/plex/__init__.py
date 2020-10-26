@@ -1,10 +1,11 @@
 """Support to embed Plex."""
 import asyncio
 import functools
-import json
+from functools import partial
 import logging
 
 import plexapi.exceptions
+from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
@@ -33,6 +34,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -43,6 +45,8 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    GDM_DEBOUNCER,
+    GDM_SCANNER,
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
@@ -53,7 +57,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-from .services import async_setup_services
+from .services import async_setup_services, lookup_plex_media
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -66,6 +70,16 @@ async def async_setup(hass, config):
     )
 
     await async_setup_services(hass)
+
+    gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
+
+    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=10,
+        immediate=True,
+        function=partial(gdm.scan, scan_for_clients=True),
+    ).async_call
 
     return True
 
@@ -143,10 +157,14 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
+    async def async_update_plex():
+        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
+        await plex_server.async_update_platforms()
+
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.async_update_platforms,
+        async_update_plex,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
@@ -267,7 +285,7 @@ def play_on_sonos(hass, service_call):
     """Play Plex media on a linked Sonos device."""
     entity_id = service_call.data[ATTR_ENTITY_ID]
     content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
-    content = json.loads(content_id)
+    content_type = service_call.data.get(ATTR_MEDIA_CONTENT_TYPE)
 
     sonos = hass.components.sonos
     try:
@@ -276,27 +294,9 @@ def play_on_sonos(hass, service_call):
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
 
-    if isinstance(content, int):
-        content = {"plex_key": content}
-        content_type = PLEX_DOMAIN
-    else:
-        content_type = "music"
-
-    plex_server_name = content.get("plex_server")
-    shuffle = content.pop("shuffle", 0)
-
-    plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
-    if plex_server_name:
-        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
-        if not plex_server:
-            _LOGGER.error(
-                "Requested Plex server '%s' not found in %s",
-                plex_server_name,
-                [x.friendly_name for x in plex_servers],
-            )
-            return
-    else:
-        plex_server = next(iter(plex_servers))
+    media, plex_server = lookup_plex_media(hass, content_type, content_id)
+    if media is None:
+        return
 
     sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
@@ -305,11 +305,4 @@ def play_on_sonos(hass, service_call):
         )
         return
 
-    media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        _LOGGER.error("Media could not be found: %s", content)
-        return
-
-    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
-    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
-    sonos_speaker.playMedia(playqueue)
+    sonos_speaker.playMedia(media)

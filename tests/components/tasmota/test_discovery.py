@@ -2,8 +2,6 @@
 import copy
 import json
 
-import pytest
-
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
@@ -29,40 +27,41 @@ async def test_valid_discovery_message(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config",
+        return_value={},
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
             hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
         )
         await hass.async_block_till_done()
-        assert mock_tasmota_has_entities.called
+        assert mock_tasmota_get_device_config.called
 
 
 async def test_invalid_topic(hass, mqtt_mock):
     """Test receiving discovery message on wrong topic."""
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/configuration", "{}")
         await hass.async_block_till_done()
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_invalid_message(hass, mqtt_mock, caplog):
     """Test receiving an invalid message."""
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/config", "asd")
         await hass.async_block_till_done()
         assert "Invalid discovery message" in caplog.text
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_invalid_mac(hass, mqtt_mock, caplog):
@@ -70,8 +69,8 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
@@ -79,7 +78,7 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
         )
         await hass.async_block_till_done()
         assert "MAC mismatch" in caplog.text
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_correct_config_discovery(
@@ -172,37 +171,6 @@ async def test_device_update(
     assert device_entry.model == "Another model"
     assert device_entry.name == "Another name"
     assert device_entry.sw_version == "v6.6.6"
-
-
-@pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog, device_reg, setup_tasmota):
-    """Test handling of exception when creating discovered device."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    mac = config["mac"]
-    data = json.dumps(config)
-
-    # Trigger an exception when the entity is added
-    with patch(
-        "hatasmota.discovery.get_device_config_helper",
-        return_value=object(),
-    ):
-        async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
-        await hass.async_block_till_done()
-
-    # Verify device entry is not created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
-    assert device_entry is None
-    assert (
-        "Exception in async_discover_device when dispatching 'tasmota_discovery_device'"
-        in caplog.text
-    )
-
-    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", data)
-    await hass.async_block_till_done()
-
-    # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
-    assert device_entry is not None
 
 
 async def test_device_remove(

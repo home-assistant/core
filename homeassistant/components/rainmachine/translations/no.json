@@ -6,14 +6,14 @@
         "error": {
             "identifier_exists": "Kontoen er allerede konfigurert",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig legitimasjon"
+            "invalid_credentials": "Ugyldige innloggingsopplysninger"
         },
         "step": {
             "user": {
                 "data": {
                     "ip_address": "Vertsnavn eller IP-adresse",
                     "password": "Passord",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Fyll ut informasjonen din"
             }

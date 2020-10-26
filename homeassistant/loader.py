@@ -419,10 +419,12 @@ class Integration:
         cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = f"{self.domain}.{platform_name}"
         if full_name not in cache:
-            cache[full_name] = importlib.import_module(
-                f"{self.pkg_path}.{platform_name}"
-            )
+            cache[full_name] = self._import_platform(platform_name)
         return cache[full_name]  # type: ignore
+
+    def _import_platform(self, platform_name: str) -> ModuleType:
+        """Import the platform."""
+        return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
     def __repr__(self) -> str:
         """Text representation of class."""

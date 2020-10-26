@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",

@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "requests_exceeded": "Byl p\u0159ekro\u010den povolen\u00fd po\u010det po\u017eadavk\u016f pro API Accuweather. Mus\u00edte po\u010dkat nebo zm\u011bnit API kl\u00ed\u010d."
         },
         "step": {
             "user": {
@@ -26,6 +27,7 @@
                 "data": {
                     "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
                 },
+                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 64 minut nam\u00edsto 32 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather.",
                 "title": "Mo\u017enosti AccuWeather"
             }
         }

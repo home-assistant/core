@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "Er du sikker p\u00e5 at du vil konfigurere Profiler?"
+                "description": "Vil du starte oppsettet?"
             }
         }
     }

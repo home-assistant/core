@@ -38,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzCover(light, gateway))
 
         if entities:
-            async_add_entities(entities, True)
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
