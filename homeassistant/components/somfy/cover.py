@@ -2,6 +2,7 @@
 
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
+import requests
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,17 +29,19 @@ SUPPORTED_CATAGORIES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
 
-    domain_data = hass.data[DOMAIN]
-    coordinator = domain_data[COORDINATOR]
-    api = domain_data[API]
+    def get_covers():
+        """Retrieve covers."""
+        domain_data = hass.data[DOMAIN]
+        coordinator = domain_data[COORDINATOR]
+        api = domain_data[API]
 
-    async_add_entities(
-        [
+        return [
             SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
             for device_id, device in coordinator.data.items()
             if SUPPORTED_CATAGORIES & set(device.categories)
         ]
-    )
+
+    async_add_entities(await hass.async_add_executor_job(get_covers))
 
 
 class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
@@ -51,6 +54,8 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         self.categories = set(self.device.categories)
         self.optimistic = optimistic
         self._closed = None
+        self._is_opening = None
+        self._is_closing = None
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -59,15 +64,31 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.cover.close()
-        if self.optimistic:
+        self._is_closing = True
+        self.schedule_update_ha_state()
+        try:
+            # Blocks until the close command is sent
+            self.cover.close()
             self._closed = True
+        except requests.exceptions.HTTPError:
+            raise
+        finally:
+            self._is_closing = None
+            self.schedule_update_ha_state()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.cover.open()
-        if self.optimistic:
+        self._is_opening = True
+        self.schedule_update_ha_state()
+        try:
+            # Blocks until the open command is sent
+            self.cover.open()
             self._closed = False
+        except requests.exceptions.HTTPError:
+            raise
+        finally:
+            self._is_opening = None
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -82,7 +103,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Return the device class."""
         if self.categories & BLIND_DEVICE_CATAGORIES:
             return DEVICE_CLASS_BLIND
-        elif self.categories & SHUTTER_DEVICE_CATAGORIES:
+        if self.categories & SHUTTER_DEVICE_CATAGORIES:
             return DEVICE_CLASS_SHUTTER
         return None
 
@@ -95,6 +116,20 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         return position
 
     @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        if not self.optimistic:
+            return None
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        if not self.optimistic:
+            return None
+        return self._is_closing
+
+    @property
     def is_closed(self):
         """Return if the cover is closed."""
         is_closed = None
@@ -103,6 +138,17 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         elif self.optimistic:
             is_closed = self._closed
         return is_closed
+
+    @property
+    def assumed_state(self):
+        """Return if the cover has an assumed state."""
+        if not self.optimistic:
+            return None
+        return (
+            self._is_closing is not None
+            or self._is_opening is not None
+            or self._closed is not None
+        )
 
     @property
     def current_cover_tilt_position(self):
@@ -143,3 +189,5 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
                 STATE_CLOSED,
             ):
                 self._closed = last_state.state == STATE_CLOSED
+
+        await self.async_update()
