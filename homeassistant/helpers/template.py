@@ -146,9 +146,13 @@ def gen_result_wrapper(kls):
 class TupleWrapper(tuple, ResultWrapper):
     """Wrap a tuple."""
 
+    # This is all magic to be allowed to subclass a tuple.
+
     def __new__(cls, value: tuple, render_result: str) -> "TupleWrapper":
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
+
+    # pylint: disable=super-init-not-called
 
     def __init__(self, value: tuple, render_result: str):
         """Initialize a new tuple class."""
@@ -398,7 +402,7 @@ class Template:
 
         return self._parse_result(render_result)
 
-    def _parse_result(self, render_result: str) -> Any:
+    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
         """Parse the result."""
         try:
             result = literal_eval(render_result)
