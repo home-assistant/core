@@ -2651,3 +2651,47 @@ async def test_legacy_templates(hass):
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
     )
+
+
+async def test_no_result_parsing(hass):
+    """Test if templates results are not parsed."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render(
+            parse_result=False
+        )
+        == "12"
+    )
+
+    assert (
+        template.Template("{{ false }}", hass).async_render(parse_result=False)
+        == "False"
+    )
+
+    assert (
+        template.Template("{{ [1, 2, 3] }}", hass).async_render(parse_result=False)
+        == "[1, 2, 3]"
+    )
+
+
+async def test_is_static_still_ast_evals(hass):
+    """Test is_static still convers to native type."""
+    tpl = template.Template("[1, 2]", hass)
+    assert tpl.is_static
+    assert tpl.async_render() == [1, 2]
+
+
+async def test_result_wrappers(hass):
+    """Test result wrappers."""
+    for text, native in (
+        ("[1, 2]", [1, 2]),
+        ("{1, 2}", {1, 2}),
+        ("(1, 2)", (1, 2)),
+        ('{"hello": True}', {"hello": True}),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert result.render_result == text

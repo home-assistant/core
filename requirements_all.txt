@@ -460,7 +460,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.0.0rc2
+debugpy==1.0.0
 
 # homeassistant.components.decora
 # decora==0.6
@@ -729,10 +729,10 @@ hass-nabucasa==0.37.1
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.22
+hatasmota==0.0.23
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.5
+hdate==0.9.12
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18

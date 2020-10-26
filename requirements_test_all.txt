@@ -242,7 +242,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.0.0rc2
+debugpy==1.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -364,10 +364,10 @@ hangups==0.4.11
 hass-nabucasa==0.37.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.22
+hatasmota==0.0.23
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.5
+hdate==0.9.12
 
 # homeassistant.components.here_travel_time
 herepy==2.0.0

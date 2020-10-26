@@ -490,7 +490,11 @@ def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
         raise vol.Invalid("string value is None")
-    if isinstance(value, (list, dict)):
+
+    if isinstance(value, template_helper.ResultWrapper):
+        value = value.render_result
+
+    elif isinstance(value, (list, dict)):
         raise vol.Invalid("value should be a string")
 
     return str(value)
