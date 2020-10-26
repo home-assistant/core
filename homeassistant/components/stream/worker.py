@@ -90,7 +90,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     # Iterator for demuxing
     container_packets = None
     # The decoder timestamps of the latest packet in each stream we processed
-    last_dts = None
+    last_dts = {video_stream: float("-inf"), audio_stream: float("-inf")}
     # Keep track of consecutive packets without a dts to detect end of stream.
     missing_dts = 0
     # Holds the buffers for each stream provider
@@ -216,11 +216,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     if not peek_first_pts():
         container.close()
         return
-    last_dts = {video_stream: segment_start_pts - 1}
-    if audio_stream:
-        last_dts[audio_stream] = (
-            int(segment_start_pts * video_stream.time_base / audio_stream.time_base) - 1
-        )
+
     initialize_segment(segment_start_pts)
 
     while not quit_event.is_set():
