@@ -1,0 +1,7 @@
+{
+  "domain": "input_timetable",
+  "name": "Input Timetable",
+  "documentation": "https://www.home-assistant.io/integrations/input_timetable",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

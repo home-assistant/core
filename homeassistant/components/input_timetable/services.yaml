@@ -1,0 +1,39 @@
+set:
+  description: Adds a state change at the specified time.
+  fields:
+    entity_id:
+      description: Entity id of the input timetable that should be set.
+      example: input_timetable.lights
+    time:
+      description: The time of the change.
+      example: '"05:04:20"'
+    state:
+      description: The new state (on or off).
+      example: "on"
+unset:
+  description: Removes a state change.
+  fields:
+    entity_id:
+      description: Entity id of the input timetable that should be reset.
+      example: input_timetable.lights
+    time:
+      description: The time of the state change to remove.
+      example: '"05:04:20"'
+reset:
+  description: Removes all state changes.
+  fields:
+    entity_id:
+      description: Entity id of the input timetable that should be reset.
+      example: input_timetable.lights
+reconfig:
+  description: Overrides the timetable with the provided list.
+  fields:
+    entity_id:
+      description: Entity id of the input timetable that should be set.
+      example: input_timetable.lights
+    timetable:
+      description: List of state changes.
+      example:
+        [{ time: "01:02:03", state: "on" }, { time: "04:05:06", state: "off" }]
+reload:
+  description: Reload the input_timetable configuration.
