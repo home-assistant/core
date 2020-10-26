@@ -1,6 +1,5 @@
 """This component provides support for RainMachine programs and zones."""
 from datetime import datetime
-import logging
 
 from regenmaschine.errors import RequestError
 
@@ -9,19 +8,18 @@ from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import RainMachineEntity
+from . import RainMachineEntity, async_update_programs_and_zones
 from .const import (
     CONF_ZONE_RUN_TIME,
-    DATA_CLIENT,
+    DATA_CONTROLLER,
     DATA_PROGRAMS,
     DATA_ZONES,
     DATA_ZONES_DETAILS,
-    DOMAIN as RAINMACHINE_DOMAIN,
+    DOMAIN,
+    LOGGER,
     PROGRAM_UPDATE_TOPIC,
     ZONE_UPDATE_TOPIC,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
@@ -102,15 +100,20 @@ SWITCH_TYPE_ZONE = "zone"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
-    rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
+    controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]
+
+    programs_coordinator = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id][
+        DATA_PROGRAMS
+    ]
+    zones_coordinator = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id][DATA_ZONES]
 
     entities = []
-    for program in rainmachine.data[DATA_PROGRAMS]:
-        entities.append(RainMachineProgram(rainmachine, program))
-    for zone in rainmachine.data[DATA_ZONES]:
-        entities.append(RainMachineZone(rainmachine, zone))
+    for program in programs_coordinator.data:
+        entities.append(RainMachineProgram(programs_coordinator, controller))
+    for zone in zones_coordinator.data:
+        entities.append(RainMachineZone(zones_coordinator, controller))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchEntity):
@@ -119,7 +122,6 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     def __init__(self, rainmachine, switch_data):
         """Initialize a generic RainMachine switch."""
         super().__init__(rainmachine)
-
         self._is_on = False
         self._name = switch_data["name"]
         self._switch_data = switch_data
@@ -155,7 +157,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         try:
             resp = await api_coro
         except RequestError as err:
-            _LOGGER.error(
+            LOGGER.error(
                 'Error while toggling %s "%s": %s',
                 self._switch_type,
                 self.unique_id,
@@ -164,7 +166,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
             return
 
         if resp["statusCode"] != 0:
-            _LOGGER.error(
+            LOGGER.error(
                 'Error while toggling %s "%s": %s',
                 self._switch_type,
                 self.unique_id,
@@ -172,7 +174,9 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
             )
             return
 
-        self.hass.async_create_task(self.rainmachine.async_update_programs_and_zones())
+        self.hass.async_create_task(
+            async_update_programs_and_zones(self.hass, self._config_entry)
+        )
 
 
 class RainMachineProgram(RainMachineSwitch):
