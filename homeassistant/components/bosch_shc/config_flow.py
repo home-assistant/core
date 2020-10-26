@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         data[CONF_IP_ADDRESS],
         data[CONF_SSL_CERTIFICATE],
         data[CONF_SSL_KEY],
-        False,
+        True,
     )
     status = session.information.version
 
