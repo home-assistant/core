@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from pymfy.api.devices.category import Category
-from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
@@ -90,11 +89,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     async def _update_all_devices():
         """Update all the devices."""
-        try:
-            devices = await hass.async_add_executor_job(data[API].get_devices)
-            return {dev.id: dev for dev in devices}
-        except HTTPError as err:
-            _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
+        devices = await hass.async_add_executor_job(data[API].get_devices)
+        return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
         hass,
