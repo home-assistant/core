@@ -2,6 +2,7 @@
 
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
+import requests
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -52,6 +53,8 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         self.categories = set(device.categories)
         self.optimistic = optimistic
         self._closed = None
+        self._is_opening = None
+        self._is_closing = None
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -60,15 +63,27 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.cover.close()
-        if self.optimistic:
+        self._is_closing = True
+        try:
+            # Blocks until the close command is sent
+            self.cover.close()
             self._closed = True
+        except requests.exceptions.HTTPError:
+            raise
+        finally:
+            self._is_closing = False
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.cover.open()
-        if self.optimistic:
+        self._is_opening = True
+        try:
+            # Blocks until the open command is sent
+            self.cover.open()
             self._closed = False
+        except requests.exceptions.HTTPError:
+            raise
+        finally:
+            self._is_opening = False
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -83,7 +98,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Return the device class."""
         if self.categories & BLIND_DEVICE_CATAGORIES:
             return DEVICE_CLASS_BLIND
-        elif self.categories & SHUTTER_DEVICE_CATAGORIES:
+        if self.categories & SHUTTER_DEVICE_CATAGORIES:
             return DEVICE_CLASS_SHUTTER
         return None
 
@@ -94,6 +109,20 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         if self.has_capability("position"):
             position = 100 - self.cover.get_position()
         return position
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        if not self.optimistic:
+            return None
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        if not self.optimistic:
+            return None
+        return self._is_closing
 
     @property
     def is_closed(self):
