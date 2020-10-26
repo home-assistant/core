@@ -3,6 +3,7 @@ import asyncio
 import cProfile
 import time
 
+from guppy import hpy
 from pyprof2calltree import convert
 import voluptuous as vol
 
@@ -59,13 +60,17 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     profiler = cProfile.Profile()
     profiler.enable()
+    heap_profiler = hpy()
+    heap_profiler.setref()
     await asyncio.sleep(float(call.data[CONF_SECONDS]))
     profiler.disable()
+    heap = heap_profiler.heap()
 
     cprofile_path = hass.config.path(f"profile.{start_time}.cprof")
     callgrind_path = hass.config.path(f"callgrind.out.{start_time}")
+    heap_path = hass.config.path(f"heap_profile.{start_time}.hpy")
     await hass.async_add_executor_job(
-        _write_profile, profiler, cprofile_path, callgrind_path
+        _write_profile, profiler, cprofile_path, callgrind_path, heap, heap_path
     )
     hass.components.persistent_notification.async_create(
         f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
@@ -74,7 +79,8 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
 
 
-def _write_profile(profiler, cprofile_path, callgrind_path):
+def _write_profile(profiler, cprofile_path, callgrind_path, heap, heap_path):
     profiler.create_stats()
     profiler.dump_stats(cprofile_path)
     convert(profiler.getstats(), callgrind_path)
+    heap.dump(heap_path)

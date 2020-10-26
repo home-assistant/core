@@ -713,6 +713,9 @@ growattServer==0.1.1
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
 
+# homeassistant.components.profiler
+guppy3==3.1.0
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 
