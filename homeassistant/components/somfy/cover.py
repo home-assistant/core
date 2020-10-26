@@ -7,6 +7,8 @@ from pymfy.api.devices.category import Category
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
@@ -15,6 +17,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+BLIND_DEVICE_CATAGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
+SHUTTER_DEVICE_CATAGORIES = {Category.EXTERIOR_BLIND.value}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -48,6 +53,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Initialize the Somfy device."""
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
+        self.categories = set(device.categories)
         self.optimistic = optimistic
         self._closed = None
 
@@ -75,6 +81,15 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
         self.cover.set_position(100 - kwargs[ATTR_POSITION])
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        if self.categories & BLIND_DEVICE_CATAGORIES:
+            return DEVICE_CLASS_BLIND
+        elif self.categories & SHUTTER_DEVICE_CATAGORIES:
+            return DEVICE_CLASS_SHUTTER
+        return None
 
     @property
     def current_cover_position(self):
