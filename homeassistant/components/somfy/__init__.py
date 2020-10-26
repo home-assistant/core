@@ -171,6 +171,11 @@ class SomfyEntity(Entity):
         capabilities = self.device.capabilities
         return bool([c for c in capabilities if c.name == capability])
 
+    @property
+    def assumed_state(self):
+        """Return if the device has an assumed state."""
+        return not bool(self.device.states)
+
 
 @Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass):

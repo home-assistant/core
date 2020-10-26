@@ -1,14 +1,27 @@
 """Support for Somfy Covers."""
+
 from pymfy.api.devices.blind import Blind
 from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
+from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
+
+BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
+SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}
+SUPPORTED_CATEGORIES = {
+    Category.ROLLER_SHUTTER.value,
+    Category.INTERIOR_BLIND.value,
+    Category.EXTERIOR_BLIND.value,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -16,12 +29,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_covers():
         """Retrieve covers."""
-        categories = {
-            Category.ROLLER_SHUTTER.value,
-            Category.INTERIOR_BLIND.value,
-            Category.EXTERIOR_BLIND.value,
-        }
-
         devices = hass.data[DOMAIN][DEVICES]
 
         return [
@@ -29,21 +36,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
             )
             for cover in devices
-            if categories & set(cover.categories)
+            if SUPPORTED_CATEGORIES & set(cover.categories)
         ]
 
-    async_add_entities(await hass.async_add_executor_job(get_covers), True)
+    async_add_entities(await hass.async_add_executor_job(get_covers))
 
 
-class SomfyCover(SomfyEntity, CoverEntity):
+class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     """Representation of a Somfy cover device."""
 
     def __init__(self, device, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
+        self.categories = set(device.categories)
         self.optimistic = optimistic
         self._closed = None
+        self._is_opening = None
+        self._is_closing = None
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -52,15 +62,27 @@ class SomfyCover(SomfyEntity, CoverEntity):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.optimistic:
+        self._is_closing = True
+        self.schedule_update_ha_state()
+        try:
+            # Blocks until the close command is sent
+            self.cover.close()
             self._closed = True
-        self.cover.close()
+        finally:
+            self._is_closing = None
+            self.schedule_update_ha_state()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.optimistic:
+        self._is_opening = True
+        self.schedule_update_ha_state()
+        try:
+            # Blocks until the open command is sent
+            self.cover.open()
             self._closed = False
-        self.cover.open()
+        finally:
+            self._is_opening = None
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -71,12 +93,35 @@ class SomfyCover(SomfyEntity, CoverEntity):
         self.cover.set_position(100 - kwargs[ATTR_POSITION])
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        if self.categories & BLIND_DEVICE_CATEGORIES:
+            return DEVICE_CLASS_BLIND
+        if self.categories & SHUTTER_DEVICE_CATEGORIES:
+            return DEVICE_CLASS_SHUTTER
+        return None
+
+    @property
     def current_cover_position(self):
         """Return the current position of cover shutter."""
         position = None
         if self.has_capability("position"):
             position = 100 - self.cover.get_position()
         return position
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        if not self.optimistic:
+            return None
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        if not self.optimistic:
+            return None
+        return self._is_closing
 
     @property
     def is_closed(self):
@@ -114,3 +159,18 @@ class SomfyCover(SomfyEntity, CoverEntity):
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
         self.cover.stop()
+
+    async def async_added_to_hass(self):
+        """Complete the initialization."""
+        await super().async_added_to_hass()
+        if self.optimistic:
+            # Restore the last state if we use optimistic
+            last_state = await self.async_get_last_state()
+
+            if last_state is not None and last_state.state in (
+                STATE_OPEN,
+                STATE_CLOSED,
+            ):
+                self._closed = last_state.state == STATE_CLOSED
+
+        await self.async_update()
