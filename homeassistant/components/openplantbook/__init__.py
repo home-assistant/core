@@ -31,16 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     async def get_plant(call):
+        if "SPECIES" not in hass.data[DOMAIN]:
+            hass.data[DOMAIN]["SPECIES"] = {}
         species = call.data.get(ATTR_SPECIES)
-        if species:
+        if species and species not in hass.data[DOMAIN]["SPECIES"]:
             plant_data = await hass.data[DOMAIN]["API"].get_plantbook_data(species)
-            attrs = {}
-            for var, val in plant_data.items():
-                attrs[var] = val
-            entity_id = async_generate_entity_id(
-                f"{DOMAIN}" + ".{}", plant_data["pid"], hass=hass
-            )
-            hass.states.async_set(entity_id, plant_data["display_pid"], attrs)
+            if plant_data:
+                hass.data[DOMAIN]["SPECIES"][species] = plant_data
+                attrs = {}
+                for var, val in plant_data.items():
+                    attrs[var] = val
+                entity_id = async_generate_entity_id(
+                    f"{DOMAIN}" + ".{}", plant_data["pid"], hass=hass
+                )
+                hass.states.async_set(entity_id, plant_data["display_pid"], attrs)
 
     async def search_plantbook(call):
         alias = call.data.get(ATTR_ALIAS)
