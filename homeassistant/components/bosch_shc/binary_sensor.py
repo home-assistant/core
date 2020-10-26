@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN
 from .entity import SHCEntity
@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ShutterContactSensor(
                 device=binarysensor,
                 room_name=session.room(binarysensor.room_id).name,
-                controller_ip=config_entry.data[CONF_IP_ADDRESS],
+                controller_ip=config_entry.data[CONF_HOST],
             )
         )
 

@@ -3,31 +3,18 @@ import asyncio
 import logging
 
 from boschshcpy import SHCSession
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_IP_ADDRESS,
+    CONF_HOST,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): cv.string,
-                vol.Required(CONF_SSL_CERTIFICATE): cv.isfile,
-                vol.Required(CONF_SSL_KEY): cv.isfile,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = [
     "binary_sensor",
@@ -45,11 +32,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
         return True
 
     configured_hosts = {
-        entry.data.get(CONF_IP_ADDRESS)
-        for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get(CONF_HOST) for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
-    if conf[CONF_IP_ADDRESS] in configured_hosts:
+    if conf[CONF_HOST] in configured_hosts:
         return True
 
     hass.async_create_task(
@@ -66,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     session = await hass.async_add_executor_job(
         SHCSession,
-        data[CONF_IP_ADDRESS],
+        data[CONF_HOST],
         data[CONF_SSL_CERTIFICATE],
         data[CONF_SSL_KEY],
     )
@@ -74,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     shc_info = session.information
     if shc_info.version == "n/a":
         _LOGGER.warning("Unable to connect to Bosch Smart Home Controller API")
-        return False
+        raise ConfigEntryNotReady
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
@@ -83,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, data[CONF_IP_ADDRESS])},
+        identifiers={(DOMAIN, data[CONF_HOST])},
         manufacturer="Bosch",
         name=entry.title,
         model="SmartHomeController",

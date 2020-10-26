@@ -27,7 +27,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "ssl_certificate": "test-cert.pem",
                 "ssl_key": "test-key.pem",
             },
@@ -36,7 +36,7 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Bosch SHC"
     assert result2["data"] == {
-        "ip_address": "1.1.1.1",
+        "host": "1.1.1.1",
         "ssl_certificate": "test-cert.pem",
         "ssl_key": "test-key.pem",
     }
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "ssl_certificate": "test-cert.pem",
                 "ssl_key": "test-key.pem",
             },
@@ -81,7 +81,7 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "ip_address": "1.1.1.1",
+                "host": "1.1.1.1",
                 "ssl_certificate": "test-cert.pem",
                 "ssl_key": "test-key.pem",
             },

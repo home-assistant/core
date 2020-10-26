@@ -3,10 +3,10 @@
   "config": {
     "step": {
       "user": {
+        "description": "Set up your Bosch SHC instance to allow monitoring and control.",
         "title": "SHC access parameters",
         "data": {
-          "name": "Name",
-          "ip_address": "IP Address",
+          "host": "[%key:common::config_flow::data::host%]",
           "ssl_certificate": "SSL Certificate",
           "ssl_key": "SSL Key",
           "icon": "Icon"

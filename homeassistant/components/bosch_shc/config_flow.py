@@ -5,7 +5,7 @@ from boschshcpy import SHCSession
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
+        vol.Required(CONF_HOST): str,
         vol.Required(CONF_SSL_CERTIFICATE): str,
         vol.Required(CONF_SSL_KEY): str,
     }
@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     session = await hass.async_add_executor_job(
         SHCSession,
-        data[CONF_IP_ADDRESS],
+        data[CONF_HOST],
         data[CONF_SSL_CERTIFICATE],
         data[CONF_SSL_KEY],
         True,
@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 # Check if already configured
-                await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
+                await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
+        await self.async_set_unique_id(user_input[CONF_HOST])
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user(user_input)
