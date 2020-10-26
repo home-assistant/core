@@ -127,8 +127,10 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         if self.optimistic:
             # Restore the last state if we use optimistic
             last_state = await self.async_get_last_state()
+            _LOGGER.debug("Last state was: %s", last_state)
 
             if last_state is not None:
                 self._closed = last_state.state == STATE_CLOSED
+                _LOGGER.debug("%s: closed: %s", self.entity_id, self._closed)
 
         await self.async_update()
