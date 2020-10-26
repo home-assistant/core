@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Location",
+        "title": "[%key:common::config_flow::data::location%]",
         "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",

@@ -6,7 +6,7 @@
         "step": {
             "pairing": {
                 "description": "Gdy tylko {name} b\u0119dzie gotowy, opcja parowania b\u0119dzie dost\u0119pna w \u201ePowiadomieniach\u201d jako \u201eKonfiguracja mostka HomeKit\u201d.",
-                "title": "Sparuj z HomeKit"
+                "title": "Parowanie z HomeKit"
             },
             "user": {
                 "data": {
