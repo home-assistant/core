@@ -39,6 +39,7 @@ READING_BRIGHTNESS = "brightness"
 
 ATTR_PROBLEM = "problem"
 ATTR_SENSORS = "sensors"
+ATTR_LIMITS = "limits"
 PROBLEM_NONE = "none"
 ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 
@@ -165,6 +166,7 @@ class Plant(Entity):
         self._config = config
         self._sensormap = {}
         self._readingmap = {}
+        self._limitsmap = {}
         self._unit_of_measurement = {}
         for reading, entity_id in config["sensors"].items():
             self._sensormap[entity_id] = reading
@@ -182,6 +184,12 @@ class Plant(Entity):
         if CONF_CHECK_DAYS in self._config:
             self._conf_check_days = self._config[CONF_CHECK_DAYS]
         self._brightness_history = DailyHistory(self._conf_check_days)
+
+        for reading in self.READINGS.values():
+            if "min" in reading and reading["min"] in self._config:
+                self._limitsmap[reading["min"]] = self._config[reading["min"]]
+            if "max" in reading and reading["max"] in self._config:
+                self._limitsmap[reading["max"]] = self._config[reading["max"]]
 
     @callback
     def _state_changed_event(self, event):
@@ -357,6 +365,7 @@ class Plant(Entity):
         attrib = {
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
+            ATTR_LIMITS: self._limitsmap,
             ATTR_DICT_OF_UNITS_OF_MEASUREMENT: self._unit_of_measurement,
         }
 

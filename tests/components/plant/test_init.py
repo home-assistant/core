@@ -30,6 +30,15 @@ GOOD_DATA = {
 BRIGHTNESS_ENTITY = "sensor.mqtt_plant_brightness"
 MOISTURE_ENTITY = "sensor.mqtt_plant_moisture"
 
+GOOD_LIMITS = {
+    "min_moisture": 20,
+    "max_moisture": 60,
+    "min_battery": 17,
+    "min_conductivity": 500,
+    "min_temperature": 15,
+    "min_brightness": 500,
+}
+
 GOOD_CONFIG = {
     "sensors": {
         "moisture": MOISTURE_ENTITY,
@@ -38,12 +47,7 @@ GOOD_CONFIG = {
         "conductivity": "sensor.mqtt_plant_conductivity",
         "brightness": BRIGHTNESS_ENTITY,
     },
-    "min_moisture": 20,
-    "max_moisture": 60,
-    "min_battery": 17,
-    "min_conductivity": 500,
-    "min_temperature": 15,
-    "min_brightness": 500,
+    **GOOD_LIMITS,
 }
 
 
@@ -59,9 +63,9 @@ async def test_valid_data(hass):
         )
     assert sensor.state == "ok"
     attrib = sensor.state_attributes
+    assert attrib["problem"] == "none"
+    assert attrib["limits"] == GOOD_LIMITS
     for reading, value in GOOD_DATA.items():
-        # battery level has a different name in
-        # the JSON format than in hass
         assert attrib[reading] == value
 
 
