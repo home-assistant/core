@@ -6,6 +6,7 @@ from instantpy import InstantVC
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import DOMAIN, TRACKED_CLIENTS
 
@@ -47,9 +48,9 @@ class VirtualController:
         _LOGGER.debug("Initial Virtual Controller login.")
         try:
             await self.hass.async_add_executor_job(self._virtual_controller.login)
-        except ConnectionError:
-            return ConnectionError
-        await self.async_update_all()
+            await self.async_update_all()
+        except AttributeError:
+            raise PlatformNotReady
         return True
 
     async def async_update_all(self) -> dict:
