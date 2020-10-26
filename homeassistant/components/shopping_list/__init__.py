@@ -128,6 +128,10 @@ async def async_setup_entry(hass, config_entry):
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
     )
 
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    )
+
     return True
 
 
@@ -175,6 +179,7 @@ class ShoppingData:
     def save(self):
         """Save the items."""
         save_json(self.hass.config.path(PERSISTENCE), self.items)
+        self.hass.bus.async_fire(EVENT)
 
 
 class ShoppingListView(http.HomeAssistantView):
