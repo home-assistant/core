@@ -370,7 +370,7 @@ hass-nabucasa==0.37.1
 hatasmota==0.0.23
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.5
+hdate==0.9.12
 
 # homeassistant.components.here_travel_time
 herepy==2.0.0
