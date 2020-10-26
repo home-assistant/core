@@ -174,7 +174,7 @@ async def test_do_no_run_forever(hass, caplog):
         assert await async_setup_component(
             hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": "sleep 10000"}},
+            {shell_command.DOMAIN: {"test_service": "sleep 10000s"}},
         )
         await hass.async_block_till_done()
 
