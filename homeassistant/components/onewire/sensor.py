@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from pi1wire import InvalidCRCException, Pi1Wire, UnsupportResponseException
+from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet import protocol
 import voluptuous as vol
 
@@ -175,21 +175,10 @@ def get_entities(onewirehub: OneWireHub, config):
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
-        owhost = config[CONF_HOST]
-        owport = config[CONF_PORT]
-
-        try:
-            devices = onewirehub.owproxy.dir()
-        except protocol.OwnetError as exc:
-            _LOGGER.error(
-                "Failed to list devices on %s:%d, got: %s", owhost, owport, exc
-            )
-            return entities
-        for device in devices:
-            _LOGGER.debug("Found device: %s", device)
-            family = onewirehub.owproxy.read(f"{device}family").decode()
-            device_type = onewirehub.owproxy.read(f"{device}type").decode()
-            sensor_id = os.path.split(os.path.split(device)[0])[1]
+        for device in onewirehub.devices:
+            family = device["family"]
+            device_type = device["type"]
+            sensor_id = os.path.split(os.path.split(device["path"])[0])[1]
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
@@ -199,7 +188,7 @@ def get_entities(onewirehub: OneWireHub, config):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
-                    device,
+                    sensor_id,
                 )
                 continue
             device_info = {
@@ -213,12 +202,14 @@ def get_entities(onewirehub: OneWireHub, config):
                     s_id = sensor_key.split("_")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
-                            f"{device}moisture/is_leaf.{s_id}"
+                            f"{device['path']}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
                         sensor_key = f"wetness_{s_id}"
-                device_file = os.path.join(os.path.split(device)[0], sensor_value)
+                device_file = os.path.join(
+                    os.path.split(device["path"])[0], sensor_value
+                )
                 entities.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
@@ -233,7 +224,7 @@ def get_entities(onewirehub: OneWireHub, config):
     elif conf_type == CONF_TYPE_SYSBUS:
         base_dir = config[CONF_MOUNT_DIR]
         _LOGGER.debug("Initializing using SysBus %s", base_dir)
-        for p1sensor in Pi1Wire(base_dir).find_all_sensors():
+        for p1sensor in onewirehub.devices:
             family = p1sensor.mac_address[:2]
             sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:

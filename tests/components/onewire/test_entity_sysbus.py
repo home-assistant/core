@@ -142,7 +142,7 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
 
     with patch(
-        "homeassistant.components.onewire.sensor.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
     ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
