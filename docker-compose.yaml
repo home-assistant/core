@@ -11,7 +11,8 @@ services:
       - /home/ha/HA-Component-mythtv-frontend/mythtv:/config/custom_components/mythtv
       - /home/ha/home-assistant/homeassistant/components/hdmi_cec:/config/custom_components/hdmi_cec
       - /home/ha/home-assistant/homeassistant/components/squeezebox:/config/custom_components/squeezebox
-      - /home/ha/frontend:/config/frontend
+      - /home/ha/home-assistant/homeassistant/components/media_player:/config/custom_components/media_player
+      #- /home/ha/frontend:/config/frontend
     environment:
       - TZ=America/Chicago
       - WHEELS_LINKS=https://wheels.hass.io/alpine-3.12/amd64/
