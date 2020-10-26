@@ -41,7 +41,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from . import HoneywellDevice, client_key_coordinator
+from . import HoneywellDevice, CLIENT_KEY_COORDINATOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Honeywell thermostat."""
     _LOGGER.info("honeywell setup_platform")
 
-    coordinator = hass.data[client_key_coordinator]
+    coordinator = hass.data[CLIENT_KEY_COORDINATOR]
 
     # try updating during component setup, but if it fails, just let it retry later
 

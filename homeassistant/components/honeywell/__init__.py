@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-client_key_coordinator = "client_key_coordinator"
+CLIENT_KEY_COORDINATOR = "client_key_coordinator"
 
 
 class HoneywellDevice(CoordinatorEntity):
@@ -135,6 +135,6 @@ async def async_setup(hass, config):
         update_interval=timedelta(seconds=300),
     )
 
-    hass.data[client_key_coordinator] = coordinator
+    hass.data[CLIENT_KEY_COORDINATOR] = coordinator
 
     return True

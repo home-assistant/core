@@ -17,7 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from . import HoneywellDevice, client_key_coordinator
+from . import HoneywellDevice, CLIENT_KEY_COORDINATOR
 
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
@@ -105,7 +105,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up sensors."""
     _LOGGER.info("setting up honeywell sensors")
 
-    coordinator = hass.data[client_key_coordinator]
+    coordinator = hass.data[CLIENT_KEY_COORDINATOR]
     client = coordinator.data
 
     if coordinator.data is None:
