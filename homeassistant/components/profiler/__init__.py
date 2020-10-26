@@ -73,7 +73,7 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
         _write_profile, profiler, cprofile_path, callgrind_path, heap, heap_path
     )
     hass.components.persistent_notification.async_create(
-        f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
+        f"Wrote cProfile data to {cprofile_path}, callgrind data to {callgrind_path}, and heapy memory profile to {heap_path}",
         title="Profile Complete",
         notification_id=f"profiler_{start_time}",
     )
