@@ -6,7 +6,8 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_pin_code": "Sisestatud PIN kood oli vale"
         },
         "step": {
             "pairing": {
