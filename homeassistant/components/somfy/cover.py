@@ -20,6 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 BLIND_DEVICE_CATAGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
 SHUTTER_DEVICE_CATAGORIES = {Category.EXTERIOR_BLIND.value}
+SUPPORTED_CATAGORIES = {
+    Category.ROLLER_SHUTTER.value,
+    Category.INTERIOR_BLIND.value,
+    Category.EXTERIOR_BLIND.value,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,12 +32,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_covers():
         """Retrieve covers."""
-        categories = {
-            Category.ROLLER_SHUTTER.value,
-            Category.INTERIOR_BLIND.value,
-            Category.EXTERIOR_BLIND.value,
-        }
-
         devices = hass.data[DOMAIN][DEVICES]
 
         return [
@@ -40,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
             )
             for cover in devices
-            if categories & set(cover.categories)
+            if SUPPORTED_CATAGORIES & set(cover.categories)
         ]
 
     async_add_entities(await hass.async_add_executor_job(get_covers))
