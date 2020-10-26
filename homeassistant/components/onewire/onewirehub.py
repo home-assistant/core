@@ -1,5 +1,4 @@
 """Hub for communication with 1-Wire server or mount_dir."""
-import logging
 import os
 
 from pyownet import protocol
@@ -10,8 +9,6 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OneWireHub:
@@ -29,20 +26,15 @@ class OneWireHub:
                 protocol.proxy, host, port
             )
         except protocol.ConnError as exc:
-            _LOGGER.error(
-                "Cannot connect to owserver on %s:%d, got: %s", host, port, exc
-            )
             raise CannotConnect from exc
 
     async def check_mount_dir(self, mount_dir: str) -> None:
         """Test that the mount_dir is a valid path."""
         if not await self.hass.async_add_executor_job(os.path.isdir, mount_dir):
-            _LOGGER.error("Cannot find directory %s", mount_dir)
             raise InvalidPath
 
     async def initialize(self, config_entry: ConfigEntry) -> None:
         """Initialize a config entry."""
-        _LOGGER.debug("Initialising config entry %s", config_entry.data)
         if config_entry.data[CONF_TYPE] == CONF_TYPE_SYSBUS:
             await self.check_mount_dir(config_entry.data[CONF_MOUNT_DIR])
         elif config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
