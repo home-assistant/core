@@ -376,7 +376,7 @@ class Template:
             kwargs.update(variables)
 
         return run_callback_threadsafe(
-            self.hass.loop, self.async_render, kwargs
+            self.hass.loop, self.async_render, None, parse_result, kwargs
         ).result()
 
     @callback

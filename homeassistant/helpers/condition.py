@@ -39,7 +39,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.template import ResultWrapper, Template
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
@@ -463,9 +463,6 @@ def async_template(
 
     if isinstance(value, str):
         return value.lower() == "true"
-
-    if isinstance(value, ResultWrapper):
-        return value.render_result.lower() == "true"
 
     return False
 
