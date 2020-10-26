@@ -2,7 +2,8 @@
 
 import os
 import tempfile
-import unittest
+import logging
+import pytest
 
 from pysignalclirestapi import SignalCliRestApi
 import requests_mock
@@ -36,7 +37,7 @@ async def test_signal_messenger_init(hass):
         assert hass.services.has_service(BASE_COMPONENT, "test")
 
 
-class TestSignalMesssenger(unittest.TestCase):
+class TestSignalMessenger:
     """Test the signal_messenger notify."""
 
     def setUp(self):
@@ -48,82 +49,88 @@ class TestSignalMesssenger(unittest.TestCase):
             recipients, client
         )
 
-    @requests_mock.Mocker()
-    def test_send_message(self, mock):
-        """Test send message."""
-        message = "Testing Signal Messenger platform :)"
-        mock.register_uri(
-            "POST",
-            "http://127.0.0.1:8080/v2/send",
-            status_code=201,
-        )
-        mock.register_uri(
-            "GET",
-            "http://127.0.0.1:8080/v1/about",
-            status_code=200,
-            json={"versions": ["v1", "v2"]},
-        )
-        with self.assertLogs(
-            "homeassistant.components.signal_messenger.notify", level="DEBUG"
-        ) as context:
-            self._signalmessenger.send_message(message)
-        self.assertIn("Sending signal message", context.output[0])
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
+    def test_send_message(self, requests_mock, caplog):
+        """Test send message"""
 
-    @requests_mock.Mocker()
-    def test_send_message_should_show_deprecation_warning(self, mock):
-        """Test send message."""
-        message = "Testing Signal Messenger platform with attachment :)"
-        mock.register_uri(
+        self.setUp()
+
+        message = "Testing Signal Messenger platform :)"
+        requests_mock.register_uri(
             "POST",
             "http://127.0.0.1:8080/v2/send",
             status_code=201,
         )
-        mock.register_uri(
+        requests_mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
             status_code=200,
             json={"versions": ["v1", "v2"]},
         )
-        with self.assertLogs(
-            "homeassistant.components.signal_messenger.notify", level="WARNING"
-        ) as context:
+        with caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ):
+            self._signalmessenger.send_message(message)
+        assert "Sending signal message" in caplog.text
+        assert requests_mock.called == True
+        assert requests_mock.call_count == 2
+
+    def test_send_message_should_show_deprecation_warning(self, requests_mock, caplog):
+        """Test send message."""
+
+        self.setUp()
+
+        message = "Testing Signal Messenger platform with attachment :)"
+        requests_mock.register_uri(
+            "POST",
+            "http://127.0.0.1:8080/v2/send",
+            status_code=201,
+        )
+        requests_mock.register_uri(
+            "GET",
+            "http://127.0.0.1:8080/v1/about",
+            status_code=200,
+            json={"versions": ["v1", "v2"]},
+        )
+        with caplog.at_level(
+            logging.WARNING, logger="homeassistant.components.signal_messenger.notify"
+        ):
             with tempfile.NamedTemporaryFile(
                 suffix=".png", prefix=os.path.basename(__file__)
             ) as tf:
                 data = {"data": {"attachment": tf.name}}
                 self._signalmessenger.send_message(message, **data)
-        self.assertIn(
-            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108",
-            context.output[0],
+        assert (
+            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
+            in caplog.text
         )
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
+        assert requests_mock.called == True
+        assert requests_mock.call_count == 2
 
-    @requests_mock.Mocker()
-    def test_send_message_with_attachment(self, mock):
-        """Test send message."""
+    def test_send_message_with_attachment(self, requests_mock, caplog):
+        """Test send message"""
+
+        self.setUp()
+
         message = "Testing Signal Messenger platform :)"
-        mock.register_uri(
+        requests_mock.register_uri(
             "POST",
             "http://127.0.0.1:8080/v2/send",
             status_code=201,
         )
-        mock.register_uri(
+        requests_mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
             status_code=200,
             json={"versions": ["v1", "v2"]},
         )
-        with self.assertLogs(
-            "homeassistant.components.signal_messenger.notify", level="DEBUG"
-        ) as context:
+        with caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ):
             with tempfile.NamedTemporaryFile(
                 suffix=".png", prefix=os.path.basename(__file__)
             ) as tf:
                 data = {"data": {"attachments": [tf.name]}}
                 self._signalmessenger.send_message(message, **data)
-        self.assertIn("Sending signal message", context.output[0])
-        self.assertTrue(mock.called)
-        self.assertEqual(mock.call_count, 2)
+        assert "Sending signal message" in caplog.text
+        assert requests_mock.called == True
+        assert requests_mock.call_count == 2
