@@ -127,7 +127,7 @@ def is_template_string(maybe_template: str) -> bool:
 class ResultWrapper:
     """Result wrapper class to store render result."""
 
-    render_result: str
+    render_result: Optional[str]
 
 
 def gen_result_wrapper(kls):
@@ -136,8 +136,8 @@ def gen_result_wrapper(kls):
     class Wrapper(kls, ResultWrapper):
         """Wrapper of a kls that can store render_result."""
 
-        def __init__(self, value: kls, render_result: str) -> None:
-            super().__init__(value)
+        def __init__(self, *args: tuple, render_result: Optional[str] = None) -> None:
+            super().__init__(*args)
             self.render_result = render_result
 
     return Wrapper
@@ -148,13 +148,15 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(cls, value: tuple, render_result: str) -> "TupleWrapper":
+    def __new__(
+        cls, value: tuple, *, render_result: Optional[str] = None
+    ) -> "TupleWrapper":
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, render_result: str):
+    def __init__(self, value: tuple, *, render_result: Optional[str] = None):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -416,7 +418,9 @@ class Template:
             result = literal_eval(render_result)
 
             if type(result) in RESULT_WRAPPERS:
-                result = RESULT_WRAPPERS[type(result)](result, render_result)
+                result = RESULT_WRAPPERS[type(result)](
+                    result, render_result=render_result
+                )
 
             # If the literal_eval result is a string, use the original
             # render, by not returning right here. The evaluation of strings
