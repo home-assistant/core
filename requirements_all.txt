@@ -1809,7 +1809,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.1.0
+python-velbus==2.1.1
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
