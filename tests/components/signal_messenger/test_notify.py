@@ -1,12 +1,10 @@
 """The tests for the signal_messenger platform."""
 
+import logging
 import os
 import tempfile
-import logging
-import pytest
 
 from pysignalclirestapi import SignalCliRestApi
-import requests_mock
 
 import homeassistant.components.signal_messenger.notify as signalmessenger
 from homeassistant.setup import async_setup_component
@@ -50,7 +48,7 @@ class TestSignalMessenger:
         )
 
     def test_send_message(self, requests_mock, caplog):
-        """Test send message"""
+        """Test send message."""
 
         self.setUp()
 
@@ -71,7 +69,7 @@ class TestSignalMessenger:
         ):
             self._signalmessenger.send_message(message)
         assert "Sending signal message" in caplog.text
-        assert requests_mock.called == True
+        assert requests_mock.called is True
         assert requests_mock.call_count == 2
 
     def test_send_message_should_show_deprecation_warning(self, requests_mock, caplog):
@@ -107,7 +105,7 @@ class TestSignalMessenger:
         assert requests_mock.call_count == 2
 
     def test_send_message_with_attachment(self, requests_mock, caplog):
-        """Test send message"""
+        """Test send message."""
 
         self.setUp()
 
@@ -132,5 +130,5 @@ class TestSignalMessenger:
                 data = {"data": {"attachments": [tf.name]}}
                 self._signalmessenger.send_message(message, **data)
         assert "Sending signal message" in caplog.text
-        assert requests_mock.called == True
+        assert requests_mock.called is True
         assert requests_mock.call_count == 2
