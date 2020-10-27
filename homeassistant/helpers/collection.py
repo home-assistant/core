@@ -1,9 +1,8 @@
 """Helper to deal with YAML + storage."""
 from abc import ABC, abstractmethod
 import asyncio
-from dataclasses import dataclass
 import logging
-from typing import Any, Awaitable, Callable, Dict, Iterable, List, Optional, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -25,20 +24,6 @@ SAVE_DELAY = 10
 CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
-
-
-@dataclass
-class CollectionChangeSet:
-    """Class to represent a change set.
-
-    change_type: One of CHANGE_*
-    item_id: The id of the item
-    item: The item
-    """
-
-    change_type: str
-    item_id: str
-    item: Any
 
 
 ChangeListener = Callable[
@@ -120,14 +105,11 @@ class ObservableCollection(ABC):
         """
         self.listeners.append(listener)
 
-    async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
+    async def notify_change(self, change_type: str, item_id: str, item: dict) -> None:
         """Notify listeners of a change."""
+        self.logger.debug("%s %s: %s", change_type, item_id, item)
         await asyncio.gather(
-            *[
-                listener(change_set.change_type, change_set.item_id, change_set.item)
-                for listener in self.listeners
-                for change_set in change_sets
-            ]
+            *[listener(change_type, item_id, item) for listener in self.listeners]
         )
 
 
@@ -136,10 +118,9 @@ class YamlCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
-
         old_ids = set(self.data)
 
-        change_sets = []
+        tasks = []
 
         for item in data:
             item_id = item[CONF_ID]
@@ -154,15 +135,15 @@ class YamlCollection(ObservableCollection):
                 event = CHANGE_ADDED
 
             self.data[item_id] = item
-            change_sets.append(CollectionChangeSet(event, item_id, item))
+            tasks.append(self.notify_change(event, item_id, item))
 
         for item_id in old_ids:
-            change_sets.append(
-                CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+            tasks.append(
+                self.notify_change(CHANGE_REMOVED, item_id, self.data.pop(item_id))
             )
 
-        if change_sets:
-            await self.notify_changes(change_sets)
+        if tasks:
+            await asyncio.gather(*tasks)
 
 
 class StorageCollection(ObservableCollection):
@@ -197,9 +178,9 @@ class StorageCollection(ObservableCollection):
         for item in raw_storage["items"]:
             self.data[item[CONF_ID]] = item
 
-        await self.notify_changes(
-            [
-                CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)
+        await asyncio.gather(
+            *[
+                self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
                 for item in raw_storage["items"]
             ]
         )
@@ -223,9 +204,7 @@ class StorageCollection(ObservableCollection):
         item[CONF_ID] = self.id_manager.generate_id(self._get_suggested_id(item))
         self.data[item[CONF_ID]] = item
         self._async_schedule_save()
-        await self.notify_changes(
-            [CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)]
-        )
+        await self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
         return item
 
     async def async_update_item(self, item_id: str, updates: dict) -> dict:
@@ -243,9 +222,7 @@ class StorageCollection(ObservableCollection):
         self.data[item_id] = updated
         self._async_schedule_save()
 
-        await self.notify_changes(
-            [CollectionChangeSet(CHANGE_UPDATED, item_id, updated)]
-        )
+        await self.notify_change(CHANGE_UPDATED, item_id, updated)
 
         return self.data[item_id]
 
@@ -257,7 +234,7 @@ class StorageCollection(ObservableCollection):
         item = self.data.pop(item_id)
         self._async_schedule_save()
 
-        await self.notify_changes([CollectionChangeSet(CHANGE_REMOVED, item_id, item)])
+        await self.notify_change(CHANGE_REMOVED, item_id, item)
 
     @callback
     def _async_schedule_save(self) -> None:
@@ -277,9 +254,9 @@ class IDLessCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the collection. Overrides existing data."""
-        await self.notify_changes(
-            [
-                CollectionChangeSet(CHANGE_REMOVED, item_id, item)
+        await asyncio.gather(
+            *[
+                self.notify_change(CHANGE_REMOVED, item_id, item)
                 for item_id, item in list(self.data.items())
             ]
         )
@@ -292,9 +269,9 @@ class IDLessCollection(ObservableCollection):
 
             self.data[item_id] = item
 
-        await self.notify_changes(
-            [
-                CollectionChangeSet(CHANGE_ADDED, item_id, item)
+        await asyncio.gather(
+            *[
+                self.notify_change(CHANGE_ADDED, item_id, item)
                 for item_id, item in self.data.items()
             ]
         )
