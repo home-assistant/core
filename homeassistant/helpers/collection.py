@@ -18,6 +18,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
@@ -118,6 +120,8 @@ class YamlCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
+        _LOGGER.warning("yaml old data: %s", self.data)
+
         old_ids = set(self.data)
 
         tasks = []
@@ -141,6 +145,8 @@ class YamlCollection(ObservableCollection):
             tasks.append(
                 self.notify_change(CHANGE_REMOVED, item_id, self.data.pop(item_id))
             )
+
+        _LOGGER.warning("yaml new data: %s", self.data)
 
         if tasks:
             await asyncio.gather(*tasks)
@@ -254,6 +260,8 @@ class IDLessCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the collection. Overrides existing data."""
+        _LOGGER.warning("old data: %s", self.data)
+
         await asyncio.gather(
             *[
                 self.notify_change(CHANGE_REMOVED, item_id, item)
@@ -269,6 +277,7 @@ class IDLessCollection(ObservableCollection):
 
             self.data[item_id] = item
 
+        _LOGGER.warning("new data: %s", self.data)
         await asyncio.gather(
             *[
                 self.notify_change(CHANGE_ADDED, item_id, item)
