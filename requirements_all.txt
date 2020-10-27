@@ -1198,7 +1198,7 @@ py-synology==0.2.0
 py17track==2.2.2
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.5.0
+pyCEC==0.5.1
 
 # homeassistant.components.control4
 pyControl4==0.0.6
