@@ -1,5 +1,6 @@
 """Tests for light platform."""
 import logging
+from datetime import timedelta
 from typing import Callable, NamedTuple
 
 from pyHS100 import SmartDeviceException
@@ -30,8 +31,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.async_mock import Mock, PropertyMock, patch
+from tests.common import async_fire_time_changed
 
 
 class LightMockData(NamedTuple):
@@ -605,5 +608,9 @@ async def test_async_setup_entry_unavailable(
         )
 
         await hass.async_block_till_done()
-        assert "Unable to communicate with device 123.123.123.123" in caplog.text
-        assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+        assert not hass.states.get("light.light1")
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light1")

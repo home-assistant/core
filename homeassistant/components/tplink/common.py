@@ -131,7 +131,7 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
-def add_available_devices(hass, device_type, device_class, async_add_entities):
+def add_available_devices(hass, device_type, device_class):
     """Get sysinfo for all devices."""
 
     devices = hass.data[TPLINK_DOMAIN][device_type]
@@ -153,7 +153,5 @@ def add_available_devices(hass, device_type, device_class, async_add_entities):
                 ex,
             )
 
+    hass.data[TPLINK_DOMAIN][f"{device_type}_ready"] = entities_ready
     hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = entities_unavailable
-
-    if entities_ready:
-        async_add_entities(entities_ready, update_before_add=True)
