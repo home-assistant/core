@@ -177,11 +177,8 @@ class ZoneStorageCollection(collection.StorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
-    _LOGGER.warning("async_setup zone 1")
     component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
-
-    _LOGGER.warning("async_setup zone 2")
 
     yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
@@ -189,7 +186,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     collection.attach_entity_component_collection(
         component, yaml_collection, lambda conf: Zone(conf, False)
     )
-    _LOGGER.warning("async_setup zone 3")
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
@@ -199,20 +195,15 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     collection.attach_entity_component_collection(
         component, storage_collection, lambda conf: Zone(conf, True)
     )
-    _LOGGER.warning("async_setup zone 4")
 
     if config[DOMAIN]:
         await yaml_collection.async_load(config[DOMAIN])
 
-    _LOGGER.warning("async_setup zone 5")
-
     await storage_collection.async_load()
-    _LOGGER.warning("async_setup zone 6")
 
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-    _LOGGER.warning("async_setup zone 7")
 
     async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
         """Handle a collection change: clean up entity registry on removals."""
@@ -224,10 +215,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
             cast(str, ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
         )
 
-    _LOGGER.warning("async_setup zone 8")
-
     storage_collection.async_add_listener(_collection_changed)
-    _LOGGER.warning("async_setup zone 9")
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all zones and load new ones from config."""
@@ -236,8 +224,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
             return
         await yaml_collection.async_load(conf[DOMAIN])
 
-    _LOGGER.warning("async_setup zone 10")
-
     service.async_register_admin_service(
         hass,
         DOMAIN,
@@ -245,7 +231,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         reload_service_handler,
         schema=RELOAD_SERVICE_SCHEMA,
     )
-    _LOGGER.warning("async_setup zone 11")
 
     if component.get_entity("zone.home"):
         return True
@@ -255,21 +240,15 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         True,
     )
     home_zone.entity_id = ENTITY_ID_HOME
-    _LOGGER.warning("async_setup zone 12")
-
     await component.async_add_entities([home_zone])
-    _LOGGER.warning("async_setup zone 13")
 
     async def core_config_updated(_: Event) -> None:
         """Handle core config updated."""
         await home_zone.async_update_config(_home_conf(hass))
 
-    _LOGGER.warning("async_setup zone 14")
-
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
     hass.data[DOMAIN] = storage_collection
-    _LOGGER.warning("async_setup zone 15")
 
     return True
 
