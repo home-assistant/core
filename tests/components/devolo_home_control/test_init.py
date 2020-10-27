@@ -11,8 +11,6 @@ from tests.components.devolo_home_control import configure_integration
 
 
 @pytest.mark.usefixtures("patch_mydevolo")
-@pytest.mark.credentials_valid(True)
-@pytest.mark.maintenance(False)
 async def test_setup_entry(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
@@ -22,8 +20,7 @@ async def test_setup_entry(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("patch_mydevolo")
-@pytest.mark.credentials_valid(False)
-@pytest.mark.maintenance(False)
+@pytest.mark.credentials_invalid
 async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     """Test setup entry fails if credentials are invalid."""
     entry = configure_integration(hass)
@@ -32,8 +29,7 @@ async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("patch_mydevolo")
-@pytest.mark.credentials_valid(True)
-@pytest.mark.maintenance(True)
+@pytest.mark.maintenance
 async def test_setup_entry_maintenance(hass: HomeAssistant):
     """Test setup entry fails if mydevolo is in maintenance mode."""
     entry = configure_integration(hass)
@@ -42,8 +38,6 @@ async def test_setup_entry_maintenance(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("patch_mydevolo")
-@pytest.mark.credentials_valid(True)
-@pytest.mark.maintenance(False)
 async def test_setup_connection_error(hass: HomeAssistant):
     """Test setup entry fails on connection error."""
     entry = configure_integration(hass)
