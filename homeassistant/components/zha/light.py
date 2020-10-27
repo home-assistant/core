@@ -280,7 +280,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 0x0,
                 0x0,
                 0x0,
-                0x0,  # update action only, action off, no dir,time,hue
+                0x0,  # update action only, action off, no dir, time, hue
             )
             t_log["color_loop_set"] = result
             self._effect = None
@@ -411,7 +411,7 @@ class Light(BaseLight, ZhaEntity):
             self._effect = last_state.attributes["effect"]
 
     async def async_get_state(self):
-        """Attempt to retrieve on off state from the light."""
+        """Attempt to retrieve the state from the light."""
         if not self.available:
             return
         self.debug("polling current state")
@@ -470,6 +470,10 @@ class Light(BaseLight, ZhaEntity):
                 color_loop_active = results["color_loop_active"]
                 if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
+
+    async def async_update(self):
+        """Update to the latest state."""
+        await self.async_get_state()
 
     async def _refresh(self, time):
         """Call async_get_state at an interval."""
