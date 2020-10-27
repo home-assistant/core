@@ -330,13 +330,14 @@ async def async_get_translations(
 
         if integration is not None:
             pass
-        elif config_flow:
-            loaded_comp_resources = await async_get_translations(
-                hass, language, category
-            )
-            resources.update(loaded_comp_resources)
-        else:
+
+        # The cache must be set while holding the lock
+        if not config_flow:
             assert cache is not None
             cache.async_set_cache(language, category, resources)
+
+    if config_flow:
+        loaded_comp_resources = await async_get_translations(hass, language, category)
+        resources.update(loaded_comp_resources)
 
     return resources
