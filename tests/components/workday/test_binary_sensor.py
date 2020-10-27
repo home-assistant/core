@@ -319,4 +319,4 @@ class TestWorkdaySetup:
         self.hass.start()
 
         entity = self.hass.states.get("binary_sensor.workday_sensor")
-        assert entity.state == "off"
+        assert entity.state == "on"
