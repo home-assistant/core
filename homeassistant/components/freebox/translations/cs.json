@@ -10,6 +10,7 @@
         },
         "step": {
             "link": {
+                "description": "Klikn\u011bte na \"Odeslat\" a pot\u00e9 stiskn\u011bte \u0161ipku doprava na routeru - t\u00edm zaregistrujte Freebox u Home Assistant.\n\n![Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na routeru](/static/images/config_freebox.png)",
                 "title": "Propojte router Freebox"
             },
             "user": {

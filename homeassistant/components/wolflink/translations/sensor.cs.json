@@ -3,9 +3,13 @@
         "wolflink__state": {
             "auto": "Automatika",
             "cooling": "Chlazen\u00ed",
+            "eco": "Ekonomick\u00fd re\u017eim",
+            "ein": "Povoleno",
             "heizbetrieb": "Re\u017eim topen\u00ed",
             "heizung": "Topen\u00ed",
             "permanent": "Trval\u00fd",
+            "sparbetrieb": "Ekonomick\u00fd re\u017eim",
+            "sparen": "Ekonomick\u00fd re\u017eim",
             "standby": "Pohotovostn\u00ed re\u017eim",
             "start": "Start",
             "storung": "Chyba",
