@@ -140,18 +140,18 @@ def add_available_devices(hass, device_type, device_class):
         devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
 
     entities_ready = []
-    entities_unavailable = []
+    devices_unavailable = []
     for device in devices:
         try:
             device.get_sysinfo()
             entities_ready.append(device_class(device))
         except SmartDeviceException as ex:
-            entities_unavailable.append(device)
+            devices_unavailable.append(device)
             _LOGGER.warning(
                 "Unable to communicate with device %s: %s",
                 device.host,
                 ex,
             )
 
-    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = entities_unavailable
+    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
     return entities_ready
