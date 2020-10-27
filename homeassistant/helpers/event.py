@@ -539,7 +539,7 @@ class _TrackStateChangeFiltered:
         last_track_states = self._last_track_states
         self._last_track_states = new_track_states
 
-        _LOGGER.debug(
+        _LOGGER.warning(
             "async_update_listeners: last_track_states=%s, new_track_states=%s",
             last_track_states,
             new_track_states,
