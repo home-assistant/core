@@ -316,6 +316,8 @@ class SynoApi:
         )
         self._with_surveillance_station = bool(
             self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        ) or bool(
+            self._fetching_entities.get(SynoSurveillanceStation.HOME_MODE_API_KEY)
         )
 
         # Reset not used API, information is not reset since it's used in device_info
