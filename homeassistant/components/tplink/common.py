@@ -153,5 +153,5 @@ def add_available_devices(hass, device_type, device_class):
                 ex,
             )
 
-    hass.data[TPLINK_DOMAIN][f"{device_type}_ready"] = entities_ready
     hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = entities_unavailable
+    return entities_ready

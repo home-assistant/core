@@ -31,14 +31,13 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
-    await hass.async_add_executor_job(
+    devices = []
+    devices = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_SWITCH, SmartPlugSwitch
     )
 
-    if hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_ready"]:
-        async_add_entities(
-            hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_ready"], update_before_add=True
-        )
+    if devices:
+        async_add_entities(devices, update_before_add=True)
 
     if hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"]:
         raise PlatformNotReady
