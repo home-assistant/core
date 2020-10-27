@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "scan_interval": "Po\u010det minut mezi skenov\u00e1n\u00edm",
                     "timeout": "\u010casov\u00fd limit (v sekund\u00e1ch)"
                 }
             }

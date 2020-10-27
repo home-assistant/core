@@ -17,7 +17,7 @@
                     "password": "Password"
                 },
                 "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
-                "title": "Credenziali iCloud"
+                "title": "Reautenticare l'integrazione"
             },
             "trusted_device": {
                 "data": {

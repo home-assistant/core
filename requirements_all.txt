@@ -1692,7 +1692,7 @@ pysonos==0.0.35
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.1
+pysqueezebox==0.5.4
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2015,7 +2015,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.5.1
+simplisafe-python==9.6.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1

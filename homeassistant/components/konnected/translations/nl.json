@@ -91,6 +91,7 @@
             },
             "options_switch": {
                 "data": {
+                    "activation": "Uitvoer wanneer ingeschakeld",
                     "momentary": "Pulsduur (ms) (optioneel)",
                     "more_states": "Aanvullende statussen voor deze zone configureren",
                     "name": "Naam (optioneel)",

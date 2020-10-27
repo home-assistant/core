@@ -577,3 +577,33 @@ async def test_update_failure(
             in caplog.text
         )
         assert "Device 123.123.123.123|light1 responded after " in caplog.text
+
+
+async def test_async_setup_entry_unavailable(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test unavailable devices trigger a later retry."""
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        side_effect=SmartDeviceException,
+    ):
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await async_setup_component(
+            hass,
+            tplink.DOMAIN,
+            {
+                tplink.DOMAIN: {
+                    CONF_DISCOVERY: False,
+                    CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert "Unable to communicate with device 123.123.123.123" in caplog.text
+        assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
