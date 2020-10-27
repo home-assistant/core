@@ -328,11 +328,8 @@ async def async_get_translations(
             base_resources = flatten(resource_func(results[1], components, category))
             resources = {**base_resources, **resources}
 
-        if integration is not None:
-            pass
-
         # The cache must be set while holding the lock
-        if not config_flow:
+        if integration is None and not config_flow:
             assert cache is not None
             cache.async_set_cache(language, category, resources)
 
