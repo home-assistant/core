@@ -1,0 +1,5 @@
+binary_sensor:
+  - platform: anomaly
+    sensors:
+      second_test_anomaly_sensor:
+        entity_id: sensor.test_state

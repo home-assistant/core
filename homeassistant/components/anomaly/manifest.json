@@ -1,0 +1,8 @@
+{
+  "domain": "anomaly",
+  "name": "Data Anomaly Sensor",
+  "documentation": "https://www.home-assistant.io/integrations/anomaly",
+  "requirements": ["numpy==1.19.2"],
+  "dependencies": [],
+  "codeowners": ["@adamlogan73"]
+}
