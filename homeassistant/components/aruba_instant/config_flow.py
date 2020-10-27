@@ -17,11 +17,11 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    AVAILABLE_CLIENTS,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    AVAILABLE_CLIENTS,
     TRACKED_CLIENTS,
 )
 

@@ -5,8 +5,8 @@ import logging
 from instantpy import InstantVC
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, TRACKED_CLIENTS
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class VirtualController:
     """Instantiate an InstantVC object."""
 
-    _LOGGER.debug("Intializing Aruba Instant Virtual Controller")
+    _LOGGER.debug("Initializing Aruba Instant Virtual Controller")
 
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         """Instantiate the VirtualController class."""

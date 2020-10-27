@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get_registry
 
+from .const import AVAILABLE_CLIENTS, DOMAIN, TRACKED_CLIENTS
 from .virtual_controller import VirtualController
-from .const import DOMAIN, AVAILABLE_CLIENTS, TRACKED_CLIENTS
 
 _LOGGER = logging.getLogger(__name__)
 urllib3.disable_warnings()
@@ -52,14 +52,14 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     if "track_none" not in entry.options.keys():
         # Start tracking new clients.
         for mac in entry.options.keys() - entry.data[TRACKED_CLIENTS]:
-            _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+            _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
                 f"Enabling entity: {mac}"
             )
             entry.data[TRACKED_CLIENTS].append(mac)
 
         # Stop tracking clients.
         for mac in entry.data[TRACKED_CLIENTS] - entry.options.keys():
-            _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+            _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
                 f"Disabling entity: {mac}"
             )
             client = hass.data[DOMAIN]["coordinator"][entry.entry_id].entities.get(mac)

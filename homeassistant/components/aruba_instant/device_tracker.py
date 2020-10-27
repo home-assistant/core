@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, AVAILABLE_CLIENTS, TRACKED_CLIENTS
+from .const import AVAILABLE_CLIENTS, DOMAIN, TRACKED_CLIENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class InstantClientEntity(ScannerEntity):
 
     def __init__(self, coordinator, ent):
         """Instantiate the InstantClientEntity class."""
-        _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+        _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
             f"Creating entity for client {ent}."
         )
         self.coordinator = coordinator
@@ -111,7 +111,7 @@ class InstantClientEntity(ScannerEntity):
             self._is_connected = True
             self.coordinator.entities.update({self.unique_id: self})
         except KeyError:
-            _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+            _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
                 f"{self._mac} is not currently connected."
             )
             self._is_connected = False
@@ -151,13 +151,13 @@ class InstantClientEntity(ScannerEntity):
             self._lat = self.coordinator.hass.config.latitude
             self._lon = self.coordinator.hass.config.longitude
             if self._is_connected is False:
-                _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+                _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
                     f"{self._mac} - {self._name} is now connected."
                 )
             self._is_connected = True
         except KeyError:
             if self._is_connected is True:
-                _LOGGER.debug(  # pylint: disable=logging-format-interpolation
+                _LOGGER.debug(  # pylint: disable=logging-fstring-interpolation
                     f"{self._mac} - {self._name} is no longer connected."
                 )
             self._is_connected = False
