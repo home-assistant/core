@@ -1,4 +1,5 @@
 """Shared class to maintain Plex server instances."""
+import asyncio
 import logging
 import ssl
 import time
@@ -18,12 +19,14 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_IGNORE_NEW_SHARED_USERS,
@@ -61,6 +64,8 @@ plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
 plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
 plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
+
+LIVE_TV_SECTION = "-4"
 
 
 class PlexServer:
@@ -265,18 +270,36 @@ class PlexServer:
         if playqueue_item_id:
             playqueue_item_id = int(playqueue_item_id)
 
-        unique_id = self.active_sessions.get(session_key, {}).get("unique_id")
+        active_session = self.active_sessions.get(session_key, {})
+        unique_id = active_session.get("unique_id")
         if not unique_id:
             await self.async_update_platforms()
             return
+
+        active_session["media_position"] = int(offset / 1000)
+        active_session["media_position_updated_at"] = dt_util.utcnow()
+
+        def update_with_new_media():
+            """Update an existing session with new media details."""
+            media = self.fetch_item(rating_key)
+            self.update_session_details(media, unique_id)
+
+        if active_session.get("media_content_id") != rating_key and state in [
+            "playing",
+            "paused",
+        ]:
+            await self.hass.async_add_executor_job(update_with_new_media)
 
         async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(unique_id),
             state,
-            offset,
-            rating_key,
             playqueue_item_id,
+        )
+
+        async_dispatcher_send(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
         )
 
     def _fetch_platform_data(self):
@@ -422,6 +445,7 @@ class PlexServer:
 
         await self.hass.async_add_executor_job(connect_new_clients)
 
+        session_tasks = []
         for session in sessions:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
@@ -429,6 +453,13 @@ class PlexServer:
 
             session_username = session.usernames[0]
             for player in session.players:
+                session_tasks.append(
+                    self.hass.async_add_executor_job(
+                        self.update_session_details,
+                        session,
+                        f"{self.machine_identifier}:{player.machineIdentifier}",
+                    )
+                )
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug(
@@ -439,6 +470,9 @@ class PlexServer:
                     continue
                 process_device("session", player)
                 available_clients[player.machineIdentifier]["session"] = session
+
+        if session_tasks:
+            await asyncio.gather(*session_tasks)
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
@@ -550,6 +584,20 @@ class PlexServer:
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
 
+    def get_media_image_url(self, media):
+        """Get the image URL from a media object."""
+        thumb_url = media.thumbUrl
+        if media.type == "episode" and not self.option_use_episode_art:
+            if media.librarySectionID == LIVE_TV_SECTION:
+                thumb_url = media.grandparentThumb
+            else:
+                thumb_url = media.url(media.grandparentThumb)
+
+        if thumb_url is None:
+            thumb_url = media.url(media.art)
+
+        return thumb_url
+
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""
         media_type = media_type.lower()
@@ -610,7 +658,91 @@ class PlexServer:
     @property
     def sensor_attributes(self):
         """Return active session information for use in activity sensor."""
-        _LOGGER.info("Active sessions: %s", self.active_sessions)
         return {
             x["sensor_user"]: x["sensor_title"] for x in self.active_sessions.values()
         }
+
+    def update_session_details(self, media, unique_id):
+        """Set various details based on active media."""
+        session_details = {"unique_id": unique_id}
+
+        session_key = media.sessionKey
+        if session_key:
+            session_details.setdefault("media_position", int(media.viewOffset / 1000))
+            session_details.setdefault("media_position_updated_at", dt_util.utcnow())
+            session_details.setdefault("username", next(iter(media.usernames), None))
+        else:
+            session_key = next(
+                (x for x in self.active_sessions if x["unique_id"] == unique_id), None
+            )
+            active_session = self.active_sessions[session_key]
+            for key in [
+                "media_position",
+                "media_position_updated_at",
+                "username",
+            ]:
+                value = getattr(active_session, key, None)
+                if value:
+                    session_details[key] = value
+
+        # A Plex client can only have one active session
+        for key in list(self.active_sessions):
+            if (
+                key != session_key
+                and self.active_sessions[key]["unique_id"] == unique_id
+            ):
+                self.active_sessions.pop(key)
+
+        session_details["media_content_id"] = media.ratingKey
+        session_details["media_content_rating"] = getattr(media, "contentRating", None)
+        session_details["media_summary"] = media.summary
+        session_details["media_title"] = media.title
+
+        if media.librarySectionID == LIVE_TV_SECTION:
+            session_details["media_library_title"] = "Live TV"
+        else:
+            session_details["media_library_title"] = (
+                media.section().title if media.section() is not None else ""
+            )
+
+        if media.type == "episode":
+            session_details["media_content_type"] = MEDIA_TYPE_TVSHOW
+            session_details["media_season"] = media.seasonNumber
+            session_details["media_series_title"] = media.grandparentTitle
+            if media.index is not None:
+                session_details["media_episode"] = media.index
+            sensor_title = (
+                f"{media.grandparentTitle} - {media.seasonEpisode} - {media.title}"
+            )
+        elif media.type == "movie":
+            session_details["media_content_type"] = MEDIA_TYPE_MOVIE
+            if media.year is not None and media.title is not None:
+                session_details["media_title"] += f" ({media.year!s})"
+            sensor_title = session_details["media_title"]
+        elif media.type == "track":
+            session_details["media_content_type"] = MEDIA_TYPE_MUSIC
+            session_details["media_album_name"] = media.parentTitle
+            session_details["media_album_artist"] = media.grandparentTitle
+            session_details["media_track"] = media.index
+            session_details["media_artist"] = (
+                media.originalTitle or session_details["media_album_artist"]
+            )
+            sensor_title = f"{session_details['media_artist']} - {media.parentTitle} - {media.title}"
+        elif media.type == "clip":
+            _LOGGER.debug(
+                "Clip content type detected, compatibility may vary: %s", media
+            )
+            session_details["media_content_type"] = MEDIA_TYPE_VIDEO
+            sensor_title = media.title
+        else:
+            sensor_title = "Unknown"
+
+        session_details["sensor_title"] = sensor_title
+        session_details["sensor_user"] = session_details["username"]
+        if media.players:
+            session_details["sensor_user"] += f" - {media.players[0].title}"
+
+        session_details["media_duration"] = int(media.duration / 1000)
+        session_details["media_image_url"] = self.get_media_image_url(media)
+
+        self.active_sessions[session_key] = session_details
