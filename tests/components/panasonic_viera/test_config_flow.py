@@ -12,6 +12,8 @@ from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -37,13 +39,14 @@ def panasonic_viera_setup_fixture():
 
 def get_mock_remote(
     host="1.2.3.4",
+    request_error=None,
     authorize_error=None,
     encrypted=False,
     app_id=None,
     encryption_key=None,
     name=DEFAULT_NAME,
-    manufacturer="mock-manufacturer",
-    model_number="mock-model-number",
+    manufacturer=DEFAULT_MANUFACTURER,
+    model_number=DEFAULT_MODEL_NUMBER,
     unique_id="mock-unique-id",
 ):
     """Return a mock remote."""
@@ -54,7 +57,8 @@ def get_mock_remote(
     mock_remote.enc_key = encryption_key
 
     def request_pin_code(name=None):
-        return
+        if request_error is not None:
+            raise request_error
 
     mock_remote.request_pin_code = request_pin_code
 
@@ -110,8 +114,8 @@ async def test_flow_non_encrypted(hass):
         CONF_ON_ACTION: None,
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -154,6 +158,56 @@ async def test_flow_unknown_abort(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
+async def test_flow_encrypted_not_connected_pin_code_request(hass):
+    """Test flow with encryption and PIN code request connection error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=TimeoutError)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_encrypted_unknown_pin_code_request(hass):
+    """Test flow with encryption and PIN code request unknown error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=Exception)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -208,8 +262,8 @@ async def test_flow_encrypted_valid_pin_code(hass):
         CONF_ENCRYPTION_KEY: "test-encryption-key",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -392,8 +446,8 @@ async def test_imported_flow_non_encrypted(hass):
         CONF_ON_ACTION: "test-on-action",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
@@ -442,8 +496,8 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         CONF_ENCRYPTION_KEY: "test-encryption-key",
         ATTR_DEVICE_INFO: {
             ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-            ATTR_MANUFACTURER: "mock-manufacturer",
-            ATTR_MODEL_NUMBER: "mock-model-number",
+            ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+            ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
             ATTR_UDN: "mock-unique-id",
         },
     }
