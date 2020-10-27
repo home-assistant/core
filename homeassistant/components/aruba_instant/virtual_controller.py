@@ -50,7 +50,7 @@ class VirtualController:
             await self.hass.async_add_executor_job(self._virtual_controller.login)
             await self.async_update_all()
         except AttributeError:
-            raise PlatformNotReady
+            raise PlatformNotReady from AttributeError
         return True
 
     async def async_update_all(self) -> dict:
