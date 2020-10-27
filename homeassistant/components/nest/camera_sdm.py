@@ -47,7 +47,7 @@ class NestCamera(Camera):
         self._device_info = DeviceInfo(device)
 
     @property
-    def should_pool(self) -> bool:
+    def should_poll(self) -> bool:
         """Disable polling since entities have state pushed via pubsub."""
         return False
 
