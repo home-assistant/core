@@ -10,7 +10,6 @@ from tests.async_mock import patch
 from tests.components.devolo_home_control import configure_integration
 
 
-@pytest.mark.usefixtures("patch_mydevolo")
 async def test_setup_entry(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
@@ -19,7 +18,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert hass.data[DOMAIN]
 
 
-@pytest.mark.usefixtures("patch_mydevolo")
 @pytest.mark.credentials_invalid
 async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     """Test setup entry fails if credentials are invalid."""
@@ -28,7 +26,6 @@ async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     assert not hass.data[DOMAIN]
 
 
-@pytest.mark.usefixtures("patch_mydevolo")
 @pytest.mark.maintenance
 async def test_setup_entry_maintenance(hass: HomeAssistant):
     """Test setup entry fails if mydevolo is in maintenance mode."""
@@ -37,7 +34,6 @@ async def test_setup_entry_maintenance(hass: HomeAssistant):
         await async_setup_entry(hass, entry)
 
 
-@pytest.mark.usefixtures("patch_mydevolo")
 async def test_setup_connection_error(hass: HomeAssistant):
     """Test setup entry fails on connection error."""
     entry = configure_integration(hass)

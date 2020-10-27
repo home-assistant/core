@@ -17,7 +17,7 @@ def pytest_configure(config):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def patch_mydevolo(request):
     """Fixture to patch mydevolo into a desired state."""
     with patch(
