@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 SERVICE_START = "start"
+SERVICE_MEMORY = "memory"
 CONF_SECONDS = "seconds"
 
 
@@ -32,11 +33,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         async with lock:
             await _async_generate_profile(hass, call)
 
+    async def _async_run_memory_profile(call: ServiceCall):
+        async with lock:
+            await _async_generate_memory_profile(hass, call)
+
     async_register_admin_service(
         hass,
         DOMAIN,
         SERVICE_START,
         _async_run_profile,
+        schema=vol.Schema(
+            {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
+        ),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_MEMORY,
+        _async_run_memory_profile,
         schema=vol.Schema(
             {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
         ),
@@ -60,27 +75,47 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     )
     profiler = cProfile.Profile()
     profiler.enable()
-    heap_profiler = hpy()
-    heap_profiler.setref()
     await asyncio.sleep(float(call.data[CONF_SECONDS]))
     profiler.disable()
-    heap = heap_profiler.heap()
 
     cprofile_path = hass.config.path(f"profile.{start_time}.cprof")
     callgrind_path = hass.config.path(f"callgrind.out.{start_time}")
-    heap_path = hass.config.path(f"heap_profile.{start_time}.hpy")
     await hass.async_add_executor_job(
-        _write_profile, profiler, cprofile_path, callgrind_path, heap, heap_path
+        _write_profile, profiler, cprofile_path, callgrind_path
     )
     hass.components.persistent_notification.async_create(
-        f"Wrote cProfile data to {cprofile_path}, callgrind data to {callgrind_path}, and heapy memory profile to {heap_path}",
+        f"Wrote cProfile data to {cprofile_path} and callgrind data to {callgrind_path}",
         title="Profile Complete",
         notification_id=f"profiler_{start_time}",
     )
 
 
-def _write_profile(profiler, cprofile_path, callgrind_path, heap, heap_path):
+async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall):
+    start_time = int(time.time() * 1000000)
+    hass.components.persistent_notification.async_create(
+        "The memory profile started. This notification will be updated when it is complete.",
+        title="Profile Started",
+        notification_id=f"memory_profiler_{start_time}",
+    )
+    heap_profiler = hpy()
+    heap_profiler.setref()
+    await asyncio.sleep(float(call.data[CONF_SECONDS]))
+    heap = heap_profiler.heap()
+
+    heap_path = hass.config.path(f"heap_profile.{start_time}.hpy")
+    await hass.async_add_executor_job(_write_memory_profile, heap, heap_path)
+    hass.components.persistent_notification.async_create(
+        f"Wrote heapy memory profile to {heap_path}",
+        title="Profile Complete",
+        notification_id=f"memory_profiler_{start_time}",
+    )
+
+
+def _write_profile(profiler, cprofile_path, callgrind_path):
     profiler.create_stats()
     profiler.dump_stats(cprofile_path)
     convert(profiler.getstats(), callgrind_path)
+
+
+def _write_memory_profile(heap, heap_path):
     heap.dump(heap_path)
