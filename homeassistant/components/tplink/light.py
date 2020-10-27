@@ -61,13 +61,12 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up lights."""
-    devices = []
-    devices = await hass.async_add_executor_job(
+    entities = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
     )
 
-    if devices:
-        async_add_entities(devices, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
     if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
         raise PlatformNotReady
