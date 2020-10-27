@@ -115,9 +115,9 @@ PLATFORM_SCHEMA = vol.All(
 
 @singleton(DATA_BLUEPRINTS)
 @callback
-def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
+def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:  # type: ignore
     """Get automation blueprints."""
-    return blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)
+    return blueprint.DomainBlueprints(hass, DOMAIN, _LOGGER)  # type: ignore
 
 
 @bind_hass
@@ -525,12 +525,12 @@ async def _async_process_config(
     entities = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[
+        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[  # type: ignore
             config_key
         ]
 
         for list_no, config_block in enumerate(conf):
-            if isinstance(config_block, blueprint.BlueprintInputs):
+            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
                 blueprint_inputs = config_block
 
                 try:
