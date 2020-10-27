@@ -36,6 +36,31 @@ async def test_discover_device_tracker(hass, mqtt_mock, caplog):
     assert ("device_tracker", "bla") in hass.data[ALREADY_DISCOVERED]
 
 
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Beer" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is None
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Beer", "state_topic": "required-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Beer"
+
+
 async def test_non_duplicate_device_tracker_discovery(hass, mqtt_mock, caplog):
     """Test for a non duplicate component."""
     async_fire_mqtt_message(
@@ -120,6 +145,31 @@ async def test_duplicate_device_tracker_removal(hass, mqtt_mock, caplog):
     assert (
         "Component has already been discovered: device_tracker bla" not in caplog.text
     )
+
+
+async def test_device_tracker_discovery_update(hass, mqtt_mock, caplog):
+    """Test for a discovery update event."""
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Beer"
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_tracker/bla/config",
+        '{ "name": "Cider", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("device_tracker.beer")
+    assert state is not None
+    assert state.name == "Cider"
 
 
 async def test_cleanup_device_tracker(hass, device_reg, entity_reg, mqtt_mock):
@@ -304,3 +354,8 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     state = hass.states.get("device_tracker.test")
     assert state.attributes["longitude"] == -117.22743
     assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "attributes-topic", '{"latitude":32.87336}')
+    state = hass.states.get("device_tracker.test")
+    assert state.attributes["latitude"] == 32.87336
+    assert state.state == STATE_NOT_HOME
