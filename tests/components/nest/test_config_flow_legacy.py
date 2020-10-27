@@ -100,7 +100,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
     flow.hass = hass
     result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_verify_code_timeout(hass):
