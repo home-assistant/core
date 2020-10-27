@@ -49,7 +49,6 @@ async def test_setup_connection_error(hass: HomeAssistant):
     entry = configure_integration(hass)
     with patch(
         "devolo_home_control_api.homecontrol.HomeControl.__init__",
-        return_value=None,
         side_effect=ConnectionError,
     ), pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, entry)
