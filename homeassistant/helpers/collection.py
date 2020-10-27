@@ -19,8 +19,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
-
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
@@ -138,7 +136,6 @@ class YamlCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
-        _LOGGER.warning("yaml old data: %s", self.data)
 
         old_ids = set(self.data)
 
@@ -163,8 +160,6 @@ class YamlCollection(ObservableCollection):
             change_sets.append(
                 CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
             )
-
-        _LOGGER.warning("yaml new data: %s", self.data)
 
         if change_sets:
             await self.notify_changes(change_sets)
@@ -282,8 +277,6 @@ class IDLessCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the collection. Overrides existing data."""
-        _LOGGER.warning("old data: %s", self.data)
-
         await self.notify_changes(
             [
                 CollectionChangeSet(CHANGE_REMOVED, item_id, item)
@@ -299,7 +292,6 @@ class IDLessCollection(ObservableCollection):
 
             self.data[item_id] = item
 
-        _LOGGER.warning("new data: %s", self.data)
         await self.notify_changes(
             [
                 CollectionChangeSet(CHANGE_ADDED, item_id, item)
@@ -319,7 +311,6 @@ def attach_entity_component_collection(
 
     async def _collection_changed(change_type: str, item_id: str, config: dict) -> None:
         """Handle a collection change."""
-        _LOGGER.warning("_collection_changed: %s %s %s", change_type, item_id, config)
         if change_type == CHANGE_ADDED:
             entity = create_entity(config)
             await entity_component.async_add_entities([entity])
