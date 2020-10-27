@@ -50,6 +50,8 @@ def is_installed(package: str) -> bool:
         # leaving it in for custom components.
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
+    _LOGGER.debug("requirement: %s", req)
+
     try:
         return version(req.project_name) in req
     except PackageNotFoundError:
