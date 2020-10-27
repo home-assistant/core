@@ -46,6 +46,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -339,7 +340,7 @@ def _expand_light_groups(hass: HomeAssistant, lights: List[str]) -> List[str]:
 
 def _supported_features(hass: HomeAssistant, light: str):
     state = hass.states.get(light)
-    supported_features = state.attributes["supported_features"]
+    supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     return {key for key, value in _SUPPORT_OPTS.items() if supported_features & value}
 
 
