@@ -128,7 +128,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                         coordinator, device, "current_humidity", "Indoor Humidity"
                     )
                 )
-                _LOGGER.info("device: " + str(dir(device)))
                 if device.outdoor_temperature:
                     sensors_list.append(
                         TemperatureSensor(
