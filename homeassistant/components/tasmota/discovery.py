@@ -21,7 +21,6 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 ALREADY_DISCOVERED = "tasmota_discovered_components"
-TASMOTA_DISCOVERY_DEVICE = "tasmota_discovery_device"
 TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
@@ -41,7 +40,7 @@ def set_discovery_hash(hass, discovery_hash):
 
 
 async def async_start(
-    hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt
+    hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt, setup_device
 ) -> bool:
     """Start Tasmota device discovery."""
 
@@ -95,9 +94,7 @@ async def async_start(
 
         _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
-        async_dispatcher_send(
-            hass, TASMOTA_DISCOVERY_DEVICE, tasmota_device_config, mac
-        )
+        setup_device(tasmota_device_config, mac)
 
         if not payload:
             return

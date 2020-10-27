@@ -832,7 +832,7 @@ async def test_attach_unknown_remove_device_from_registry(
     await hass.async_block_till_done()
 
 
-async def test_attach_remove_config_entry(hass, mqtt_mock, setup_tasmota, device_reg):
+async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tasmota):
     """Test trigger cleanup when removing a Tasmota config entry."""
     # Discover a device with device trigger
     config = copy.deepcopy(DEFAULT_CONFIG)
