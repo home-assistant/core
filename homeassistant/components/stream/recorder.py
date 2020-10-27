@@ -28,7 +28,6 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
     # Get first_pts values from first segment
     if len(segments) > 0:
         segment = segments[0]
-        segment.segment.seek(0)
         source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
         first_pts["video"] = source_v.start_time
@@ -40,8 +39,7 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
         source.close()
 
     for segment in segments:
-        # Seek to beginning and open segment
-        segment.segment.seek(0)
+        # Open segment
         source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
         # Add output streams
