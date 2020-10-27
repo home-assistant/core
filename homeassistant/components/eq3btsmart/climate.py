@@ -76,17 +76,17 @@ ATTR_STATE_ERROR = "error"
 ATTR_STATE_LAST_ERROR_AT = "last_error_at"
 
 EQ_TO_HA_HVAC = {
-    eq3.Mode.Open: HVAC_MODE_HEAT,
     eq3.Mode.Closed: HVAC_MODE_OFF,
+    eq3.Mode.Open: HVAC_MODE_HEAT,
     eq3.Mode.Auto: HVAC_MODE_AUTO,
     eq3.Mode.Manual: HVAC_MODE_HEAT,
-    eq3.Mode.Boost: HVAC_MODE_AUTO,
     eq3.Mode.Away: HVAC_MODE_HEAT,
+    eq3.Mode.Boost: HVAC_MODE_AUTO,
 }
 
 HA_TO_EQ_HVAC = {
-    HVAC_MODE_HEAT: eq3.Mode.Manual,
     HVAC_MODE_OFF: eq3.Mode.Closed,
+    HVAC_MODE_HEAT: eq3.Mode.Manual,
     HVAC_MODE_AUTO: eq3.Mode.Auto,
 }
 HA_TO_EQ_HVAC_SENSOR_CONTROL = {
