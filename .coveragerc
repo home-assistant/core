@@ -59,7 +59,7 @@ omit =
     homeassistant/components/arlo/*
     homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
-    homeassistant/components/aruba_instant/*
+    homeassistant/components/aruba_instant/virtual_controller.py
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
