@@ -15,7 +15,6 @@ DATA_PROVISION_SETTINGS = "provision.settings"
 DATA_RESTRICTIONS_CURRENT = "restrictions.current"
 DATA_RESTRICTIONS_UNIVERSAL = "restrictions.universal"
 DATA_ZONES = "zones"
-DATA_ZONES_DETAILS = "zones.details"
 
 DEFAULT_PORT = 8080
 DEFAULT_ZONE_RUN = 60 * 10
