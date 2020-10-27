@@ -91,7 +91,6 @@ async def build_item_response(entity, payload):
 
         children = []
         for item in result["items"]:
-            thumbnail = entity.get_browse_image_url(item.get("image_url"))
             children.append(
                 BrowseMedia(
                     title=item["title"],
@@ -100,7 +99,7 @@ async def build_item_response(entity, payload):
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=thumbnail,
+                    thumbnail=entity.get_thumbnail_url(item.get("image_url")),
                 )
             )
 

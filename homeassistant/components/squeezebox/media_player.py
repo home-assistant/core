@@ -47,7 +47,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.network import get_url
 from homeassistant.util.dt import utcnow
 
 from .browse_media import build_item_response, generate_playlist, library_payload
@@ -595,21 +594,19 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(self, browse_image):
         """Get album art from Squeezebox server."""
-        if browse_image.startswith(self._internal_artwork_url):
-            return await self._async_fetch_image(browse_image, cache=False)
-        return (None, None)
-
-    def get_browse_image_url(self, browse_image):
-        """Generate an externally accessible url for a media browser image."""
-        base_url = get_url(self.hass, prefer_external=True)
-        thumbnail = browse_image
-        if thumbnail and thumbnail.startswith(self._internal_artwork_url):
-            thumbnail = (
-                f"{base_url}/api/media_player_proxy/{self.entity_id}"
-                f"?token={self.access_token}&browse_image={thumbnail}"
-            )
-        return thumbnail
+        internal_url = f"{self._internal_artwork_url}{browse_image}"
+        result = await self._async_fetch_image(internal_url)
+        if result == (None, None):
+            _LOGGER.info("Error retrieving proxied album art from %s", internal_url)
+        return result
 
     async def async_browse(self, *args, **kwargs):
         """Browse player's media library."""
         return await self._player.async_browse(*args, **kwargs)
+
+    def get_thumbnail_url(self, image_url):
+        """Get thumbnail image url for media browser."""
+        if image_url is not None and image_url.startswith(self._internal_artwork_url):
+            thumbnail = image_url.replace(self._internal_artwork_url, "")
+            return self.get_browse_image_url(thumbnail)
+        return image_url

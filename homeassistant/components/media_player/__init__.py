@@ -853,12 +853,10 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
-    async def _async_fetch_image(self, url, cache=True):
+    async def _async_fetch_image(self, url):
         """Fetch image.
 
         Images are cached in memory (the images are typically 10-100kB in size).
-
-        To fetch image without storing in cache set parameter cache=False.
         """
         cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
         cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
@@ -866,14 +864,24 @@ class MediaPlayerEntity(Entity):
         if urlparse(url).hostname is None:
             url = f"{get_url(self.hass)}{url}"
 
-        if cache:
-            if url not in cache_images:
-                cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
+        if url not in cache_images:
+            cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
-            async with cache_images[url][CACHE_LOCK]:
-                if CACHE_CONTENT in cache_images[url]:
-                    return cache_images[url][CACHE_CONTENT]
+        async with cache_images[url][CACHE_LOCK]:
+            if CACHE_CONTENT in cache_images[url]:
+                return cache_images[url][CACHE_CONTENT]
 
+        (content, content_type) = await self._async_retrieve_image(url)
+
+        async with cache_images[url][CACHE_LOCK]:
+            cache_images[url][CACHE_CONTENT] = content, content_type
+            while len(cache_images) > cache_maxsize:
+                cache_images.popitem(last=False)
+
+        return content, content_type
+
+    async def _async_retrieve_image(self, url):
+        """Retrieve an image."""
         content, content_type = (None, None)
         websession = async_get_clientsession(self.hass)
         try:
@@ -889,13 +897,16 @@ class MediaPlayerEntity(Entity):
         except asyncio.TimeoutError:
             pass
 
-        if cache:
-            async with cache_images[url][CACHE_LOCK]:
-                cache_images[url][CACHE_CONTENT] = content, content_type
-                while len(cache_images) > cache_maxsize:
-                    cache_images.popitem(last=False)
-
         return content, content_type
+
+    def get_browse_image_url(self, browse_image):
+        """Generate an externally accessible url for a media browser image."""
+        base_url = get_url(self.hass, prefer_external=True)
+        url = (
+            f"{base_url}/api/media_player_proxy/{self.entity_id}"
+            f"?token={self.access_token}&browse_image={browse_image}"
+        )
+        return url
 
 
 class MediaPlayerImageView(HomeAssistantView):
