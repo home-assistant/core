@@ -7,7 +7,7 @@
             },
             "init": {
                 "data": {
-                    "mode": "Mode",
+                    "mode": "[%key:common::config_flow::data::mode%]",
                     "include_domains": "[%key:component::homekit::config::step::user::data::include_domains%]"
                 },
                 "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV device class to function properly. Entities in the \u201cDomains to include\u201d will be exposed to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
@@ -15,7 +15,7 @@
             },
             "include_exclude": {
                 "data": {
-                    "mode": "Mode",
+                    "mode": "[%key:common::config_flow::data::mode%]",
                     "entities": "Entities"
                 },
                 "description": "Choose the entities to be exposed. In accessory mode, only a single entity is exposed. In bridge include mode, all entities in the domain will be exposed unless specific entities are selected. In bridge exclude mode, all entities in the domain will be exposed except for the excluded entities.",
