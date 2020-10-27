@@ -13,6 +13,8 @@ from pyHS100 import (
 
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN as TPLINK_DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -127,3 +129,31 @@ def get_static_devices(config_data) -> SmartDevices:
                     "Failed to setup device %s due to %s; not retrying", host, sde
                 )
     return SmartDevices(lights, switches)
+
+
+def add_available_devices(hass, device_type, device_class, async_add_entities):
+    """Get sysinfo for all devices."""
+
+    devices = hass.data[TPLINK_DOMAIN][device_type]
+
+    if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
+        devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
+
+    entities_ready = []
+    entities_unavailable = []
+    for device in devices:
+        try:
+            device.get_sysinfo()
+            entities_ready.append(device_class(device))
+        except SmartDeviceException as ex:
+            entities_unavailable.append(device)
+            _LOGGER.warning(
+                "Unable to communicate with device %s: %s",
+                device.host,
+                ex,
+            )
+
+    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = entities_unavailable
+
+    if entities_ready:
+        async_add_entities(entities_ready, update_before_add=True)
