@@ -383,7 +383,7 @@ blockchain==1.4.4
 bond-api==0.1.12
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.1.10
+boschshcpy==0.1.11
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -656,7 +656,6 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
-# homeassistant.components.bosch_shc
 # homeassistant.components.denonavr
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef

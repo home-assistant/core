@@ -37,7 +37,6 @@ async def test_form(hass):
     assert result2["title"] == "Bosch SHC"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "mac": None,
         "ssl_certificate": "test-cert.pem",
         "ssl_key": "test-key.pem",
     }

@@ -1,14 +1,11 @@
 """Config flow for Bosch Smart Home Controller integration."""
-from functools import partial
 import logging
 
 from boschshcpy import SHCSession
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_MAC
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.const import CONF_HOST
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -62,13 +59,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
 
-                mac_address = await self.async_get_mac(user_input[CONF_HOST])
-
                 return self.async_create_entry(
                     title=info["title"],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
-                        CONF_MAC: mac_address,
                         CONF_SSL_CERTIFICATE: user_input[CONF_SSL_CERTIFICATE],
                         CONF_SSL_KEY: user_input[CONF_SSL_KEY],
                     },
@@ -91,24 +85,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user(user_input)
-
-    async def async_get_mac(self, host):
-        """Get the mac address of the DenonAVR receiver."""
-        try:
-            mac_address = await self.hass.async_add_executor_job(
-                partial(get_mac_address, **{"ip": host})
-            )
-            if not mac_address:
-                mac_address = await self.hass.async_add_executor_job(
-                    partial(get_mac_address, **{"hostname": host})
-                )
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Unable to get mac address: %s", err)
-            mac_address = None
-
-        if mac_address is not None:
-            mac_address = format_mac(mac_address)
-        return mac_address
 
 
 class CannotConnect(exceptions.HomeAssistantError):

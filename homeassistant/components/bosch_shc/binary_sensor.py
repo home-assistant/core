@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_MAC
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .entity import SHCEntity
@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ShutterContactSensor(
                 device=binarysensor,
                 room_name=session.room(binarysensor.room_id).name,
-                shc_uid=config_entry.data[CONF_MAC],
+                shc_uid=format_mac(session.information.macAddress),
             )
         )
 
