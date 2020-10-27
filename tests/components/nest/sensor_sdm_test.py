@@ -5,108 +5,19 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
-import time
-
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
-from google_nest_sdm.event import EventCallback, EventMessage
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from google_nest_sdm.event import EventMessage
 
-from homeassistant.components.nest import DOMAIN
-from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from .common import async_setup_sdm_platform
 
 PLATFORM = "sensor"
-
-CONFIG = {
-    "nest": {
-        "client_id": "some-client-id",
-        "client_secret": "some-client-secret",
-        # Required fields for using SDM API
-        "project_id": "some-project-id",
-        "subscriber_id": "some-subscriber-id",
-    },
-}
-
-CONFIG_ENTRY_DATA = {
-    "sdm": {},  # Indicates new SDM API, not legacy API
-    "auth_implementation": "local",
-    "token": {
-        "expires_at": time.time() + 86400,
-        "access_token": {
-            "token": "some-token",
-        },
-    },
-}
 
 THERMOSTAT_TYPE = "sdm.devices.types.THERMOSTAT"
 
 
-class FakeDeviceManager(DeviceManager):
-    """Fake DeviceManager that can supply a list of devices and structures."""
-
-    def __init__(self, devices: dict, structures: dict):
-        """Initialize FakeDeviceManager."""
-        super().__init__()
-        self._devices = devices
-
-    @property
-    def structures(self) -> dict:
-        """Override structures with fake result."""
-        return self._structures
-
-    @property
-    def devices(self) -> dict:
-        """Override devices with fake result."""
-        return self._devices
-
-
-class FakeSubscriber(GoogleNestSubscriber):
-    """Fake subscriber that supplies a FakeDeviceManager."""
-
-    def __init__(self, device_manager: FakeDeviceManager):
-        """Initialize Fake Subscriber."""
-        self._device_manager = device_manager
-        self._callback = None
-
-    def set_update_callback(self, callback: EventCallback):
-        """Capture the callback set by Home Assistant."""
-        self._callback = callback
-
-    async def start_async(self) -> DeviceManager:
-        """Return the fake device manager."""
-        return self._device_manager
-
-    async def async_get_device_manager(self) -> DeviceManager:
-        """Return the fake device manager."""
-        return self._device_manager
-
-    def stop_async(self):
-        """No-op to stop the subscriber."""
-        return None
-
-    def receive_event(self, event_message: EventMessage):
-        """Simulate a received pubsub message, invoked by tests."""
-        # Update device state, then invoke HomeAssistant to refresh
-        self._device_manager.handle_event(event_message)
-        self._callback.handle_event(event_message)
-
-
-async def setup_sensor(hass, devices={}, structures={}):
+async def async_setup_sensor(hass, devices={}, structures={}):
     """Set up the platform and prerequisites."""
-    MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA).add_to_hass(hass)
-    device_manager = FakeDeviceManager(devices=devices, structures=structures)
-    subscriber = FakeSubscriber(device_manager)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
-        "homeassistant.components.nest.GoogleNestSubscriber", return_value=subscriber
-    ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
-        await hass.async_block_till_done()
-    return subscriber
+    return await async_setup_sdm_platform(hass, PLATFORM, devices, structures)
 
 
 async def test_thermostat_device(hass):
@@ -131,7 +42,7 @@ async def test_thermostat_device(hass):
             auth=None,
         )
     }
-    await setup_sensor(hass, devices)
+    await async_setup_sensor(hass, devices)
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
@@ -156,7 +67,7 @@ async def test_thermostat_device(hass):
 
 async def test_no_devices(hass):
     """Test no devices returned by the api."""
-    await setup_sensor(hass)
+    await async_setup_sensor(hass)
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is None
@@ -177,7 +88,7 @@ async def test_device_no_sensor_traits(hass):
             auth=None,
         )
     }
-    await setup_sensor(hass, devices)
+    await async_setup_sensor(hass, devices)
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is None
@@ -205,7 +116,7 @@ async def test_device_name_from_structure(hass):
             auth=None,
         )
     }
-    await setup_sensor(hass, devices)
+    await async_setup_sensor(hass, devices)
 
     temperature = hass.states.get("sensor.some_room_temperature")
     assert temperature is not None
@@ -231,7 +142,7 @@ async def test_event_updates_sensor(hass):
             auth=None,
         )
     }
-    subscriber = await setup_sensor(hass, devices)
+    subscriber = await async_setup_sensor(hass, devices)
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
@@ -280,7 +191,7 @@ async def test_device_with_unknown_type(hass):
             auth=None,
         )
     }
-    await setup_sensor(hass, devices)
+    await async_setup_sensor(hass, devices)
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
