@@ -34,11 +34,16 @@ class BroadlinkScout:
                 hass, _LOGGER, cooldown=self.timeout, immediate=True
             ),
         )
-        self.coordinator.async_add_listener(self.update_listener)
+        self.reset_jobs = []
+
+    @property
+    def is_on(self):
+        """Return True if device discovery is activated."""
+        return bool(self.reset_jobs)
 
     @callback
     def update_listener(self):
-        """Create config flows for the devices discovered."""
+        """Create config flows for new devices found."""
         devices = self.coordinator.data
         if not (self.coordinator.last_update_success and devices):
             return
@@ -66,6 +71,18 @@ class BroadlinkScout:
                     },
                 )
             )
+
+    async def async_start(self):
+        """Start device discovery."""
+        self.reset_jobs.append(
+            self.coordinator.async_add_listener(self.update_listener)
+        )
+        await self.coordinator.async_request_refresh()
+
+    async def async_stop(self):
+        """Stop device discovery."""
+        while self.reset_jobs:
+            self.reset_jobs.pop()()
 
     async def async_discover(self):
         """Discover Broadlink devices available on the local network."""
