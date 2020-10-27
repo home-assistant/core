@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 
 from . import CannotConnect, InvalidAuth, OpenPlantBookApi
-from .const import DOMAIN
+from .const import ATTR_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["API"] = OpenPlantBookApi(data["client_id"], data["secret"])
+    hass.data[DOMAIN][ATTR_API] = OpenPlantBookApi(data["client_id"], data["secret"])
 
     return {"title": "Openplantbook API"}
 
