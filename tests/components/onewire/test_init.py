@@ -16,8 +16,8 @@ from . import setup_onewire_owserver_integration, setup_onewire_sysbus_integrati
 from tests.common import MockConfigEntry
 
 
-async def test_owserver_platform_not_ready(hass):
-    """Create the 1-Wire integration."""
+async def test_owserver_connect_failure(hass):
+    """Test connection failure raises ConfigEntryNotReady."""
     config_entry_owserver = MockConfigEntry(
         domain=DOMAIN,
         source="user",
