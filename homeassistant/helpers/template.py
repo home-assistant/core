@@ -428,7 +428,7 @@ class Template:
             # output; use the original render instead of the evaluated one.
             if not isinstance(result, str):
                 return result
-        except (ValueError, SyntaxError, MemoryError):
+        except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
 
         return render_result
