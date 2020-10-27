@@ -3,8 +3,6 @@ import asyncio
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
-import async_timeout
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -37,7 +35,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
-    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -599,19 +596,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_get_browse_image(self, browse_image):
         """Get album art from Squeezebox server."""
         if browse_image.startswith(self._internal_artwork_url):
-            try:
-                session = async_get_clientsession(self.hass)
-                with async_timeout.timeout(5):
-                    response = await session.get(browse_image)
-
-                    if response.status == HTTP_OK:
-                        content = await response.read()
-                        content_type = response.headers.get(CONTENT_TYPE)
-                        if content_type:
-                            content_type = content_type.split(";")[0]
-                        return (content, content_type)
-            except asyncio.TimeoutError:
-                pass
+            return await self._async_fetch_image(browse_image, cache=False)
         return (None, None)
 
     def get_browse_image_url(self, browse_image):

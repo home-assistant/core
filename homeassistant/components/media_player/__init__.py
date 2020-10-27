@@ -430,7 +430,7 @@ class MediaPlayerEntity(Entity):
         if url is None:
             return None, None
 
-        return await _async_fetch_image(self.hass, url)
+        return await self._async_fetch_image(url)
 
     async def async_get_browse_image(self, browse_image):
         """
@@ -853,27 +853,29 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
+    async def _async_fetch_image(self, url, cache=True):
+        """Fetch image.
 
-async def _async_fetch_image(hass, url):
-    """Fetch image.
+        Images are cached in memory (the images are typically 10-100kB in size).
 
-    Images are cached in memory (the images are typically 10-100kB in size).
-    """
-    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
-    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+        To fetch image without storing in cache set parameter cache=False.
+        """
+        cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
-    if urlparse(url).hostname is None:
-        url = f"{get_url(hass)}{url}"
+        if urlparse(url).hostname is None:
+            url = f"{get_url(self.hass)}{url}"
 
-    if url not in cache_images:
-        cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
+        if cache:
+            if url not in cache_images:
+                cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
-    async with cache_images[url][CACHE_LOCK]:
-        if CACHE_CONTENT in cache_images[url]:
-            return cache_images[url][CACHE_CONTENT]
+            async with cache_images[url][CACHE_LOCK]:
+                if CACHE_CONTENT in cache_images[url]:
+                    return cache_images[url][CACHE_CONTENT]
 
         content, content_type = (None, None)
-        websession = async_get_clientsession(hass)
+        websession = async_get_clientsession(self.hass)
         try:
             with async_timeout.timeout(10):
                 response = await websession.get(url)
@@ -883,13 +885,15 @@ async def _async_fetch_image(hass, url):
                     content_type = response.headers.get(CONTENT_TYPE)
                     if content_type:
                         content_type = content_type.split(";")[0]
-                    cache_images[url][CACHE_CONTENT] = content, content_type
 
         except asyncio.TimeoutError:
             pass
 
-        while len(cache_images) > cache_maxsize:
-            cache_images.popitem(last=False)
+        if cache:
+            async with cache_images[url][CACHE_LOCK]:
+                cache_images[url][CACHE_CONTENT] = content, content_type
+                while len(cache_images) > cache_maxsize:
+                    cache_images.popitem(last=False)
 
         return content, content_type
 
