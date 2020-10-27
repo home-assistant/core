@@ -4,7 +4,6 @@ import logging
 import os
 
 from pi1wire import InvalidCRCException, UnsupportResponseException
-from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.onewire.onewireentity import OneWire, OneWireProxy
