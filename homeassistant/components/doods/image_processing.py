@@ -1,6 +1,7 @@
 """Support for the DOODS service."""
 import io
 import logging
+import os
 import time
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
@@ -26,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_MATCHES = "matches"
 ATTR_SUMMARY = "summary"
 ATTR_TOTAL_MATCHES = "total_matches"
+ATTR_PROCESS_TIME = "process_time"
 
 CONF_URL = "url"
 CONF_AUTH_KEY = "auth_key"
@@ -203,6 +205,7 @@ class Doods(ImageProcessingEntity):
         self._matches = {}
         self._total_matches = 0
         self._last_image = None
+        self._process_time = 0
 
     @property
     def camera_entity(self):
@@ -228,6 +231,7 @@ class Doods(ImageProcessingEntity):
                 label: len(values) for label, values in self._matches.items()
             },
             ATTR_TOTAL_MATCHES: self._total_matches,
+            ATTR_PROCESS_TIME: self._process_time,
         }
 
     def _save_image(self, image, matches, paths):
@@ -270,6 +274,8 @@ class Doods(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):
@@ -308,6 +314,7 @@ class Doods(ImageProcessingEntity):
                 _LOGGER.error(response["error"])
             self._matches = matches
             self._total_matches = total_matches
+            self._process_time = time.monotonic() - start
             return
 
         for detection in response["detections"]:
@@ -380,3 +387,4 @@ class Doods(ImageProcessingEntity):
 
         self._matches = matches
         self._total_matches = total_matches
+        self._process_time = time.monotonic() - start

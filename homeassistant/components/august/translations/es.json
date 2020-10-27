@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya est\u00e1 configurada"
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",

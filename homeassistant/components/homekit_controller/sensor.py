@@ -7,6 +7,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -18,8 +19,6 @@ HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:molecule-co2"
-
-UNIT_LUX = "lux"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -113,7 +112,7 @@ class HomeKitLightSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_LUX
+        return LIGHT_LUX
 
     @property
     def state(self):

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "already_in_progress": "\uc774 \uae30\uae30\uc5d0 \ub300\ud574 \uc774\ubbf8 \uc9c4\ud589\uc911\uc778 \uad6c\uc131\uc774 \uc788\uc2b5\ub2c8\ub2e4.",
+            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "invalid_host": "\uc798\ubabb\ub41c \ud638\uc2a4\ud2b8\uba85 \ub610\ub294 IP \uc8fc\uc18c",
+            "not_supported": "\uc9c0\uc6d0\ub418\uc9c0 \uc54a\ub294 \uc7a5\uce58",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "invalid_host": "\uc798\ubabb\ub41c \ud638\uc2a4\ud2b8\uba85 \ub610\ub294 IP \uc8fc\uc18c",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+        },
+        "flow_title": "{name} ({host} \uc758 {model})",
+        "step": {
+            "auth": {
+                "title": "\uc7a5\uce58\uc5d0 \uc778\uc99d"
+            },
+            "finish": {
+                "title": "\uc7a5\uce58 \uc774\ub984\uc744 \uc120\ud0dd\ud558\uc2ed\uc2dc\uc624"
+            },
+            "reset": {
+                "title": "\uc7a5\uce58 \uc7a0\uae08 \ud574\uc81c"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "\uc608"
+                },
+                "description": "\uc7a5\uce58\uac00 \uc7a0\uaca8 \uc788\uc2b5\ub2c8\ub2e4. \uc774\ub85c \uc778\ud574 Home Assistant\uc5d0\uc11c \uc778\uc99d \ubb38\uc81c\uac00 \ubc1c\uc0dd\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \uc7a0\uae08\uc744 \ud574\uc81c \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\uc7a5\uce58 \uc7a0\uae08 \ud574\uc81c (\uc635\uc158)"
+            },
+            "user": {
+                "data": {
+                    "timeout": "\uc81c\ud55c \uc2dc\uac04"
+                },
+                "title": "\uc7a5\uce58\uc5d0 \uc5f0\uacb0"
+            }
+        }
+    }
+}

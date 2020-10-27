@@ -5,7 +5,7 @@ from wled import WLEDConnectionError
 from homeassistant import data_entry_flow
 from homeassistant.components.wled import config_flow
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
@@ -45,7 +45,7 @@ async def test_show_zerconf_form(
     aioclient_mock.get(
         "http://192.168.1.123:80/json/",
         text=load_fixture("wled/rgb.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.WLEDFlowHandler()
@@ -190,7 +190,7 @@ async def test_full_user_flow_implementation(
     aioclient_mock.get(
         "http://192.168.1.123:80/json/",
         text=load_fixture("wled/rgb.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -218,7 +218,7 @@ async def test_full_zeroconf_flow_implementation(
     aioclient_mock.get(
         "http://192.168.1.123:80/json/",
         text=load_fixture("wled/rgb.json"),
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.WLEDFlowHandler()

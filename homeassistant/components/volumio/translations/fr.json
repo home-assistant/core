@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "Impossible de se connecter au Volumio d\u00e9couvert"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous ajouter Volumio (` {name} `) \u00e0 Home Assistant?",
+                "title": "Volumio d\u00e9couvert"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

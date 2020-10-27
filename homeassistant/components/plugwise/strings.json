@@ -13,10 +13,11 @@
     "step": {
       "user": {
         "title": "Connect to the Smile",
-        "description": "Details",
+        "description": "Please enter:",
         "data": {
+          "password": "Smile ID",
           "host": "Smile IP address",
-          "password": "Smile ID"
+          "port": "Smile port number"
         }
       }
     },

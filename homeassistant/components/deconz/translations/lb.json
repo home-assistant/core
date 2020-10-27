@@ -93,7 +93,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
-                    "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben"
+                    "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben",
+                    "allow_new_devices": "Erlaabt automatesch dob\u00e4isetze vu neien Apparater"
                 },
                 "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren",
                 "title": "deCONZ Optiounen"

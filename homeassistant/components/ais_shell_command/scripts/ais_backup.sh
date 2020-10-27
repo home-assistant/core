@@ -1,4 +1,10 @@
 # AIS dom backup script to create bootstrap
+ais_pro=$(su -c cat /system/build.prop | grep 'ro.product.name=AISPRO1' | wc -l)
+if [ $ais_pro -gt 0 ]; then
+  echo "OK, let use 6 CPUs"
+else
+  echo "We will use 2 CPUs"
+fi
 
 # 0. remove the gate ID
 rm /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_secure_android_id_dom
@@ -35,7 +41,10 @@ rm /data/data/pl.sviete.dom/files/home/AIS/.storage/person
 # logs and db settings
 echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
-
+# create db settings for pro
+if [ $ais_pro -gt 0 ]; then
+  echo '{"dbEngine": "PostgreSQL", "dbDrive": "", "dbUrl": "postgresql://ais:dom@localhost/ha", "dbPassword": "dom", "dbUser": "ais", "dbServerIp": "localhost", "dbServerName": "ha", "dbKeepDays": "10", "errorInfo": ""}' >  /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info
+fi
 # 6. clear npm cache
 rm -rf /data/data/pl.sviete.dom/files/home/.npm/_cacache/*
 
@@ -72,6 +81,10 @@ echo "advanced:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configu
 echo "  log_level: info" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  log_output:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "    - console" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "frontend:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "  port: 8099" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "experimental:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "  new_api: true" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 
 # 12. delete img galery
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/www/img/*
@@ -93,7 +106,11 @@ rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 # ON THE END -> create new bootstrap
 cd /data/data/pl.sviete.dom
 # su -c "tar -cvzf /sdcard/files.tar files"
-# to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
-7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
 
+if [ $ais_pro -gt 0 ]; then
+  7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files
+else
+  # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
+  7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
+fi
 

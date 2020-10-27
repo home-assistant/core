@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Dialogflow teavituste vastuv\u00f5tmiseks peab teie Home Assistant olema Interneti kaudu ligip\u00e4\u00e4setav.",
+            "one_instance_allowed": "Vaja on ainult \u00fchte \u00fcksust."
+        },
+        "create_entry": {
+            "default": "S\u00fcndmuste saatmiseks Home Assistantile peate seadistama [Dialogflow'i veebihaagii integreerimine] ( {dialogflow_url} ). \n\n Sisestage j\u00e4rgmine teave: \n\n - URL: \" {webhook_url} \" \n - Meetod: POST \n - Sisu t\u00fc\u00fcp: rakendus / json \n\n Lisateavet leiate [dokumentatsioonist] ( {docs_url} )."
+        },
+        "step": {
+            "user": {
+                "description": "Kas oled kindel, et soovid seadistada Dialogflow?",
+                "title": "Seadistage Dialogflow veebihaak"
+            }
+        }
+    }
+}

@@ -163,7 +163,7 @@ class ExtaLifeSensor(ExtaLifeChannel):
                 c += 1
                 for k, v in phase.items():
                     phase_variable = f"phase_{c}_{k}"
-                    attr.update({phase_variable: k})
+                    attr.update({phase_variable: v})
 
         if not self._monitored_value:
             if data.get("value_1") is not None:
@@ -172,6 +172,8 @@ class ExtaLifeSensor(ExtaLifeChannel):
                 attr.update({"value_2": data.get("value_2")})
             if data.get("value_3") is not None:
                 attr.update({"value_3": data.get("value_3")})
+
+        self.format_state_attr(attr)
 
         return attr
 

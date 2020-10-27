@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "connection_failed": "No s'ha pogut connectar, torna-ho a provar",
+            "connection_failed": "Ha fallat la connexi\u00f3",
             "register_failed": "No s'ha pogut registrar, torna-ho a provar",
-            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
+            "unknown": "Error inesperat"
         },
         "step": {
             "link": {

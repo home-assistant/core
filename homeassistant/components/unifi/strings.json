@@ -54,7 +54,8 @@
       },
       "statistics_sensors": {
         "data": {
-          "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients"
+          "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients",
+          "allow_uptime_sensors": "Uptime sensors for network clients"
         },
         "description": "Configure statistics sensors",
         "title": "UniFi options 3/3"

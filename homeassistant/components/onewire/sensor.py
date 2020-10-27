@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     ELECTRICAL_CURRENT_AMPERE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     VOLT,
@@ -19,12 +20,15 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .const import (
+    CONF_MOUNT_DIR,
+    CONF_NAMES,
+    DEFAULT_OWSERVER_PORT,
+    DEFAULT_SYSBUS_MOUNT_DIR,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MOUNT_DIR = "mount_dir"
-CONF_NAMES = "names"
-
-DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
     # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
@@ -33,6 +37,10 @@ DEVICE_SENSORS = {
     "26": {
         "temperature": "temperature",
         "humidity": "humidity",
+        "humidity_hih3600": "HIH3600/humidity",
+        "humidity_hih4000": "HIH4000/humidity",
+        "humidity_hih5030": "HIH5030/humidity",
+        "humidity_htm1735": "HTM1735/humidity",
         "pressure": "B1-R1-A/pressure",
         "illuminance": "S3-R1-A/illuminance",
         "voltage_VAD": "VAD",
@@ -68,9 +76,13 @@ SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
     "humidity": ["humidity", PERCENTAGE],
+    "humidity_hih3600": ["humidity", PERCENTAGE],
+    "humidity_hih4000": ["humidity", PERCENTAGE],
+    "humidity_hih5030": ["humidity", PERCENTAGE],
+    "humidity_htm1735": ["humidity", PERCENTAGE],
     "humidity_raw": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
-    "illuminance": ["illuminance", "lux"],
+    "illuminance": ["illuminance", LIGHT_LUX],
     "wetness_0": ["wetness", PERCENTAGE],
     "wetness_1": ["wetness", PERCENTAGE],
     "wetness_2": ["wetness", PERCENTAGE],
@@ -91,9 +103,9 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAMES): {cv.string: cv.string},
-        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
+        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=4304): cv.port,
+        vol.Optional(CONF_PORT, default=DEFAULT_OWSERVER_PORT): cv.port,
     }
 )
 
@@ -107,14 +119,10 @@ def hb_info_from_type(dev_type="std"):
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the one wire Sensors."""
+    """Set up 1-Wire platform."""
     base_dir = config[CONF_MOUNT_DIR]
     owport = config[CONF_PORT]
     owhost = config.get(CONF_HOST)
-    if owhost:
-        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
-    else:
-        _LOGGER.debug("Initializing using %s", base_dir)
 
     devs = []
     device_names = {}
@@ -124,6 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # We have an owserver on a remote(or local) host/port
     if owhost:
+        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
             devices = owproxy.dir()
@@ -154,7 +163,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
                     )
                     if is_leaf:
-                        sensor_key = f"wetness_{id}"
+                        sensor_key = f"wetness_{s_id}"
                 sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
                 devs.append(
@@ -167,7 +176,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
 
     # We have a raw GPIO ow sensor on a Pi
-    elif base_dir == DEFAULT_MOUNT_DIR:
+    elif base_dir == DEFAULT_SYSBUS_MOUNT_DIR:
+        _LOGGER.debug("Initializing using SysBus %s", base_dir)
         for device_family in DEVICE_SENSORS:
             for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]
@@ -182,6 +192,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # We have an owfs mounted
     else:
+        _LOGGER.debug("Initializing using OWFS %s", base_dir)
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path) as family_file:
                 family = family_file.read()
@@ -213,7 +224,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class OneWire(Entity):
-    """Implementation of an One wire Sensor."""
+    """Implementation of a 1-Wire sensor."""
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
@@ -258,10 +269,10 @@ class OneWire(Entity):
 
 
 class OneWireProxy(OneWire):
-    """Implementation of a One wire Sensor through owserver."""
+    """Implementation of a 1-Wire sensor through owserver."""
 
     def __init__(self, name, device_file, sensor_type, owproxy):
-        """Initialize the onewire sensor via owserver."""
+        """Initialize the sensor."""
         super().__init__(name, device_file, sensor_type)
         self._owproxy = owproxy
 
@@ -287,7 +298,7 @@ class OneWireProxy(OneWire):
 
 
 class OneWireDirect(OneWire):
-    """Implementation of an One wire Sensor directly connected to RPI GPIO."""
+    """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def update(self):
         """Get the latest data from the device."""
@@ -305,7 +316,7 @@ class OneWireDirect(OneWire):
 
 
 class OneWireOWFS(OneWire):
-    """Implementation of an One wire Sensor through owfs."""
+    """Implementation of a 1-Wire sensor through owfs."""
 
     def update(self):
         """Get the latest data from the device."""

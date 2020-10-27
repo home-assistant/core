@@ -2,18 +2,25 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Godkjent p\u00e5 nytt",
             "unknown": "Uventet feil"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes.",
             "invalid_auth": "Ugyldig godkjenning"
         },
+        "flow_title": "",
         "step": {
+            "reauth_confirm": {
+                "description": "Sonarr-integrasjonen m\u00e5 autentiseres p\u00e5 nytt med Sonarr API vert p\u00e5: {host}",
+                "title": "Autentiser p\u00e5 nytt med Sonarr"
+            },
             "user": {
                 "data": {
                     "api_key": "API N\u00f8kkel",
                     "base_path": "Bane til API",
                     "host": "Vert",
+                    "port": "",
                     "ssl": "Sonarr bruker et SSL-sertifikat",
                     "verify_ssl": "Sonarr bruker et riktig sertifikat"
                 },
@@ -30,5 +37,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

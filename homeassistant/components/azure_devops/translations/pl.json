@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Token dost\u0119pu pomy\u015blnie zaktualizowany"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "organization": "Organizacja",
+                    "project": "Projekt"
+                }
+            }
+        }
+    },
+    "title": "Azure DevOps"
+}

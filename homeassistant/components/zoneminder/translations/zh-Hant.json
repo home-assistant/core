@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+        },
+        "create_entry": {
+            "default": "ZoneMinder \u4f3a\u670d\u5668\u5df2\u65b0\u589e\u3002"
+        },
+        "error": {
+            "auth_fail": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4\u3002",
+            "connection_error": "ZoneMinder \u4f3a\u670d\u5668\u9023\u7dda\u5931\u6557\u3002"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\uff08\u4f8b\u5982 10.10.0.4:8010\uff09",
+                    "password": "\u5bc6\u78bc",
+                    "path": "ZM \u8def\u5f91",
+                    "path_zms": "ZMS \u8def\u5f91",
+                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 ZoneMinder",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                },
+                "title": "\u65b0\u589e ZoneMinder \u4f3a\u670d\u5668\u3002"
+            }
+        }
+    }
+}

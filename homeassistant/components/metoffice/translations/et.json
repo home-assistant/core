@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                },
+                "description": "Laius- ja pikkuskraadi kasutatakse l\u00e4hima ilmajaama leidmiseks."
+            }
+        }
+    }
+}

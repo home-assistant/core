@@ -27,6 +27,9 @@
                 "description": "Wprowad\u017a kod parowania HomeKit, aby u\u017cy\u0107 tego akcesorium",
                 "title": "Sparuj z akcesorium HomeKit"
             },
+            "protocol_error": {
+                "description": "Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i wymaga\u0107 "
+            },
             "user": {
                 "data": {
                     "device": "Urz\u0105dzenie"
@@ -34,6 +37,21 @@
                 "description": "Wybierz urz\u0105dzenie, kt\u00f3re chcesz sparowa\u0107",
                 "title": "Sparuj z akcesorium HomeKit"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Przycisk 1",
+            "button10": "Przycisk 10",
+            "button2": "Przycisk 2",
+            "button3": "Przycisk 3",
+            "button4": "Przycisk 4",
+            "button5": "Przycisk 5",
+            "button6": "Przycisk 6",
+            "button7": "Przycisk 7",
+            "button8": "Przycisk 8",
+            "button9": "Przycisk 9",
+            "doorbell": "Dzwonek do drzwi"
         }
     },
     "title": "Akcesorium HomeKit"

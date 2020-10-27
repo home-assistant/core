@@ -64,12 +64,11 @@ async def add_new_device(
 @callback
 def configured_service(hass):
     """Return a set of the configured hosts."""
-    return set("spotify" for entry in hass.config_entries.async_entries(DOMAIN))
+    return {"spotify" for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
-    """Spotify config flow."""
+class AisDomDeviceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """AIS devices config flow."""
 
     VERSION = 1
 

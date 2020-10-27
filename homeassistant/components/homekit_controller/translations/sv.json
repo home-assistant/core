@@ -36,5 +36,20 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Knapp 1",
+            "button10": "Knapp 10",
+            "button2": "Knapp 2",
+            "button3": "Knapp 3",
+            "button4": "Knapp 4",
+            "button5": "Knapp 5",
+            "button6": "Knapp 6",
+            "button7": "Knapp 7",
+            "button8": "Knapp 8",
+            "button9": "Knapp 9",
+            "doorbell": "D\u00f6rrklocka"
+        }
+    },
     "title": "HomeKit-tillbeh\u00f6r"
 }

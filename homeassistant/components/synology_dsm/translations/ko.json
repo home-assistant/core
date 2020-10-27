@@ -44,7 +44,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9(\ubd84)"
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9(\ubd84)",
+                    "timeout": "\uc81c\ud55c \uc2dc\uac04 (\ucd08)"
                 }
             }
         }

@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    HTTP_SERVICE_UNAVAILABLE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -189,7 +190,7 @@ class VerisureHub:
             self.overview = self.session.get_overview()
         except verisure.ResponseError as ex:
             _LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == 503:  # Service unavailable
+            if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
                 _LOGGER.info("Trying to log in again")
                 self.login()
             else:

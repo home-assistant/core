@@ -2353,6 +2353,10 @@ async def async_setup(hass, config):
     def say_it(service):
         """Info to the user."""
         text = ""
+        pitch = None
+        rate = None
+        language = None
+        voice = None
         if ATTR_TEXT in service.data:
             text = service.data[ATTR_TEXT]
         # TODO else:
@@ -2369,7 +2373,16 @@ async def async_setup(hass, config):
                     img = None
         else:
             img = None
-        _say_it(hass, text, img)
+
+        if "pitch" in service.data:
+            pitch = service.data["pitch"]
+        if "rate" in service.data:
+            rate = service.data["rate"]
+        if "language" in service.data:
+            language = service.data["language"]
+        if "voice" in service.data:
+            voice = service.data["voice"]
+        _say_it(hass, text, img, pitch, rate, language, voice)
 
     def say_in_browser(service):
         """Info to the via browser - this is handled by ais-tts in card"""
@@ -2915,6 +2928,7 @@ async def async_setup(hass, config):
         hass,
         INTENT_GET_TIME,
         [
+            "która",
             "która [jest] [teraz] godzina",
             "którą mamy godzinę",
             "jaki [jest] czas",
@@ -2935,6 +2949,7 @@ async def async_setup(hass, config):
         hass,
         INTENT_PLAY_RADIO,
         [
+            "Włącz radio",
             "Radio {item}",
             "Włącz radio {item}",
             "Graj radio {item}",
@@ -3526,13 +3541,16 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, hass, exclude_say_it=None):
+def _post_message(
+    message, hass, exclude_say_it=None, pitch=None, rate=None, language=None, voice=None
+):
     """Post the message to TTS service."""
     j_data = {
         "text": message,
-        "pitch": ais_global.GLOBAL_TTS_PITCH,
-        "rate": ais_global.GLOBAL_TTS_RATE,
-        "voice": ais_global.GLOBAL_TTS_VOICE,
+        "pitch": pitch if pitch is not None else ais_global.GLOBAL_TTS_PITCH,
+        "rate": rate if rate is not None else ais_global.GLOBAL_TTS_RATE,
+        "language": language if language is not None else "pl_PL",
+        "voice": voice if voice is not None else ais_global.GLOBAL_TTS_VOICE,
     }
 
     tts_browser_text = message
@@ -3586,10 +3604,19 @@ def _beep_it(hass, tone):
     )
 
 
-def _say_it(hass, message, img=None, exclude_say_it=None):
+def _say_it(
+    hass,
+    message,
+    img=None,
+    exclude_say_it=None,
+    pitch=None,
+    rate=None,
+    language=None,
+    voice=None,
+):
     # sent the tts message to the panel via http api
     message = message.replace("°C", "stopni Celsjusza")
-    _post_message(message, hass, exclude_say_it)
+    _post_message(message, hass, exclude_say_it, pitch, rate, language, voice)
 
     if len(message) > 1999:
         tts_text = message[0:1999] + "..."
@@ -4161,11 +4188,15 @@ class PlayRadioIntent(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"]
-        station = item
         success = False
-        if not station:
-            message = "Nie wiem jaką stację chcesz włączyć."
+        station = None
+        try:
+            item = slots["item"]["value"]
+            station = item
+        except Exception:
+            pass
+        if station is None:
+            message = "Powiedz jaką stację mam włączyć"
         else:
             ws_resp = aisCloudWS.audio(
                 station, ais_global.G_AN_RADIO, intent_obj.text_input

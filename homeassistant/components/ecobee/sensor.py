@@ -108,7 +108,11 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN, "unknown"]:
+        if self._state in [
+            ECOBEE_STATE_CALIBRATING,
+            ECOBEE_STATE_UNKNOWN,
+            "unknown",
+        ]:
             return None
 
         if self.type == "temperature":

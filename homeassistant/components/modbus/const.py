@@ -46,6 +46,7 @@ ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
+DEFAULT_SCAN_INTERVAL = 15  # seconds
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"
@@ -71,3 +72,12 @@ CONF_UNIT = "temperature_unit"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_STEP = "temp_step"
+
+# cover.py
+CONF_STATE_OPEN = "state_open"
+CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_OPENING = "state_opening"
+CONF_STATE_CLOSING = "state_closing"
+CONF_STATUS_REGISTER = "status_register"
+CONF_STATUS_REGISTER_TYPE = "status_register_type"
+DEFAULT_SLAVE = 1

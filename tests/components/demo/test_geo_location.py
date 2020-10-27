@@ -8,7 +8,12 @@ from homeassistant.components.demo.geo_location import (
     DEFAULT_UPDATE_INTERVAL,
     NUMBER_OF_DEMO_DEVICES,
 )
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_KILOMETERS,
+)
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -59,13 +64,14 @@ class TestDemoPlatform(unittest.TestCase):
                     # ignore home zone state
                     continue
                 assert (
-                    abs(state.attributes["latitude"] - self.hass.config.latitude) < 1.0
-                )
-                assert (
-                    abs(state.attributes["longitude"] - self.hass.config.longitude)
+                    abs(state.attributes[ATTR_LATITUDE] - self.hass.config.latitude)
                     < 1.0
                 )
-                assert state.attributes["unit_of_measurement"] == LENGTH_KILOMETERS
+                assert (
+                    abs(state.attributes[ATTR_LONGITUDE] - self.hass.config.longitude)
+                    < 1.0
+                )
+                assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_KILOMETERS
 
             # Update (replaces 1 device).
             fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)

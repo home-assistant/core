@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Anduri nimi"
+                },
+                "title": "Kohalik IP-aadress"
+            }
+        }
+    },
+    "title": "Kohalik IP-aadress"
+}

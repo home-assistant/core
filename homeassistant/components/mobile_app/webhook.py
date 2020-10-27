@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
+    ATTR_SUPPORTED_FEATURES,
     CONF_WEBHOOK_ID,
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
@@ -267,7 +268,7 @@ async def webhook_stream_camera(hass, config_entry, data):
 
     resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
 
-    if camera.attributes["supported_features"] & CAMERA_SUPPORT_STREAM:
+    if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:
             resp["hls_path"] = await hass.components.camera.async_request_stream(
                 camera.entity_id, "hls"

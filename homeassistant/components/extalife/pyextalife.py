@@ -188,7 +188,6 @@ DEVICE_ARR_ALL_TRANSMITTER = [
 ]
 DEVICE_ARR_ALL_IGNORE = [*DEVICE_ARR_REPEATER]
 
-
 # measurable magnitude/quantity:
 DEVICE_ARR_ALL_SENSOR_MEAS = [
     *DEVICE_ARR_SENS_TEMP,
@@ -217,7 +216,10 @@ DEVICE_ICON_ARR_LIGHT = [
     14,
     16,
     17,
-]  # override device and type rules based on icon; force 'light' device for some icons, but only when device was detected preliminarly as switch; 28 =LED
+]  # override device and type rules based on icon; force 'light' device for some icons,
+
+
+# but only when device was detected preliminarly as switch; 28 =LED
 
 
 class ExtaLifeAPI:
@@ -482,58 +484,7 @@ class ExtaLifeAPI:
 
     @classmethod
     def _get_channels_int(cls, data_js, dummy_ch=False):
-        """
-        data_js - list of TCP command data in JSON dict
-        dummy_ch - dummy channel number? For Transmitters there is no channel info. Make it # per device
 
-        The method will transform TCP JSON into list of channels.
-        Each channel will look like rephrased TCP JSON and will consist of attributes
-        of the "state" section (channel) + attributes of the "device" section
-        eg.:
-        "devices": [{
-                                "id": 11,
-                                "is_powered": false,
-                                "is_paired": false,
-                                "set_remove_sensor": false,
-                                "device": 1,
-                                "type": 11,
-                                "serial": 725149,
-                                "state": [{
-                                                "alias": "Kuchnia 1-1",
-                                                "channel": 1,
-                                                "icon": 13,
-                                                "is_timeout": false,
-                                                "fav": null,
-                                                "power": 0,
-                                                "last_dir": null,
-                                                "value": null
-                                        }
-                                ]
-                        }
-        will become:
-            [{
-                "id": "11-1",
-                "data":
-                {
-                    "alias": "Kuchnia 1-1",
-                    "channel": 1,
-                    "icon": 13,
-                    "is_timeout": false,
-                    "fav": null,
-                    "power": 0,
-                    "last_dir": null,
-                    "value": null,
-                    "id": 11,
-                    "is_powered": false,
-                    "is_paired": false,
-                    "set_remove_sensor": false,
-                    "device": 1,
-                    "type": 11,
-                    "serial": 725149
-                }
-
-        }]
-        """
         def_channel = None
         if dummy_ch:
             def_channel = "#"
@@ -542,10 +493,11 @@ class ExtaLifeAPI:
             for device in cmd["data"]["devices"]:
                 dev = device.copy()
 
-                if dev.get("exta_free_device") == True:
+                if dev.get("exta_free_device"):
                     dev["type"] = (
                         int(dev["state"][0]["exta_free_type"]) + 300
-                    )  # do the same as the Exta Life app does - add 300 to move identifiers to Exta Life "namespace"
+                    )  # do the same as the Exta Life app does - add 300
+                    # to move identifiers to Exta Life "namespace"
 
                 dev.pop("state")
                 for state in device["state"]:
@@ -720,7 +672,6 @@ class APIResponse(APIMessage):
 
 
 class TCPAdapter:
-
     TCP_BUFF_SIZE = 8192
     EFC01_PORT = 20400
 
@@ -912,11 +863,7 @@ class TCPAdapter:
         self._socket.setblocking(False)
         self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
-        _LOGGER.debug(
-            "Connecting to %s:%s",
-            self._params.host,
-            self.EFC01_PORT,
-        )
+        _LOGGER.debug("Connecting to %s:%s", self._params.host, self.EFC01_PORT)
         try:
             coro = self._params.eventloop.sock_connect(
                 self._socket, (self._params.host, self.EFC01_PORT)
@@ -952,7 +899,7 @@ class TCPAdapter:
         """
 
         self._check_connected()
-        if self._authenticated == True:
+        if self._authenticated:
             raise TCPConnError("Already logged in!")
 
         _LOGGER.debug(

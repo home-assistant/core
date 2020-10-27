@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 1",
+            "button10": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 10",
+            "button2": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 2",
+            "button3": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 3",
+            "button4": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 4",
+            "button5": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 5",
+            "button6": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 6",
+            "button7": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 7",
+            "button8": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 8",
+            "button9": "\u039a\u03bf\u03c5\u03bc\u03c0\u03af 9"
+        },
+        "trigger_type": {
+            "single_press": "\u03a0\u03b1\u03c4\u03ae\u03b8\u03b7\u03ba\u03b5 \u03c4\u03bf \" {subtype} \""
+        }
+    }
+}

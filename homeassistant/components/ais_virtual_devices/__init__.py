@@ -247,8 +247,6 @@ async def async_setup(hass, config):
         "on",
         {
             "entity_id": [
-                "sensor.dayofyear",
-                "sensor.weekofyear",
                 "binary_sensor.dzien_pracujacy",
             ],
             "order": 6,

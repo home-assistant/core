@@ -19,7 +19,7 @@
         "title": "Discovered Smappee device"
       },
       "pick_implementation": {
-        "title": "Pick Authentication Method"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
     },
     "abort": {

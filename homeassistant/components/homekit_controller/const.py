@@ -4,6 +4,7 @@ DOMAIN = "homekit_controller"
 KNOWN_DEVICES = f"{DOMAIN}-devices"
 CONTROLLER = f"{DOMAIN}-controller"
 ENTITY_MAP = f"{DOMAIN}-entity-map"
+TRIGGERS = f"{DOMAIN}-triggers"
 
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
@@ -28,6 +29,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "temperature": "sensor",
     "battery": "sensor",
     "smoke": "binary_sensor",
+    "carbon-monoxide": "binary_sensor",
     "leak": "binary_sensor",
     "fan": "fan",
     "fanv2": "fan",

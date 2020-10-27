@@ -19,6 +19,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -30,6 +31,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -426,12 +428,14 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    assert config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 2},
+        user_input={CONF_SCAN_INTERVAL: 2, CONF_TIMEOUT: 30},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
+    assert config_entry.options[CONF_TIMEOUT] == 30

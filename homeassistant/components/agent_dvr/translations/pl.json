@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",

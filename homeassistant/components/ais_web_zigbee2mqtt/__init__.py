@@ -2,12 +2,11 @@
 import asyncio
 from ipaddress import ip_address
 import logging
-import os
 from typing import Dict, Union
 
 import aiohttp
 from aiohttp import hdrs, web
-from aiohttp.web_exceptions import HTTPBadGateway
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPUnauthorized
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
@@ -17,15 +16,15 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import X_HASSIO, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
-
 DOMAIN = "ais_web_zigbee2mqtt"
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, port: str):
+def async_setup_ingress_view(hass: HomeAssistantType, host: str, port: int):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
-    hassio_ingress = HassIOIngress(port, websession)
+
+    hassio_ingress = HassIOIngress(hass, host, port, websession)
     hass.http.register_view(hassio_ingress)
 
 
@@ -33,33 +32,53 @@ class HassIOIngress(HomeAssistantView):
     """Hass.io view to handle base part."""
 
     name = "api:zigbee2mqtt"
-    url = "/api/zigbee2mqtt/{path:.*}"
+    url = "/api/zigbee2mqtt/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, port: str, websession: aiohttp.ClientSession):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        host: str,
+        port: int,
+        websession: aiohttp.ClientSession,
+    ):
         """Initialize a Hass.io ingress view."""
+        self._host = host
         self._port = port
+        self._hass = hass
         self._websession = websession
+        self._valid_token = ""
 
-    def _create_url(self, request: web.Request, path: str) -> str:
+    def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        url = f"http://localhost:{self._port}/{path}"
-        return url
+        return f"http://{self._host}:{self._port}/{path}"
 
     async def _handle(
-        self, request: web.Request, path: str
+        self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
+        # validate token
+        if token != self._valid_token:
+            try:
+                auth = self._hass.auth
+                refresh_token = await auth.async_validate_access_token(token)
+                if refresh_token is None:
+                    raise HTTPUnauthorized() from None
+                # remember the token as valid
+                self._valid_token = token
+            except Exception:
+                raise HTTPUnauthorized() from None
+
         try:
-            # Websocket
+            # Websockettoken
             if _is_websocket(request):
-                return await self._handle_websocket(request, path)
+                return await self._handle_websocket(request, token, path)
 
             # Request
-            return await self._handle_request(request, path)
+            return await self._handle_request(request, token, path)
 
         except aiohttp.ClientError as err:
-            _LOGGER.debug("Ingress error with %s: %s", path, err)
+            _LOGGER.debug("Ingress error with %s / %s: %s", token, path, err)
 
         raise HTTPBadGateway() from None
 
@@ -71,7 +90,7 @@ class HassIOIngress(HomeAssistantView):
     options = _handle
 
     async def _handle_websocket(
-        self, request: web.Request, path: str
+        self, request: web.Request, token: str, path: str
     ) -> web.WebSocketResponse:
         """Ingress route for websocket."""
         if hdrs.SEC_WEBSOCKET_PROTOCOL in request.headers:
@@ -88,8 +107,8 @@ class HassIOIngress(HomeAssistantView):
         await ws_server.prepare(request)
 
         # Preparing
-        url = self._create_url(request, path)
-        source_header = _init_header(request)
+        url = self._create_url(token, path)
+        source_header = _init_header(request, token)
 
         # Support GET query
         if request.query_string:
@@ -115,12 +134,12 @@ class HassIOIngress(HomeAssistantView):
         return ws_server
 
     async def _handle_request(
-        self, request: web.Request, path: str
+        self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
-        url = self._create_url(request, path)
+        url = self._create_url(token, path)
         data = await request.read()
-        source_header = _init_header(request)
+        source_header = _init_header(request, token)
 
         async with self._websession.request(
             request.method,
@@ -156,12 +175,14 @@ class HassIOIngress(HomeAssistantView):
                     await response.write(data)
 
             except (aiohttp.ClientError, aiohttp.ClientPayloadError) as err:
-                _LOGGER.debug("Stream error %s / %s: %s", path, err)
+                _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
             return response
 
 
-def _init_header(request: web.Request) -> Union[CIMultiDict, Dict[str, str]]:
+def _init_header(
+    request: web.Request, token: str
+) -> Union[CIMultiDict, Dict[str, str]]:
     """Create initial header."""
     headers = {}
 
@@ -177,6 +198,13 @@ def _init_header(request: web.Request) -> Union[CIMultiDict, Dict[str, str]]:
         ):
             continue
         headers[name] = value
+
+    # Inject token
+    # headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
+    headers[X_HASSIO] = token
+
+    # Ingress information
+    headers[X_INGRESS_PATH] = f"/api/zigbee2mqtt/{token}"
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
@@ -252,8 +280,9 @@ async def _websocket_forward(ws_from, ws_to):
 async def async_setup(hass, config):
     """Set up the  component."""
     config = config.get(DOMAIN, {})
+    host = config.get("host")
     port = config.get("port")
     # Init ingress feature
-    async_setup_ingress_view(hass, port)
+    async_setup_ingress_view(hass, host, port)
 
     return True

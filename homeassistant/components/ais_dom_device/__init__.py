@@ -4,17 +4,17 @@ Support for interacting with Ais Dom devices.
 For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import logging
 import asyncio
 import json
+import logging
 
-from homeassistant.core import callback
-from .config_flow import configured_service
-from .const import DOMAIN
 from homeassistant.components.mqtt import discovery as mqtt_disco
+from homeassistant.core import callback
 from homeassistant.util.json import load_json, save_json
 
 from . import sensor
+from .config_flow import configured_service
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,24 +106,17 @@ async def async_setup(hass, config):
 
 
 async def _async_start_rf_sniffing(hass):
-    # beep (00C0 is the length of the sound)
+    # beep
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 192}
     )
     # set Portisch firmware support and messages
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 1}
     )
     # start Bucket sniffing
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
-    )
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
-    )
-    await asyncio.sleep(2)
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 177}
     )
     # say info
     await hass.services.async_call(
@@ -134,24 +127,17 @@ async def _async_start_rf_sniffing(hass):
 
 
 async def _async_stop_rf_sniffing(hass, clear):
-    # beep (00C0 is the length of the sound)
+    # beep
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 192}
     )
     # set Portisch firmware support and messages
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 1}
     )
     #  bucket Transmitting using command 0xB0
     await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
-    )
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB055"}
-    )
-    await asyncio.sleep(2)
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
+        "mqtt", "publish", {"topic": "cmnd/dom/RfRaw", "payload": 176}
     )
     # say info
     await hass.services.async_call(
@@ -164,14 +150,14 @@ async def _async_stop_rf_sniffing(hass, clear):
 
 async def _async_send_rf_code(hass, long_topic, b0_code):
     # get the first part of topic
-    topic = long_topic.split("/")[0]
+    topic = long_topic.split("/")[1]
     # the command is like
     # cmnd/sonoffRFBridge/Backlog RfRaw AAB0210314016703F9241110011001010110011010110010101100255; RfRaw 0; RfRaw 1
     await hass.services.async_call(
         "mqtt",
         "publish",
         {
-            "topic": topic + "/cmnd/Backlog",
+            "topic": "/cmnd" + topic + "/Backlog",
             "payload": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
         },
     )
@@ -179,6 +165,9 @@ async def _async_send_rf_code(hass, long_topic, b0_code):
 
 async def _async_remove_ais_dom_entity(hass, entity_id):
     ent_registry = await hass.helpers.entity_registry.async_get_registry()
+    platform = ""
+    domain = ""
+    unique_id = ""
     if ent_registry.async_is_registered(entity_id):
         entity_entry = ent_registry.async_get(entity_id)
         unique_id = entity_entry.unique_id
@@ -227,7 +216,7 @@ async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entit
     device = registry.async_get(device_id)
 
     # 1. get topic from payload
-    unique_topic = topic.split("/")[0]
+    unique_topic = topic.split("/")[1]
 
     # 2. execute the discovery for each code from json
     l_identifiers = list(device.identifiers)
@@ -239,7 +228,7 @@ async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entit
         disco_topic = "homeassistant/switch/" + uniq_id + "/config"
         payload = {
             "name": name,
-            "command_topic": unique_topic + "/cmnd/Backlog",
+            "command_topic": "cmnd/" + unique_topic + "/Backlog",
             "uniq_id": uniq_id,
             "payload_on": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
             "payload_off": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",

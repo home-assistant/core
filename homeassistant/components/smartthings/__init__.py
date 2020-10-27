@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     HTTP_FORBIDDEN,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -158,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
-        if ex.status in (401, HTTP_FORBIDDEN):
+        if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
             _LOGGER.exception(
                 "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,

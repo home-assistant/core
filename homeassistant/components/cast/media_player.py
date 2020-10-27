@@ -86,7 +86,7 @@ SUPPORT_CAST = (
 
 
 ENTITY_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
+    cv.deprecated(CONF_HOST),
     vol.Schema(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,
@@ -97,7 +97,7 @@ ENTITY_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST, invalidation_version="0.116"),
+    cv.deprecated(CONF_HOST),
     PLATFORM_SCHEMA.extend(
         {
             vol.Exclusive(CONF_HOST, "device_identifier"): cv.string,

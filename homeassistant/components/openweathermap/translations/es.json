@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La integraci\u00f3n de OpenWeatherMap para estas coordenadas ya est\u00e1 configurada."
+        },
+        "error": {
+            "auth": "La clave de API no es correcta.",
+            "connection": "No se puede conectar a la API de OWM"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave de API de OpenWeatherMap",
+                    "language": "Idioma",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "mode": "Modo",
+                    "name": "Nombre de la integraci\u00f3n"
+                },
+                "description": "Configurar la integraci\u00f3n de OpenWeatherMap. Para generar la clave API, ve a https://openweathermap.org/appid",
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Idioma",
+                    "mode": "Modo"
+                }
+            }
+        }
+    }
+}

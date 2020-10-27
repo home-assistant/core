@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Kann d\u00e9i Systemklass fir d\u00ebs noutwendeg Komponent net fannen, stell s\u00e9cher dass de Kernel rezent ass an d'Hardware \u00ebnnerst\u00ebtzt g\u00ebtt."
+        }
+    }
+}

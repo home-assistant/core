@@ -11,9 +11,11 @@ CONF_GROUP_ID_BASE = "group_id_base"
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
 DEFAULT_ALLOW_DECONZ_GROUPS = True
+DEFAULT_ALLOW_NEW_DEVICES = True
 
 CONF_ALLOW_CLIP_SENSOR = "allow_clip_sensor"
 CONF_ALLOW_DECONZ_GROUPS = "allow_deconz_groups"
+CONF_ALLOW_NEW_DEVICES = "allow_new_devices"
 CONF_MASTER_GATEWAY = "master"
 
 SUPPORTED_PLATFORMS = [
@@ -44,4 +46,6 @@ POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
 
+CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
+CONF_XY = "xy"

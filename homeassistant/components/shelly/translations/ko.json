@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "unsupported_firmware": "\uc774 \uc7a5\uce58\ub294 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\ub294 \ud38c\uc6e8\uc5b4 \ubc84\uc804\uc744 \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d"
+        },
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "\uc554\ud638",
+                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                }
+            }
+        }
+    }
+}

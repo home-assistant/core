@@ -4,6 +4,7 @@
     "flow_title": "Shelly: {name}",
     "step": {
       "user": {
+        "description": "Before set up, the battery-powered device must be woken up by pressing the button on the device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -15,7 +16,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?"
+        "description": "Do you want to set up the {model} at {host}?\n\nBefore set up, the battery-powered device must be woken up by pressing the button on the device."
       }
     },
     "error": {

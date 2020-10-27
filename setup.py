@@ -50,9 +50,9 @@ REQUIRES = [
     "pyyaml==5.3.1",
     "requests==2.24.0",
     "ruamel.yaml==0.15.100",
-    "voluptuous==0.11.7",
+    "voluptuous==0.12.0",
     "voluptuous-serialize==2.4.0",
-    "ais-dom-frontend==20200918.8",
+    "ais-dom-frontend==20201001.6",
     "yarl==1.4.2",
 ]
 

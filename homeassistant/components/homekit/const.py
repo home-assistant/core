@@ -136,6 +136,7 @@ SERV_TELEVISION_SPEAKER = "TelevisionSpeaker"
 SERV_TEMPERATURE_SENSOR = "TemperatureSensor"
 SERV_THERMOSTAT = "Thermostat"
 SERV_VALVE = "Valve"
+SERV_WINDOW = "Window"
 SERV_WINDOW_COVERING = "WindowCovering"
 
 # #### Characteristics ####

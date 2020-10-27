@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
+                    "server": "",
                     "username": "Brukernavn"
                 },
                 "description": "Angi Dexcom Share-legitimasjon",

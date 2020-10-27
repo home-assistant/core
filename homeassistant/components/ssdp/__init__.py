@@ -17,16 +17,22 @@ SCAN_INTERVAL = timedelta(seconds=60)
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_USN = "ssdp_usn"
+ATTR_SSDP_EXT = "ssdp_ext"
+ATTR_SSDP_SERVER = "ssdp_server"
 # Attributes for accessing info from retrieved UPnP device description
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
 ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
+ATTR_UPNP_MODEL_DESCRIPTION = "modelDescription"
 ATTR_UPNP_MODEL_NAME = "modelName"
 ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+ATTR_UPNP_MODEL_URL = "modelURL"
 ATTR_UPNP_SERIAL = "serialNumber"
 ATTR_UPNP_UDN = "UDN"
+ATTR_UPNP_UPC = "UPC"
+ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +113,9 @@ class Scanner:
         """Process a single entry."""
 
         info = {"st": entry.st}
+        for key in "usn", "ext", "server":
+            if key in entry.values:
+                info[key] = entry.values[key]
 
         if entry.location:
 
@@ -165,5 +174,12 @@ def info_from_entry(entry, device_info):
     }
     if device_info:
         info.update(device_info)
+        info.pop("st", None)
+        if "usn" in info:
+            info[ATTR_SSDP_USN] = info.pop("usn")
+        if "ext" in info:
+            info[ATTR_SSDP_EXT] = info.pop("ext")
+        if "server" in info:
+            info[ATTR_SSDP_SERVER] = info.pop("server")
 
     return info

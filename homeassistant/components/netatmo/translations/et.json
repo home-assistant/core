@@ -1,0 +1,27 @@
+{
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Ala nimi",
+                    "lat_ne": "Kirdenurga laiuskraad",
+                    "lat_sw": "Edelanurga laiuskraad",
+                    "lon_ne": "Kirdenurga pikkuskraad",
+                    "lon_sw": "Edelanurga pikkuskraad",
+                    "mode": "Arvutamine",
+                    "show_on_map": "Kuva kaardil"
+                },
+                "description": "Seadista selle ala avalik ilmaandur.",
+                "title": "Netatmo avalik ilmaandur"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Ala nimi",
+                    "weather_areas": "Ilmaandmete alad"
+                },
+                "description": "Seadista avalikke ilmastikuandureid.",
+                "title": "Netatmo avalik ilmaandur"
+            }
+        }
+    }
+}

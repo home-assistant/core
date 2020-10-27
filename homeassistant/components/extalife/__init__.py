@@ -714,6 +714,28 @@ class ExtaLifeChannel(Entity):
             "not_responding": self.channel_data.get("is_timeout"),
         }
 
+    def format_state_attr(self, attr: dict):
+        from re import search
+
+        """ Format state atteibutes based on name and other criteria.
+        Can be overriden in dedicated subclasses to refine formatiing """
+        for k, v in attr.items():
+            val = v
+            if search("voltage", k):
+                v = v / 100
+            elif search("current", k):
+                v = v / 1000
+            elif search("energy_consumption", k):
+                v = v / 100000
+            elif search("frequency", k):
+                v = v / 100
+            elif search("phase_shift", k):
+                v = v / 10
+            elif search("phase_energy", k):
+                v = v / 100000
+            if val != v:
+                attr.update({k: v})
+
 
 class ExtaLifeController(Entity):
     """Base class of a ExtaLife Channel (an equivalent of HA's Entity)."""
