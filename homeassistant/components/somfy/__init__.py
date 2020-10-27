@@ -1,4 +1,5 @@
 """Support for Somfy hubs."""
+from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
@@ -202,3 +203,7 @@ class SomfyEntity(CoordinatorEntity, Entity):
         """Process an update from the coordinator."""
         self._create_device()
         super()._handle_coordinator_update()
+
+    @abstractmethod
+    def _create_device(self):
+        """Update the device with the latest data."""
