@@ -111,7 +111,9 @@ class MicrosoftProvider(Provider):
             pass
         else:
             _LOGGER.error(
-                f"The provided voice {self._voice} is not in the supported types list. Falling back to default voice {DEFAULT_VOICE}"
+                "The provided voice %s is not in the supported types list. Falling back to default voice %s",
+                self._voice,
+                DEFAULT_VOICE,
             )
             self._voice = DEFAULT_VOICE
 
@@ -130,7 +132,7 @@ class MicrosoftProvider(Provider):
             data = result.audio_data
 
             if result.reason == ResultReason.SynthesizingAudioCompleted:
-                _LOGGER.debug(f"Speech synthesized for text [{message}]")
+                _LOGGER.debug("Speech synthesized for text [%s]", message)
                 stream = AudioDataStream(result)
 
                 # Reads data from the stream
@@ -138,24 +140,20 @@ class MicrosoftProvider(Provider):
                 total_size = 0
                 filled_size = stream.read_data(audio_buffer)
                 while filled_size > 0:
-                    _LOGGER.debug(f"{filled_size} bytes received.")
+                    _LOGGER.debug("%s bytes received.", filled_size)
                     total_size += filled_size
                     filled_size = stream.read_data(audio_buffer)
                 _LOGGER.debug(
-                    "Totally {} bytes received for text [{}].".format(
-                        total_size, message
-                    )
+                    "Totally %s bytes received for text [%s].", total_size, message
                 )
 
             elif result.reason == ResultReason.Canceled:
                 cancellation_details = result.cancellation_details
                 _LOGGER.info(
-                    f"Speech synthesis canceled: {cancellation_details.reason}"
+                    "Speech synthesis canceled: %s", cancellation_details.reason
                 )
                 if cancellation_details.reason == CancellationReason.Error:
-                    _LOGGER.error(
-                        f"Error details: {cancellation_details.error_details}"
-                    )
+                    _LOGGER.error("Error details: %s", cancellation_details.reason)
         except HTTPException as ex:
             _LOGGER.error("Error occurred for Microsoft TTS: %s", ex)
             return (None, None)
