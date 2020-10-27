@@ -96,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "camera"]
 
 # Services for the legacy API
 
