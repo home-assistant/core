@@ -16,7 +16,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione di Spotify deve essere nuovamente autenticata con Spotify per l'account: {account}",
-                "title": "Eseguire nuovamente l'autenticazione con Spotify"
+                "title": "Reautenticare l'integrazione"
             }
         }
     }
