@@ -418,7 +418,7 @@ async def test_owserver_setup_valid_device(hass, device_id):
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
 
-    with patch("homeassistant.components.onewire.sensor.protocol.proxy") as owproxy:
+    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
         owproxy.return_value.dir.return_value = dir_return_value
         owproxy.return_value.read.side_effect = read_side_effect
 
