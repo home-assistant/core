@@ -2698,3 +2698,13 @@ async def test_result_wrappers(hass):
         assert result == native
         assert result.render_result == text
         schema(result)  # should not raise
+
+
+async def test_parse_result(hass):
+    """Test parse result."""
+    for tpl, result in (
+        ('{{ "{{}}" }}', "{{}}"),
+        ("not-something", "not-something"),
+        ("2a", "2a"),
+    ):
+        assert template.Template(tpl, hass).async_render() == result
