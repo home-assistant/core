@@ -294,7 +294,8 @@ async def async_get_translations(
             }
 
     async with lock:
-        if integration is None and not config_flow:
+        use_cache = integration is None and not config_flow
+        if use_cache:
             cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
             if cache is None:
                 cache = hass.data[TRANSLATION_FLATTEN_CACHE] = FlatCache(hass)
@@ -317,24 +318,24 @@ async def async_get_translations(
 
         results = await asyncio.gather(*tasks)
 
-    if category == "state":
-        resource_func = merge_resources
-    else:
-        resource_func = build_resources
+        if category == "state":
+            resource_func = merge_resources
+        else:
+            resource_func = build_resources
 
-    resources = flatten(resource_func(results[0], components, category))
+        resources = flatten(resource_func(results[0], components, category))
 
-    if language != "en":
-        base_resources = flatten(resource_func(results[1], components, category))
-        resources = {**base_resources, **resources}
+        if language != "en":
+            base_resources = flatten(resource_func(results[1], components, category))
+            resources = {**base_resources, **resources}
 
-    if integration is not None:
-        pass
-    elif config_flow:
+        # The cache must be set while holding the lock
+        if use_cache:
+            assert cache is not None
+            cache.async_set_cache(language, category, resources)
+
+    if config_flow:
         loaded_comp_resources = await async_get_translations(hass, language, category)
         resources.update(loaded_comp_resources)
-    else:
-        assert cache is not None
-        cache.async_set_cache(language, category, resources)
 
     return resources
