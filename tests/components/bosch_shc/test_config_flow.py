@@ -1,4 +1,6 @@
 """Test the Bosch SHC config flow."""
+from boschshcpy import SHCSession
+
 from homeassistant import config_entries, setup
 from homeassistant.components.bosch_shc.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.bosch_shc.const import DOMAIN
@@ -89,3 +91,40 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_other_exception(hass):
+    """Test we handle exception error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.bosch_shc.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "ssl_certificate": "test-cert.pem",
+                "ssl_key": "test-key.pem",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_session_valid(hass):
+    """Test we provide parameters to SHC Session valid."""
+    session = await hass.async_add_executor_job(
+        SHCSession,
+        "1.1.1.1",
+        "test-cert.pem",
+        "test-key.pem",
+        True,
+    )
+    assert session.api._controller_ip == "1.1.1.1"
+    assert session.api._certificate == "test-cert.pem"
+    assert session.api._key == "test-key.pem"
