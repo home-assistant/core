@@ -1,6 +1,6 @@
 """Tests for light platform."""
-import logging
 from datetime import timedelta
+import logging
 from typing import Callable, NamedTuple
 
 from pyHS100 import SmartDeviceException
