@@ -61,29 +61,29 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         await super().async_update()
         self.cover = Blind(self.device, self.api)
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Close the cover."""
         self._is_closing = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
         try:
             # Blocks until the close command is sent
-            self.cover.close()
+            await self.hass.async_add_executor_job(self.cover.close)
             self._closed = True
         finally:
             self._is_closing = None
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Open the cover."""
         self._is_opening = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
         try:
             # Blocks until the open command is sent
-            self.cover.open()
+            await self.hass.async_add_executor_job(self.cover.open)
             self._closed = False
         finally:
             self._is_opening = None
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
