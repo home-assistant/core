@@ -1,4 +1,4 @@
-"""Harmony callback subscriber."""
+"""Harmony data object which contains the Harmony Client."""
 
 import logging
 from typing import Any, Callable, NamedTuple, Optional
@@ -25,8 +25,8 @@ class HarmonyCallback(NamedTuple):
     activity_started: ActivityCallback
 
 
-class HarmonySubscriber:
-    """Subscriber for Harmony hub updates."""
+class HarmonyData:
+    """HarmonyData registers for Harmony hub updates."""
 
     def __init__(self, client: HarmonyClient, name: str):
         """Initialize a subscriber."""
