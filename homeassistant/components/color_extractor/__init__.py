@@ -76,7 +76,9 @@ async def async_setup(hass, hass_config):
             elif ATTR_PATH in service_data:
                 image_type = "file path"
                 image_reference = service_data.pop(ATTR_PATH)
-                color = extract_color_from_path(image_reference)
+                color = await hass.async_add_executor_job(
+                    extract_color_from_path, image_reference
+                )
 
         except UnidentifiedImageError as ex:
             _LOGGER.error(
