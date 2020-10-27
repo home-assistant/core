@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LOCK, DOMAIN
+from .const import CONF_LOCK, DOMAIN, SUPPORTED_TYPES
 from .helpers import get_ip_or_none
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +56,9 @@ class BroadlinkScout:
         for device in devices:
             host, mac_addr = device.host[0], device.mac.hex()
             if (host, mac_addr) in hosts_and_macs:
+                continue
+
+            if device.type not in SUPPORTED_TYPES:
                 continue
 
             self.hass.async_create_task(

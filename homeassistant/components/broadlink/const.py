@@ -15,3 +15,5 @@ DOMAINS_AND_TYPES = (
     (SENSOR_DOMAIN, ("A1", "RM2", "RM4")),
     (SWITCH_DOMAIN, ("BG1", "MP1", "RM2", "RM4", "SP1", "SP2", "SP4", "SP4B")),
 )
+
+SUPPORTED_TYPES = ["A1", "MP1", "RM2", "RM4", "SP1", "SP2"]
