@@ -37,3 +37,35 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_error(hass):
+    """Test if something fails."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.openplantbook.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.openplantbook.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        try:
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    "client_id": "test-client-id",
+                },
+            )
+        except KeyError:
+            result2 = None
+            pass
+
+    await hass.async_block_till_done()
+    assert result2 is None
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0

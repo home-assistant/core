@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 
-from . import CannotConnect, InvalidAuth, OpenPlantBookApi
+from . import OpenPlantBookApi
 from .const import ATTR_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,13 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_API] = OpenPlantBookApi(data["client_id"], data["secret"])
+    try:
+        hass.data[DOMAIN][ATTR_API] = OpenPlantBookApi(
+            data["client_id"], data["secret"]
+        )
+    except Exception as ex:
+        _LOGGER.debug("Unable to connect to OpenPlantbook: %s", ex)
+        raise
 
     return {"title": "Openplantbook API"}
 
@@ -38,16 +44,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-                if info:
-                    return self.async_create_entry(title=info["title"], data=user_input)
-                raise CannotConnect
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                return self.async_create_entry(title=info["title"], data=user_input)
+            except Exception as ex:
+                _LOGGER.error("Unable to connect to OpenPlantbook: %s", ex)
+                raise
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
