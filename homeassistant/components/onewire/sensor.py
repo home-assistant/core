@@ -2,35 +2,15 @@
 from glob import glob
 import logging
 import os
-from typing import Any, Dict, Optional
 
 from pi1wire import InvalidCRCException, UnsupportResponseException
-from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.onewire.onewirehub import OneWireHub
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TYPE,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRICAL_CURRENT_AMPERE,
-    LIGHT_LUX,
-    PERCENTAGE,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
-    VOLT,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -41,8 +21,8 @@ from .const import (
     DEFAULT_OWSERVER_PORT,
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
-    PRESSURE_CBAR,
 )
+from .onewire_entities import OneWire, OneWireProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,33 +71,6 @@ HOBBYBOARD_EF = {
     },
 }
 
-SENSOR_TYPES = {
-    # SensorType: [ Measured unit, Unit, DeviceClass ]
-    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih3600": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih4000": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih5030": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_htm1735": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_raw": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "pressure": ["pressure", PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
-    "illuminance": ["illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
-    "wetness_0": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_1": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_2": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_3": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "moisture_0": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_1": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_2": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_3": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "counter_a": ["counter", "count", None],
-    "counter_b": ["counter", "count", None],
-    "HobbyBoard": ["none", "none", None],
-    "voltage": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VAD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VDD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "current": ["current", ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -291,84 +244,6 @@ def get_entities(onewirehub: OneWireHub, config):
                     )
 
     return entities
-
-
-class OneWire(Entity):
-    """Implementation of a 1-Wire sensor."""
-
-    def __init__(self, name, device_file, sensor_type, device_info=None):
-        """Initialize the sensor."""
-        self._name = f"{name} {sensor_type.capitalize()}"
-        self._device_file = device_file
-        self._device_class = SENSOR_TYPES[sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._device_info = device_info
-        self._state = None
-        self._value_raw = None
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the sensor."""
-        if "count" in self._unit_of_measurement:
-            return int(self._state)
-        return self._state
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self) -> Optional[str]:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the sensor."""
-        return {"device_file": self._device_file, "raw_value": self._value_raw}
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._device_file
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        """Return device specific attributes."""
-        return self._device_info
-
-
-class OneWireProxy(OneWire):
-    """Implementation of a 1-Wire sensor through owserver."""
-
-    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
-        """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, device_info)
-        self._owproxy = owproxy
-
-    def _read_value_ownet(self):
-        """Read a value from the owserver."""
-        return self._owproxy.read(self._device_file).decode().lstrip()
-
-    def update(self):
-        """Get the latest data from the device."""
-        value = None
-        value_read = False
-        try:
-            value_read = self._read_value_ownet()
-        except protocol.Error as exc:
-            _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        if value_read:
-            value = round(float(value_read), 1)
-            self._value_raw = float(value_read)
-
-        self._state = value
 
 
 class OneWireDirect(OneWire):
