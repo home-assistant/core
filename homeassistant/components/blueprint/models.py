@@ -45,7 +45,7 @@ class Blueprint:
         try:
             data = self.data = BLUEPRINT_SCHEMA(data)
         except vol.Invalid as err:
-            raise InvalidBlueprint(expected_domain, path, data, err)
+            raise InvalidBlueprint(expected_domain, path, data, err) from err
 
         self.placeholders = placeholder.extract_placeholders(data)
 
@@ -221,7 +221,7 @@ class DomainBlueprints:
         except vol.Invalid as err:
             raise InvalidBlueprintInputs(
                 self.domain, humanize_error(config_with_blueprint, err)
-            )
+            ) from err
 
         bp_conf = config_with_blueprint[CONF_USE_BLUEPRINT]
         blueprint = await self.async_get_blueprint(bp_conf[CONF_PATH])
