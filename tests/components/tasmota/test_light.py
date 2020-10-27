@@ -482,7 +482,7 @@ async def test_sending_mqtt_commands_on_off(hass, mqtt_mock, setup_tasmota):
     # Turn the light on and verify MQTT message is sent
     await common.async_turn_on(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Fade 0;NoDelay;Power1 ON", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "ON", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -493,7 +493,7 @@ async def test_sending_mqtt_commands_on_off(hass, mqtt_mock, setup_tasmota):
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Fade 0;NoDelay;Power1 OFF", 0, False
+        "tasmota_49A3BC/cmnd/Power1", "OFF", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -575,6 +575,57 @@ async def test_sending_mqtt_commands_rgbww(hass, mqtt_mock, setup_tasmota):
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade 0;NoDelay;Power1 ON;NoDelay;Scheme 4",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+
+async def test_sending_mqtt_commands_power_unlinked(hass, mqtt_mock, setup_tasmota):
+    """Test the sending MQTT commands to a light with unlinked dimlevel and power."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 2
+    config["lt_st"] = 1  # 1 channel light (dimmer)
+    config["so"]["20"] = 1  # Update of Dimmer/Color/CT without turning power on
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.reset_mock()
+
+    # Turn the light on and verify MQTT message is sent
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Fade 0;NoDelay;Power1 ON", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Tasmota is not optimistic, the state should still be off
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    # Turn the light off and verify MQTT message is sent
+    await common.async_turn_off(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/Backlog", "NoDelay;Fade 0;NoDelay;Power1 OFF", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Turn the light on and verify MQTT messages are sent; POWER should be sent
+    await common.async_turn_on(hass, "light.test", brightness=192)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Fade 0;NoDelay;Dimmer 75;NoDelay;Power1 ON",
         0,
         False,
     )
@@ -733,7 +784,7 @@ async def test_split_light2(hass, mqtt_mock, setup_tasmota):
 
 
 async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
-    """Test multi-channel light split to single-channel dimmers."""
+    """Test rgbww light split to rgb+ww."""
     mac = config["mac"]
     num_lights = 2
 
@@ -775,7 +826,7 @@ async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
 
 
 async def test_unlinked_light(hass, mqtt_mock, setup_tasmota):
-    """Test multi-channel light split to rgb+ww."""
+    """Test rgbww light split to rgb+ww."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 2
     config["rl"][1] = 2
@@ -786,7 +837,7 @@ async def test_unlinked_light(hass, mqtt_mock, setup_tasmota):
 
 
 async def test_unlinked_light2(hass, mqtt_mock, setup_tasmota):
-    """Test multi-channel light split to single-channel dimmers."""
+    """Test rgbww light split to rgb+ww."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["rl"][0] = 1
     config["rl"][1] = 1
@@ -892,6 +943,22 @@ async def test_discovery_removal_relay_as_light(hass, mqtt_mock, caplog, setup_t
     config1["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
     config2 = copy.deepcopy(DEFAULT_CONFIG)
     config2["rl"][0] = 1
+    config2["so"]["30"] = 0  # Disable Home Assistant auto-discovery as light
+
+    await help_test_discovery_removal(
+        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
+    )
+
+
+async def test_discovery_removal_relay_as_light2(
+    hass, mqtt_mock, caplog, setup_tasmota
+):
+    """Test removal of discovered relay as light."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG)
+    config1["rl"][0] = 1
+    config1["so"]["30"] = 1  # Enforce Home Assistant auto-discovery as light
+    config2 = copy.deepcopy(DEFAULT_CONFIG)
+    config2["rl"][0] = 0
     config2["so"]["30"] = 0  # Disable Home Assistant auto-discovery as light
 
     await help_test_discovery_removal(

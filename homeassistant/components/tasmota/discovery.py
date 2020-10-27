@@ -29,6 +29,9 @@ TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
 def clear_discovery_hash(hass, discovery_hash):
     """Clear entry in ALREADY_DISCOVERED list."""
+    if ALREADY_DISCOVERED not in hass.data:
+        # Discovery is shutting down
+        return
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
