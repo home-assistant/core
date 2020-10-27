@@ -16,8 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
@@ -27,7 +26,7 @@ from homeassistant.util.color import (
 import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
-from .common import UNAVAILABLE_RETRY_DELAY, get_devices_sysinfo
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -62,35 +61,12 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up lights."""
-    devices = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    entities_ready = []
-    entities_unavailable = []
-
-    entities_ready, entities_unavailable = await hass.async_add_executor_job(
-        get_devices_sysinfo, devices, TPLinkSmartBulb
+    await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb, async_add_entities
     )
-    if entities_ready:
-        async_add_entities(entities_ready, update_before_add=True)
 
-    async def async_retry_setup_entry(_):
-        entities_unavailable = hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]
-        entities_ready, entities_unavailable = await hass.async_add_executor_job(
-            get_devices_sysinfo, entities_unavailable, TPLinkSmartBulb
-        )
-        if entities_ready:
-            _LOGGER.debug("Adding additional entries")
-            async_add_entities(entities_ready, update_before_add=True)
-        if entities_unavailable:
-            _LOGGER.debug("Rescheduling retry for unavailable devices")
-            hass.helpers.event.async_call_later(
-                UNAVAILABLE_RETRY_DELAY, async_retry_setup_entry
-            )
-
-    if entities_unavailable:
-        hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"] = entities_unavailable
-
-        _LOGGER.warning("Scheduling a retry for unavailable devices")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_retry_setup_entry)
+    if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
+        raise PlatformNotReady
 
 
 def brightness_to_percentage(byt):

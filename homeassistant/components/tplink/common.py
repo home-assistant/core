@@ -13,6 +13,8 @@ from pyHS100 import (
 
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN as TPLINK_DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -22,8 +24,6 @@ CONF_DISCOVERY = "discovery"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
-
-UNAVAILABLE_RETRY_DELAY = 60
 
 
 class SmartDevices:
@@ -131,8 +131,14 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
-def get_devices_sysinfo(devices, device_class):
+def add_available_devices(hass, device_type, device_class, async_add_entities):
     """Get sysinfo for all devices."""
+
+    devices = hass.data[TPLINK_DOMAIN][device_type]
+
+    if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
+        devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
+
     entities_ready = []
     entities_unavailable = []
     for device in devices:
@@ -147,4 +153,7 @@ def get_devices_sysinfo(devices, device_class):
                 ex,
             )
 
-    return entities_ready, entities_unavailable
+    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = entities_unavailable
+
+    if entities_ready:
+        async_add_entities(entities_ready, update_before_add=True)
