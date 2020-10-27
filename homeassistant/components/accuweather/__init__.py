@@ -1,6 +1,5 @@
 """The AccuWeather component."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
