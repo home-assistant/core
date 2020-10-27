@@ -126,15 +126,15 @@ class DeconzGateway:
         if not self.option_allow_new_devices:
             return
 
-        if device is None:
-            async_dispatcher_send(self.hass, self.async_signal_new_device(device_type))
-            return
+        args = []
 
-        if not isinstance(device, list):
-            device = [device]
+        if device is not None and not isinstance(device, list):
+            args.append([device])
 
         async_dispatcher_send(
-            self.hass, self.async_signal_new_device(device_type), device
+            self.hass,
+            self.async_signal_new_device(device_type),
+            *args,  # Don't send device if None, it would override default value in listeners
         )
 
     async def async_update_device_registry(self) -> None:
