@@ -1,4 +1,5 @@
 """Constants for 1-Wire component."""
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
@@ -13,7 +14,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLT,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
