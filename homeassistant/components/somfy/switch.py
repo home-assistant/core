@@ -32,11 +32,10 @@ class SomfyCameraShutter(SomfyEntity, SwitchEntity):
     def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id, api)
-        self.shutter = CameraProtect(self.device, self.api)
+        self._create_device()
 
-    async def async_update(self):
+    def _create_device(self):
         """Update the device with the latest data."""
-        await super().async_update()
         self.shutter = CameraProtect(self.device, self.api)
 
     def turn_on(self, **kwargs) -> None:
