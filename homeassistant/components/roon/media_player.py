@@ -77,12 +77,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(
         SERVICE_JOIN,
         {vol.Required(ATTR_JOIN): vol.All(cv.ensure_list, [cv.entity_id])},
-        "async_join",
+        "join",
     )
     platform.async_register_entity_service(
         SERVICE_UNJOIN,
         {vol.Optional(ATTR_UNJOIN): vol.All(cv.ensure_list, [cv.entity_id])},
-        "async_unjoin",
+        "unjoin",
     )
     platform.async_register_entity_service(
         SERVICE_TRANSFER,
@@ -508,7 +508,7 @@ class RoonDevice(MediaPlayerEntity):
                 media_id,
             )
 
-    async def async_join(self, join_ids):
+    def join(self, join_ids):
         """Add another Roon player to this player's join group."""
 
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
@@ -548,7 +548,7 @@ class RoonDevice(MediaPlayerEntity):
             [self._output_id] + [sync_available[name] for name in names]
         )
 
-    async def async_unjoin(self, unjoin_ids=None):
+    def unjoin(self, unjoin_ids=None):
         """Remove a Roon player to this player's join group."""
 
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
@@ -610,7 +610,9 @@ class RoonDevice(MediaPlayerEntity):
             )
 
         _LOGGER.info("Transferring from %s to %s", self.name, name)
-        self._server.roonapi.transfer_zone(self._zone_id, transfer_id)
+        await self.hass.async_add_executor_job(
+            self._server.roonapi.transfer_zone, self._zone_id, transfer_id
+        )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
