@@ -101,7 +101,7 @@ class TestSignalMessenger:
             "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
             in caplog.text
         )
-        assert requests_mock.called == True
+        assert requests_mock.called is True
         assert requests_mock.call_count == 2
 
     def test_send_message_with_attachment(self, requests_mock, caplog):
