@@ -1502,6 +1502,7 @@ async def test_debug_info_qos_retain(hass, mqtt_mock):
 async def test_publish_json_from_template(hass, mqtt_mock):
     """Test the publishing of call to services."""
     test_str = "{'valid': 'python', 'invalid': 'json'}"
+    test_str_tpl = "{{ \"{'valid': 'python', 'invalid': 'json'}\" }}"
 
     await async_setup_component(
         hass,
@@ -1511,13 +1512,16 @@ async def test_publish_json_from_template(hass, mqtt_mock):
                 "test_script_payload": {
                     "sequence": {
                         "service": "mqtt.publish",
-                        "data": {"topic": "test-topic", "payload": test_str},
+                        "data": {"topic": "test-topic", "payload": test_str_tpl},
                     }
                 },
                 "test_script_payload_template": {
                     "sequence": {
                         "service": "mqtt.publish",
-                        "data": {"topic": "test-topic", "payload_template": test_str},
+                        "data": {
+                            "topic": "test-topic",
+                            "payload_template": test_str_tpl,
+                        },
                     }
                 },
             }
