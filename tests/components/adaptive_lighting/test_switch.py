@@ -14,6 +14,7 @@ from homeassistant.components.adaptive_lighting.const import (
     CONF_INITIAL_TRANSITION,
     CONF_MANUAL_CONTROL,
     CONF_PREFER_RGB_COLOR,
+    CONF_SEPARATE_TURN_ON_COMMANDS,
     CONF_SUNRISE_OFFSET,
     CONF_SUNRISE_TIME,
     CONF_SUNSET_TIME,
@@ -147,7 +148,7 @@ async def setup_lights(hass):
     return lights
 
 
-async def setup_lights_and_switch(hass):
+async def setup_lights_and_switch(hass, extra_conf=None):
     """Create switch and demo lights."""
     # Setup demo lights and turn on
     lights_instances = await setup_lights(hass)
@@ -174,6 +175,7 @@ async def setup_lights_and_switch(hass):
             CONF_TRANSITION: 0,
             CONF_DETECT_NON_HA_CHANGES: True,
             CONF_PREFER_RGB_COLOR: False,
+            **(extra_conf or {}),
         },
     )
     await hass.async_block_till_done()
@@ -439,9 +441,9 @@ async def test_manual_control(hass):
         )
         await hass.async_block_till_done()
 
-    async def change_manual_control(
-        set_to, extra_service_data={CONF_LIGHTS: [ENTITY_LIGHT]}
-    ):
+    async def change_manual_control(set_to, extra_service_data=None):
+        if extra_service_data is None:
+            extra_service_data = {CONF_LIGHTS: [ENTITY_LIGHT]}
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_MANUAL_CONTROL,
@@ -794,20 +796,20 @@ async def test_restore_off_state(hass, state):
         elif state is None:
             assert switch.is_on
 
-        for sw, initial_state in [
+        for _switch, initial_state in [
             (switch.sleep_mode_switch, False),
             (switch.adapt_brightness_switch, True),
             (switch.adapt_color_switch, True),
         ]:
             if state == STATE_ON:
-                assert sw.is_on
+                assert _switch.is_on
             elif state == STATE_OFF:
-                assert not sw.is_on
+                assert not _switch.is_on
             elif state is None:
                 if initial_state:
-                    assert sw.is_on
+                    assert _switch.is_on
                 else:
-                    assert not sw.is_on
+                    assert not _switch.is_on
 
 
 @pytest.mark.xfail(reason="Offset is larger than half a day")
@@ -839,3 +841,31 @@ async def test_async_update_at_interval(hass):
     """Test '_async_update_at_interval' method."""
     _, switch = await setup_switch(hass, {})
     await switch._async_update_at_interval()
+
+
+async def test_separate_turn_on_commands(hass):
+    """Test 'separate_turn_on_commands' argument."""
+    switch, (light, *_) = await setup_lights_and_switch(
+        hass, {CONF_SEPARATE_TURN_ON_COMMANDS: True}
+    )
+    # We just turn sleep mode on and off which should change the
+    # brightness and color. We don't test whether the number are exactly
+    # what we expect because we do this in other tests already, we merely
+    # check whether the brightness and color_temp change.
+    context = switch.create_context("test")  # needs to be passed to update method
+    brightness = light.brightness
+    color_temp = light.color_temp
+    await switch.sleep_mode_switch.async_turn_on()
+    await switch._update_attrs_and_maybe_adapt_lights(context=context)
+    await hass.async_block_till_done()
+    sleep_brightness = light.brightness
+    sleep_color_temp = light.color_temp
+    assert sleep_brightness != brightness
+    assert sleep_color_temp != color_temp
+    await switch.sleep_mode_switch.async_turn_off()
+    await switch._update_attrs_and_maybe_adapt_lights(context=context)
+    await hass.async_block_till_done()
+    brightness = light.brightness
+    color_temp = light.color_temp
+    assert sleep_brightness != brightness
+    assert sleep_color_temp != color_temp

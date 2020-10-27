@@ -29,6 +29,7 @@
           "min_color_temp": "min_color_temp, in Kelvin",
           "only_once": "only_once, only adapt the lights when turning them on",
           "prefer_rgb_color": "prefer_rgb_color, use 'rgb_color' over 'color_temp' when possible",
+          "separate_turn_on_commands": "separate_turn_on_commands, for each attribute (color, brightness, etc.) in 'light.turn_on', required for some lights.",
           "sleep_brightness": "sleep_brightness, in %",
           "sleep_color_temp": "sleep_color_temp, in Kelvin",
           "sunrise_offset": "sunrise_offset, in +/- seconds",
