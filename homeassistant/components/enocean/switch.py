@@ -95,3 +95,6 @@ class EnOceanSwitch(EnOceanEntity, ToggleEntity):
                 if channel == self.channel:
                     self._on_state = output > 0
                     self.schedule_update_ha_state()
+        elif packet.data[0] == 0xD5:
+            # actuator status telegram
+            packet.parse_eep(0x00, 0x01)

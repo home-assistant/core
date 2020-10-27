@@ -31,6 +31,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_DOOR_WINDOW = "door"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_HUMIDITY: {
@@ -38,26 +39,38 @@ SENSOR_TYPES = {
         "unit": PERCENTAGE,
         "icon": "mdi:water-percent",
         "class": DEVICE_CLASS_HUMIDITY,
+        "orig_state": None,
     },
     SENSOR_TYPE_POWER: {
         "name": "Power",
         "unit": POWER_WATT,
         "icon": "mdi:power-plug",
         "class": DEVICE_CLASS_POWER,
+        "orig_state": None,
     },
     SENSOR_TYPE_TEMPERATURE: {
         "name": "Temperature",
         "unit": TEMP_CELSIUS,
         "icon": "mdi:thermometer",
         "class": DEVICE_CLASS_TEMPERATURE,
+        "orig_state": None,
     },
     SENSOR_TYPE_WINDOWHANDLE: {
         "name": "WindowHandle",
         "unit": None,
         "icon": "mdi:window",
         "class": None,
+        "orig_state": None,
+    },
+    SENSOR_TYPE_DOOR_WINDOW: {
+        "name": "DoorWindow",
+        "unit": None,
+        "icon": "mdi:door-closed",
+        "class": None,
+        "orig_state": STATE_CLOSED,
     },
 }
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -100,6 +113,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
+    elif sensor_type == SENSOR_TYPE_DOOR_WINDOW:
+        add_entities([EnOceanDoorWindow(dev_id, dev_name)])
+
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
@@ -112,7 +128,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity):
         self._dev_name = f"{SENSOR_TYPES[self._sensor_type]['name']} {dev_name}"
         self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]["unit"]
         self._icon = SENSOR_TYPES[self._sensor_type]["icon"]
-        self._state = None
+        self._state = SENSOR_TYPES[self._sensor_type]["orig_state"]
 
     @property
     def name(self):
@@ -189,7 +205,6 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     - A5-10-10 (Temp. and Humidity Sensor and Set Point)
     - A5-10-12 (Temp. and Humidity Sensor, Set Point and Occupancy Control)
     - 10 Bit Temp. Sensors are not supported (A5-02-20, A5-02-30)
-
     For the following EEPs the scales must be set to "0 to 250":
     - A5-04-01
     - A5-04-02
@@ -261,5 +276,31 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._state = STATE_OPEN
         if action == 0x05:
             self._state = "tilt"
+
+        self.schedule_update_ha_state()
+
+
+class EnOceanDoorWindow(EnOceanSensor):
+    """Representation of an EnOcean door sensor device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - D5-00-01
+    """
+
+    def __init__(self, dev_id, dev_name):
+        """Initialize the EnOcean door and window sensor device."""
+        super().__init__(dev_id, dev_name, SENSOR_TYPE_DOOR_WINDOW)
+        self._dev_name = dev_name
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        packet.parse_eep(0x00, 0x01)
+        contact_value = packet.parsed["CO"]["value"]
+        if contact_value == "open":
+            self._state = STATE_OPEN
+            self._icon = "mdi:door-open"
+        elif contact_value == "closed":
+            self._state = STATE_CLOSED
+            self._icon = "mdi:door-closed"
 
         self.schedule_update_ha_state()
