@@ -137,4 +137,6 @@ async def async_setup(hass, config):
 
     hass.data[CLIENT_KEY_COORDINATOR] = coordinator
 
+    await hass.helpers.discovery.async_load_platform("sensor", "honeywell", {}, config)
+
     return True

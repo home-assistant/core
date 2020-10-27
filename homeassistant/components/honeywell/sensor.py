@@ -38,10 +38,10 @@ PLATFORM_SCHEMA = vol.All(
 class ThermostatSensor(HoneywellDevice, Entity):
     """Base class for honeywell thermostat sensor."""
 
-    def __init__(self, coordinator, device, get_data_function, display_name):
-        """Init the sensor, pass in reference to coordinator, somecomfort device, the type str of this sensor, and entity display name."""
+    def __init__(self, coordinator, device, get_data_function_name, display_name):
+        """Init the sensor, pass in reference to coordinator, somecomfort device, somecomfort function name, and entity display name."""
         HoneywellDevice.__init__(self, coordinator, device)
-        self._get_data_function = get_data_function
+        self._get_data_function_name = get_data_function_name
         self._display_name = display_name
 
     @property
@@ -52,7 +52,7 @@ class ThermostatSensor(HoneywellDevice, Entity):
     @property
     def state(self):
         """Return the current state of the entity."""
-        return self._device.get_data_function()
+        return getattr(self._device, self._get_data_function_name)
 
 
 class TemperatureSensor(ThermostatSensor):
@@ -119,30 +119,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     TemperatureSensor(
                         coordinator,
                         device,
-                        device.current_temperature,
+                        "current_temperature",
                         "Indoor Temperature",
                     )
                 )
                 sensors_list.append(
                     HumiditySensor(
-                        coordinator, device, device.current_humidity, "Indoor Humidity"
+                        coordinator, device, "current_humidity", "Indoor Humidity"
                     )
                 )
-                if not device.outdoor_temperature() is None:
+                _LOGGER.info("device: " + str(dir(device)))
+                if device.outdoor_temperature:
                     sensors_list.append(
                         TemperatureSensor(
                             coordinator,
                             device,
-                            device.outdoor_temperature,
+                            "outdoor_temperature",
                             "Outdoor Temperature",
                         )
                     )
-                if not device.outdoor_humidity() is None:
+                if device.outdoor_humidity:
                     sensors_list.append(
                         HumiditySensor(
                             coordinator,
                             device,
-                            device.outdoor_humidity,
+                            "outdoor_humidity",
                             "Outdoor Humidity",
                         )
                     )
