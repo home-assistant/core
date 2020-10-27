@@ -112,7 +112,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             ACCUWEATHER_API_WINDOW
             / self.requests_remaining
             / (2 if self.forecast else 1)
-        )        
+        )
         _LOGGER.debug("Data will be update every %.1f minutes", interval)
         return interval
 
@@ -139,7 +139,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             self.accuweather.requests_remaining > self.requests_remaining
             or self.requests_remaining - self.accuweather.requests_remaining
             > (2 if self.forecast else 1)
-        ):            
+        ):
             self.requests_remaining = self.accuweather.requests_remaining
             self.update_interval = self.calculate_update_interval()
 
