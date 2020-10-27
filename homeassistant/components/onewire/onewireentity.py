@@ -7,7 +7,7 @@ from pyownet import protocol
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 
-from .const import SENSOR_TYPE_COUNT, SENSOR_TYPE_SENSED, SENSOR_TYPES
+from .const import SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,20 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 class OneWire(Entity):
     """Implementation of a 1-Wire sensor."""
 
-    def __init__(
-        self,
-        name,
-        device_file,
-        sensor_type: str,
-        sensor_name: str = None,
-        device_info=None,
-    ):
+    def __init__(self, name, device_file, sensor_type, device_info=None):
         """Initialize the sensor."""
-        self._name = f"{name} {(sensor_name or sensor_type).capitalize()}"
+        self._name = f"{name} {sensor_type.capitalize()}"
         self._device_file = device_file
-        self._sensor_type = sensor_type
-        self._device_class = SENSOR_TYPES[sensor_type][1]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][0]
+        self._device_class = SENSOR_TYPES[sensor_type][2]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._device_info = device_info
         self._state = None
         self._value_raw = None
@@ -41,6 +33,8 @@ class OneWire(Entity):
     @property
     def state(self) -> StateType:
         """Return the state of the sensor."""
+        if "count" in self._unit_of_measurement:
+            return int(self._state)
         return self._state
 
     @property
@@ -72,17 +66,9 @@ class OneWire(Entity):
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
 
-    def __init__(
-        self,
-        name: str,
-        device_file: str,
-        sensor_type: str,
-        sensor_name: str,
-        device_info: Dict[str, Any],
-        owproxy: protocol._Proxy,
-    ):
+    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, sensor_name, device_info)
+        super().__init__(name, device_file, sensor_type, device_info)
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
@@ -92,14 +78,13 @@ class OneWireProxy(OneWire):
     def update(self):
         """Get the latest data from the device."""
         value = None
+        value_read = False
         try:
-            self._value_raw = self._read_value_ownet()
+            value_read = self._read_value_ownet()
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        else:
-            if self._sensor_type in [SENSOR_TYPE_COUNT, SENSOR_TYPE_SENSED]:
-                value = int(self._value_raw)
-            else:
-                value = round(float(self._value_raw), 1)
+        if value_read:
+            value = round(float(value_read), 1)
+            self._value_raw = float(value_read)
 
         self._state = value

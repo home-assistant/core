@@ -111,7 +111,7 @@ MOCK_DEVICE_SENSORS = {
                 "unique_id": "/1D.111111111111/counter.A",
                 "injected_value": b"    251123",
                 "result": "251123",
-                "unit": None,
+                "unit": "count",
                 "class": None,
             },
             {
@@ -119,7 +119,7 @@ MOCK_DEVICE_SENSORS = {
                 "unique_id": "/1D.111111111111/counter.B",
                 "injected_value": b"    248125",
                 "result": "248125",
-                "unit": None,
+                "unit": "count",
                 "class": None,
             },
         ],
