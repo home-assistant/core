@@ -22,7 +22,7 @@ from .const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from .onewireeentities import OneWire, OneWireProxy
+from .onewire_entities import OneWire, OneWireProxy
 
 _LOGGER = logging.getLogger(__name__)
 
