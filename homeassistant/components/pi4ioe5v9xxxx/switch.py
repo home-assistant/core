@@ -57,6 +57,10 @@ class Pi4ioe5v9Switch(SwitchEntity):
         self._invert_logic = invert_logic
         self._state = False
 
+    def async_added_to_hass(self):
+        """On initializatin time switch off. This is required in case of inversion."""
+        self.turn_off()
+
     @property
     def name(self):
         """Return the name of the switch."""
