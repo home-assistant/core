@@ -24,7 +24,22 @@ from .entity import ShellyBlockEntity
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up lights for device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
-    blocks = [block for block in wrapper.device.blocks if block.type == "light"]
+
+    blocks = []
+    for block in wrapper.device.blocks:
+        if block.type == "light":
+            blocks.append(block)
+        if block.type == "relay":
+            if (
+                "appliance_type"
+                in wrapper.device.settings["relays"][int(block.channel)]
+            ):
+                if (
+                    wrapper.device.settings["relays"][int(block.channel)][
+                        "appliance_type"
+                    ]
+                ) == "light":
+                    blocks.append(block)
 
     if not blocks:
         return
