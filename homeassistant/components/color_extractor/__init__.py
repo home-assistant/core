@@ -44,31 +44,55 @@ def _get_file(file_path):
     return file_path
 
 
+def _get_color(file_handler) -> tuple:
+    """Given an image file, extract the predominant color from it."""
+    color_thief = ColorThief(file_handler)
+
+    # get_color returns a SINGLE RGB value for the given image
+    color = color_thief.get_color(quality=1)
+
+    _LOGGER.debug("Extracted RGB color %s from image", color)
+
+    return color
+
+
 async def async_setup(hass, hass_config):
     """Set up services for color_extractor integration."""
-
-    def _get_color(file_handler) -> tuple:
-        """Given an image file, extract the predominant color from it."""
-        color_thief = ColorThief(file_handler)
-
-        # get_color returns a SINGLE RGB value for the given image
-        color = color_thief.get_color(quality=1)
-
-        _LOGGER.debug("Extracted RGB color %s from image", color)
-
-        return color
 
     async def async_handle_service(service_call):
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
 
-        if ATTR_URL in service_data:
-            await _async_url_service(service_data)
-        elif ATTR_PATH in service_data:
-            await _async_file_service(service_data)
-        else:
-            _LOGGER.error("Missing either required url or path key")
-            return None
+        if ATTR_URL not in service_data and ATTR_PATH not in service_data:
+            _LOGGER.error("Missing either required %s or %s key", ATTR_URL, ATTR_PATH)
+            return
+
+        try:
+            if ATTR_URL in service_data:
+                image_type = "URL"
+                image_reference = service_data.pop(ATTR_URL)
+                color = await async_extract_color_from_url(image_reference)
+
+            elif ATTR_PATH in service_data:
+                image_type = "file path"
+                image_reference = service_data.pop(ATTR_PATH)
+                color = extract_color_from_path(image_reference)
+
+        except UnidentifiedImageError as ex:
+            _LOGGER.error(
+                "Bad image from %s '%s' provided, are you sure it's an image? %s",
+                image_type,
+                image_reference,
+                ex,
+            )
+            return
+
+        if color:
+            service_data[ATTR_RGB_COLOR] = color
+
+            await hass.services.async_call(
+                LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
+            )
 
     hass.services.async_register(
         DOMAIN,
@@ -77,16 +101,14 @@ async def async_setup(hass, hass_config):
         schema=SERVICE_SCHEMA,
     )
 
-    async def _async_url_service(service_data):
+    async def async_extract_color_from_url(url):
         """Handle call for URL based image."""
-        url = service_data.pop(ATTR_URL)
-
         if not hass.config.is_allowed_external_url(url):
             _LOGGER.error(
                 "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
                 url,
             )
-            return None
+            return
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -99,7 +121,7 @@ async def async_setup(hass, hass_config):
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
-            return None
+            return
 
         content = await response.content.read()
 
@@ -107,51 +129,20 @@ async def async_setup(hass, hass_config):
             _file.name = "color_extractor.jpg"
             _file.seek(0)
 
-            try:
-                color = _get_color(_file)
-            except UnidentifiedImageError as ex:
-                _LOGGER.error(
-                    "Bad image from url '%s' provided, are you sure it's an image? %s",
-                    url,
-                    ex,
-                )
-                return None
+            return _get_color(_file)
 
-        service_data[ATTR_RGB_COLOR] = color
-
-        await hass.services.async_call(
-            LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
-        )
-
-    async def _async_file_service(service_data):
+    def extract_color_from_path(file_path):
         """Handle call for local file based image."""
-        file_path = service_data.pop(ATTR_PATH)
-
         if not hass.config.is_allowed_path(file_path):
             _LOGGER.error(
                 "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
                 file_path,
             )
-            return None
+            return
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
         _file = _get_file(file_path)
-
-        try:
-            color = await hass.async_add_executor_job(_get_color, _file)
-        except UnidentifiedImageError as ex:
-            _LOGGER.error(
-                "Bad image from file path '%s' provided, are you sure it's an image? %s",
-                file_path,
-                ex,
-            )
-            return None
-
-        service_data[ATTR_RGB_COLOR] = color
-
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
-        )
+        return _get_color(_file)
 
     return True
