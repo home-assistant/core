@@ -21,12 +21,17 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_MAC,
     PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
+CONF_PRECISION = "precision"
 STATE_BOOST = "boost"
 
 ATTR_STATE_WINDOW_OPEN = "window_open"
@@ -55,7 +60,16 @@ EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY}
 HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away}
 
 
-DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION): vol.In(
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+    }
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): vol.Schema({cv.string: DEVICE_SCHEMA})}
@@ -69,8 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
 
     for name, device_cfg in config[CONF_DEVICES].items():
-        mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name))
+        devices.append(EQ3BTSmartThermostat(hass, name, device_cfg))
 
     add_entities(devices, True)
 
@@ -78,11 +91,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
-    def __init__(self, _mac, _name):
+    def __init__(self, hass, _name, device_cfg):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
-        self._thermostat = eq3.Thermostat(_mac)
+        self._thermostat = eq3.Thermostat(device_cfg[CONF_MAC])
+
+        self._min_temp = device_cfg.get(CONF_MIN_TEMP)
+        self._max_temp = device_cfg.get(CONF_MAX_TEMP)
+        self._temp_precision = device_cfg.get(CONF_PRECISION)
 
     @property
     def supported_features(self):
@@ -106,8 +123,11 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
     @property
     def precision(self):
-        """Return eq3bt's precision 0.5."""
-        return PRECISION_HALVES
+        """Return the precision of the system."""
+        if self._temp_precision is not None:
+            return self._temp_precision
+
+        return super().precision
 
     @property
     def current_temperature(self):
@@ -147,11 +167,17 @@ class EQ3BTSmartThermostat(ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
+        if self._min_temp is not None:
+            return self._min_temp
+
         return self._thermostat.min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
+        if self._max_temp is not None:
+            return self._max_temp
+
         return self._thermostat.max_temp
 
     @property
