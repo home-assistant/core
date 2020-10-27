@@ -297,6 +297,7 @@ def attach_entity_component_collection(
 
     async def _collection_changed(change_type: str, item_id: str, config: dict) -> None:
         """Handle a collection change."""
+        _LOGGER.warning("_collection_changed: %s %s %s", change_type, item_id, config)
         if change_type == CHANGE_ADDED:
             entity = create_entity(config)
             await entity_component.async_add_entities([entity])
