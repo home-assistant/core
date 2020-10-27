@@ -204,7 +204,11 @@ async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
 
 async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: ServiceCall):
     """Set or unset lights as 'manually controlled'."""
-    all_lights = _expand_light_groups(switch.hass, service_call.data[CONF_LIGHTS])
+    lights = service_call.data[CONF_LIGHTS]
+    if not lights:
+        all_lights = switch._lights
+    else:
+        all_lights = _expand_light_groups(switch.hass, lights)
     _LOGGER.debug(
         "Called 'adaptive_lighting.set_manual_control' service with '%s'",
         service_call.data,
@@ -287,7 +291,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_MANUAL_CONTROL,
         {
-            vol.Required(CONF_LIGHTS): cv.entity_ids,
+            vol.Optional(CONF_LIGHTS, default=[]): cv.entity_ids,
             vol.Optional(CONF_MANUAL_CONTROL, default=True): cv.boolean,
         },
         handle_set_manual_control,

@@ -32,5 +32,5 @@ set_manual_control:
       description: "Whether to add ('true') or remove ('false') the light from the 'manual_control' list, default: true"
       example: true
     lights:
-      description: entity_id(s) of lights.
+      description: entity_id(s) of lights, if not specified, all lights in the switch are selected.
       example: light.bedroom_ceiling
