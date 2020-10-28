@@ -100,9 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     session: SHCSession = hass.data[DOMAIN][entry.entry_id]
-    session.reset_connection_listener()
-    _LOGGER.debug("Stopping polling service of SHC")
-    await hass.async_add_executor_job(session.stop_polling)
+    if session.reset_connection_listener is not None:
+        session.reset_connection_listener()
+        _LOGGER.debug("Stopping polling service of SHC")
+        await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = all(
         await asyncio.gather(
