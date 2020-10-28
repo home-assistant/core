@@ -7,7 +7,6 @@ from hyperion import const
 
 from homeassistant import setup
 from homeassistant.components.hyperion import (
-    async_unload_entry,
     get_hyperion_unique_id,
     light as hyperion_light,
 )
@@ -651,6 +650,8 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert client.async_client_connect.called
     assert not client.async_client_disconnect.called
+    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    assert entry
 
-    assert await async_unload_entry(hass, entry)
+    await entry.async_unload(hass)
     assert client.async_client_disconnect.called
