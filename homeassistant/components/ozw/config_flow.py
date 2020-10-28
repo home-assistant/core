@@ -96,43 +96,44 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_start_addon()
 
     async def async_step_start_addon(self, user_input=None):
-        """Ask for missing config and start add-on."""
+        """Ask for config and start add-on."""
         if self.addon_config is None:
             self.addon_config = await self._async_get_addon_config()
 
-        self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE)
-        self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY)
-
-        if user_input is None and None in (self.usb_path, self.network_key):
-            data_schema = vol.Schema({})
-
-            if not self.usb_path:
-                data_schema = data_schema.extend({vol.Required(CONF_USB_PATH): str})
-            if not self.network_key:
-                data_schema = data_schema.extend(
-                    {vol.Optional(CONF_NETWORK_KEY, default=""): str}
-                )
-
-            return self.async_show_form(step_id="start_addon", data_schema=data_schema)
+        errors = {}
 
         if user_input is not None:
-            self.network_key = self.network_key or user_input[CONF_NETWORK_KEY]
-            self.usb_path = self.usb_path or user_input[CONF_USB_PATH]
+            self.network_key = user_input[CONF_NETWORK_KEY]
+            self.usb_path = user_input[CONF_USB_PATH]
 
-        new_addon_config = {CONF_ADDON_DEVICE: self.usb_path}
-        if self.network_key:
-            new_addon_config[CONF_ADDON_NETWORK_KEY] = self.network_key
+            new_addon_config = {CONF_ADDON_DEVICE: self.usb_path}
+            if self.network_key:
+                new_addon_config[CONF_ADDON_NETWORK_KEY] = self.network_key
 
-        if new_addon_config != self.addon_config:
-            await self._async_set_addon_config(new_addon_config)
+            if new_addon_config != self.addon_config:
+                await self._async_set_addon_config(new_addon_config)
 
-        try:
-            await self.hass.components.hassio.async_start_addon("core_zwave")
-        except HassioAPIError as err:
-            _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
-            return self.async_abort(reason="addon_start_failed")
+            try:
+                await self.hass.components.hassio.async_start_addon("core_zwave")
+            except HassioAPIError as err:
+                _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
+                return self.async_abort(reason="addon_start_failed")
 
-        return self._async_use_mqtt_integration()
+            return self._async_use_mqtt_integration()
+
+        self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
+        self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USB_PATH, default=self.usb_path): str,
+                vol.Optional(CONF_NETWORK_KEY, default=self.network_key): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="start_addon", data_schema=data_schema, errors=errors
+        )
 
     async def _async_get_addon_info(self):
         """Return and cache add-on info."""
