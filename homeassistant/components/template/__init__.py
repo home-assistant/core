@@ -1,13 +1,8 @@
 """The template component."""
-
-import logging
-
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.reload import async_reload_integration_platforms
 
 from .const import DOMAIN, EVENT_TEMPLATE_RELOADED, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_reload_service(hass):

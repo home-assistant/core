@@ -52,7 +52,7 @@
             "hot": "{entity_name} se zah\u0159\u00e1l",
             "light": "{entity_name} za\u010dalo detekovat sv\u011btlo",
             "locked": "{entity_name} zam\u010deno",
-            "moist": "{entity_name} se navlh\u010dil",
+            "moist": "{entity_name} zvlhnul",
             "motion": "{entity_name} za\u010dalo detekovat pohyb",
             "moving": "{entity_name} se za\u010dal pohybovat",
             "no_gas": "{entity_name} p\u0159estalo detekovat plyn",

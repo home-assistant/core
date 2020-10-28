@@ -1,23 +1,30 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Nest.",
-            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "no_flows": "Musisz skonfigurowa\u0107 Nest, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/nest/)."
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_flows": "Musisz skonfigurowa\u0107 Nest, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/nest/).",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
         },
         "error": {
             "internal_error": "Wewn\u0119trzny b\u0142\u0105d sprawdzania poprawno\u015bci kodu",
             "invalid_code": "Nieprawid\u0142owy kod",
-            "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu.",
-            "unknown": "Nieznany b\u0142\u0105d sprawdzania poprawno\u015bci kodu"
+            "invalid_pin": "Nieprawid\u0142owy kod PIN",
+            "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Dostawca"
                 },
-                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Nest.",
+                "description": "Wybierz metod\u0119 uwierzytelniania",
                 "title": "Dostawca uwierzytelnienia"
             },
             "link": {
@@ -26,6 +33,9 @@
                 },
                 "description": "Aby po\u0142\u0105czy\u0107 z kontem Nest, [wykonaj autoryzacj\u0119]({url}). \n\n Po autoryzacji skopiuj i wklej podany kod PIN poni\u017cej.",
                 "title": "Po\u0142\u0105czenie z kontem Nest"
+            },
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }
     }

@@ -1,6 +1,5 @@
 """Sensor that can display the current Home Assistant versions."""
 from datetime import timedelta
-import logging
 
 from pyhaversion import (
     DockerVersion,
@@ -17,8 +16,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 ALL_IMAGES = [
     "default",

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Deze printer is al geconfigureerd.",
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met de printer.",
             "connection_upgrade": "Kan geen verbinding maken met de printer omdat een upgrade van de verbinding vereist is.",
             "ipp_error": "Er is een IPP-fout opgetreden.",
@@ -10,6 +11,7 @@
             "unique_id_required": "Apparaat ontbreekt een unieke identificatie die nodig is voor de ontdekking."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met de printer.",
             "connection_upgrade": "Kan geen verbinding maken met de printer. Probeer het opnieuw met SSL / TLS-optie aangevinkt."
         },

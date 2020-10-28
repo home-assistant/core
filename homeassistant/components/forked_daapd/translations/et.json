@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "forbidden": "Ei saa \u00fchendust. Kontrolli oma forked-daapd sidumise v\u00f5rgu\u00f5igusi.",
+            "unknown_error": "Tundmatu viga",
+            "wrong_password": "Vale salas\u00f5na."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                }
+            }
+        }
+    }
+}

@@ -51,6 +51,7 @@ async def test_user_flow(hass, user_flow):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_HOST["host"]
@@ -63,7 +64,6 @@ async def test_user_flow(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -98,6 +98,7 @@ async def test_form_valid_auth(hass, user_flow):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_CREDENTIALS
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_HOST["host"]
@@ -109,7 +110,6 @@ async def test_form_valid_auth(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -148,6 +148,7 @@ async def test_form_valid_ws_port(hass, user_flow):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_WS_PORT
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_HOST["host"]
@@ -160,7 +161,6 @@ async def test_form_valid_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -193,6 +193,7 @@ async def test_form_empty_ws_port(hass, user_flow):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ws_port": 0}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_HOST["host"]
@@ -205,7 +206,6 @@ async def test_form_empty_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -436,6 +436,7 @@ async def test_discovery(hass):
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "hostname"
@@ -448,7 +449,6 @@ async def test_discovery(hass):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -592,12 +592,12 @@ async def test_form_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data=TEST_IMPORT,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_IMPORT["name"]
     assert result["data"] == TEST_IMPORT
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

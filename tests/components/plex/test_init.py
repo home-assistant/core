@@ -18,7 +18,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update
-from .mock_classes import MockPlexAccount, MockPlexServer
+from .mock_classes import MockGDM, MockPlexAccount, MockPlexServer
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -183,6 +183,8 @@ async def test_bad_token_with_tokenless_server(hass, entry):
     """Test setup with a bad token and a server with token auth disabled."""
     with patch("plexapi.server.PlexServer", return_value=MockPlexServer()), patch(
         "plexapi.myplex.MyPlexAccount", side_effect=plexapi.exceptions.Unauthorized
+    ), patch(
+        "homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)
     ), patch(
         "homeassistant.components.plex.PlexWebsocket", autospec=True
     ) as mock_websocket:

@@ -1,6 +1,5 @@
 """Support for Switchmate."""
 from datetime import timedelta
-import logging
 
 # pylint: disable=import-error, no-member
 import switchmate
@@ -9,8 +8,6 @@ import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"

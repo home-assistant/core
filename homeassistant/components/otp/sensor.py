@@ -1,5 +1,4 @@
 """Support for One-Time Password (OTP)."""
-import logging
 import time
 
 import pyotp
@@ -10,8 +9,6 @@ from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "OTP Sensor"
 

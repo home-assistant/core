@@ -1,5 +1,4 @@
 """This platform allows several cover to be grouped into one cover."""
-import logging
 from typing import Dict, Optional, Set
 
 import voluptuous as vol
@@ -47,8 +46,6 @@ from . import GroupEntity
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"

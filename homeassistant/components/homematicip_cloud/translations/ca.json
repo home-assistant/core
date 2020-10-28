@@ -17,7 +17,7 @@
                 "data": {
                     "hapid": "Identificador del punt d'acc\u00e9s (SGTIN)",
                     "name": "Nom (opcional, s'utilitza com a prefix de nom per a tots els dispositius)",
-                    "pin": "Codi PIN (opcional)"
+                    "pin": "Codi PIN"
                 },
                 "title": "Tria el punt d'acc\u00e9s HomematicIP"
             },

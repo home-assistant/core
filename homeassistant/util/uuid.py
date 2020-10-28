@@ -1,15 +1,12 @@
 """Helpers to generate uuids."""
 
-import random
-import uuid
+from random import getrandbits
 
 
-def uuid_v1mc_hex() -> str:
-    """Generate a uuid1 with a random multicast MAC address.
+def random_uuid_hex() -> str:
+    """Generate a random UUID hex.
 
-    The uuid1 uses a random multicast MAC address instead of the real MAC address
-    of the machine without the overhead of calling the getrandom() system call.
-
-    This is effectively equivalent to PostgreSQL's uuid_generate_v1mc() function
+    This uuid should not be used for cryptographically secure
+    operations.
     """
-    return uuid.uuid1(node=random.getrandbits(48) | (1 << 40)).hex
+    return "%032x" % getrandbits(32 * 4)

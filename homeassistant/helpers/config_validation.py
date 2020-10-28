@@ -98,6 +98,7 @@ TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 positive_int = vol.All(vol.Coerce(int), vol.Range(min=0))
+positive_float = vol.All(vol.Coerce(float), vol.Range(min=0))
 latitude = vol.All(
     vol.Coerce(float), vol.Range(min=-90, max=90), msg="invalid latitude"
 )
@@ -485,7 +486,11 @@ def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
         raise vol.Invalid("string value is None")
-    if isinstance(value, (list, dict)):
+
+    if isinstance(value, template_helper.ResultWrapper):
+        value = value.render_result
+
+    elif isinstance(value, (list, dict)):
         raise vol.Invalid("value should be a string")
 
     return str(value)
@@ -526,8 +531,8 @@ def template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -544,8 +549,8 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
-        template_value.ensure_valid()
-        return cast(template_helper.Template, template_value)
+        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
 
@@ -827,6 +832,12 @@ def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
+
+    if schema is string:
+        return {"type": "string"}
+
+    if schema is boolean:
+        return {"type": "boolean"}
 
     if isinstance(schema, multi_select):
         return {"type": "multi_select", "options": schema.options}

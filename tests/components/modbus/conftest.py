@@ -1,5 +1,4 @@
 """The tests for the Modbus sensor component."""
-import logging
 from unittest import mock
 
 import pytest
@@ -15,19 +14,18 @@ from homeassistant.const import CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockModule, async_fire_time_changed, mock_integration
-
-_LOGGER = logging.getLogger(__name__)
+from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture()
 def mock_hub(hass):
     """Mock hub."""
-    mock_integration(hass, MockModule(DOMAIN))
-    hub = mock.MagicMock()
-    hub.name = "hub"
-    hass.data[DOMAIN] = {DEFAULT_HUB: hub}
-    return hub
+    with patch("homeassistant.components.modbus.setup", return_value=True):
+        hub = mock.MagicMock()
+        hub.name = "hub"
+        hass.data[DOMAIN] = {DEFAULT_HUB: hub}
+        yield hub
 
 
 class ReadResult:

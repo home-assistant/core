@@ -12,12 +12,22 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "Tipo di connessione",
+                    "host": "Indirizzo IP",
+                    "password": "ID Smile",
+                    "port": "Porta"
+                },
+                "description": "Prodotto:",
+                "title": "Tipo di Plugwise"
+            },
+            "user_gateway": {
+                "data": {
                     "host": "Indirizzo IP",
                     "password": "ID Smile",
                     "port": "Porta"
                 },
                 "description": "Si prega di inserire:",
-                "title": "Connettersi al dispositivo"
+                "title": "Connettiti allo Smile"
             }
         }
     },

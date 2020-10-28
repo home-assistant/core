@@ -7,6 +7,7 @@ from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_EU,
     DeviceType,
     GatewayException,
 )
@@ -93,6 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             GATEWAY_MODEL_AC_V1,
             GATEWAY_MODEL_AC_V2,
             GATEWAY_MODEL_AC_V3,
+            GATEWAY_MODEL_EU,
         ]:
             entities.append(
                 XiaomiGatewayIlluminanceSensor(
@@ -231,8 +233,9 @@ class XiaomiAirQualityMonitor(Entity):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiGatewaySensor(XiaomiGatewayDevice):

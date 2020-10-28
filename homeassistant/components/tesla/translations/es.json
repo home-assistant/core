@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "already_configured": "La cuenta ya ha sido configurada",
             "already_configured_account": "La cuenta ya ha sido configurada",
             "cannot_connect": "No se pudo conectar",
             "connection_error": "Error de conexi\u00f3n; comprueba la red y vuelve a intentarlo",

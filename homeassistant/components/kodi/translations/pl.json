@@ -22,7 +22,7 @@
             },
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 Kodi (\"{name}\") do Home Assistant?",
-                "title": "Wykryto urz\u0105dzenia Kodi"
+                "title": "Wykryte urz\u0105dzenia Kodi"
             },
             "host": {
                 "data": {
@@ -35,7 +35,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Certyfikat SSL"
                 },
                 "description": "Informacje o po\u0142\u0105czeniu Kodi. Upewnij si\u0119, \u017ce w\u0142\u0105czy\u0142e\u015b \"Zezwalaj na zdalne sterowanie przez HTTP\" w System/Ustawienia/Sieci/Us\u0142ugi."
             },
@@ -49,8 +50,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_off": "{entity_name} zosta\u0142 poproszony o wy\u0142\u0105czenie",
-            "turn_on": "{entity_name} zosta\u0142 poproszony o w\u0142\u0105czenie"
+            "turn_off": "{entity_name} zostanie poproszony o wy\u0142\u0105czenie",
+            "turn_on": "{entity_name} zostanie poproszony o w\u0142\u0105czenie"
         }
     }
 }

@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "unknown": "Tundmatu viga"
+        },
         "error": {
             "invalid_2fa": "Vale 2-teguriline autentimine, proovige uuesti.",
             "invalid_2fa_method": "Kehtetu 2FA meetod (kontrollige telefoni teel).",
@@ -16,7 +20,8 @@
                 "data": {
                     "email": "E-posti aadress",
                     "password": "Salas\u00f5na"
-                }
+                },
+                "title": "Google Hangoutsi sisselogimine"
             }
         }
     }

@@ -1,14 +1,10 @@
 """Support for Fast.com internet speed testing sensor."""
-import logging
-
 from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:speedometer"
 

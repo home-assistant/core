@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "no_mac": "Kan geen unieke ID configureren voor ONVIF-apparaat."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
         "step": {
             "auth": {
                 "data": {

@@ -7,15 +7,12 @@ from __future__ import annotations
 
 import asyncio
 import enum
-import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
 from .async_ import run_callback_threadsafe
 
 ZONE_GLOBAL = "global"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class _State(str, enum.Enum):

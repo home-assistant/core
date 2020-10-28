@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja.",
+            "one_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "wrong_server_id": "Identyfikator serwera jest nieprawid\u0142owy"
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 SpeedTest?",
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
                 "title": "Konfiguracja SpeedTest"
             }
         }

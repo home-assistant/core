@@ -89,8 +89,8 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
             **connection,
             CONF_PROTOCOL: protocol,
         }
+        await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -126,7 +126,7 @@ async def test_setup_connection_error(hass: HomeAssistant):
             result["flow_id"], connection_settings
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "service_unavailable"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_options_arm_flow(hass: HomeAssistant):
