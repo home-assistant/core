@@ -81,6 +81,7 @@ def setup(hass, config):
 
     # Load platforms
     discovery.load_platform(hass, "fan", DOMAIN, {}, config)
+    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
 
     return True
 
