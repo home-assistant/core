@@ -1,5 +1,5 @@
 """Support for Recollect Waste curbside collection pickup."""
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 
 import recollect_waste
@@ -13,6 +13,8 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
+ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
+ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 CONF_PLACE_ID = "place_id"
 CONF_SERVICE_ID = "service_id"
 DEFAULT_NAME = "recollect_waste"
@@ -84,13 +86,21 @@ class RecollectWasteSensor(Entity):
     def update(self):
         """Update device state."""
         try:
-            pickup_event = self.client.get_next_pickup()
+            pickup_event_array = self.client.get_pickup_events(
+                date.today(), date.today() + timedelta(weeks=4)
+            )
+        except recollect_waste.RecollectWasteException as ex:
+            _LOGGER.error("Recollect Waste platform error. %s", ex)
+        else:
+            pickup_event = pickup_event_array[0]
+            next_pickup_event = pickup_event_array[1]
+            next_date = str(next_pickup_event.event_date)
             self._state = pickup_event.event_date
             self._attributes.update(
                 {
                     ATTR_PICKUP_TYPES: pickup_event.pickup_types,
                     ATTR_AREA_NAME: pickup_event.area_name,
+                    ATTR_NEXT_PICKUP_TYPES: next_pickup_event.pickup_types,
+                    ATTR_NEXT_PICKUP_DATE: next_date,
                 }
             )
-        except recollect_waste.RecollectWasteException as ex:
-            _LOGGER.error("Recollect Waste platform error. %s", ex)

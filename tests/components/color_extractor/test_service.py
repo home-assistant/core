@@ -4,6 +4,7 @@ import io
 
 import aiohttp
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.color_extractor import (
     ATTR_PATH,
@@ -103,8 +104,11 @@ async def test_missing_url_and_path(hass):
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
-    await hass.async_block_till_done()
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        )
+        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)

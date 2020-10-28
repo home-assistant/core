@@ -39,7 +39,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import ResultWrapper
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
@@ -259,10 +258,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        if isinstance(result, ResultWrapper):
-            state = result.render_result.lower()
-        else:
-            state = str(result).lower()
+        state = str(result).lower()
 
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
