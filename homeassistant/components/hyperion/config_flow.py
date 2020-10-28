@@ -175,6 +175,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_id")
         return await self.async_step_auth()
 
+    # pylint: disable=arguments-differ
     async def async_step_user(
         self,
         user_input: Optional[ConfigType] = None,
@@ -226,7 +227,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return auth_resp
 
-    def _get_hyperion_url(self):
+    def _get_hyperion_url(self) -> str:
         """Return the URL of the Hyperion UI."""
         # If this flow was kicked off by SSDP, this will be the correct frontend URL. If
         # this is a manual flow instantiation, then it will be a best guess (as this
