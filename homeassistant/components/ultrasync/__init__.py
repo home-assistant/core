@@ -23,7 +23,7 @@ from .const import (
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
+    CONF_USERNAME,
     CONF_PIN,
     CONF_SCAN_INTERVAL,
 )
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_PIN): cv.string,
-                vol.Optional(CONF_ID): cv.string,
+                vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,

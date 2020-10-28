@@ -1,7 +1,7 @@
 """Monitor the Informix UltraSync Hub"""
 
 import logging
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_USERNAME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -37,7 +37,7 @@ async def async_setup_entry(
             UltraSyncSensor(
                 coordinator,
                 entry.entry_id,
-                entry.data[CONF_ID],
+                entry.data[CONF_USERNAME],
                 sensor_config[0],
                 sensor_config[1],
                 sensor_config[2],

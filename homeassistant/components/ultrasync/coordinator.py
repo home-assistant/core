@@ -9,7 +9,7 @@ from async_timeout import timeout
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_PIN,
-    CONF_ID,
+    CONF_USERNAME,
     CONF_HOST,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -26,7 +26,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global UltraSync data updater."""
         self.hub = UltraSync(
-            user=config[CONF_ID],
+            user=config[CONF_USERNAME],
             pin=config[CONF_PIN],
             host=config[CONF_HOST],
         )

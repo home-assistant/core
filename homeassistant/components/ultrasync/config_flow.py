@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_HOST,
     CONF_PIN,
-    CONF_ID,
+    CONF_USERNAME,
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant import config_entries
@@ -26,7 +26,7 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """Validate the user input allows us to connect.
 
     """
-    data[CONF_ID]
+    data[CONF_USERNAME]
     data[CONF_PIN]
     data[CONF_HOST]
     usync = UltraSync()
@@ -84,7 +84,7 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({
                 vol.Required(CONF_HOST): str,
-                vol.Required(CONF_ID): str,
+                vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PIN): str,
             }),
             errors=errors,
