@@ -82,19 +82,23 @@ async def async_setup_entry(
             return partial(
                 ProvisionSettingsSensor,
                 coordinators[DATA_PROVISION_SETTINGS],
-                controller,
             )
 
         return partial(
             UniversalRestrictionsSensor,
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
-            controller,
         )
 
     async_add_entities(
         [
             async_get_sensor(api_category)(
-                sensor_type, name, icon, unit, device_class, enabled_by_default
+                controller,
+                sensor_type,
+                name,
+                icon,
+                unit,
+                device_class,
+                enabled_by_default,
             )
             for (
                 sensor_type,
