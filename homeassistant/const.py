@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 116
-PATCH_VERSION = "4"
+MINOR_VERSION = 117
+PATCH_VERSION = "0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 1)
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_ALLOWLIST_EXTERNAL_URLS = "allowlist_external_urls"
 CONF_API_KEY = "api_key"
+CONF_API_TOKEN = "api_token"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
@@ -112,6 +113,7 @@ CONF_INCLUDE = "include"
 CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
+CONF_LEGACY_TEMPLATES = "legacy_templates"
 CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
@@ -353,6 +355,9 @@ ATTR_STATE = "state"
 ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
+# The entity has been restored with restore state
+ATTR_RESTORED = "restored"
+
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
@@ -472,6 +477,10 @@ SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
 SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
 SPEED_MILES_PER_HOUR = "mph"
 
+# Signal_strength units
+SIGNAL_STRENGTH_DECIBELS = "dB"
+SIGNAL_STRENGTH_DECIBELS_MILLIWATT = "dBm"
+
 # Data units
 DATA_BITS = "bit"
 DATA_KILOBITS = "kbit"
@@ -526,6 +535,7 @@ SERVICE_MEDIA_STOP = "media_stop"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
+SERVICE_REPEAT_SET = "repeat_set"
 SERVICE_SHUFFLE_SET = "shuffle_set"
 
 SERVICE_ALARM_DISARM = "alarm_disarm"

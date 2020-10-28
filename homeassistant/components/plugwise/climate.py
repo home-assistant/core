@@ -18,7 +18,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 
-from . import SmileGateway
 from .const import (
     COORDINATOR,
     DEFAULT_MAX_TEMP,
@@ -27,6 +26,7 @@ from .const import (
     SCHEDULE_OFF,
     SCHEDULE_ON,
 )
+from .gateway import SmileGateway
 
 HVAC_MODES_HEAT_ONLY = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 HVAC_MODES_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -114,10 +114,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
             if self._cooling_state:
                 return CURRENT_HVAC_COOL
             return CURRENT_HVAC_IDLE
-        if self._heating_state is not None:
-            if self._setpoint > self._temperature:
-                return CURRENT_HVAC_HEAT
-            return CURRENT_HVAC_IDLE
+        if self._setpoint > self._temperature:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def supported_features(self):
@@ -142,10 +141,9 @@ class PwThermostat(SmileGateway, ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._heating_state is not None:
-            if self._compressor_state is not None:
-                return HVAC_MODES_HEAT_COOL
-            return HVAC_MODES_HEAT_ONLY
+        if self._compressor_state is not None:
+            return HVAC_MODES_HEAT_COOL
+        return HVAC_MODES_HEAT_ONLY
 
     @property
     def hvac_mode(self):
@@ -263,11 +261,11 @@ class PwThermostat(SmileGateway, ClimateEntity):
         if heater_central_data.get("compressor_state") is not None:
             self._compressor_state = heater_central_data["compressor_state"]
 
+        self._hvac_mode = HVAC_MODE_HEAT
+        if self._compressor_state is not None:
+            self._hvac_mode = HVAC_MODE_HEAT_COOL
+
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO
-        elif self._heating_state is not None:
-            self._hvac_mode = HVAC_MODE_HEAT
-            if self._compressor_state is not None:
-                self._hvac_mode = HVAC_MODE_HEAT_COOL
 
         self.async_write_ha_state()

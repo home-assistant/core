@@ -29,7 +29,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             # Config entry already exists, only one allowed.
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
         stored_api_key = (

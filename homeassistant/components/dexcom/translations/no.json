@@ -5,7 +5,9 @@
         },
         "error": {
             "account_error": "Ugyldig godkjenning",
-            "session_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "session_error": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
         "step": {

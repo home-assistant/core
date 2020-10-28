@@ -367,6 +367,8 @@ class TemplateFan(TemplateEntity, FanEntity):
     @callback
     def _update_speed(self, speed):
         # Validate speed
+        speed = str(speed)
+
         if speed in self._speed_list:
             self._speed = speed
         elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:

@@ -26,16 +26,13 @@ from .const import (
     CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
+    LOCK_TYPES,
     NEW_GROUP,
     NEW_LIGHT,
     SWITCH_TYPES,
 )
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -50,12 +47,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
             if (
-                light.type not in COVER_TYPES + SWITCH_TYPES
+                light.type not in COVER_TYPES + LOCK_TYPES + SWITCH_TYPES
                 and light.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLight(light, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -80,7 +78,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if new_group.unique_id not in known_groups:
                 entities.append(new_group)
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -210,10 +209,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        attributes["is_deconz_group"] = self._device.type == "LightGroup"
-
-        return attributes
+        return {"is_deconz_group": self._device.type == "LightGroup"}
 
 
 class DeconzLight(DeconzBaseLight):

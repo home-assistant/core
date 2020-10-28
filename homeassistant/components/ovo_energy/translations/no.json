@@ -3,7 +3,9 @@
         "error": {
             "already_configured": "Kontoen er allerede konfigurert",
             "authorization_error": "Autoriseringsfeil. Sjekk legitimasjonsbeskrivelsen.",
-            "connection_error": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes",
+            "connection_error": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

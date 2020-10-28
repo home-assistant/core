@@ -174,7 +174,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
-    assert result["errors"] == {"base": "invalid_password"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_discovery_initiation(hass, mock_client):

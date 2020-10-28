@@ -2,9 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Dit Elgato Key Light apparaat is al geconfigureerd.",
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met het Elgato Key Light apparaat."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met het Elgato Key Light apparaat."
         },
         "flow_title": "Elgato Key Light: {serial_number}",

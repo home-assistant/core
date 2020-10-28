@@ -1,5 +1,4 @@
 """Define tests for the OpenWeatherMap config flow."""
-from asynctest import MagicMock, patch
 from pyowm.exceptions.api_call_error import APICallError
 from pyowm.exceptions.api_response_error import UnauthorizedError
 
@@ -19,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 CONFIG = {
@@ -166,7 +166,7 @@ async def test_form_invalid_api_key(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "auth"}
+        assert result["errors"] == {"base": "invalid_api_key"}
 
 
 async def test_form_api_call_error(hass):
@@ -182,7 +182,7 @@ async def test_form_api_call_error(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "connection"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_api_offline(hass):
@@ -197,7 +197,7 @@ async def test_form_api_offline(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {"base": "auth"}
+        assert result["errors"] == {"base": "invalid_api_key"}
 
 
 def _create_mocked_owm(is_api_online: bool):

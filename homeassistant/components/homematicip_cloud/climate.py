@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud climate devices."""
-import logging
 from typing import Any, Dict, List, Optional, Union
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
@@ -32,8 +31,6 @@ from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_PRESET_END_TIME = "preset_end_time"
 PERMANENT_END_TIME = "permanent"

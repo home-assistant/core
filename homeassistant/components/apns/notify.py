@@ -229,7 +229,7 @@ class ApnsNotificationService(BaseNotificationService):
         if isinstance(message, str):
             rendered_message = message
         elif isinstance(message, template_helper.Template):
-            rendered_message = message.render()
+            rendered_message = message.render(parse_result=False)
         else:
             rendered_message = ""
 

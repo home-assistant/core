@@ -1,6 +1,4 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
-import logging
-
 import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.components.ffmpeg import (
 from homeassistant.components.ffmpeg_motion.binary_sensor import FFmpegBinarySensor
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PEAK = "peak"
 CONF_DURATION = "duration"
