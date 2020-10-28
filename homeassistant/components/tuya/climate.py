@@ -23,19 +23,17 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
-    ENTITY_MATCH_NONE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback, valid_entity_id
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
 from .const import (
     CONF_CURR_TEMP_DIVIDER,
-    CONF_EXT_TEMP_SENSOR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_TEMP_DIVIDER,
@@ -112,8 +110,6 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._def_hvac_mode = HVAC_MODE_AUTO
         self._min_temp = None
         self._max_temp = None
-        self._temp_entity = None
-        self._temp_entity_error = False
 
     @callback
     def _process_config(self):
@@ -133,7 +129,6 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         else:
             self._min_temp = min_temp
             self._max_temp = max_temp
-        self._temp_entity = config.get(CONF_EXT_TEMP_SENSOR)
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
@@ -196,10 +191,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        curr_temp = self._tuya.current_temperature()
-        if curr_temp is None:
-            return self._get_ext_temperature()
-        return curr_temp
+        return self._tuya.current_temperature()
 
     @property
     def target_temperature(self):
@@ -271,39 +263,3 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         if max_temp is not None:
             return max_temp
         return super().max_temp
-
-    def _set_and_log_temp_error(self, error_msg):
-        if not self._temp_entity_error:
-            _LOGGER.warning(
-                "Error on Tuya external temperature sensor %s: %s",
-                self._temp_entity,
-                error_msg,
-            )
-            self._temp_entity_error = True
-
-    def _get_ext_temperature(self):
-        """Get external temperature entity current state."""
-        if not self._temp_entity or self._temp_entity == ENTITY_MATCH_NONE:
-            return None
-
-        entity_name = self._temp_entity
-        if not valid_entity_id(entity_name):
-            self._set_and_log_temp_error("entity name is invalid")
-            return None
-
-        state_obj = self.hass.states.get(entity_name)
-        if state_obj:
-            temperature = state_obj.state
-            try:
-                float(temperature)
-            except (TypeError, ValueError):
-                self._set_and_log_temp_error(
-                    "entity state is not available or is not a number"
-                )
-                return None
-
-            self._temp_entity_error = False
-            return temperature
-
-        self._set_and_log_temp_error("entity not found")
-        return None
