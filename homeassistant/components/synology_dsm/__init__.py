@@ -331,6 +331,10 @@ class SynoApi:
             self.dsm.reset(self.storage)
             self.storage = None
 
+        if not self._with_upgrade:
+            self.dsm.reset(self.upgrade)
+            self.upgrade = None
+
         if not self._with_utilisation:
             self.dsm.reset(self.utilisation)
             self.utilisation = None
@@ -344,13 +348,15 @@ class SynoApi:
         self.information = self.dsm.information
         self.network = self.dsm.network
         self.network.update()
-        self.upgrade = self.dsm.upgrade
 
         if self._with_security:
             self.security = self.dsm.security
 
         if self._with_storage:
             self.storage = self.dsm.storage
+
+        if self._with_upgrade:
+            self.upgrade = self.dsm.upgrade
 
         if self._with_utilisation:
             self.utilisation = self.dsm.utilisation
