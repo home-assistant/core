@@ -44,6 +44,8 @@ CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
 
+DATA_LISTENER = "listener"
+
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
@@ -77,7 +79,7 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
     return True
 
 
@@ -213,7 +215,9 @@ async def async_setup_entry(hass, config_entry):
     ]:
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 
-    config_entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER] = config_entry.add_update_listener(
+        async_reload_entry
+    )
 
     return True
 
@@ -221,6 +225,8 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+    cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
+    cancel_listener()
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, component)
