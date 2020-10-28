@@ -6,15 +6,14 @@
                 "description": "Set up your Bosch SHC instance to allow monitoring and control.",
                 "title": "SHC access parameters",
                 "data": {
-                    "host": "Host name",
-                    "ssl_certificate": "SSL Certificate",
-                    "ssl_key": "SSL Key",
-                    "icon": "Icon"
+                    "host": "Host",
+                    "ssl_certificate": "SSL certificate public key",
+                    "ssl_key": "SSL certificate private key"
                 }
             }
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

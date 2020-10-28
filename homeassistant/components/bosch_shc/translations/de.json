@@ -6,15 +6,14 @@
                 "description": "Richte dein Bosch SHC Gerät zur Überwachung und Steuerung ein.",
                 "title": "SHC Parameter",
                 "data": {
-                    "host": "Hostname",
-                    "ssl_certificate": "SSL Zertifikat",
-                    "ssl_key": "SSL Schlüssel",
-                    "icon": "Symbol"
+                    "host": "Host",
+                    "ssl_certificate": "SSL Zertifikat Öffentlicher Schlüssel",
+                    "ssl_key": "SSL Zertifikat Privater Schlüssel"
                 }
             }
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler, bitte erneut versuchen",
+            "cannot_connect": "Verbindungsfehler",
             "invalid_auth": "Ungültige Authentifikation",
             "unknown": "Unerwarteter Fehler"
         },
