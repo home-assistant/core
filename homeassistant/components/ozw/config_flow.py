@@ -117,9 +117,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.components.hassio.async_start_addon("core_zwave")
             except HassioAPIError as err:
                 _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
-                return self.async_abort(reason="addon_start_failed")
-
-            return self._async_use_mqtt_integration()
+                errors["base"] = "addon_start_failed"
+            else:
+                return self._async_use_mqtt_integration()
 
         self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
         self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
