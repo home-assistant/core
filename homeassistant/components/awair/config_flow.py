@@ -67,7 +67,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             access_token = user_input[CONF_ACCESS_TOKEN]
-            error = await self._check_connection(access_token)[1]
+            _, error = await self._check_connection(access_token)
 
             if error is None:
                 for entry in self._async_current_entries():
