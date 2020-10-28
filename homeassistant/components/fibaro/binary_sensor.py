@@ -1,6 +1,4 @@
 """Support for Fibaro binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOTION,
@@ -12,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", "flood"],

@@ -92,6 +92,10 @@ async def test_manual_flow_works(hass, aioclient_mock):
     """Test config flow discovers only already configured bridges."""
     mock_bridge = get_mock_bridge()
 
+    MockConfigEntry(
+        domain="hue", source=config_entries.SOURCE_IGNORE, unique_id="bla"
+    ).add_to_hass(hass)
+
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         return_value=[mock_bridge],
@@ -137,7 +141,7 @@ async def test_manual_flow_works(hass, aioclient_mock):
         "username": "username-abc",
     }
     entries = hass.config_entries.async_entries("hue")
-    assert len(entries) == 1
+    assert len(entries) == 2
     entry = entries[-1]
     assert entry.unique_id == "id-1234"
 

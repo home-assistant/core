@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_password": "Vale salas\u00f5na!"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Kas soovid lisada ESPHome'i s\u00f5lme '{name}' Home Assistant-ile?"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

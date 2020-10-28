@@ -40,7 +40,7 @@ async def test_connection_error(
         data={CONF_HOST: "example.local", CONF_PASSKEY: "1234", CONF_PORT: 80},
     )
 
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

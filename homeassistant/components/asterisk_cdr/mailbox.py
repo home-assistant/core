@@ -1,7 +1,6 @@
 """Support for the Asterisk CDR interface."""
 import datetime
 import hashlib
-import logging
 
 from homeassistant.components.asterisk_mbox import (
     DOMAIN as ASTERISK_DOMAIN,
@@ -10,8 +9,6 @@ from homeassistant.components.asterisk_mbox import (
 from homeassistant.components.mailbox import Mailbox
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-_LOGGER = logging.getLogger(__name__)
 
 MAILBOX_NAME = "asterisk_cdr"
 

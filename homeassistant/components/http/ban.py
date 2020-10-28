@@ -137,7 +137,7 @@ async def process_wrong_login(request):
         new_ban = IpBan(remote_addr)
         request.app[KEY_BANNED_IPS].append(new_ban)
 
-        await hass.async_add_job(
+        await hass.async_add_executor_job(
             update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban
         )
 

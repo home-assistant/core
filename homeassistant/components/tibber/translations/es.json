@@ -4,6 +4,7 @@
             "already_configured": "Una cuenta de Tibber ya est\u00e1 configurada."
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "Error de conexi\u00f3n con Tibber",
             "invalid_access_token": "Token de acceso inv\u00e1lido",
             "timeout": "Tiempo de espera para conectarse a Tibber"

@@ -1,6 +1,4 @@
 """Support for INSTEON fans via PowerLinc Modem."""
-import logging
-
 from pyinsteon.constants import FanSpeed
 
 from homeassistant.components.fan import (
@@ -18,7 +16,6 @@ from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
-_LOGGER = logging.getLogger(__name__)
 FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 SPEED_TO_VALUE = {
     SPEED_OFF: FanSpeed.OFF,

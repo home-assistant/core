@@ -8,11 +8,11 @@
     "pyserial==3.4",
     "zha-quirks==0.0.45",
     "zigpy-cc==0.5.2",
-    "zigpy-deconz==0.10.0",
+    "zigpy-deconz==0.11.0",
     "zigpy==0.26.0",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.6.2",
-    "zigpy-znp==0.2.1"
+    "zigpy-znp==0.2.2"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"]
 }

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "mqtt_required": "MQTT \u6574\u5408\u5c1a\u672a\u8a2d\u5b9a",
-            "one_instance_allowed": "\u6574\u5408\u50c5\u652f\u63f4\u4e00\u7d44 Z-Wave \u5be6\u4f8b"
+            "one_instance_allowed": "\u6574\u5408\u50c5\u652f\u63f4\u4e00\u7d44 Z-Wave \u5be6\u4f8b",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
         },
         "step": {
             "user": {

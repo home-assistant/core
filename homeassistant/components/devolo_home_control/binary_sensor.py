@@ -1,6 +1,4 @@
 """Platform for binary sensor integration."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_HEAT,
@@ -14,8 +12,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_MAPPING = {
     "Water alarm": DEVICE_CLASS_MOISTURE,
@@ -85,6 +81,9 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
                 self._name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         self._value = self._binary_sensor_property.state
+
+        if element_uid.startswith("devolo.WarningBinaryFI:"):
+            self._enabled_default = False
 
     @property
     def is_on(self):

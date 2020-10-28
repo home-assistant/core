@@ -10,6 +10,11 @@
             "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrauensw\u00fcrdiges Ger\u00e4t"

@@ -1,12 +1,8 @@
 """Support for Fibaro switches."""
-import logging
-
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # Ais dom

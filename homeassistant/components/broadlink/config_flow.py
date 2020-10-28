@@ -1,6 +1,7 @@
 """Config flow for Broadlink devices."""
 import errno
 from functools import partial
+import logging
 import socket
 
 import broadlink as blk
@@ -15,7 +16,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
-from . import LOGGER
 from .const import (  # pylint: disable=unused-import
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
@@ -23,6 +23,8 @@ from .const import (  # pylint: disable=unused-import
     DOMAINS_AND_TYPES,
 )
 from .helpers import format_mac
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,7 +45,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for device_type in device_types
         }
         if device.type not in supported_types:
-            LOGGER.error(
+            _LOGGER.error(
                 "Unsupported device: %s. If it worked before, please open "
                 "an issue at https://github.com/home-assistant/core/issues",
                 hex(device.devtype),
@@ -111,7 +113,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     f"{format_mac(self.device.mac)}, but {format_mac(device.mac)} was given"
                 )
 
-            LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
+            _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
             if self.source == config_entries.SOURCE_IMPORT:
                 return self.async_abort(reason=errors["base"])
@@ -158,7 +160,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             await self.async_set_unique_id(device.mac.hex())
             if self.source == config_entries.SOURCE_IMPORT:
-                LOGGER.warning(
+                _LOGGER.warning(
                     "The %s at %s is ready to be configured. Please "
                     "click Configuration in the sidebar and click "
                     "Integrations. Then find the device there and click "
@@ -172,7 +174,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_finish()
 
         await self.async_set_unique_id(device.mac.hex())
-        LOGGER.error(
+        _LOGGER.error(
             "Failed to authenticate to the device at %s: %s", device.host[0], err_msg
         )
         return self.async_show_form(step_id="auth", errors=errors)
@@ -226,7 +228,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_finish()
 
-            LOGGER.error(
+            _LOGGER.error(
                 "Failed to unlock the device at %s: %s", device.host[0], err_msg
             )
 

@@ -217,7 +217,7 @@ class WemoSwitch(SwitchEntity):
         self._update_lock = asyncio.Lock()
 
         registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_job(registry.register, self.wemo)
+        await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
     async def async_update(self):
@@ -242,7 +242,7 @@ class WemoSwitch(SwitchEntity):
     async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
         async with self._update_lock:
-            await self.hass.async_add_job(self._update, force_update)
+            await self.hass.async_add_executor_job(self._update, force_update)
 
     def _update(self, force_update):
         """Update the device state."""

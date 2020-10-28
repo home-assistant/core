@@ -25,6 +25,7 @@ SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
 SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
+SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
@@ -76,6 +77,8 @@ DISCOVERY_SOURCES = (
     SOURCE_IMPORT,
     SOURCE_UNIGNORE,
 )
+
+RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
@@ -139,7 +142,7 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid_util.uuid_v1mc_hex()
+        self.entry_id = entry_id or uuid_util.random_uuid_hex()
 
         # Version of the configuration.
         self.version = version
@@ -561,9 +564,18 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 title="Wykryto nowe urządzenia",
                 message=(
                     "Wykryliśmy nowe urządzenia w Twojej sieci. "
-                    "[Sprawdz](/config/integrations)"
+                    "[Sprawdz](/config/integrations)."
                 ),
                 notification_id=DISCOVERY_NOTIFICATION_ID,
+            )
+        elif source == SOURCE_REAUTH:
+            self.hass.components.persistent_notification.async_create(
+                title="Integration requires reconfiguration",
+                message=(
+                    "At least one of your integrations requires reconfiguration to "
+                    "continue functioning. [Check it out](/config/integrations)."
+                ),
+                notification_id=RECONFIGURE_NOTIFICATION_ID,
             )
 
 
@@ -874,9 +886,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @callback
     def _abort_if_unique_id_configured(
-        self,
-        updates: Optional[Dict[Any, Any]] = None,
-        reload_on_update: bool = True,
+        self, updates: Optional[Dict[Any, Any]] = None, reload_on_update: bool = True
     ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass
@@ -1003,8 +1013,30 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
+    @callback
+    def async_abort(
+        self, *, reason: str, description_placeholders: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Abort the config flow."""
+        assert self.hass
+
+        # Remove reauth notification if no reauth flows are in progress
+        if self.source == SOURCE_REAUTH and not any(
+            ent["context"]["source"] == SOURCE_REAUTH
+            for ent in self.hass.config_entries.flow.async_progress()
+            if ent["flow_id"] != self.flow_id
+        ):
+            self.hass.components.persistent_notification.async_dismiss(
+                RECONFIGURE_NOTIFICATION_ID
+            )
+
+        return super().async_abort(
+            reason=reason, description_placeholders=description_placeholders
+        )
+
     async_step_hassio = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
 

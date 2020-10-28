@@ -1,6 +1,5 @@
 """Test Axis device."""
 from copy import deepcopy
-import json
 from unittest import mock
 
 import axis as axislib
@@ -39,7 +38,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "00408C12345"
@@ -197,22 +196,22 @@ root.StreamProfile.S1.Parameters=videocodec=h265
 """
 
 
-def vapix_session_request(session, url, **kwargs):
+async def vapix_request(self, session, url, **kwargs):
     """Return data based on url."""
     if API_DISCOVERY_URL in url:
-        return json.dumps(API_DISCOVERY_RESPONSE)
+        return API_DISCOVERY_RESPONSE
     if APPLICATIONS_URL in url:
         return APPLICATIONS_LIST_RESPONSE
     if BASIC_DEVICE_INFO_URL in url:
-        return json.dumps(BASIC_DEVICE_INFO_RESPONSE)
+        return BASIC_DEVICE_INFO_RESPONSE
     if LIGHT_CONTROL_URL in url:
-        return json.dumps(LIGHT_CONTROL_RESPONSE)
+        return LIGHT_CONTROL_RESPONSE
     if MQTT_CLIENT_URL in url:
-        return json.dumps(MQTT_CLIENT_RESPONSE)
+        return MQTT_CLIENT_RESPONSE
     if PORT_MANAGEMENT_URL in url:
-        return json.dumps(PORT_MANAGEMENT_RESPONSE)
+        return PORT_MANAGEMENT_RESPONSE
     if VMD4_URL in url:
-        return json.dumps(VMD4_RESPONSE)
+        return VMD4_RESPONSE
     if BRAND_URL in url:
         return BRAND_RESPONSE
     if IOPORT_URL in url or INPUT_URL in url or OUTPUT_URL in url:
@@ -235,7 +234,7 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
     )
     config_entry.add_to_hass(hass)
 
-    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
+    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
         "axis.rtsp.RTSPClient.start",
         return_value=True,
     ):
@@ -314,7 +313,7 @@ async def test_update_address(hass):
     device = await setup_axis_integration(hass)
     assert device.api.config.host == "1.2.3.4"
 
-    with patch("axis.vapix.session_request", new=vapix_session_request), patch(
+    with patch("axis.vapix.Vapix.request", new=vapix_request), patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -385,16 +384,18 @@ async def test_shutdown():
 
     axis_device = axis.device.AxisNetworkDevice(hass, entry)
     axis_device.api = Mock()
+    axis_device.api.vapix.close = AsyncMock()
 
-    axis_device.shutdown(None)
+    await axis_device.shutdown(None)
 
     assert len(axis_device.api.stream.stop.mock_calls) == 1
+    assert len(axis_device.api.vapix.close.mock_calls) == 1
 
 
 async def test_get_device_fails(hass):
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.vapix.session_request", side_effect=axislib.Unauthorized
+        "axis.vapix.Vapix.request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -402,7 +403,7 @@ async def test_get_device_fails(hass):
 async def test_get_device_device_unavailable(hass):
     """Device unavailable yields cannot connect error."""
     with patch(
-        "axis.vapix.session_request", side_effect=axislib.RequestError
+        "axis.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
         await axis.device.get_device(hass, host="", port="", username="", password="")
 
@@ -410,6 +411,6 @@ async def test_get_device_device_unavailable(hass):
 async def test_get_device_unknown_error(hass):
     """Device yield unknown error."""
     with patch(
-        "axis.vapix.session_request", side_effect=axislib.AxisException
+        "axis.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_device(hass, host="", port="", username="", password="")

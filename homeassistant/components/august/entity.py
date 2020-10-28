@@ -1,14 +1,9 @@
 """Base class for August entity."""
-
-import logging
-
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 from .const import MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AugustEntityMixin(Entity):

@@ -153,7 +153,7 @@ def _custom_tasks(template, info) -> None:
         )
 
     elif template == "config_flow_oauth2":
-        info.update_manifest(config_flow=True)
+        info.update_manifest(config_flow=True, dependencies=["http"])
         info.update_strings(
             title=info.name,
             config={

@@ -1,6 +1,4 @@
 """Support for Homekit motion sensors."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
@@ -15,8 +13,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):

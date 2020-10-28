@@ -12,6 +12,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -48,6 +49,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.util.dt import utcnow
 
+from .browse_media import build_item_response, generate_playlist, library_payload
 from .const import (
     DEFAULT_PORT,
     DISCOVERY_TASK,
@@ -71,7 +73,8 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTERVAL = 60
 
 SUPPORT_SQUEEZEBOX = (
-    SUPPORT_PAUSE
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
@@ -476,15 +479,40 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
         """
         cmd = "play"
+        index = None
+
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             cmd = "add"
 
-        if media_type == MEDIA_TYPE_PLAYLIST:
-            content = json.loads(media_id)
-            await self._player.async_load_playlist(content["urls"], cmd)
-            await self._player.async_index(content["index"])
-        else:
+        if media_type == MEDIA_TYPE_MUSIC:
             await self._player.async_load_url(media_id, cmd)
+            return
+
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            try:
+                # a saved playlist by number
+                payload = {
+                    "search_id": int(media_id),
+                    "search_type": MEDIA_TYPE_PLAYLIST,
+                }
+                playlist = await generate_playlist(self._player, payload)
+            except ValueError:
+                # a list of urls
+                content = json.loads(media_id)
+                playlist = content["urls"]
+                index = content["index"]
+        else:
+            payload = {
+                "search_id": media_id,
+                "search_type": media_type,
+            }
+            playlist = await generate_playlist(self._player, payload)
+
+            _LOGGER.debug("Generated playlist: %s", playlist)
+
+        await self._player.async_load_playlist(playlist, cmd)
+        if index is not None:
+            await self._player.async_index(index)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -541,3 +569,22 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_unsync(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+
+        _LOGGER.debug(
+            "Reached async_browse_media with content_type %s and content_id %s",
+            media_content_type,
+            media_content_id,
+        )
+
+        if media_content_type in [None, "library"]:
+            return await library_payload(self._player)
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+
+        return await build_item_response(self._player, payload)
