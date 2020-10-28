@@ -287,23 +287,22 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
                 )
                 self._temp_entity_error = True
 
-        try:
-            entity_name = self._temp_entity
-            if not valid_entity_id(entity_name):
-                _log_error("entity name is invalid")
+        entity_name = self._temp_entity
+        if not valid_entity_id(entity_name):
+            _log_error("entity name is invalid")
+            return None
+
+        state_obj = self.hass.states.get(entity_name)
+        if state_obj:
+            temperature = state_obj.state
+            try:
+                float(temperature)
+            except (TypeError, ValueError):
+                _log_error("entity state is not available or is not a number")
                 return None
 
-            state_obj = self.hass.states.get(entity_name)
-            if state_obj:
-                temp = state_obj.state
-                if temp is None or not isinstance(temp, Number):
-                    _log_error("entity state is not available or is not a number")
-                    return None
+            self._temp_entity_error = False
+            return temperature
 
-                self._temp_entity_error = False
-                return temp
-
-            _log_error("entity not found")
-            return None
-        except (TypeError, ValueError):
-            return None
+        _log_error("entity not found")
+        return None
