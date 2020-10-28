@@ -70,7 +70,7 @@ class MicrosoftProvider(Provider):
         self._type = ttype
         self._voice = f"{lang}-{ttype}"
         self._output = output
-        self.name = "Microsoft Speech"
+        self.name = "Microsoft_Speech"
 
     @property
     def default_language(self):
