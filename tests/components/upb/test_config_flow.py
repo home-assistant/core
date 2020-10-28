@@ -107,7 +107,7 @@ async def test_form_user_with_already_configured(hass):
     _ = await valid_tcp_flow(hass)
     result2 = await valid_tcp_flow(hass)
     assert result2["type"] == "abort"
-    assert result2["reason"] == "address_already_configured"
+    assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
 
 

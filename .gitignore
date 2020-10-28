@@ -90,7 +90,7 @@ venv
 .venv
 Pipfile*
 share/*
-Scripts/
+/Scripts/
 venv3.7
 
 # vimmy stuff

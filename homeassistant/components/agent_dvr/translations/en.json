@@ -4,7 +4,8 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "already_in_progress": "Config flow for device is already in progress.",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
             "device_unavailable": "Device is not available"
         },
         "step": {

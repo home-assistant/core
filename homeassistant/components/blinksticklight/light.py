@@ -1,6 +1,4 @@
 """Support for Blinkstick lights."""
-import logging
-
 from blinkstick import blinkstick
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL = "serial"
 
@@ -53,11 +49,6 @@ class BlinkStickLight(LightEntity):
         self._serial = stick.get_serial()
         self._hs_color = None
         self._brightness = None
-
-    @property
-    def should_poll(self):
-        """Set up polling."""
-        return True
 
     @property
     def name(self):

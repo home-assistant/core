@@ -109,6 +109,7 @@ RESOLUTIONS = [
     (1280, 720),
     (1280, 960),
     (1920, 1080),
+    (1600, 1200),
 ]
 
 VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]

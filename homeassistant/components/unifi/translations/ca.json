@@ -16,7 +16,7 @@
                     "port": "[%key::common::config_flow::data::port%]",
                     "site": "ID del lloc",
                     "username": "[%key::common::config_flow::data::username%]",
-                    "verify_ssl": "El controlador est\u00e0 utilitzant un certificat adequat"
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Configuraci\u00f3 del controlador UniFi"
             }

@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "C\u00f3digo PIN"
                 },
                 "description": "Tu TV debe estar mostrando un c\u00f3digo. Escribe ese c\u00f3digo en el formulario y contin\u00faa con el paso siguiente para completar el emparejamiento.",
                 "title": "Completar Proceso de Emparejamiento"

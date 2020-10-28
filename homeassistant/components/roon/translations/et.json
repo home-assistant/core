@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "duplicate_entry": "See host on juba lisatud.",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
+            }
+        }
+    },
+    "title": "[VOID]\n"
+}

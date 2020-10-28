@@ -1,7 +1,9 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Invalid authentication",
             "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
+            "unknown": "Unexpected error",
             "unknown_error": "Unexpected error",
             "wrong_login": "Invalid authentication"
         },

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Allerede konfigurert. Bare en enkelt konfigurasjon mulig.",
+            "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
-            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
             "external_setup": "Punktet er konfigurert fra en annen flyt.",
-            "no_flows": "Komponenten er ikke konfigurert. F\u00f8lg dokumentasjonen."
+            "no_flows": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
             "default": "Vellykket godkjenning"
@@ -23,8 +23,8 @@
                 "data": {
                     "flow_impl": "Tilbyder"
                 },
-                "description": "\u00d8nsker du \u00e5 starte oppsettet?",
-                "title": "Velg godkjenningsleverand\u00f8r"
+                "description": "Vil du starte oppsettet?",
+                "title": "Velg godkjenningsmetode"
             }
         }
     }
