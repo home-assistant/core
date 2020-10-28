@@ -88,7 +88,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the anomaly sensors."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
@@ -313,7 +312,6 @@ class SensorAnomaly(BinarySensorEntity):
         """
         trailing_sample_values = np.array([s for _, s in self.trailing_samples])
         sample_values = np.array([s for _, s in self.samples])
-        print(self.samples)
         self._trailing_avg = np.mean(a=trailing_sample_values)
         self._sample_avg = np.mean(a=sample_values)
         self._change_amount = self._sample_avg - self._trailing_avg

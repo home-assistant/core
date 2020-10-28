@@ -412,52 +412,6 @@ class TestAnomalyBinarySensor:
         state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
         assert state.state == "on"
 
-    def test_sample_duration(self):
-        """Test that sample duration is limited correctly."""
-        assert setup.setup_component(
-            self.hass,
-            "binary_sensor",
-            {
-                "binary_sensor": {
-                    "platform": "anomaly",
-                    "sensors": {
-                        "test_anomaly_sensor": {
-                            "entity_id": "sensor.test_state",
-                            "max_samples": 100,
-                            "max_trailing_samples": 100,
-                            "min_change_amount": 10,
-                            "sample_duration": 7,
-                            "trailing_sample_duration": 15,
-                        }
-                    },
-                }
-            },
-        )
-        self.hass.block_till_done()
-        now = dt_util.utcnow()
-
-        for val in [0, 1, 2, 3, 50, 51, 52]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-        """
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "on"
-        assert state.attributes["sample_count"] == 3
-        assert state.attributes["max_trailing_samples"] == 7
-        for val in [50, 51, 50, 51, 50, 51, 50]:
-            with patch("homeassistant.util.dt.utcnow", return_value=now):
-                self.hass.states.set("sensor.test_state", val)
-            self.hass.block_till_done()
-            now += timedelta(seconds=2)
-        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
-        assert state.state == "off"
-        assert state.attributes["sample_count"] == 3
-        assert state.attributes["sample_average"] > 49
-        assert state.attributes["trailing_sample_average"] > 49
-        """
-
     def test_max_samples(self):
         """Test that sample count is limited correctly."""
         assert setup.setup_component(
