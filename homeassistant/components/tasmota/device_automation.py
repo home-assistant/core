@@ -6,6 +6,7 @@ from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import device_trigger
+from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 
 
@@ -25,7 +26,9 @@ async def async_setup_entry(hass, config_entry):
                 hass, tasmota_automation, config_entry, discovery_hash
             )
 
-    async_dispatcher_connect(
+    hass.data[
+        DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation")
+    ] = async_dispatcher_connect(
         hass,
         TASMOTA_DISCOVERY_ENTITY_NEW.format("device_automation", "tasmota"),
         async_discover,

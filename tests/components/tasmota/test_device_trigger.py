@@ -830,3 +830,53 @@ async def test_attach_unknown_remove_device_from_registry(
     # Remove the device
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
+
+
+async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tasmota):
+    """Test trigger cleanup when removing a Tasmota config entry."""
+    # Discover a device with device trigger
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["swc"][0] = 0
+    mac = config["mac"]
+
+    mqtt_mock.async_subscribe.reset_mock()
+
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{mac}/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+
+    calls = []
+
+    def callback(trigger, context):
+        calls.append(trigger["trigger"]["description"])
+
+    await async_attach_trigger(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+            "type": "button_short_press",
+            "subtype": "switch_1",
+        },
+        callback,
+        None,
+    )
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == "event 'tasmota_event'"
+
+    # Remove the Tasmota config entry
+    config_entries = hass.config_entries.async_entries("tasmota")
+    await hass.config_entries.async_remove(config_entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the triggers are no longer active
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/SWITCH1T", '{"TRIG":"TOGGLE"}')
+    await hass.async_block_till_done()
+    assert len(calls) == 1

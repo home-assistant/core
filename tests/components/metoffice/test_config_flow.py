@@ -42,6 +42,7 @@ async def test_form(hass, requests_mock):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_SITE_NAME_WAVERTREE
@@ -51,7 +52,6 @@ async def test_form(hass, requests_mock):
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

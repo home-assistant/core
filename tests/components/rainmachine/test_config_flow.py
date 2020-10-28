@@ -4,13 +4,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant import data_entry_flow
 from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -76,7 +70,6 @@ async def test_step_user(hass):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: True,
-        CONF_SCAN_INTERVAL: 60,
     }
 
     flow = config_flow.RainMachineFlowHandler()
@@ -96,6 +89,5 @@ async def test_step_user(hass):
             CONF_PASSWORD: "password",
             CONF_PORT: 8080,
             CONF_SSL: True,
-            CONF_SCAN_INTERVAL: 60,
             CONF_ZONE_RUN_TIME: 600,
         }

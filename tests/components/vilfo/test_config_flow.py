@@ -38,7 +38,6 @@ async def test_form(hass):
         "access_token": "test-token",
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
