@@ -66,10 +66,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     This method is a coroutine.
     """
-    import cProfile
-
-    pr = cProfile.Profile()
-    pr.enable()
     result = HomeAssistantConfig()
 
     def _pack_error(
@@ -198,7 +194,4 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             del config[filter_comp]
         result[domain] = platforms
 
-    pr.disable()
-    pr.create_stats()
-    pr.dump_stats("check_config.cprof")
     return result
