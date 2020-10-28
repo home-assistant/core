@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import async_generate_entity_id
 
-from .const import ATTR_ALIAS, ATTR_API, ATTR_SPECIES, CACHE_TIME, DOMAIN
+from .const import ATTR_ALIAS, ATTR_API, ATTR_HOURS, ATTR_SPECIES, CACHE_TIME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
@@ -96,12 +96,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.states.async_set(f"{DOMAIN}.search_result", state, attrs)
 
     async def clean_cache(call):
+        hours = call.data.get(ATTR_HOURS)
+        if not hours:
+            hours = CACHE_TIME
         if ATTR_SPECIES in hass.data[DOMAIN]:
             for species in list(hass.data[DOMAIN][ATTR_SPECIES]):
                 value = hass.data[DOMAIN][ATTR_SPECIES][species]
                 if datetime.now() > datetime.fromisoformat(
                     value["timestamp"]
-                ) + timedelta(hours=CACHE_TIME):
+                ) + timedelta(hours=hours):
                     _LOGGER.debug("Removing %s from cache", species)
                     entity_id = async_generate_entity_id(
                         f"{DOMAIN}" + ".{}", value["pid"], current_ids={}
