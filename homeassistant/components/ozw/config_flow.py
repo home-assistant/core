@@ -35,7 +35,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.addon_info = None
         self.network_key = None
         self.usb_path = None
-        # If we install the the add-on we should uninstall it on entry unload.
+        # If we install the add-on we should uninstall it on entry unload.
         self.integration_created_addon = False
 
     async def async_step_user(self, user_input=None):
@@ -170,5 +170,5 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "core_zwave", options
             )
         except HassioAPIError as err:
-            _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
+            _LOGGER.error("Failed to set OpenZWave add-on config: %s", err)
             raise AbortFlow("addon_set_config_failed") from err
