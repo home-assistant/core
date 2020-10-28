@@ -131,10 +131,17 @@ async def _init_flow(hass, source=SOURCE_USER, data=None):
 async def _configure_flow(hass, result, user_input=None):
     """Provide input to a flow."""
     user_input = user_input or {}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.hyperion.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.hyperion.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
     return result
 
 

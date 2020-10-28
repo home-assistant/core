@@ -147,7 +147,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for entity_id, entity in registry.entities.items():
         if entity.config_entry_id is not None or entity.platform != DOMAIN:
             continue
-        result = re.search(r"([^:]+):(\d+)-%i" % instance, entity.unique_id)
+        result = re.search(rf"([^:]+):(\d+)-{instance}", entity.unique_id)
         if result and result.group(1) == host and int(result.group(2)) == port:
             registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
             break
@@ -205,7 +205,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_instances_to_entities(response: Dict[str, Any]) -> None:
         if not response or const.KEY_DATA not in response:
             return
-        return await async_instances_to_entities_raw(response[const.KEY_DATA])
+        await async_instances_to_entities_raw(response[const.KEY_DATA])
 
     async def async_instances_to_entities_raw(instances: Dict[str, Any]) -> None:
         registry = await async_get_registry(hass)

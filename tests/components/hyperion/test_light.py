@@ -1,5 +1,6 @@
 """Tests for the Hyperion integration."""
 import logging
+from typing import Any, Optional
 
 from asynctest import CoroutineMock, call, patch
 from hyperion import const
@@ -10,15 +11,17 @@ from homeassistant.components.hyperion import (
     get_hyperion_unique_id,
     light as hyperion_light,
 )
-from homeassistant.components.hyperion.const import CONF_ROOT_CLIENT, DOMAIN
+from homeassistant.components.hyperion.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     TEST_ENTITY_ID_1,
@@ -41,12 +44,16 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _call_registered_callback(client, key, *args, **kwargs):
+def _call_registered_callback(
+    client: CoroutineMock, key: str, *args: Any, **kwargs: Any
+) -> None:
     """Call a Hyperion entity callback that was registered with the client."""
     return client.set_callbacks.call_args[0][0][key](*args, **kwargs)
 
 
-async def _setup_entity_yaml(hass, client=None):
+async def _setup_entity_yaml(
+    hass: HomeAssistantType, client: CoroutineMock = None
+) -> None:
     """Add a test Hyperion entity to hass."""
     client = client or create_mock_client()
     with patch("hyperion.client.HyperionClient", return_value=client):
@@ -66,7 +73,16 @@ async def _setup_entity_yaml(hass, client=None):
         await hass.async_block_till_done()
 
 
-async def test_setup_yaml_already_converted(hass):
+def _get_config_entry_from_unique_id(
+    hass: HomeAssistantType, unique_id: str
+) -> Optional[ConfigEntry]:
+    for entry in hass.config_entries.async_entries(domain=DOMAIN):
+        if TEST_SERVER_ID == entry.unique_id:
+            return entry
+    return None
+
+
+async def test_setup_yaml_already_converted(hass: HomeAssistantType) -> None:
     """Test an already converted YAML style config."""
     # This tests "Possibility 1" from async_setup_platform()
 
@@ -80,7 +96,7 @@ async def test_setup_yaml_already_converted(hass):
     assert hass.states.get(TEST_YAML_ENTITY_ID) is None
 
 
-async def test_setup_yaml_old_style_unique_id(hass):
+async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     """Test an already converted YAML style config."""
     # This tests "Possibility 2" from async_setup_platform()
     old_unique_id = f"{TEST_HOST}:{TEST_PORT}-0"
@@ -108,12 +124,12 @@ async def test_setup_yaml_old_style_unique_id(hass):
     assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
 
     # There should be a config entry with the correct server unique_id.
-    entry_id = next(iter(hass.data[DOMAIN]))
-    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
-    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
+    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
 
 
-async def test_setup_yaml_new_style_unique_id_wo_config(hass):
+async def test_setup_yaml_new_style_unique_id_wo_config(
+    hass: HomeAssistantType,
+) -> None:
     """Test an a new unique_id without a config entry."""
     # Note: This casde should not happen in the wild, as no released version of Home
     # Assistant should this combination, but verify correct behavior for defense in
@@ -142,12 +158,10 @@ async def test_setup_yaml_new_style_unique_id_wo_config(hass):
     assert registry.async_get(entity_id_to_preserve).unique_id == new_unique_id
 
     # There should be a config entry with the correct server unique_id.
-    entry_id = next(iter(hass.data[DOMAIN]))
-    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
-    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
+    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
 
 
-async def test_setup_yaml_no_registry_entity(hass):
+async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     """Test an already converted YAML style config."""
     # This tests "Possibility 3" from async_setup_platform()
 
@@ -167,12 +181,10 @@ async def test_setup_yaml_no_registry_entity(hass):
     )
 
     # There should be a config entry with the correct server unique_id.
-    entry_id = next(iter(hass.data[DOMAIN]))
-    assert client == hass.data[DOMAIN][entry_id][CONF_ROOT_CLIENT]
-    assert TEST_SERVER_ID == hass.config_entries.async_get_entry(entry_id).unique_id
+    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
 
 
-async def test_setup_yaml_not_ready(hass):
+async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
@@ -180,13 +192,13 @@ async def test_setup_yaml_not_ready(hass):
     assert hass.states.get(TEST_YAML_ENTITY_ID) is None
 
 
-async def test_setup_config_entry(hass):
+async def test_setup_config_entry(hass: HomeAssistantType) -> None:
     """Test setting up the component via config entries."""
     await setup_test_config_entry(hass, client=create_mock_client())
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
-async def test_setup_config_entry_not_ready(hass):
+async def test_setup_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
@@ -194,7 +206,7 @@ async def test_setup_config_entry_not_ready(hass):
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
-async def test_setup_config_entry_dynamic_instances(hass):
+async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
     """Test dynamic changes in the omstamce configuration."""
     config_entry = add_test_config_entry(hass)
 
@@ -210,8 +222,6 @@ async def test_setup_config_entry_dynamic_instances(hass):
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    assert master_client == hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT]
 
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert hass.states.get(TEST_ENTITY_ID_2) is not None
@@ -267,7 +277,7 @@ async def test_setup_config_entry_dynamic_instances(hass):
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
 
-async def test_light_basic_properies(hass):
+async def test_light_basic_properies(hass: HomeAssistantType) -> None:
     """Test the basic properties."""
     client = create_mock_client()
     await setup_test_config_entry(hass, client=client)
@@ -287,7 +297,7 @@ async def test_light_basic_properies(hass):
     )
 
 
-async def test_light_async_turn_on(hass):
+async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     """Test turning the light on."""
     client = create_mock_client()
     await setup_test_config_entry(hass, client=client)
@@ -483,7 +493,7 @@ async def test_light_async_turn_on(hass):
     assert not client.async_send_set_effect.called
 
 
-async def test_light_async_turn_off(hass):
+async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
     """Test turning the light off."""
     client = create_mock_client()
     await setup_test_config_entry(hass, client=client)
@@ -520,7 +530,9 @@ async def test_light_async_turn_off(hass):
     assert not client.async_send_set_component.called
 
 
-async def test_light_async_updates_from_hyperion_client(hass):
+async def test_light_async_updates_from_hyperion_client(
+    hass: HomeAssistantType,
+) -> None:
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
     await setup_test_config_entry(hass, client=client)
@@ -609,7 +621,7 @@ async def test_light_async_updates_from_hyperion_client(hass):
     assert entity_state.state == "on"
 
 
-async def test_full_state_loaded_on_start(hass):
+async def test_full_state_loaded_on_start(hass: HomeAssistantType) -> None:
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
 
@@ -632,16 +644,13 @@ async def test_full_state_loaded_on_start(hass):
     assert entity_state.attributes["hs_color"] == (180.0, 100.0)
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistantType) -> None:
     """Test unload."""
-    assert DOMAIN not in hass.data
-
-    entry = await setup_test_config_entry(hass)
+    client = create_mock_client()
+    entry = await setup_test_config_entry(hass, client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
-    client = hass.data[DOMAIN][entry.entry_id][CONF_ROOT_CLIENT]
     assert client.async_client_connect.called
     assert not client.async_client_disconnect.called
 
     assert await async_unload_entry(hass, entry)
     assert client.async_client_disconnect.called
-    assert entry.entry_id not in hass.data[DOMAIN]

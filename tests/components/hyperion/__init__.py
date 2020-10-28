@@ -9,7 +9,6 @@ from hyperion import const
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -93,7 +92,6 @@ def add_test_config_entry(hass):
 
 async def setup_test_config_entry(hass, client=None):
     """Add a test Hyperion entity to hass."""
-    assert await async_setup_component(hass, DOMAIN, {})
     config_entry = add_test_config_entry(hass)
 
     client = client or create_mock_client()

@@ -22,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Unique ID
 # =========
-# A config entry represents a connection to a single Hyperion server. The config
-# entry_id is the server id returned from the Hyperion instance (a unique ID per
+# A config entry represents a connection to a single Hyperion server. The config entry
+# unique_id is the server id returned from the Hyperion instance (a unique ID per
 # server).
 #
 # Each server connection may create multiple entities, 1 per "instance" on the Hyperion
