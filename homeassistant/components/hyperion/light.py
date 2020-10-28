@@ -18,13 +18,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import (
-    CONF_ENTITIES,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -215,9 +209,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         registry = await async_get_registry(hass)
         entities_to_add: List[Hyperion] = []
         desired_unique_ids: Set[str] = set()
-        current_entities = hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN][
-            CONF_ENTITIES
-        ]
         server_id = config_entry.unique_id
 
         # In practice, an instance can be in 3 states as seen by this function:
@@ -261,7 +252,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities_to_add)
 
-    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN] = {CONF_ENTITIES: set()}
+    # Readability note: This variable is kept alive in the context of the callback to
+    # async_instances_to_entities below.
+    current_entities = set()
 
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
@@ -297,7 +290,6 @@ class Hyperion(LightEntity):
             brightness=255, rgb_color=DEFAULT_COLOR, effect=KEY_EFFECT_SOLID
         )
         self._effect_list = []
-        self._dispatcher_instance_removed_unsub = None
 
     @property
     def should_poll(self):
@@ -560,10 +552,12 @@ class Hyperion(LightEntity):
     async def async_added_to_hass(self):
         """Register callbacks when entity added to hass."""
 
-        self._dispatcher_instance_removed_unsub = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_INSTANCE_REMOVED.format(self._unique_id),
-            self.async_remove,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_INSTANCE_REMOVED.format(self._unique_id),
+                self.async_remove,
+            )
         )
 
         self._client.set_callbacks(
@@ -583,7 +577,3 @@ class Hyperion(LightEntity):
     async def async_will_remove_from_hass(self):
         """Disconnect from server."""
         await self._client.async_client_disconnect()
-
-        if self._dispatcher_instance_removed_unsub:
-            self._dispatcher_instance_removed_unsub()
-            self._dispatcher_instance_removed_unsub = None

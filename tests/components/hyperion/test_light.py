@@ -653,5 +653,5 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
 
-    await entry.async_unload(hass)
+    await hass.config_entries.async_unload(entry.entry_id)
     assert client.async_client_disconnect.called

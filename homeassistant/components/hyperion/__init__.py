@@ -41,9 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 #     <config_entry.entry_id>: {
 #         "ROOT_CLIENT": <Hyperion Client>,
 #         "ON_UNLOAD": [<callable>, ...],
-#         "LIGHT": {
-#             "ENTITIES": set(<unique_id>)
-#         }
 #     }
 # }
 
