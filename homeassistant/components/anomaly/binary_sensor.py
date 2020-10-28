@@ -289,7 +289,6 @@ class SensorAnomaly(BinarySensorEntity):
             self._state = False
         if self._invert:
             self._state = not self._state
-        return
 
     def _validate_direction(self) -> bool:
         """
@@ -319,17 +318,14 @@ class SensorAnomaly(BinarySensorEntity):
         self._sample_avg = np.mean(a=sample_values)
         self._change_amount = self._sample_avg - self._trailing_avg
         self._change_percent = (self._change_amount / self._trailing_avg) * 100
-        return
 
     def _trim_trailing_samples(self) -> None:
         trailing_cuttoff = utcnow().timestamp() - self._trailing_sample_duration
         while self.trailing_samples and self.trailing_samples[0][0] < trailing_cuttoff:
             self.trailing_samples.popleft()
-        return
 
     def _trim_samples(self) -> None:
         cutoff = utcnow().timestamp() - self._sample_duration
         print(cutoff)
         while self.samples and self.samples[0][0] < cutoff:
             self.samples.popleft()
-        return
