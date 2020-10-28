@@ -19,7 +19,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.bosch_shc.config_flow.SHCSession.information",
+        "homeassistant.components.bosch_shc.config_flow.SHCSession.acquire_information",
         return_value=SHCInformation,
     ), patch(
         "homeassistant.components.bosch_shc.async_setup", return_value=True
@@ -160,5 +160,5 @@ async def test_session_invalid(hass):
         True,
     )
 
-    status = session.information.version
-    assert status == "n/a"
+    session_information = session.information
+    assert session_information is None

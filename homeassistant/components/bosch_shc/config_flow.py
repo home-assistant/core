@@ -33,9 +33,9 @@ async def validate_input(hass: core.HomeAssistant, data):
         data[CONF_SSL_KEY],
         True,
     )
-    status = session.information.version
 
-    if status == "n/a":
+    session_information = await hass.async_add_executor_job(session.acquire_information)
+    if session_information is None:
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.

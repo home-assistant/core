@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     shc_info = session.information
-    if shc_info.version == "n/a":
+    if shc_info is None:
         _LOGGER.warning("Unable to connect to Bosch Smart Home Controller API")
         raise ConfigEntryNotReady
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
