@@ -692,6 +692,7 @@ googlemaps==2.5.1
 # homeassistant.components.slide
 goslide-api==0.5.1
 
+# homeassistant.components.energenie
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.5.1
 

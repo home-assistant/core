@@ -1,0 +1,10 @@
+{
+  "domain": "energenie",
+  "name": "Energenie Python Sockets",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/energenie_pimote",
+  "requirements": ["gpiozero==1.5.1"],
+  "codeowners": [
+    "@matejmecka"
+  ]
+}

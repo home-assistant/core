@@ -1066,6 +1066,7 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/energenie/switch.py
 
 [report]
 # Regexes for lines to exclude from consideration

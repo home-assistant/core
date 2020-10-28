@@ -1,0 +1,21 @@
+{
+  "title": "Energenie PiMote",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the Outlet",
+        "data": {
+          "name": "Name",
+          "socket_id": "Socket Number"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error",
+      "invalid_rang": "Socket Number isn't in range from 1-4"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
