@@ -5,6 +5,7 @@ import random
 
 import pytest
 import pytz
+import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
@@ -2684,14 +2685,26 @@ async def test_is_static_still_ast_evals(hass):
 
 async def test_result_wrappers(hass):
     """Test result wrappers."""
-    for text, native in (
-        ("[1, 2]", [1, 2]),
-        ("{1, 2}", {1, 2}),
-        ("(1, 2)", (1, 2)),
-        ('{"hello": True}', {"hello": True}),
+    for text, native, orig_type, schema in (
+        ("[1, 2]", [1, 2], list, vol.Schema([int])),
+        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
     ):
         tpl = template.Template(text, hass)
         result = tpl.async_render()
+        assert isinstance(result, orig_type)
         assert isinstance(result, template.ResultWrapper)
         assert result == native
         assert result.render_result == text
+        schema(result)  # should not raise
+
+
+async def test_parse_result(hass):
+    """Test parse result."""
+    for tpl, result in (
+        ('{{ "{{}}" }}', "{{}}"),
+        ("not-something", "not-something"),
+        ("2a", "2a"),
+    ):
+        assert template.Template(tpl, hass).async_render() == result
