@@ -51,7 +51,7 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    if isinstance(data, dict) and "signature" in data.keys():
+    if isinstance(data, dict) and "signature" in data:
         if await verify_webhook(hass, **data["signature"]):
             data["webhook_id"] = webhook_id
             hass.bus.async_fire(MESSAGE_RECEIVED, data)

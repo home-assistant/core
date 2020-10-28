@@ -114,6 +114,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
-    for name in conf.keys():
+    for name in conf:
         hass.services.async_register(DOMAIN, name, async_service_handler)
     return True

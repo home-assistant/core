@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             continue
 
         config = p_config.copy()
-        if config[CONF_HOST] not in configs.keys():
+        if config[CONF_HOST] not in configs:
             configs[config[CONF_HOST]] = {
                 CONF_HOST: config[CONF_HOST],
                 CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
