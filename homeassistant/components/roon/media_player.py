@@ -533,17 +533,17 @@ class RoonDevice(MediaPlayerEntity):
             if name is None:
                 _LOGGER.error("No roon player found for %s", entity_id)
                 return
-            if name not in sync_available.keys():
+            if name not in sync_available:
                 _LOGGER.error(
                     "Can't join player %s with %s because it's not in the join available list %s",
                     name,
                     self.name,
-                    list(sync_available.keys()),
+                    list(sync_available),
                 )
                 return
             names.append(name)
 
-        _LOGGER.info("Joining %s to %s", names, self.name)
+        _LOGGER.debug("Joining %s to %s", names, self.name)
         self._server.roonapi.group_outputs(
             [self._output_id] + [sync_available[name] for name in names]
         )
@@ -583,7 +583,7 @@ class RoonDevice(MediaPlayerEntity):
                     return
                 names.append(name)
 
-        _LOGGER.info("Unjoining %s from %s", names, self.name)
+        _LOGGER.debug("Unjoining %s from %s", names, self.name)
         self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
 
     async def async_transfer(self, transfer_id):
@@ -609,7 +609,7 @@ class RoonDevice(MediaPlayerEntity):
                 list(zone_ids.keys()),
             )
 
-        _LOGGER.info("Transferring from %s to %s", self.name, name)
+        _LOGGER.debug("Transferring from %s to %s", self.name, name)
         await self.hass.async_add_executor_job(
             self._server.roonapi.transfer_zone, self._zone_id, transfer_id
         )
