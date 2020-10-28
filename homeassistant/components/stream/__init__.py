@@ -57,6 +57,8 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
             **options,
         }
 
+    options["fflags"] = "nobuffer"
+
     try:
         streams = hass.data[DOMAIN][ATTR_STREAMS]
         stream = streams.get(stream_source)
