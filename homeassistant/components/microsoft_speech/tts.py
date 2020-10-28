@@ -108,7 +108,7 @@ class MicrosoftProvider(Provider):
         if self._voice in self.supported_voices:
             pass
         else:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "The provided voice %s is not in the supported types list. Falling back to default voice %s",
                 self._voice,
                 DEFAULT_VOICE,
@@ -151,8 +151,8 @@ class MicrosoftProvider(Provider):
                     "Speech synthesis canceled: %s", cancellation_details.reason
                 )
                 if cancellation_details.reason == CancellationReason.Error:
-                    _LOGGER.warn("Error details: %s", cancellation_details.reason)
+                    _LOGGER.warning("Error details: %s", cancellation_details.reason)
         except HTTPException as ex:
-            _LOGGER.warn("Error occurred for Microsoft TTS: %s", ex)
+            _LOGGER.warning("Error occurred for Microsoft TTS: %s", ex)
             return (None, None)
         return ("wav", data)
