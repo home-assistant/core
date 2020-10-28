@@ -37,6 +37,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -48,6 +49,7 @@ from .const import (
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
@@ -176,6 +178,13 @@ class UniFiController:
     def option_block_clients(self):
         """Config entry option with list of clients to control network access."""
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+
+    @property
+    def option_dpi_restrictions(self):
+        """Config entry option to control DPI restriction groups."""
+        return self.config_entry.options.get(
+            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+        )
 
     # Statistics sensor options
 
