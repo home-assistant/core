@@ -47,8 +47,8 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
             LOGGER.error("Unable to connect to Abode: %s", str(ex))
             if ex.errcode == HTTP_BAD_REQUEST:
-                return self._show_form({"base": "invalid_credentials"})
-            return self._show_form({"base": "connection_error"})
+                return self._show_form({"base": "invalid_auth"})
+            return self._show_form({"base": "cannot_connect"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],

@@ -32,8 +32,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     def __init__(self, simplisafe, system, lock):
         """Initialize."""
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
-        self._is_locked = False
         self._lock = lock
+        self._is_locked = None
 
         for event_type in (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED):
             self.websocket_events_to_listen_for.append(event_type)
@@ -51,8 +51,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
-        self._is_locked = True
-
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
         try:
@@ -60,8 +58,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         except SimplipyError as err:
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
-
-        self._is_locked = False
 
     @callback
     def async_update_from_rest_api(self):
@@ -73,6 +69,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
                 ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
             }
         )
+
+        self._is_locked = self._lock.state == LockStates.locked
 
     @callback
     def async_update_from_websocket_event(self, event):

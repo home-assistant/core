@@ -4,7 +4,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN  # pylint: disable=unused-import
@@ -36,14 +35,13 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except pyatag.errors.Unauthorized:
             return await self._show_form({"base": "unauthorized"})
         except pyatag.errors.AtagException:
-            return await self._show_form({"base": "connection_error"})
+            return await self._show_form({"base": "cannot_connect"})
 
         await self.async_set_unique_id(atag.id)
         self._abort_if_unique_id_configured(updates=user_input)
 
         return self.async_create_entry(title=atag.id, data=user_input)
 
-    @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(

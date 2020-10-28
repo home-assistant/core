@@ -1,6 +1,4 @@
 """Component to integrate the Home Assistant cloud."""
-import logging
-
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
@@ -42,8 +40,6 @@ from .const import (
     MODE_PROD,
 )
 from .prefs import CloudPreferences
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_MODE = MODE_PROD
 

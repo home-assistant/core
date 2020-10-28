@@ -5,6 +5,7 @@
             "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun AdGuard Home ass erlaabt."
         },
         "error": {
+            "cannot_connect": "Feeler beim verbannen",
             "connection_error": "Feeler beim verbannen."
         },
         "step": {

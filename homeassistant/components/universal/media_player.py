@@ -1,6 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 from copy import copy
-import logging
 
 import voluptuous as vol
 
@@ -74,8 +73,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVE_CHILD = "active_child"
 ATTR_DATA = "data"

@@ -329,7 +329,9 @@ async def async_setup(hass, config):
                 else:
                     attribute_templ.hass = hass
                     try:
-                        data[attribute] = attribute_templ.async_render()
+                        data[attribute] = attribute_templ.async_render(
+                            parse_result=False
+                        )
                     except TemplateError as exc:
                         _LOGGER.error(
                             "TemplateError in %s: %s -> %s",
@@ -354,26 +356,32 @@ async def async_setup(hass, config):
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            await hass.async_add_job(partial(notify_service.send_message, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.send_message, **kwargs)
+            )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_STICKER,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_DOCUMENT,
         ]:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.send_file, msgtype, **kwargs)
             )
         elif msgtype == SERVICE_SEND_LOCATION:
-            await hass.async_add_job(partial(notify_service.send_location, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.send_location, **kwargs)
+            )
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.answer_callback_query, **kwargs)
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            await hass.async_add_job(partial(notify_service.delete_message, **kwargs))
+            await hass.async_add_executor_job(
+                partial(notify_service.delete_message, **kwargs)
+            )
         else:
-            await hass.async_add_job(
+            await hass.async_add_executor_job(
                 partial(notify_service.edit_message, msgtype, **kwargs)
             )
 

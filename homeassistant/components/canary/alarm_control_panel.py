@@ -1,5 +1,4 @@
 """Support for Canary alarm."""
-import logging
 from typing import Callable, List
 
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
@@ -19,11 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CanaryData
-from .const import DATA_CANARY, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import CanaryDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -32,25 +30,35 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Canary alarm control panels based on a config entry."""
-    data: CanaryData = hass.data[DOMAIN][entry.entry_id][DATA_CANARY]
-    alarms = [CanaryAlarm(data, location.location_id) for location in data.locations]
+    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
+    alarms = [
+        CanaryAlarm(coordinator, location)
+        for location_id, location in coordinator.data["locations"].items()
+    ]
 
     async_add_entities(alarms, True)
 
 
-class CanaryAlarm(AlarmControlPanelEntity):
+class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Canary alarm control panel."""
 
-    def __init__(self, data, location_id):
+    def __init__(self, coordinator, location):
         """Initialize a Canary security camera."""
-        self._data = data
-        self._location_id = location_id
+        super().__init__(coordinator)
+        self._location_id = location.location_id
+        self._location_name = location.name
+
+    @property
+    def location(self):
+        """Return information about the location."""
+        return self.coordinator.data["locations"][self._location_id]
 
     @property
     def name(self):
         """Return the name of the alarm."""
-        location = self._data.get_location(self._location_id)
-        return location.name
+        return self._location_name
 
     @property
     def unique_id(self):
@@ -60,18 +68,17 @@ class CanaryAlarm(AlarmControlPanelEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        location = self._data.get_location(self._location_id)
-
-        if location.is_private:
+        if self.location.is_private:
             return STATE_ALARM_DISARMED
 
-        mode = location.mode
+        mode = self.location.mode
         if mode.name == LOCATION_MODE_AWAY:
             return STATE_ALARM_ARMED_AWAY
         if mode.name == LOCATION_MODE_HOME:
             return STATE_ALARM_ARMED_HOME
         if mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
+
         return None
 
     @property
@@ -82,26 +89,24 @@ class CanaryAlarm(AlarmControlPanelEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        location = self._data.get_location(self._location_id)
-        return {"private": location.is_private}
+        return {"private": self.location.is_private}
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        location = self._data.get_location(self._location_id)
-        self._data.set_location_mode(self._location_id, location.mode.name, True)
+        self.coordinator.canary.set_location_mode(
+            self._location_id, self.location.mode.name, True
+        )
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
+        self.coordinator.canary.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._data.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
+        self.coordinator.canary.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)
-
-    def update(self):
-        """Get the latest state of the sensor."""
-        self._data.update()
+        self.coordinator.canary.set_location_mode(
+            self._location_id, LOCATION_MODE_NIGHT
+        )

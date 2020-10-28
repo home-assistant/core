@@ -4,12 +4,12 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "old_firmware": "Gammel fastvare som ikke st\u00f8ttes p\u00e5 Bond-enheten \u2013 vennligst oppgrader f\u00f8r du fortsetter",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Obligasjon: {bond_id} ( {host} )",
+        "flow_title": "",
         "step": {
             "confirm": {
                 "data": {

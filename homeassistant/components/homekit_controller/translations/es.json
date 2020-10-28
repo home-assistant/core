@@ -34,8 +34,8 @@
                 "data": {
                     "pairing_code": "C\u00f3digo de vinculaci\u00f3n"
                 },
-                "description": "Introduce tu c\u00f3digo de vinculaci\u00f3n de HomeKit (en este formato XXX-XX-XXX) para usar este accesorio",
-                "title": "Vincular con accesorio HomeKit"
+                "description": "El controlador de HomeKit se comunica con {name} a trav\u00e9s de la red de \u00e1rea local usando una conexi\u00f3n encriptada segura sin un controlador HomeKit separado o iCloud. Introduce el c\u00f3digo de vinculaci\u00f3n de tu HomeKit (con el formato XXX-XX-XXX) para usar este accesorio. Este c\u00f3digo suele encontrarse en el propio dispositivo o en el embalaje.",
+                "title": "Vincular un dispositivo a trav\u00e9s del protocolo de accesorios HomeKit"
             },
             "protocol_error": {
                 "description": "Es posible que el dispositivo no est\u00e9 en modo de emparejamiento y que requiera que se presione un bot\u00f3n f\u00edsico o virtual. Aseg\u00farate de que el dispositivo est\u00e1 en modo de emparejamiento o intenta reiniciar el dispositivo, luego contin\u00faa para reanudar el emparejamiento.",
@@ -49,8 +49,8 @@
                 "data": {
                     "device": "Dispositivo"
                 },
-                "description": "Selecciona el dispositivo que quieres vincular",
-                "title": "Vincular con accesorio HomeKit"
+                "description": "El controlador de HomeKit se comunica a trav\u00e9s de la red de \u00e1rea local usando una conexi\u00f3n encriptada segura sin un controlador HomeKit separado o iCloud. Selecciona el dispositivo que quieres vincular:",
+                "title": "Selecci\u00f3n del dispositivo"
             }
         }
     },

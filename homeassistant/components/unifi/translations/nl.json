@@ -54,7 +54,8 @@
                 "data": {
                     "block_client": "Cli\u00ebnten met netwerktoegang",
                     "track_clients": "Volg netwerkclients"
-                }
+                },
+                "description": "Configureer UniFi-integratie"
             },
             "statistics_sensors": {
                 "data": {

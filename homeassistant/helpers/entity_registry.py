@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
@@ -55,8 +56,6 @@ DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
-
-ATTR_RESTORED = "restored"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -183,7 +182,7 @@ class EntityRegistry:
         while (
             test_string in self.entities
             or test_string in known_object_ids
-            or self.hass.states.get(test_string)
+            or not self.hass.states.async_available(test_string)
         ):
             tries += 1
             test_string = f"{preferred_string}_{tries}"

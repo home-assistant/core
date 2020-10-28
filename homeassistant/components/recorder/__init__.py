@@ -48,7 +48,7 @@ ATTR_REPACK = "repack"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
     }
 )
@@ -58,7 +58,12 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
+DEFAULT_COMMIT_INTERVAL = 1
 KEEPALIVE_TIME = 30
+
+# Controls how often we clean up
+# States and Events objects
+EXPIRE_AFTER_COMMITS = 120
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
@@ -87,13 +92,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
                     vol.Optional(CONF_DB_URL): cv.string,
-                    vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(
+                        CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
@@ -238,6 +241,7 @@ class Recorder(threading.Thread):
         self.exclude_t = exclude_t
 
         self._timechanges_seen = 0
+        self._commits_without_expire = 0
         self._keepalive_count = 0
         self._old_states = {}
         self._pending_expunge = []
@@ -345,6 +349,7 @@ class Recorder(threading.Thread):
             )
 
         self.event_session = self.get_session()
+        self.event_session.expire_on_commit = False
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
@@ -382,9 +387,11 @@ class Recorder(threading.Thread):
                     continue
 
             try:
-                dbevent = Events.from_event(event)
                 if event.event_type == EVENT_STATE_CHANGED:
-                    dbevent.event_data = "{}"
+                    dbevent = Events.from_event(event, event_data="{}")
+                else:
+                    dbevent = Events.from_event(event)
+                dbevent.created = event.time_fired
                 self.event_session.add(dbevent)
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
@@ -397,10 +404,15 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
                     if dbstate.entity_id in self._old_states:
-                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
+                        old_state = self._old_states.pop(dbstate.entity_id)
+                        if old_state.state_id:
+                            dbstate.old_state_id = old_state.state_id
+                        else:
+                            dbstate.old_state = old_state
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
+                    dbstate.created = event.time_fired
                     self.event_session.add(dbstate)
                     if has_new_state:
                         self._old_states[dbstate.entity_id] = dbstate
@@ -484,24 +496,35 @@ class Recorder(threading.Thread):
 
         try:
             self.event_session = self.get_session()
+            self.event_session.expire_on_commit = False
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.exception("Error while creating new event session: %s", err)
 
     def _commit_event_session(self):
+        self._commits_without_expire += 1
+
         try:
-            self.event_session.flush()
-            for dbstate in self._pending_expunge:
-                # Expunge the state so its not expired
-                # until we use it later for dbstate.old_state
-                if dbstate in self.event_session:
-                    self.event_session.expunge(dbstate)
-            self._pending_expunge = []
+            if self._pending_expunge:
+                self.event_session.flush()
+                for dbstate in self._pending_expunge:
+                    # Expunge the state so its not expired
+                    # until we use it later for dbstate.old_state
+                    if dbstate in self.event_session:
+                        self.event_session.expunge(dbstate)
+                self._pending_expunge = []
             self.event_session.commit()
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
             raise
+
+        # Expire is an expensive operation (frequently more expensive
+        # than the flush and commit itself) so we only
+        # do it after EXPIRE_AFTER_COMMITS commits
+        if self._commits_without_expire == EXPIRE_AFTER_COMMITS:
+            self._commits_without_expire = 0
+            self.event_session.expire_all()
 
     @callback
     def event_listener(self, event):

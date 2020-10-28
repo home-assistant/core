@@ -159,8 +159,7 @@ from os import path
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import light
 from homeassistant.const import ATTR_ASSUMED_STATE, SERVICE_RELOAD, STATE_OFF, STATE_ON
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -290,13 +289,13 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 255, 255)
-    assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 150
-    assert state.attributes.get("effect") == "none"
-    assert state.attributes.get("hs_color") == (0, 0)
-    assert state.attributes.get("white_value") == 255
-    assert state.attributes.get("xy_color") == (0.323, 0.329)
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("effect") is None
+    assert state.attributes.get("hs_color") is None
+    assert state.attributes.get("white_value") is None
+    assert state.attributes.get("xy_color") is None
 
     async_fire_mqtt_message(hass, "test_light_rgb/status", "0")
 
@@ -384,12 +383,17 @@ async def test_invalid_state_via_topic(hass, mqtt_mock, caplog):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "test_light_rgb/status", "1")
+    async_fire_mqtt_message(hass, "test_light_rgb/rgb/status", "255,255,255")
+    async_fire_mqtt_message(hass, "test_light_rgb/brightness/status", "255")
+    async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "153")
+    async_fire_mqtt_message(hass, "test_light_rgb/effect/status", "none")
+    async_fire_mqtt_message(hass, "test_light_rgb/white_value/status", "255")
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 150
+    assert state.attributes.get("color_temp") == 153
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (0, 0)
     assert state.attributes.get("white_value") == 255
@@ -408,7 +412,7 @@ async def test_invalid_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
     assert "Ignoring empty color temp message" in caplog.text
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 150
+    assert light_state.attributes["color_temp"] == 153
 
     async_fire_mqtt_message(hass, "test_light_rgb/effect/status", "")
     assert "Ignoring empty effect message" in caplog.text
@@ -473,7 +477,7 @@ async def test_brightness_controlling_scale(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("brightness") is None
 
     async_fire_mqtt_message(hass, "test_scale/status", "off")
 
@@ -559,7 +563,7 @@ async def test_white_value_controlling_scale(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("white_value") == 255
+    assert state.attributes.get("white_value") is None
 
     async_fire_mqtt_message(hass, "test_scale/status", "off")
 
@@ -756,11 +760,11 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
         [
             call("test_light_rgb/set", "on", 2, False),
             call("test_light_rgb/rgb/set", "255,128,0", 2, False),
-            call("test_light_rgb/brightness/set", 50, 2, False),
+            call("test_light_rgb/brightness/set", "50", 2, False),
             call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
-            call("test_light_rgb/white_value/set", 80, 2, False),
+            call("test_light_rgb/white_value/set", "80", 2, False),
             call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
-            call("test_light_rgb/color_temp/set", 125, 2, False),
+            call("test_light_rgb/color_temp/set", "125", 2, False),
         ],
         any_order=True,
     )
@@ -847,162 +851,6 @@ async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
     assert state.attributes["color_temp"] == 100
 
 
-async def test_show_brightness_if_only_command_topic(hass, mqtt_mock):
-    """Test the brightness if only a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "brightness_command_topic": "test_light_rgb/brightness/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("brightness") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("brightness") == 255
-
-
-async def test_show_color_temp_only_if_command_topic(hass, mqtt_mock):
-    """Test the color temp only if a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "color_temp_command_topic": "test_light_rgb/brightness/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("color_temp") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 150
-
-
-async def test_show_effect_only_if_command_topic(hass, mqtt_mock):
-    """Test the effect only if a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("effect") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("effect") == "none"
-
-
-async def test_show_hs_if_only_command_topic(hass, mqtt_mock):
-    """Test the hs if only a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("hs_color") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("hs_color") == (0, 0)
-
-
-async def test_show_white_value_if_only_command_topic(hass, mqtt_mock):
-    """Test the white_value if only a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "white_value_command_topic": "test_light_rgb/white_value/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("white_value") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("white_value") == 255
-
-
-async def test_show_xy_if_only_command_topic(hass, mqtt_mock):
-    """Test the xy if only a command topic is present."""
-    config = {
-        light.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "command_topic": "test_light_rgb/set",
-            "state_topic": "test_light_rgb/status",
-        }
-    }
-
-    assert await async_setup_component(hass, light.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_OFF
-    assert state.attributes.get("xy_color") is None
-
-    async_fire_mqtt_message(hass, "test_light_rgb/status", "ON")
-
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("xy_color") == (0.323, 0.329)
-
-
 async def test_on_command_first(hass, mqtt_mock):
     """Test on command being sent before brightness."""
     config = {
@@ -1029,7 +877,7 @@ async def test_on_command_first(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/set", "ON", 0, False),
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
         ],
     )
     mqtt_mock.async_publish.reset_mock()
@@ -1063,7 +911,7 @@ async def test_on_command_last(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
             call("test_light/set", "ON", 0, False),
         ],
     )
@@ -1098,7 +946,9 @@ async def test_on_command_brightness(hass, mqtt_mock):
 
     # Should get the following MQTT messages.
     #    test_light/bright: 255
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 255, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "255", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1109,7 +959,7 @@ async def test_on_command_brightness(hass, mqtt_mock):
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 50, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "50", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1121,7 +971,7 @@ async def test_on_command_brightness(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", 50, 0, False),
+            call("test_light/bright", "50", 0, False),
         ],
         any_order=True,
     )
@@ -1152,7 +1002,9 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
 
     # Should get the following MQTT messages.
     #    test_light/bright: 100
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1163,19 +1015,21 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
     # Turn on w/ brightness
     await common.async_turn_on(hass, "light.test", brightness=50)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 20, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "20", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ max brightness
     await common.async_turn_on(hass, "light.test", brightness=255)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/bright", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn on w/ min brightness
     await common.async_turn_on(hass, "light.test", brightness=1)
 
-    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", 1, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("test_light/bright", "1", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_off(hass, "light.test")
@@ -1187,7 +1041,7 @@ async def test_on_command_brightness_scaled(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light/rgb", "255,128,0", 0, False),
-            call("test_light/bright", 1, 0, False),
+            call("test_light/bright", "1", 0, False),
         ],
         any_order=True,
     )
@@ -1455,8 +1309,6 @@ async def test_discovery_removal_light(hass, mqtt_mock, caplog):
 
 async def test_discovery_deprecated(hass, mqtt_mock, caplog):
     """Test discovery of mqtt light with deprecated platform option."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
     data = (
         '{ "name": "Beer",' '  "platform": "mqtt",' '  "command_topic": "test_topic"}'
     )

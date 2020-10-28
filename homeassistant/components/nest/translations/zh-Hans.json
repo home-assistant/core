@@ -9,6 +9,7 @@
         "error": {
             "internal_error": "\u9a8c\u8bc1\u4ee3\u7801\u65f6\u53d1\u751f\u5185\u90e8\u9519\u8bef",
             "invalid_code": "\u9a8c\u8bc1\u7801\u65e0\u6548",
+            "invalid_pin": "PIN\u7801\u65e0\u6548",
             "timeout": "\u9a8c\u8bc1\u7801\u8d85\u65f6",
             "unknown": "\u9a8c\u8bc1\u7801\u672a\u77e5\u9519\u8bef"
         },

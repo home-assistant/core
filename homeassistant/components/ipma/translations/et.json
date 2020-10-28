@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "latitude": "Laiuskraad",
-                    "longitude": "Pikkuskraad"
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi"
                 },
                 "title": "Asukoht"
             }
