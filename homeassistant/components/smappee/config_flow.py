@@ -17,8 +17,6 @@ from .const import (
     SUPPORTED_LOCAL_DEVICES,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SmappeeFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -94,7 +92,7 @@ class SmappeeFlowHandler(
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=f"{DOMAIN}{serial_number}",
@@ -149,7 +147,7 @@ class SmappeeFlowHandler(
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         advanced_config = await self.hass.async_add_executor_job(
             smappee_api.load_advanced_config

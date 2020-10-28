@@ -112,11 +112,11 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def device_state_attributes(self):
         """Return device state attributes."""
-        state_attr = {ATTR_TARGET_HEAT: self._usrobj.target_heating_level}
-        state_attr[ATTR_ACTIVE_HEAT] = self._usrobj.now_heating
-        state_attr[ATTR_DURATION_HEAT] = self._usrobj.heating_remaining
-
-        return state_attr
+        return {
+            ATTR_TARGET_HEAT: self._usrobj.target_heating_level,
+            ATTR_ACTIVE_HEAT: self._usrobj.now_heating,
+            ATTR_DURATION_HEAT: self._usrobj.heating_remaining,
+        }
 
 
 class EightUserSensor(EightSleepUserEntity):

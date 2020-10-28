@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "reauth_successful": "Token di accesso aggiornato correttamente"
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "authorization_error": "Errore di autorizzazione. Verificare di avere accesso al progetto e disporre delle credenziali corrette.",

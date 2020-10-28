@@ -2,11 +2,14 @@
     "config": {
         "abort": {
             "auth_failed": "Ugyldig godkjenning",
-            "conn_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
+            "conn_error": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "auth_failed": "Ugyldig godkjenning"
+            "auth_failed": "Ugyldig godkjenning",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "flow_title": "Tuya konfigurasjon",
         "step": {

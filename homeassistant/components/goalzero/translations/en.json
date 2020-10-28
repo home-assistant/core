@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_host": "This is not the Yeti you are looking for",
-            "unknown": "Unknown Error"
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {

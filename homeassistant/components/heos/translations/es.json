@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Solo puedes configurar una \u00fanica conexi\u00f3n Heos, ya que admitir\u00e1 todos los dispositivos de la red."
+            "already_setup": "Solo puedes configurar una \u00fanica conexi\u00f3n Heos, ya que admitir\u00e1 todos los dispositivos de la red.",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_failure": "No se puede conectar al host especificado."
         },
         "step": {

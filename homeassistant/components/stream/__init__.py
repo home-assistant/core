@@ -171,7 +171,7 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import stream_worker
 
-        if self._thread is None or not self._thread.isAlive():
+        if self._thread is None or not self._thread.is_alive():
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.

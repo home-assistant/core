@@ -1,6 +1,5 @@
 """Support for sensors from the Dovado router."""
 from datetime import timedelta
-import logging
 import re
 
 import voluptuous as vol
@@ -11,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DOVADO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 

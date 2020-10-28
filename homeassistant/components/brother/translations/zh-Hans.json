@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "snmp_error": "SNMP\u670d\u52a1\u5668\u5df2\u5173\u95ed\u6216\u4e0d\u652f\u6301\u6253\u5370\u3002"
+        }
+    }
+}

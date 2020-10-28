@@ -36,7 +36,7 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "port": "Port",
-                    "ssl": "Connexi\u00f3 mitjan\u00e7ant SSL"
+                    "ssl": "Utilitza un certificat SSL"
                 },
                 "description": "Informaci\u00f3 de connexi\u00f3 de Kodi. Assegura't d'activar \"Permet el control de Kodi via HTTP\" a Sistema/Configuraci\u00f3/Xarxa/Serveis."
             },

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "ssl": "Kasutab SSL serti",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                }
+            }
+        }
+    }
+}

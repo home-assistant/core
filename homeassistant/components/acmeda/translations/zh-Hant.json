@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "all_configured": "\u672a\u641c\u5c0b\u5230 Pulse hub"
+            "all_configured": "\u672a\u641c\u5c0b\u5230 Pulse hub",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u8a2d\u5099"
         },
         "step": {
             "user": {

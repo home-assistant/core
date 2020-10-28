@@ -47,7 +47,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "name_exists"
+            self._errors[CONF_NAME] = "already_configured"
 
         return await self._show_config_form(
             name=HOME_LOCATION_NAME,

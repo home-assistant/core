@@ -1,6 +1,5 @@
 """Native Home Assistant iOS app component."""
 import datetime
-import logging
 
 import voluptuous as vol
 
@@ -24,8 +23,6 @@ from .const import (
     CONF_ACTIONS,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"

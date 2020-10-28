@@ -15,11 +15,11 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect to Elgato Key Light device."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "This Elgato Key Light device is already configured.",
-      "connection_error": "Failed to connect to Elgato Key Light device."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }
