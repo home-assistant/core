@@ -1,7 +1,10 @@
 """Tests for the devolo Home Control integration."""
 import pytest
 
-from homeassistant.components.devolo_home_control import async_setup_entry
+from homeassistant.components.devolo_home_control import (
+    async_setup_entry,
+    async_unload_entry,
+)
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -42,3 +45,13 @@ async def test_setup_connection_error(hass: HomeAssistant):
         side_effect=ConnectionError,
     ), pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, entry)
+
+
+async def test_unload_entry(hass: HomeAssistant):
+    """Test unload entry."""
+    entry = configure_integration(hass)
+    with patch("homeassistant.components.devolo_home_control.HomeControl"):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert await async_unload_entry(hass, entry)
+        assert not hass.data[DOMAIN]
