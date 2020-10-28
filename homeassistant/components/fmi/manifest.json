@@ -3,7 +3,7 @@
   "name": "Finnish Meteorological Institute",
   "documentation": "https://www.home-assistant.io/integrations/fmi/",
   "requirements": [
-    "fmi-weather-client==0.1.0"
+    "fmi-weather-client==0.1.1"
   ],
   "dependencies": [],
   "codeowners": [
