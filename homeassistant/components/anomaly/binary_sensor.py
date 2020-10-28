@@ -131,7 +131,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
     if sensors:
         add_entities(sensors)
-    return
 
 
 class SensorAnomaly(BinarySensorEntity):
