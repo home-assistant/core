@@ -272,23 +272,23 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             return max_temp
         return super().max_temp
 
+    def _set_and_log_temp_error(self, error_msg):
+        if not self._temp_entity_error:
+            _LOGGER.warning(
+                "Error on Tuya external temperature sensor %s: %s",
+                self._temp_entity,
+                error_msg,
+            )
+            self._temp_entity_error = True
+
     def _get_ext_temperature(self):
         """Get external temperature entity current state."""
         if not self._temp_entity or self._temp_entity == ENTITY_MATCH_NONE:
             return None
 
-        def _log_error(error_msg):
-            if not self._temp_entity_error:
-                _LOGGER.warning(
-                    "Error on Tuya external temperature sensor %s: %s",
-                    self._temp_entity,
-                    error_msg,
-                )
-                self._temp_entity_error = True
-
         entity_name = self._temp_entity
         if not valid_entity_id(entity_name):
-            _log_error("entity name is invalid")
+            self._set_and_log_temp_error("entity name is invalid")
             return None
 
         state_obj = self.hass.states.get(entity_name)
@@ -297,11 +297,13 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             try:
                 float(temperature)
             except (TypeError, ValueError):
-                _log_error("entity state is not available or is not a number")
+                self._set_and_log_temp_error(
+                    "entity state is not available or is not a number"
+                )
                 return None
 
             self._temp_entity_error = False
             return temperature
 
-        _log_error("entity not found")
+        self._set_and_log_temp_error("entity not found")
         return None

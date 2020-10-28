@@ -253,7 +253,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             dev_ids = user_input.get(CONF_LIST_DEVICES)
             if dev_ids:
-                return await self._async_device_form(dev_ids)
+                return await self.async_step_device(None, dev_ids)
 
             user_input.pop(CONF_LIST_DEVICES, [])
             return self._save_config(data=user_input)
@@ -302,8 +302,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors=self._get_form_error(),
         )
 
-    async def async_step_device(self, user_input=None):
+    async def async_step_device(self, user_input=None, dev_ids=None):
         """Handle options flow for device."""
+        if dev_ids is not None:
+            return await self._async_device_form(dev_ids)
         if user_input is not None:
             for device_id in self._conf_devs_id:
                 self._conf_devs_option[device_id] = user_input
