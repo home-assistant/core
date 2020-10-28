@@ -1,6 +1,5 @@
 """Support for Tuya covers."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.cover import (
     DOMAIN as SENSOR_DOMAIN,
@@ -17,8 +16,6 @@ from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
 SCAN_INTERVAL = timedelta(seconds=15)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -100,7 +97,6 @@ class TuyaCover(TuyaDevice, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         state = self._tuya.state()
-        _LOGGER.warning("TUYA COVER STATE: %s", state)
         if state != 2 and self._was_closing:
             return True
         if state != 1 and self._was_opening:

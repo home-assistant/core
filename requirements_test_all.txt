@@ -245,7 +245,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.0.0
+debugpy==1.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -878,7 +878,7 @@ python-tado==0.8.1
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.47
+python-velbus==2.1.1
 
 # homeassistant.components.awair
 python_awair==0.1.1
