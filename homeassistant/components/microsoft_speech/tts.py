@@ -38,12 +38,10 @@ DEFAULT_VOICE = f"{DEFAULT_LANG}-{DEFAULT_TYPE}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
+        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.In(SUPPORTED_TYPES),
         vol.Optional(CONF_OUTPUT, default=DEFAULT_OUTPUT): vol.In(SUPPORTED_OUTPUTS),
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
     }
 )
 
