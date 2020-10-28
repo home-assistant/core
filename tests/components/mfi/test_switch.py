@@ -2,13 +2,13 @@
 import pytest
 
 import homeassistant.components.mfi.switch as mfi
-import homeassistant.components.switch as switch
+import homeassistant.components.switch as switch_component
 from homeassistant.setup import async_setup_component
 
 import tests.async_mock as mock
 
 PLATFORM = mfi
-COMPONENT = switch
+COMPONENT = switch_component
 THING = "switch"
 GOOD_CONFIG = {
     "switch": {
@@ -38,7 +38,7 @@ async def test_setup_adds_proper_devices(hass):
         mock_client.return_value.get_devices.return_value = [
             mock.MagicMock(ports=ports)
         ]
-        assert await async_setup_component(hass, switch.DOMAIN, GOOD_CONFIG)
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
         await hass.async_block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
@@ -72,15 +72,17 @@ async def test_update(port, switch):
 
 async def test_update_with_target_state(port, switch):
     """Test update with target state."""
+    # pylint: disable=protected-access
     switch._target_state = True
     port.data = {}
     port.data["output"] = "stale"
     switch.update()
-    assert 1.0 == port.data["output"]
+    assert port.data["output"] == 1.0
+    # pylint: disable=protected-access
     assert switch._target_state is None
     port.data["output"] = "untouched"
     switch.update()
-    assert "untouched" == port.data["output"]
+    assert port.data["output"] == "untouched"
 
 
 async def test_turn_on(port, switch):
@@ -88,6 +90,7 @@ async def test_turn_on(port, switch):
     switch.turn_on()
     assert port.control.call_count == 1
     assert port.control.call_args == mock.call(True)
+    # pylint: disable=protected-access
     assert switch._target_state
 
 
@@ -96,22 +99,23 @@ async def test_turn_off(port, switch):
     switch.turn_off()
     assert port.control.call_count == 1
     assert port.control.call_args == mock.call(False)
+    # pylint: disable=protected-access
     assert not switch._target_state
 
 
 async def test_current_power_w(port, switch):
     """Test current power."""
     port.data = {"active_pwr": 10}
-    assert 10 == switch.current_power_w
+    assert switch.current_power_w == 10
 
 
 async def test_current_power_w_no_data(port, switch):
     """Test current power if there is no data."""
     port.data = {"notpower": 123}
-    assert 0 == switch.current_power_w
+    assert switch.current_power_w == 0
 
 
 async def test_device_state_attributes(port, switch):
     """Test the state attributes."""
     port.data = {"v_rms": 1.25, "i_rms": 2.75}
-    assert {"volts": 1.2, "amps": 2.8} == switch.device_state_attributes
+    assert switch.device_state_attributes == {"volts": 1.2, "amps": 2.8}

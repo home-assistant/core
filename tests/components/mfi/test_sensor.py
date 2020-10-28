@@ -4,14 +4,14 @@ import pytest
 import requests
 
 import homeassistant.components.mfi.sensor as mfi
-import homeassistant.components.sensor as sensor
+import homeassistant.components.sensor as sensor_component
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 import tests.async_mock as mock
 
 PLATFORM = mfi
-COMPONENT = sensor
+COMPONENT = sensor_component
 THING = "sensor"
 GOOD_CONFIG = {
     "sensor": {
@@ -103,7 +103,7 @@ async def test_setup_adds_proper_devices(hass):
         mock_client.return_value.get_devices.return_value = [
             mock.MagicMock(ports=ports)
         ]
-        assert await async_setup_component(hass, sensor.DOMAIN, GOOD_CONFIG)
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
         await hass.async_block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
@@ -137,25 +137,25 @@ async def test_uom_temp(port, sensor):
 async def test_uom_power(port, sensor):
     """Test the UOEM power."""
     port.tag = "active_pwr"
-    assert "Watts" == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == "Watts"
 
 
 async def test_uom_digital(port, sensor):
     """Test the UOM digital input."""
     port.model = "Input Digital"
-    assert "State" == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == "State"
 
 
 async def test_uom_unknown(port, sensor):
     """Test the UOM."""
     port.tag = "balloons"
-    assert "balloons" == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == "balloons"
 
 
 async def test_uom_uninitialized(port, sensor):
     """Test that the UOM defaults if not initialized."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
-    assert "State" == sensor.unit_of_measurement
+    assert sensor.unit_of_measurement == "State"
 
 
 async def test_state_digital(port, sensor):
@@ -174,13 +174,13 @@ async def test_state_digits(port, sensor):
     port.tag = "didyoucheckthedict?"
     port.value = 1.25
     with mock.patch.dict(mfi.DIGITS, {"didyoucheckthedict?": 1}):
-        assert 1.2 == sensor.state
+        assert sensor.state == 1.2
     with mock.patch.dict(mfi.DIGITS, {}):
-        assert 1.0 == sensor.state
+        assert sensor.state == 1.0
 
 
 async def test_state_uninitialized(port, sensor):
-    """Test the state of uninitialized sensors."""
+    """Test the state of uninitialized sensorfs."""
     type(port).tag = mock.PropertyMock(side_effect=ValueError)
     assert mfi.STATE_OFF == sensor.state
 
