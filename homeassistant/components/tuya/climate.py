@@ -1,7 +1,6 @@
 """Support for the Tuya climate devices."""
 from datetime import timedelta
 import logging
-from numbers import Number
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
@@ -273,37 +272,38 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             return max_temp
         return super().max_temp
 
+    def _set_and_log_temp_error(self, error_msg):
+        if not self._temp_entity_error:
+            _LOGGER.warning(
+                "Error on Tuya external temperature sensor %s: %s",
+                self._temp_entity,
+                error_msg,
+            )
+            self._temp_entity_error = True
+
     def _get_ext_temperature(self):
         """Get external temperature entity current state."""
         if not self._temp_entity or self._temp_entity == ENTITY_MATCH_NONE:
             return None
 
-        def _log_error(error_msg):
-            if not self._temp_entity_error:
-                _LOGGER.warning(
-                    "Error on Tuya external temperature sensor %s: %s",
-                    self._temp_entity,
-                    error_msg,
-                )
-                self._temp_entity_error = True
+        entity_name = self._temp_entity
+        if not valid_entity_id(entity_name):
+            self._set_and_log_temp_error("entity name is invalid")
+            return None
 
-        try:
-            entity_name = self._temp_entity
-            if not valid_entity_id(entity_name):
-                _log_error("entity name is invalid")
+        state_obj = self.hass.states.get(entity_name)
+        if state_obj:
+            temperature = state_obj.state
+            try:
+                float(temperature)
+            except (TypeError, ValueError):
+                self._set_and_log_temp_error(
+                    "entity state is not available or is not a number"
+                )
                 return None
 
-            state_obj = self.hass.states.get(entity_name)
-            if state_obj:
-                temp = state_obj.state
-                if temp is None or not isinstance(temp, Number):
-                    _log_error("entity state is not available or is not a number")
-                    return None
+            self._temp_entity_error = False
+            return temperature
 
-                self._temp_entity_error = False
-                return temp
-
-            _log_error("entity not found")
-            return None
-        except (TypeError, ValueError):
-            return None
+        self._set_and_log_temp_error("entity not found")
+        return None
