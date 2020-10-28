@@ -326,11 +326,6 @@ def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
 
     This method needs to run in an executor.
     """
-    import cProfile
-
-    pr = cProfile.Profile()
-    pr.enable()
-
     conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
@@ -339,16 +334,11 @@ def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
             "does not contain a dictionary"
         )
         _LOGGER.error(msg)
-        pr.disable()
         raise HomeAssistantError(msg)
 
     # Convert values to dictionaries if they are None
     for key, value in conf_dict.items():
         conf_dict[key] = value or {}
-
-    pr.disable()
-    pr.create_stats()
-    pr.dump_stats(f"load_yaml.{os.path.basename(config_path)}.cprof")
     return conf_dict
 
 
