@@ -88,6 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the anomaly sensors."""
+
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
@@ -128,10 +129,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 min_change_percent=min_change_percent,
             )
         )
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return
-    add_entities(sensors)
+    if sensors:
+        add_entities(sensors)
     return
 
 
@@ -324,6 +323,5 @@ class SensorAnomaly(BinarySensorEntity):
 
     def _trim_samples(self) -> None:
         cutoff = utcnow().timestamp() - self._sample_duration
-        print(cutoff)
         while self.samples and self.samples[0][0] < cutoff:
             self.samples.popleft()

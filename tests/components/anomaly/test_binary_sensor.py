@@ -426,6 +426,8 @@ class TestAnomalyBinarySensor:
                             "min_change_amount": 3,
                             "max_samples": 3,
                             "max_trailing_samples": 6,
+                            "sample_duration": 7,
+                            "trailing_sample_duration": 15,
                         }
                     },
                 }
@@ -439,7 +441,30 @@ class TestAnomalyBinarySensor:
         state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
         assert state.state == "on"
         assert state.attributes["sample_count"] == 3
-        assert state.attributes["max_trailing_samples"] == 6
+        assert state.attributes["trailing_sample_count"] == 6
+
+    def test_no_data(self):
+        """Test that sample count is limited correctly."""
+        assert setup.setup_component(
+            self.hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": "anomaly",
+                    "sensors": {
+                        "test_anomaly_sensor": {
+                            "entity_id": "sensor.test_state",
+                            "min_change_amount": 3,
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.block_till_done()
+        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
+        assert state.state == "off"
+        assert state.attributes["sample_count"] == 0
+        assert state.attributes["trailing_sample_count"] == 0
 
     def test_non_numeric(self):
         """Test up anomaly."""
