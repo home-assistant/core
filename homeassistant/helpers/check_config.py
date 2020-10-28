@@ -1,5 +1,6 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict
+import logging
 import os
 from typing import List, NamedTuple, Optional
 
@@ -26,6 +27,8 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CheckConfigError(NamedTuple):
@@ -111,11 +114,13 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     # Process and validate config
     for domain in components:
+        _LOGGER.debug("process config: %s (1)", domain)
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
         except (RequirementsNotFound, loader.IntegrationNotFound) as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
+        _LOGGER.debug("process config: %s (2)", domain)
 
         try:
             component = integration.get_component()
@@ -142,6 +147,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             continue
 
         platforms = []
+        _LOGGER.debug("process config: %s (3)", domain)
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
@@ -157,6 +163,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
                 platforms.append(p_validated)
                 continue
 
+            _LOGGER.debug("process config: %s (4)", domain)
             try:
                 p_integration = await async_get_integration_with_requirements(
                     hass, p_name
@@ -169,6 +176,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
             ) as ex:
                 result.add_error(f"Platform error {domain}.{p_name} - {ex}")
                 continue
+            _LOGGER.debug("process config: %s (5)", domain)
 
             # Validate platform specific schema
             platform_schema = getattr(platform, "PLATFORM_SCHEMA", None)
