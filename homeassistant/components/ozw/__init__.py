@@ -263,11 +263,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         unsubscribe_listener()
     hass.data[DOMAIN].pop(entry.entry_id)
 
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Remove a config entry."""
     if entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
         await hass.components.hassio.async_stop_addon(hass, "core_zwave")
         await hass.components.hassio.async_uninstall_addon(hass, "core_zwave")
-
-    return True
 
 
 async def async_handle_remove_node(hass: HomeAssistant, node: OZWNode):

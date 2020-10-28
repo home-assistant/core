@@ -35,7 +35,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.addon_info = None
         self.network_key = None
         self.usb_path = None
-        # If we install the add-on we should uninstall it on entry unload.
+        # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
 
     async def async_step_user(self, user_input=None):
