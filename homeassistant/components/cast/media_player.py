@@ -601,7 +601,7 @@ class CastDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
 
         if media_status is None:
             return None
@@ -633,13 +633,13 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.content_id if media_status else None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         if media_status is None:
             return None
         if media_status.media_is_tvshow:
@@ -653,13 +653,13 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.duration if media_status else None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         if media_status is None:
             return None
 
@@ -677,49 +677,49 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.title if media_status else None
 
     @property
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.artist if media_status else None
 
     @property
     def media_album_name(self):
         """Album of current playing media (Music track only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.album_name if media_status else None
 
     @property
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.album_artist if media_status else None
 
     @property
     def media_track(self):
         """Track number of current playing media (Music track only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.track if media_status else None
 
     @property
     def media_series_title(self):
         """Return the title of the series of current playing media."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.series_title if media_status else None
 
     @property
     def media_season(self):
         """Season of current playing media (TV Show only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.season if media_status else None
 
     @property
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         return media_status.episode if media_status else None
 
     @property
@@ -736,7 +736,7 @@ class CastDevice(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         support = SUPPORT_CAST
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
 
         if media_status:
             if media_status.supports_queue_next:
@@ -754,7 +754,7 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        media_status, _ = self._media_status()
+        media_status = self._media_status()[0]
         if media_status is None or not (
             media_status.player_is_playing
             or media_status.player_is_paused
@@ -769,7 +769,7 @@ class CastDevice(MediaPlayerEntity):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        _, media_status_recevied = self._media_status()
+        media_status_recevied = self._media_status()[1]
         return media_status_recevied
 
     @property

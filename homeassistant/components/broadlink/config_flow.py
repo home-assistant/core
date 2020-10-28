@@ -41,7 +41,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a device for the config flow."""
         supported_types = {
             device_type
-            for _, device_types in DOMAINS_AND_TYPES
+            for device_types in DOMAINS_AND_TYPES[1]
             for device_type in device_types
         }
         if device.type not in supported_types:

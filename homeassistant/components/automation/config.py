@@ -65,7 +65,7 @@ async def async_validate_config(hass, config):
             await asyncio.gather(
                 *(
                     _try_async_validate_config_item(hass, p_config, config)
-                    for _, p_config in config_per_platform(config, DOMAIN)
+                    for p_config in config_per_platform(config, DOMAIN)[1]
                 )
             ),
         )
