@@ -368,10 +368,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     @callback
     def _update_speed(self, speed):
         # Validate speed
-        if isinstance(speed, ResultWrapper):
-            speed = speed.render_result
-        else:
-            speed = str(speed)
+        speed = str(speed)
 
         if speed in self._speed_list:
             self._speed = speed
@@ -394,8 +391,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._oscillating = None
         else:
             _LOGGER.error(
-                "Received invalid oscillating: %s. Expected: True/False",
-                oscillating,
+                "Received invalid oscillating: %s. Expected: True/False", oscillating
             )
             self._oscillating = None
 
