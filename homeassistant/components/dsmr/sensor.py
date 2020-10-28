@@ -358,6 +358,16 @@ class DerivativeDSMREntity(DSMREntity):
         """Return the calculated current hourly rate."""
         return self._state
 
+    @property
+    def force_update(self):
+        """Force update."""
+        return False
+
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return True
+
     async def async_update(self):
         """Recalculate hourly rate if timestamp has changed.
 
