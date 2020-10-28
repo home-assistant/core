@@ -13,6 +13,7 @@ CONF_PRIORITY = "priority"
 CONF_ROOT_CLIENT = "ROOT_CLIENT"
 CONF_ON_UNLOAD = "ON_UNLOAD"
 
-SIGNAL_INSTANCES_UPDATED = f"{DOMAIN}_update_instances_signal." "{}"
+SIGNAL_INSTANCES_UPDATED = f"{DOMAIN}_instances_updated_signal." "{}"
+SIGNAL_INSTANCE_REMOVED = f"{DOMAIN}_instance_removed_signal." "{}"
 
 SOURCE_IMPORT = "import"

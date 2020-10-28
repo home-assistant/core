@@ -27,7 +27,10 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
@@ -40,6 +43,7 @@ from .const import (
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
+    SIGNAL_INSTANCE_REMOVED,
     SIGNAL_INSTANCES_UPDATED,
     SOURCE_IMPORT,
 )
@@ -237,25 +241,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             if not hyperion_client:
                 continue
-            current_entities[unique_id] = Hyperion(
-                unique_id,
-                instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
-                config_entry.options,
-                hyperion_client,
+            current_entities.add(unique_id)
+            entities_to_add.append(
+                Hyperion(
+                    unique_id,
+                    instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
+                    config_entry.options,
+                    hyperion_client,
+                )
             )
-            entities_to_add.append(current_entities[unique_id])
 
         # Delete instances that are no longer present on this server.
-        for unique_id in set(current_entities) - desired_unique_ids:
-            entity = current_entities.pop(unique_id)
-            await entity.async_remove()
+        for unique_id in current_entities - desired_unique_ids:
+            current_entities.remove(unique_id)
+            async_dispatcher_send(hass, SIGNAL_INSTANCE_REMOVED.format(unique_id))
             entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
             if entity_id:
                 registry.async_remove(entity_id)
 
         async_add_entities(entities_to_add)
 
-    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN] = {CONF_ENTITIES: {}}
+    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN] = {CONF_ENTITIES: set()}
 
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
@@ -291,6 +297,7 @@ class Hyperion(LightEntity):
             brightness=255, rgb_color=DEFAULT_COLOR, effect=KEY_EFFECT_SOLID
         )
         self._effect_list = []
+        self._dispatcher_instance_removed_unsub = None
 
     @property
     def should_poll(self):
@@ -552,6 +559,13 @@ class Hyperion(LightEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks when entity added to hass."""
+
+        self._dispatcher_instance_removed_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_INSTANCE_REMOVED.format(self._unique_id),
+            self.async_remove,
+        )
+
         self._client.set_callbacks(
             {
                 f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
@@ -569,3 +583,7 @@ class Hyperion(LightEntity):
     async def async_will_remove_from_hass(self):
         """Disconnect from server."""
         await self._client.async_client_disconnect()
+
+        if self._dispatcher_instance_removed_unsub:
+            self._dispatcher_instance_removed_unsub()
+            self._dispatcher_instance_removed_unsub = None
