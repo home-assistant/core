@@ -3,8 +3,8 @@
     "step": {
       "on_supervisor": {
         "title": "Select connection method",
-        "description": "Select how to connect to the OpenZWave controller MQTT broker",
-        "data": {"use_addon": "Do you want to use the OpenZWave Supervisor add-on?"}
+        "description": "Do you want to use the OpenZWave Supervisor add-on?",
+        "data": {"use_addon": "Use the OpenZWave Supervisor add-on"}
       },
       "start_addon": {
         "title": "Enter the OpenZWave add-on config",
