@@ -168,7 +168,7 @@ class FlowManager(abc.ABC):
                 RESULT_TYPE_INFO_STEP_DONE,
             ):
                 raise ValueError(
-                    "Info step can only transition to " "info step or info step done."
+                    "Info step can only transition to info step or info step done."
                 )
 
             # If the result has changed from last result, fire event to update
