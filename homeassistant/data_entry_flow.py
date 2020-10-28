@@ -363,7 +363,11 @@ class FlowHandler:
 
     @callback
     def async_show_progress(
-        self, *, step_id: str, description_placeholders: Optional[Dict] = None
+        self,
+        *,
+        step_id: str,
+        progress_action: str,
+        description_placeholders: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """Show a progress message to the user, without user input allowed."""
         return {
@@ -371,6 +375,7 @@ class FlowHandler:
             "flow_id": self.flow_id,
             "handler": self.handler,
             "step_id": step_id,
+            "progress_action": progress_action,
             "description_placeholders": description_placeholders,
         }
 

@@ -298,6 +298,7 @@ async def test_show_progress(hass, manager):
             if not user_input:
                 return self.async_show_progress(
                     step_id="init",
+                    progress_action="presenting",
                 )
 
             self.data = user_input
