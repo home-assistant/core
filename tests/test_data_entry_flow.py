@@ -285,8 +285,8 @@ async def test_external_step(hass, manager):
     assert result["title"] == "Hello"
 
 
-async def test_info_step(hass, manager):
-    """Test info step logic."""
+async def test_show_progress(hass, manager):
+    """Test show progress logic."""
     manager.hass = hass
 
     @manager.mock_reg_handler("test")
@@ -296,12 +296,12 @@ async def test_info_step(hass, manager):
 
         async def async_step_init(self, user_input=None):
             if not user_input:
-                return self.async_info_step(
+                return self.async_show_progress(
                     step_id="init",
                 )
 
             self.data = user_input
-            return self.async_info_step_done(next_step_id="finish")
+            return self.async_show_progress_done(next_step_id="finish")
 
         async def async_step_finish(self, user_input=None):
             return self.async_create_entry(title=self.data["title"], data=self.data)
@@ -311,13 +311,13 @@ async def test_info_step(hass, manager):
     )
 
     result = await manager.async_init("test")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_INFO_STEP
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
     assert len(manager.async_progress()) == 1
 
     # Mimic task finishing and continuing step
     # Called by integrations: `hass.config_entries.flow.async_configure(…)`
     result = await manager.async_configure(result["flow_id"], {"title": "Hello"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_INFO_STEP_DONE
+    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
 
     await hass.async_block_till_done()
     assert len(events) == 1
