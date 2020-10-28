@@ -86,25 +86,24 @@ async def async_setup_entry(
             return partial(
                 ProvisionSettingsBinarySensor,
                 coordinators[DATA_PROVISION_SETTINGS],
-                controller,
             )
 
         if api_category == DATA_RESTRICTIONS_CURRENT:
             return partial(
                 CurrentRestrictionsBinarySensor,
                 coordinators[DATA_RESTRICTIONS_CURRENT],
-                controller,
             )
 
         return partial(
             UniversalRestrictionsBinarySensor,
             coordinators[DATA_RESTRICTIONS_UNIVERSAL],
-            controller,
         )
 
     async_add_entities(
         [
-            async_get_sensor(api_category)(sensor_type, name, icon, enabled_by_default)
+            async_get_sensor(api_category)(
+                controller, sensor_type, name, icon, enabled_by_default
+            )
             for (
                 sensor_type,
                 (name, icon, enabled_by_default, api_category),
