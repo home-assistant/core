@@ -4,6 +4,7 @@ import logging
 
 from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
+
 import voluptuous as vol
 
 from homeassistant.components.poolsense import PLATFORMS
