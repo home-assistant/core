@@ -92,9 +92,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._require_confirm = False
         self._port_ui = const.DEFAULT_PORT_UI
 
-    async def _create_client(
-        self, raw_connection=False
-    ) -> Optional[client.HyperionClient]:
+    async def _create_client(self, raw_connection=False) -> client.HyperionClient:
         """Create and connect a client instance."""
         return client.HyperionClient(
             self._data[CONF_HOST],

@@ -34,7 +34,7 @@ import homeassistant.util.color as color_util
 
 from . import async_create_connect_client, get_hyperion_unique_id
 from .const import (
-    CONF_DISPATCHER_UNSUB,
+    CONF_ON_UNLOAD,
     CONF_PRIORITY,
     CONF_ROOT_CLIENT,
     DEFAULT_ORIGIN,
@@ -260,21 +260,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
     )
-    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN][
-        CONF_DISPATCHER_UNSUB
-    ] = async_dispatcher_connect(
-        hass,
-        SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
-        async_instances_to_entities,
+    hass.data[DOMAIN][config_entry.entry_id].setdefault(CONF_ON_UNLOAD, []).append(
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
+            async_instances_to_entities,
+        )
     )
 
     config_entry.add_update_listener(_async_options_updated)
-
-
-async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigType):
-    """Unload a config entry."""
-    hass.data[DOMAIN][config_entry.entry_id][LIGHT_DOMAIN].pop(CONF_DISPATCHER_UNSUB)()
-    hass.data[DOMAIN][config_entry.entry_id].pop(LIGHT_DOMAIN)
 
 
 async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):

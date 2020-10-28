@@ -12,8 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_ROOT_CLIENT, DOMAIN, SIGNAL_INSTANCES_UPDATED
+from .const import CONF_ON_UNLOAD, CONF_ROOT_CLIENT, DOMAIN, SIGNAL_INSTANCES_UPDATED
 
 PLATFORMS = [LIGHT_DOMAIN]
 
@@ -38,10 +39,10 @@ _LOGGER = logging.getLogger(__name__)
 #
 # hass.data[DOMAIN] = {
 #     <config_entry.entry_id>: {
-#         "ROOT_CLIENT": <Hyperion Client>
+#         "ROOT_CLIENT": <Hyperion Client>,
+#         "ON_UNLOAD": [<callable>, ...],
 #         "LIGHT": {
 #             "ENTITIES": {<unique_id>: <entity>}
-#             "DISPATCHER_UNSUB": <dispatcher unsubscribe callable>
 #         }
 #     }
 # }
@@ -115,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -127,6 +128,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         config_data = hass.data[DOMAIN].pop(config_entry.entry_id)
+        for func in config_data[CONF_ON_UNLOAD]:
+            func()
         root_client = config_data[CONF_ROOT_CLIENT]
         await root_client.async_client_connect()
     return unload_ok
