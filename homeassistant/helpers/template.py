@@ -140,6 +140,16 @@ def gen_result_wrapper(kls):
             super().__init__(*args)
             self.render_result = render_result
 
+        def __str__(self) -> str:
+            if self.render_result is None:
+                # Can't get set repr to work
+                if kls is set:
+                    return str(set(self))
+
+                return kls.__str__(self)
+
+            return self.render_result
+
     return Wrapper
 
 
@@ -159,6 +169,13 @@ class TupleWrapper(tuple, ResultWrapper):
     def __init__(self, value: tuple, *, render_result: Optional[str] = None):
         """Initialize a new tuple class."""
         self.render_result = render_result
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        if self.render_result is None:
+            return super().__str__()
+
+        return self.render_result
 
 
 RESULT_WRAPPERS: Dict[Type, Type] = {
