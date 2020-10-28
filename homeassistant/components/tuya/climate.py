@@ -1,7 +1,6 @@
 """Support for the Tuya climate devices."""
 from datetime import timedelta
 import logging
-from numbers import Number
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
