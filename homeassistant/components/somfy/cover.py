@@ -49,16 +49,16 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def __init__(self, coordinator, device_id, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id, api)
-        self.cover = Blind(self.device, self.api)
         self.categories = set(self.device.categories)
         self.optimistic = optimistic
         self._closed = None
         self._is_opening = None
         self._is_closing = None
+        self.cover = None
+        self._create_device()
 
-    async def async_update(self):
+    def _create_device(self):
         """Update the device with the latest data."""
-        await super().async_update()
         self.cover = Blind(self.device, self.api)
 
     async def async_close_cover(self, **kwargs):

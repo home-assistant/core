@@ -1,4 +1,5 @@
 """Support for Somfy hubs."""
+from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
@@ -9,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -27,7 +29,7 @@ from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=1)
-
+SCAN_INTERVAL_ALL_ASSUMED_STATE = timedelta(minutes=60)
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -102,6 +104,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     data[COORDINATOR] = coordinator
 
     await coordinator.async_refresh()
+
+    if all(not bool(device.states) for device in coordinator.data.values()):
+        _LOGGER.debug(
+            "All devices have assumed state. Update interval has been reduced to: %s",
+            SCAN_INTERVAL_ALL_ASSUMED_STATE,
+        )
+        coordinator.update_interval = SCAN_INTERVAL_ALL_ASSUMED_STATE
 
     device_registry = await dr.async_get_registry(hass)
 
@@ -188,3 +197,13 @@ class SomfyEntity(CoordinatorEntity, Entity):
     def assumed_state(self):
         """Return if the device has an assumed state."""
         return not bool(self.device.states)
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Process an update from the coordinator."""
+        self._create_device()
+        super()._handle_coordinator_update()
+
+    @abstractmethod
+    def _create_device(self):
+        """Update the device with the latest data."""
