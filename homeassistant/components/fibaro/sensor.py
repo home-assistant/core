@@ -28,12 +28,7 @@ SENSOR_TYPES = {
         None,
     ],
     "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
-    "com.fibaro.humiditySensor": [
-        "Humidity",
-        PERCENTAGE,
-        None,
-        DEVICE_CLASS_HUMIDITY,
-    ],
+    "com.fibaro.humiditySensor": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
 }
 

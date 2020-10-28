@@ -61,9 +61,12 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up lights."""
-    await hass.async_add_executor_job(
-        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb, async_add_entities
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
     )
+
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
     if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
         raise PlatformNotReady
@@ -190,18 +193,14 @@ class TPLinkSmartBulb(LightEntity):
         await self._async_set_light_state_retry(
             self._light_state,
             self._light_state._replace(
-                state=True,
-                brightness=brightness,
-                color_temp=color_tmp,
-                hs=hue_sat,
+                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self._async_set_light_state_retry(
-            self._light_state,
-            self._light_state._replace(state=False),
+            self._light_state, self._light_state._replace(state=False)
         )
 
     @property
@@ -329,10 +328,7 @@ class TPLinkSmartBulb(LightEntity):
             )
 
         return LightState(
-            state=state,
-            brightness=brightness,
-            color_temp=color_temp,
-            hs=hue_saturation,
+            state=state, brightness=brightness, color_temp=color_temp, hs=hue_saturation
         )
 
     def _get_light_state(self) -> LightState:
@@ -480,9 +476,7 @@ class TPLinkSmartBulb(LightEntity):
         else:
             if self._is_available:
                 _LOGGER.warning(
-                    "Could not read state for %s|%s",
-                    self._host,
-                    self._alias,
+                    "Could not read state for %s|%s", self._host, self._alias
                 )
             self._is_available = False
 

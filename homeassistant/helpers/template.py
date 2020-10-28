@@ -140,6 +140,16 @@ def gen_result_wrapper(kls):
             super().__init__(*args)
             self.render_result = render_result
 
+        def __str__(self) -> str:
+            if self.render_result is None:
+                # Can't get set repr to work
+                if kls is set:
+                    return str(set(self))
+
+                return kls.__str__(self)
+
+            return self.render_result
+
     return Wrapper
 
 
@@ -160,6 +170,13 @@ class TupleWrapper(tuple, ResultWrapper):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
+    def __str__(self) -> str:
+        """Return string representation."""
+        if self.render_result is None:
+            return super().__str__()
+
+        return self.render_result
+
 
 RESULT_WRAPPERS: Dict[Type, Type] = {
     kls: gen_result_wrapper(kls) for kls in (list, dict, set)
@@ -168,9 +185,7 @@ RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
 def extract_entities(
-    hass: HomeAssistantType,
-    template: Optional[str],
-    variables: TemplateVarsType = None,
+    hass: HomeAssistantType, template: Optional[str], variables: TemplateVarsType = None
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
 

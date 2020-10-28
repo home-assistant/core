@@ -1,4 +1,5 @@
 """Tests for light platform."""
+from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
 
@@ -30,8 +31,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.async_mock import Mock, PropertyMock, patch
+from tests.common import async_fire_time_changed
 
 
 class LightMockData(NamedTuple):
@@ -239,10 +242,7 @@ def dimmer_switch_mock_data_fixture() -> None:
 async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Run an update action for an entity."""
     await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -271,10 +271,7 @@ async def test_smartswitch(
     assert hass.states.get("light.dimmer1")
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.dimmer1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.dimmer1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.dimmer1")
@@ -314,10 +311,7 @@ async def test_smartswitch(
     sys_info["brightness"] = 66
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.dimmer1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.dimmer1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.dimmer1")
@@ -326,10 +320,7 @@ async def test_smartswitch(
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.dimmer1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.dimmer1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.dimmer1")
@@ -363,10 +354,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     assert hass.states.get("light.light1")
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.light1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -419,10 +407,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     light_state["dft_on_state"]["saturation"] = 78
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.light1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -431,10 +416,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.light1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.light1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -507,10 +489,7 @@ async def test_get_light_state_retry(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.light1"},
-        blocking=True,
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True
     )
     await hass.async_block_till_done()
     await update_entity(hass, "light.light1")
@@ -605,5 +584,9 @@ async def test_async_setup_entry_unavailable(
         )
 
         await hass.async_block_till_done()
-        assert "Unable to communicate with device 123.123.123.123" in caplog.text
-        assert len(hass.data[tplink.DOMAIN][f"{CONF_LIGHT}_remaining"]) == 1
+        assert not hass.states.get("light.light1")
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light1")

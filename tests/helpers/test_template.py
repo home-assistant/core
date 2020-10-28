@@ -191,12 +191,7 @@ def test_iterating_domain_states(hass):
     hass.states.async_set("sensor.temperature", 10)
 
     info = render_to_info(hass, tmpl_str)
-    assert_result_info(
-        info,
-        "open10",
-        entities=[],
-        domains=["sensor"],
-    )
+    assert_result_info(info, "open10", entities=[], domains=["sensor"])
 
 
 def test_float(hass):
@@ -917,10 +912,7 @@ def test_relative_time(mock_is_safe, hass):
         )
         assert (
             "string"
-            == template.Template(
-                '{{relative_time("string")}}',
-                hass,
-            ).async_render()
+            == template.Template('{{relative_time("string")}}', hass).async_render()
         )
 
 
@@ -934,51 +926,38 @@ def test_timedelta(mock_is_safe, hass):
     with patch("homeassistant.util.dt.now", return_value=now):
         assert (
             "0:02:00"
-            == template.Template(
-                "{{timedelta(seconds=120)}}",
-                hass,
-            ).async_render()
+            == template.Template("{{timedelta(seconds=120)}}", hass).async_render()
         )
         assert (
             "1 day, 0:00:00"
-            == template.Template(
-                "{{timedelta(seconds=86400)}}",
-                hass,
-            ).async_render()
+            == template.Template("{{timedelta(seconds=86400)}}", hass).async_render()
         )
         assert (
             "1 day, 4:00:00"
-            == template.Template(
-                "{{timedelta(days=1, hours=4)}}",
-                hass,
-            ).async_render()
+            == template.Template("{{timedelta(days=1, hours=4)}}", hass).async_render()
         )
         assert (
             "1 hour"
             == template.Template(
-                "{{relative_time(now() - timedelta(seconds=3600))}}",
-                hass,
+                "{{relative_time(now() - timedelta(seconds=3600))}}", hass
             ).async_render()
         )
         assert (
             "1 day"
             == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86400))}}",
-                hass,
+                "{{relative_time(now() - timedelta(seconds=86400))}}", hass
             ).async_render()
         )
         assert (
             "1 day"
             == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86401))}}",
-                hass,
+                "{{relative_time(now() - timedelta(seconds=86401))}}", hass
             ).async_render()
         )
         assert (
             "15 days"
             == template.Template(
-                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
-                hass,
+                "{{relative_time(now() - timedelta(weeks=2, days=1))}}", hass
             ).async_render()
         )
 
@@ -1985,12 +1964,7 @@ def test_generate_select(hass):
     hass.states.async_set("sensor.test_sensor_on", "on")
 
     info = tmp.async_render_to_info()
-    assert_result_info(
-        info,
-        "sensor.test_sensor",
-        [],
-        ["sensor"],
-    )
+    assert_result_info(info, "sensor.test_sensor", [], ["sensor"])
     assert info.domains_lifecycle == {"sensor"}
 
 
@@ -2234,11 +2208,7 @@ def test_extract_entities_domain_states_outer_with_group(hass, allow_extract_ent
 def test_extract_entities_blocked_from_core_code(hass):
     """Test extract entities is blocked from core code."""
     with pytest.raises(RuntimeError):
-        template.extract_entities(
-            hass,
-            "{{ states.light }}",
-            {},
-        )
+        template.extract_entities(hass, "{{ states.light }}", {})
 
 
 def test_extract_entities_warns_and_logs_from_an_integration(hass, caplog):
@@ -2258,18 +2228,10 @@ def test_extract_entities_warns_and_logs_from_an_integration(hass, caplog):
                 line="do_something()",
             ),
             correct_frame,
-            Mock(
-                filename="/home/dev/mdns/lights.py",
-                lineno="2",
-                line="something()",
-            ),
+            Mock(filename="/home/dev/mdns/lights.py", lineno="2", line="something()"),
         ],
     ):
-        template.extract_entities(
-            hass,
-            "{{ states.light }}",
-            {},
-        )
+        template.extract_entities(hass, "{{ states.light }}", {})
 
     assert "custom_components/burncpu/light.py" in caplog.text
     assert "23" in caplog.text
@@ -2341,8 +2303,7 @@ def test_render_complex_handling_non_template_values(hass):
 def test_urlencode(hass):
     """Test the urlencode method."""
     tpl = template.Template(
-        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"),
-        hass,
+        ("{% set dict = {'foo': 'x&y', 'bar': 42} %}" "{{ dict | urlencode }}"), hass
     )
     assert tpl.async_render() == "foo=x%26y&bar=42"
     tpl = template.Template(
@@ -2357,17 +2318,13 @@ async def test_cache_garbage_collection():
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
-    tpl = template.Template(
-        (template_string),
-    )
+    tpl = template.Template(template_string)
     tpl.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string
     )  # pylint: disable=protected-access
 
-    tpl2 = template.Template(
-        (template_string),
-    )
+    tpl2 = template.Template(template_string)
     tpl2.ensure_valid()
     assert template._NO_HASS_ENV.template_cache.get(
         template_string
@@ -2571,46 +2528,25 @@ async def test_state_attributes(hass):
     """Test state attributes."""
     hass.states.async_set("sensor.test", "23")
 
-    tpl = template.Template(
-        "{{ states.sensor.test.last_changed }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.last_changed }}", hass)
     assert tpl.async_render() == str(hass.states.get("sensor.test").last_changed)
 
-    tpl = template.Template(
-        "{{ states.sensor.test.object_id }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.object_id }}", hass)
     assert tpl.async_render() == hass.states.get("sensor.test").object_id
 
-    tpl = template.Template(
-        "{{ states.sensor.test.domain }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.domain }}", hass)
     assert tpl.async_render() == hass.states.get("sensor.test").domain
 
-    tpl = template.Template(
-        "{{ states.sensor.test.context.id }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.context.id }}", hass)
     assert tpl.async_render() == hass.states.get("sensor.test").context.id
 
-    tpl = template.Template(
-        "{{ states.sensor.test.state_with_unit }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.state_with_unit }}", hass)
     assert tpl.async_render() == 23
 
-    tpl = template.Template(
-        "{{ states.sensor.test.invalid_prop }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.invalid_prop }}", hass)
     assert tpl.async_render() == ""
 
-    tpl = template.Template(
-        "{{ states.sensor.test.invalid_prop.xx }}",
-        hass,
-    )
+    tpl = template.Template("{{ states.sensor.test.invalid_prop.xx }}", hass)
     with pytest.raises(TemplateError):
         tpl.async_render()
 
@@ -2698,6 +2634,12 @@ async def test_result_wrappers(hass):
         assert result == native
         assert result.render_result == text
         schema(result)  # should not raise
+        # Result with render text stringifies to original text
+        assert str(result) == text
+        # Result without render text stringifies same as original type
+        assert str(template.RESULT_WRAPPERS[orig_type](native)) == str(
+            orig_type(native)
+        )
 
 
 async def test_parse_result(hass):

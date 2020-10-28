@@ -1553,7 +1553,7 @@ class Config:
         self.safe_mode: bool = False
 
         # Use legacy template behavior
-        self.legacy_templates: bool = False
+        self.legacy_templates: bool = True
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
