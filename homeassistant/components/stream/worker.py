@@ -222,7 +222,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     def finalize_stream():
         if not stream.keepalive:
             # End of stream, clear listeners and stop thread
-            for fmt in stream.outputs.keys():
+            for fmt in stream.outputs:
                 hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
 
     if not peek_first_pts():
