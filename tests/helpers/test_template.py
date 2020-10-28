@@ -2698,6 +2698,12 @@ async def test_result_wrappers(hass):
         assert result == native
         assert result.render_result == text
         schema(result)  # should not raise
+        # Result with render text stringifies to original text
+        assert str(result) == text
+        # Result without render text stringifies same as original type
+        assert str(template.RESULT_WRAPPERS[orig_type](native)) == str(
+            orig_type(native)
+        )
 
 
 async def test_parse_result(hass):
