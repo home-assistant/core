@@ -109,7 +109,7 @@ async def async_setup(hass, hass_config):
                 "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
                 url,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -122,7 +122,7 @@ async def async_setup(hass, hass_config):
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
-            return
+            return None
 
         content = await response.content.read()
 
@@ -139,7 +139,7 @@ async def async_setup(hass, hass_config):
                 "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
                 file_path,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 
