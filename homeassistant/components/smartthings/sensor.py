@@ -154,6 +154,9 @@ CAPABILITY_TO_SENSORS = {
     Capability.oven_setpoint: [
         Map(Attribute.oven_setpoint, "Oven Set Point", None, None)
     ],
+    Capability.power_consumption_report: [
+        Map(Attribute.power_consumption, "Power Consumption Report", None, None)
+    ],
     Capability.power_meter: [Map(Attribute.power, "Power Meter", POWER_WATT, None)],
     Capability.power_source: [Map(Attribute.power_source, "Power Source", None, None)],
     Capability.refrigeration_setpoint: [
