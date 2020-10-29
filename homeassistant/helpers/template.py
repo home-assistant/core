@@ -48,12 +48,6 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 
-_RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
-_RE_GET_ENTITIES = re.compile(
-    r"(?:(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|states\.(?P<domain_outer>[a-z]+)|states\[(?:[\'\"]?)(?P<domain_inner>[\w]+))|(?P<variable>[\w]+))",
-    re.I | re.M,
-)
-
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
