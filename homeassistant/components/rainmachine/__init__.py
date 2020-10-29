@@ -278,7 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload an OpenUV config entry."""
+    """Unload an RainMachine config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
