@@ -74,7 +74,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
         "input_datetime",
         {"input_datetime": {"trigger": {"has_date": has_date, "has_time": has_time}}},
     )
-
+    print("DEFAULT TZ", dt_util.DEFAULT_TIME_ZONE)
     now = dt_util.now()
 
     trigger_dt = now.replace(
