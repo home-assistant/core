@@ -9,7 +9,8 @@
             },
             "user": {
                 "data": {
-                    "auto_start": "Automatisch starten (uitschakelen als u Z-Wave of een ander vertraagd startsysteem gebruikt)"
+                    "auto_start": "Automatisch starten (uitschakelen als u Z-Wave of een ander vertraagd startsysteem gebruikt)",
+                    "include_domains": "Domeinen om op te nemen"
                 },
                 "title": "Activeer HomeKit Bridge"
             }

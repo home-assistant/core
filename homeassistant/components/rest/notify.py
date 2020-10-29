@@ -163,7 +163,7 @@ class RestNotificationService(BaseNotificationService):
                         key: _data_template_creator(item) for key, item in value.items()
                     }
                 value.hass = self._hass
-                return value.async_render(kwargs)
+                return value.async_render(kwargs, parse_result=False)
 
             data.update(_data_template_creator(self._data_template))
 

@@ -5,6 +5,7 @@ import pytest
 import requests_mock
 
 from tests.common import load_fixture
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(name="requests_mock")

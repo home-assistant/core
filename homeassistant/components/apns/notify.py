@@ -186,7 +186,7 @@ class ApnsNotificationService(BaseNotificationService):
     def write_devices(self):
         """Write all known devices to file."""
         with open(self.yaml_path, "w+") as out:
-            for _, device in self.devices.items():
+            for device in self.devices.values():
                 _write_device(out, device)
 
     def register(self, call):
@@ -229,7 +229,7 @@ class ApnsNotificationService(BaseNotificationService):
         if isinstance(message, str):
             rendered_message = message
         elif isinstance(message, template_helper.Template):
-            rendered_message = message.render()
+            rendered_message = message.render(parse_result=False)
         else:
             rendered_message = ""
 

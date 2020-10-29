@@ -16,13 +16,15 @@
                 "data": {
                     "select_ip": "IP adresa"
                 },
+                "description": "Chcete-li p\u0159ipojit dal\u0161\u00ed br\u00e1ny, spus\u0165te znovu instalaci",
                 "title": "Vyberte br\u00e1nu Xiaomi Aqara, kterou chcete p\u0159ipojit"
             },
             "settings": {
                 "data": {
                     "key": "Kl\u00ed\u010d va\u0161\u00ed br\u00e1ny",
                     "name": "Jm\u00e9no br\u00e1ny"
-                }
+                },
+                "title": "Br\u00e1na Xiaomi Aqara, voliteln\u00e1 nastaven\u00ed"
             },
             "user": {
                 "data": {

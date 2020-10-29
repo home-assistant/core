@@ -68,10 +68,12 @@
     },
     "options": {
         "abort": {
+            "already_configured": "P\u0159ipojen\u00ed modemu Insteon je ji\u017e nastaveno",
             "cannot_connect": "Nelze se p\u0159ipojit k modemu Insteon"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "input_error": "Neplatn\u00e9 polo\u017eky, zkontrolujte pros\u00edm sv\u00e9 hodnoty.",
             "select_single": "Vyberte jednu mo\u017enost."
         },
         "step": {

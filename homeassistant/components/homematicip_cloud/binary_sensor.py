@@ -20,6 +20,7 @@ from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
     AsyncWeatherSensorPro,
+    AsyncWiredInput32,
 )
 from homematicip.aio.group import AsyncSecurityGroup, AsyncSecurityZoneGroup
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
@@ -85,7 +86,14 @@ async def async_setup_entry(
             entities.append(HomematicipAccelerationSensor(hap, device))
         if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
-        if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
+        if isinstance(device, AsyncWiredInput32):
+            for channel in range(1, 33):
+                entities.append(
+                    HomematicipMultiContactInterface(hap, device, channel=channel)
+                )
+        elif isinstance(
+            device, (AsyncContactInterface, AsyncFullFlushContactInterface)
+        ):
             entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
             device,
@@ -203,6 +211,29 @@ class HomematicipAccelerationSensor(HomematicipBaseActionSensor):
 
 class HomematicipTiltVibrationSensor(HomematicipBaseActionSensor):
     """Representation of the HomematicIP tilt vibration sensor."""
+
+
+class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEntity):
+    """Representation of the HomematicIP multi room/area contact interface."""
+
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
+        """Initialize the multi contact entity."""
+        super().__init__(hap, device, channel=channel)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_OPENING
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the contact interface is on/open."""
+        if self._device.functionalChannels[self._channel].windowState is None:
+            return None
+        return (
+            self._device.functionalChannels[self._channel].windowState
+            != WindowState.CLOSED
+        )
 
 
 class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):

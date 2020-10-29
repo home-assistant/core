@@ -6,7 +6,7 @@
         "error": {
             "identifier_exists": "Kontoen er allerede konfigurert",
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig legitimasjon"
+            "invalid_credentials": "Ugyldige innloggingsopplysninger"
         },
         "step": {
             "user": {

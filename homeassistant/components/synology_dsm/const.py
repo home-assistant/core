@@ -1,6 +1,7 @@
 """Constants for Synology DSM."""
 
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
@@ -43,6 +44,16 @@ ENTITY_ENABLE = "enable"
 # Entity keys should start with the API_KEY to fetch
 
 # Binary sensors
+UPGRADE_BINARY_SENSORS = {
+    f"{SynoCoreUpgrade.API_KEY}:update_available": {
+        ENTITY_NAME: "Update available",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:update",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+}
+
 SECURITY_BINARY_SENSORS = {
     f"{SynoCoreSecurity.API_KEY}:status": {
         ENTITY_NAME: "Security status",

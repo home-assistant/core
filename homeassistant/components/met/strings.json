@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Location",
+        "title": "[%key:common::config_flow::data::location%]",
         "description": "Meteorologisk institutt",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "elevation": "Elevation"
+          "elevation": "[%key:common::config_flow::data::elevation%]"
         }
       }
     },

@@ -348,4 +348,5 @@ GARMIN_ENTITY_LIST = {
     "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
     "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
     "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
+    "nextAlarm": ["Next Alarm Time", "", "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
 }

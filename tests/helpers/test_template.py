@@ -5,6 +5,7 @@ import random
 
 import pytest
 import pytz
+import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
@@ -2651,3 +2652,65 @@ async def test_legacy_templates(hass):
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
     )
+
+
+async def test_no_result_parsing(hass):
+    """Test if templates results are not parsed."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render(
+            parse_result=False
+        )
+        == "12"
+    )
+
+    assert (
+        template.Template("{{ false }}", hass).async_render(parse_result=False)
+        == "False"
+    )
+
+    assert (
+        template.Template("{{ [1, 2, 3] }}", hass).async_render(parse_result=False)
+        == "[1, 2, 3]"
+    )
+
+
+async def test_is_static_still_ast_evals(hass):
+    """Test is_static still convers to native type."""
+    tpl = template.Template("[1, 2]", hass)
+    assert tpl.is_static
+    assert tpl.async_render() == [1, 2]
+
+
+async def test_result_wrappers(hass):
+    """Test result wrappers."""
+    for text, native, orig_type, schema in (
+        ("[1, 2]", [1, 2], list, vol.Schema([int])),
+        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, orig_type)
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert result.render_result == text
+        schema(result)  # should not raise
+        # Result with render text stringifies to original text
+        assert str(result) == text
+        # Result without render text stringifies same as original type
+        assert str(template.RESULT_WRAPPERS[orig_type](native)) == str(
+            orig_type(native)
+        )
+
+
+async def test_parse_result(hass):
+    """Test parse result."""
+    for tpl, result in (
+        ('{{ "{{}}" }}', "{{}}"),
+        ("not-something", "not-something"),
+        ("2a", "2a"),
+    ):
+        assert template.Template(tpl, hass).async_render() == result

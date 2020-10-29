@@ -6,6 +6,7 @@ from typing import Dict
 
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
@@ -230,6 +231,7 @@ class SynoApi:
         self.information: SynoDSMInformation = None
         self.network: SynoDSMNetwork = None
         self.security: SynoCoreSecurity = None
+        self.upgrade: SynoCoreUpgrade = None
         self.storage: SynoStorage = None
         self.utilisation: SynoCoreUtilization = None
         self.surveillance_station: SynoSurveillanceStation = None
@@ -238,6 +240,7 @@ class SynoApi:
         self._fetching_entities = {}
         self._with_security = True
         self._with_storage = True
+        self._with_upgrade = True
         self._with_utilisation = True
         self._with_information = True
         self._with_surveillance_station = True
@@ -308,6 +311,7 @@ class SynoApi:
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
+        self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
@@ -316,6 +320,8 @@ class SynoApi:
         )
         self._with_surveillance_station = bool(
             self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        ) or bool(
+            self._fetching_entities.get(SynoSurveillanceStation.HOME_MODE_API_KEY)
         )
 
         # Reset not used API, information is not reset since it's used in device_info
@@ -326,6 +332,10 @@ class SynoApi:
         if not self._with_storage:
             self.dsm.reset(self.storage)
             self.storage = None
+
+        if not self._with_upgrade:
+            self.dsm.reset(self.upgrade)
+            self.upgrade = None
 
         if not self._with_utilisation:
             self.dsm.reset(self.utilisation)
@@ -346,6 +356,9 @@ class SynoApi:
 
         if self._with_storage:
             self.storage = self.dsm.storage
+
+        if self._with_upgrade:
+            self.upgrade = self.dsm.upgrade
 
         if self._with_utilisation:
             self.utilisation = self.dsm.utilisation

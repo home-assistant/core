@@ -7,7 +7,7 @@
             "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})"
         },
         "create_entry": {
-            "default": "Pomy\u015blnie uwierzytelniono z Withings dla wybranego profilu"
+            "default": "Pomy\u015blnie uwierzytelniono"
         },
         "error": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",

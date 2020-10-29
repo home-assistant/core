@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Teenus on juba seadistatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        }
+    }
+}

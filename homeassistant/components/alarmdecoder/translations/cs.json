@@ -34,6 +34,7 @@
         "step": {
             "arm_settings": {
                 "data": {
+                    "alt_night_mode": "Alternativn\u00ed no\u010dn\u00ed re\u017eim",
                     "code_arm_required": "K\u00f3d vy\u017eadovan\u00fd pro zabezpe\u010den\u00ed"
                 },
                 "title": "Konfigurovat AlarmDecoder"
