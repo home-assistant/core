@@ -130,7 +130,8 @@ class InstantConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         track_client_data_schema = vol.Schema(
             {
                 vol.Optional(
-                    AVAILABLE_CLIENTS, description=AVAILABLE_CLIENTS,
+                    AVAILABLE_CLIENTS,
+                    description=AVAILABLE_CLIENTS,
                 ): cv.multi_select(macs),
                 vol.Optional(
                     "track_none", description="Stop tracking all devices."
@@ -186,17 +187,13 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
             self.config_entry.entry_id
         ]:
             if (
-                (
-                    mac
-                    in self.hass.data[DOMAIN]["coordinator"][
-                        self.config_entry.entry_id
-                    ].data.keys()
-                )
-                and mac
-                not in self.hass.data[DOMAIN][TRACKED_CLIENTS][
+                mac
+                in self.hass.data[DOMAIN]["coordinator"][
                     self.config_entry.entry_id
-                ]
-            ):
+                ].data.keys()
+            ) and mac not in self.hass.data[DOMAIN][TRACKED_CLIENTS][
+                self.config_entry.entry_id
+            ]:
                 available_macs.update(
                     {
                         mac: f"{self.hass.data[DOMAIN]['coordinator'][self.config_entry.entry_id].data.get(mac)['name']} ({mac})"
@@ -230,7 +227,9 @@ class InstantOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         return self.async_show_form(
-            step_id="init", data_schema=track_client_data_schema, errors=errors,
+            step_id="init",
+            data_schema=track_client_data_schema,
+            errors=errors,
         )
 
 
