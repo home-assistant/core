@@ -29,6 +29,7 @@ async def async_setup_entry(
     entities = []
 
     for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        entities.append(DevoloLocalConnection(gateway))
         for device in gateway.binary_sensor_devices:
             for binary_sensor in device.binary_sensor_property:
                 entities.append(
@@ -134,3 +135,43 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()
+
+
+class DevoloLocalConnection(BinarySensorEntity):
+    """Representation of the connection way to a gateway."""
+
+    def __init__(self, homecontrol):
+        """Initialize the connection way."""
+        self._state = homecontrol.gateway.local_connection
+        self._id = homecontrol.gateway.id
+        self._unique_id = f"local_{homecontrol.gateway.id}"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
+    @property
+    def icon(self) -> str:
+        """Return an icon."""
+        return "mdi:cloud-off-outline" if self._state else "mdi:cloud-outline"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state."""
+        return self._state
+
+    @property
+    def name(self) -> str:
+        """Return the display name of this entity."""
+        return f"Local connection {self._id}"
+
+    @property
+    def should_poll(self) -> bool:
+        """Return the polling state."""
+        return False
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the entity."""
+        return self._unique_id
