@@ -208,7 +208,7 @@ class TankerkoenigData:
         """Add fuel station to the entity list."""
         station_id = station["id"]
         if station_id in self.stations:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Sensor for station with id %s was already created", station_id
             )
             return
