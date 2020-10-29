@@ -260,7 +260,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
 
         self._available = True
 
-        return int(result.registers[0])
+        return bool(result.bits[0] & 1)
 
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
