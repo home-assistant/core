@@ -5,9 +5,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "Name",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "Use SSL"
+          "name": "[%key:common::config_flow::data::name%]",
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },
@@ -16,17 +15,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "title": "Epson Options",
-        "description": "Epson projectors sometimes have delay responding. Default timeouts are turn_on - 40s, off - 10s, source-5s, rest-3s. You can multiply this time by setting timeout scale eg. 1.5.",
-        "data": {
-          "timeout_scale": "Timeout scale"
-        }
-      }
     }
   }
 }

@@ -1,14 +1,35 @@
 """The epson integration."""
 import asyncio
+import logging
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFROM
+from epson_projector import Projector
+from epson_projector.const import POWER
+
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_EPSON, DOMAIN, SIGNAL_CONFIG_OPTIONS_UPDATE, UPDATE_LISTENER
+from .const import DOMAIN
+from .exceptions import CannotConnect
 
-PLATFORMS = [MEDIA_PLAYER_PLATFROM]
+PLATFORMS = [MEDIA_PLAYER_PLATFORM]
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def validate_projector(hass: HomeAssistant, host, port):
+    """Validate the given host and port allows us to connect."""
+    epson_proj = Projector(
+        host=host,
+        websession=async_get_clientsession(hass, verify_ssl=False),
+        port=port,
+    )
+    _power = await epson_proj.get_property(POWER)
+    if not _power or _power == STATE_UNAVAILABLE:
+        raise CannotConnect
+    return epson_proj
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -19,15 +40,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up epson from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_EPSON: [],
-        UPDATE_LISTENER: entry.add_update_listener(update_listener),
-    }
+    try:
+        projector = await validate_projector(
+            hass, entry.data[CONF_HOST], entry.data[CONF_PORT]
+        )
+    except CannotConnect:
+        _LOGGER.warning(f"Cannot connect to projector {entry.data[CONF_HOST]}")
+        return False
+    hass.data[DOMAIN][entry.entry_id] = projector
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
     return True
 
 
@@ -42,15 +66,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
-        listener()
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
-
-
-async def update_listener(hass, entry):
-    """Handle options update."""
-    async_dispatcher_send(
-        hass, f"{SIGNAL_CONFIG_OPTIONS_UPDATE} {entry.entry_id}", entry.options
-    )

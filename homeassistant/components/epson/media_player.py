@@ -1,7 +1,6 @@
 """Support for Epson projector."""
 import logging
 
-import epson_projector as epson
 from epson_projector.const import (
     BACK,
     BUSY,
@@ -38,30 +37,17 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    CONF_SSL,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    ATTR_CMODE,
-    DATA_EPSON,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_SELECT_CMODE,
-    SIGNAL_CONFIG_OPTIONS_UPDATE,
-    SUPPORT_CMODE,
-    TIMEOUT_SCALE,
-)
+from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,61 +55,34 @@ SUPPORT_EPSON = (
     SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
-    | SUPPORT_CMODE
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PREVIOUS_TRACK
 )
 
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
     }
 )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Epson projector from a config entry."""
-    timeout_scale = config_entry.options.get(TIMEOUT_SCALE, 1.0)
-    epson_proj = EpsonProjector(
-        async_get_clientsession(hass, verify_ssl=config_entry.data[CONF_SSL]),
-        config_entry.title,
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        timeout_scale,
-        config_entry.entry_id,
+    unique_id = config_entry.entry_id
+    projector = hass.data[DOMAIN][unique_id]
+    projector_entity = EpsonProjectorMediaPlayer(
+        projector, config_entry.title, unique_id
     )
-    hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON].append(epson_proj)
-    async_add_entities(hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON])
-
-    async def async_service_handler(service):
-        """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            devices = [
-                device
-                for device in hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON]
-                if device.entity_id in entity_ids
-            ]
-        else:
-            devices = hass.data[DOMAIN][config_entry.entry_id][DATA_EPSON]
-        for device in devices:
-            if service.service == SERVICE_SELECT_CMODE:
-                cmode = service.data.get(ATTR_CMODE)
-                await device.select_cmode(cmode)
-            device.async_schedule_update_ha_state(True)
-
-    epson_schema = MEDIA_PLAYER_SCHEMA.extend(
-        {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))}
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_SELECT_CMODE, async_service_handler, schema=epson_schema
+    async_add_entities([projector_entity], True)
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SELECT_CMODE,
+        {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
+        SERVICE_SELECT_CMODE,
     )
     return True
 
@@ -137,58 +96,42 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class EpsonProjector(MediaPlayerEntity):
+class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, websession, name, host, port, timeout_scale, entry_id):
+    def __init__(self, projector, name, unique_id):
         """Initialize entity to control Epson projector."""
         self._name = name
-        self._projector = epson.Projector(
-            host, websession=websession, port=port, timeout_scale=timeout_scale
-        )
+        self._projector = projector
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
         self._volume = None
         self._state = None
-        self._entry_id = entry_id
+        self._unique_id = unique_id
 
     async def async_update(self):
         """Update state of device."""
-        is_turned_on = await self._projector.get_property(POWER)
-        _LOGGER.debug("Projector status: %s", is_turned_on)
-        if is_turned_on:
-            if is_turned_on == EPSON_CODES[POWER]:
-                self._state = STATE_ON
-                self._source_list = list(DEFAULT_SOURCES.values())
-                cmode = await self._projector.get_property(CMODE)
-                self._cmode = CMODE_LIST.get(cmode, self._cmode)
-                source = await self._projector.get_property(SOURCE)
-                self._source = SOURCE_LIST.get(source, self._source)
-                volume = await self._projector.get_property(VOLUME)
-                if volume:
-                    self._volume = volume
-            elif is_turned_on == BUSY:
-                self._state = STATE_ON
-            elif is_turned_on == STATE_UNAVAILABLE:
-                self._state = STATE_UNAVAILABLE
-            else:
-                self._state = STATE_OFF
-
-    async def async_added_to_hass(self):
-        """Use lifecycle hooks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_CONFIG_OPTIONS_UPDATE} {self._entry_id}",
-                self.update_options,
-            )
-        )
-
-    @callback
-    def update_options(self, options):
-        """Update timeout scale option."""
-        self._projector.set_timeout_scale(options.get(TIMEOUT_SCALE, 1.0))
+        power_state = await self._projector.get_property(POWER)
+        _LOGGER.debug("Projector status: %s", power_state)
+        if not power_state:
+            return
+        if power_state == EPSON_CODES[POWER]:
+            self._state = STATE_ON
+            self._source_list = list(DEFAULT_SOURCES.values())
+            cmode = await self._projector.get_property(CMODE)
+            self._cmode = CMODE_LIST.get(cmode, self._cmode)
+            source = await self._projector.get_property(SOURCE)
+            self._source = SOURCE_LIST.get(source, self._source)
+            volume = await self._projector.get_property(VOLUME)
+            if volume:
+                self._volume = volume
+        elif power_state == BUSY:
+            self._state = STATE_ON
+        elif power_state == STATE_UNAVAILABLE:
+            self._state = STATE_UNAVAILABLE
+        else:
+            self._state = STATE_OFF
 
     @property
     def name(self):
@@ -198,7 +141,7 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return unique ID."""
-        return self._name
+        return self._unique_id
 
     @property
     def state(self):
@@ -219,7 +162,6 @@ class EpsonProjector(MediaPlayerEntity):
         """Turn off epson."""
         if self._state == STATE_ON:
             await self._projector.send_command(TURN_OFF)
-            self._state = STATE_OFF
 
     @property
     def source_list(self):
