@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, entry.data[CONF_HOST], entry.data[CONF_PORT]
         )
     except CannotConnect:
-        _LOGGER.warning(f"Cannot connect to projector {entry.data[CONF_HOST]}")
+        _LOGGER.warning("Cannot connect to projector %s.", entry.data[CONF_HOST])
         return False
     hass.data[DOMAIN][entry.entry_id] = projector
     for component in PLATFORMS:
