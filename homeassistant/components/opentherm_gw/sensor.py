@@ -2,10 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import (
-    CONF_FORCE_UPDATE,
-    CONF_ID,
-)
+from homeassistant.const import CONF_FORCE_UPDATE, CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
