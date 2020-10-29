@@ -141,7 +141,7 @@ async def test_ssdp_cannot_connect(
         data=discovery_info,
     )
 
-    assert result["ty RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
 
 
