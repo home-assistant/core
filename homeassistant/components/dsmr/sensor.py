@@ -360,12 +360,12 @@ class DerivativeDSMREntity(DSMREntity):
 
     @property
     def force_update(self):
-        """Force update."""
+        """Disable force update."""
         return False
 
     @property
     def should_poll(self):
-        """Disable polling."""
+        """Enable polling."""
         return True
 
     async def async_update(self):
