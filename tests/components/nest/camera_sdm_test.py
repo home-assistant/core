@@ -13,6 +13,8 @@ from homeassistant.components.camera import STATE_IDLE
 
 from .common import async_setup_sdm_platform
 
+from tests.async_mock import patch
+
 PLATFORM = "camera"
 CAMERA_DEVICE_TYPE = "sdm.devices.types.CAMERA"
 DEVICE_ID = "some-device-id"
@@ -126,7 +128,7 @@ async def test_camera_device(hass):
     assert device.identifiers == {("nest", DEVICE_ID)}
 
 
-async def test_camera_stream(hass):
+async def test_camera_stream(hass, aiohttp_client):
     """Test a basic camera and fetch its live stream."""
     response = FakeResponse(
         {
@@ -163,3 +165,12 @@ async def test_camera_stream(hass):
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    with patch(
+        "homeassistant.components.nest.camera_sdm.ImageFrame.get_image",
+        autopatch=True,
+        return_value=b"image bytes",
+    ):
+        image = await camera.async_get_image(hass, "camera.my_camera")
+
+    assert image.content == b"image bytes"

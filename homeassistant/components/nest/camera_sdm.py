@@ -1,12 +1,15 @@
 """Support for Google Nest SDM Cameras."""
 
+import asyncio
 import logging
 from typing import Optional
 
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
@@ -33,18 +36,19 @@ async def async_setup_sdm_entry(
             CameraImageTrait.NAME in device.traits
             or CameraLiveStreamTrait.NAME in device.traits
         ):
-            entities.append(NestCamera(device))
+            entities.append(NestCamera(device, hass.data[DATA_FFMPEG]))
     async_add_entities(entities)
 
 
 class NestCamera(Camera):
     """Devices that support cameras."""
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device, ffmpeg):
         """Initialize the camera."""
         super().__init__()
         self._device = device
         self._device_info = DeviceInfo(device)
+        self._ffmpeg = ffmpeg
 
     @property
     def should_poll(self) -> bool:
@@ -109,7 +113,12 @@ class NestCamera(Camera):
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
-        # No support for still images yet.  Still images are only available
-        # in response to an event on the feed.  For now, suppress a
-        # NotImplementedError in the parent class.
-        return None
+        stream_url = await self.stream_source()
+        if not stream_url:
+            return None
+
+        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        image = await asyncio.shield(
+            ffmpeg.get_image(stream_url, output_format=IMAGE_JPEG)
+        )
+        return image
