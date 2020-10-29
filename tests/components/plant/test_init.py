@@ -49,9 +49,7 @@ GOOD_CONFIG = {
 
 async def test_valid_data(hass):
     """Test processing valid data."""
-    sensor = plant.Plant("my plant", GOOD_CONFIG)
-    sensor.entity_id = "sensor.mqtt_plant_battery"
-    sensor.hass = hass
+    sensor = plant.Plant("my plant", GOOD_CONFIG, hass)
     for reading, value in GOOD_DATA.items():
         sensor.state_changed(
             GOOD_CONFIG["sensors"][reading],
@@ -67,13 +65,11 @@ async def test_valid_data(hass):
 
 async def test_low_battery(hass):
     """Test processing with low battery data and limit set."""
-    sensor = plant.Plant("other plant", GOOD_CONFIG)
-    sensor.entity_id = "sensor.mqtt_plant_battery"
-    sensor.hass = hass
+    sensor = plant.Plant("other plant", GOOD_CONFIG, hass)
     assert sensor.state_attributes["problem"] == "none"
     sensor.state_changed(
-        "sensor.mqtt_plant_battery",
-        State("sensor.mqtt_plant_battery", 10),
+        GOOD_CONFIG["sensors"]["battery"],
+        State(GOOD_CONFIG["sensors"]["battery"], 10),
     )
     assert sensor.state == "problem"
     assert sensor.state_attributes["problem"] == "battery low"
