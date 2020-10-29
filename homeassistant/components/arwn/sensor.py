@@ -94,12 +94,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 sensor.hass = hass
                 sensor.set_event(event)
                 store[sensor.name] = sensor
-                _LOGGER.debug(
-                    "Registering new sensor %(name)s => %(event)s",
+                _LOGGER.info(
+                    "Registering sensor %(name)s => %(event)s",
                     {"name": sensor.name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:
+                _LOGGER.info(
+                    "Recording sensor %(name)s => %(event)s",
+                    {"name": sensor.name, "event": event},
+                )
                 store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
@@ -134,6 +138,11 @@ class ArwnSensor(Entity):
     def name(self):
         """Get the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.entity_id
 
     @property
     def state_attributes(self):
