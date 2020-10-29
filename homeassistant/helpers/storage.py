@@ -164,7 +164,7 @@ class Store:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_handle_write_data
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
             )
 
     @callback
@@ -187,6 +187,11 @@ class Store:
         if self.hass.state == CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
+        await self._async_handle_write_data()
+
+    async def _async_callback_final_write(self, _event):
+        """Handle a write because Home Assistant is in final write state."""
+        self._unsub_final_write_listener = None
         await self._async_handle_write_data()
 
     async def _async_handle_write_data(self, *_args):
