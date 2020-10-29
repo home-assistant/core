@@ -761,8 +761,3 @@ async def test_restoring_client(hass):
 
     device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None
-
-
-async def test_dpi_restriction_switch(hass):
-    """Test that DPI restriction switches are added."""
-    assert True
