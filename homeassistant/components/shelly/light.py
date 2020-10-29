@@ -29,17 +29,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for block in wrapper.device.blocks:
         if block.type == "light":
             blocks.append(block)
-        if block.type == "relay":
-            if (
+        elif (
+            block.type == "relay"
+            and wrapper.device.settings["relays"][int(block.channel)].get(
                 "appliance_type"
-                in wrapper.device.settings["relays"][int(block.channel)]
-            ):
-                if (
-                    wrapper.device.settings["relays"][int(block.channel)][
-                        "appliance_type"
-                    ]
-                ) == "light":
-                    blocks.append(block)
+            )
+            == "light"
+        ):
+            blocks.append(block)
 
     if not blocks:
         return
