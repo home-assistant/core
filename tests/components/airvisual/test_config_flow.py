@@ -162,6 +162,7 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -189,31 +190,6 @@ async def test_step_geography(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Cloud API (51.528308, -0.3817765)"
-        assert result["data"] == {
-            CONF_API_KEY: "abcde12345",
-            CONF_LATITUDE: 51.528308,
-            CONF_LONGITUDE: -0.3817765,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
-        }
-
-
-async def test_step_import(hass):
-    """Test the import step for both types of configuration."""
-    geography_conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-    }
-
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
-        )
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "Cloud API (51.528308, -0.3817765)"
         assert result["data"] == {

@@ -146,10 +146,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY},
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_geography(import_config)
-
     async def async_step_node_pro(self, user_input=None):
         """Handle the initialization of the integration with a Node/Pro."""
         if not user_input:
