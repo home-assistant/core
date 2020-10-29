@@ -1,179 +1,158 @@
-"""The tests for the Microsoft speech platform."""
-import asyncio
-import os
-import shutil
+"""Support for the Microsoft Speech text-to-speech service based on Azure Cognitive Services."""
+from http.client import HTTPException
+import logging
 
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
-    SERVICE_PLAY_MEDIA,
+from azure.cognitiveservices.speech import (
+    AudioDataStream,
+    CancellationReason,
+    ResultReason,
+    SpeechConfig,
+    SpeechSynthesisOutputFormat,
+    SpeechSynthesizer,
 )
-import homeassistant.components.tts as tts
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.setup import setup_component
+import voluptuous as vol
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.const import CONF_API_KEY, CONF_TYPE
+import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    SUPPORTED_LANGUAGES,
+    SUPPORTED_OUTPUTS,
+    SUPPORTED_REGIONS,
+    SUPPORTED_TYPES,
+    SUPPORTED_VOICES,
+)
+
+CONF_OUTPUT = "output"
+CONF_REGION = "region"
+
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_LANG = "en-US"
+DEFAULT_TYPE = "AriaNeural"
+DEFAULT_OUTPUT = "Audio16Khz128KBitRateMonoMp3"
+DEFAULT_REGION = "eastus"
+DEFAULT_VOICE = f"{DEFAULT_LANG}-{DEFAULT_TYPE}"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
+        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.In(SUPPORTED_TYPES),
+        vol.Optional(CONF_OUTPUT, default=DEFAULT_OUTPUT): vol.In(SUPPORTED_OUTPUTS),
+    }
+)
 
 
-class TestTTSMicrosoftSpeechPlatform:
-    """Test the Microsoft speech component."""
+def get_engine(hass, config, discovery_info=None):
+    """Set up Microsoft Speech component."""
+    return MicrosoftProvider(
+        config[CONF_API_KEY],
+        config[CONF_REGION],
+        config[CONF_OUTPUT],
+        config[CONF_LANG],
+        config[CONF_TYPE],
+    )
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-        asyncio.run_coroutine_threadsafe(
-            async_process_ha_core_config(
-                self.hass, {"internal_url": "http://example.local:8123"}
-            ),
-            self.hass.loop,
-        )
+class MicrosoftProvider(Provider):
+    """The Microsoft Speech API provider."""
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        default_tts = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
-        if os.path.isdir(default_tts):
-            shutil.rmtree(default_tts)
+    def __init__(self, apikey, region, output, lang, ttype):
+        """Init Microsoft TTS service."""
+        self._apikey = apikey
+        self._region = region
+        self._lang = lang
+        self._type = ttype
+        self._voice = f"{lang}-{ttype}"
+        self._output = output
+        self.name = "Microsoft_Speech"
 
-        self.hass.stop()
+    @property
+    def default_language(self):
+        """Return the default language."""
+        return self._lang
 
-    def test_setup_component(self):
-        """Test setup component."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-            }
-        }
+    @property
+    def supported_languages(self):
+        """Return list of supported languages."""
+        return SUPPORTED_LANGUAGES
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    @property
+    def supported_types(self):
+        """Return list of supported types."""
+        return SUPPORTED_TYPES
 
-    def test_setup_component_all_params(self):
-        """Test setup component with all parameters."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "region": "westeurope",
-                "language": "nl-NL",
-                "type": "ColetteNeural",
-            }
-        }
+    @property
+    def supported_voices(self):
+        """Return list of supported voices."""
+        return SUPPORTED_VOICES
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    @property
+    def supported_outputs(self):
+        """Return list of supported outputs."""
+        return SUPPORTED_OUTPUTS
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_setup_component_error_region(self, mock_calculate):
-        """Test setup component with error on region."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "region": "nonexistingregion",
-            }
-        }
+    @property
+    def supported_regions(self):
+        """Return list of supported regions."""
+        return SUPPORTED_REGIONS
 
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+    def get_tts_audio(self, message, language, options=None):
+        """Load TTS from Microsoft Speech."""
+        if language is None:
+            language = self._lang
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_setup_component_error_language(self, mock_calculate):
-        """Test setup component with error on language."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "language": "nonexistinglanguage",
-            }
-        }
-
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_setup_component_error_type(self, mock_calculate):
-        """Test setup component with error on type."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "type": "nonexistingtype",
-            }
-        }
-
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_setup_component_error_api_key(self, mock_calculate):
-        """Test setup component with error on missing api_key."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-            }
-        }
-
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say(self, mock_calculate):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-            }
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-            self.hass.services.call(
-                tts.DOMAIN,
-                "microsoft_speech_say",
-                {
-                    "entity_id": "media_player.something",
-                    tts.ATTR_MESSAGE: "HomeAssistant",
-                },
+        if self._voice in self.supported_voices:
+            pass
+        else:
+            _LOGGER.warning(
+                "The provided voice %s is not in the supported types list. Falling back to default voice %s",
+                self._voice,
+                DEFAULT_VOICE,
             )
-            self.hass.block_till_done()
+            self._voice = DEFAULT_VOICE
 
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+        try:
+            speech_config = SpeechConfig(subscription=self._apikey, region=self._region)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_dutch(self, mock_calculate):
-        """Test service call say in Dutch."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "region": "westeurope",
-                "language": "nl-NL",
-                "type": "ColetteNeural",
-            }
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-            self.hass.services.call(
-                tts.DOMAIN,
-                "microsoft_speech_say",
-                {
-                    "entity_id": "media_player.something",
-                    tts.ATTR_MESSAGE: "Voordat ik een fout maak, maak ik die fout niet.",
-                },
+            speech_config.set_speech_synthesis_output_format(
+                SpeechSynthesisOutputFormat[self._output]
             )
-            self.hass.block_till_done()
+            speech_config.speech_synthesis_voice_name = self._voice
+            synthesizer = SpeechSynthesizer(
+                speech_config=speech_config, audio_config=None
+            )
 
-        assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
+            result = synthesizer.speak_text_async(message).get()
+            data = result.audio_data
+
+            if result.reason == ResultReason.SynthesizingAudioCompleted:
+                _LOGGER.debug("Speech synthesized for text [%s]", message)
+                stream = AudioDataStream(result)
+
+                # Reads data from the stream
+                audio_buffer = bytes(16000)
+                total_size = 0
+                filled_size = stream.read_data(audio_buffer)
+                while filled_size > 0:
+                    _LOGGER.debug("%s bytes received.", filled_size)
+                    total_size += filled_size
+                    filled_size = stream.read_data(audio_buffer)
+                _LOGGER.debug(
+                    "Totally %s bytes received for text [%s].", total_size, message
+                )
+
+            elif result.reason == ResultReason.Canceled:
+                cancellation_details = result.cancellation_details
+                _LOGGER.info(
+                    "Speech synthesis canceled: %s", cancellation_details.reason
+                )
+                if cancellation_details.reason == CancellationReason.Error:
+                    _LOGGER.warning("Error details: %s", cancellation_details.reason)
+        except HTTPException as ex:
+            _LOGGER.warning("Error occurred for Microsoft TTS: %s", ex)
+            return (None, None)
+        return ("wav", data)
