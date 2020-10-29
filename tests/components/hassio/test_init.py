@@ -186,7 +186,8 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
     assert aioclient_mock.call_count == 7
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
-    await hass.config.async_update(time_zone="America/New_York")
+    with patch("homeassistant.util.dt.set_default_time_zone"):
+        await hass.config.async_update(time_zone="America/New_York")
     await hass.async_block_till_done()
     assert aioclient_mock.mock_calls[-1][2]["timezone"] == "America/New_York"
 
