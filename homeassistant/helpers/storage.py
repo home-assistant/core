@@ -150,9 +150,9 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
         self._async_cleanup_delay_listener()
+        self._async_ensure_final_write_listener()
 
         if self.hass.state == CoreState.stopping:
-            self._async_ensure_final_write_listener()
             return
 
         self._unsub_delay_listener = async_call_later(
