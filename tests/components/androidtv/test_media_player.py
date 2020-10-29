@@ -341,12 +341,14 @@ async def _test_sources(hass, config0):
             "hdmi",
             False,
             1,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
             "playing",
             "com.app.test1",
             ["com.app.test1", "com.app.test2", "com.app.test3", "com.app.test4"],
+            "HW5",
         )
 
     with patch_update:
@@ -365,12 +367,14 @@ async def _test_sources(hass, config0):
             "hdmi",
             True,
             0,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
             "playing",
             "com.app.test2",
             ["com.app.test2", "com.app.test1", "com.app.test3", "com.app.test4"],
+            "HW5",
         )
 
     with patch_update:
@@ -428,6 +432,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
             "hdmi",
             False,
             1,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
@@ -440,6 +445,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
                 "com.app.test4",
                 "com.app.test5",
             ],
+            "HW5",
         )
 
     with patch_update:
