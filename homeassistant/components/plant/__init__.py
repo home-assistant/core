@@ -8,9 +8,11 @@ import voluptuous as vol
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
+    ATTR_NAME,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONDUCTIVITY,
+    CONF_NAME,
     CONF_SENSORS,
     LIGHT_LUX,
     PERCENTAGE,
@@ -23,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -37,8 +39,10 @@ READING_MOISTURE = "moisture"
 READING_CONDUCTIVITY = "conductivity"
 READING_BRIGHTNESS = "brightness"
 
+ATTR_IMAGE = "image"
 ATTR_PROBLEM = "problem"
 ATTR_SENSORS = "sensors"
+ATTR_SPECIES = "species"
 PROBLEM_NONE = "none"
 ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 
@@ -46,6 +50,8 @@ ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 # to have a separate literal for it to avoid confusion.
 ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
 
+CONF_IMAGE = "image"
+CONF_SPECIES = "species"
 CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
 CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
 CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
@@ -99,6 +105,9 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
         vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
         vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
+        vol.Optional(CONF_IMAGE): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_SPECIES): cv.string,
     }
 )
 
@@ -119,7 +128,7 @@ async def async_setup(hass, config):
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
         _LOGGER.info("Added plant %s", plant_name)
-        entity = Plant(plant_name, plant_config)
+        entity = Plant(plant_name, plant_config, hass)
         entities.append(entity)
 
     await component.async_add_entities(entities)
@@ -160,8 +169,9 @@ class Plant(Entity):
         },
     }
 
-    def __init__(self, name, config):
+    def __init__(self, name, config, hass):
         """Initialize the Plant component."""
+        self.hass = hass
         self._config = config
         self._sensormap = {}
         self._readingmap = {}
@@ -170,7 +180,12 @@ class Plant(Entity):
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
         self._state = None
-        self._name = name
+        self._entity_id = generate_entity_id(f"{DOMAIN}" + ".{}", name, hass=self.hass)
+        self._name = config.get(CONF_NAME, name)
+        self._species = config.get(CONF_SPECIES)
+        self._image = config.get(CONF_IMAGE)
+        if not self._image and self._species:
+            self._image = f"/local/images/plants/{self._species}.jpg"
         self._battery = None
         self._moisture = None
         self._conductivity = None
@@ -338,6 +353,11 @@ class Plant(Entity):
         return False
 
     @property
+    def entity_id(self):
+        """Return the name of the sensor."""
+        return self._entity_id
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -358,6 +378,9 @@ class Plant(Entity):
             ATTR_PROBLEM: self._problems,
             ATTR_SENSORS: self._readingmap,
             ATTR_DICT_OF_UNITS_OF_MEASUREMENT: self._unit_of_measurement,
+            ATTR_NAME: self._name,
+            ATTR_SPECIES: self._species,
+            ATTR_IMAGE: self._image,
         }
 
         for reading in self._sensormap.values():
