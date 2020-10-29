@@ -445,6 +445,7 @@ class ADBDevice(MediaPlayerEntity):
         self._current_app = None
         self._sources = None
         self._state = None
+        self._hdmi_input = None
 
     @property
     def app_id(self):
@@ -464,7 +465,10 @@ class ADBDevice(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Provide the last ADB command's response as an attribute."""
-        return {"adb_response": self._adb_response}
+        return {
+            "adb_response": self._adb_response,
+            "hdmi_input": self._hdmi_input,
+        }
 
     @property
     def media_image_hash(self):
@@ -670,6 +674,7 @@ class AndroidTVDevice(ADBDevice):
             _,
             self._is_volume_muted,
             self._volume_level,
+            self._hdmi_input,
         ) = await self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
@@ -744,9 +749,12 @@ class FireTVDevice(ADBDevice):
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, running_apps = await self.aftv.update(
-            self._get_sources
-        )
+        (
+            state,
+            self._current_app,
+            running_apps,
+            self._hdmi_input,
+        ) = await self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
