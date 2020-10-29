@@ -47,12 +47,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
