@@ -161,7 +161,7 @@ class RuntimeEntryData:
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
-        self.store.async_delay_save(store_data, SAVE_DELAY)
+        self.store.async_delay_save(lambda: store_data, SAVE_DELAY)
 
 
 def _attr_obj_from_dict(cls, **kwargs):
