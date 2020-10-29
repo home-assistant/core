@@ -1,6 +1,7 @@
 """Support for Google Nest SDM Cameras."""
 
 import asyncio
+import datetime
 import logging
 from typing import Optional
 
@@ -49,6 +50,7 @@ class NestCamera(Camera):
         self._device = device
         self._device_info = DeviceInfo(device)
         self._ffmpeg = ffmpeg
+        self._stream = None
 
     @property
     def should_poll(self) -> bool:
@@ -94,11 +96,24 @@ class NestCamera(Camera):
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        rtsp_stream = await trait.generate_rtsp_stream()
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        if not self._stream:
+            logging.debug("Fetching stream url")
+            self._stream = await trait.generate_rtsp_stream()
+        elif self._stream.expires_at < now:
+            logging.debug("Stream expired, extending stream")
+            new_stream = await self._stream.extend_rtsp_stream()
+            self._stream = new_stream
         # Note: This is only valid for a few minutes, and probably needs
         # to be improved with an occasional call to .extend_rtsp_stream() which
         # returns a new rtsp_stream object.
-        return rtsp_stream.rtsp_stream_url
+        return self._stream.rtsp_stream_url
+
+    async def async_removed_from_registry(self):
+        """Invalidates the RTSP token."""
+        if self._stream:
+            logging.debug("Invalidating stream")
+            await self._stream.stop_rtsp_stream()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
