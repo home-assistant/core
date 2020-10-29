@@ -53,7 +53,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
 
     @callback
     def update_options(self, entry):
-        """Update climate entity options."""
+        """Update binary_sensor entity options."""
         self._force_update = entry.options[CONF_FORCE_UPDATE]
         self.async_write_ha_state()
 
