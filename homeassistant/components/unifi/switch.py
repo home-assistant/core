@@ -1,5 +1,4 @@
 """Support for devices connected to UniFi POE."""
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -15,10 +14,6 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
 from .const import ATTR_MANUFACTURER, CONF_DPI_RESTRICTIONS, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
@@ -69,23 +64,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             client = controller.api.clients_all[mac]
             controller.api.clients.process_raw([client.raw])
 
-    # Create update coordinator for DPI Restrictions
-    if controller.option_dpi_restrictions:
-
-        async def async_update_data():
-            """Refresh DPI Groups."""
-            await controller.api.dpi_groups.update()
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="switch",
-            update_method=async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=30),
-        )
-
     @callback
     def items_added(
         clients: set = controller.api.clients,
@@ -102,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
 
         if controller.option_dpi_restrictions:
-            add_dpi_entities(coordinator, controller, async_add_entities, dpi_groups)
+            add_dpi_entities(controller, async_add_entities, dpi_groups)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
@@ -178,7 +156,7 @@ def add_poe_entities(
 
 
 @callback
-def add_dpi_entities(coordinator, controller, async_add_entities, dpi_groups):
+def add_dpi_entities(controller, async_add_entities, dpi_groups):
     """Add new switch entities from the controller."""
     switches = []
 
@@ -189,9 +167,7 @@ def add_dpi_entities(coordinator, controller, async_add_entities, dpi_groups):
         ):
             continue
 
-        switches.append(
-            UniFiDPIRestrictionSwitch(dpi_groups[group], controller, coordinator)
-        )
+        switches.append(UniFiDPIRestrictionSwitch(dpi_groups[group], controller))
 
     if switches:
         async_add_entities(switches)
@@ -340,16 +316,11 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
             await self.remove_item({self.client.mac})
 
 
-class UniFiDPIRestrictionSwitch(CoordinatorEntity, UniFiBase, SwitchEntity):
+class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     """Representation of a DPI restriction group."""
 
     DOMAIN = DOMAIN
     TYPE = DPI_SWITCH
-
-    def __init__(self, item, controller, coordinator) -> None:
-        """Set up DPI switch."""
-        CoordinatorEntity.__init__(self, coordinator)
-        UniFiBase.__init__(self, item, controller)
 
     @property
     def key(self) -> Any:
@@ -381,17 +352,10 @@ class UniFiDPIRestrictionSwitch(CoordinatorEntity, UniFiBase, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn on connectivity for client."""
         await self.controller.api.dpi_groups.async_enable(self._item)
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn off connectivity for client."""
         await self.controller.api.dpi_groups.async_disable(self._item)
-        await self.coordinator.async_request_refresh()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Ignore updated data from the coordinator, handled by UniFiBase."""
-        return None
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
