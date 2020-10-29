@@ -4,12 +4,8 @@ import logging
 
 from boschshcpy import SHCSession
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -26,23 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Bosch SHC component."""
     hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN)
-
-    if not conf:
-        return True
-
-    configured_hosts = {
-        entry.data.get(CONF_HOST) for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-    if conf[CONF_HOST] in configured_hosts:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
     return True
 
 
@@ -85,14 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Stop polling service."""
         await hass.async_add_executor_job(session.stop_polling)
 
-    async def start_polling(event):
-        """Start polling service."""
-        await hass.async_add_executor_job(session.start_polling)
-        session.reset_connection_listener = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, stop_polling
-        )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_polling)
+    await hass.async_add_executor_job(session.start_polling)
+    session.reset_connection_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, stop_polling
+    )
 
     return True
 
@@ -102,7 +77,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     session: SHCSession = hass.data[DOMAIN][entry.entry_id]
     if session.reset_connection_listener is not None:
         session.reset_connection_listener()
-        _LOGGER.debug("Stopping polling service of SHC")
+        session.reset_connection_listener = None
         await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = all(

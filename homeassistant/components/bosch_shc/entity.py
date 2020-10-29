@@ -1,11 +1,7 @@
 """Bosch Smart Home Controller base entity."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SHCEntity(Entity):
@@ -63,15 +59,3 @@ class SHCEntity(Entity):
     def should_poll(self):
         """Report polling mode. SHC Entity is communicating via long polling."""
         return False
-
-    def update(self):
-        """Trigger an update of the device."""
-        self._device.update()
-
-    @property
-    def device_state_attributes(self):
-        """Extend state attribute of the device."""
-        state_attr = {}
-        if self._room_name:
-            state_attr["bosch_shc_room_name"] = self._room_name
-        return state_attr

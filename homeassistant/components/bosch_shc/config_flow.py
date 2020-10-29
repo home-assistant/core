@@ -67,8 +67,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SSL_KEY: user_input[CONF_SSL_KEY],
                     },
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -78,10 +76,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
