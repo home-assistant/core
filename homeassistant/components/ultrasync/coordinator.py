@@ -54,45 +54,45 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
             # initialize our response
             response = {
-                'Area1State': 'unknown',
-                'Area2State': 'unknown',
-                'Area3State': 'unknown',
-                'Area4State': 'unknown',
+                "Area1State": "unknown",
+                "Area2State": "unknown",
+                "Area3State": "unknown",
+                "Area4State": "unknown",
             }
 
             # Update our details
             details = self.hub.details()
             if details:
                 for bank, zone in self.hub.zones.items():
-                    if self._zone_delta.get(zone['bank']) != zone['sequence']:
+                    if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
                         self.hass.bus.fire(
                             "ultrasync_sensor_update",
                             {
-                                "sensor": zone['bank'] + 1,
-                                "name": zone['name'],
-                                "status": zone['status'],
+                                "sensor": zone["bank"] + 1,
+                                "name": zone["name"],
+                                "status": zone["status"],
                             },
                         )
 
                         # Update our sequence
-                        self._zone_delta[zone['bank']] = zone['sequence']
+                        self._zone_delta[zone["bank"]] = zone["sequence"]
 
-                for area in details.get('areas', []):
-                    if self._area_delta.get(area['bank']) != area['sequence']:
+                for area in details.get("areas", []):
+                    if self._area_delta.get(area["bank"]) != area["sequence"]:
                         self.hass.bus.fire(
                             "ultrasync_area_update",
                             {
-                                "area": area['bank'] + 1,
-                                "name": area['name'],
-                                "status": area['status'],
+                                "area": area["bank"] + 1,
+                                "name": area["name"],
+                                "status": area["status"],
                             },
                         )
 
                         # Update our sequence
-                        self._area_delta[area['bank']] = area['sequence']
+                        self._area_delta[area["bank"]] = area["sequence"]
 
                     # Set our state:
-                    response['Area{}State'.format(area['bank'] + 1)] = area['status']
+                    response["Area{}State".format(area["bank"] + 1)] = area["status"]
 
             self._init = True
 
