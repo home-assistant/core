@@ -43,6 +43,7 @@
                     "entities": "Entity",
                     "mode": "Re\u017eim"
                 },
+                "description": "Vyberte entity, kter\u00e9 maj\u00ed b\u00fdt vystaveny. V re\u017eimu P\u0159\u00edslu\u0161enstv\u00ed je vystavena pouze jedna entita. V re\u017eimu Zahrnut\u00ed p\u0159emost\u011bn\u00ed budou vystaveny v\u0161echny entity v dom\u00e9n\u011b, pokud nebudou vybr\u00e1ny konkr\u00e9tn\u00ed entity. V re\u017eimu Vylou\u010den\u00ed p\u0159emost\u011bn\u00ed budou vystaveny v\u0161echny entity v dom\u00e9n\u011b krom\u011b vylou\u010den\u00fdch entit.",
                 "title": "Vyberte entity, kter\u00e9 chcete vystavit"
             },
             "init": {
