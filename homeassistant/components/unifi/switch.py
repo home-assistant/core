@@ -1,5 +1,7 @@
 """Support for devices connected to UniFi POE."""
+from datetime import timedelta
 import logging
+from typing import Any
 
 from aiounifi.api import SOURCE_EVENT
 from aiounifi.events import (
@@ -13,6 +15,10 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import ATTR_MANUFACTURER, CONF_DPI_RESTRICTIONS, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
@@ -63,6 +69,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             client = controller.api.clients_all[mac]
             controller.api.clients.process_raw([client.raw])
 
+    # Create update coordinator for DPI Restrictions
+    if controller.option_dpi_restrictions:
+
+        async def async_update_data():
+            """Refresh DPI Groups."""
+            await controller.api.dpi_groups.update()
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            # Name of the data. For logging purposes.
+            name="switch",
+            update_method=async_update_data,
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=timedelta(seconds=30),
+        )
+
     @callback
     def items_added(
         clients: set = controller.api.clients,
@@ -79,7 +102,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
 
         if controller.option_dpi_restrictions:
-            add_dpi_entities(controller, async_add_entities, dpi_groups)
+            add_dpi_entities(coordinator, controller, async_add_entities, dpi_groups)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
@@ -155,7 +178,7 @@ def add_poe_entities(
 
 
 @callback
-def add_dpi_entities(controller, async_add_entities, dpi_groups):
+def add_dpi_entities(coordinator, controller, async_add_entities, dpi_groups):
     """Add new switch entities from the controller."""
     switches = []
 
@@ -167,7 +190,7 @@ def add_dpi_entities(controller, async_add_entities, dpi_groups):
             continue
 
         switches.append(
-            UniFiDPIRestrictionSwitch(dpi_groups[group], controller, key=dpi_groups.KEY)
+            UniFiDPIRestrictionSwitch(dpi_groups[group], controller, coordinator)
         )
 
     if switches:
@@ -317,33 +340,21 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
             await self.remove_item({self.client.mac})
 
 
-class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
+class UniFiDPIRestrictionSwitch(CoordinatorEntity, UniFiBase, SwitchEntity):
     """Representation of a DPI restriction group."""
 
     DOMAIN = DOMAIN
     TYPE = DPI_SWITCH
 
-    @property
-    def is_on(self):
-        """Return true if client is allowed to connect."""
-        return self._item.enabled
-
-    async def async_update(self) -> None:
-        """Update DPI switch state."""
-        await self.controller.api.dpi_groups.update()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn on connectivity for client."""
-        await self.controller.api.dpi_groups.async_enable(self._item)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn off connectivity for client."""
-        await self.controller.api.dpi_groups.async_disable(self._item)
+    def __init__(self, item, controller, coordinator) -> None:
+        """Set up DPI switch."""
+        CoordinatorEntity.__init__(self, coordinator)
+        UniFiBase.__init__(self, item, controller)
 
     @property
-    def should_poll(self) -> bool:
-        """We need to poll for current status."""
-        return True
+    def key(self) -> Any:
+        """Return item key."""
+        return self._item.id
 
     @property
     def unique_id(self):
@@ -363,6 +374,31 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         return "mdi:network-off"
 
     @property
+    def is_on(self):
+        """Return true if client is allowed to connect."""
+        return self._item.enabled
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on connectivity for client."""
+        await self.controller.api.dpi_groups.async_enable(self._item)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off connectivity for client."""
+        await self.controller.api.dpi_groups.async_disable(self._item)
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Ignore updated data from the coordinator, handled by UniFiBase."""
+        return None
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_dpi_restrictions:
+            await self.remove_item({self.key})
+
+    @property
     def device_info(self) -> dict:
         """Return a service description for device registry."""
         return {
@@ -372,8 +408,3 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             "model": "Deep Packet Inspection",
             "entry_type": "service",
         }
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        if not self.controller.option_dpi_restrictions:
-            await self.remove_item({self._item.get(self._key)})

@@ -1,6 +1,6 @@
 """Base class for UniFi entities."""
 import logging
-from typing import Optional
+from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,15 +16,19 @@ class UniFiBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    def __init__(self, item, controller, *, key: Optional[str] = None) -> None:
+    def __init__(self, item, controller) -> None:
         """Set up UniFi entity base.
 
         Register mac to controller entities to cover disabled entities.
         """
         self._item = item
         self.controller = controller
-        self._key = key or "mac"
-        self.controller.entities[self.DOMAIN][self.TYPE].add(item.get(self._key))
+        self.controller.entities[self.DOMAIN][self.TYPE].add(self.key)
+
+    @property
+    def key(self) -> Any:
+        """Return item key."""
+        return self._item.mac
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -32,7 +36,7 @@ class UniFiBase(Entity):
             "New %s entity %s (%s)",
             self.TYPE,
             self.entity_id,
-            self._item.get(self._key),
+            self.key,
         )
         for signal, method in (
             (self.controller.signal_reachable, self.async_update_callback),
@@ -48,12 +52,10 @@ class UniFiBase(Entity):
             "Removing %s entity %s (%s)",
             self.TYPE,
             self.entity_id,
-            self._item.get(self._key),
+            self.key,
         )
         self._item.remove_callback(self.async_update_callback)
-        self.controller.entities[self.DOMAIN][self.TYPE].remove(
-            self._item.get(self._key)
-        )
+        self.controller.entities[self.DOMAIN][self.TYPE].remove(self.key)
 
     @callback
     def async_update_callback(self) -> None:
@@ -62,7 +64,7 @@ class UniFiBase(Entity):
             "Updating %s entity %s (%s)",
             self.TYPE,
             self.entity_id,
-            self._item.get(self._key),
+            self.key,
         )
         self.async_write_ha_state()
 
@@ -78,7 +80,7 @@ class UniFiBase(Entity):
         Remove device registry entry if there is only one linked entity (this entity).
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
-        if self._item.get(self._key) not in keys:
+        if self.key not in keys:
             return
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
