@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Já configurado. Apenas uma única configuração é possível."
+        },
+        "error": {
+            "invalid_discovery_topic": "prefixo do tópico de descoberta inválido."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Tópico de descoberta"
+                },
+                "description": "Por favor, entre na configuração do Tasmota.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Você quer configurar o Tasmota?"
+            }
+        }
+    }
+}
