@@ -38,8 +38,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     if session_information is None:
         raise InvalidAuth
 
-    # Return info that you want to store in the config entry.
-    return {"title": "Bosch SHC", "mac": session_information.macAddress}
+    if session_information.getMacAddress() is None:
+        raise InvalidAuth
+
+    return {"title": "Bosch SHC", "mac": session_information.getMacAddress()}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

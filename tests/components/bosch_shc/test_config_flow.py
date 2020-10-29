@@ -18,8 +18,11 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.bosch_shc.config_flow.SHCSession.acquire_information",
+        "boschshcpy.session.SHCSession.acquire_information",
         return_value=SHCInformation,
+    ), patch(
+        "boschshcpy.information.SHCInformation.getMacAddress",
+        return_value="ab:cd:ef:01:23:45",
     ), patch(
         "homeassistant.components.bosch_shc.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -54,7 +57,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.bosch_shc.config_flow.SHCSession",
+        "boschshcpy.session.SHCSession",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +80,33 @@ async def test_form_invalid_auth_from_shc(hass):
     )
 
     with patch(
-        "homeassistant.components.bosch_shc.config_flow.SHCSession.acquire_information",
+        "boschshcpy.session.SHCSession.acquire_information",
+        return_value=None,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "ssl_certificate": "test-cert.pem",
+                "ssl_key": "test-key.pem",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_invalid_auth_from_mac(hass):
+    """Test we handle invalid auth from invalid mac."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "boschshcpy.session.SHCSession.acquire_information",
+        return_value=SHCInformation,
+    ), patch(
+        "boschshcpy.session.SHCInformation.getMacAddress",
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
