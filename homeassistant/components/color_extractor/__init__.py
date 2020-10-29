@@ -27,12 +27,15 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
-SERVICE_SCHEMA = cv.make_entity_service_schema(
-    {
-        **LIGHT_TURN_ON_SCHEMA,
-        vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
-        vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
-    }
+SERVICE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
+    cv.make_entity_service_schema(
+        {
+            **LIGHT_TURN_ON_SCHEMA,
+            vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+            vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+        }
+    ),
 )
 
 
@@ -62,10 +65,6 @@ async def async_setup(hass, hass_config):
     async def async_handle_service(service_call):
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
-
-        if ATTR_URL not in service_data and ATTR_PATH not in service_data:
-            _LOGGER.error("Missing either required %s or %s key", ATTR_URL, ATTR_PATH)
-            return
 
         try:
             if ATTR_URL in service_data:
@@ -110,7 +109,7 @@ async def async_setup(hass, hass_config):
                 "External URL '%s' is not allowed, please add to 'allowlist_external_urls'",
                 url,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from image URL '%s'", url)
 
@@ -123,7 +122,7 @@ async def async_setup(hass, hass_config):
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
-            return
+            return None
 
         content = await response.content.read()
 
@@ -140,7 +139,7 @@ async def async_setup(hass, hass_config):
                 "File path '%s' is not allowed, please add to 'allowlist_external_dirs'",
                 file_path,
             )
-            return
+            return None
 
         _LOGGER.debug("Getting predominant RGB from file path '%s'", file_path)
 

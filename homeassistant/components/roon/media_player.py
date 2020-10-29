@@ -523,7 +523,7 @@ class RoonDevice(MediaPlayerEntity):
                     zone["display_name"] != self.name
                     and output["output_id"]
                     in self.player_data["can_group_with_output_ids"]
-                    and zone["display_name"] not in sync_available.keys()
+                    and zone["display_name"] not in sync_available
                 ):
                     sync_available[zone["display_name"]] = output["output_id"]
 
@@ -533,17 +533,17 @@ class RoonDevice(MediaPlayerEntity):
             if name is None:
                 _LOGGER.error("No roon player found for %s", entity_id)
                 return
-            if name not in sync_available.keys():
+            if name not in sync_available:
                 _LOGGER.error(
                     "Can't join player %s with %s because it's not in the join available list %s",
                     name,
                     self.name,
-                    list(sync_available.keys()),
+                    list(sync_available),
                 )
                 return
             names.append(name)
 
-        _LOGGER.info("Joining %s to %s", names, self.name)
+        _LOGGER.debug("Joining %s to %s", names, self.name)
         self._server.roonapi.group_outputs(
             [self._output_id] + [sync_available[name] for name in names]
         )
@@ -564,7 +564,7 @@ class RoonDevice(MediaPlayerEntity):
 
         if unjoin_ids is None:
             # unjoin everything
-            names = list(join_group.keys())
+            names = list(join_group)
         else:
             names = []
             for entity_id in unjoin_ids:
@@ -573,17 +573,17 @@ class RoonDevice(MediaPlayerEntity):
                     _LOGGER.error("No roon player found for %s", entity_id)
                     return
 
-                if name not in join_group.keys():
+                if name not in join_group:
                     _LOGGER.error(
                         "Can't unjoin player %s from %s because it's not in the joined group %s",
                         name,
                         self.name,
-                        list(join_group.keys()),
+                        list(join_group),
                     )
                     return
                 names.append(name)
 
-        _LOGGER.info("Unjoining %s from %s", names, self.name)
+        _LOGGER.debug("Unjoining %s from %s", names, self.name)
         self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
 
     async def async_transfer(self, transfer_id):
@@ -606,10 +606,10 @@ class RoonDevice(MediaPlayerEntity):
                 "Can't transfer from %s to %s because destination is not known %s",
                 self.name,
                 transfer_id,
-                list(zone_ids.keys()),
+                list(zone_ids),
             )
 
-        _LOGGER.info("Transferring from %s to %s", self.name, name)
+        _LOGGER.debug("Transferring from %s to %s", self.name, name)
         await self.hass.async_add_executor_job(
             self._server.roonapi.transfer_zone, self._zone_id, transfer_id
         )
