@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_DEVICE,
+    CONF_FORCE_UPDATE,
     CONF_ID,
     CONF_NAME,
     PRECISION_HALVES,
@@ -134,6 +135,10 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),
+                    ): bool,
+                    vol.Optional(
+                        CONF_FORCE_UPDATE,
+                        default=self.config_entry.options.get(CONF_FORCE_UPDATE, False),
                     ): bool,
                 }
             ),
