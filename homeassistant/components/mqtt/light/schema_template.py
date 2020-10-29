@@ -252,7 +252,7 @@ class MqttLightTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
-            if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
                 try:
                     self._white_value = int(
                         self._templates[
