@@ -9,6 +9,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
+    CONF_DPI_RESTRICTIONS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
@@ -266,10 +267,14 @@ async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
         hass,
-        options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
+        options={
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+            CONF_DPI_RESTRICTIONS: False,
+        },
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -282,7 +287,7 @@ async def test_controller_not_client(hass):
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
@@ -300,7 +305,7 @@ async def test_not_admin(hass):
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -318,7 +323,7 @@ async def test_switches(hass):
         clients_all_response=[BLOCKED, UNBLOCKED, CLIENT_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -343,8 +348,8 @@ async def test_switches(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 5
-    assert controller.mock_requests[4] == {
+    assert len(controller.mock_requests) == 7
+    assert controller.mock_requests[6] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
         "method": "post",
         "path": "/cmd/stamgr",
@@ -353,8 +358,8 @@ async def test_switches(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 6
-    assert controller.mock_requests[5] == {
+    assert len(controller.mock_requests) == 8
+    assert controller.mock_requests[7] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
         "path": "/cmd/stamgr",
@@ -443,8 +448,8 @@ async def test_block_switches(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 5
-    assert controller.mock_requests[4] == {
+    assert len(controller.mock_requests) == 7
+    assert controller.mock_requests[6] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
         "method": "post",
         "path": "/cmd/stamgr",
@@ -453,8 +458,8 @@ async def test_block_switches(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 6
-    assert controller.mock_requests[5] == {
+    assert len(controller.mock_requests) == 8
+    assert controller.mock_requests[7] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
         "path": "/cmd/stamgr",
@@ -469,10 +474,11 @@ async def test_new_client_discovered_on_block_control(hass):
             CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
+            CONF_DPI_RESTRICTIONS: False,
         },
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     blocked = hass.states.get("switch.block_client_1")
@@ -550,7 +556,7 @@ async def test_new_client_discovered_on_poe_control(hass):
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     controller.api.websocket._data = {
@@ -576,9 +582,9 @@ async def test_new_client_discovered_on_poe_control(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 5
+    assert len(controller.mock_requests) == 7
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    assert controller.mock_requests[4] == {
+    assert controller.mock_requests[6] == {
         "json": {
             "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
         },
@@ -589,8 +595,8 @@ async def test_new_client_discovered_on_poe_control(hass):
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 6
-    assert controller.mock_requests[4] == {
+    assert len(controller.mock_requests) == 8
+    assert controller.mock_requests[7] == {
         "json": {
             "port_overrides": [
                 {"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}
@@ -613,7 +619,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -664,7 +670,7 @@ async def test_restoring_client(hass):
         clients_all_response=[CLIENT_1],
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     device_1 = hass.states.get("switch.client_1")
