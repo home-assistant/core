@@ -144,7 +144,6 @@ class DevoloLocalConnection(BinarySensorEntity):
         """Initialize the connection way."""
         self._state = homecontrol.gateway.local_connection
         self._id = homecontrol.gateway.id
-        self._unique_id = f"local_{homecontrol.gateway.id}"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -174,4 +173,4 @@ class DevoloLocalConnection(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
-        return self._unique_id
+        return f"local_{self._id}"
