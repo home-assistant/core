@@ -407,7 +407,7 @@ async def test_switches(hass):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 11
+    assert len(controller.mock_requests) == 9
     assert controller.mock_requests[8] == {
         "json": {"enabled": False},
         "method": "put",
@@ -420,8 +420,8 @@ async def test_switches(hass):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 12
-    assert controller.mock_requests[11] == {
+    assert len(controller.mock_requests) == 10
+    assert controller.mock_requests[9] == {
         "json": {"enabled": True},
         "method": "put",
         "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
