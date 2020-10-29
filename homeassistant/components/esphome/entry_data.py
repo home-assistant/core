@@ -52,7 +52,6 @@ class RuntimeEntryData:
     entry_id: str = attr.ib()
     client: "APIClient" = attr.ib()
     store: Store = attr.ib()
-    store_data: Dict[str, Any] = attr.ib(default=None)
     reconnect_task: Optional[asyncio.Task] = attr.ib(default=None)
     state: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
     info: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
@@ -132,7 +131,7 @@ class RuntimeEntryData:
 
     async def async_load_from_store(self) -> Tuple[List[EntityInfo], List[UserService]]:
         """Load the retained data from store and return de-serialized data."""
-        self.store_data = restored = await self.store.async_load()
+        restored = await self.store.async_load()
         if restored is None:
             return [], []
 
@@ -160,9 +159,7 @@ class RuntimeEntryData:
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
-        if self.store_data != store_data:
-            await self.store.async_save(store_data)
-        self.store_data = store_data
+        await self.store.async_save(store_data)
 
 
 def _attr_obj_from_dict(cls, **kwargs):
