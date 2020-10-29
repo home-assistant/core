@@ -20,7 +20,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ):
         return
 
-    relay_blocks = [block for block in wrapper.device.blocks if block.type == "relay"]
+    relay_blocks = []
+    for block in wrapper.device.blocks:
+        if block.type == "relay" and (
+            wrapper.device.settings["relays"][int(block.channel)].get("appliance_type")
+            != "light"
+        ):
+            relay_blocks.append(block)
 
     if not relay_blocks:
         return

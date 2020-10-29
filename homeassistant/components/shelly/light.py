@@ -1,4 +1,5 @@
 """Light for Shelly."""
+import logging
 from typing import Optional
 
 from aioshelly import Block
@@ -20,6 +21,8 @@ from . import ShellyDeviceWrapper
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up lights for device."""
@@ -37,6 +40,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             == "light"
         ):
             blocks.append(block)
+            entity_reg = await hass.helpers.entity_registry.async_get_registry()
+            for entity in entity_reg.entities.values():
+                if entity.entity_id.startswith("switch.") and entity.unique_id == (
+                    wrapper.device.shelly["mac"] + "-relay_" + block.channel
+                ):
+                    entity_reg.async_remove(entity.entity_id)
+                    _LOGGER.debug("Removed switch domain for %s", entity.original_name)
+                    break
 
     if not blocks:
         return
