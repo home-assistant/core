@@ -44,6 +44,8 @@ CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
 
+DATA_LISTENER = "listener"
+
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
@@ -77,16 +79,27 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
 
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
+    entry_updates = {}
     if not config_entry.unique_id:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_IP_ADDRESS]
-        )
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = config_entry.data[CONF_IP_ADDRESS]
+    if CONF_ZONE_RUN_TIME in config_entry.data:
+        # If a zone run time exists in the config entry's data, pop it and move it to
+        # options:
+        data = {**config_entry.data}
+        entry_updates["data"] = data
+        entry_updates["options"] = {
+            **config_entry.options,
+            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
+        }
+    if entry_updates:
+        hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -107,12 +120,7 @@ async def async_setup_entry(hass, config_entry):
         # regenmaschine can load multiple controllers at once, but we only grab the one
         # we loaded above:
         controller = next(iter(client.controllers.values()))
-
-        rainmachine = RainMachine(
-            hass,
-            controller,
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
-        )
+        rainmachine = RainMachine(hass, config_entry, controller)
 
     # Update the data object, which at this point (prior to any sensors registering
     # "interest" in the API), will focus on grabbing the latest program and zone data:
@@ -207,12 +215,18 @@ async def async_setup_entry(hass, config_entry):
     ]:
         hass.services.async_register(DOMAIN, service, method, schema=schema)
 
+    hass.data[DOMAIN][DATA_LISTENER] = config_entry.add_update_listener(
+        async_reload_entry
+    )
+
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+    cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
+    cancel_listener()
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, component)
@@ -224,15 +238,20 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+async def async_reload_entry(hass, config_entry):
+    """Handle an options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, controller, default_zone_runtime):
+    def __init__(self, hass, config_entry, controller):
         """Initialize."""
         self._async_cancel_time_interval_listener = None
+        self.config_entry = config_entry
         self.controller = controller
         self.data = {}
-        self.default_zone_runtime = default_zone_runtime
         self.device_mac = controller.mac
         self.hass = hass
 

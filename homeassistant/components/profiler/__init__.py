@@ -69,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     start_time = int(time.time() * 1000000)
     hass.components.persistent_notification.async_create(
-        "The profile started. This notification will be updated when it is complete.",
+        "The profile has started. This notification will be updated when it is complete.",
         title="Profile Started",
         notification_id=f"profiler_{start_time}",
     )
@@ -93,7 +93,7 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
 async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall):
     start_time = int(time.time() * 1000000)
     hass.components.persistent_notification.async_create(
-        "The memory profile started. This notification will be updated when it is complete.",
+        "The memory profile has started. This notification will be updated when it is complete.",
         title="Profile Started",
         notification_id=f"memory_profiler_{start_time}",
     )
@@ -118,4 +118,4 @@ def _write_profile(profiler, cprofile_path, callgrind_path):
 
 
 def _write_memory_profile(heap, heap_path):
-    heap.dump(heap_path)
+    heap.byrcs.dump(heap_path)
