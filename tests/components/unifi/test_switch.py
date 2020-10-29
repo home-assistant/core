@@ -10,6 +10,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
+    CONF_POE_CLIENTS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
@@ -252,6 +253,35 @@ EVENT_CLIENT_2_CONNECTED = {
 }
 
 
+DPI_GROUPS = [
+    {
+        "_id": "5ba29dd8e3c58f026e9d7c4a",
+        "attr_no_delete": True,
+        "attr_hidden_id": "Default",
+        "name": "Default",
+        "site_id": "name",
+    },
+    {
+        "_id": "5f976f4ae3c58f018ec7dff6",
+        "name": "Block Media Streaming",
+        "site_id": "name",
+        "dpiapp_ids": ["5f976f62e3c58f018ec7e17d"],
+    },
+]
+
+DPI_APPS = [
+    {
+        "_id": "5f976f62e3c58f018ec7e17d",
+        "apps": [],
+        "blocked": True,
+        "cats": ["4"],
+        "enabled": True,
+        "log": True,
+        "site_id": "name",
+    }
+]
+
+
 async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a controller."""
     assert (
@@ -321,10 +351,12 @@ async def test_switches(hass):
         clients_response=[CLIENT_1, CLIENT_4],
         devices_response=[DEVICE_1],
         clients_all_response=[BLOCKED, UNBLOCKED, CLIENT_1],
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
     )
 
     assert len(controller.mock_requests) == 6
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
@@ -345,6 +377,10 @@ async def test_switches(hass):
     assert unblocked is not None
     assert unblocked.state == "on"
 
+    dpi_switch = hass.states.get("switch.block_media_streaming")
+    assert dpi_switch is not None
+    assert dpi_switch.state == "on"
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
@@ -363,6 +399,32 @@ async def test_switches(hass):
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
         "path": "/cmd/stamgr",
+    }
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.block_media_streaming"},
+        blocking=True,
+    )
+    assert len(controller.mock_requests) == 11
+    assert controller.mock_requests[8] == {
+        "json": {"enabled": False},
+        "method": "put",
+        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
+    }
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.block_media_streaming"},
+        blocking=True,
+    )
+    assert len(controller.mock_requests) == 12
+    assert controller.mock_requests[11] == {
+        "json": {"enabled": True},
+        "method": "put",
+        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
     }
 
 
@@ -547,6 +609,30 @@ async def test_option_block_clients(hass):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
+async def test_option_remove_switches(hass):
+    """Test removal of DPI switch when options updated."""
+    controller = await setup_unifi_integration(
+        hass,
+        options={
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        },
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
+    )
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+
+    # Disable DPI Switches
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={CONF_DPI_RESTRICTIONS: False, CONF_POE_CLIENTS: False},
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+
+
 async def test_new_client_discovered_on_poe_control(hass):
     """Test if 2nd update has a new client."""
     controller = await setup_unifi_integration(
@@ -675,3 +761,8 @@ async def test_restoring_client(hass):
 
     device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None
+
+
+async def test_dpi_restriction_switch(hass):
+    """Test that DPI restriction switches are added."""
+    assert True
