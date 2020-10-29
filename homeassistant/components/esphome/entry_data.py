@@ -52,7 +52,7 @@ class RuntimeEntryData:
     entry_id: str = attr.ib()
     client: "APIClient" = attr.ib()
     store: Store = attr.ib()
-    store_data: Dict[str, Any] = attr.ib()
+    store_data: Dict[str, Any] = attr.ib(default=None)
     reconnect_task: Optional[asyncio.Task] = attr.ib(default=None)
     state: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
     info: Dict[str, Dict[str, Any]] = attr.ib(factory=dict)
