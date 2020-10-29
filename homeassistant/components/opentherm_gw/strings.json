@@ -21,8 +21,9 @@
       "init": {
         "description": "Options for the OpenTherm Gateway",
         "data": {
+          "precision": "Precision",
           "floor_temperature": "Floor Temperature",
-          "precision": "Precision"
+          "force_update": "Force Update"
         }
       }
     }

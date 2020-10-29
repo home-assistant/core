@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
-from homeassistant.const import CONF_ID
+from homeassistant.const import (
+    CONF_FORCE_UPDATE,
+    CONF_ID,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -45,12 +48,23 @@ class OpenThermBinarySensor(BinarySensorEntity):
         self._device_class = device_class
         self._friendly_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
+        self._unsub_options = None
+        self._force_update = False
+
+    @callback
+    def update_options(self, entry):
+        """Update climate entity options."""
+        self._force_update = entry.options[CONF_FORCE_UPDATE]
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""
         _LOGGER.debug("Added OpenTherm Gateway binary sensor %s", self._friendly_name)
         self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
+        )
+        self._unsub_options = async_dispatcher_connect(
+            self.hass, self._gateway.options_update_signal, self.update_options
         )
 
     async def async_will_remove_from_hass(self):
@@ -59,6 +73,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
             "Removing OpenTherm Gateway binary sensor %s", self._friendly_name
         )
         self._unsub_updates()
+        self._unsub_options()
 
     @property
     def available(self):
@@ -112,3 +127,8 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def should_poll(self):
         """Return False because entity pushes its state."""
         return False
+
+    @property
+    def force_update(self) -> bool:
+        """Return force_update property."""
+        return self._force_update
