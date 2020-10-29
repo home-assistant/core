@@ -39,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Bosch SHC"}
+    return {"title": "Bosch SHC", "mac": session_information.macAddress}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 # Check if already configured
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                await self.async_set_unique_id(info["mac"])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(

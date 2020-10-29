@@ -45,10 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = session
 
+    if shc_info.macAddress is None:
+        raise ConfigEntryNotReady
+    mac = dr.format_mac(shc_info.macAddress)
+
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, dr.format_mac(shc_info.macAddress))},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        identifiers={(DOMAIN, mac)},
         manufacturer="Bosch",
         name=entry.title,
         model="SmartHomeController",
