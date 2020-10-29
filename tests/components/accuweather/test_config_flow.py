@@ -159,6 +159,8 @@ async def test_options_flow(hass):
         return_value=json.loads(
             load_fixture("accuweather/current_conditions_data.json")
         ),
+    ), patch(
+        "accuweather.AccuWeather.async_get_forecast"
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -174,3 +176,7 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {CONF_FORECAST: True}
+
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()

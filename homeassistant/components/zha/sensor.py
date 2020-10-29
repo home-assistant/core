@@ -1,6 +1,5 @@
 """Sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 import numbers
 
 from homeassistant.components.sensor import (
@@ -45,7 +44,6 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
-_LOGGER = logging.getLogger(__name__)
 
 BATTERY_SIZES = {
     0: "No battery",

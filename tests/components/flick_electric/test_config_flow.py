@@ -43,11 +43,11 @@ async def test_form(hass):
             result["flow_id"],
             CONF,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Flick Electric: test-username"
     assert result2["data"] == CONF
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

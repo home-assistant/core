@@ -1,6 +1,4 @@
 """Home Assistant Switcher Component Switch platform."""
-
-from logging import getLogger
 from typing import TYPE_CHECKING, Callable, Dict
 
 from aioswitcher.api import SwitcherV2Api
@@ -30,8 +28,6 @@ if TYPE_CHECKING:
     from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
     from aioswitcher.devices import SwitcherV2Device
 
-
-_LOGGER = getLogger(__name__)
 
 DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
     "power_consumption": ATTR_CURRENT_POWER_W,

@@ -32,10 +32,10 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP adresse (La v\u00e6re tom hvis du bruker Auto Discovery).",
+                    "ip_address": "IP adresse (La v\u00e6re tom hvis du bruker automatisk oppdagelse)",
                     "mode": "Konfigureringsmodus"
                 },
-                "description": "Velg modus for konfigurasjon. Feltet IP adresse kan st\u00e5 tomt hvis du velger Auto Discovery, da enheter automatisk blir oppdaget.",
+                "description": "Velg modus for konfigurasjon. Feltet IP adresse kan st\u00e5 tomt hvis du velger automatisk oppdagelse, da enheter automatisk blir oppdaget.",
                 "title": ""
             }
         }

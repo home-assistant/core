@@ -5,6 +5,7 @@ import random
 
 import pytest
 import pytz
+import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
@@ -150,7 +151,7 @@ def test_iterating_all_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", all_states=True)
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.temperature", 10)
@@ -168,7 +169,7 @@ def test_iterating_all_states_unavailable(hass):
     info = render_to_info(hass, tmpl_str)
 
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "unknown")
     hass.states.async_set("sensor.temperature", 10)
@@ -183,7 +184,7 @@ def test_iterating_domain_states(hass):
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     hass.states.async_set("test.object", "happy")
     hass.states.async_set("sensor.back_door", "open")
@@ -856,10 +857,26 @@ def test_now(mock_is_safe, hass):
     """Test now method."""
     now = dt_util.now()
     with patch("homeassistant.util.dt.now", return_value=now):
-        assert (
-            now.isoformat()
-            == template.Template("{{ now().isoformat() }}", hass).async_render()
-        )
+        info = template.Template("{{ now().isoformat() }}", hass).async_render_to_info()
+        assert now.isoformat() == info.result()
+
+    assert info.has_time is True
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_utcnow(mock_is_safe, hass):
+    """Test now method."""
+    utcnow = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+        info = template.Template(
+            "{{ utcnow().isoformat() }}", hass
+        ).async_render_to_info()
+        assert utcnow.isoformat() == info.result()
+
+    assert info.has_time is True
 
 
 @patch(
@@ -963,20 +980,6 @@ def test_timedelta(mock_is_safe, hass):
                 "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
                 hass,
             ).async_render()
-        )
-
-
-@patch(
-    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
-    return_value=True,
-)
-def test_utcnow(mock_is_safe, hass):
-    """Test utcnow method."""
-    now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        assert (
-            now.isoformat()
-            == template.Template("{{ utcnow().isoformat() }}", hass).async_render()
         )
 
 
@@ -1420,7 +1423,7 @@ async def test_expand(hass):
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
@@ -1437,7 +1440,7 @@ async def test_expand(hass):
         hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", {"test.object"}, ["group"])
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
     info = render_to_info(
         hass,
@@ -1588,7 +1591,7 @@ def test_async_render_to_info_with_complex_branching(hass):
     )
 
     assert_result_info(info, ["sensor.a"], {"light.a", "light.b"}, {"sensor"})
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
@@ -1610,7 +1613,7 @@ async def test_async_render_to_info_with_wildcard_matching_entity_id(hass):
     assert info.domains == {"cover"}
     assert info.entities == set()
     assert info.all_states is False
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 async def test_async_render_to_info_with_wildcard_matching_state(hass):
@@ -1629,13 +1632,14 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
     hass.states.async_set("binary_sensor.door", "open")
+    await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
     assert info.entities == set()
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     hass.states.async_set("binary_sensor.door", "closed")
     info = render_to_info(hass, template_complex_str)
@@ -1643,7 +1647,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     assert not info.domains
     assert info.entities == set()
     assert info.all_states is True
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
     template_cover_str = """
 
@@ -1660,7 +1664,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(hass):
     assert info.domains == {"cover"}
     assert info.entities == set()
     assert info.all_states is False
-    assert info.rate_limit == template.DEFAULT_RATE_LIMIT
+    assert info.rate_limit == template.DOMAIN_STATES_RATE_LIMIT
 
 
 def test_nested_async_render_to_info_case(hass):
@@ -2458,6 +2462,18 @@ async def test_lifecycle(hass):
     hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
     for i in range(2):
         hass.states.async_set(f"sensor.sensor{i}", "on")
+    hass.states.async_set("sensor.removed", "off")
+
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sun.sun", "below", {"elevation": 60, "next_rising": "later"})
+    for i in range(2):
+        hass.states.async_set(f"sensor.sensor{i}", "off")
+
+    hass.states.async_set("sensor.new", "off")
+    hass.states.async_remove("sensor.removed")
+
+    await hass.async_block_till_done()
 
     tmp = template.Template("{{ states | count }}", hass)
 
@@ -2465,6 +2481,8 @@ async def test_lifecycle(hass):
     assert info.all_states is False
     assert info.all_states_lifecycle is True
     assert info.rate_limit is None
+    assert info.has_time is False
+
     assert info.entities == set()
     assert info.domains == set()
     assert info.domains_lifecycle == set()
@@ -2540,7 +2558,13 @@ async def test_template_errors(hass):
         template.Template("{{ now() | rando }}", hass).async_render()
 
     with pytest.raises(TemplateError):
+        template.Template("{{ utcnow() | rando }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
         template.Template("{{ now() | random }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ utcnow() | random }}", hass).async_render()
 
 
 async def test_state_attributes(hass):
@@ -2624,8 +2648,69 @@ async def test_legacy_templates(hass):
     )
 
     await async_process_ha_core_config(hass, {"legacy_templates": True})
-
     assert (
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
     )
+
+
+async def test_no_result_parsing(hass):
+    """Test if templates results are not parsed."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render(
+            parse_result=False
+        )
+        == "12"
+    )
+
+    assert (
+        template.Template("{{ false }}", hass).async_render(parse_result=False)
+        == "False"
+    )
+
+    assert (
+        template.Template("{{ [1, 2, 3] }}", hass).async_render(parse_result=False)
+        == "[1, 2, 3]"
+    )
+
+
+async def test_is_static_still_ast_evals(hass):
+    """Test is_static still convers to native type."""
+    tpl = template.Template("[1, 2]", hass)
+    assert tpl.is_static
+    assert tpl.async_render() == [1, 2]
+
+
+async def test_result_wrappers(hass):
+    """Test result wrappers."""
+    for text, native, orig_type, schema in (
+        ("[1, 2]", [1, 2], list, vol.Schema([int])),
+        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, orig_type)
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert result.render_result == text
+        schema(result)  # should not raise
+        # Result with render text stringifies to original text
+        assert str(result) == text
+        # Result without render text stringifies same as original type
+        assert str(template.RESULT_WRAPPERS[orig_type](native)) == str(
+            orig_type(native)
+        )
+
+
+async def test_parse_result(hass):
+    """Test parse result."""
+    for tpl, result in (
+        ('{{ "{{}}" }}', "{{}}"),
+        ("not-something", "not-something"),
+        ("2a", "2a"),
+    ):
+        assert template.Template(tpl, hass).async_render() == result

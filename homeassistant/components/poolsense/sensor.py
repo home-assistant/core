@@ -1,6 +1,4 @@
 """Sensor platform for the PoolSense sensor."""
-import logging
-
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
@@ -14,8 +12,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import PoolSenseEntity
 from .const import ATTRIBUTION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "Chlorine": {

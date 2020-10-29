@@ -1,6 +1,4 @@
 """This platform provides binary sensors for key RainMachine data."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -14,8 +12,6 @@ from .const import (
     DOMAIN as RAINMACHINE_DOMAIN,
     SENSOR_UPDATE_TOPIC,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 TYPE_FLOW_SENSOR = "flow_sensor"
 TYPE_FREEZE = "freeze"

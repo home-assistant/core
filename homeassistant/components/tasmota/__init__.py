@@ -1,4 +1,5 @@
 """The Tasmota integration."""
+import asyncio
 import logging
 
 from hatasmota.const import (
@@ -18,12 +19,10 @@ from homeassistant.components.mqtt.subscription import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import discovery
-from .const import CONF_DISCOVERY_PREFIX
-from .discovery import TASMOTA_DISCOVERY_DEVICE
+from . import device_automation, discovery
+from .const import CONF_DISCOVERY_PREFIX, DATA_REMOVE_DISCOVER_COMPONENT, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,21 +53,57 @@ async def async_setup_entry(hass, entry):
 
     tasmota_mqtt = TasmotaMQTTClient(_publish, _subscribe_topics, _unsubscribe_topics)
 
-    discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
-    await discovery.async_start(hass, discovery_prefix, entry, tasmota_mqtt)
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    async def async_discover_device(config, mac):
+    def async_discover_device(config, mac):
         """Discover and add a Tasmota device."""
-        await async_setup_device(hass, mac, config, entry, tasmota_mqtt)
+        async_setup_device(hass, mac, config, entry, tasmota_mqtt, device_registry)
 
-    async_dispatcher_connect(hass, TASMOTA_DISCOVERY_DEVICE, async_discover_device)
+    async def start_platforms():
+        await device_automation.async_setup_entry(hass, entry)
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+
+        discovery_prefix = entry.data[CONF_DISCOVERY_PREFIX]
+        await discovery.async_start(
+            hass, discovery_prefix, entry, tasmota_mqtt, async_discover_device
+        )
+
+    hass.async_create_task(start_platforms())
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+
+    # cleanup platforms
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
+
+    # disable discovery
+    await discovery.async_stop(hass)
+    hass.data.pop(DEVICE_MACS)
+    hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation"))()
+    for component in PLATFORMS:
+        hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(component))()
 
     return True
 
 
-async def _remove_device(hass, config_entry, mac, tasmota_mqtt):
+def _remove_device(hass, config_entry, mac, tasmota_mqtt, device_registry):
     """Remove device from device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get_device(set(), {(CONNECTION_NETWORK_MAC, mac)})
 
     if device is None:
@@ -79,9 +114,8 @@ async def _remove_device(hass, config_entry, mac, tasmota_mqtt):
     clear_discovery_topic(mac, config_entry.data[CONF_DISCOVERY_PREFIX], tasmota_mqtt)
 
 
-async def _update_device(hass, config_entry, config):
+def _update_device(hass, config_entry, config, device_registry):
     """Add or update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
     device_info = {
         "connections": {(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
@@ -96,9 +130,9 @@ async def _update_device(hass, config_entry, config):
     hass.data[DEVICE_MACS][device.id] = config[CONF_MAC]
 
 
-async def async_setup_device(hass, mac, config, config_entry, tasmota_mqtt):
+def async_setup_device(hass, mac, config, config_entry, tasmota_mqtt, device_registry):
     """Set up the Tasmota device."""
     if not config:
-        await _remove_device(hass, config_entry, mac, tasmota_mqtt)
+        _remove_device(hass, config_entry, mac, tasmota_mqtt, device_registry)
     else:
-        await _update_device(hass, config_entry, config)
+        _update_device(hass, config_entry, config, device_registry)

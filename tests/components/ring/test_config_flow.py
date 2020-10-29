@@ -30,6 +30,7 @@ async def test_form(hass):
             result["flow_id"],
             {"username": "hello@home-assistant.io", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "hello@home-assistant.io"
@@ -37,7 +38,6 @@ async def test_form(hass):
         "username": "hello@home-assistant.io",
         "token": {"access_token": "mock-token"},
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

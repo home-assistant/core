@@ -38,11 +38,12 @@ class TasmotaEntity(Entity):
         await self._tasmota_entity.unsubscribe_topics()
         await super().async_will_remove_from_hass()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
         self._tasmota_entity.config_update(update)
         await self._subscribe_topics()
-        self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -84,7 +85,7 @@ class TasmotaAvailability(TasmotaEntity):
         super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events."""
+        """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
@@ -152,6 +153,12 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
                 discovery_callback,
             )
         )
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        clear_discovery_hash(self.hass, self._discovery_hash)
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""

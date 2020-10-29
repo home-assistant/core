@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} \u5df2\u5173\u95ed",
+            "is_closing": "{entity_name}\u6b63\u5728\u5173\u95ed",
+            "is_open": "{entity_name}\u4e3a\u5f00\u653e"
+        },
+        "trigger_type": {
+            "closed": "{entity_name}\u5df2\u5173\u95ed"
+        }
+    },
     "state": {
         "_": {
             "closed": "\u5df2\u5173\u95ed",

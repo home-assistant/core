@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "host": "Hostitel"
-                }
+                },
+                "description": "Zadejte informace o Roku."
             }
         }
     }

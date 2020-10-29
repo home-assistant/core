@@ -164,7 +164,7 @@ class FibaroController:
         for change in state.get("changes", []):
             try:
                 dev_id = change.pop("id")
-                if dev_id not in self._device_map.keys():
+                if dev_id not in self._device_map:
                     continue
                 device = self._device_map[dev_id]
                 for property_name, value in change.items():

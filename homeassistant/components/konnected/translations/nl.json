@@ -52,7 +52,8 @@
                     "poll_interval": "Poll interval (minuten) (optioneel)",
                     "type": "Type sensor"
                 },
-                "description": "{zone} opties"
+                "description": "{zone} opties",
+                "title": "Configureer digitale sensor"
             },
             "options_io": {
                 "data": {
@@ -90,11 +91,14 @@
             },
             "options_switch": {
                 "data": {
+                    "activation": "Uitvoer wanneer ingeschakeld",
+                    "momentary": "Pulsduur (ms) (optioneel)",
                     "more_states": "Aanvullende statussen voor deze zone configureren",
                     "name": "Naam (optioneel)",
                     "pause": "Pauze tussen de pulsen (ms) (optioneel)",
                     "repeat": "Aantal herhalingen (-1=oneindig) (optioneel)"
                 },
+                "description": "{zone} opties: status {state}",
                 "title": "Schakelbare uitgang configureren"
             }
         }

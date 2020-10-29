@@ -6,7 +6,11 @@
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_flows": "Devi configurare Nest prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/nest/).",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
         },
         "error": {
             "internal_error": "Errore interno nella convalida del codice",
@@ -29,6 +33,9 @@
                 },
                 "description": "Per collegare l'account Nido, [autorizzare l'account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito di seguito.",
                 "title": "Collega un account Nest"
+            },
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
             }
         }
     }

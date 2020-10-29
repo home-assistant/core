@@ -7,7 +7,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
 
 from homeassistant import config_entries
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     ServiceCall,
@@ -78,6 +78,10 @@ class EntityPlatform:
         hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
             self.platform_name, []
         ).append(self)
+
+    def __repr__(self):
+        """Represent an EntityPlatform."""
+        return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
 
     @callback
     def _get_parallel_updates_semaphore(
@@ -461,11 +465,15 @@ class EntityPlatform:
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
 
         already_exists = entity.entity_id in self.entities
+        restored = False
 
-        if not already_exists:
+        if not already_exists and not self.hass.states.async_available(
+            entity.entity_id
+        ):
             existing = self.hass.states.get(entity.entity_id)
-
-            if existing and not existing.attributes.get("restored"):
+            if existing is not None and ATTR_RESTORED in existing.attributes:
+                restored = True
+            else:
                 already_exists = True
 
         if already_exists:
@@ -483,6 +491,15 @@ class EntityPlatform:
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
+
+        if not restored:
+            # Reserve the state in the state machine
+            # because as soon as we return control to the event
+            # loop below, another entity could be added
+            # with the same id before `entity.add_to_platform_finish()`
+            # has a chance to finish.
+            self.hass.states.async_reserve(entity.entity_id)
+
         entity.async_on_remove(lambda: self.entities.pop(entity_id))
 
         await entity.add_to_platform_finish()

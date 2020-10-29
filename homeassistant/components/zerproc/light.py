@@ -1,7 +1,7 @@
 """Zerproc light platform."""
 from datetime import timedelta
 import logging
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import pyzerproc
 
@@ -141,6 +141,11 @@ class ZerprocLight(LightEntity):
             "name": self.name,
             "manufacturer": "Zerproc",
         }
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return the icon to use in the frontend."""
+        return "mdi:string-lights"
 
     @property
     def supported_features(self):

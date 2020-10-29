@@ -24,5 +24,36 @@
                 "title": ""
             }
         }
+    },
+    "options": {
+        "error": {
+            "dev_multi_type": "Mitu h\u00e4\u00e4lestatavat seadet peavad olema sama t\u00fc\u00fcpi",
+            "dev_not_config": "Seda t\u00fc\u00fcpi seade pole seadistatav",
+            "dev_not_found": "Seadet ei leitud"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Seadme kasutatav heledusvahemik",
+                    "curr_temp_divider": "Praeguse temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "ext_temp_sensor": "Praeguse temperatuuri andur",
+                    "max_kelvin": "Maksimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
+                    "max_temp": "Maksimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
+                    "min_kelvin": "Minimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
+                    "min_temp": "Minimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
+                    "support_color": "Luba v\u00e4rvuse juhtimine",
+                    "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "unit_of_measurement": "Seadme temperatuuri\u00fchik"
+                },
+                "title": "H\u00e4\u00e4lesta Tuya seade"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Seadme leidmisp\u00e4ringute intervall (sekundites)",
+                    "query_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "title": "Tuya suvandite seadistamine"
+            }
+        }
     }
 }

@@ -1,12 +1,23 @@
 """deCONZ fan platform tests."""
+
 from copy import deepcopy
 
 import pytest
 
-from homeassistant.components import deconz
+from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-import homeassistant.components.fan as fan
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.fan import (
+    ATTR_SPEED,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_SPEED,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -38,11 +49,11 @@ async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a gateway."""
     assert (
         await async_setup_component(
-            hass, fan.DOMAIN, {"fan": {"platform": deconz.DOMAIN}}
+            hass, FAN_DOMAIN, {"fan": {"platform": DECONZ_DOMAIN}}
         )
         is True
     )
-    assert deconz.DOMAIN not in hass.data
+    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_fans(hass):
@@ -64,7 +75,7 @@ async def test_fans(hass):
     # Test states
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_HIGH
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_HIGH
 
     state_changed_event = {
         "t": "event",
@@ -77,7 +88,7 @@ async def test_fans(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_OFF
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_OFF
 
     # Test service calls
 
@@ -89,9 +100,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_TURN_ON,
-            {"entity_id": "fan.ceiling_fan"},
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -103,9 +114,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_TURN_OFF,
-            {"entity_id": "fan.ceiling_fan"},
+            FAN_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -117,9 +128,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_LOW},
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_LOW},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -131,9 +142,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_MEDIUM},
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_MEDIUM},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -145,9 +156,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_HIGH},
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_HIGH},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -159,9 +170,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: fan.SPEED_OFF},
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_OFF},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -173,9 +184,9 @@ async def test_fans(hass):
         ceiling_fan_device, "_request", return_value=True
     ) as set_callback, pytest.raises(ValueError):
         await hass.services.async_call(
-            fan.DOMAIN,
-            fan.SERVICE_SET_SPEED,
-            {"entity_id": "fan.ceiling_fan", fan.ATTR_SPEED: "bad value"},
+            FAN_DOMAIN,
+            SERVICE_SET_SPEED,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: "bad value"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -193,7 +204,7 @@ async def test_fans(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == fan.SPEED_MEDIUM
+    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_MEDIUM
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

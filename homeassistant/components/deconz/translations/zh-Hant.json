@@ -67,6 +67,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" \u6309\u9215\u56db\u9023\u9ede\u64ca",
             "remote_button_quintuple_press": "\"{subtype}\" \u6309\u9215\u4e94\u9023\u9ede\u64ca",
             "remote_button_rotated": "\u65cb\u8f49 \"{subtype}\" \u6309\u9215",
+            "remote_button_rotated_fast": "\u5feb\u901f\u65cb\u8f49 \"{subtype}\" \u6309\u9215",
             "remote_button_rotation_stopped": "\u65cb\u8f49 \"{subtype}\" \u6309\u9215\u5df2\u505c\u6b62",
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",

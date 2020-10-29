@@ -1,13 +1,9 @@
 """Support for Tellstick covers using Tellstick Net."""
-import logging
-
 from homeassistant.components import cover, tellduslive
 from homeassistant.components.cover import CoverEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

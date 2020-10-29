@@ -2,7 +2,6 @@
 import asyncio
 import functools
 from functools import partial
-import json
 import logging
 
 import plexapi.exceptions
@@ -58,7 +57,7 @@ from .const import (
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-from .services import async_setup_services
+from .services import async_setup_services, lookup_plex_media
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -286,7 +285,7 @@ def play_on_sonos(hass, service_call):
     """Play Plex media on a linked Sonos device."""
     entity_id = service_call.data[ATTR_ENTITY_ID]
     content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
-    content = json.loads(content_id)
+    content_type = service_call.data.get(ATTR_MEDIA_CONTENT_TYPE)
 
     sonos = hass.components.sonos
     try:
@@ -295,27 +294,9 @@ def play_on_sonos(hass, service_call):
         _LOGGER.error("Cannot get Sonos device: %s", err)
         return
 
-    if isinstance(content, int):
-        content = {"plex_key": content}
-        content_type = PLEX_DOMAIN
-    else:
-        content_type = "music"
-
-    plex_server_name = content.get("plex_server")
-    shuffle = content.pop("shuffle", 0)
-
-    plex_servers = hass.data[PLEX_DOMAIN][SERVERS].values()
-    if plex_server_name:
-        plex_server = [x for x in plex_servers if x.friendly_name == plex_server_name]
-        if not plex_server:
-            _LOGGER.error(
-                "Requested Plex server '%s' not found in %s",
-                plex_server_name,
-                [x.friendly_name for x in plex_servers],
-            )
-            return
-    else:
-        plex_server = next(iter(plex_servers))
+    media, plex_server = lookup_plex_media(hass, content_type, content_id)
+    if media is None:
+        return
 
     sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
     if sonos_speaker is None:
@@ -324,11 +305,4 @@ def play_on_sonos(hass, service_call):
         )
         return
 
-    media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        _LOGGER.error("Media could not be found: %s", content)
-        return
-
-    _LOGGER.debug("Attempting to play '%s' on %s", media, sonos_speaker)
-    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
-    sonos_speaker.playMedia(playqueue)
+    sonos_speaker.playMedia(media)

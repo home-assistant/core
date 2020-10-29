@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "already_configured": "L\u00fc\u00fcs on juba m\u00e4\u00e4ratud"
+            "already_configured": "L\u00fc\u00fcs on juba m\u00e4\u00e4ratud",
+            "cannot_connect": "\u00dchendamine nurjus"
         }
     }
 }

@@ -54,7 +54,7 @@ async def test_invalid_credentials(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_options_flow(hass):

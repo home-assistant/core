@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_access_token": "Ugyldig tilgangstoken",
-            "invalid_auth": "Ugyldig legitimasjon",
+            "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "step": {
