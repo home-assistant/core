@@ -1470,7 +1470,7 @@ pykodi==0.2.1
 pykwb==0.0.8
 
 # homeassistant.components.lacrosse
-pylacrosse==0.4.0
+pylacrosse==0.4
 
 # homeassistant.components.lastfm
 pylast==3.3.0
