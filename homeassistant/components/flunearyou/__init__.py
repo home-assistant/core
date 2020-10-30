@@ -1,6 +1,7 @@
 """The flunearyou component."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 
 from pyflunearyou import Client
 from pyflunearyou.errors import FluNearYouError
@@ -60,7 +61,7 @@ async def async_setup_entry(hass, config_entry):
             LOGGER,
             name=f"{api_category} ({latitude}, {longitude})",
             update_interval=DEFAULT_UPDATE_INTERVAL,
-            update_method=lambda api_category=api_category: async_update(api_category),
+            update_method=partial(async_update, api_category),
         )
         data_init_tasks.append(coordinator.async_refresh())
 
