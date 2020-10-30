@@ -1,12 +1,13 @@
 """Config flow for Informix Ultrasync Hub."""
 import logging
 from typing import Any, Dict, Optional
-from ultrasync import UltraSync
+import ultrasync
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
+    CONF_NAME,
     CONF_HOST,
     CONF_PIN,
     CONF_USERNAME,
@@ -16,21 +17,31 @@ from homeassistant import config_entries
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_NAME,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class AuthFailureException(IOError):
+    """A general exception we can throw and track Authentication
+    failures.
+    """
+
+
 def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """Validate the user input allows us to connect."""
-    data[CONF_USERNAME]
-    data[CONF_PIN]
-    data[CONF_HOST]
-    usync = UltraSync()
+
+    usync = ultrasync.UltraSync(
+        host=data[CONF_HOST], user=data[CONF_USERNAME], pin=data[CONF_PIN]
+    )
 
     # validate by attempting to authenticate with our hub
-    return usync.login()
+
+    if not usync.login():
+        # report our connection issue
+        raise AuthFailureException()
 
     return True
 
@@ -70,19 +81,23 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     validate_input, self.hass, user_input
                 )
 
+            except AuthFailureException:
+                errors["base"] = "cannot_connect"
+
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
-
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
-            )
+            else:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST],
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PIN): str,

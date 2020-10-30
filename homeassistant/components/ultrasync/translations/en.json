@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "name": "Name",
                     "pin": "PIN Code",
                     "username": "Username"
                 },

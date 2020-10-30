@@ -2278,11 +2278,11 @@ twentemilieu==0.3.0
 # homeassistant.components.twilio
 twilio==6.32.0
 
-# homeassistant.components.ultrasync
-ultrasync==0.8.1
-
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.2
+
+# homeassistant.components.ultrasync
+ultrasync==0.8.0
 
 # homeassistant.components.unifiled
 unifiled==0.11

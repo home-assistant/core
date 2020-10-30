@@ -1,11 +1,11 @@
 """Monitor the Informix UltraSync Hub"""
 
 import logging
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_NAME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from typing import Callable, List, Optional
+from typing import Callable, List
 
 from . import UltraSyncEntity
 from .const import DATA_COORDINATOR, DOMAIN
@@ -13,11 +13,11 @@ from .coordinator import UltraSyncDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "area01_state": ["Area1State", "Area 1 State", None],
-    "area02_state": ["Area2State", "Area 2 State", None],
-    "area03_state": ["Area3State", "Area 3 State", None],
-    "area04_state": ["Area4State", "Area 4 State", None],
+SENSORS = {
+    "area01_state": "Area1State",
+    "area02_state": "Area2State",
+    "area03_state": "Area3State",
+    "area04_state": "Area4State",
 }
 
 
@@ -32,15 +32,14 @@ async def async_setup_entry(
     ]
     sensors = []
 
-    for sensor_config in SENSOR_TYPES.values():
+    for sensor_type, sensor_name in SENSORS.items():
         sensors.append(
             UltraSyncSensor(
                 coordinator,
                 entry.entry_id,
-                entry.data[CONF_USERNAME],
-                sensor_config[0],
-                sensor_config[1],
-                sensor_config[2],
+                entry.data[CONF_NAME],
+                sensor_type,
+                sensor_name,
             )
         )
 
@@ -57,12 +56,11 @@ class UltraSyncSensor(UltraSyncEntity):
         entry_name: str,
         sensor_type: str,
         sensor_name: str,
-        unit_of_measurement: Optional[str] = None,
     ):
         """Initialize a new UltraSync sensor."""
+
         self._sensor_type = sensor_type
         self._unique_id = f"{entry_id}_{sensor_type}"
-        self._unit_of_measurement = unit_of_measurement
 
         super().__init__(
             coordinator=coordinator,

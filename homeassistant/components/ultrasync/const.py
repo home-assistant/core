@@ -5,6 +5,8 @@ DOMAIN = "ultrasync"
 # Scan Time (in seconds)
 DEFAULT_SCAN_INTERVAL = 5
 
+DEFAULT_NAME = "UltraSync"
+
 # Services
 SERVICE_AWAY = "away"
 SERVICE_STAY = "stay"

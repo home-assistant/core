@@ -11,6 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.exceptions import ConfigEntryNotReady
 
+
 from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
@@ -18,10 +19,12 @@ from .const import (
     SERVICE_AWAY,
     SERVICE_STAY,
     SERVICE_DISARM,
+    DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
 )
 
 from homeassistant.const import (
+    CONF_NAME,
     CONF_HOST,
     CONF_USERNAME,
     CONF_PIN,
@@ -36,9 +39,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Required(CONF_HOST): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PIN): cv.string,
-                vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,

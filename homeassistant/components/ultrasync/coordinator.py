@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from ultrasync import UltraSync
+import ultrasync
 
 from async_timeout import timeout
 
@@ -25,7 +25,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistantType, *, config: dict, options: dict):
         """Initialize global UltraSync data updater."""
-        self.hub = UltraSync(
+        self.hub = ultrasync.UltraSync(
             user=config[CONF_USERNAME],
             pin=config[CONF_PIN],
             host=config[CONF_HOST],
@@ -68,7 +68,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                         self.hass.bus.fire(
                             "ultrasync_sensor_update",
                             {
-                                "sensor": zone["bank"] + 1,
+                                "sensor": bank + 1,
                                 "name": zone["name"],
                                 "status": zone["status"],
                             },
