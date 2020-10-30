@@ -126,9 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         async with async_timeout.timeout(10):
             shades = Shades(pv_request)
             shade_data = _async_map_data_by_id(
-                (await shades.get_resources({"params": {"refresh": "true"}}))[
-                    SHADE_DATA
-                ]
+                (await shades.get_resources(params={"refresh": "true"}))[SHADE_DATA]
             )
     except HUB_EXCEPTIONS as err:
         _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
