@@ -93,7 +93,7 @@ async def test_coil_switch(hass, mock_hub, regs, expected):
         ),
         (
             [0xFF],
-            STATE_ON,
+            STATE_OFF,
         ),
         (
             [0x01],
