@@ -10,13 +10,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD_ON,
     CONF_UNIQUE_ID,
-    STATE_ON,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
@@ -29,9 +26,7 @@ from . import (
     PLATFORMS,
     MqttAvailability,
     MqttDiscoveryUpdate,
-    subscription,
 )
-from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
