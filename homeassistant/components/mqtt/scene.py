@@ -26,7 +26,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Scene"
-DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_RETAIN = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
@@ -34,7 +33,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     }
