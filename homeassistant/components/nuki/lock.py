@@ -22,6 +22,8 @@ DEFAULT_TIMEOUT = 20
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
+ATTR_DOORSENSORSTATE = "door_sensor_state"
+ATTR_DOORSENSORSTATENAME = "door_sensor_state_name"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -111,6 +113,8 @@ class NukiDeviceEntity(LockEntity, ABC):
         data = {
             ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
+            ATTR_DOORSENSORSTATE: self._nuki_device.door_sensor_state,
+            ATTR_DOORSENSORSTATENAME: self._nuki_device.door_sensor_state_name,
         }
         return data
 
