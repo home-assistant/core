@@ -471,7 +471,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def custom_effects_names(self):
         """Return list with custom effects names."""
-        return list(self.custom_effects.keys())
+        return list(self.custom_effects)
 
     @property
     def light_type(self):
