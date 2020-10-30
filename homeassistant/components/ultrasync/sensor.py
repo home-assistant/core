@@ -1,4 +1,4 @@
-"""Monitor the Informix UltraSync Hub."""
+"""Monitor the Interlogix UltraSync Hub."""
 
 import logging
 from typing import Callable, List

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "Informix UltraSync Hub: {name}",
+        "flow_title": "Interlogix UltraSync Hub: {name}",
         "step": {
             "user": {
                 "data": {

@@ -1,4 +1,4 @@
-"""The Informix UltraSync Hub component."""
+"""The Interlogix UltraSync Hub component."""
 
 import asyncio
 

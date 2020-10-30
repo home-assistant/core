@@ -1,9 +1,9 @@
 {
   "config": {
-    "flow_title": "Informix UltraSync Hub: {name}",
+    "flow_title": "Interlogix UltraSync Hub: {name}",
     "step": {
       "user": {
-        "title": "Connect to Informix UltraSync Hub",
+        "title": "Connect to Interlogix UltraSync Hub",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",

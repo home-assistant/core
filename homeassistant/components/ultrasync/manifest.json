@@ -1,6 +1,6 @@
 {
   "domain": "ultrasync",
-  "name": "Informix Ultrasync Hub",
+  "name": "Interlogix Ultrasync Hub",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
   "requirements": ["ultrasync==0.8.0"],
   "codeowners": ["@caronc"],

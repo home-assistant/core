@@ -1,4 +1,4 @@
-"""Config flow for Informix Ultrasync Hub."""
+"""Config flow for Interlogix Ultrasync Hub."""
 import logging
 from typing import Any, Dict, Optional
 
