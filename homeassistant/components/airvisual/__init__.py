@@ -11,7 +11,7 @@ from pyairvisual.errors import (
     NodeProError,
 )
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -302,7 +302,7 @@ async def async_migrate_entry(hass, config_entry):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_IMPORT},
+                    context={"source": "geography"},
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )

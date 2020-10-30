@@ -9,7 +9,7 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_IP_ADDRESS,
@@ -37,7 +37,10 @@ async def test_duplicate_error(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
+        DOMAIN, context={"source": SOURCE_USER}, data={"type": "Geographical Location"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=geography_conf
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -73,8 +76,14 @@ async def test_invalid_identifier(hass):
         side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"type": "Geographical Location"},
         )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=geography_conf
+        )
+
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
@@ -188,8 +197,14 @@ async def test_step_geography(hass):
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"type": "Geographical Location"},
         )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=conf
+        )
+
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "Cloud API (51.528308, -0.3817765)"
         assert result["data"] == {
