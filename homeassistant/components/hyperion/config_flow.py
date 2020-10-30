@@ -126,9 +126,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
-    async def async_step_ssdp(
-        self, discovery_info: ConfigType = None
-    ) -> Dict[str, Any]:
+    async def async_step_ssdp(self, discovery_info: ConfigType) -> Dict[str, Any]:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
         #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
