@@ -1,6 +1,7 @@
 """Support for Tasmota sensors."""
 from typing import Optional
 
+from hatasmota import status_sensor
 from hatasmota.const import (
     SENSOR_AMBIENT,
     SENSOR_APPARENT_POWERUSAGE,
@@ -162,7 +163,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         # Hide status sensors to not overwhelm users
-        if self._tasmota_entity.quantity == SENSOR_STATUS_SIGNAL:
+        if self._tasmota_entity.quantity in status_sensor.SENSORS:
             return False
         return True
 
