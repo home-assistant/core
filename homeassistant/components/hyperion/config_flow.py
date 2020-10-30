@@ -296,7 +296,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             login_ok = await self._can_login()
             if login_ok is None:
                 return self.async_abort(reason="connection_error")
-            elif login_ok:
+            if login_ok:
                 return await self.async_step_confirm()
             errors[CONF_BASE] = "auth_error"
 
@@ -352,7 +352,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if login_ok is None:
             return self.async_abort(reason="connection_error")
-        elif not login_ok:
+        if not login_ok:
             return self.async_abort(reason="auth_new_token_not_work_error")
         return await self.async_step_confirm()
 
