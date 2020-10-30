@@ -79,16 +79,25 @@ snapshot_full:
     name:
       description: Optional or it will be the current date and time.
       example: "Snapshot 1"
+    password:
+      description: Optional password.
+      example: "password"
 
 snapshot_partial:
   description: Create a partial snapshot.
   fields:
-    folders:
-      description: Optional list of directories.
-      example: ["homeassistant", "share"]
     addons:
       description: Optional list of addon slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
+    folders:
+      description: Optional list of directories.
+      example: ["homeassistant", "share"]
+    name:
+      description: Optional or it will be the current date and time.
+      example: "Partial Snapshot 1"
+    password:
+      description: Optional password.
+      example: "password"
 
 supervisor_reload:
   description: Reload the Hass.io supervisor.
