@@ -9,14 +9,14 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-	ATTR_WHITE_VALUE,
+    ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
-	SUPPORT_WHITE_VALUE,
+    SUPPORT_WHITE_VALUE,
     LightEntity,
 )
 from homeassistant.const import (
@@ -484,7 +484,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
             self._effect_list = None
 
-    @callback
     def _update_state(self, result):
         """Update the state from the template."""
 
