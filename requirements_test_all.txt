@@ -323,6 +323,9 @@ faadelays==0.0.7
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
+# homeassistant.components.fmi
+fmi-weather-client==0.1.1
+
 # homeassistant.components.homekit
 fnvhash==0.1.0
 
