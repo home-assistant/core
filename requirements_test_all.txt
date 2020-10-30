@@ -498,9 +498,6 @@ numpy==1.19.2
 # homeassistant.components.google
 oauth2client==4.0.0
 
-# homeassistant.components.profiler
-objgraph==3.4.1
-
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
 
