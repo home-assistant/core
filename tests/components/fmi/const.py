@@ -5,7 +5,7 @@ import datetime
 import fmi_weather_client as fmi
 
 MOCK_CURRENT = fmi.Weather(
-    place="Dark side of Moon",
+    place="MOON",
     lat=12.34567,
     lon=76.54321,
     data=fmi.models.WeatherData(
@@ -43,7 +43,7 @@ MOCK_CURRENT = fmi.Weather(
 )
 
 MOCK_FORECAST = fmi.models.Forecast(
-    place="Dark side of Moon",
+    place="MOON",
     lat=12.34567,
     lon=76.54321,
     forecasts=[

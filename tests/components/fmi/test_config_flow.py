@@ -19,6 +19,13 @@ VALID_CONFIG = {
     CONF_LONGITUDE: 122.12,
 }
 
+INVALID_CONFIG = {
+    CONF_NAME: "abcd",
+    CONF_OFFSET: 12,
+    CONF_LATITUDE: 0,
+    CONF_LONGITUDE: 0,
+}
+
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
@@ -33,28 +40,29 @@ async def test_show_form(hass):
 async def test_api_error(hass):
     """Test API error."""
     with patch(
-        "fmi.weather_by_coordinates",
-        side_effect=ClientError("Invalid response from FMI API"),
+        "homeassistant.components.fmi.config_flow.fmi_client.weather_by_coordinates",
+        side_effect=ClientError(status_code=404, message="API error"),
     ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
+            data=INVALID_CONFIG,
         )
 
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["errors"] == {"fmi": "client_connect_error"}
 
 
 async def test_integration_already_exists(hass):
     """Test we only allow a single config flow."""
     with patch(
-        "fmi.weather_by_coordinates",
+        "homeassistant.components.fmi.config_flow.fmi_client.weather_by_coordinates",
         return_value=MOCK_CURRENT,
     ):
+
         MockConfigEntry(
             domain=DOMAIN,
-            unique_id="12.34567_76.54321",
+            unique_id="55.55_122.12",
             data=VALID_CONFIG,
         ).add_to_hass(hass)
 
@@ -64,16 +72,22 @@ async def test_integration_already_exists(hass):
             data=VALID_CONFIG,
         )
 
+        print(result.keys())
+        print(result)
+
         assert result["type"] == "abort"
-        assert result["reason"] == "single_instance_allowed"
+        assert result["reason"] == "already_configured"
 
 
 async def test_create_entry(hass):
     """Test that the user step works."""
     with patch(
-        "fmi.weather_by_coordinates",
+        "homeassistant.components.fmi.config_flow.fmi_client.weather_by_coordinates",
         return_value=MOCK_CURRENT,
-    ), patch("homeassistant.components.fmi.weather_by_coordinates", return_value=True):
+    ), patch(
+        "homeassistant.components.fmi.config_flow.fmi_client.weather_by_coordinates",
+        return_value=MOCK_CURRENT,
+    ):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -83,7 +97,7 @@ async def test_create_entry(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "MOON"
-        assert result["data"][CONF_NAME] == "MOON"
-        assert result["data"][CONF_LATITUDE] == 12.34567
-        assert result["data"][CONF_LONGITUDE] == 76.54321
+        assert result["data"][CONF_NAME] == "abcd"
+        assert result["data"][CONF_LATITUDE] == 55.55
+        assert result["data"][CONF_LONGITUDE] == 122.12
         assert result["data"][CONF_OFFSET] == 12

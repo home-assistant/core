@@ -22,11 +22,15 @@ async def validate_user_config(hass: core.HomeAssistant, data):
     latitude = data[CONF_LATITUDE]
     longitude = data[CONF_LONGITUDE]
 
+    errors = ""
+
     # Current Weather
     try:
         weather_data = await hass.async_add_executor_job(
             fmi_client.weather_by_coordinates, latitude, longitude
         )
+
+        return {"place": weather_data.place, "err": ""}
     except ClientError as err:
         err_string = (
             "Client error with status "
@@ -34,6 +38,7 @@ async def validate_user_config(hass: core.HomeAssistant, data):
             + " and message "
             + err.message
         )
+        errors = "client_connect_error"
         _LOGGER.error(err_string)
     except ServerError as err:
         err_string = (
@@ -42,9 +47,10 @@ async def validate_user_config(hass: core.HomeAssistant, data):
             + " and message "
             + err.body
         )
+        errors = "server_connect_error"
         _LOGGER.error(err_string)
 
-    return {"place": weather_data.place}
+    return {"place": "None", "err": errors}
 
 
 class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
@@ -56,6 +62,7 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
     async def async_step_user(self, user_input=None):
         """Handle user step."""
         # Display an option for the user to provide Lat/Long for the integration
+        errors = {}
         if user_input is not None:
 
             await self.async_set_unique_id(
@@ -64,7 +71,11 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
             self._abort_if_unique_id_configured()
 
             valid = await validate_user_config(self.hass, user_input)
-            return self.async_create_entry(title=valid["place"], data=user_input)
+
+            if valid.get("err", "") == "":
+                return self.async_create_entry(title=valid["place"], data=user_input)
+
+            errors["fmi"] = valid["err"]
 
         data_schema = vol.Schema(
             {
@@ -79,7 +90,11 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
             }
         )
 
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+        )
 
     @staticmethod
     @callback
