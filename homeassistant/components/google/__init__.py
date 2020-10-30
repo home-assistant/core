@@ -133,6 +133,20 @@ def do_authentication(hass, hass_config, config):
     Notify user of user_code and verification_url then poll
     until we have an access token.
     """
+    # get the credentials from AIS dom
+    if config[CONF_CLIENT_ID] == "ASK_AIS_DOM":
+        from homeassistant.components import ais_cloud
+
+        try:
+            ais_dom = ais_cloud.AisCloudWS(hass)
+            json_ws_resp = ais_dom.key("gcalendar_client_id")
+            config[CONF_CLIENT_ID] = json_ws_resp["key"]
+            json_ws_resp = ais_dom.key("gcalendar_secret")
+            config[CONF_CLIENT_SECRET] = json_ws_resp["key"]
+        except Exception as e:
+            _LOGGER.error("Error calendar do_authentication: " + str(e))
+
+    # oAuth
     oauth = OAuth2WebServerFlow(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
@@ -151,9 +165,9 @@ def do_authentication(hass, hass_config, config):
 
     hass.components.persistent_notification.create(
         (
-            f"In order to authorize Home-Assistant to view your calendars "
-            f'you must visit: <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> and enter '
-            f"code: {dev_flow.user_code}"
+            f"Aby zezwolić Asystentowi domowemu przeglądanie Twoich kalendarzy"
+            f' kliknij <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> '
+            f" i wpisz kod: {dev_flow.user_code}"
         ),
         title=NOTIFICATION_TITLE,
         notification_id=NOTIFICATION_ID,
@@ -182,8 +196,8 @@ def do_authentication(hass, hass_config, config):
         listener()
         hass.components.persistent_notification.create(
             (
-                f"We are all setup now. Check {YAML_DEVICES} for calendars that have "
-                f"been found"
+                f"OK, wszystko gotowe, twoje kalendarze zostały dodane do aplikacji, "
+                f" konfiguracja kalendarzy przechowywana jest w pliku {YAML_DEVICES} "
             ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
