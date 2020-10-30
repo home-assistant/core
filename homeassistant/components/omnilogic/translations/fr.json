@@ -16,5 +16,15 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Intervalle d'interrogation (en secondes)"
+                }
+            }
+        }
+    },
+    "title": "Omnilogic"
 }

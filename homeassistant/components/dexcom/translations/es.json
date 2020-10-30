@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "La cuenta ya ha sido configurada",
             "already_configured_account": "La cuenta ya ha sido configurada"
         },
         "error": {
