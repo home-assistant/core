@@ -12,31 +12,31 @@ def get_mac_address_from_doorstation_info(doorstation_info):
 
 def get_doorstation_by_token(hass, token):
     """Get doorstation by token."""
-    for config_entry_id in hass.data[DOMAIN]:
-        doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
-
-        if token == doorstation.token:
-            return doorstation
+    return _get_doorstation_by_attr(hass, "token", token)
 
 
 def get_doorstation_by_slug(hass, slug):
     """Get doorstation by slug."""
-    for config_entry_id in hass.data[DOMAIN]:
-        doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
+    return _get_doorstation_by_attr(hass, "slug", slug)
 
-        if slug == doorstation.slug:
+
+def _get_doorstation_by_attr(hass, attr, val):
+    for entry in hass.data[DOMAIN].values():
+        if DOOR_STATION not in entry:
+            continue
+
+        doorstation = entry[DOOR_STATION]
+
+        if getattr(doorstation, attr) == val:
             return doorstation
+
+    return None
 
 
 def get_all_doorstations(hass):
     """Get all doorstations."""
-
-    doorstations = []
-    for config_entry_id in hass.data[DOMAIN]:
-        if DOOR_STATION not in hass.data[DOMAIN][config_entry_id]:
-            continue
-
-        doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
-        doorstations.append(doorstation)
-
-    return doorstations
+    return [
+        entry[DOOR_STATION]
+        for entry in hass.data[DOMAIN].values()
+        if DOOR_STATION in entry
+    ]
