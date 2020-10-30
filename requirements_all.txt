@@ -178,7 +178,7 @@ aioguardian==1.0.1
 aioharmony==0.2.6
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.2.53
+aiohomekit==0.2.54
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -696,7 +696,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.9.0
+greeclimate==0.9.2
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -732,7 +732,7 @@ hass-nabucasa==0.37.1
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.24
+hatasmota==0.0.25
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
