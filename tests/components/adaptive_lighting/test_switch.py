@@ -13,6 +13,7 @@ from homeassistant.components.adaptive_lighting.const import (
     CONF_DETECT_NON_HA_CHANGES,
     CONF_INITIAL_TRANSITION,
     CONF_MANUAL_CONTROL,
+    CONF_MIN_COLOR_TEMP,
     CONF_PREFER_RGB_COLOR,
     CONF_SEPARATE_TURN_ON_COMMANDS,
     CONF_SUNRISE_OFFSET,
@@ -175,6 +176,7 @@ async def setup_lights_and_switch(hass, extra_conf=None):
             CONF_TRANSITION: 0,
             CONF_DETECT_NON_HA_CHANGES: True,
             CONF_PREFER_RGB_COLOR: False,
+            CONF_MIN_COLOR_TEMP: 2500,  # to not coincide with sleep_color_temp
             **(extra_conf or {}),
         },
     )
@@ -843,10 +845,11 @@ async def test_async_update_at_interval(hass):
     await switch._async_update_at_interval()
 
 
-async def test_separate_turn_on_commands(hass):
+@pytest.mark.parametrize("separate_turn_on_commands", (True, False))
+async def test_separate_turn_on_commands(hass, separate_turn_on_commands):
     """Test 'separate_turn_on_commands' argument."""
     switch, (light, *_) = await setup_lights_and_switch(
-        hass, {CONF_SEPARATE_TURN_ON_COMMANDS: True}
+        hass, {CONF_SEPARATE_TURN_ON_COMMANDS: separate_turn_on_commands}
     )
     # We just turn sleep mode on and off which should change the
     # brightness and color. We don't test whether the number are exactly

@@ -184,6 +184,28 @@ def is_our_context(context: Optional[Context]) -> bool:
     return context.id.startswith(_DOMAIN_SHORT)
 
 
+def _copy_and_pop(dct, keys):
+    """Copy a dictionary and remove 'keys' if they exist."""
+    copy = dct.copy()
+    for key in keys:
+        copy.pop(key, None)
+    return copy
+
+
+def _split_service_data(service_data, adapt_brightness, adapt_color):
+    """Split service_data into two dictionaries (for color and brightness)."""
+    service_datas = []
+    if adapt_color:
+        service_datas.append(
+            _copy_and_pop(service_data, (ATTR_WHITE_VALUE, ATTR_BRIGHTNESS))
+        )
+    if adapt_brightness:
+        service_datas.append(
+            _copy_and_pop(service_data, (ATTR_RGB_COLOR, ATTR_COLOR_TEMP))
+        )
+    return service_datas
+
+
 async def handle_apply(switch: AdaptiveSwitch, service_call: ServiceCall):
     """Handle the entity service apply."""
     hass = switch.hass
@@ -741,23 +763,20 @@ class AdaptiveSwitch(SwitchEntity, RestoreEntity):
             )
         ):
             return
-        _LOGGER.debug(
-            "%s: Scheduling 'light.turn_on' with the following 'service_data': %s"
-            " with context.id='%s'",
-            self._name,
-            service_data,
-            context.id,
-        )
         self.turn_on_off_listener.last_service_data[light] = service_data
-        if self._separate_turn_on_commands:
-            service_datas = [
-                {ATTR_ENTITY_ID: light, key: value}
-                for key, value in service_data.items()
-                if key != ATTR_ENTITY_ID
-            ]
-        else:
-            service_datas = [service_data]
+        service_datas = (
+            _split_service_data(service_data, adapt_brightness, adapt_color)
+            if self._separate_turn_on_commands
+            else [service_data]
+        )
         for service_data in service_datas:
+            _LOGGER.debug(
+                "%s: Scheduling 'light.turn_on' with the following 'service_data': %s"
+                " with context.id='%s'",
+                self._name,
+                service_data,
+                context.id,
+            )
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
                 SERVICE_TURN_ON,
