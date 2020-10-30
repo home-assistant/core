@@ -1,16 +1,11 @@
-""""Support for MQTT scenes."""
+"""Support for MQTT scenes."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import scene, mqtt
+from homeassistant.components import mqtt, scene
 from homeassistant.components.scene import Scene
-from homeassistant.const import (
-    CONF_ICON,
-    CONF_NAME,
-    CONF_PAYLOAD_ON,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -21,7 +16,6 @@ from . import (
     CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
-    CONF_STATE_TOPIC,
     DOMAIN,
     PLATFORMS,
     MqttAvailability,
@@ -119,6 +113,7 @@ class MqttScene(
         self._config = config
 
     async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
         await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
