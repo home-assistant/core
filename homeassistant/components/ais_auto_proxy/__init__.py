@@ -271,7 +271,7 @@ async def _websocket_forward(ws_from, ws_to):
 
 async def async_setup(hass, config):
     """Set up the  component."""
-    config = config.get(DOMAIN, {})
+    # config = config.get(DOMAIN, {})
     # Init ingress feature
     async_setup_ingress_view(hass)
     return True

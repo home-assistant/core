@@ -14,7 +14,7 @@ from homeassistant.components import ais_cloud
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 from homeassistant.core import callback
 
-from . import DOMAIN, TOKEN_FILE, do_setup
+from . import CONF_TRACK_NEW, DOMAIN, TOKEN_FILE, async_do_setup, do_setup
 
 _LOGGER = logging.getLogger(__name__)
 CONF_OAUTH_INFO = "oauth_info"
@@ -104,19 +104,19 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 credentials = OAUTH.step2_exchange(device_flow_info=DEV_FLOW)
                 storage = Storage(self.hass.config.path(TOKEN_FILE))
                 storage.put(credentials)
-                do_setup(self.hass, None, None)
+                conf = {
+                    "client_id": "ASK_AIS_DOM",
+                    "client_secret": "ASK_AIS_DOM",
+                    CONF_TRACK_NEW: True,
+                }
 
-                return self.async_finish_flow(
-                    title="AIS Google Calendar", data=user_input
+                await async_do_setup(self.hass, self.hass.config)
+
+                self.hass.components.frontend.async_register_built_in_panel(
+                    "calendar", "calendar", "hass:calendar"
                 )
-                # hass.components.persistent_notification.create(
-                #     (
-                #         f"OK, wszystko gotowe, twoje kalendarze zostały dodane do aplikacji, "
-                #         f" konfiguracja kalendarzy przechowywana jest w pliku {YAML_DEVICES} "
-                #     ),
-                #     title=NOTIFICATION_TITLE,
-                #     notification_id=NOTIFICATION_ID,
-                # )
+
+                return self.async_create_entry(title="AIS Google Calendars", data=conf)
             except Exception as err:
                 _LOGGER.error("Error calendar async_step_token: " + str(err))
                 description_placeholders = {"error_info": f"Error: {err}"}

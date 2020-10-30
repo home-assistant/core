@@ -1,22 +1,22 @@
-{   "title": "AIS Google Calendar",
+{   "title": "AIS Google Calendars",
     "config": {
         "step": {
             "confirm": {
-                  "description": "###### ![AIS logo](brands.home-assistant.io/_/google/icon.png)\n\nTa integracja pozwala na wysyłanie poleceń do Asystenta Google oraz na wysyłanie powiadomień audio do urządzeń Google Home, bez przerywania muzyki.\n\n Czy chcesz skonfigurować integrację AIS Google Home?",
-                  "title": "AIS Google Home"
+                  "description": "###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\nThis integration allows you to sync events between Home Assistant and your Google calendars.\n\n Do you want to set up AIS Google Calendars integration?",
+                  "title": "AIS Google Calendars"
              },
             "oauth": {
-                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home)\n\n###### ![AIS logo](/static/icons/ais_google_home.png)\n\n Następnie wróć tu i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób urządzenie zostanie autoryzowane.\n\n{error_info}",
-                "title": "Uwierzytelnianie urządzenia w Google"
+                "description": "To allow the Home Assistant to access your calendars: \n 1. Copy the code: **{user_code}** \n 2.Paste the copied code on the page that will open after clicking on [this link]({verification_url}) \n 3. When the device is authorized, go back to this page and press the button below **SUBMIT** \n\n###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\n{error_info}",
+                "title": "Device authentication with Google"
             }
         },
         "error": {
-          "oauth_error": "Niepoprawne dane oAuth",
-          "token_error": "Niepoprawny kod"
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
         },
         "abort": {
-            "abort_by_error": "Error 123 {error_info}",
-            "single_instance_allowed": "Masz już skonfigurowany AIS Google Home.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."
+            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
+            "single_instance_allowed": "You already have AIS Google Calendars set up.\n\n If you want to reconfigure, remove the current integration first."
         }
     }
 }

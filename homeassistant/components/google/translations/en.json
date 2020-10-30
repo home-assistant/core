@@ -1,13 +1,13 @@
-{   "title": "AIS Google Calendar",
+{   "title": "AIS Google Calendars",
     "config": {
         "step": {
             "confirm": {
-                  "description": "###### ![AIS logo](brands.home-assistant.io/_/google/icon.png)\n\nThis integration allows you to send commands to the Google Assistant and to send audio notifications to Google Home devices without interrupting the music.\n\n Do you want to set up AIS Google Home integration?",
-                  "title": "AIS Google Home"
+                  "description": "###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\nThis integration allows you to sync events between Home Assistant and your Google calendars.\n\n Do you want to set up AIS Google Calendars integration?",
+                  "title": "AIS Google Calendars"
              },
             "oauth": {
-                "description": "Setting up communication with Google Home requires downloading the JSON OAuth2 file from Google. To do this, follow the [Guide in the Home Assistant documentation](https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home)\n\n Then come back to this page and paste in the field ** Certificate oAuth2 for the device ** content from a file downloaded from Google.\n\n In this way the device will be authorized.\n\n###### ![AIS logo](/static/icons/ais_google_home.png)\n\n {error_info}",
-                "title": "Device authentication in Google"
+                "description": "To allow the Home Assistant to access your calendars: \n 1. Copy the code: **{user_code}** \n 2.Paste the copied code on the page that will open after clicking on [this link]({verification_url}) \n 3. When the device is authorized, go back to this page and press the button below **SUBMIT** \n\n###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\n{error_info}",
+                "title": "Device authentication with Google"
             }
         },
         "error": {
@@ -15,8 +15,8 @@
           "token_error": "Invalid code"
         },
         "abort": {
-            "abort_by_error": "Error 123 {error_info}",
-            "single_instance_allowed": "You've already set up Google Home AIS integration.\n\nIf you want to reconfigure, first remove the current integration."
+            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
+            "single_instance_allowed": "You already have AIS Google Calendars set up.\n\n If you want to reconfigure, remove the current integration first."
         }
     }
 }

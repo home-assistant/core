@@ -53,7 +53,7 @@ REQUIRES = [
     "ruamel.yaml==0.15.100",
     "voluptuous==0.12.0",
     "voluptuous-serialize==2.4.0",
-    "ais-dom-frontend==20201021.5",
+    "ais-dom-frontend==20201021.6",
     "yarl==1.4.2",
 ]
 
