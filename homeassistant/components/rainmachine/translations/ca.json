@@ -18,5 +18,15 @@
                 "title": "Introdueix la teva informaci\u00f3"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Temps d'execuci\u00f3 predeterminat de la zona (en segons)"
+                },
+                "title": "Configuraci\u00f3 de RainMachine"
+            }
+        }
     }
 }
