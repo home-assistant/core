@@ -357,7 +357,7 @@ class HomeKitSpeedMapping:
         for state, speed_range in reversed(self.speed_ranges.items()):
             if speed_range.start <= speed:
                 return state
-        return list(self.speed_ranges.keys())[0]
+        return list(self.speed_ranges)[0]
 
 
 def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
