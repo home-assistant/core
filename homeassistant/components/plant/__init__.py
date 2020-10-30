@@ -186,10 +186,9 @@ class Plant(Entity):
         self._brightness_history = DailyHistory(self._conf_check_days)
 
         for reading in self.READINGS.values():
-            if "min" in reading and reading["min"] in self._config:
-                self._limitsmap[reading["min"]] = self._config[reading["min"]]
-            if "max" in reading and reading["max"] in self._config:
-                self._limitsmap[reading["max"]] = self._config[reading["max"]]
+            for item in ["min", "max"]:
+                if item in reading and reading[item] in self._config:
+                    self._limitsmap[reading[item]] = self._config[reading[item]]
 
     @callback
     def _state_changed_event(self, event):
