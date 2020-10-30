@@ -150,7 +150,7 @@ class RainMachineSensor(RainMachineEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._device_mac}_{self._sensor_type}"
+        return f"{self._unique_id}_{self._sensor_type}"
 
     @property
     def unit_of_measurement(self) -> str:

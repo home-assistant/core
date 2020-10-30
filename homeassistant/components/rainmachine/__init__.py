@@ -1,6 +1,7 @@
 """Support for RainMachine devices."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -86,14 +87,16 @@ async def async_update_programs_and_zones(
     Program and zone updates always go together because of how linked they are:
     programs affect zones and certain combinations of zones affect programs.
     """
-    coordinators = [
-        hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][DATA_PROGRAMS],
-        hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][DATA_ZONES],
-    ]
-
-    tasks = [coordinator.async_refresh() for coordinator in coordinators]
-
-    await asyncio.gather(*tasks)
+    await asyncio.gather(
+        *[
+            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                DATA_PROGRAMS
+            ].async_refresh(),
+            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                DATA_ZONES
+            ].async_refresh(),
+        ]
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -178,7 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER,
             name=f'{controller.name} ("{api_category}")',
             update_interval=DEFAULT_UPDATE_INTERVAL,
-            update_method=lambda api_category=api_category: async_update(api_category),
+            update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(coordinator.async_refresh())
 
@@ -314,7 +317,7 @@ class RainMachineEntity(CoordinatorEntity):
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
-        self._device_mac = controller.mac.replace(":", "")
+        self._unique_id = controller.mac.replace(":", "")
         self._name = None
 
     @property
@@ -346,16 +349,15 @@ class RainMachineEntity(CoordinatorEntity):
         """Return the name of the entity."""
         return self._name
 
+    @callback
+    def _handle_coordinator_update(self):
+        """Respond to a DataUpdateCoordinator update."""
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
+        await super().async_added_to_hass()
         self.update_from_latest_data()
 
     @callback
