@@ -184,25 +184,19 @@ def is_our_context(context: Optional[Context]) -> bool:
     return context.id.startswith(_DOMAIN_SHORT)
 
 
-def _copy_and_pop(dct, keys):
-    """Copy a dictionary and remove 'keys' if they exist."""
-    copy = dct.copy()
-    for key in keys:
-        copy.pop(key, None)
-    return copy
-
-
 def _split_service_data(service_data, adapt_brightness, adapt_color):
     """Split service_data into two dictionaries (for color and brightness)."""
     service_datas = []
     if adapt_color:
-        service_datas.append(
-            _copy_and_pop(service_data, (ATTR_WHITE_VALUE, ATTR_BRIGHTNESS))
-        )
+        service_data_color = service_data.copy()
+        service_data_color.pop(ATTR_WHITE_VALUE, None)
+        service_data_color.pop(ATTR_BRIGHTNESS, None)
+        service_datas.append(service_data_color)
     if adapt_brightness:
-        service_datas.append(
-            _copy_and_pop(service_data, (ATTR_RGB_COLOR, ATTR_COLOR_TEMP))
-        )
+        service_data_brightness = service_data.copy()
+        service_data_brightness.pop(ATTR_RGB_COLOR, None)
+        service_data_brightness.pop(ATTR_COLOR_TEMP, None)
+        service_datas.append(service_data_brightness)
     return service_datas
 
 
@@ -243,12 +237,13 @@ async def handle_set_manual_control(switch: AdaptiveSwitch, service_call: Servic
     else:
         switch.turn_on_off_listener.reset(*all_lights)
         # pylint: disable=protected-access
-        await switch._adapt_lights(
-            all_lights,
-            transition=switch._initial_transition,
-            force=True,
-            context=switch.create_context("service"),
-        )
+        if switch.is_on:
+            await switch._update_attrs_and_maybe_adapt_lights(
+                all_lights,
+                transition=switch._initial_transition,
+                force=True,
+                context=switch.create_context("service"),
+            )
 
 
 @callback
