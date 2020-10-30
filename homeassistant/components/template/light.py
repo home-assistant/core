@@ -1,5 +1,4 @@
 """Support for Template lights."""
-import ast
 import logging
 
 import voluptuous as vol
@@ -10,13 +9,14 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
+	ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    SUPPORT_WHITE_VALUE,
+    SUPPORT_TRANSITION,
+	SUPPORT_WHITE_VALUE,
     LightEntity,
 )
 from homeassistant.const import (
@@ -274,7 +274,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Flag supported features."""
         supported_features = 0
         if self._level_script is not None:
-            supported_features |= SUPPORT_BRIGHTNESS
+            supported_features |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
         if self._temperature_script is not None:
             supported_features |= SUPPORT_COLOR_TEMP
         if self._color_script is not None:
@@ -475,7 +475,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             if effect_list in ("None", ""):
                 self._effect_list = None
                 return
-            self._effect_list = ast.literal_eval(effect_list)
+
+            self._effect_list = effect_list
         except ValueError:
             _LOGGER.error(
                 "Template must supply a list of effects, or 'None'",
