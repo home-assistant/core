@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
 
 from . import async_create_connect_client, get_hyperion_unique_id
@@ -259,20 +258,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
     )
-    hass.data[DOMAIN][config_entry.entry_id].setdefault(CONF_ON_UNLOAD, []).append(
+    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
         async_dispatcher_connect(
             hass,
             SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
             async_instances_to_entities,
         )
     )
-
-    config_entry.add_update_listener(_async_options_updated)
-
-
-async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class Hyperion(LightEntity):

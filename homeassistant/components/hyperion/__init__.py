@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import CONF_ON_UNLOAD, CONF_ROOT_CLIENT, DOMAIN, SIGNAL_INSTANCES_UPDATED
 
@@ -103,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONF_ROOT_CLIENT: hyperion_client,
+        CONF_ON_UNLOAD: [config_entry.add_update_listener(_async_options_updated)],
     }
 
     for component in PLATFORMS:
@@ -111,6 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
 
     return True
+
+
+async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry):

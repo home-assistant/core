@@ -93,7 +93,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._require_confirm = False
         self._port_ui = const.DEFAULT_PORT_UI
 
-    async def _create_client(self, raw_connection=False) -> client.HyperionClient:
+    def _create_client(self, raw_connection=False) -> client.HyperionClient:
         """Create and connect a client instance."""
         return client.HyperionClient(
             self._data[CONF_HOST],
@@ -121,13 +121,13 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle a flow initiated by a YAML config import."""
         self._data = import_data
-        async with await self._create_client(raw_connection=True) as hyperion_client:
+        async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
-                return self.async_abort(reason="connection_error")
+                return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     async def async_step_ssdp(
-        self, discovery_info: Optional[ConfigType] = None
+        self, discovery_info: ConfigType = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
@@ -183,18 +183,19 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_PORT] = const.DEFAULT_PORT_JSON
 
         hyperion_id = discovery_info.get(ATTR_UPNP_SERIAL)
-        if hyperion_id:
-            # For discovery mechanisms, we set the unique_id as early as possible to
-            # avoid discovery popping up a duplicate on the screen. The unique_id is set
-            # authoritatively later in the flow by asking the server to confirm its id
-            # (which should theoretically be the same as specified here)
-            await self.async_set_unique_id(hyperion_id)
-            self._abort_if_unique_id_configured()
-        else:
+        if not hyperion_id:
             return self.async_abort(reason="no_id")
-        async with await self._create_client(raw_connection=True) as hyperion_client:
+
+        # For discovery mechanisms, we set the unique_id as early as possible to
+        # avoid discovery popping up a duplicate on the screen. The unique_id is set
+        # authoritatively later in the flow by asking the server to confirm its id
+        # (which should theoretically be the same as specified here)
+        await self.async_set_unique_id(hyperion_id)
+        self._abort_if_unique_id_configured()
+
+        async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
-                return self.async_abort(reason="connection_error")
+                return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     # pylint: disable=arguments-differ
@@ -207,14 +208,12 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._data = user_input
 
-            async with await self._create_client(
-                raw_connection=True
-            ) as hyperion_client:
+            async with self._create_client(raw_connection=True) as hyperion_client:
                 if hyperion_client:
                     return await self._advance_to_auth_step_if_necessary(
                         hyperion_client
                     )
-                errors[CONF_BASE] = "connection_error"
+                errors[CONF_BASE] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -233,20 +232,16 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self._request_token_task.done():
                 self._request_token_task.cancel()
 
-            # Cancellation is only processed on the **next** cycle of the event loop, so
-            # yield here.
-            await asyncio.sleep(0)
-
             try:
                 await self._request_token_task
             except asyncio.CancelledError:
                 pass
             self._request_token_task = None
 
-    async def _request_token_task_func(self, auth_id: str) -> Optional[ConfigType]:
+    async def _request_token_task_func(self, auth_id: str) -> None:
         """Send an async_request_token request."""
         auth_resp = {}
-        async with await self._create_client(raw_connection=True) as hyperion_client:
+        async with self._create_client(raw_connection=True) as hyperion_client:
             if hyperion_client:
                 # The Hyperion-py client has a default timeout of 3 minutes on this request.
                 auth_resp = await hyperion_client.async_request_token(
@@ -255,7 +250,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.flow.async_configure(
                 flow_id=self.flow_id, user_input=auth_resp
             )
-        return auth_resp
 
     def _get_hyperion_url(self) -> str:
         """Return the URL of the Hyperion UI."""
@@ -269,7 +263,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _can_login(self) -> Optional[bool]:
         """Verify login details."""
-        async with await self._create_client(raw_connection=True) as hyperion_client:
+        async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return None
             return client.LoginResponseOK(
@@ -284,21 +278,16 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             if user_input.get(CONF_CREATE_TOKEN):
-                self._auth_id = client.generate_random_auth_id()
-                return self.async_show_form(
-                    step_id="create_token",
-                    description_placeholders={
-                        CONF_AUTH_ID: self._auth_id,
-                    },
-                )
+                return await self.async_step_create_token()
+
             # Using a static token.
             self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
             login_ok = await self._can_login()
             if login_ok is None:
-                return self.async_abort(reason="connection_error")
+                return self.async_abort(reason="cannot_connect")
             if login_ok:
                 return await self.async_step_confirm()
-            errors[CONF_BASE] = "auth_error"
+            errors[CONF_BASE] = "invalid_access_token"
 
         return self.async_show_form(
             step_id="auth",
@@ -312,9 +301,18 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token(
-        self, _: Optional[ConfigType] = None
+        self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Send a request for a new token."""
+        if user_input is None:
+            self._auth_id = client.generate_random_auth_id()
+            return self.async_show_form(
+                step_id="create_token",
+                description_placeholders={
+                    CONF_AUTH_ID: self._auth_id,
+                },
+            )
+
         # Cancel the request token task if it's already running, then re-create it.
         await self._cancel_request_token_task()
         # Start a task in the background requesting a new token. The next step will
@@ -351,7 +349,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         login_ok = await self._can_login()
 
         if login_ok is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         if not login_ok:
             return self.async_abort(reason="auth_new_token_not_work_error")
         return await self.async_step_confirm()
@@ -378,15 +376,15 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        async with await self._create_client() as hyperion_client:
+        async with self._create_client() as hyperion_client:
             if not hyperion_client:
-                return self.async_abort(reason="connection_error")
+                return self.async_abort(reason="cannot_connect")
             hyperion_id = await hyperion_client.async_id()
 
         if not hyperion_id:
             return self.async_abort(reason="no_id")
 
-        await self.async_set_unique_id(hyperion_id)
+        await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167

@@ -177,7 +177,7 @@ async def test_user_client_errors(hass):
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"]["base"] == "connection_error"
+        assert result["errors"]["base"] == "cannot_connect"
 
     # Fail the auth check call.
     client.async_client_connect = CoroutineMock(return_value=True)
@@ -188,7 +188,7 @@ async def test_user_client_errors(hass):
         assert result["reason"] == "auth_required_error"
 
 
-async def test_user_confirm_connection_error(hass):
+async def test_user_confirm_cannot_connect(hass):
     """Test a failure to connect during confirmation."""
 
     result = await _init_flow(hass)
@@ -201,7 +201,7 @@ async def test_user_confirm_connection_error(hass):
     with patch("hyperion.client.HyperionClient", side_effect=[good_client, bad_client]):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_confirm_id_error(hass):
@@ -282,6 +282,29 @@ async def test_auth_static_token_success(hass):
     }
 
 
+async def test_auth_static_token_login_fail(hass):
+    """Test correct behavior with a bad static token."""
+    result = await _init_flow(hass)
+    assert result["step_id"] == "user"
+
+    client = create_mock_client()
+    client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    # Fail the login call.
+    client.async_login = CoroutineMock(
+        return_value={"command": "authorize-login", "success": False, "tan": 0}
+    )
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"]["base"] == "invalid_access_token"
+
+
 async def test_auth_create_token_approval_declined(hass):
     """Verify correct behaviour when a token request is declined."""
     result = await _init_flow(hass)
@@ -356,7 +379,7 @@ async def test_auth_create_token_when_issued_token_fails(hass):
 
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_auth_create_token_success(hass):
@@ -431,7 +454,7 @@ async def test_ssdp_cannot_connect(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_missing_serial(hass):
@@ -558,4 +581,4 @@ async def test_import_cannot_connect(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
