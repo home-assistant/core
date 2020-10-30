@@ -83,24 +83,8 @@ class ActivityStream(AugustSubscriberMixin):
                 # Make sure we process the next house if one of them fails
                 continue
 
-            try:
-                house = await self._api.async_get_house(
-                    self._august_gateway.access_token, house_id
-                )
-            except ClientError as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve async_get_house for house id %s: %s",
-                    house_id,
-                    ex,
-                )
-                # Make sure we process the next house if one of them fails
-                continue
-
-            _LOGGER.warning(
-                "Completed retrieving device activities for house id %s: %s %s",
-                house_id,
-                house,
-                activities,
+            _LOGGER.debug(
+                "Completed retrieving device activities for house id %s", house_id
             )
 
             updated_device_ids = self._process_newer_device_activities(activities)
