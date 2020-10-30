@@ -74,7 +74,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             SharkIqNotAuthedError,
             SharkIqAuthExpiringError,
         ) as err:
-            _LOGGER.debug("Bad auth state.  Attempting re-auth.", exc_info=err)
+            _LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
             flow_context = {
                 "source": "reauth",
                 "unique_id": self._config_entry.unique_id,
@@ -87,7 +87,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             ]
 
             if not matching_flows:
-                _LOGGER.debug("Re-initializing flows.  Attempting re-auth.")
+                _LOGGER.debug("Re-initializing flows.  Attempting re-auth")
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
                         DOMAIN,
@@ -96,7 +96,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
             else:
-                _LOGGER.debug("Matching flow found.")
+                _LOGGER.debug("Matching flow found")
 
             raise UpdateFailed(err) from err
         except Exception as err:  # pylint: disable=broad-except
