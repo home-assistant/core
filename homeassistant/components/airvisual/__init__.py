@@ -45,6 +45,8 @@ from .const import (
 
 PLATFORMS = ["air_quality", "sensor"]
 
+DATA_LISTENER = "listener"
+
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_NODE_PRO_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
@@ -151,7 +153,7 @@ def async_sync_geo_coordinator_update_intervals(hass, api_key):
 
 async def async_setup(hass, config):
     """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
 
     if DOMAIN not in config:
         return True
@@ -281,7 +283,9 @@ async def async_setup_entry(hass, config_entry):
         )
 
         # Only geography-based entries have options:
-        config_entry.add_update_listener(async_reload_entry)
+        hass.data[DOMAIN][DATA_LISTENER][
+            config_entry.entry_id
+        ] = config_entry.add_update_listener(async_reload_entry)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
 
@@ -365,9 +369,12 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
+        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
+        remove_listener()
+
         if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
-            # Re-calculate the update interval period for any remaining consumes of this
-            # API key:
+            # Re-calculate the update interval period for any remaining consumers of
+            # this API key:
             async_sync_geo_coordinator_update_intervals(
                 hass, config_entry.data[CONF_API_KEY]
             )
