@@ -33,8 +33,6 @@ class OneWire(Entity):
     @property
     def state(self) -> StateType:
         """Return the state of the sensor."""
-        if "count" in self._unit_of_measurement:
-            return int(self._state)
         return self._state
 
     @property
@@ -84,7 +82,10 @@ class OneWireProxy(OneWire):
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
         if value_read:
-            value = round(float(value_read), 1)
+            if "count" in self._unit_of_measurement:
+                value = int(value_read)
+            else:
+                value = round(float(value_read), 1)
             self._value_raw = float(value_read)
 
         self._state = value
