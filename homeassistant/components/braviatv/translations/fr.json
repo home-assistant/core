@@ -11,6 +11,9 @@
         },
         "step": {
             "authorize": {
+                "data": {
+                    "pin": "Code PIN"
+                },
                 "description": "Saisissez le code PIN affich\u00e9 sur le t\u00e9l\u00e9viseur Sony Bravia. \n\nSi le code PIN n'est pas affich\u00e9, vous devez d\u00e9senregistrer Home Assistant de votre t\u00e9l\u00e9viseur, allez dans: Param\u00e8tres - > R\u00e9seau - > Param\u00e8tres de l'appareil distant - > Annuler l'enregistrement de l'appareil distant.",
                 "title": "Autoriser Sony Bravia TV"
             },

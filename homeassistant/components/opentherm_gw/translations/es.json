@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway ya configurado",
+            "cannot_connect": "No se pudo conectar",
             "id_exists": "El ID del Gateway ya existe",
             "serial_error": "Error de conexi\u00f3n al dispositivo",
             "timeout": "Intento de conexi\u00f3n agotado"

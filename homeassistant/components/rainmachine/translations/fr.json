@@ -5,6 +5,7 @@
         },
         "error": {
             "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
+            "invalid_auth": "Authentification invalide",
             "invalid_credentials": "Informations d'identification invalides"
         },
         "step": {
@@ -15,6 +16,16 @@
                     "port": "Port"
                 },
                 "title": "Veuillez saisir vos informations"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Dur\u00e9e d'ex\u00e9cution de la zone par d\u00e9faut (en secondes)"
+                },
+                "title": "Configurer RainMachine"
             }
         }
     }

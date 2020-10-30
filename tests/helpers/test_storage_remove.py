@@ -33,3 +33,4 @@ async def test_removing_while_delay_in_progress(tmpdir):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert not await hass.async_add_executor_job(os.path.exists, real_store.path)
+        await hass.async_stop()

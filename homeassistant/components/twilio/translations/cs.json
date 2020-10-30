@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "Opravdu chcete nastavit slu\u017ebu Twilio?",
+                "description": "Chcete za\u010d\u00edt nastavovat?",
                 "title": "Nastaven\u00ed Twilio Webhook"
             }
         }
