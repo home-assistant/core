@@ -1,14 +1,18 @@
 """The profiler integration."""
 import asyncio
 import cProfile
+from datetime import timedelta
+import logging
 import time
 
 from guppy import hpy
+import objgraph
 from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -17,6 +21,8 @@ from .const import DOMAIN
 SERVICE_START = "start"
 SERVICE_MEMORY = "memory"
 CONF_SECONDS = "seconds"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,6 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {vol.Optional(CONF_SECONDS, default=60.0): vol.Coerce(float)}
         ),
     )
+
+    @callback
+    def _log_objects(*_):
+        _LOGGER.debug("Most common types: %s", objgraph.most_common_types(limit=100))
+        _LOGGER.debug("Growth: %s", objgraph.growth(limit=100))
+
+    async_track_time_interval(hass, _log_objects, timedelta(seconds=30))
 
     return True
 
