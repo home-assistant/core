@@ -26,17 +26,19 @@ _LOGGER.setLevel(logging.DEBUG)
 #  +------------------+    +------------------+    +--------------------+
 #           v                      v                       v
 #           +----------------------+-----------------------+
-#                                  |
-#                Auth not    +------------+
-#                required?   |Step: auth  |
-#           +<---------------|            |
+# Auth not  |         Auth      |
+# required? |         required? |
+#           |                   v
+#           |                +------------+
+#           |                |Step: auth  |
+#           |                |            |
 #           |                |Input: token|
 #           |                +------------+
 #           |    Static         |
 #           v    token          |
 #            <------------------+
 #           |                   |
-#           |                   |New token
+#           |                   | New token
 #           |                   v
 #           |            +------------------+
 #           |            |Step: create_token|
@@ -100,12 +102,29 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raw_connection=raw_connection,
         )
 
+    async def _advance_to_auth_step_if_necessary(
+        self, hyperion_client
+    ) -> Dict[str, Any]:
+        """Determine if auth is required."""
+        auth_resp = await hyperion_client.async_is_auth_required()
+
+        # Could not determine if auth is required.
+        if not client.ResponseOK(auth_resp):
+            return self.async_abort(reason="auth_required_error")
+        auth_required = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED, False)
+        if auth_required:
+            return await self.async_step_auth()
+        return await self.async_step_confirm()
+
     async def async_step_import(
         self, import_data: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by a YAML config import."""
         self._data = import_data
-        return await self.async_step_auth()
+        async with await self._create_client(raw_connection=True) as hyperion_client:
+            if not hyperion_client:
+                return self.async_abort(reason="connection_error")
+            return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     async def async_step_ssdp(
         self, discovery_info: Optional[ConfigType] = None
@@ -173,29 +192,40 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
         else:
             return self.async_abort(reason="no_id")
-        return await self.async_step_auth()
+        async with await self._create_client(raw_connection=True) as hyperion_client:
+            if not hyperion_client:
+                return self.async_abort(reason="connection_error")
+            return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     # pylint: disable=arguments-differ
     async def async_step_user(
         self,
         user_input: Optional[ConfigType] = None,
-        errors: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """Handle a flow initiated by the user."""
-        if not user_input or errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
-                    }
-                ),
-                errors=errors or {},
-            )
+        errors = {}
+        if user_input:
+            self._data = user_input
 
-        self._data = user_input
-        return await self.async_step_auth()
+            async with await self._create_client(
+                raw_connection=True
+            ) as hyperion_client:
+                if hyperion_client:
+                    return await self._advance_to_auth_step_if_necessary(
+                        hyperion_client
+                    )
+                errors[CONF_BASE] = "connection_error"
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
+                }
+            ),
+            errors=errors,
+        )
 
     async def _cancel_request_token_task(self) -> None:
         """Cancel the request token task if it exists."""
@@ -237,61 +267,49 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # used to open a URL, that the user already knows the address of).
         return f"http://{self._data[CONF_HOST]}:{self._port_ui}"
 
+    async def _can_login(self) -> Optional[bool]:
+        """Verify login details."""
+        async with await self._create_client(raw_connection=True) as hyperion_client:
+            if not hyperion_client:
+                return None
+            return client.LoginResponseOK(
+                await hyperion_client.async_login(token=self._data[CONF_TOKEN])
+            )
+
     async def async_step_auth(
         self,
         user_input: Optional[ConfigType] = None,
-        errors: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """Handle the auth step of a flow."""
-        if not errors:
-            # First connect without attempting to login and determine if
-            # authentication is required.
-            async with await self._create_client(
-                raw_connection=True
-            ) as hyperion_client:
-                if not hyperion_client:
-                    return await self.async_step_user(
-                        errors={CONF_BASE: "connection_error"}
-                    )
-                auth_resp = await hyperion_client.async_is_auth_required()
-
-            # Could not determine if auth is required, show error.
-            if not client.ResponseOK(auth_resp):
-                return await self.async_step_user(
-                    errors={CONF_BASE: "auth_required_error"}
+        errors = {}
+        if user_input:
+            if user_input.get(CONF_CREATE_TOKEN):
+                self._auth_id = client.generate_random_auth_id()
+                return self.async_show_form(
+                    step_id="create_token",
+                    description_placeholders={
+                        CONF_AUTH_ID: self._auth_id,
+                    },
                 )
-
-            if not auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED, False):
+            # Using a static token.
+            self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
+            login_ok = await self._can_login()
+            if login_ok is None:
+                return self.async_abort(reason="connection_error")
+            elif login_ok:
                 return await self.async_step_confirm()
+            errors[CONF_BASE] = "auth_error"
 
-        # Auth is required, show the form to get the token.
-        if not user_input or errors:
-            return self.async_show_form(
-                step_id="auth",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_CREATE_TOKEN): bool,
-                        vol.Optional(CONF_TOKEN): str,
-                    }
-                ),
-                errors=errors or {},
-            )
-
-        if user_input.get(CONF_CREATE_TOKEN):
-            self._auth_id = client.generate_random_auth_id()
-            return self.async_show_form(
-                step_id="create_token",
-                description_placeholders={
-                    CONF_AUTH_ID: self._auth_id,
-                },
-            )
-
-        self._data[CONF_TOKEN] = user_input.get(CONF_TOKEN)
-
-        async with await self._create_client() as hyperion_client:
-            if not hyperion_client:
-                return await self.async_step_auth(errors={CONF_BASE: "auth_error"})
-        return await self.async_step_confirm()
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CREATE_TOKEN): bool,
+                    vol.Optional(CONF_TOKEN): str,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_create_token(
         self, _: Optional[ConfigType] = None
@@ -330,11 +348,12 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self._cancel_request_token_task()
 
         # Test the token.
-        async with await self._create_client() as hyperion_client:
-            if not hyperion_client:
-                return await self.async_step_auth(
-                    errors={CONF_BASE: "auth_new_token_not_work_error"}
-                )
+        login_ok = await self._can_login()
+
+        if login_ok is None:
+            return self.async_abort(reason="connection_error")
+        elif not login_ok:
+            return self.async_abort(reason="auth_new_token_not_work_error")
         return await self.async_step_confirm()
 
     async def async_step_create_token_fail(
@@ -343,9 +362,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Show an error on the auth form."""
         # Clean-up the request task.
         await self._cancel_request_token_task()
-        return await self.async_step_auth(
-            errors={CONF_BASE: "auth_new_token_not_granted_error"}
-        )
+        return self.async_abort(reason="auth_new_token_not_granted_error")
 
     async def async_step_confirm(
         self, user_input: Optional[ConfigType] = None
@@ -363,9 +380,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         async with await self._create_client() as hyperion_client:
             if not hyperion_client:
-                return await self.async_step_user(
-                    errors={CONF_BASE: "connection_error"}
-                )
+                return self.async_abort(reason="connection_error")
             hyperion_id = await hyperion_client.async_id()
 
         if not hyperion_id:

@@ -184,8 +184,8 @@ async def test_user_client_errors(hass):
     client.async_is_auth_required = CoroutineMock(return_value={"success": False})
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"]["base"] == "auth_required_error"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "auth_required_error"
 
 
 async def test_user_confirm_connection_error(hass):
@@ -200,8 +200,8 @@ async def test_user_confirm_connection_error(hass):
     # Confirmation sync_client_connect fails.
     with patch("hyperion.client.HyperionClient", side_effect=[good_client, bad_client]):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"]["base"] == "connection_error"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "connection_error"
 
 
 async def test_user_confirm_id_error(hass):
@@ -255,9 +255,8 @@ async def test_auth_static_token_auth_required_fail(hass):
     client.async_is_auth_required = CoroutineMock(return_value=None)
     with patch("hyperion.client.HyperionClient", return_value=client):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "auth_required_error"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "auth_required_error"
 
 
 async def test_auth_static_token_success(hass):
@@ -317,9 +316,8 @@ async def test_auth_create_token_approval_declined(hass):
         # The flow will be automatically advanced by the auth token response.
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"]["base"] == "auth_new_token_not_granted_error"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "auth_new_token_not_granted_error"
 
 
 async def test_auth_create_token_when_issued_token_fails(hass):
@@ -357,9 +355,8 @@ async def test_auth_create_token_when_issued_token_fails(hass):
         client.async_client_connect = CoroutineMock(return_value=False)
 
         result = await _configure_flow(hass, result)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"]["base"] == "auth_new_token_not_work_error"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "connection_error"
 
 
 async def test_auth_create_token_success(hass):
@@ -421,6 +418,20 @@ async def test_ssdp_success(hass):
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
     }
+
+
+async def test_ssdp_cannot_connect(hass):
+    """Check an SSDP flow that cannot connect."""
+
+    client = create_mock_client()
+    client.async_client_connect = CoroutineMock(return_value=False)
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO)
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_ssdp_missing_serial(hass):
@@ -504,7 +515,7 @@ async def test_ssdp_abort_duplicates(hass):
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_import(hass):
+async def test_import_success(hass):
     """Check an import flow from the old-style YAML."""
 
     client = create_mock_client()
@@ -527,3 +538,24 @@ async def test_import(hass):
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
     }
+
+
+async def test_import_cannot_connect(hass):
+    """Check an import flow that cannot connect."""
+
+    client = create_mock_client()
+    client.async_client_connect = CoroutineMock(return_value=False)
+
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_IMPORT,
+            data={
+                CONF_HOST: TEST_HOST,
+                CONF_PORT: TEST_PORT,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"

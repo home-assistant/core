@@ -63,6 +63,10 @@ def create_mock_client():
             "tan": 1,
         }
     )
+    mock_client.async_login = CoroutineMock(
+        return_value={"command": "authorize-login", "success": True, "tan": 0}
+    )
+
     mock_client.async_id = CoroutineMock(return_value=TEST_SERVER_ID)
     mock_client.adjustment = None
     mock_client.effects = None
