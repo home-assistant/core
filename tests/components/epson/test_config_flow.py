@@ -89,26 +89,3 @@ async def test_import_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_import_already_configured(hass):
-    """Test config.yaml import."""
-    with patch(
-        "homeassistant.components.epson.Projector.get_property",
-        return_value="04",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson", CONF_PORT: 80},
-        )
-        assert result["type"] == "create_entry"
-        assert result["title"] == "test-epson"
-        assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 80}
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson", CONF_PORT: 80},
-        )
-        assert result2["type"] == "abort"
-        assert result2["reason"] == "already_configured"
