@@ -42,9 +42,18 @@
                 "description": "Choisissez les entit\u00e9s que vous ne souhaitez PAS voir reli\u00e9es.",
                 "title": "Exclure les entit\u00e9s des domaines s\u00e9lectionn\u00e9s de la passerelle"
             },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e9s",
+                    "mode": "Mode"
+                },
+                "description": "Choisissez les entit\u00e9s \u00e0 exposer. En mode accessoire, une seule entit\u00e9 est expos\u00e9e. En mode d'inclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 moins que des entit\u00e9s sp\u00e9cifiques ne soient s\u00e9lectionn\u00e9es. En mode d'exclusion de pont, toutes les entit\u00e9s du domaine seront expos\u00e9es \u00e0 l'exception des entit\u00e9s exclues.",
+                "title": "S\u00e9lectionnez les entit\u00e9s \u00e0 exposer"
+            },
             "init": {
                 "data": {
-                    "include_domains": "Domaine \u00e0 inclure"
+                    "include_domains": "Domaine \u00e0 inclure",
+                    "mode": "Mode"
                 },
                 "description": "Les entit\u00e9s des \u00abdomaines \u00e0 inclure\u00bb seront pont\u00e9es vers HomeKit. Vous pourrez s\u00e9lectionner les entit\u00e9s \u00e0 exclure de cette liste sur l'\u00e9cran suivant.",
                 "title": "S\u00e9lectionnez les domaines \u00e0 relier."
