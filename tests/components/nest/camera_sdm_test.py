@@ -13,6 +13,7 @@ from google_nest_sdm.device import Device
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
+from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
 
@@ -71,7 +72,6 @@ class FakeAuth(AbstractAuth):
 
     async def request(self, method: str, url: str, **kwargs):
         """Pass through the FakeResponse."""
-        print("request: ", method, url, kwargs)
         return self._responses.pop(0)
 
 
@@ -133,7 +133,7 @@ async def test_camera_device(hass):
 
 async def test_camera_stream(hass, aiohttp_client):
     """Test a basic camera and fetch its live stream."""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = utcnow()
     expiration = now + datetime.timedelta(seconds=100)
     response = FakeResponse(
         {
@@ -167,7 +167,7 @@ async def test_camera_stream(hass, aiohttp_client):
 
 async def test_refresh_expired_stream_token(hass, aiohttp_client):
     """Test a camera stream expiration and refresh."""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = utcnow()
     past = now - datetime.timedelta(seconds=100)
     future = now + datetime.timedelta(seconds=100)
     responses = [
@@ -221,7 +221,7 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
 
 async def test_camera_removed(hass, aiohttp_client):
     """Test a stream token is a basic camera and fetch its live stream."""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = utcnow()
     expiration = now + datetime.timedelta(seconds=100)
     responses = [
         FakeResponse(

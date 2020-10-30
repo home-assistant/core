@@ -1,7 +1,6 @@
 """Support for Google Nest SDM Cameras."""
 
 import asyncio
-import datetime
 import logging
 from typing import Optional
 
@@ -14,6 +13,7 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, SIGNAL_NEST_UPDATE
 from .device_info import DeviceInfo
@@ -96,7 +96,7 @@ class NestCamera(Camera):
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        now = utcnow()
         if not self._stream:
             logging.debug("Fetching stream url")
             self._stream = await trait.generate_rtsp_stream()
