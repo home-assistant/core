@@ -144,6 +144,7 @@ PLATFORMS = [
     "fan",
     "light",
     "lock",
+    "scene",
     "sensor",
     "switch",
     "vacuum",
