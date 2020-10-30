@@ -443,6 +443,39 @@ class TestAnomalyBinarySensor:
         assert state.attributes["sample_count"] == 3
         assert state.attributes["trailing_sample_count"] == 6
 
+    def test_max_samples_time(self):
+        """Test that sample count is limited correctly."""
+        assert setup.setup_component(
+            self.hass,
+            "binary_sensor",
+            {
+                "binary_sensor": {
+                    "platform": "anomaly",
+                    "sensors": {
+                        "test_anomaly_sensor": {
+                            "entity_id": "sensor.test_state",
+                            "min_change_amount": 3,
+                            "max_samples": 100,
+                            "max_trailing_samples": 100,
+                            "sample_duration": 7,
+                            "trailing_sample_duration": 15,
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.block_till_done()
+        now = dt_util.utcnow() - timedelta(seconds=20)
+        for val in [0, 1, 2, 3, 4, 5, 6, 50, 51, 52]:
+            with patch("homeassistant.util.dt.utcnow", return_value=now):
+                self.hass.states.set("sensor.test_state", val)
+            self.hass.block_till_done()
+            now += timedelta(seconds=2)
+        state = self.hass.states.get("binary_sensor.test_anomaly_sensor")
+        assert state.state == "on"
+        assert state.attributes["sample_count"] == 3
+        assert state.attributes["trailing_sample_count"] == 7
+
     def test_no_data(self):
         """Test that sample count is limited correctly."""
         assert setup.setup_component(

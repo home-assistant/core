@@ -1,8 +1,8 @@
 """A sensor that detects anomalies in other components."""
 from collections import deque
 import logging
+from typing import Optional
 
-import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -88,7 +88,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the anomaly sensors."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
@@ -174,8 +173,8 @@ class SensorAnomaly(BinarySensorEntity):
         self._min_change_pct: float = min_change_percent
         self._change_amount: float = 0.0
         self._change_percent: float = 0.0
-        self._trailing_avg: float = 0.0
-        self._sample_avg: float = 0.0
+        self._trailing_avg: Optional[float] = None
+        self._sample_avg: Optional[float] = None
         self._state = None
         self.trailing_samples: deque = deque(maxlen=max_trailing_samples)
         self.samples: deque = deque(maxlen=max_samples)
@@ -199,18 +198,6 @@ class SensorAnomaly(BinarySensorEntity):
     def device_state_attributes(self) -> dict:
         """Return the state attributes of the sensor."""
         return {
-            ATTR_ENTITY_ID: self._entity_id,
-            ATTR_FRIENDLY_NAME: self._name,
-            ATTR_INVERT: self._invert,
-            ATTR_REQUIRE_BOTH: self._require_both,
-            ATTR_POSITIVE_ONLY: self._positive_only,
-            ATTR_NEGATIVE_ONLY: self._negative_only,
-            ATTR_MIN_CHANGE_AMOUNT: self._min_change_amount,
-            ATTR_MIN_CHANGE_PERCENT: self._min_change_pct,
-            ATTR_SAMPLE_DURATION: self._sample_duration,
-            ATTR_MAX_SAMPLES: self._max_samples,
-            ATTR_TRAILING_SAMPLE_DURATION: self._trailing_sample_duration,
-            ATTR_MAX_TRAILING_SAMPLES: self._max_trailing_samples,
             ATTR_SAMPLE_COUNT: len(self.samples),
             ATTR_TRAILING_SAMPLE_COUNT: len(self.trailing_samples),
             ATTR_SAMPLE_AVG: self._sample_avg,
@@ -261,11 +248,12 @@ class SensorAnomaly(BinarySensorEntity):
             await self.hass.async_add_executor_job(self._trim_trailing_samples)
         if self._sample_duration > 0:
             await self.hass.async_add_executor_job(self._trim_samples)
-        if len(self.samples) == 0:
-            return
 
         # Calculate diffs between trailing and sample averages
-        await self.hass.async_add_executor_job(self._calculate_diff)
+        if len(self.samples) == 0:
+            await self.hass.async_add_executor_job(self._empty_sample_diff)
+        else:
+            await self.hass.async_add_executor_job(self._calculate_diff)
 
         # Update state
         await self.hass.async_add_executor_job(self._set_state)
@@ -294,26 +282,38 @@ class SensorAnomaly(BinarySensorEntity):
         Assume True since first check already passed.
         Switch to False if we require a direction and the direction isn't met.
         """
-        state: bool = True
         if self._positive_only:
-            if self._change_amount < 0:
-                state = False
-        elif self._negative_only:
-            if self._change_amount > 0:
-                state = False
-        return state
+            return self._change_amount > 0
+        if self._negative_only:
+            return self._change_amount < 0
+        return True
+
+    def _empty_sample_diff(self):
+        if len(self.trailing_samples) > 0:
+            trailing_sample_values = [s for _, s in self.trailing_samples]
+            self._trailing_avg = sum(trailing_sample_values) / len(
+                trailing_sample_values
+            )
+        else:
+            self._trailing_avg = None
+        self._sample_avg = None
+        self._change_amount = 0
+        self._change_percent = 0
 
     def _calculate_diff(self) -> None:
         """Compute the diff between the current samples and the trailing samples.
 
         This need run inside executor.
         """
-        trailing_sample_values = np.array([s for _, s in self.trailing_samples])
-        sample_values = np.array([s for _, s in self.samples])
-        self._trailing_avg = np.mean(a=trailing_sample_values)
-        self._sample_avg = np.mean(a=sample_values)
+        trailing_sample_values = [s for _, s in self.trailing_samples]
+        sample_values = [s for _, s in self.samples]
+        self._trailing_avg = sum(trailing_sample_values) / len(trailing_sample_values)
+        self._sample_avg = sum(sample_values) / len(sample_values)
         self._change_amount = self._sample_avg - self._trailing_avg
-        self._change_percent = (self._change_amount / self._trailing_avg) * 100
+        if self._trailing_avg != 0:
+            self._change_percent = (self._change_amount / self._trailing_avg) * 100
+        else:
+            self._change_percent = (self._change_amount / 1) * 100
 
     def _trim_trailing_samples(self) -> None:
         trailing_cuttoff = utcnow().timestamp() - self._trailing_sample_duration
