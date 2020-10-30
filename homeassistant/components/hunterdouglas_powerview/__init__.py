@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data():
         """Fetch data from shade endpoint."""
         async with async_timeout.timeout(10):
-            shade_entries = await shades.get_resources()
+            shade_entries = await shades.get_resources(params={"refresh": "true"})
         if not shade_entries:
             raise UpdateFailed("Failed to fetch new shade data.")
         return _async_map_data_by_id(shade_entries[SHADE_DATA])
