@@ -5,15 +5,10 @@ from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PIN, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from . import (
-    ENTRY_CONFIG,
-    YAML_CONFIG,
-    _patch_async_setup_entry,
-    init_integration,
-)
+from . import ENTRY_CONFIG, YAML_CONFIG, _patch_async_setup_entry, init_integration
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry

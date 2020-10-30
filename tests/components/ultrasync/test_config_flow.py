@@ -10,15 +10,9 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
+from . import ENTRY_CONFIG, USER_INPUT, _patch_async_setup, _patch_async_setup_entry
+
 from tests.async_mock import MagicMock, patch
-
-from . import (
-    ENTRY_CONFIG,
-    USER_INPUT,
-    _patch_async_setup,
-    _patch_async_setup_entry,
-)
-
 from tests.common import MockConfigEntry
 
 

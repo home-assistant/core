@@ -1,11 +1,12 @@
-"""Monitor the Informix UltraSync Hub"""
+"""Monitor the Informix UltraSync Hub."""
 
 import logging
-from homeassistant.const import CONF_NAME
+from typing import Callable, List
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from typing import Callable, List
 
 from . import UltraSyncEntity
 from .const import DATA_COORDINATOR, DOMAIN

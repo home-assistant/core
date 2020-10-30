@@ -2,16 +2,10 @@
 from datetime import timedelta
 import logging
 
+from async_timeout import timeout
 import ultrasync
 
-from async_timeout import timeout
-
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_PIN,
-    CONF_USERNAME,
-    CONF_HOST,
-)
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 

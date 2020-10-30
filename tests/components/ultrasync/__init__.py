@@ -3,11 +3,11 @@ from datetime import timedelta
 
 from homeassistant.components.ultrasync.const import DOMAIN
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_PIN,
-    CONF_USERNAME,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
 )
 
 from tests.async_mock import patch

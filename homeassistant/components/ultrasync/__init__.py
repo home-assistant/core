@@ -2,35 +2,32 @@
 
 import asyncio
 
+from ultrasync import AlarmScene
 import voluptuous as vol
 
-from ultrasync import AlarmScene
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
-
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
-    DOMAIN,
-    SERVICE_AWAY,
-    SERVICE_STAY,
-    SERVICE_DISARM,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SERVICE_AWAY,
+    SERVICE_DISARM,
+    SERVICE_STAY,
 )
-
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-)
-
 from .coordinator import UltraSyncDataUpdateCoordinator
 
 PLATFORMS = ["sensor"]

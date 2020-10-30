@@ -1,4 +1,4 @@
-"""Constants for Informix UltraSync Hub"""
+"""Constants for Informix UltraSync Hub."""
 
 DOMAIN = "ultrasync"
 

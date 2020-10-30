@@ -1,33 +1,28 @@
 """Config flow for Informix Ultrasync Hub."""
 import logging
 from typing import Any, Dict, Optional
+
 import ultrasync
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_PIN,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant import config_entries
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class AuthFailureException(IOError):
-    """A general exception we can throw and track Authentication
-    failures.
-    """
+    """A general exception we can use to track Authentication failures."""
 
 
 def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
@@ -70,6 +65,7 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
+        """Handle user flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
