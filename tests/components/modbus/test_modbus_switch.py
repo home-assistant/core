@@ -133,3 +133,54 @@ async def test_register_switch(hass, mock_hub, regs, expected):
         expected,
         now + timedelta(seconds=scan_interval + 1),
     )
+
+
+@pytest.mark.parametrize(
+    "regs,expected",
+    [
+        (
+            [0x40],
+            STATE_ON,
+        ),
+        (
+            [0x04],
+            STATE_OFF,
+        ),
+        (
+            [0xFF],
+            STATE_OFF,
+        ),
+    ],
+)
+async def test_register_state_switch(hass, mock_hub, regs, expected):
+    """Run test for given config."""
+    switch_name = "modbus_test_switch"
+    scan_interval = 5
+    entity_id, now, device = await setup_base_test(
+        switch_name,
+        hass,
+        mock_hub,
+        {
+            CONF_REGISTERS: [
+                {
+                    CONF_NAME: switch_name,
+                    CONF_REGISTER: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x04,
+                    CONF_COMMAND_ON: 0x40,
+                },
+            ]
+        },
+        SWITCH_DOMAIN,
+        scan_interval,
+    )
+
+    await run_base_read_test(
+        entity_id,
+        hass,
+        mock_hub,
+        CALL_TYPE_REGISTER_HOLDING,
+        regs,
+        expected,
+        now + timedelta(seconds=scan_interval + 1),
+    )
