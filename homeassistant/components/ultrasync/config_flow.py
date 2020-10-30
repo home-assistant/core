@@ -16,7 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +47,10 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
 
     @staticmethod
     @callback
