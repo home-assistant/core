@@ -7,5 +7,6 @@
     "httplib2==0.10.3",
     "oauth2client==4.0.0"
   ],
+  "config_flow": true,
   "codeowners": []
 }

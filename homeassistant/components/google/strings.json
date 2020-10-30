@@ -1,0 +1,22 @@
+{   "title": "AIS Google Calendar",
+    "config": {
+        "step": {
+            "confirm": {
+                  "description": "###### ![AIS logo](brands.home-assistant.io/_/google/icon.png)\n\nTa integracja pozwala na wysyłanie poleceń do Asystenta Google oraz na wysyłanie powiadomień audio do urządzeń Google Home, bez przerywania muzyki.\n\n Czy chcesz skonfigurować integrację AIS Google Home?",
+                  "title": "AIS Google Home"
+             },
+            "oauth": {
+                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home)\n\n###### ![AIS logo](/static/icons/ais_google_home.png)\n\n Następnie wróć tu i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób urządzenie zostanie autoryzowane.\n\n{error_info}",
+                "title": "Uwierzytelnianie urządzenia w Google"
+            }
+        },
+        "error": {
+          "oauth_error": "Niepoprawne dane oAuth",
+          "token_error": "Niepoprawny kod"
+        },
+        "abort": {
+            "abort_by_error": "Error 123 {error_info}",
+            "single_instance_allowed": "Masz już skonfigurowany AIS Google Home.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."
+        }
+    }
+}

@@ -135,16 +135,8 @@ def do_authentication(hass, hass_config, config):
     """
     # get the credentials from AIS dom
     if config[CONF_CLIENT_ID] == "ASK_AIS_DOM":
-        from homeassistant.components import ais_cloud
-
-        try:
-            ais_dom = ais_cloud.AisCloudWS(hass)
-            json_ws_resp = ais_dom.key("gcalendar_client_id")
-            config[CONF_CLIENT_ID] = json_ws_resp["key"]
-            json_ws_resp = ais_dom.key("gcalendar_secret")
-            config[CONF_CLIENT_SECRET] = json_ws_resp["key"]
-        except Exception as e:
-            _LOGGER.error("Error calendar do_authentication: " + str(e))
+        # TODO show only disco for user
+        return True
 
     # oAuth
     oauth = OAuth2WebServerFlow(
