@@ -26,7 +26,7 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
-from homeassistant.const import CONF_HOST, STATE_ON
+from homeassistant.const import CONF_HOST, STATE_OFF
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -202,7 +202,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
-        self._state = state is None or state.state == STATE_ON
+        self._state = state is None or state.state != STATE_OFF
 
         self.async_on_remove(
             self._coordinator.async_add_listener(self.async_write_ha_state)

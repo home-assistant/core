@@ -281,7 +281,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.elkm1
-elkm1-lib==0.8.5
+elkm1-lib==0.8.7
 
 # homeassistant.components.mobile_app
 emoji==0.5.4
@@ -370,7 +370,7 @@ hangups==0.4.11
 hass-nabucasa==0.37.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.25
+hatasmota==0.0.26
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -640,7 +640,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cloudflare
-pycfdns==1.1.1
+pycfdns==1.2.1
 
 # homeassistant.components.cast
 pychromecast==7.5.1
