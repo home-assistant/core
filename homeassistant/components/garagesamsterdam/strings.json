@@ -1,0 +1,14 @@
+{
+  "title": "Garages Amsterdam",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pick a garage name to monitor",
+        "data": { "garageName":"Garage name" }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

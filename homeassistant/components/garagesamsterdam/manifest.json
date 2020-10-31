@@ -1,0 +1,14 @@
+{
+  "domain": "garagesamsterdam",
+  "name": "Garages Amsterdam",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/garagesamsterdam",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@klaasnicolaas"
+  ]
+}

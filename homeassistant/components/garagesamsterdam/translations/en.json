@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integration is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garageName": "Garage name"
+                },
+                "title": "Pick a garage name to monitor"
+            }
+        }
+    },
+    "title": "Garages Amsterdam"
+}
