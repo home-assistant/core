@@ -150,11 +150,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self.async_schedule_update_ha_state(True)
 
     @callback
-    def async_refresh_media_player(self, device, session):
+    def async_refresh_media_player(self, device, session, source):
         """Set instance objects and trigger an entity state update."""
         _LOGGER.debug("Refreshing %s [%s / %s]", self.entity_id, device, session)
         self.device = device
         self.session = session
+        if source:
+            self.player_source = source
         self.async_schedule_update_ha_state(True)
 
     @callback
@@ -200,6 +202,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def force_idle(self):
         """Force client to idle."""
         self._state = STATE_IDLE
+        if self.player_source == "session":
+            self.device = None
+            self.session_device = None
+            self._available = False
 
         dispatcher_send(
             self.hass,

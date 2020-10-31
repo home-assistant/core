@@ -236,7 +236,7 @@ class PlexServer:
             raise ShouldUpdateConfigEntry
 
     @callback
-    def async_refresh_entity(self, machine_identifier, device, session):
+    def async_refresh_entity(self, machine_identifier, device, session, source):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
@@ -245,6 +245,7 @@ class PlexServer:
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
+            source,
         )
 
     async def async_update_session(self, payload):
@@ -492,7 +493,10 @@ class PlexServer:
                 self._created_clients.add(client_id)
             else:
                 self.async_refresh_entity(
-                    client_id, client_data["device"], client_data.get("session")
+                    client_id,
+                    client_data["device"],
+                    client_data.get("session"),
+                    client_data.get(PLAYER_SOURCE),
                 )
 
         self._known_clients.update(new_clients | ignored_clients)
@@ -501,7 +505,7 @@ class PlexServer:
             self._known_clients - self._known_idle - ignored_clients
         ).difference(available_clients)
         for client_id in idle_clients:
-            self.async_refresh_entity(client_id, None, None)
+            self.async_refresh_entity(client_id, None, None, None)
             self._known_idle.add(client_id)
             self._client_device_cache.pop(client_id, None)
 
