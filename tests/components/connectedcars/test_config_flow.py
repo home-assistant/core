@@ -203,3 +203,31 @@ async def test_form_cannot_get_email(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_get_email"}
+
+
+async def test_form_unknown_error(hass):
+    """Test we handle error of noy getting vin."""
+    cc_client = _get_mock_cc_client()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.connectedcars.config_flow.ConnectedCarsClient",
+        return_value=cc_client,
+    ), patch(
+        "homeassistant.components.connectedcars.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAMESPACE: "test-namespace",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
