@@ -16,6 +16,20 @@ def mock_supervisor_fixture():
         yield
 
 
+@pytest.fixture(name="addon_info")
+def mock_addon_info():
+    """Mock Supervisor add-on info."""
+    with patch("homeassistant.components.hassio.async_get_addon_info") as addon_info:
+        yield addon_info
+
+
+@pytest.fixture(name="addon_running")
+def mock_addon_running(addon_info):
+    """Mock add-on already running."""
+    addon_info.return_value = {"state": "started"}
+    return addon_info
+
+
 async def test_user_not_supervisor_create_entry(hass):
     """Test the user step creates an entry not on Supervisor."""
     hass.config.components.add("mqtt")
@@ -81,6 +95,37 @@ async def test_not_addon(hass, supervisor):
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": False}
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": None,
+        "network_key": None,
+        "integration_created_addon": False,
+    }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_addon_running(hass, supervisor, addon_running):
+    """Test add-on already running on Supervisor."""
+    hass.config.components.add("mqtt")
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"use_addon": True}
         )
 
     assert result["type"] == "create_entry"
