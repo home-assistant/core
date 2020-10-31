@@ -95,13 +95,13 @@ async def test_humidifier_active_state(hass, utcnow):
     helper = await setup_test_component(hass, create_humidifier_dehumidifier_service)
 
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": "humidifier.testdevice"}, blocking=True
+        DOMAIN, "turn_on", {"entity_id": helper.entity_id}, blocking=True
     )
 
     assert helper.characteristics[ACTIVE].value == 1
 
     await hass.services.async_call(
-        DOMAIN, "turn_off", {"entity_id": "humidifier.testdevice"}, blocking=True
+        DOMAIN, "turn_off", {"entity_id": helper.entity_id}, blocking=True
     )
 
     assert helper.characteristics[ACTIVE].value == 0
@@ -123,17 +123,35 @@ async def test_humidifier_read_humidity(hass, utcnow):
     assert state.state == "off"
     assert state.attributes["humidity"] == 10
 
+    helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 3
+    helper.characteristics[RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD].value = 40
+    state = await helper.poll_and_get_state()
+    assert state.attributes["humidity"] == 10
+
+
+async def test_humidifier_set_humidity(hass, utcnow):
+    """Test that we can set the state of a HomeKit diffuser accessory."""
+    helper = await setup_test_component(hass, create_humidifier_dehumidifier_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_humidity",
+        {"entity_id": helper.entity_id, "humidity": 20},
+        blocking=True,
+    )
+    assert helper.characteristics[RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD].value == 20
+
 
 async def test_humidifier_read_only_mode(hass, utcnow):
     """Test that we can read the state of a HomeKit humidifier accessory."""
     helper = await setup_test_component(hass, create_humidifier_dehumidifier_service)
 
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "unknown"
+    assert state.attributes["mode"] == "normal"
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 0
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "off"
+    assert state.attributes["mode"] == "normal"
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 1
     state = await helper.poll_and_get_state()
@@ -141,11 +159,11 @@ async def test_humidifier_read_only_mode(hass, utcnow):
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 2
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "humidifying"
+    assert state.attributes["mode"] == "normal"
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 3
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "dehumidifying"
+    assert state.attributes["mode"] == "normal"
 
 
 async def test_humidifier_target_humidity_modes(hass, utcnow):
@@ -160,23 +178,20 @@ async def test_humidifier_target_humidity_modes(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.attributes["mode"] == "auto"
     assert state.attributes["humidity"] == 37
-    assert state.attributes["current_humidity"] == 51
-    assert state.attributes["humidifier_threshold"] == 37
-    assert state.attributes["dehumidifier_threshold"] == 73
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 3
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "dehumidifying"
-    assert state.attributes["humidity"] == 73
+    assert state.attributes["mode"] == "normal"
+    assert state.attributes["humidity"] == 37
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 2
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "humidifying"
+    assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 37
 
     helper.characteristics[CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE].value = 0
     state = await helper.poll_and_get_state()
-    assert state.attributes["mode"] == "off"
+    assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 37
 
 
