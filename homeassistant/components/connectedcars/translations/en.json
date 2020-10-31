@@ -4,6 +4,7 @@
             "already_configured": "This ConnectedCars.io-component is already configured"
         },
         "error": {
+            "cannot_get_email": "Could not connect get email address for user from ConnectedCars.io",
             "cannot_get_vin": "Could not connect get vin of car from ConnectedCars.io",
             "invalid_auth": "Unable to login to ConnectedCars.io",
             "unknown": "Unknown error occured"

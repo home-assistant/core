@@ -12,6 +12,7 @@
       }
     },
     "error": {
+      "cannot_get_email": "Could not connect get email address for user from ConnectedCars.io",
       "cannot_get_vin": "Could not connect get vin of car from ConnectedCars.io",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -21,3 +22,4 @@
     }
   }
 }
+

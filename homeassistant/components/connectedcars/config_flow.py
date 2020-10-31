@@ -38,13 +38,15 @@ class ConnectedcarsApiHandler:
 
         self.client = client
 
-        self.user_data = await client.async_query(QUERY_USER)
+        try:
+            self.user_data = await client.async_query(QUERY_USER)
+        except ConnectedCarsException:
+            return False
 
         return True
 
     async def get_email(self) -> str:
         """Will get the email address of the account holder."""
-
         if not self.user_data:
             self.user_data = await self.client.async_query(QUERY_USER)
 
@@ -54,7 +56,6 @@ class ConnectedcarsApiHandler:
 
     async def get_vin(self, userinput_vin) -> str:
         """Will get the vin identifier of the car."""
-
         if not self.vin:
             response = await self.client.async_query(QUERY_VEHICLE_VIN)
             # This needs to lookup the "userinput_vin" to see if it can be found in the result, not just take the first car
@@ -69,7 +70,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
     ccah = ConnectedcarsApiHandler(data["namespace"])
 
     if not await ccah.authenticate(data["username"], data["password"]):
@@ -77,9 +77,14 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         email = await ccah.get_email()
-        userinput_vin = None
-        # if not data["vin"]: ## Do this somehow
-        #     userinput_vin = data["vin"]
+    except ConnectedCarsException as exception:
+        raise CannotGetEmail from exception
+
+    userinput_vin = None
+    # if not data["vin"]: ## Do this somehow
+    #     userinput_vin = data["vin"]
+
+    try:
         vin = await ccah.get_vin(userinput_vin)
     except ConnectedCarsException as exception:
         raise CannotGetVin from exception
@@ -108,6 +113,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
+            except CannotGetEmail:
+                errors["base"] = "cannot_get_email"
+                _LOGGER.error("Unable to find your email from connectedcars.io")
             except CannotGetVin:
                 errors["base"] = "cannot_get_vin"
                 _LOGGER.error("Unable to find a car vin-name from connectedcars.io")
@@ -121,6 +129,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+
+class CannotGetEmail(exceptions.HomeAssistantError):
+    """Error to indicate we cannot find email of user."""
 
 
 class CannotGetVin(exceptions.HomeAssistantError):

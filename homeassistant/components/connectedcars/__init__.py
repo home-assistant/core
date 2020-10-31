@@ -49,7 +49,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up ConnectedCars.io from a config entry."""
-
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
     namespace = config_entry.data[CONF_NAMESPACE]
