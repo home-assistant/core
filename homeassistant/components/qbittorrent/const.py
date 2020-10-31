@@ -16,7 +16,7 @@ SENSOR_TYPE_RESUMED_TORRENTS = "resumed_torrents"
 SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
 SENSOR_TYPE_COMPLETED_TORRENTS = "completed_torrents"
 
-DEFAULT_NAME = "qBittorrent"
+DEFAULT_NAME = "qbittorrent"
 TRIM_SIZE = 35
 CONF_CATEGORIES = "categories"
 
