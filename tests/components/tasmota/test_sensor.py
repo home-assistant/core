@@ -412,11 +412,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow()
-        + timedelta(
-            seconds=config_entries.EntityRegistryDisabledHandler.RELOAD_AFTER_UPDATE_DELAY
-            + 1
-        ),
+        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
