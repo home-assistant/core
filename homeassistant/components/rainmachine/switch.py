@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
 from .const import (
+    CONF_ZONE_RUN_TIME,
     DATA_CLIENT,
     DATA_PROGRAMS,
     DATA_ZONES,
@@ -268,7 +269,8 @@ class RainMachineZone(RainMachineSwitch):
         """Turn the zone on."""
         await self._async_run_switch_coroutine(
             self.rainmachine.controller.zones.start(
-                self._rainmachine_entity_id, self.rainmachine.default_zone_runtime
+                self._rainmachine_entity_id,
+                self.rainmachine.config_entry.options[CONF_ZONE_RUN_TIME],
             )
         )
 

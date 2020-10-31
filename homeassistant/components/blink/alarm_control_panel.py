@@ -66,7 +66,7 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         """Return the state attributes."""
         attr = self.sync.attributes
         attr["network_info"] = self.data.networks
-        attr["associated_cameras"] = list(self.sync.cameras.keys())
+        attr["associated_cameras"] = list(self.sync.cameras)
         attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         return attr
 

@@ -40,7 +40,7 @@ def _check_sensor_schema(conf):
     except (ImportError, AttributeError):
         return conf
 
-    customs = list(conf[CONF_CUSTOM].keys())
+    customs = list(conf[CONF_CUSTOM])
 
     for sensor in conf[CONF_SENSORS]:
         if sensor in customs:
@@ -120,7 +120,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if isinstance(config_sensors, list):
         if not config_sensors:  # Use all sensors by default
             config_sensors = [s.name for s in sensor_def]
-        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM].keys())))
+        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM])))
         for sensor in used_sensors:
             hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
