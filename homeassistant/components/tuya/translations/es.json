@@ -51,9 +51,12 @@
             },
             "init": {
                 "data": {
+                    "discovery_interval": "Intervalo de sondeo del descubrimiento al dispositivo en segundos",
                     "list_devices": "Selecciona los dispositivos a configurar o d\u00e9jalos en blanco para guardar la configuraci\u00f3n",
-                    "query_device": "Selecciona el dispositivo que utilizar\u00e1 el m\u00e9todo de consulta para una actualizaci\u00f3n de estado m\u00e1s r\u00e1pida"
+                    "query_device": "Selecciona el dispositivo que utilizar\u00e1 el m\u00e9todo de consulta para una actualizaci\u00f3n de estado m\u00e1s r\u00e1pida",
+                    "query_interval": "Intervalo de sondeo de la consulta al dispositivo en segundos"
                 },
+                "description": "No establezcas valores de intervalo de sondeo demasiado bajos o las llamadas fallar\u00e1n generando un mensaje de error en el registro",
                 "title": "Configurar opciones de Tuya"
             }
         }
