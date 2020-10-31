@@ -102,14 +102,14 @@ async def async_start(
 
         payload = MQTTConfig(payload)
 
-        for key in list(payload.keys()):
+        for key in list(payload):
             abbreviated_key = key
             key = ABBREVIATIONS.get(key, key)
             payload[key] = payload.pop(abbreviated_key)
 
         if CONF_DEVICE in payload:
             device = payload[CONF_DEVICE]
-            for key in list(device.keys()):
+            for key in list(device):
                 abbreviated_key = key
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)

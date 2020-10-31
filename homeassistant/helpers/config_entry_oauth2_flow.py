@@ -233,7 +233,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "implementation", default=list(implementations.keys())[0]
+                        "implementation", default=list(implementations)[0]
                     ): vol.In({key: impl.name for key, impl in implementations.items()})
                 }
             ),

@@ -18,5 +18,12 @@
                 "title": "Vypl\u0148te va\u0161e \u00fadaje"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Nastaven\u00ed RainMachine"
+            }
+        }
     }
 }
