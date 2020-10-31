@@ -3,12 +3,11 @@ import logging
 
 from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
-from homeassistant.exceptions import PlatformNotReady
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
