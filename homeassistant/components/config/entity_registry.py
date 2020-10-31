@@ -1,6 +1,7 @@
 """HTTP views to interact with the entity registry."""
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import (
@@ -114,6 +115,15 @@ async def websocket_update_entity(hass, connection, msg):
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
         )
     else:
+        result = websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
+        if "disabled_by" in changes and changes["disabled_by"] is None:
+            config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
+            if entry and not config_entry.supports_unload:
+                result["result"]["requires_restart"] = True
+            else:
+                result["result"][
+                    "reload_delay"
+                ] = config_entries.RELOAD_AFTER_UPDATE_DELAY
         connection.send_message(
             websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
         )
