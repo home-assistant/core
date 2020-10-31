@@ -119,10 +119,9 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
-            supported_features |= SUPPORT_STOP
-        return supported_features
+            return SUPPORT_STOP | SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
     def is_closed(self):
