@@ -10,7 +10,7 @@ homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
 # Home Assistant Supervisor
-base.json @home-assistant/supervisor
+build.json @home-assistant/supervisor
 machine/* @home-assistant/supervisor
 rootfs/* @home-assistant/supervisor
 Dockerfile @home-assistant/supervisor
