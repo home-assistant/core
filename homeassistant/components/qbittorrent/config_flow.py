@@ -1,4 +1,4 @@
-"""Config flow for qbittorrent integration."""
+"""Config flow for qBittorrent integration."""
 import logging
 
 from qbittorrent.client import Client, LoginRequired
@@ -7,15 +7,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class qbittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class qBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for qbittorrent."""
 
     VERSION = 1

@@ -6,7 +6,7 @@ from qbittorrent.client import Client, LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.poolsense import PLATFORMS
+# from homeassistant.components.qbittorrent import PLATFORMS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,21 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_CATEGORIES,
-    DEFAULT_NAME,
     DOMAIN,
-    SENSOR_TYPE_ACTIVE_TORRENTS,
-    SENSOR_TYPE_COMPLETED_TORRENTS,
-    SENSOR_TYPE_CURRENT_STATUS,
-    SENSOR_TYPE_DOWNLOAD_SPEED,
-    SENSOR_TYPE_DOWNLOADING_TORRENTS,
-    SENSOR_TYPE_INACTIVE_TORRENTS,
-    SENSOR_TYPE_PAUSED_TORRENTS,
-    SENSOR_TYPE_RESUMED_TORRENTS,
-    SENSOR_TYPE_SEEDING_TORRENTS,
-    SENSOR_TYPE_TOTAL_TORRENTS,
-    SENSOR_TYPE_UPLOAD_SPEED,
-    TRIM_SIZE,
 )
 
 PLATFORMS = ["sensor"]
