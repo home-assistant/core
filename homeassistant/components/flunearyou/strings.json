@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Configure Flu Near You",
-        "description": "Monitor user-based and CDC repots for a pair of coordinates.",
+        "description": "Monitor user-based and CDC reports for a pair of coordinates.",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"

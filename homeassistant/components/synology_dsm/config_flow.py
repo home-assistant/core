@@ -275,7 +275,6 @@ def _login_and_fetch_syno_info(api, otp_code):
     if (
         not api.information.serial
         or api.utilisation.cpu_user_load is None
-        or not api.storage.disks_ids
         or not api.storage.volumes_ids
         or not api.network.macs
     ):
