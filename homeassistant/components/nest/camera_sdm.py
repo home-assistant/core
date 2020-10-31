@@ -104,13 +104,10 @@ class NestCamera(Camera):
             logging.debug("Stream expired, extending stream")
             new_stream = await self._stream.extend_rtsp_stream()
             self._stream = new_stream
-        # Note: This is only valid for a few minutes, and probably needs
-        # to be improved with an occasional call to .extend_rtsp_stream() which
-        # returns a new rtsp_stream object.
         return self._stream.rtsp_stream_url
 
-    async def async_removed_from_registry(self):
-        """Invalidates the RTSP token."""
+    async def async_will_remove_from_hass(self):
+        """Invalidates the RTSP token when unloaded."""
         if self._stream:
             logging.debug("Invalidating stream")
             await self._stream.stop_rtsp_stream()
