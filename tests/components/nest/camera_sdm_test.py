@@ -36,6 +36,7 @@ DEVICE_TRAITS = {
     },
 }
 DATETIME_FORMAT = "YY-MM-DDTHH:MM:SS"
+DOMAIN = "nest"
 
 
 class FakeResponse:
@@ -156,7 +157,7 @@ async def test_camera_stream(hass, aiohttp_client):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     with patch(
-        "homeassistant.components.nest.camera_sdm.ImageFrame.get_image",
+        "homeassistant.components.ffmpeg.ImageFrame.get_image",
         autopatch=True,
         return_value=b"image bytes",
     ):
@@ -220,7 +221,7 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
 
 
 async def test_camera_removed(hass, aiohttp_client):
-    """Test a stream token is a basic camera and fetch its live stream."""
+    """Test case where entities are removed and stream tokens expired."""
     now = utcnow()
     expiration = now + datetime.timedelta(seconds=100)
     responses = [
@@ -251,3 +252,7 @@ async def test_camera_removed(hass, aiohttp_client):
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.async_remove(config_entry.entry_id)
+    assert len(hass.states.async_all()) == 0
