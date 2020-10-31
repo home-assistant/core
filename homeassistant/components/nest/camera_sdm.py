@@ -36,17 +36,16 @@ async def async_setup_sdm_entry(
             CameraImageTrait.NAME in device.traits
             or CameraLiveStreamTrait.NAME in device.traits
         ):
-            entities.append(NestCamera(hass, device))
+            entities.append(NestCamera(device))
     async_add_entities(entities)
 
 
 class NestCamera(Camera):
     """Devices that support cameras."""
 
-    def __init__(self, hass: HomeAssistantType, device: Device):
+    def __init__(self, device: Device):
         """Initialize the camera."""
         super().__init__()
-        self._hass = hass
         self._device = device
         self._device_info = DeviceInfo(device)
         self._stream = None
@@ -127,4 +126,4 @@ class NestCamera(Camera):
         stream_url = await self.stream_source()
         if not stream_url:
             return None
-        return await async_get_image(self._hass, stream_url, output_format=IMAGE_JPEG)
+        return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
