@@ -318,3 +318,20 @@ async def test_addon_not_installed(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_install_addon_failure(hass, supervisor, addon_installed, install_addon):
+    """Test add-on install failure."""
+    addon_installed.return_value["version"] = None
+    install_addon.side_effect = HassioAPIError()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "addon_install_failed"
