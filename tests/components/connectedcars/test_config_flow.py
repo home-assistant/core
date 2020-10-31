@@ -1,0 +1,116 @@
+"""Test the ConnectedCars config flow."""
+from connectedcars.client import ConnectedCarsClient
+
+from homeassistant import config_entries, setup
+from homeassistant.components.connectedcars.const import CONF_NAMESPACE, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.async_mock import AsyncMock, patch
+
+
+def _get_mock_cc_client(
+    get_async_query_data={
+        "data": {
+            "viewer": {
+                "email": "test@email.tld",
+                "vehicles": [{"vehicle": {"vin": "test-vin"}}],
+            }
+        }
+    }
+):
+    mock = AsyncMock(ConnectedCarsClient)
+    mock.async_query.return_value = get_async_query_data
+
+    return mock
+
+
+async def test_form(hass):
+    """Test we get the form."""
+    await setup.async_setup_component(hass, DOMAIN, {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+
+async def test_setup(hass):
+    """Test setup results in a create_entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    cc_client = _get_mock_cc_client()
+
+    with patch(
+        "homeassistant.components.connectedcars.config_flow.ConnectedCarsClient",
+        return_value=cc_client,
+    ), patch(
+        "homeassistant.components.connectedcars.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        test_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAMESPACE: "test-namespace",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert test_result["type"] == "create_entry"
+    assert test_result["data"] == {
+        CONF_NAMESPACE: "test-namespace",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_full_user_flow_implementation(hass) -> None:
+    """Test the full manual user flow from start to finish."""
+    cc_client = _get_mock_cc_client()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] == "form"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAMESPACE: "test-namespace",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.connectedcars.config_flow.ConnectedCarsClient",
+        return_value=cc_client,
+    ), patch(
+        "homeassistant.components.connectedcars.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        test_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAMESPACE: "test-namespace",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert test_result["data"][CONF_NAMESPACE] == "test-namespace"
+    assert test_result["data"][CONF_USERNAME] == "test-username"
+    assert test_result["data"][CONF_PASSWORD] == "test-password"
+    assert test_result["title"] == "test@email.tld - test-vin"
+    assert test_result["type"] == "create_entry"
+
+    assert len(mock_setup_entry.mock_calls) == 1
