@@ -5,6 +5,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.connectedcars.config_flow import (
     CannotGetEmail,
     CannotGetVin,
+    ConnectedcarsApiHandler,
     InvalidAuth,
 )
 from homeassistant.components.connectedcars.const import CONF_NAMESPACE, DOMAIN
@@ -231,3 +232,15 @@ async def test_form_unknown_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_connectedcars_api_handler_get_email_empty_user_data():
+    """Test we handle error of noy getting vin."""
+    cc_client = _get_mock_cc_client()
+
+    ccapih = ConnectedcarsApiHandler("test-namespace")
+    ccapih.client = cc_client
+    ccapih.user_data = None
+    result = await ConnectedcarsApiHandler.get_email(ccapih)
+
+    assert result == "test@email.tld"
