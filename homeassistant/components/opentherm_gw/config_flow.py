@@ -122,7 +122,7 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_PRECISION,
-                        default=self.config_entry.options.get(CONF_PRECISION),
+                        default=self.config_entry.options.get(CONF_PRECISION, 0),
                     ): vol.All(
                         vol.Coerce(float),
                         vol.In(
