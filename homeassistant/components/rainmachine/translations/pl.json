@@ -18,5 +18,15 @@
                 "title": "Wprowad\u017a dane"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Domy\u015blny czas dzia\u0142ania dla strefy (w sekundach)"
+                },
+                "title": "Konfiguracja RainMachine"
+            }
+        }
     }
 }

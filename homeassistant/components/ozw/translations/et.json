@@ -2,7 +2,13 @@
     "config": {
         "abort": {
             "mqtt_required": "MQTT sidumine pole seadistatud",
+            "one_instance_allowed": "Sidumine toetab ainult \u00fchte Z-Wave'i eksemplari",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "user": {
+                "title": "Kinnita seadistamine"
+            }
         }
     }
 }

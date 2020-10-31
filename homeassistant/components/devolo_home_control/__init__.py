@@ -44,9 +44,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
-        hass.data[DOMAIN][entry.entry_id] = []
+        hass.data[DOMAIN][entry.entry_id] = {"gateways": [], "listener": None}
         for gateway_id in gateway_ids:
-            hass.data[DOMAIN][entry.entry_id].append(
+            hass.data[DOMAIN][entry.entry_id]["gateways"].append(
                 await hass.async_add_executor_job(
                     partial(
                         HomeControl,
@@ -65,13 +65,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
 
     def shutdown(event):
-        for gateway in hass.data[DOMAIN][entry.entry_id]:
+        for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
             gateway.websocket_disconnect(
                 f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
             )
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+    hass.data[DOMAIN][entry.entry_id]["listener"] = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, shutdown
+    )
 
     return True
 
@@ -89,8 +91,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     await asyncio.gather(
         *[
             hass.async_add_executor_job(gateway.websocket_disconnect)
-            for gateway in hass.data[DOMAIN][entry.entry_id]
+            for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]
         ]
     )
+    hass.data[DOMAIN][entry.entry_id]["listener"]()
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload

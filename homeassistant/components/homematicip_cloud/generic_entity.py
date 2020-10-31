@@ -5,11 +5,9 @@ from typing import Any, Dict, Optional
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
@@ -78,7 +76,6 @@ class HomematicipGenericEntity(Entity):
         device,
         post: Optional[str] = None,
         channel: Optional[int] = None,
-        is_multi_area: Optional[bool] = False,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
@@ -86,7 +83,6 @@ class HomematicipGenericEntity(Entity):
         self._device = device
         self._post = post
         self._channel = channel
-        self._is_multi_area = is_multi_area
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
@@ -96,20 +92,6 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            if self._is_multi_area:
-                return {
-                    "identifiers": {
-                        # Unique ID of Homematic IP device
-                        (HMIPC_DOMAIN, self.unique_id)
-                    },
-                    "name": self.name,
-                    "manufacturer": self._device.oem,
-                    "model": self._device.modelType,
-                    "sw_version": self._device.firmwareVersion,
-                    # Link to the base device.
-                    "via_device": (HMIPC_DOMAIN, self._device.id),
-                }
-
             return {
                 "identifiers": {
                     # Serial numbers of Homematic IP device
@@ -269,19 +251,3 @@ class HomematicipGenericEntity(Entity):
             state_attr[ATTR_IS_GROUP] = True
 
         return state_attr
-
-
-async def async_add_base_multi_area_device(
-    hass: HomeAssistantType, entry: ConfigEntry, device: AsyncDevice
-):
-    """Register base multi area device in registry."""
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(HMIPC_DOMAIN, device.id)},
-        manufacturer=device.oem,
-        name=device.label,
-        model=device.modelType,
-        sw_version=device.firmwareVersion,
-        via_device=(HMIPC_DOMAIN, device.homeId),
-    )

@@ -4,3 +4,9 @@ start:
     seconds:
       description: The number of seconds to run the profiler.
       example: 60.0
+memory:
+  description: Start the Memory Profiler
+  fields:
+    seconds:
+      description: The number of seconds to run the memory profiler.
+      example: 60.0

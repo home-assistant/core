@@ -170,9 +170,12 @@ async def test_get_translations_while_loading_components(hass):
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
     hass.config.components.add("component1")
+    load_count = 0
 
     def mock_load_translation_files(files):
         """Mock load translation files."""
+        nonlocal load_count
+        load_count += 1
         # Mimic race condition by loading a component during setup
         setup_component(hass, "persistent_notification", {})
         return {"component1": {"hello": "world"}}
@@ -187,11 +190,15 @@ async def test_get_translations_while_loading_components(hass):
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
-        translations = await translation.async_get_translations(hass, "en", "hello")
+        tasks = [
+            translation.async_get_translations(hass, "en", "hello") for _ in range(5)
+        ]
+        all_translations = await asyncio.gather(*tasks)
 
-    assert translations == {
+    assert all_translations[0] == {
         "component.component1.hello": "world",
     }
+    assert load_count == 1
 
 
 async def test_get_translation_categories(hass):

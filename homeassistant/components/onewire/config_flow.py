@@ -1,7 +1,6 @@
 """Config flow for 1-Wire component."""
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,7 +15,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from .onewirehub import OneWireHub
+from .onewirehub import CannotConnect, InvalidPath, OneWireHub
 
 DATA_SCHEMA_USER = vol.Schema(
     {vol.Required(CONF_TYPE): vol.In([CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS])}
@@ -44,8 +43,8 @@ async def validate_input_owserver(hass: HomeAssistantType, data):
 
     host = data[CONF_HOST]
     port = data[CONF_PORT]
-    if not await hub.can_connect(host, port):
-        raise CannotConnect
+    # Raises CannotConnect exception on failure
+    await hub.connect(host, port)
 
     # Return info that you want to store in the config entry.
     return {"title": host}
@@ -71,8 +70,9 @@ async def validate_input_mount_dir(hass: HomeAssistantType, data):
     hub = OneWireHub(hass)
 
     mount_dir = data[CONF_MOUNT_DIR]
-    if not await hub.is_valid_mount_dir(mount_dir):
-        raise InvalidPath
+
+    # Raises InvalidDir exception on failure
+    await hub.check_mount_dir(mount_dir)
 
     # Return info that you want to store in the config entry.
     return {"title": mount_dir}
@@ -185,11 +185,3 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         if CONF_MOUNT_DIR not in platform_config:
             platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
         return await self.async_step_mount_dir(platform_config)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidPath(exceptions.HomeAssistantError):
-    """Error to indicate the path is invalid."""

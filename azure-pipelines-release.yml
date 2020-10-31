@@ -143,8 +143,8 @@ stages:
 
         version="$(homeassistantRelease)"
 
-        git clone https://github.com/home-assistant/hassio-version
-        cd hassio-version
+        git clone https://github.com/home-assistant/version
+        cd version
 
         dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
         beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"

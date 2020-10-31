@@ -13,7 +13,7 @@ async def async_setup_entry(
     """Get all devices and setup the switch devices via config entry."""
     entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]:
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.binary_switch_devices:
             for binary_switch in device.binary_switch_property:
                 # Exclude the binary switch which also has multi_level_switches here,
