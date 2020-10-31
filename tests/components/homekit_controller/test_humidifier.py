@@ -323,13 +323,20 @@ async def test_diffuser_read_state(hass, utcnow):
     helper = await setup_test_component(hass, create_diffuser_service)
 
     helper.characteristics[VOCOLINC_HUMIDIFIER_SPRAY_LEVEL].value = 5
+    state = await helper.poll_and_get_state()
+    assert state.attributes["humidity"] == 0
 
+    helper.characteristics[ACTIVE].value = 1
     state = await helper.poll_and_get_state()
     assert state.attributes["humidity"] == 100
 
     helper.characteristics[VOCOLINC_HUMIDIFIER_SPRAY_LEVEL].value = 2
     state = await helper.poll_and_get_state()
     assert state.attributes["humidity"] == 40
+
+    helper.characteristics[ACTIVE].value = 0
+    state = await helper.poll_and_get_state()
+    assert state.attributes["humidity"] == 0
 
 
 async def test_diffuser_set_state(hass, utcnow):
