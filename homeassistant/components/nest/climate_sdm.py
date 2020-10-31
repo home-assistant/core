@@ -3,7 +3,7 @@
 from typing import Optional
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_traits import TemperatureTrait
+from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
     ThermostatHvacTrait,
@@ -18,6 +18,8 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_OFF,
+    FAN_OFF,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -25,6 +27,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
+    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
@@ -66,6 +69,18 @@ THERMOSTAT_SETPOINT_TRAIT_MAP = {
 }
 THERMOSTAT_TARGET_LOW_MODES = [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 THERMOSTAT_TARGET_HIGH_MODES = [HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+
+PRESET_MODE_MAP = {
+    "MANUAL_ECO": PRESET_ECO,
+    "OFF": PRESET_NONE,
+}
+PRESET_INV_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
+
+FAN_MODE_MAP = {
+    "ON": FAN_ON,
+    "OFF": FAN_OFF,
+}
+FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
 
 async def async_setup_sdm_entry(
@@ -208,8 +223,6 @@ class ThermostatEntity(ClimateEntity):
     def hvac_modes(self):
         """List of available operation modes."""
         supported_modes = []
-        if ThermostatEcoTrait.NAME in self._device.traits:
-            trait = self._device.traits[ThermostatEcoTrait.NAME]
         if ThermostatModeTrait.NAME in self._device.traits:
             trait = self._device.traits[ThermostatModeTrait.NAME]
             for mode in trait.available_modes:
@@ -232,8 +245,7 @@ class ThermostatEntity(ClimateEntity):
         """Return the current active preset."""
         if ThermostatEcoTrait.NAME in self._device.traits:
             trait = self._device.traits[ThermostatEcoTrait.NAME]
-            if trait.mode == "MANUAL_ECO":
-                return PRESET_ECO
+            return PRESET_MODE_MAP.get(trait.mode, PRESET_NONE)
         return PRESET_NONE
 
     @property
@@ -241,8 +253,26 @@ class ThermostatEntity(ClimateEntity):
         """Return the available presets."""
         modes = []
         if ThermostatEcoTrait.NAME in self._device.traits:
-            modes.append(PRESET_ECO)
+            trait = self._device.traits[ThermostatEcoTrait.NAME]
+            for mode in trait.available_modes:
+                if mode in PRESET_MODE_MAP:
+                    modes.append(PRESET_MODE_MAP[mode])
         return modes
+
+    @property
+    def fan_mode(self):
+        """Return the current fan mode."""
+        if FanTrait.NAME in self._device.traits:
+            trait = self._device.traits[FanTrait.NAME]
+            return FAN_MODE_MAP.get(trait.timer_mode, FAN_OFF)
+        return FAN_OFF
+
+    @property
+    def fan_modes(self):
+        """Return the list of available fan modes."""
+        if FanTrait.NAME in self._device.traits:
+            return list(FAN_INV_MODE_MAP.keys())
+        return []
 
     @property
     def supported_features(self):
@@ -254,6 +284,8 @@ class ThermostatEntity(ClimateEntity):
             )
         if ThermostatEcoTrait.NAME in self._device.traits:
             features = features | SUPPORT_PRESET_MODE
+        if FanTrait.NAME in self._device.traits:
+            features = features | SUPPORT_FAN_MODE
         return features
 
     async def async_set_hvac_mode(self, hvac_mode):
@@ -286,12 +318,18 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
-        if preset_mode not in [PRESET_ECO, PRESET_NONE]:
+        if preset_mode not in self.preset_modes:
             return
         if ThermostatEcoTrait.NAME not in self._device.traits:
             return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
-        if preset_mode == PRESET_ECO:
-            await trait.set_mode("MANUAL_ECO")
-        elif preset_mode == PRESET_NONE:
-            await trait.set_mode("OFF")
+        await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        if fan_mode not in self.fan_modes:
+            return
+        if FanTrait.NAME not in self._device.traits:
+            return
+        trait = self._device.traits[FanTrait.NAME]
+        await trait.set_timer(FAN_INV_MODE_MAP[fan_mode])
