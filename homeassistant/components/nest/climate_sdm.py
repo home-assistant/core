@@ -123,7 +123,6 @@ class ThermostatEntity(ClimateEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._device_info.device_name
-        return self.device_name
 
     @property
     def device_info(self):
