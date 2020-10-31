@@ -156,7 +156,6 @@ class PyZEProxy:
         Using lock to ensure vehicle proxies are only created once across all platforms.
         """
         vin: str = vehicle_link["vin"]
-        vin = vin.upper()
         async with self._vehicles_lock:
             pyze_vehicle_proxy = self._vehicle_proxies.get(vin)
             if pyze_vehicle_proxy is None:
