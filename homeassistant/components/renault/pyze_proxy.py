@@ -165,5 +165,5 @@ class PyZEProxy:
                     Vehicle(vehicle_link["vin"], self._kamereon),
                 )
                 self._vehicle_proxies[vin] = pyze_vehicle_proxy
-                await pyze_vehicle_proxy.async_initialise
+                await pyze_vehicle_proxy.async_initialise()
         return self._vehicle_proxies[vin]

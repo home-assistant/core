@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def get_entities(hass, proxy: PyZEProxy):
     """Create Renault entities for all vehicles."""
     entities = []
-    for vehicle_link in proxy.vehicle_links():
+    for vehicle_link in proxy.vehicle_links:
         vehicle_proxy = await proxy.get_vehicle_proxy(vehicle_link)
         entities.extend(await get_vehicle_entities(hass, vehicle_proxy))
     return entities
