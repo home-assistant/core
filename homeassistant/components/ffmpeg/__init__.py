@@ -99,7 +99,7 @@ async def async_get_image(
     manager = hass.data[DATA_FFMPEG]
     ffmpeg = ImageFrame(manager.binary, loop=hass.loop)
     image = await asyncio.shield(
-        ffmpeg.get_image(input_source, output_format=output_format)
+        ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
     return image
 
