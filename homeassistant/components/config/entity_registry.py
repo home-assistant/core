@@ -118,7 +118,7 @@ async def websocket_update_entity(hass, connection, msg):
         result = websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
         if "disabled_by" in changes and changes["disabled_by"] is None:
             config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
-            if entry and not config_entry.supports_unload:
+            if config_entry and not config_entry.supports_unload:
                 result["result"]["requires_restart"] = True
             else:
                 result["result"][
