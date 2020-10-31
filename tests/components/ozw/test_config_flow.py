@@ -97,6 +97,7 @@ async def test_not_addon(hass, supervisor):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": False}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
@@ -105,7 +106,6 @@ async def test_not_addon(hass, supervisor):
         "network_key": None,
         "integration_created_addon": False,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -128,6 +128,7 @@ async def test_addon_running(hass, supervisor, addon_running):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"use_addon": True}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
@@ -136,7 +137,6 @@ async def test_addon_running(hass, supervisor, addon_running):
         "network_key": None,
         "integration_created_addon": False,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
