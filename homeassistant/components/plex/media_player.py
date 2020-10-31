@@ -143,7 +143,6 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.async_update_from_websocket,
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
-        self.async_schedule_update_ha_state(True)
 
     @callback
     def async_refresh_media_player(self, device, session, source):
@@ -156,9 +155,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self.async_schedule_update_ha_state(True)
 
     @callback
-    def async_update_from_websocket(self, state):
+    def async_update_from_websocket(self):
         """Update the entity based on new websocket data."""
-        self.state = state
+        self.state = self.session.state
         self.async_schedule_update_ha_state()
 
     def update(self):
