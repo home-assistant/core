@@ -50,8 +50,10 @@ def mock_addon_options(addon_info):
 @pytest.fixture(name="set_addon_options")
 def mock_set_addon_options():
     """Mock set add-on options."""
-    with patch("homeassistant.components.hassio.async_set_addon_options"):
-        yield
+    with patch(
+        "homeassistant.components.hassio.async_set_addon_options"
+    ) as set_options:
+        yield set_options
 
 
 @pytest.fixture(name="start_addon")
@@ -222,3 +224,25 @@ async def test_addon_installed(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_set_addon_config_failure(
+    hass, supervisor, addon_installed, addon_options, set_addon_options
+):
+    """Test add-on set config failure."""
+    set_addon_options.side_effect = HassioAPIError()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "addon_set_config_failed"
