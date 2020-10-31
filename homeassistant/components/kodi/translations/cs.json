@@ -17,7 +17,12 @@
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "description": "Zadejte sv\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no a heslo pro Kodi. To lze nal\u00e9zt v Syst\u00e9m/Nastaven\u00ed/S\u00ed\u0165/Slu\u017eby."
+            },
+            "discovery_confirm": {
+                "description": "Chcete p\u0159idat Kodi (\"{name}\") do Home Assistant?",
+                "title": "Objeven\u00e9 Kodi"
             },
             "host": {
                 "data": {
@@ -38,6 +43,12 @@
                     "ws_port": "Port"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} bylo po\u017e\u00e1d\u00e1no o vypnut\u00ed",
+            "turn_on": "{entity_name} bylo po\u017e\u00e1d\u00e1no o zapnut\u00ed"
         }
     }
 }

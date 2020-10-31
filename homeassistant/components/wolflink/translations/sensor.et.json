@@ -1,0 +1,16 @@
+{
+    "state": {
+        "wolflink__state": {
+            "permanent": "Alaline",
+            "permanentbetrieb": "P\u00fcsire\u017eiim",
+            "solarbetrieb": "P\u00e4ikesek\u00fctte re\u017eiim",
+            "sparbetrieb": "S\u00e4\u00e4sture\u017eiim",
+            "stabilisierung": "Rahunemine",
+            "standby": "Ootel",
+            "start": "K\u00e4ivitus",
+            "storung": "Viga",
+            "test": "Kontroll",
+            "zunden": "S\u00fc\u00fcde"
+        }
+    }
+}

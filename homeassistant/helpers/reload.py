@@ -80,7 +80,9 @@ async def _resetup_platform(
 
     # If its an entity platform, we use the entity_platform
     # async_reset method
-    platform = async_get_platform(hass, integration_name, integration_platform)
+    platform = async_get_platform_without_config_entry(
+        hass, integration_name, integration_platform
+    )
     if platform:
         await _async_reconfig_platform(platform, root_config[integration_platform])
         return
@@ -137,11 +139,13 @@ async def async_integration_yaml_config(
 
 
 @callback
-def async_get_platform(
+def async_get_platform_without_config_entry(
     hass: HomeAssistantType, integration_name: str, integration_platform_name: str
 ) -> Optional[EntityPlatform]:
-    """Find an existing platform."""
+    """Find an existing platform that is not a config entry."""
     for integration_platform in async_get_platforms(hass, integration_name):
+        if integration_platform.config_entry is not None:
+            continue
         if integration_platform.domain == integration_platform_name:
             platform: EntityPlatform = integration_platform
             return platform

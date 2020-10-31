@@ -1,6 +1,4 @@
 """Tests for Vizio config flow."""
-import logging
-
 import pytest
 import voluptuous as vol
 
@@ -54,8 +52,6 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_user_flow_minimum_fields(

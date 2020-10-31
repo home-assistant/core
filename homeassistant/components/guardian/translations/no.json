@@ -3,14 +3,14 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kan ikke koble til Guardian-enheten."
         },
         "step": {
             "user": {
                 "data": {
                     "ip_address": "IP adresse",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Konfigurer en lokal Elexa Guardian-enhet."
             },

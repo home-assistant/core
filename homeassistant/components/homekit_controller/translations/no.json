@@ -66,12 +66,12 @@
             "button7": "Knapp 7",
             "button8": "Knapp 8",
             "button9": "Knapp 9",
-            "doorbell": "D\u00f8r-klokke"
+            "doorbell": "D\u00f8rklokke"
         },
         "trigger_type": {
-            "double_press": "{subtype} trykket to ganger",
-            "long_press": "{subtype} trykket og holdt",
-            "single_press": "{subtype}\u00bb trykket"
+            "double_press": "\"{subtype}\" trykket to ganger",
+            "long_press": "\"{subtype}\" trykket og holdt",
+            "single_press": "\"{subtype}\" trykket"
         }
     },
     "title": "HomeKit-kontroller"

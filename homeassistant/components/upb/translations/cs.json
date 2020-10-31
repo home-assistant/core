@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "address": "Adresa (viz popis v\u00fd\u0161e)",
                     "protocol": "Protokol"
                 },
                 "title": "P\u0159ipojen\u00ed k UPB PIM"

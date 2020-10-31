@@ -6,13 +6,16 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga",
+            "name_exists": "Nimi on juba olemas",
             "wrong_credentials": "Vale kasutajanimi v\u00f5i salas\u00f5na"
         },
         "step": {
             "user": {
                 "data": {
+                    "host": "",
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
+                    "port": "",
                     "username": "Kasutajanimi"
                 }
             }

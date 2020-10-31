@@ -70,6 +70,13 @@ alarm_display_message:
       description: Up to 16 characters of text (truncated if too long). Default blank.
       example: the universe, and everything.
 
+set_time:
+  description: Set the time for the panel.
+  fields:
+    prefix:
+      description: Prefix for the panel.
+      example: gatehouse
+
 speak_phrase:
   description: Speak a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.
   fields:
@@ -83,6 +90,23 @@ speak_word:
     number:
       description: Word number to speak.
       example: 142
+
+sensor_counter_refresh:
+  description: Refresh the value of a counter from the panel.
+  fields:
+    entity_id:
+      description: Name of counter to refresh.
+      example: "sensor.counting_sheep"
+
+sensor_counter_set:
+  description: Set the value of a counter on the panel.
+  fields:
+    entity_id:
+      description: Name of counter to set.
+      example: "sensor.test42"
+    value:
+      description: Value to set the counter to.
+      example: 4242
 
 sensor_zone_bypass:
   description: Bypass zone.

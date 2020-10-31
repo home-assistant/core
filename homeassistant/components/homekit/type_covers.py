@@ -26,21 +26,26 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_CLOSING,
+    STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory, debounce
 from .const import (
+    ATTR_OBSTRUCTION_DETECTED,
     CHAR_CURRENT_DOOR_STATE,
     CHAR_CURRENT_POSITION,
     CHAR_CURRENT_TILT_ANGLE,
     CHAR_HOLD_POSITION,
+    CHAR_OBSTRUCTION_DETECTED,
     CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE,
     CHAR_TARGET_POSITION,
     CHAR_TARGET_TILT_ANGLE,
+    CONF_LINKED_OBSTRUCTION_SENSOR,
     DEVICE_PRECISION_LEEWAY,
     HK_DOOR_CLOSED,
     HK_DOOR_CLOSING,
@@ -74,7 +79,6 @@ DOOR_TARGET_HASS_TO_HK = {
     STATE_CLOSING: HK_DOOR_CLOSED,
 }
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -98,7 +102,54 @@ class GarageDoorOpener(HomeAccessory):
         self.char_target_state = serv_garage_door.configure_char(
             CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
         )
+        self.char_obstruction_detected = serv_garage_door.configure_char(
+            CHAR_OBSTRUCTION_DETECTED, value=False
+        )
+
+        self.linked_obstruction_sensor = self.config.get(CONF_LINKED_OBSTRUCTION_SENSOR)
+        if self.linked_obstruction_sensor:
+            self._async_update_obstruction_state(
+                self.hass.states.get(self.linked_obstruction_sensor)
+            )
+
         self.async_update_state(state)
+
+    async def run_handler(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self.linked_obstruction_sensor:
+            async_track_state_change_event(
+                self.hass,
+                [self.linked_obstruction_sensor],
+                self._async_update_obstruction_event,
+            )
+
+        await super().run_handler()
+
+    @callback
+    def _async_update_obstruction_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_obstruction_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_obstruction_state(self, new_state):
+        """Handle linked obstruction sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
+        detected = new_state.state == STATE_ON
+        if self.char_obstruction_detected.value == detected:
+            return
+
+        self.char_obstruction_detected.set_value(detected)
+        _LOGGER.debug(
+            "%s: Set linked obstruction %s sensor to %d",
+            self.entity_id,
+            self.linked_obstruction_sensor,
+            detected,
+        )
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
@@ -120,6 +171,13 @@ class GarageDoorOpener(HomeAccessory):
         hass_state = new_state.state
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
+
+        if ATTR_OBSTRUCTION_DETECTED in new_state.attributes:
+            obstruction_detected = (
+                new_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
+            )
+            if self.char_obstruction_detected.value != obstruction_detected:
+                self.char_obstruction_detected.set_value(obstruction_detected)
 
         if (
             target_door_state is not None

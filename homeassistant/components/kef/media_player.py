@@ -85,6 +85,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def get_ip_mode(host):
+    """Get the 'mode' used to retrieve the MAC address."""
+    try:
+        if ipaddress.ip_address(host).version == 6:
+            return "ip6"
+        return "ip"
+    except ValueError:
+        return "hostname"
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEF platform."""
     if DOMAIN not in hass.data:
@@ -111,13 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sources,
     )
 
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
+    mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
     unique_id = f"kef-{mac}" if mac is not None else None
 

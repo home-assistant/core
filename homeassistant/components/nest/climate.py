@@ -33,7 +33,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_NEST, DOMAIN as NEST_DOMAIN, SIGNAL_NEST_UPDATE
+from . import DATA_NEST, DOMAIN as NEST_DOMAIN
+from .const import SIGNAL_NEST_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
-    thermostats = await hass.async_add_job(hass.data[DATA_NEST].thermostats)
+    thermostats = await hass.async_add_executor_job(hass.data[DATA_NEST].thermostats)
 
     all_devices = [
         NestThermostat(structure, device, temp_unit)

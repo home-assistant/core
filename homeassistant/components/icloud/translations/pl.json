@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
-            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\".",
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -17,7 +17,7 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Twoje poprzednio wprowadzone has\u0142o dla {username} ju\u017c nie dzia\u0142a. Zaktualizuj swoje has\u0142o, aby nadal korzysta\u0107 z tej integracji.",
-                "title": "Dane uwierzytelniaj\u0105ce iCloud"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "trusted_device": {
                 "data": {

@@ -1,6 +1,4 @@
 """Support for monitoring a Sense energy sensor."""
-import logging
-
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
@@ -29,8 +27,6 @@ from .const import (
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TRENDS_COORDINATOR,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SensorConfig:
@@ -199,11 +195,14 @@ class SenseActiveSensor(Entity):
     @callback
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
-        self._state = round(
+        new_state = round(
             self._data.active_solar_power
             if self._is_production
             else self._data.active_power
         )
+        if self._available and self._state == new_state:
+            return
+        self._state = new_state
         self._available = True
         self.async_write_ha_state()
 
@@ -280,8 +279,11 @@ class SenseVoltageSensor(Entity):
     @callback
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
-        self._state = round(self._data.active_voltage[self._voltage_index], 1)
+        new_state = round(self._data.active_voltage[self._voltage_index], 1)
+        if self._available and self._state == new_state:
+            return
         self._available = True
+        self._state = new_state
         self.async_write_ha_state()
 
 
@@ -442,8 +444,11 @@ class SenseEnergyDevice(Entity):
         """Get the latest data, update state. Must not do I/O."""
         device_data = self._sense_devices_data.get_device_by_id(self._id)
         if not device_data or "w" not in device_data:
-            self._state = 0
+            new_state = 0
         else:
-            self._state = int(device_data["w"])
+            new_state = int(device_data["w"])
+        if self._available and self._state == new_state:
+            return
+        self._state = new_state
         self._available = True
         self.async_write_ha_state()

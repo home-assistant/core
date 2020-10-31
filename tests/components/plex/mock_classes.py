@@ -13,7 +13,7 @@ from homeassistant.const import CONF_URL
 
 from .const import DEFAULT_DATA, MOCK_SERVERS, MOCK_USERS
 
-GDM_PAYLOAD = [
+GDM_SERVER_PAYLOAD = [
     {
         "data": {
             "Content-Type": "plex/media-server",
@@ -27,17 +27,73 @@ GDM_PAYLOAD = [
     }
 ]
 
+GDM_CLIENT_PAYLOAD = [
+    {
+        "data": {
+            "Content-Type": "plex/media-player",
+            "Device-Class": "stb",
+            "Name": "plexamp",
+            "Port": "36000",
+            "Product": "Plexamp",
+            "Protocol": "plex",
+            "Protocol-Capabilities": "timeline,playback,playqueues,playqueues-creation",
+            "Protocol-Version": "1",
+            "Resource-Identifier": "client-2",
+            "Version": "1.1.0",
+        },
+        "from": ("1.2.3.10", 32412),
+    },
+    {
+        "data": {
+            "Content-Type": "plex/media-player",
+            "Device-Class": "pc",
+            "Name": "Chrome",
+            "Port": "32400",
+            "Product": "Plex Web",
+            "Protocol": "plex",
+            "Protocol-Capabilities": "timeline,playback,navigation,mirror,playqueues",
+            "Protocol-Version": "3",
+            "Resource-Identifier": "client-1",
+            "Version": "4.40.1",
+        },
+        "from": ("1.2.3.4", 32412),
+    },
+    {
+        "data": {
+            "Content-Type": "plex/media-player",
+            "Device-Class": "mobile",
+            "Name": "SHIELD Android TV",
+            "Port": "32500",
+            "Product": "Plex for Android (TV)",
+            "Protocol": "plex",
+            "Protocol-Capabilities": "timeline,playback,navigation,mirror,playqueues,provider-playback",
+            "Protocol-Version": "1",
+            "Resource-Identifier": "client-999",
+            "Updated-At": "1597686153",
+            "Version": "8.5.0.19697",
+        },
+        "from": ("1.2.3.11", 32412),
+    },
+]
+
 
 class MockGDM:
     """Mock a GDM instance."""
 
-    def __init__(self):
+    def __init__(self, disabled=False):
         """Initialize the object."""
-        self.entries = GDM_PAYLOAD
+        self.entries = []
+        self.disabled = disabled
 
-    def scan(self):
+    def scan(self, scan_for_clients=False):
         """Mock the scan call."""
-        pass
+        if self.disabled:
+            return
+
+        if scan_for_clients:
+            self.entries = GDM_CLIENT_PAYLOAD
+        else:
+            self.entries = GDM_SERVER_PAYLOAD
 
 
 class MockResource:
@@ -56,7 +112,9 @@ class MockResource:
             self.name = f"plex.tv Resource Player {index+10}"
             self.clientIdentifier = f"client-{index+10}"
             self.provides = ["player"]
-            self.device = MockPlexClient(f"http://192.168.0.1{index}:32500", index + 10)
+            self.device = MockPlexClient(
+                baseurl=f"http://192.168.0.1{index}:32500", index=index + 10
+            )
             self.presence = index == 0
             self.publicAddressMatches = True
 
@@ -122,6 +180,7 @@ class MockPlexServer:
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
 
         self._clients = []
+        self._session = None
         self._sessions = []
         self.set_clients(num_users)
         self.set_sessions(num_users, session_type)
@@ -130,7 +189,9 @@ class MockPlexServer:
 
     def set_clients(self, num_clients):
         """Set up mock PlexClients for this PlexServer."""
-        self._clients = [MockPlexClient(self._baseurl, x) for x in range(num_clients)]
+        self._clients = [
+            MockPlexClient(baseurl=self._baseurl, index=x) for x in range(num_clients)
+        ]
 
     def set_sessions(self, num_sessions, session_type):
         """Set up mock PlexSessions for this PlexServer."""
@@ -150,6 +211,10 @@ class MockPlexServer:
     def clients(self):
         """Mock the clients method."""
         return self._clients
+
+    def createToken(self):
+        """Mock the createToken method."""
+        return "temporary_token"
 
     def sessions(self):
         """Mock the sessions method."""
@@ -204,10 +269,10 @@ class MockPlexServer:
 class MockPlexClient:
     """Mock a PlexClient instance."""
 
-    def __init__(self, url, index=0):
+    def __init__(self, server=None, baseurl=None, token=None, index=0):
         """Initialize the object."""
         self.machineIdentifier = f"client-{index+1}"
-        self._baseurl = url
+        self._baseurl = baseurl
         self._index = index
 
     def url(self, key):

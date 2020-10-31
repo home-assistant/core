@@ -8,6 +8,9 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 }
+            },
+            "user": {
+                "title": "Configureer Logitech Media Server"
             }
         }
     },

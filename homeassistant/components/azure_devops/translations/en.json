@@ -6,7 +6,9 @@
         },
         "error": {
             "authorization_error": "Authorization error. Check you have access to the project and have the correct credentials.",
+            "cannot_connect": "Failed to connect",
             "connection_error": "Could not connect to Azure DevOps.",
+            "invalid_auth": "Invalid authentication",
             "project_error": "Could not get project info."
         },
         "flow_title": "Azure DevOps: {project_url}",

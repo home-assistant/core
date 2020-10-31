@@ -17,7 +17,7 @@
                     "password": "Passord"
                 },
                 "description": "Ditt tidligere angitte passord for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
-                "title": "iCloud-legitimasjon"
+                "title": "Bekreft integrering p\u00e5 nytt"
             },
             "trusted_device": {
                 "data": {

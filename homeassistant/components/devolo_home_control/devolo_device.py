@@ -21,6 +21,7 @@ class DevoloDeviceEntity(Entity):
         self._device_class = None
         self._value = None
         self._unit = None
+        self._enabled_default = True
 
         # This is not doing I/O. It fetches an internal state of the API
         self._available = device_instance.is_online()
@@ -59,6 +60,11 @@ class DevoloDeviceEntity(Entity):
             "manufacturer": self._brand,
             "model": self._model,
         }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     @property
     def should_poll(self):

@@ -1,6 +1,4 @@
 """Support for the OpenWeatherMap (OWM) service."""
-import logging
-
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import TEMP_CELSIUS
 
@@ -20,8 +18,6 @@ from .const import (
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

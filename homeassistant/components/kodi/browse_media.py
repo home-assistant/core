@@ -176,6 +176,9 @@ async def build_item_response(media_library, payload):
         except UnknownMediaType:
             pass
 
+    if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
+        children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
+
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
             search_type, MEDIA_CLASS_DIRECTORY

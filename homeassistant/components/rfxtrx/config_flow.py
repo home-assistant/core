@@ -1,6 +1,5 @@
 """Config flow for RFXCOM RFXtrx integration."""
 import copy
-import logging
 import os
 
 import RFXtrx as rfxtrxmod
@@ -46,8 +45,6 @@ from .const import (
 from .cover import supported as cover_supported
 from .light import supported as light_supported
 from .switch import supported as switch_supported
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_EVENT_CODE = "event_code"
 CONF_MANUAL_PATH = "Enter Manually"

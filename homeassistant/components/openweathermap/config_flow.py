@@ -1,6 +1,4 @@
 """Config flow for OpenWeatherMap."""
-import logging
-
 from pyowm import OWM
 from pyowm.exceptions.api_call_error import APICallError
 from pyowm.exceptions.api_response_error import UnauthorizedError
@@ -37,8 +35,6 @@ SCHEMA = vol.Schema(
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

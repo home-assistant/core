@@ -18,7 +18,7 @@
                 "data": {
                     "host": ""
                 },
-                "title": "Valige Hue sild"
+                "title": "Vali Hue sild"
             },
             "link": {
                 "description": "Vajutage silla nuppu, et registreerida Philips Hue Home Assistant abil. \n\n ! [Nupu asukoht sillal] (/ static / images / config_philips_hue.jpg)",

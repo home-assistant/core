@@ -19,6 +19,7 @@
     "config_flow": {
       "title": {
         "oauth2_pick_implementation": "Pick Authentication Method",
+        "reauth": "Reauthenticate Integration",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
@@ -39,9 +40,12 @@
         "api_token": "API Token",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
+        "elevation": "Elevation",
         "longitude": "Longitude",
         "latitude": "Latitude",
-        "pin": "PIN Code"
+        "location": "Location",
+        "pin": "PIN Code",
+        "mode": "Mode"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"

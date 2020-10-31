@@ -15,6 +15,7 @@
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
+                    "url": "URL",
                     "username": "Kasutajanimi"
                 },
                 "description": "Sisesta seadmele juurdep\u00e4\u00e4su \u00fcksikasjad. Kasutajanime ja salas\u00f5na m\u00e4\u00e4ramine on valikuline kuid v\u00f5imaldab rohkemate sidumisfunktsioonide toetamist. Teisest k\u00fcljest v\u00f5ib volitatud \u00fchenduse kasutamine p\u00f5hjustada probleeme seadme veebiliidese ligip\u00e4\u00e4suga v\u00e4ljastpoolt Home assistant'i kui sidumine on aktiivne ja vastupidi."

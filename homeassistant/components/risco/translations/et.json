@@ -12,7 +12,24 @@
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
+                    "pin": "PIN kood",
                     "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Valves eemal",
+                    "armed_home": "Valves kodus",
+                    "armed_night": "Valves \u00f6ine"
+                }
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "N\u00f5ua valvestamiseks PIN koodi"
                 }
             }
         }

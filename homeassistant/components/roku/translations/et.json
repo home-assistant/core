@@ -9,6 +9,7 @@
         },
         "step": {
             "ssdp_confirm": {
+                "description": "Kas soovid seadistada {name}?",
                 "title": ""
             },
             "user": {

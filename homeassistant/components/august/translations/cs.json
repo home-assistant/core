@@ -16,7 +16,8 @@
                     "password": "Heslo",
                     "timeout": "\u010casov\u00fd limit (v sekund\u00e1ch)",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "title": "Nastavte \u00fa\u010det August"
             },
             "validation": {
                 "data": {

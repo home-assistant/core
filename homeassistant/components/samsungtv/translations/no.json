@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "auth_missing": "Home Assistant er ikke godkjent til \u00e5 koble til denne Samsung-TV. Vennligst kontroller innstillingene for TV-en for \u00e5 godkjenne Home Assistent.",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "not_successful": "Kan ikke koble til denne Samsung TV-enheten.",
             "not_supported": "Denne Samsung TV-enhetene st\u00f8ttes forel\u00f8pig ikke."
         },
@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert ",
+                    "host": "Vert",
                     "name": "Navn"
                 },
                 "description": "Fyll inn Samsung TV-informasjonen din. Hvis du aldri har koblet til Home Assistant f\u00f8r, vil en popup p\u00e5 TVen be om godkjenning."

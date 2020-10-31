@@ -118,7 +118,7 @@ stages:
           -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
           --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
-          -t /data --docker-hub homeassistant
+          -t /data/machine --docker-hub homeassistant
       displayName: 'Build Release'
 
 - stage: 'Publish'
@@ -143,8 +143,8 @@ stages:
 
         version="$(homeassistantRelease)"
 
-        git clone https://github.com/home-assistant/hassio-version
-        cd hassio-version
+        git clone https://github.com/home-assistant/version
+        cd version
 
         dev_version="$(jq --raw-output '.homeassistant.default' dev.json)"
         beta_version="$(jq --raw-output '.homeassistant.default' beta.json)"

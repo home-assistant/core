@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 117
+MINOR_VERSION = 118
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -354,6 +354,9 @@ ATTR_STATE = "state"
 
 ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
+
+# The entity has been restored with restore state
+ATTR_RESTORED = "restored"
 
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = "supported_features"

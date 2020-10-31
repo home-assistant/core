@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La posizione \u00e8 gi\u00e0 configurata o Node/Pro ID sono gi\u00e0 registrati."
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata o Node/Pro ID sono gi\u00e0 registrati.",
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -21,11 +22,17 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Indirizzo IP/Nome host dell'unit\u00e0",
+                    "ip_address": "Host",
                     "password": "Password"
                 },
                 "description": "Monitorare un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
                 "title": "Configurare un AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "title": "Riautenticare AirVisual"
             },
             "user": {
                 "data": {

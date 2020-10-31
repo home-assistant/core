@@ -23,5 +23,14 @@
                 "title": "Nastaven\u00ed routeru Mikrotik"
             }
         }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "force_dhcp": "Vynutit skenov\u00e1n\u00ed pomoc\u00ed DHCP"
+                }
+            }
+        }
     }
 }

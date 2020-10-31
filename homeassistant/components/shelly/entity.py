@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity
 
 from . import ShellyDeviceWrapper
-from .const import DOMAIN
+from .const import DATA_CONFIG_ENTRY, DOMAIN
 
 
 def temperature_unit(block_info: dict) -> str:
@@ -28,7 +28,7 @@ def shelly_naming(self, block, entity_type: str):
         return f"{entity_name} {self.description.name}"
 
     channels = 0
-    mode = "relays"
+    mode = block.type + "s"
     if "num_outputs" in self.wrapper.device.shelly:
         channels = self.wrapper.device.shelly["num_outputs"]
         if (
@@ -38,7 +38,6 @@ def shelly_naming(self, block, entity_type: str):
             channels = 1
         if block.type == "emeter" and "num_emeters" in self.wrapper.device.shelly:
             channels = self.wrapper.device.shelly["num_emeters"]
-            mode = "emeters"
     if channels > 1 and block.type != "device":
         # Shelly EM (SHEM) with firmware v1.8.1 doesn't have "name" key; will be fixed in next firmware release
         if "name" in self.wrapper.device.settings[mode][int(block.channel)]:
@@ -65,7 +64,9 @@ async def async_setup_entry_attribute_entities(
     hass, config_entry, async_add_entities, sensors, sensor_class
 ):
     """Set up entities for block attributes."""
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][config_entry.entry_id]
+    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ]
     blocks = []
 
     for block in wrapper.device.blocks:

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Location is already configured or Node/Pro ID is already registered."
+            "already_configured": "Location is already configured or Node/Pro ID is already registered.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -26,6 +27,12 @@
                 },
                 "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
                 "title": "Configure an AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "title": "Re-authenticate AirVisual"
             },
             "user": {
                 "data": {

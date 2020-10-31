@@ -20,7 +20,7 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nom de l'\u00e0rea",
-                    "lat_ne": "Latitud cantonada nord-est",
+                    "lat_ne": "Longitud cantonada nord-est",
                     "lat_sw": "Latitud cantonada sud-oest",
                     "lon_ne": "Longitud cantonada nord-est",
                     "lon_sw": "Longitud cantonada sud-oest",

@@ -10,7 +10,7 @@
             "connection_timeout": "\u010casov\u00fd limit spojen\u00ed",
             "incorrect_password": "Nespr\u00e1vn\u00e9 heslo",
             "incorrect_username": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no",
-            "incorrect_username_or_password": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no \u010di heslo",
+            "incorrect_username_or_password": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_url": "Neplatn\u00e1 adresa URL",
             "login_attempts_exceeded": "Maxim\u00e1ln\u00ed pokus o p\u0159ihl\u00e1\u0161en\u00ed byl p\u0159ekro\u010den, zkuste to znovu pozd\u011bji",

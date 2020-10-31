@@ -5,6 +5,7 @@
         },
         "step": {
             "confirm": {
+                "description": "Kas soovid seadistada WiLight'i {name} ?\n\n See toetab: {components}",
                 "title": ""
             }
         }

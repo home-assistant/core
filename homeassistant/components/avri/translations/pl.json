@@ -4,7 +4,7 @@
             "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "invalid_country_code": "Nieznany dwuliterowy kod kraju.",
+            "invalid_country_code": "Nieznany dwuliterowy kod kraju",
             "invalid_house_number": "Nieprawid\u0142owy numer domu"
         },
         "step": {

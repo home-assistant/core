@@ -1,4 +1,5 @@
 """Tests for light platform."""
+from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
 
@@ -30,8 +31,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.async_mock import Mock, PropertyMock, patch
+from tests.common import async_fire_time_changed
 
 
 class LightMockData(NamedTuple):
@@ -577,3 +580,37 @@ async def test_update_failure(
             in caplog.text
         )
         assert "Device 123.123.123.123|light1 responded after " in caplog.text
+
+
+async def test_async_setup_entry_unavailable(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test unavailable devices trigger a later retry."""
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        side_effect=SmartDeviceException,
+    ):
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await async_setup_component(
+            hass,
+            tplink.DOMAIN,
+            {
+                tplink.DOMAIN: {
+                    CONF_DISCOVERY: False,
+                    CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert not hass.states.get("light.light1")
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light1")

@@ -4,7 +4,7 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "invalid_discovery_topic": "Ugyldig prefiks for oppdagelsesemne."
+            "invalid_discovery_topic": "Ugyldig prefiks for oppdagelsesemne"
         },
         "step": {
             "config": {

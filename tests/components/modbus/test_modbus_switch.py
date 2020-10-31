@@ -1,6 +1,5 @@
 """The tests for the Modbus switch component."""
 from datetime import timedelta
-import logging
 
 import pytest
 
@@ -9,8 +8,6 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
 
 from .conftest import run_base_read_test, setup_base_test
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(

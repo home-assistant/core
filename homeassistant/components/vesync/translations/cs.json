@@ -1,17 +1,20 @@
 {
     "config": {
         "abort": {
+            "already_setup": "Je povolena pouze jedna instance Vesync",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_login": "Neplatn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "E-mail"
-                }
+                },
+                "title": "Zadejte u\u017eivatelsk\u00e9 jm\u00e9no a heslo"
             }
         }
     }

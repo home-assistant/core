@@ -5,7 +5,8 @@
         },
         "error": {
             "identifier_exists": "Konto on juba seadistatud",
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat"
         },
         "step": {
             "user": {
@@ -14,6 +15,16 @@
                     "password": "Salas\u00f5na",
                     "port": ""
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Vaiketsooni k\u00e4itamisaeg (sekundites)"
+                },
+                "title": "Seadista RainMachine"
             }
         }
     }

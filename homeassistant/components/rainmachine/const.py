@@ -1,6 +1,4 @@
 """Define constants for the SimpliSafe component."""
-from datetime import timedelta
-
 DOMAIN = "rainmachine"
 
 CONF_ZONE_RUN_TIME = "zone_run_time"
@@ -14,7 +12,6 @@ DATA_ZONES = "zones"
 DATA_ZONES_DETAILS = "zones_details"
 
 DEFAULT_PORT = 8080
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_ZONE_RUN = 60 * 10
 
 PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"

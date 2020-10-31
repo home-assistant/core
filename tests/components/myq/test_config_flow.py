@@ -31,6 +31,7 @@ async def test_form_user(hass):
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
@@ -38,7 +39,6 @@ async def test_form_user(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -61,6 +61,7 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={"username": "test-username", "password": "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
@@ -68,7 +69,6 @@ async def test_import(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

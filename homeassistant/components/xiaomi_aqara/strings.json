@@ -23,7 +23,7 @@
         "title": "Select the Xiaomi Aqara Gateway that you wish to connect",
         "description": "Run the setup again if you want to connect aditional gateways",
         "data": {
-          "select_ip": "Gateway IP"
+          "select_ip": "[%key:common::config_flow::data::ip%]"
         }
       }
     },

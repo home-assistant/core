@@ -10,6 +10,7 @@
             "default": "Successfully authenticated with Withings."
         },
         "error": {
+            "already_configured": "Account is already configured",
             "already_configured_account": "Account is already configured",
             "profile_exists": "User profile is already configured. Please provide a unique profile name."
         },
@@ -27,7 +28,7 @@
             },
             "reauth": {
                 "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
-                "title": "Re-authenticate Profile"
+                "title": "Reauthenticate Integration"
             }
         }
     }

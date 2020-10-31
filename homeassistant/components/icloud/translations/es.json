@@ -15,7 +15,9 @@
             "reauth": {
                 "data": {
                     "password": "Contrase\u00f1a"
-                }
+                },
+                "description": "La contrase\u00f1a introducida anteriormente para {username} ya no funciona. Actualiza tu contrase\u00f1a para seguir usando esta integraci\u00f3n.",
+                "title": "Credenciales de iCloud"
             },
             "trusted_device": {
                 "data": {

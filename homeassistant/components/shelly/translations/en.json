@@ -10,7 +10,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
                 "description": "Do you want to set up the {model} at {host}?\n\nBefore set up, the battery-powered device must be woken up by pressing the button on the device."

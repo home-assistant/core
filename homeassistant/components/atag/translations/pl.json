@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "unauthorized": "Odmowa parowania, sprawd\u017a urz\u0105dzenie pod k\u0105tem \u017c\u0105dania autoryzacji."
+            "unauthorized": "Odmowa parowania, sprawd\u017a urz\u0105dzenie pod k\u0105tem \u017c\u0105dania autoryzacji"
         },
         "step": {
             "user": {

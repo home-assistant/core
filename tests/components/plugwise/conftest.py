@@ -80,7 +80,7 @@ def mock_smile_adam():
             return_value=True
         )
         smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=True
+            return_value=False
         )
         smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
             return_value=True

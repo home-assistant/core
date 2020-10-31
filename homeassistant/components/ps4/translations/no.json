@@ -9,7 +9,7 @@
             "port_997_bind_error": "Kunne ikke binde til port 997. Se [dokumentasjonen](https://www.home-assistant.io/components/ps4/) for videre informasjon."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "credential_timeout": "Legitimasjonstjenesten ble tidsavbrutt. Trykk send for \u00e5 starte p\u00e5 nytt.",
             "login_failed": "Kunne ikke koble til PlayStation 4. Bekreft at PIN-kode er riktig.",
             "no_ipaddress": "Skriv inn IP adresse til PlayStation 4 du vil konfigurere.",
@@ -32,10 +32,10 @@
             },
             "mode": {
                 "data": {
-                    "ip_address": "IP adresse (La v\u00e6re tom hvis du bruker Auto Discovery).",
+                    "ip_address": "IP adresse (La v\u00e6re tom hvis du bruker automatisk oppdagelse)",
                     "mode": "Konfigureringsmodus"
                 },
-                "description": "Velg modus for konfigurasjon. Feltet IP adresse kan st\u00e5 tomt hvis du velger Auto Discovery, da enheter automatisk blir oppdaget.",
+                "description": "Velg modus for konfigurasjon. Feltet IP adresse kan st\u00e5 tomt hvis du velger automatisk oppdagelse, da enheter automatisk blir oppdaget.",
                 "title": ""
             }
         }

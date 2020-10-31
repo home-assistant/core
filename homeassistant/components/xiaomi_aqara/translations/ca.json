@@ -17,7 +17,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP de la passarel\u00b7la"
+                    "select_ip": "Adre\u00e7a IP"
                 },
                 "description": "Torna a executar la configuraci\u00f3 si vols connectar passarel\u00b7les addicionals",
                 "title": "Selecciona la passarel\u00b7la Xiaomi Aqara a la qual connectar-te"

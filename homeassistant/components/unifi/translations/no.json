@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -54,7 +54,7 @@
                 "data": {
                     "block_client": "Nettverkskontrollerte klienter",
                     "track_clients": "Spor nettverksklienter",
-                    "track_devices": "Spor nettverksenheter (Ubiquiti enheter)"
+                    "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)"
                 },
                 "description": "Konfigurer UniFi-integrasjon"
             },

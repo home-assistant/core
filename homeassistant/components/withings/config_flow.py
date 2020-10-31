@@ -10,8 +10,6 @@ from homeassistant.components.withings import const
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class WithingsFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=const.DOMAIN
@@ -70,7 +68,7 @@ class WithingsFlowHandler(
                 self._current_data = {}
                 return await self.async_step_finish(new_data)
 
-            errors["base"] = "already_configured_account"
+            errors["base"] = "already_configured"
 
         return self.async_show_form(
             step_id="profile",
