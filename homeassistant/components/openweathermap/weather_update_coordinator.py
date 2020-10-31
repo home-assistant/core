@@ -174,16 +174,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _calc_precipitation(rain, snow):
         """Calculate the precipitation."""
-        rain_value = (
-            0
-            if WeatherUpdateCoordinator._get_rain(rain) == "not raining"
-            else WeatherUpdateCoordinator._get_rain(rain)
-        )
-        snow_value = (
-            0
-            if WeatherUpdateCoordinator._get_snow(snow) == "not snowing"
-            else WeatherUpdateCoordinator._get_snow(snow)
-        )
+        rain_value = 0
+        if WeatherUpdateCoordinator._get_rain(rain) != "not raining":
+            rain_value = WeatherUpdateCoordinator._get_rain(rain)
+
+        snow_value = 0
+        if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
+            snow_value = WeatherUpdateCoordinator._get_snow(snow)
+
         if round(rain_value + snow_value, 1) == 0:
             return None
         return round(rain_value + snow_value, 1)
