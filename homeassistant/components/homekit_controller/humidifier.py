@@ -425,14 +425,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return None
 
     def get_char(serv, iid):
-        try:
-            type_name = CharacteristicsTypes[iid]
-            type_uuid = CharacteristicsTypes.get_uuid(type_name)
-            for char in serv.get("characteristics"):
-                if char.get("type") == type_uuid:
-                    return char
-        except KeyError:
-            return None
+
+        if len(iid) == 36:
+            type_uuid = iid
+        else:
+            try:
+                type_name = CharacteristicsTypes[iid]
+                type_uuid = CharacteristicsTypes.get_uuid(type_name)
+            except KeyError:
+                return None
+
+        for char in serv.get("characteristics"):
+            if char.get("type") == type_uuid:
+                return char
         return None
 
     @callback
@@ -445,18 +450,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         serv = get_service(acc, service["iid"])
 
         if (
-            get_char(serv, CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD)
+            get_char(serv, CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL)
             is not None
         ):
-            async_add_entities([HomeKitHumidifier(conn, info)], True)
+            async_add_entities([HomeKitDiffuser(conn, info)], True)
+        else:
+            if (
+                get_char(
+                    serv, CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+                )
+                is not None
+            ):
+                async_add_entities([HomeKitHumidifier(conn, info)], True)
 
-        if (
-            get_char(
-                serv, CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-            )
-            is not None
-        ):
-            async_add_entities([HomeKitDehumidifier(conn, info)], True)
+            if (
+                get_char(
+                    serv, CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+                )
+                is not None
+            ):
+                async_add_entities([HomeKitDehumidifier(conn, info)], True)
 
         return True
 
