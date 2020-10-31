@@ -59,8 +59,8 @@ def mock_set_addon_options():
 @pytest.fixture(name="start_addon")
 def mock_start_addon():
     """Mock start add-on."""
-    with patch("homeassistant.components.hassio.async_start_addon"):
-        yield
+    with patch("homeassistant.components.hassio.async_start_addon") as start_addon:
+        yield start_addon
 
 
 async def test_user_not_supervisor_create_entry(hass):
@@ -246,3 +246,25 @@ async def test_set_addon_config_failure(
 
     assert result["type"] == "abort"
     assert result["reason"] == "addon_set_config_failed"
+
+
+async def test_start_addon_failure(
+    hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
+):
+    """Test add-on start failure."""
+    start_addon.side_effect = HassioAPIError()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "addon_start_failed"}
