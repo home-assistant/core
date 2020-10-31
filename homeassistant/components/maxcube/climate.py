@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for device in cube.devices:
             name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
-            if if device.type == 1 or device.type == 3:
+            if device.type == 1 or device.type == 3:
                 devices.append(MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
