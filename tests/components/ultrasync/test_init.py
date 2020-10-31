@@ -5,28 +5,11 @@ from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_USERNAME
-from homeassistant.setup import async_setup_component
 
-from . import ENTRY_CONFIG, YAML_CONFIG, _patch_async_setup_entry, init_integration
+from . import ENTRY_CONFIG, init_integration
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
-
-
-async def test_import_from_yaml(hass, ultrasync_api) -> None:
-    """Test import from YAML."""
-    with _patch_async_setup_entry():
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    assert entries[0].data[CONF_NAME] == "UltraSyncYAML"
-    assert entries[0].data[CONF_USERNAME] == "User 3"
-    assert entries[0].data[CONF_HOST] == "127.0.0.3"
-    assert entries[0].data[CONF_PIN] == "9876"
 
 
 async def test_unload_entry(hass, ultrasync_api):

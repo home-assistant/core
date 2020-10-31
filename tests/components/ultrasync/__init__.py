@@ -1,6 +1,4 @@
 """Tests for the UltraSync integration."""
-from datetime import timedelta
-
 from homeassistant.components.ultrasync.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -28,16 +26,6 @@ USER_INPUT = {
     CONF_USERNAME: "User 2",
     CONF_PIN: "5678",
 }
-
-YAML_CONFIG = {
-    CONF_NAME: "UltraSyncYAML",
-    CONF_HOST: "127.0.0.3",
-    CONF_USERNAME: "User 3",
-    CONF_PIN: "9876",
-    CONF_SCAN_INTERVAL: timedelta(seconds=5),
-}
-
-MOCK_VERSION = "21.0"
 
 MOCK_AREAS = [
     {"bank": 0, "name": "Area 1", "sequence": 30, "status": "Ready"},

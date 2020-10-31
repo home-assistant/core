@@ -48,24 +48,11 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return UltraSyncOptionsFlowHandler(config_entry)
-
-    async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by configuration file."""
-        if CONF_SCAN_INTERVAL in user_input:
-            user_input[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL].seconds
-
-        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
@@ -113,12 +100,7 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
