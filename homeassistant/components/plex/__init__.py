@@ -1,6 +1,5 @@
 """Support to embed Plex."""
 import asyncio
-import functools
 from functools import partial
 import logging
 
@@ -217,7 +216,7 @@ async def async_setup_entry(hass, entry):
         task = hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-        task.add_done_callback(functools.partial(start_websocket_session, platform))
+        task.add_done_callback(partial(start_websocket_session, platform))
 
     async def async_play_on_sonos_service(service_call):
         await hass.async_add_executor_job(play_on_sonos, hass, service_call)

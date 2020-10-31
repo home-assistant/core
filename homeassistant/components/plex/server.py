@@ -383,9 +383,6 @@ class PlexServer:
                     device.machineIdentifier,
                 )
 
-        for device in devices:
-            process_device("PMS", device)
-
         def connect_to_client(source, baseurl, machine_identifier, name="Unknown"):
             """Connect to a Plex client and return a PlexClient instance."""
             try:
@@ -477,6 +474,9 @@ class PlexServer:
                     available_clients[player.machineIdentifier][
                         "session"
                     ] = self.active_sessions[unique_id]
+
+        for device in devices:
+            process_device("PMS", device)
 
         def sync_tasks():
             connect_new_clients()

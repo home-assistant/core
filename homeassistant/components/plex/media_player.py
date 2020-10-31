@@ -62,9 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def async_new_media_players(new_entities):
-        _async_add_entities(
-            hass, registry, config_entry, async_add_entities, server_id, new_entities
-        )
+        _async_add_entities(hass, registry, async_add_entities, server_id, new_entities)
 
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
@@ -74,9 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def _async_add_entities(
-    hass, registry, config_entry, async_add_entities, server_id, new_entities
-):
+def _async_add_entities(hass, registry, async_add_entities, server_id, new_entities):
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
