@@ -297,6 +297,7 @@ class PlexServer:
         async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL.format(unique_id),
+            state,
         )
 
         async_dispatcher_send(
