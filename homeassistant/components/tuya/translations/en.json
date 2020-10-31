@@ -36,7 +36,6 @@
                 "data": {
                     "brightness_range_mode": "Brightness range used by device",
                     "curr_temp_divider": "Current Temperature value divider (0 = use default)",
-                    "ext_temp_sensor": "Sensor for current temperature",
                     "max_kelvin": "Max color temperature supported in kelvin",
                     "max_temp": "Max target temperature (use min and max = 0 for default)",
                     "min_kelvin": "Min color temperature supported in kelvin",
