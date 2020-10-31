@@ -56,6 +56,13 @@ def mock_set_addon_options():
         yield set_options
 
 
+@pytest.fixture(name="install_addon")
+def mock_install_addon():
+    """Mock install add-on."""
+    with patch("homeassistant.components.hassio.async_install_addon") as install_addon:
+        yield install_addon
+
+
 @pytest.fixture(name="start_addon")
 def mock_start_addon():
     """Mock start add-on."""
@@ -268,3 +275,46 @@ async def test_start_addon_failure(
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "addon_start_failed"}
+
+
+async def test_addon_not_installed(
+    hass,
+    supervisor,
+    addon_installed,
+    install_addon,
+    addon_options,
+    set_addon_options,
+    start_addon,
+):
+    """Test add-on not installed."""
+    addon_installed.return_value["version"] = None
+    hass.config.components.add("mqtt")
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": "/test",
+        "network_key": "abc123",
+        "integration_created_addon": True,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
