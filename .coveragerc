@@ -137,7 +137,6 @@ omit =
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
-    homeassistant/components/connectedcars/__init__.py
     homeassistant/components/connectedcars/const.py
     homeassistant/components/connectedcars/device_tracker.py
     homeassistant/components/connectedcars/sensor.py
