@@ -118,3 +118,42 @@ async def test_full_user_flow_implementation(
 
     entries = hass.config_entries.async_entries(config_flow.DOMAIN)
     assert entries[0].unique_id == "RVS21.831F/127"
+
+
+async def test_full_user_flow_implementation_without_auth(
+    hass: HomeAssistant, aioclient_mock
+) -> None:
+    """Test the full manual user flow from start to finish."""
+    aioclient_mock.post(
+        "http://example2.local:80/JQ?Parameter=6224,6225,6226",
+        text=load_fixture("bsblan/info.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "example2.local",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["data"][CONF_HOST] == "example2.local"
+    assert result["data"][CONF_USERNAME] is None
+    assert result["data"][CONF_PASSWORD] is None
+    assert result["data"][CONF_PASSKEY] is None
+    assert result["data"][CONF_PORT] == 80
+    assert result["data"][CONF_DEVICE_IDENT] == "RVS21.831F/127"
+    assert result["title"] == "RVS21.831F/127"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
+    assert entries[0].unique_id == "RVS21.831F/127"
