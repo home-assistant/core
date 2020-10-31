@@ -7,7 +7,7 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_user_create_entry(hass):
+async def test_user_not_supervisor_create_entry(hass):
     """Test the user step creates an entry not on Supervisor."""
     hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
