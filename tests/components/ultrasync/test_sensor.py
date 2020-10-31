@@ -8,7 +8,7 @@ async def test_sensors(hass, ultrasync_api) -> None:
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     sensors = {
-        "area01_state": ("area1state", "unknown"),
+        "area01_state": ("area1state", "Ready"),
         "area02_state": ("area2state", "unknown"),
         "area03_state": ("area3state", "unknown"),
         "area04_state": ("area4state", "unknown"),

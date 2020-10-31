@@ -48,10 +48,10 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
 
             # initialize our response
             response = {
-                "Area1State": "unknown",
-                "Area2State": "unknown",
-                "Area3State": "unknown",
-                "Area4State": "unknown",
+                "area01_state": "unknown",
+                "area02_state": "unknown",
+                "area03_state": "unknown",
+                "area04_state": "unknown",
             }
 
             # Update our details
@@ -86,8 +86,9 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                         self._area_delta[area["bank"]] = area["sequence"]
 
                     # Set our state:
-                    response["Area{}State".format(area["bank"] + 1)] = area["status"]
-
+                    response["area{:0>2}_state".format(area["bank"] + 1)] = area[
+                        "status"
+                    ]
             self._init = True
 
             # Return our response
