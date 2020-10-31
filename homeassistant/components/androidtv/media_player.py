@@ -464,7 +464,7 @@ class ADBDevice(MediaPlayerEntity):
 
     @property
     def device_state_attributes(self):
-        """Provide the last ADB command's response as an attribute."""
+        """Provide the last ADB command's response and the device's HDMI input as attributes."""
         return {
             "adb_response": self._adb_response,
             "hdmi_input": self._hdmi_input,
@@ -748,7 +748,7 @@ class FireTVDevice(ADBDevice):
         if not self._available:
             return
 
-        # Get the `state`, `current_app`, and `running_apps`.
+        # Get the `state`, `current_app`, `running_apps` and `hdmi_input`.
         (
             state,
             self._current_app,
