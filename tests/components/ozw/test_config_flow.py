@@ -21,14 +21,44 @@ def mock_supervisor_fixture():
 def mock_addon_info():
     """Mock Supervisor add-on info."""
     with patch("homeassistant.components.hassio.async_get_addon_info") as addon_info:
+        addon_info.return_value = {}
         yield addon_info
 
 
 @pytest.fixture(name="addon_running")
 def mock_addon_running(addon_info):
     """Mock add-on already running."""
-    addon_info.return_value = {"state": "started"}
+    addon_info.return_value["state"] = "started"
     return addon_info
+
+
+@pytest.fixture(name="addon_installed")
+def mock_addon_installed(addon_info):
+    """Mock add-on already installed but not running."""
+    addon_info.return_value["state"] = "stopped"
+    addon_info.return_value["version"] = "1.0"
+    return addon_info
+
+
+@pytest.fixture(name="addon_options")
+def mock_addon_options(addon_info):
+    """Mock add-on options."""
+    addon_info.return_value["options"] = {}
+    return addon_info
+
+
+@pytest.fixture(name="set_addon_options")
+def mock_set_addon_options():
+    """Mock set add-on options."""
+    with patch("homeassistant.components.hassio.async_set_addon_options"):
+        yield
+
+
+@pytest.fixture(name="start_addon")
+def mock_start_addon():
+    """Mock start add-on."""
+    with patch("homeassistant.components.hassio.async_start_addon"):
+        yield
 
 
 async def test_user_not_supervisor_create_entry(hass):
@@ -156,3 +186,39 @@ async def test_addon_info_failure(hass, supervisor, addon_info):
 
     assert result["type"] == "abort"
     assert result["reason"] == "addon_info_failed"
+
+
+async def test_addon_installed(
+    hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
+):
+    """Test add-on already installed but not running on Supervisor."""
+    hass.config.components.add("mqtt")
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    with patch(
+        "homeassistant.components.ozw.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": "/test",
+        "network_key": "abc123",
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
