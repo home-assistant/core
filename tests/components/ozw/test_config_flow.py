@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant import config_entries, setup
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw.config_flow import TITLE
 from homeassistant.components.ozw.const import DOMAIN
 
@@ -138,3 +139,20 @@ async def test_addon_running(hass, supervisor, addon_running):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_addon_info_failure(hass, supervisor, addon_info):
+    """Test add-on info failure."""
+    addon_info.side_effect = HassioAPIError()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "addon_info_failed"
