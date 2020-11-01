@@ -13,11 +13,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTRIBUTION,
     ATTR_AGENCY,
     ATTR_AGENCY_COUNTRY_CODE,
     ATTR_LAUNCH_TIME,
     ATTR_STREAM,
+    ATTRIBUTION,
     DEFAULT_NAME,
 )
 
