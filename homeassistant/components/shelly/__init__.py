@@ -98,7 +98,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         self.device.subscribe_updates(self._multicast_update)
 
-    def _multicast_update(self, data):
+    @callback
+    def _async_multicast_update(self, data):
         """Handle multicast device update."""
         self._update_from_multicast = True
         self.hass.async_create_task(self.async_refresh())

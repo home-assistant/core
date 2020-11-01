@@ -41,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     options = aioshelly.ConnectionOptions(
         gethostbyname(host), data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
-    await get_coap_context(hass)
+    context = await get_coap_context(hass)
 
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
