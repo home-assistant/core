@@ -5,10 +5,12 @@
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
+            "bad_dsn": "Kehtetu DSN",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {
+                "description": "Sisesta oma Sentry DSN",
                 "title": ""
             }
         }
