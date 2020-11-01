@@ -1,7 +1,5 @@
 """Const for Twinkly."""
 
-from aiohttp import ClientTimeout
-
 DOMAIN = "twinkly"
 
 # Keys of the config entry
@@ -22,15 +20,4 @@ HIDDEN_DEV_VALUES = (
     "code",  # This is the internal status code of the API response
     "copyright",  # We should not display a copyright "LEDWORKS 2018" in the Home-Assistant UI
     "mac",  # Does not report the actual device mac address
-)
-
-# Twinkly API endpoints configuration
-EP_DEVICE_INFO = "gestalt"
-EP_MODE = "led/mode"
-EP_BRIGHTNESS = "led/out/brightness"
-EP_LOGIN = "login"
-EP_VERIFY = "verify"
-
-EP_TIMEOUT = ClientTimeout(
-    total=3  # It on LAN, and if too long we will get warning about the update duration in logs
 )
