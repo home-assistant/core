@@ -8,7 +8,9 @@ from tests.common import load_fixture
 
 def test_setup_and_initial_state(hass, requests_mock):
     """Test that the component is created and initialized as expected."""
-    uri = re.compile(r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json")
+    uri = re.compile(
+        r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json"
+    )
     requests_mock.get(uri, text=load_fixture("aurora.json"))
 
     entities = []
@@ -35,7 +37,9 @@ def test_setup_and_initial_state(hass, requests_mock):
 
 def test_custom_threshold_works(hass, requests_mock):
     """Test that the config can take a custom forecast threshold."""
-    uri = re.compile(r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json")
+    uri = re.compile(
+        r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json"
+    )
     requests_mock.get(uri, text=load_fixture("aurora.json"))
 
     entities = []

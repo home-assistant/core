@@ -134,7 +134,7 @@ class AuroraData:
 
         # Find the forecast for the current location by walking through the one
         # dimensional list of forcasts
-        for forecast in forecast_data['coordinates']:
+        for forecast in forecast_data["coordinates"]:
             if forecast[0] == converted_longitude and forecast[1] == converted_latitude:
                 return str(forecast[2])
 
