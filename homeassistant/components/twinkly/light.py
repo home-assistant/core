@@ -1,11 +1,11 @@
 """The Twinkly light component."""
 
-from asyncio import TimeoutError
+import asyncio
 import logging
 from typing import Any, Dict, Optional
 
 from aiohttp import ClientError
-from twinkly_client import TwinklyClient
+import twinkly_client
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -40,7 +40,7 @@ async def async_setup_entry(
     name = config_entry.data[CONF_ENTRY_NAME]
     model = config_entry.data[CONF_ENTRY_MODEL]
 
-    client = TwinklyClient(host, async_get_clientsession(hass))
+    client = twinkly_client.TwinklyClient(host, async_get_clientsession(hass))
     entity = TwinklyLight(uuid, client, name, model, hass, config_entry)
 
     async_add_entities([entity], update_before_add=True)
@@ -52,7 +52,7 @@ class TwinklyLight(LightEntity):
     def __init__(
         self,
         uuid: str,
-        client: TwinklyClient,
+        client: twinkly_client.TwinklyClient,
         name: str,
         model: str,
         hass: HomeAssistantType,
@@ -215,7 +215,7 @@ class TwinklyLight(LightEntity):
             # We don't use the echo API to track the availability since we already have to pull
             # the device to get its state.
             self._is_available = True
-        except (TimeoutError, ClientError):
+        except (asyncio.TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the christmas light are not reachable in july
             if self._is_available:
                 _LOGGER.info(

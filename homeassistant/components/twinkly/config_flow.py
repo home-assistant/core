@@ -1,6 +1,6 @@
 """Config flow to configure the Twinkly integration."""
 
-from asyncio import TimeoutError
+import asyncio
 import logging
 
 from aiohttp import ClientError
@@ -52,7 +52,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ENTRY_MODEL: device_info[DEV_MODEL],
                     },
                 )
-            except (TimeoutError, ClientError) as err:
+            except (asyncio.TimeoutError, ClientError) as err:
                 _LOGGER.info("Cannot reach Twinkly '%s' (client)", host, exc_info=err)
                 errors[CONF_HOST] = "cannot_connect"
 
