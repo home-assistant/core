@@ -18,8 +18,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry,
-    update_coordinator,
     singleton,
+    update_coordinator,
 )
 
 from .const import DATA_CONFIG_ENTRY, DOMAIN
