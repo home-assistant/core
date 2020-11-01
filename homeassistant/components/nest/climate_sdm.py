@@ -86,7 +86,7 @@ FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 async def async_setup_sdm_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up the sensors."""
+    """Set up the client entities."""
 
     subscriber = hass.data[DOMAIN][entry.entry_id]
     device_manager = await subscriber.async_get_device_manager()
@@ -121,7 +121,7 @@ class ThermostatEntity(ClimateEntity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the entity."""
         return self._device_info.device_name
 
     @property
