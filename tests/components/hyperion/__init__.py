@@ -121,9 +121,12 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType, data: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType,
+    data: Optional[Dict[str, Any]] = None,
+    options: Optional[Dict[str, Any]] = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
+    options = options or TEST_CONFIG_ENTRY_OPTIONS
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
@@ -134,7 +137,7 @@ def add_test_config_entry(
         },
         title=f"Hyperion {TEST_SYSINFO_ID}",
         unique_id=TEST_SYSINFO_ID,
-        options=TEST_CONFIG_ENTRY_OPTIONS,
+        options=options,
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
     return config_entry
@@ -144,10 +147,10 @@ async def setup_test_config_entry(
     hass: HomeAssistantType,
     config_entry: Optional[ConfigEntry] = None,
     hyperion_client: Optional[Mock] = None,
+    options: Optional[Dict[str, Any]] = None,
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
-    config_entry = config_entry or add_test_config_entry(hass)
-
+    config_entry = config_entry or add_test_config_entry(hass, options=options)
     hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init
     hyperion_client.instances = [TEST_INSTANCE_1]

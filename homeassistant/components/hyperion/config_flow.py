@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
     CONF_ID,
+    CONF_MODE,
     CONF_PORT,
     CONF_SOURCE,
     CONF_TOKEN,
@@ -34,7 +35,10 @@ from . import create_hyperion_client
 from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
+    CONF_MODE_COMPONENT,
+    CONF_MODE_PRIORITY,
     CONF_PRIORITY,
+    DEFAULT_MODE,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
@@ -470,6 +474,12 @@ class HyperionOptionsFlow(OptionsFlow):
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+                    vol.Optional(
+                        CONF_MODE,
+                        default=self._config_entry.options.get(
+                            CONF_MODE_COMPONENT, DEFAULT_MODE
+                        ),
+                    ): vol.In([CONF_MODE_COMPONENT, CONF_MODE_PRIORITY]),
                 }
             ),
         )

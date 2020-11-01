@@ -45,7 +45,8 @@
     "step": {
       "init": {
         "data": {
-          "priority": "Hyperion priority to use for colors and effects"
+          "priority": "Hyperion priority to use for colors and effects",
+          "mode": "Mode: Component control or priority friendly (for interoperability with other Hyperion-NG remotes)"
         }
       }
     }
