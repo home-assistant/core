@@ -89,5 +89,5 @@ def test_missing_data_works(hass, requests_mock):
     aurora.setup_platform(hass, config, mock_add_entities)
 
     aurora_component = entities[0]
-    assert aurora_component.aurora_data.visibility_level == None
+    assert aurora_component.aurora_data.visibility_level is None
     assert not aurora_component.is_on
