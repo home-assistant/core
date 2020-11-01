@@ -1,6 +1,6 @@
 """The Twinkly light component."""
 
-from asyncio.exceptions import TimeoutError
+from asyncio import TimeoutError
 import logging
 from typing import Any, Dict, Optional
 
@@ -215,16 +215,10 @@ class TwinklyLight(LightEntity):
             # We don't use the echo API to track the availability since we already have to pull
             # the device to get its state.
             self._is_available = True
-        except ClientError:
+        except (TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the christmas light are not reachable in july
             if self._is_available:
                 _LOGGER.info(
                     "Twinkly '%s' is not reachable (client error)", self._client.host
                 )
-        except TimeoutError:
-            if self._is_available:
-                _LOGGER.info(
-                    "Twinkly '%s' is not reachable (timeout)", self._client.host
-                )
-
             self._is_available = False
