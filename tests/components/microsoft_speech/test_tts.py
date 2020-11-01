@@ -65,20 +65,6 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    def test_setup_component_all_params_with_voice(self):
-        """Test setup component with all parameters."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "region": "westeurope",
-                "voice": "nl-NL-ColetteNeural",
-            }
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
     @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_setup_component_error_region(self, mock_calculate):
         """Test setup component with error on region."""
@@ -115,20 +101,6 @@ class TestTTSMicrosoftSpeechPlatform:
                 "platform": "microsoft_speech",
                 "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
                 "type": "nonexistingtype",
-            }
-        }
-
-        with assert_setup_component(0, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-    @patch("gtts_token.gtts_token.Token.calculate_token")
-    def test_setup_component_error_voice(self, mock_calculate):
-        """Test setup component with error on voice."""
-        config = {
-            tts.DOMAIN: {
-                "platform": "microsoft_speech",
-                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
-                "voice": "nonexistingvoice",
             }
         }
 

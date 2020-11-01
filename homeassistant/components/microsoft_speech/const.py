@@ -1,5 +1,5 @@
 """Constants for Azure Speech Integration."""
-# See https://docs.microsoft.com/nl-nl/azure/cognitive-services/speech-service/language-support
+# See https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support
 SUPPORTED_LANGUAGES = [
     "ar-EG",
     "ar-SA",
@@ -52,7 +52,7 @@ SUPPORTED_LANGUAGES = [
     "zh-TW",
 ]
 
-# See https://docs.microsoft.com/nl-nl/azure/cognitive-services/speech-service/language-support
+# See https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support
 SUPPORTED_TYPES = [
     "AcharaNeural",
     "AlbaNeural",
@@ -201,7 +201,7 @@ SUPPORTED_TYPES = [
     "ZofiaNeural",
 ]
 
-# See https://docs.microsoft.com/nl-nl/azure/cognitive-services/speech-service/language-support
+# See https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support
 SUPPORTED_VOICES = [
     "ar-EG-Hoda",
     "ar-EG-SalmaNeural",
@@ -371,7 +371,7 @@ SUPPORTED_OUTPUTS = [
     "Riff8Khz8BitMonoMULaw",
 ]
 
-# See: https://azure.microsoft.com/nl-nl/global-infrastructure/services/?products=cognitive-services&regions=all
+# See: https://azure.microsoft.com/en-us/global-infrastructure/services/?products=cognitive-services&regions=all
 SUPPORTED_REGIONS = [
     "australiaeast",
     "brazilsouth",
