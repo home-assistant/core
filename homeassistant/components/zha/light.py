@@ -328,6 +328,7 @@ class Light(BaseLight, ZhaEntity):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._state = bool(self._on_off_channel.on_off)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
@@ -340,7 +341,7 @@ class Light(BaseLight, ZhaEntity):
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
-            self._brightness = 0
+            self._brightness = self._level_channel.current_level
 
         if self._color_channel:
             color_capabilities = self._color_channel.get_color_capabilities()
