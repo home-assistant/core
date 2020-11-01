@@ -1476,7 +1476,7 @@ pylacrosse==0.4
 pylast==3.3.0
 
 # homeassistant.components.launch_library
-pylaunches==0.2.0
+pylaunches==1.0.0
 
 # homeassistant.components.lg_netcast
 pylgnetcast-homeassistant==0.2.0.dev0
