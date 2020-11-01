@@ -100,7 +100,7 @@ class LuftdatenSensor(Entity):
 
         if self._data is not None:
             try:
-                 self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
+                self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]
             except KeyError:
                 return
 
