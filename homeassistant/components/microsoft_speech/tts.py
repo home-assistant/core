@@ -82,9 +82,8 @@ class MicrosoftProvider(Provider):
     def validate_voice(self):
         """Validate voice against the list of supported voices."""
         if self._voice not in self.supported_voices:
-            _LOGGER.warning(
-                "Selected voice '%s' not in supported voices list. Please validate the combination of 'language' and 'type' in your configuration",
-                self._voice,
+            raise AssertionError(
+                f"Selected voice '{self._voice}' not in supported voices list. Please validate the combination of 'language' and 'type' in your configuration."
             )
         else:
             pass
