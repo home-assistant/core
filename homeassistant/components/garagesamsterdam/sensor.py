@@ -41,12 +41,6 @@ class GaragesamsterdamSensor(CoordinatorEntity):
         self.garageName = garageName
         self.info_type = info_type
 
-        # _LOGGER.error(
-        #     "Inside INIT value: %s %s",
-        #     self.info_type,
-        #     getattr(self.coordinator.data[self.garageName], self.info_type),
-        # )
-
     @property
     def available(self):
         """Return if sensor is available."""
@@ -57,21 +51,12 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # _LOGGER.error(
-        #     "Inside ENABLED value: %s %s",
-        #     self.info_type,
-        #     getattr(self.coordinator.data[self.garageName], self.info_type),
-        # )
         if getattr(self.coordinator.data[self.garageName], self.info_type) != "":
             return True
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        # _LOGGER.error(
-        #     "Inside STATE value: %s",
-        #     getattr(self.coordinator.data[self.garageName], self.info_type),
-        # )
         return getattr(self.coordinator.data[self.garageName], self.info_type)
 
     @property
