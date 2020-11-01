@@ -347,14 +347,24 @@ class Light(BaseLight, ZhaEntity):
             color_capabilities = self._color_channel.get_color_capabilities()
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
+                self._color_temp = self._color_channel.color_temperature
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
-                self._hs_color = (0, 0)
+                curr_x = self._color_channel.current_x
+                curr_y = self._color_channel.current_y
+                if curr_x is not None and curr_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(curr_x / 65535), float(curr_y / 65535)
+                    )
+                else:
+                    self._hs_color = (0, 0)
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
+                if self._color_channel.color_loop_active == 1:
+                    self._effect = light.EFFECT_COLORLOOP
 
         if self._identify_channel:
             self._supported_features |= light.SUPPORT_FLASH
