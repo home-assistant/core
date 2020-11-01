@@ -13,13 +13,18 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, State, callback
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_component,
+    mock_restore_cache,
+)
 
 
 async def test_template(hass):
@@ -983,3 +988,41 @@ async def test_duplicate_templates(hass):
     state = hass.states.get("sensor.test_template_sensor")
     assert state.attributes["friendly_name"] == "Def"
     assert state.state == "Def"
+
+
+async def test_restore_state(hass):
+    """Test state restoration."""
+    mock_restore_cache(
+        hass,
+        (State("sensor.test_template_sensor", "1000"),),
+    )
+
+    hass.state = CoreState.starting
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.state == "1000"
+
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "2000")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.state == "2000"

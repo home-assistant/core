@@ -1,4 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
+import math
 from typing import Optional
 
 import voluptuous as vol
@@ -23,8 +24,9 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
@@ -101,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SensorTemplate(TemplateEntity, Entity):
+class SensorTemplate(TemplateEntity, RestoreEntity):
     """Representation of a Template Sensor."""
 
     def __init__(
@@ -144,6 +146,18 @@ class SensorTemplate(TemplateEntity, Entity):
         self.add_template_attribute("_state", self._template, None, self._update_state)
         if self._friendly_name_template is not None:
             self.add_template_attribute("_name", self._friendly_name_template)
+
+        # restore state after startup recovering number if possible
+        state = await self.async_get_last_state()
+        if state:
+            try:
+                frac, _ = math.modf(float(state.state))
+                if frac == 0.0:
+                    self._state = int(state.state)
+                else:
+                    self._state = float(state.state)
+            except ValueError:
+                self._state = state.state
 
         await super().async_added_to_hass()
 
