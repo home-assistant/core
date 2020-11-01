@@ -7,12 +7,16 @@
       "init": {
         "title": "Authentication Provider",
         "description": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": { "flow_impl": "Provider" }
+        "data": {
+          "flow_impl": "Provider"
+        }
       },
       "link": {
         "title": "Link Nest Account",
         "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
-        "data": { "code": "[%key:common::config_flow::data::pin%]" }
+        "data": {
+          "code": "[%key:common::config_flow::data::pin%]"
+        }
       }
     },
     "error": {
@@ -30,6 +34,14 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "camera_person": "Person detected",
+      "camera_motion": "Motion detected",
+      "camera_sound": "Sound detected",
+      "doorbell_chime": "Doorbell pressed"
     }
   }
 }
