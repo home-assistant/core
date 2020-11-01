@@ -1,12 +1,7 @@
 """Config flow for Huisbaasje integration."""
 import logging
 
-from huisbaasje import (
-    Huisbaasje,
-    HuisbaasjeConnectionException,
-    HuisbaasjeException,
-    HuisbaasjeUnauthenticatedException,
-)
+from huisbaasje import Huisbaasje, HuisbaasjeConnectionException, HuisbaasjeException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -56,9 +51,6 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 },
             )
-        except HuisbaasjeUnauthenticatedException as exception:
-            _LOGGER.warning(exception)
-            errors["base"] = "unauthenticated_exception"
         except HuisbaasjeConnectionException as exception:
             _LOGGER.warning(exception)
             errors["base"] = "connection_exception"
