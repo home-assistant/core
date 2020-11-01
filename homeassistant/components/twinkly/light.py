@@ -6,18 +6,14 @@ from typing import Any, Dict, Optional
 
 from aiohttp import ClientError
 from twinkly_client import TwinklyClient
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_validation import string
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -33,27 +29,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# Schema for configuration.yaml
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): string,
-        vol.Optional(CONF_NAME): string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setups eneity from the configuration.yaml."""
-    host = config[CONF_HOST]
-    name = config.get(CONF_NAME)
-
-    client = TwinklyClient(host, async_get_clientsession(hass))
-    entity = TwinklyLight(None, client, name, None, hass, None)
-
-    async_add_entities([entity], True)
-
-    return True
 
 
 async def async_setup_entry(
