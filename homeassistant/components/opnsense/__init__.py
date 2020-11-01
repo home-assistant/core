@@ -5,18 +5,14 @@ from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN, OPNSENSE_DATA
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_API_SECRET = "api_secret"
-CONF_TRACKER_INTERFACE = "tracker_interfaces"
-
-DOMAIN = "opnsense"
-
-OPNSENSE_DATA = DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -73,5 +69,5 @@ def setup(hass, config):
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
-    load_platform(hass, "device_tracker", DOMAIN, tracker_interfaces, config)
+    load_platform(hass, DEVICE_TRACKER, DOMAIN, tracker_interfaces, config)
     return True
