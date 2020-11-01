@@ -3,12 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from huisbaasje import (
-    Huisbaasje,
-    HuisbaasjeConnectionException,
-    HuisbaasjeException,
-    HuisbaasjeUnauthenticatedException,
-)
+from huisbaasje import HuisbaasjeException
 from huisbaasje.const import (
     SOURCE_TYPE_ELECTRICITY,
     SOURCE_TYPE_ELECTRICITY_IN,
@@ -155,7 +150,7 @@ def _get_this_day_value(current_measurements: dict, source_type: str):
 
 
 async def async_update_huisbaasje(huisbaasje):
-    """Update the data by performing a request to Huisbaasje"""
+    """Update the data by performing a request to Huisbaasje."""
     try:
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.

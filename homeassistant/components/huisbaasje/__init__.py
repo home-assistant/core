@@ -48,7 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         config_entry, "sensor"
     )
 
-    # If successfull, unload the Huisbaasje client
+    # If successful, unload the Huisbaasje client
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.data[CONF_ID])
 
