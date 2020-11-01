@@ -76,16 +76,14 @@ class OneWireProxy(OneWire):
     def update(self):
         """Get the latest data from the device."""
         value = None
-        value_read = False
         try:
-            value_read = self._read_value_ownet()
+            self._value_raw = self._read_value_ownet()
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        if value_read:
+        else:
             if "count" in self._unit_of_measurement:
-                value = int(value_read)
+                value = int(self._value_raw)
             else:
-                value = round(float(value_read), 1)
-            self._value_raw = float(value_read)
+                value = round(float(self._value_raw), 1)
 
         self._state = value
