@@ -1,5 +1,4 @@
 """Helpers for listening to events."""
-import asyncio
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -1350,11 +1349,11 @@ def async_track_utc_time_change(
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
-    cancel_callback: Optional[asyncio.TimerHandle] = None
+    cancel_callback: Optional[CALLBACK_TYPE] = None
     calculate_next(next_time)
 
     @callback
-    def pattern_time_change_listener() -> None:
+    def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
         nonlocal next_time, cancel_callback
 
@@ -1363,24 +1362,15 @@ def async_track_utc_time_change(
 
         calculate_next(now + timedelta(seconds=1))
 
-        cancel_callback = hass.loop.call_at(
-            _datetime_to_loop_time(hass, next_time),
-            pattern_time_change_listener,
+        cancel_callback = async_track_point_in_utc_time(
+            hass, pattern_time_change_listener, next_time
         )
 
-    cancel_callback = hass.loop.call_at(
-        _datetime_to_loop_time(hass, next_time),
-        pattern_time_change_listener,
+    cancel_callback = async_track_point_in_utc_time(
+        hass, pattern_time_change_listener, next_time
     )
 
-    @callback
-    def unsub_pattern_time_change_listener() -> None:
-        """Cancel the call_later."""
-        nonlocal cancel_callback
-        assert cancel_callback is not None
-        cancel_callback.cancel()
-
-    return unsub_pattern_time_change_listener
+    return cancel_callback
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
