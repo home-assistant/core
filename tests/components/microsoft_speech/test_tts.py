@@ -65,7 +65,21 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    def test_setup_component_all_params_with_voice(self):
+        """Test setup component with all parameters."""
+        config = {
+            tts.DOMAIN: {
+                "platform": "microsoft_speech",
+                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
+                "region": "westeurope",
+                "voice": "nl-NL-ColetteNeural",
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_setup_component_error_region(self, mock_calculate):
         """Test setup component with error on region."""
         config = {
@@ -79,7 +93,7 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(0, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_setup_component_error_language(self, mock_calculate):
         """Test setup component with error on language."""
         config = {
@@ -93,7 +107,7 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(0, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_setup_component_error_type(self, mock_calculate):
         """Test setup component with error on type."""
         config = {
@@ -107,7 +121,21 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(0, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    @patch("gtts_token.gtts_token.Token.calculate_token")
+    def test_setup_component_error_voice(self, mock_calculate):
+        """Test setup component with error on voice."""
+        config = {
+            tts.DOMAIN: {
+                "platform": "microsoft_speech",
+                "api_key": "123456789abcdefghijklmnopqrstuvwxyz",
+                "voice": "nonexistingvoice",
+            }
+        }
+
+        with assert_setup_component(0, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_setup_component_error_api_key(self, mock_calculate):
         """Test setup component with error on missing api_key."""
         config = {
@@ -119,7 +147,7 @@ class TestTTSMicrosoftSpeechPlatform:
         with assert_setup_component(0, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_service_say(self, mock_calculate):
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -147,7 +175,7 @@ class TestTTSMicrosoftSpeechPlatform:
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
+    @patch("gtts_token.gtts_token.Token.calculate_token")
     def test_service_say_dutch(self, mock_calculate):
         """Test service call say in Dutch."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
