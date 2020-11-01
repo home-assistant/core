@@ -33,7 +33,7 @@ async def test_initial_state(hass: HomeAssistant):
     assert state.name == entity.unique_id
     assert state.state == "on"
     assert state.attributes["host"] == TEST_HOST
-    assert state.attributes["brightness"] == 25.5
+    assert state.attributes["brightness"] == 26
     assert state.attributes["friendly_name"] == entity.unique_id
     assert state.attributes["icon"] == "mdi:string-lights"
 
@@ -157,6 +157,15 @@ async def test_update_name(hass: HomeAssistant):
     assert updated_config_entry is not None
     assert updated_config_entry.data[CONF_ENTRY_NAME] == "new_device_name"
     assert state.attributes["friendly_name"] == "new_device_name"
+
+
+async def test_unload(hass: HomeAssistant):
+    """Validate that entities can be unloaded from the UI."""
+
+    _, _, client = await _create_entries(hass)
+    entry_id = client.id
+
+    assert await hass.config_entries.async_unload(entry_id)
 
 
 async def _create_entries(
