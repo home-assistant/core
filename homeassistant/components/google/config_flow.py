@@ -110,10 +110,10 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TRACK_NEW: True,
                 }
 
-                await async_do_setup(self.hass, self.hass.config)
+                await async_do_setup(self.hass, self.hass.config.as_dict())
 
                 self.hass.components.frontend.async_register_built_in_panel(
-                    "calendar", "calendar", "hass:calendar"
+                    "calendar", "calendar", "hass:calendar", update=True
                 )
 
                 return self.async_create_entry(title="AIS Google Calendars", data=conf)

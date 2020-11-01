@@ -215,7 +215,7 @@ async def async_unload_entry(hass, config_entry):
     if os.path.isfile(hass.config.path(TOKEN_FILE)):
         await hass.async_add_executor_job(os.remove, hass.config.path(TOKEN_FILE))
     hass.components.frontend.async_remove_panel("calendar")
-    return True
+    return False
 
 
 def setup(hass, config):
@@ -271,7 +271,7 @@ async def async_setup_services(
             "calendar",
             DOMAIN,
             hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
-            hass.config,
+            hass_config,
         )
 
     hass.services.async_register(DOMAIN, SERVICE_FOUND_CALENDARS, _async_found_calendar)
@@ -433,17 +433,32 @@ async def async_do_setup(hass, hass_config):
     """Run the setup after we have everything configured."""
     # Load calendars the user has configured
     hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
+    if DATA_INDEX not in hass.data:
+        hass.data[DATA_INDEX] = {}
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
     await async_setup_services(hass, hass_config, True, calendar_service)
 
-    for calendar in hass.data[DATA_INDEX].values():
-        await discovery.async_load_platform(
-            hass, "calendar", DOMAIN, calendar, hass_config
+    # Look for any calendars
+    service = calendar_service.get()
+    cal_list = service.calendarList()
+    calendars = cal_list.list().execute()["items"]
+    for google_calendars in calendars:
+        google_calendars["track"] = True
+        calendar = get_calendar_info(hass, google_calendars)
+        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
+            return
+        hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})
+        update_config(
+            hass.config.path(YAML_DEVICES), hass.data[DATA_INDEX][calendar[CONF_CAL_ID]]
         )
-
-    # Look for any new calendars
-    await hass.services.async_call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
+        await discovery.async_load_platform(
+            hass,
+            "calendar",
+            DOMAIN,
+            hass.data[DATA_INDEX][calendar[CONF_CAL_ID]],
+            hass_config,
+        )
 
     return True
 
