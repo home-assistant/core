@@ -1,8 +1,13 @@
 """Binary Sensor platform for Garages Amsterdam."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_coordinator
+from .const import ATTRIBUTION
 
 BINARY_SENSORS = {
     "state",
@@ -30,8 +35,8 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, garageName, info_type):
         """Initialize garages amsterdam binary sensor."""
         super().__init__(coordinator)
-        self.name = f"{coordinator.data[garageName].garageName[3:]} - {info_type}"
-        self.unique_id = f"{garageName[3:]}-{info_type}"
+        self.name = f"{coordinator.data[garageName].garageName} - {info_type}"
+        self.unique_id = f"{garageName}-{info_type}"
         self.garageName = garageName
         self.info_type = info_type
 
@@ -39,6 +44,16 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self):
         """If the binary sensor is currently on or off."""
         if getattr(self.coordinator.data[self.garageName], self.info_type) == "ok":
-            return True
-        else:
             return False
+        else:
+            return True
+
+    @property
+    def device_class(self):
+        """Return the class of the binary sensor."""
+        return DEVICE_CLASS_PROBLEM
+
+    @property
+    def device_state_attributes(self):
+        """Return device attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}

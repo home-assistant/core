@@ -25,7 +25,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         GaragesamsterdamSensor(coordinator, config_entry.data["garageName"], info_type)
         for info_type in SENSORS
     )
-    # _LOGGER.error("Entity value: %s", config_entry.data)
 
 
 class GaragesamsterdamSensor(CoordinatorEntity):
@@ -37,16 +36,16 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     def __init__(self, coordinator, garageName, info_type):
         """Initialize garages amsterdam sensor."""
         super().__init__(coordinator)
-        self.name = f"{coordinator.data[garageName].garageName[3:]} - {info_type}"
-        self.unique_id = f"{garageName[3:]}-{info_type}"
+        self.name = f"{coordinator.data[garageName].garageName} - {info_type}"
+        self.unique_id = f"{garageName}-{info_type}"
         self.garageName = garageName
         self.info_type = info_type
 
-        _LOGGER.error(
-            "Inside INIT value: %s %s",
-            self.info_type,
-            getattr(self.coordinator.data[self.garageName], self.info_type),
-        )
+        # _LOGGER.error(
+        #     "Inside INIT value: %s %s",
+        #     self.info_type,
+        #     getattr(self.coordinator.data[self.garageName], self.info_type),
+        # )
 
     @property
     def available(self):
@@ -58,21 +57,21 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        _LOGGER.error(
-            "Inside ENABLED value: %s %s",
-            self.info_type,
-            getattr(self.coordinator.data[self.garageName], self.info_type),
-        )
-        if getattr(self.coordinator.data[self.garageName], self.info_type) == "0":
-            return False
+        # _LOGGER.error(
+        #     "Inside ENABLED value: %s %s",
+        #     self.info_type,
+        #     getattr(self.coordinator.data[self.garageName], self.info_type),
+        # )
+        if getattr(self.coordinator.data[self.garageName], self.info_type) != "":
+            return True
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        _LOGGER.error(
-            "Inside STATE value: %s",
-            getattr(self.coordinator.data[self.garageName], self.info_type),
-        )
+        # _LOGGER.error(
+        #     "Inside STATE value: %s",
+        #     getattr(self.coordinator.data[self.garageName], self.info_type),
+        # )
         return getattr(self.coordinator.data[self.garageName], self.info_type)
 
     @property
@@ -89,9 +88,3 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     def device_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    # @property
-    # def entity_registry_enabled_default(self) -> bool:
-    #     """Disable entity if freeSpaceLong or capacityLong has no value / None"""
-    #     if getattr(self.coordinator.data[self.garageName], self.info_type) is None:
-    #         return False
