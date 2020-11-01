@@ -115,9 +115,8 @@ class AuroraData:
             if result is False:
                 _LOGGER.error("Missing data for current location")
                 return False
-            else:
-                self.visibility_level = result
 
+            self.visibility_level = result
             if int(self.visibility_level) > self.threshold:
                 self.is_visible = True
                 self.is_visible_text = "visible!"
