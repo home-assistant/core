@@ -63,6 +63,7 @@ def test_custom_threshold_works(hass, requests_mock):
     assert aurora_component.aurora_data.visibility_level == "19"
     assert aurora_component.is_on
 
+
 def test_missing_data_works(hass, requests_mock):
     """Test that we properly handle missing data points."""
     uri = re.compile(
