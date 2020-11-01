@@ -24,7 +24,7 @@ class OneWire(Entity):
         device_info=None,
     ):
         """Initialize the sensor."""
-        self._name = f"{name} {(sensor_name or sensor_type).capitalize()}"
+        self._name = f"{name} {sensor_name or sensor_type.capitalize()}"
         self._device_file = device_file
         self._sensor_type = sensor_type
         self._device_class = SENSOR_TYPES[sensor_type][1]
