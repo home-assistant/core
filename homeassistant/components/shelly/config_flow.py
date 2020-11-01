@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client
 
 from .__init__ import get_coap_context
-from .const import COAP_CONTEXT, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,12 +41,12 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     options = aioshelly.ConnectionOptions(
         gethostbyname(host), data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
-    context = await get_coap_context(hass)
+    coap_context = await get_coap_context(hass)
 
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
             aiohttp_client.async_get_clientsession(hass),
-            hass.data[DOMAIN][COAP_CONTEXT],
+            coap_context,
             options,
         )
 
