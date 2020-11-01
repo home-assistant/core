@@ -312,7 +312,7 @@ avri-api==0.1.7
 axis==41
 
 # homeassistant.components.microsoft_speech
-azure-cognitiveservices-speech==1.13.0
+azure-cognitiveservices-speech==1.14.0
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
