@@ -48,10 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Qbittorrent from a config entry."""
     try:
         client = Client(entry.data[CONF_URL])
-        await client.login(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        client.login(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
         return
     except RequestException as err:
         _LOGGER.error("Connection failed")
         raise PlatformNotReady from err
+    return True

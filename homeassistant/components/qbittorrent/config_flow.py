@@ -36,7 +36,7 @@ class qBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 client = Client(user_input[CONF_URL])
-                await client.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                client.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             except LoginRequired:
                 errors["auth"] = "Invalid authentication"
                 return
