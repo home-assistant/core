@@ -43,9 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    res = os.popen("vcgencmd measure_temp").readline()
-    t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
-    return t_cpu
+    t_cpu = os.popen("cat /sys/class/thermal/thermal_zone0/temp").readline()
+    return float(t_cpu)
 
 
 def get_average(temp_base):

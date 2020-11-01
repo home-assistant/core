@@ -2,6 +2,6 @@
   "domain": "sensehat",
   "name": "Sense HAT",
   "documentation": "https://www.home-assistant.io/integrations/sensehat",
-  "requirements": ["sense-hat==2.2.0"],
+  "requirements": ["sense-hat==2.2.0", "rtimulib==7.2.1"],
   "codeowners": []
 }
