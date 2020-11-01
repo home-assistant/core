@@ -30,7 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GaragesamsterdamSensor(CoordinatorEntity):
     """Sensor representing garages amsterdam data."""
 
-    name = None
     unique_id = None
 
     def __init__(self, coordinator, garage_name, info_type):
@@ -39,6 +38,15 @@ class GaragesamsterdamSensor(CoordinatorEntity):
         self.unique_id = f"{garage_name}-{info_type}"
         self.garage_name = garage_name
         self.info_type = info_type
+        self._name = f"{self.coordinator.data[self.garage_name].garage_name} - {self.info_type}".replace(
+            "_", " "
+        )
+        self._state = getattr(self.coordinator.data[self.garage_name], self.info_type)
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
     @property
     def available(self):
@@ -56,7 +64,7 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data[self.garageName], self.info_type)
+        return self._state
 
     @property
     def icon(self):
