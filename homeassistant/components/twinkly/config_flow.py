@@ -1,8 +1,10 @@
 """Config flow to configure the Twinkly integration."""
 
+from asyncio.exceptions import TimeoutError
 import logging
 
-from twinkly_client import TwinklyClient
+from aiohttp import ClientError
+import twinkly_client
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
@@ -36,7 +38,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if host is not None:
             try:
-                device_info = await TwinklyClient(host).get_device_info()
+                device_info = await twinkly_client.TwinklyClient(host).get_device_info()
 
                 await self.async_set_unique_id(device_info[DEV_ID])
                 self._abort_if_unique_id_configured()
@@ -50,8 +52,11 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ENTRY_MODEL: device_info[DEV_MODEL],
                     },
                 )
-            except Exception as err:
-                _LOGGER.info("Cannot reach Twinkly '%s'", host, exc_info=err)
+            except ClientError as err:
+                _LOGGER.info("Cannot reach Twinkly '%s' (client)", host, exc_info=err)
+                errors[CONF_HOST] = "cannot_connect"
+            except TimeoutError as err:
+                _LOGGER.info("Cannot reach Twinkly '%s' (timeout)", host, exc_info=err)
                 errors[CONF_HOST] = "cannot_connect"
 
         return self.async_show_form(

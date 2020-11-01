@@ -1,5 +1,6 @@
 """The Twinkly light component."""
 
+from asyncio.exceptions import TimeoutError
 import logging
 from typing import Any, Dict, Optional
 
@@ -48,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
 
     client = TwinklyClient(host, async_get_clientsession(hass))
-    entity = TwinklyLight(None, client, name, None)
+    entity = TwinklyLight(None, client, name, None, hass, None)
 
     async_add_entities([entity], True)
 
@@ -65,25 +66,32 @@ async def async_setup_entry(
     model = config_entry.data[CONF_ENTRY_MODEL]
 
     client = TwinklyClient(host, async_get_clientsession(hass))
-    entity = TwinklyLight(uuid, client, name, model)
+    entity = TwinklyLight(uuid, client, name, model, hass, config_entry)
 
-    # We make sure the device is up-to-date before adding the entity to HA
-    await entity.async_update()
-
-    async_add_entities([entity])
+    async_add_entities([entity], update_before_add=True)
 
 
 class TwinklyLight(LightEntity):
     """Implementation of the light for the Twinkly service."""
 
-    def __init__(self, uuid: str, client: TwinklyClient, name: str, model: str):
+    def __init__(
+        self,
+        uuid: str,
+        client: TwinklyClient,
+        name: str,
+        model: str,
+        hass: HomeAssistantType,
+        conf: ConfigEntry,
+    ):
         """Initialize a TwinklyLight entity."""
         self._id = uuid
         self._client = client
+        self._hass = hass
+        self._conf = conf
 
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
-        # They are expected to be overridden by the device_info.
+        # They are expected to be updated using the device_info.
         self.__name = name
         self.__model = model
 
@@ -116,22 +124,12 @@ class TwinklyLight(LightEntity):
     @property
     def name(self) -> str:
         """Name of the device."""
-        return (
-            self._attributes[DEV_NAME]
-            if DEV_NAME in self._attributes
-            else self.__name
-            if self.__name
-            else "Twinkly light"
-        )
+        return self.__name if self.__name else "Twinkly light"
 
     @property
     def model(self) -> str:
         """Name of the device."""
-        return (
-            self._attributes[DEV_MODEL]
-            if DEV_MODEL in self._attributes
-            else self.__model
-        )
+        return self.__model
 
     @property
     def icon(self) -> str:
@@ -201,10 +199,37 @@ class TwinklyLight(LightEntity):
             self._is_on = await self._client.get_is_on()
 
             self._brightness = (
-                (await self._client.get_brigthness()) * 2.55 if self._is_on else 0
+                int(round((await self._client.get_brigthness()) * 2.55))
+                if self._is_on
+                else 0
             )
 
             device_info = await self._client.get_device_info()
+
+            if (
+                DEV_NAME in device_info
+                and DEV_MODEL in device_info
+                and (
+                    device_info[DEV_NAME] != self.__name
+                    or device_info[DEV_MODEL] != self.__model
+                )
+            ):
+                self.__name = device_info[DEV_NAME]
+                self.__model = device_info[DEV_MODEL]
+
+                if self._conf is not None:
+                    # If the name has changed, persist it in conf entry,
+                    # so we will be able to restore this new name if hass is started while the LED string is offline.
+                    self._hass.config_entries.async_update_entry(
+                        self._conf,
+                        data={
+                            CONF_ENTRY_HOST: self._client.host,  # this cannot change
+                            CONF_ENTRY_ID: self._id,  # this cannot change
+                            CONF_ENTRY_NAME: self.__name,
+                            CONF_ENTRY_MODEL: self.__model,
+                        },
+                    )
+
             for key, value in device_info.items():
                 if key not in HIDDEN_DEV_VALUES:
                     self._attributes[key] = value
@@ -218,6 +243,13 @@ class TwinklyLight(LightEntity):
         except ClientError:
             # We log this as "info" as it's pretty common that the christmas light are not reachable in july
             if self._is_available:
-                _LOGGER.info("Twinkly '%s' is not reachable", self._client.host)
+                _LOGGER.info(
+                    "Twinkly '%s' is not reachable (client error)", self._client.host
+                )
+        except TimeoutError:
+            if self._is_available:
+                _LOGGER.info(
+                    "Twinkly '%s' is not reachable (timeout)", self._client.host
+                )
 
             self._is_available = False
