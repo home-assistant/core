@@ -52,7 +52,6 @@ class OpenThermBinarySensor(BinarySensorEntity):
     def update_options(self, entry):
         """Update binary_sensor entity options."""
         self._force_update = entry.options[CONF_FORCE_UPDATE]
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""

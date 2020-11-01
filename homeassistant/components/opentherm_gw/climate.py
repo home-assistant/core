@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_FORCE_UPDATE,
     CONF_ID,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -74,12 +75,14 @@ class OpenThermClimate(ClimateEntity):
         self._away_state_b = False
         self._unsub_options = None
         self._unsub_updates = None
+        self._force_update = False
 
     @callback
     def update_options(self, entry):
         """Update climate entity options."""
         self.floor_temp = entry.options[CONF_FLOOR_TEMP]
         self.temp_precision = entry.options[CONF_PRECISION]
+        self._force_update = entry.options[CONF_FORCE_UPDATE]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -275,3 +278,8 @@ class OpenThermClimate(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return 30
+
+    @property
+    def force_update(self) -> bool:
+        """Return force_update property."""
+        return self._force_update
