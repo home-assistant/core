@@ -166,12 +166,11 @@ class ThermostatEntity(ClimateEntity):
         if self.target_temperature_high and self.target_temperature_low:
             if self.hvac_action == CURRENT_HVAC_HEAT:
                 return self.target_temperature_low
-            elif self.hvac_action == CURRENT_HVAC_COOL:
+            if self.hvac_action == CURRENT_HVAC_COOL:
                 return self.target_temperature_low
         if self.target_temperature_high:
             return self.target_temperature_high
-        else:
-            return self.target_temperature_low
+        return self.target_temperature_low
 
     @property
     def target_temperature_high(self):
