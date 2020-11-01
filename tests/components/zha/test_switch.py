@@ -136,7 +136,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+            False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
         )
 
     # turn off from HA
@@ -150,7 +150,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
+            False, OFF, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
         )
 
     # test joining a new switch to the network and HA
