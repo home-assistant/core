@@ -340,6 +340,9 @@ fritzconnection==1.4.2
 # homeassistant.components.google_translate
 gTTS==2.2.2
 
+# homeassistant.components.garagesamsterdam
+garagesamsterdam==1.0.2
+
 # homeassistant.components.garmin_connect
 garminconnect==0.1.19
 

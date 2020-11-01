@@ -3,7 +3,7 @@
   "name": "Garages Amsterdam",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/garagesamsterdam",
-  "requirements": [],
+  "requirements": ["garagesamsterdam==1.0.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
