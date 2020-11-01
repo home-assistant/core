@@ -1,6 +1,9 @@
 """Test the Huisbaasje config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.huisbaasje.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.huisbaasje.config_flow import (
+    HuisbaasjeConnectionException,
+    HuisbaasjeException,
+)
 from homeassistant.components.huisbaasje.const import DOMAIN
 
 from tests.async_mock import patch
@@ -15,28 +18,23 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.huisbaasje2.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+    with patch("huisbaasje.Huisbaasje.authenticate", return_value=None,), patch(
+        "huisbaasje.Huisbaasje.get_user_id", return_value="test-id",
     ), patch(
-        "homeassistant.components.huisbaasje2.async_setup", return_value=True
+        "homeassistant.components.huisbaasje.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.huisbaasje2.async_setup_entry", return_value=True,
+        "homeassistant.components.huisbaasje.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password",},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "test-username"
     assert result2["data"] == {
-        "host": "1.1.1.1",
+        "id": "test-id",
         "username": "test-username",
         "password": "test-password",
     }
@@ -51,16 +49,11 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.huisbaasje2.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password",},
         )
 
     assert result2["type"] == "form"
@@ -74,17 +67,12 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.huisbaasje2.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeConnectionException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password",},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "connection_exception"}
