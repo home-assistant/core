@@ -1,8 +1,8 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
+from socket import gethostbyname
 
-import aiocoap
 import aiohttp
 import aioshelly
 import async_timeout
@@ -17,7 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .__init__ import get_coap_context
+from .const import COAP_CONTEXT, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,17 +39,16 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     options = aioshelly.ConnectionOptions(
-        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        gethostbyname(host), data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
-    coap_context = await aiocoap.Context.create_client_context()
+    await get_coap_context(hass)
+
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
             aiohttp_client.async_get_clientsession(hass),
-            coap_context,
+            hass.data[DOMAIN][COAP_CONTEXT],
             options,
         )
-
-    await coap_context.shutdown()
 
     # Return info that you want to store in the config entry.
     return {

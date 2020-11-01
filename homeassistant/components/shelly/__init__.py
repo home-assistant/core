@@ -1,9 +1,8 @@
 """The Shelly integration."""
 import asyncio
-from datetime import timedelta
 import logging
+from socket import gethostbyname
 
-import aiocoap
 import aioshelly
 import async_timeout
 
@@ -24,16 +23,25 @@ PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Shelly component."""
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-    hass.data[DOMAIN][COAP_CONTEXT] = await aiocoap.Context.create_client_context()
+async def get_coap_context(hass):
+    """Init COAP context if not exists."""
+    if DOMAIN not in hass.data:
+        hass.data.setdefault(DOMAIN, {})
+    if COAP_CONTEXT not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][COAP_CONTEXT] = aioshelly.COAP()
+        await hass.data[DOMAIN][COAP_CONTEXT].initialize()
 
     async def shutdown_listener(*_):
         """Home Assistant shutdown listener."""
-        await hass.data[DOMAIN][COAP_CONTEXT].shutdown()
+        hass.data[DOMAIN][COAP_CONTEXT].close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
+
+
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Shelly component."""
+    await get_coap_context(hass)
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY] = {}
 
     return True
 
@@ -42,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Shelly from a config entry."""
     temperature_unit = "C" if hass.config.units.is_metric else "F"
     options = aioshelly.ConnectionOptions(
-        entry.data[CONF_HOST],
+        gethostbyname(entry.data[CONF_HOST]),
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         temperature_unit,
@@ -51,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coap_context = hass.data[DOMAIN][COAP_CONTEXT]
 
     try:
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(5):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 coap_context,
@@ -82,19 +90,29 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=device.settings["name"] or device.settings["device"]["hostname"],
-            update_interval=timedelta(seconds=5),
         )
         self.hass = hass
         self.entry = entry
         self.device = device
+        self._update_from_multicast = False
+
+        self.device.subscribe_updates(self._multicast_update)
+
+    def _multicast_update(self, data):
+        """Handle multicast device update."""
+        self._update_from_multicast = True
+        self.hass.async_create_task(self.async_refresh())
 
     async def _async_update_data(self):
         """Fetch data."""
+        if self._update_from_multicast:
+            self._update_from_multicast = False
+            return
 
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
-        except (aiocoap.error.Error, OSError) as err:
+        except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
     @property
