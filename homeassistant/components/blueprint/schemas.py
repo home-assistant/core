@@ -37,7 +37,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
 )
 
 
-def validate_yaml_suffix(value):
+def validate_yaml_suffix(value: str) -> str:
     """Validate value has a YAML suffix."""
     if not value.endswith(".yaml"):
         raise vol.Invalid("Path needs to end in .yaml")

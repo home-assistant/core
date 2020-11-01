@@ -90,7 +90,7 @@ def _get_community_post_import_url(url: str) -> str:
 def _extract_blueprint_from_community_topic(
     url,
     topic,
-) -> ImportedBlueprint:
+) -> Optional[ImportedBlueprint]:
     """Extract a blueprint from a community post JSON.
 
     Async friendly.
@@ -167,9 +167,9 @@ async def fetch_blueprint_from_github_url(
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
     """Get a blueprint from a url."""
-    for meth in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
+    for func in (fetch_blueprint_from_community_post, fetch_blueprint_from_github_url):
         try:
-            return await meth(hass, url)
+            return await func(hass, url)
         except ValueError:
             pass
 

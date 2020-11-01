@@ -191,7 +191,7 @@ class DomainBlueprints:
         async with self._load_lock:
             return await self.hass.async_add_executor_job(self._load_blueprints)
 
-    async def async_get_blueprint(self, blueprint_name: str) -> Blueprint:
+    async def async_get_blueprint(self, blueprint_path: str) -> Blueprint:
         """Get a blueprint."""
         if blueprint_name in self._blueprints:
             return self._blueprints[blueprint_name]
