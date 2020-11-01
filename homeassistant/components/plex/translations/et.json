@@ -20,5 +20,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Eira uusi hallatud / jagatud kasutajaid",
+                    "monitored_users": "J\u00e4lgitavad kasutajad"
+                }
+            }
+        }
     }
 }

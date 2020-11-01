@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "webhook_error": "SmartThings ei saanud veebihaagi URL-i kinnitada. Veendu, et veebihaagi URL oleks Internetis k\u00e4ttesaadav, ja proovi uuesti."
+        },
         "step": {
             "pat": {
                 "data": {
