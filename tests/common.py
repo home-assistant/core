@@ -39,7 +39,6 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
-    MAX_TIME_TRACKING_ERROR,
     STATE_OFF,
     STATE_ON,
 )
@@ -288,7 +287,6 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 @ha.callback
 def async_fire_time_changed(hass, datetime_, fire_all=False):
     """Fire a time changes event."""
-    datetime_ = datetime_ + timedelta(seconds=MAX_TIME_TRACKING_ERROR)
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
@@ -302,7 +300,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.pattern_utc_now",
+                "homeassistant.helpers.event.track_point_in_utc_time_now",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()

@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+import asyncio
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -27,7 +28,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
-    MAX_TIME_TRACKING_ERROR,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
@@ -1125,23 +1125,45 @@ def async_track_point_in_utc_time(
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
-    # Ensure point_in_time is UTC
-    utc_point_in_time = dt_util.as_utc(point_in_time)
-
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
     job = action if isinstance(action, HassJob) else HassJob(action)
 
+    cancel_callback: Optional[asyncio.TimerHandle] = None
+
+    @callback
+    def run_action() -> None:
+        """Call the action."""
+        nonlocal cancel_callback
+
+        now = track_point_in_utc_time_now()
+
+        # Depending on the available clock support (including timer hardware
+        # and the OS kernel) it can happen that we fire a little bit too early
+        # as measured by utcnow(). That is bad when callbacks have assumptions
+        # about the current time. Thus, we rearm the timer for the remaining
+        # time.
+        if now < point_in_time:
+            _LOGGER.debug(
+                "Called %f seconds too early, rearming",
+                (point_in_time - now).total_seconds(),
+            )
+
+            cancel_callback = hass.loop.call_at(
+                _datetime_to_loop_time(hass, point_in_time), run_action
+            )
+            return
+
+        hass.async_run_hass_job(job, now)
+
     cancel_callback = hass.loop.call_at(
-        _datetime_to_loop_time(hass, point_in_time),
-        hass.async_run_hass_job,
-        job,
-        utc_point_in_time,
+        _datetime_to_loop_time(hass, point_in_time), run_action
     )
 
     @callback
     def unsub_point_in_time_listener() -> None:
         """Cancel the call_later."""
+        assert cancel_callback is not None
         cancel_callback.cancel()
 
     return unsub_point_in_time_listener
@@ -1293,19 +1315,14 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-pattern_utc_now = dt_util.utcnow
+track_point_in_utc_time_now = dt_util.utcnow
 
 
 def _datetime_to_loop_time(hass: HomeAssistant, when: datetime) -> float:
     # We always get time.time() first to avoid time.time()
     # ticking forward after fetching hass.loop.time()
     # and callback being scheduled a few microseconds early.
-    #
-    # Since time.time() and hass.loop.time() do not tick
-    # synchronously we add MAX_TIME_TRACKING_ERROR to ensure
-    # we always schedule the call after the requested time.
-    #
-    return when.timestamp() - time.time() + hass.loop.time() + MAX_TIME_TRACKING_ERROR
+    return when.timestamp() - time.time() + hass.loop.time()
 
 
 @callback
@@ -1353,11 +1370,10 @@ def async_track_utc_time_change(
     calculate_next(next_time)
 
     @callback
-    def pattern_time_change_listener(_: datetime) -> None:
+    def pattern_time_change_listener(now: datetime) -> None:
         """Listen for matching time_changed events."""
         nonlocal next_time, cancel_callback
 
-        now = pattern_utc_now()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
         calculate_next(now + timedelta(seconds=1))

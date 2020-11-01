@@ -1,7 +1,7 @@
 """Test event helpers."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from astral import Astral
 import jinja2
@@ -91,6 +91,47 @@ async def test_track_point_in_time(hass):
     async_fire_time_changed(hass, after_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 2
+
+
+async def test_track_point_in_time_rollback(hass):
+    """Test tasks with the time rolling backwards."""
+    specific_runs = []
+
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
+    )
+
+    async_track_point_in_utc_time(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        time_that_will_not_match_right_away,
+    )
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 54, 950000, tzinfo=dt_util.UTC),
+        fire_all=True,
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 54, 999999, tzinfo=dt_util.UTC),
+        fire_all=True,
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC),
+        fire_all=True,
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
 
 
 async def test_track_state_change_from_to_state_match(hass):
@@ -2718,70 +2759,6 @@ async def test_periodic_task_wrong_input(hass):
     assert len(specific_runs) == 0
 
 
-async def test_periodic_task_clock_rollback(hass):
-    """Test periodic tasks with the time rolling backwards."""
-    specific_runs = []
-
-    now = dt_util.utcnow()
-
-    time_that_will_not_match_right_away = datetime(
-        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
-    )
-
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_utc_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour="/2",
-            minute=0,
-            second=0,
-        )
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 1
-
-    async_fire_time_changed(
-        hass,
-        datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC),
-        fire_all=True,
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 2
-
-    async_fire_time_changed(
-        hass,
-        datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC),
-        fire_all=True,
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 3
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 4
-
-    unsub()
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 4
-
-
 async def test_periodic_task_duplicate_time(hass):
     """Test periodic tasks not triggering on duplicate time."""
     specific_runs = []
@@ -3117,7 +3094,7 @@ async def test_track_point_in_utc_time_cancel(hass):
     await asyncio.sleep(0.2)
 
     assert len(times) == 1
-    assert times[0].tzinfo == dt_util.UTC
+    assert times[0].tzinfo == timezone.utc
 
 
 async def test_async_track_point_in_time_cancel(hass):
