@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Pick a garage name to monitor",
-        "data": { "garageName":"Garage name" }
+        "data": { "garage_name":"Garage name" }
       }
     },
     "abort": {

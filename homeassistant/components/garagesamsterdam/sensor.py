@@ -8,10 +8,10 @@ from . import get_coordinator
 from .const import ATTRIBUTION
 
 SENSORS = {
-    "freeSpaceShort": "mdi:car",
-    "freeSpaceLong": "mdi:car",
-    "shortCapacity": "mdi:car",
-    "longCapacity": "mdi:car",
+    "free_space_short": "mdi:car",
+    "free_space_long": "mdi:car",
+    "short_capacity": "mdi:car",
+    "long_capacity": "mdi:car",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = await get_coordinator(hass)
 
     async_add_entities(
-        GaragesamsterdamSensor(coordinator, config_entry.data["garageName"], info_type)
+        GaragesamsterdamSensor(coordinator, config_entry.data["garage_name"], info_type)
         for info_type in SENSORS
     )
 
@@ -33,25 +33,24 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     name = None
     unique_id = None
 
-    def __init__(self, coordinator, garageName, info_type):
+    def __init__(self, coordinator, garage_name, info_type):
         """Initialize garages amsterdam sensor."""
         super().__init__(coordinator)
-        self.name = f"{coordinator.data[garageName].garageName} - {info_type}"
-        self.unique_id = f"{garageName}-{info_type}"
-        self.garageName = garageName
+        self.unique_id = f"{garage_name}-{info_type}"
+        self.garage_name = garage_name
         self.info_type = info_type
 
     @property
     def available(self):
         """Return if sensor is available."""
         return self.coordinator.last_update_success and (
-            self.garageName in self.coordinator.data
+            self.garage_name in self.coordinator.data
         )
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if getattr(self.coordinator.data[self.garageName], self.info_type) != "":
+        if getattr(self.coordinator.data[self.garage_name], self.info_type) != "":
             return True
 
     @property

@@ -23,16 +23,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Garages Amsterdam from a config entry."""
-    if isinstance(entry.data["garageName"], int):
+    if isinstance(entry.data["garage_name"], int):
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, "garageName": entry.title}
+            entry, data={**entry.data, "garage_name": entry.title}
         )
 
         @callback
         def _async_migrator(entity_entry: entity_registry.RegistryEntry):
             """Migrate away from unstable ID."""
-            garageName, info_type = entity_entry.unique_id.rsplit("-", 1)
-            if not garageName.isnumeric():
+            garage_name, info_type = entity_entry.unique_id.rsplit("-", 1)
+            if not garage_name.isnumeric():
                 return None
             return {"new_unique_id": f"{entry.title}-{info_type}"}
 
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data["garageName"]
+            entry, unique_id=entry.data["garage_name"]
         )
 
     for component in PLATFORMS:
@@ -75,7 +75,7 @@ async def get_coordinator(hass):
     async def async_get_cases():
         with async_timeout.timeout(10):
             return {
-                case.garageName: case
+                case.garage_name: case
                 for case in await garagesamsterdam.get_cases(
                     aiohttp_client.async_get_clientsession(hass)
                 )

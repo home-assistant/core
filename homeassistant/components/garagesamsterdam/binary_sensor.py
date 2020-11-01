@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         GaragesamsterdamBinarySensor(
-            coordinator, config_entry.data["garageName"], info_type
+            coordinator, config_entry.data["garage_name"], info_type
         )
         for info_type in BINARY_SENSORS
     )
@@ -32,21 +32,19 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     name = None
     unique_id = None
 
-    def __init__(self, coordinator, garageName, info_type):
+    def __init__(self, coordinator, garage_name, info_type):
         """Initialize garages amsterdam binary sensor."""
         super().__init__(coordinator)
-        self.name = f"{coordinator.data[garageName].garageName} - {info_type}"
-        self.unique_id = f"{garageName}-{info_type}"
-        self.garageName = garageName
+        self.name = f"{coordinator.data[garage_name].garage_name} - {info_type}"
+        self.unique_id = f"{garage_name}-{info_type}"
+        self.garage_name = garage_name
         self.info_type = info_type
 
     @property
     def is_on(self):
         """If the binary sensor is currently on or off."""
-        if getattr(self.coordinator.data[self.garageName], self.info_type) == "ok":
+        if getattr(self.coordinator.data[self.garage_name], self.info_type) == "ok":
             return False
-        else:
-            return True
 
     @property
     def device_class(self):

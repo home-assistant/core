@@ -23,19 +23,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._options = {}
             coordinator = await get_coordinator(self.hass)
             for case in sorted(
-                coordinator.data.values(), key=lambda case: case.garageName
+                coordinator.data.values(), key=lambda case: case.garage_name
             ):
-                self._options[case.garageName] = case.garageName
+                self._options[case.garage_name] = case.garage_name
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input["garageName"])
+            await self.async_set_unique_id(user_input["garage_name"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self._options[user_input["garageName"]], data=user_input
+                title=self._options[user_input["garage_name"]], data=user_input
             )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("garageName"): vol.In(self._options)}),
+            data_schema=vol.Schema(
+                {vol.Required("garage_name"): vol.In(self._options)}
+            ),
             errors=errors,
         )

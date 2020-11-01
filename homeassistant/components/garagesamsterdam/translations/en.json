@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "garageName": "Garage name"
+                    "garage_name": "Garage name"
                 },
                 "title": "Pick a garage name to monitor"
             }
