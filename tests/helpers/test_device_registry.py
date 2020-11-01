@@ -145,6 +145,9 @@ async def test_loading_from_storage(hass, hass_storage):
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "id": "abcdefghijklm",
                     "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "inactive_config_entries": ["2345"],
+                    "inactive_connections": [["mac", "56:ab:cd:ef:12:34"]],
+                    "inactive_identifiers": [["other", "34:56:AB:CD:EF:12"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -183,6 +186,21 @@ async def test_loading_from_storage(hass, hass_storage):
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
+    assert isinstance(entry.inactive_config_entries, set)
+    assert isinstance(entry.inactive_connections, set)
+    assert isinstance(entry.inactive_identifiers, set)
+
+    entry = registry.async_get_or_create(
+        config_entry_id="2345",
+        connections={("mac", "56:AB:CD:EF:12:34")},
+        identifiers={("other", "34:56:AB:CD:EF:12")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry.id == "abcdefghijklm"
+    assert entry.inactive_config_entries == set()
+    assert entry.inactive_connections == set()
+    assert entry.inactive_identifiers == set()
 
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -458,7 +476,38 @@ async def test_loading_saving_data(hass, registry):
 
     registry.async_remove_device(orig_light2.id)
 
-    assert len(registry.devices) == 2
+    orig_light3 = registry.async_get_or_create(
+        config_entry_id="789",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("hue", "abc")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    registry.async_get_or_create(
+        config_entry_id="abc",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("abc", "123")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    registry.async_remove_device(orig_light3.id)
+
+    orig_light4 = registry.async_get_or_create(
+        config_entry_id="789",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        identifiers={("hue", "abc")},
+        manufacturer="manufacturer",
+        model="light",
+    )
+
+    assert orig_light4.id == orig_light3.id
+    assert orig_light4.inactive_config_entries == {"abc"}
+    assert orig_light4.inactive_connections == set()
+    assert orig_light4.inactive_identifiers == {("abc", "123")}
+
+    assert len(registry.devices) == 3
     assert len(registry.deleted_devices) == 1
 
     orig_via = registry.async_update_device(
@@ -476,9 +525,11 @@ async def test_loading_saving_data(hass, registry):
 
     new_via = registry2.async_get_device({("hue", "0123")}, set())
     new_light = registry2.async_get_device({("hue", "456")}, set())
+    new_light4 = registry2.async_get_device({("hue", "abc")}, set())
 
     assert orig_via == new_via
     assert orig_light == new_light
+    assert orig_light4 == new_light4
 
 
 async def test_no_unnecessary_changes(registry):
@@ -839,6 +890,122 @@ async def test_restore_simple_device(hass, registry, update_events):
     assert update_events[2]["device_id"] == entry2.id
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry3.id
+
+
+async def test_restore_shared_device(hass, registry, update_events):
+    """Make sure device id is stable for shared devices."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_get_or_create(
+        config_entry_id="234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_234", "2345")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    registry.async_remove_device(entry.id)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 1
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry2.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry2.config_entries, set)
+    assert isinstance(entry2.connections, set)
+    assert isinstance(entry2.identifiers, set)
+    assert isinstance(entry2.inactive_config_entries, set)
+    assert isinstance(entry2.inactive_connections, set)
+    assert isinstance(entry2.inactive_identifiers, set)
+    assert entry2.inactive_config_entries == {"234"}
+    assert entry2.inactive_connections == set()
+    assert entry2.inactive_identifiers == {("entry_234", "2345")}
+
+    registry.async_remove_device(entry.id)
+
+    entry3 = registry.async_get_or_create(
+        config_entry_id="234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_234", "2345")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry3.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry3.config_entries, set)
+    assert isinstance(entry3.connections, set)
+    assert isinstance(entry3.identifiers, set)
+    assert isinstance(entry3.inactive_config_entries, set)
+    assert isinstance(entry3.inactive_connections, set)
+    assert isinstance(entry3.inactive_identifiers, set)
+    assert entry3.inactive_config_entries == {"123"}
+    assert entry3.inactive_connections == set()
+    assert entry3.inactive_identifiers == {("entry_123", "0123")}
+
+    entry4 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("entry_123", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert entry.id == entry4.id
+    assert len(registry.devices) == 1
+    assert len(registry.deleted_devices) == 0
+
+    assert isinstance(entry4.config_entries, set)
+    assert isinstance(entry4.connections, set)
+    assert isinstance(entry4.identifiers, set)
+    assert isinstance(entry4.inactive_config_entries, set)
+    assert isinstance(entry4.inactive_connections, set)
+    assert isinstance(entry4.inactive_identifiers, set)
+    assert entry4.inactive_config_entries == set()
+    assert entry4.inactive_connections == set()
+    assert entry4.inactive_identifiers == set()
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 7
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[2]["action"] == "remove"
+    assert update_events[2]["device_id"] == entry.id
+    assert update_events[3]["action"] == "create"
+    assert update_events[3]["device_id"] == entry.id
+    assert update_events[4]["action"] == "remove"
+    assert update_events[4]["device_id"] == entry.id
+    assert update_events[5]["action"] == "create"
+    assert update_events[5]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
 
 
 async def test_get_or_create_empty_then_set_default_values(hass, registry):

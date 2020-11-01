@@ -47,12 +47,15 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(self, config_entry_id, connections, identifiers):
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            config_entries={config_entry_id},
+            connections=self.connections & connections,
+            identifiers=self.identifiers & identifiers,
+            inactive_config_entries=self.config_entries - {config_entry_id},
+            inactive_connections=self.connections - connections,
+            inactive_identifiers=self.identifiers - identifiers,
             id=self.id,
             is_new=True,
         )
@@ -65,6 +68,9 @@ class DeviceEntry:
     config_entries: Set[str] = attr.ib(converter=set, factory=set)
     connections: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
     identifiers: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
+    inactive_config_entries: Set[str] = attr.ib(factory=set)
+    inactive_connections: Set[Tuple[str, str]] = attr.ib(factory=set)
+    inactive_identifiers: Set[Tuple[str, str]] = attr.ib(factory=set)
     manufacturer: str = attr.ib(default=None)
     model: str = attr.ib(default=None)
     name: str = attr.ib(default=None)
@@ -236,7 +242,9 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
         if default_manufacturer is not _UNDEF and device.manufacturer is None:
@@ -321,12 +329,16 @@ class DeviceRegistry:
         changes = {}
 
         config_entries = old.config_entries
+        inactive_config_entries = old.inactive_config_entries
 
         if (
             add_config_entry_id is not _UNDEF
             and add_config_entry_id not in old.config_entries
         ):
             config_entries = old.config_entries | {add_config_entry_id}
+            inactive_config_entries = old.inactive_config_entries - {
+                add_config_entry_id
+            }
 
         if (
             remove_config_entry_id is not _UNDEF
@@ -338,8 +350,11 @@ class DeviceRegistry:
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
+
+        if inactive_config_entries != old.inactive_config_entries:
+            changes["inactive_config_entries"] = inactive_config_entries
 
         for attr_name, value in (
             ("connections", merge_connections),
@@ -349,6 +364,17 @@ class DeviceRegistry:
             # If not undefined, check if `value` contains new items.
             if value is not _UNDEF and not value.issubset(old_value):
                 changes[attr_name] = old_value | value
+
+        for attr_name, value in (
+            ("inactive_connections", merge_connections),
+            ("inactive_identifiers", merge_identifiers),
+        ):
+            old_value = getattr(old, attr_name)
+            # If not undefined, check if `value` contains new items.
+            if value is not _UNDEF:
+                new_value = old_value - value
+                if new_value != old_value:
+                    changes[attr_name] = new_value
 
         if new_identifiers is not _UNDEF:
             changes["identifiers"] = new_identifiers
@@ -397,9 +423,9 @@ class DeviceRegistry:
         self._remove_device(device)
         self._add_device(
             DeletedDeviceEntry(
-                config_entries=device.config_entries,
-                connections=device.connections,
-                identifiers=device.identifiers,
+                config_entries=device.config_entries | device.inactive_config_entries,
+                connections=device.connections | device.inactive_connections,
+                identifiers=device.identifiers | device.inactive_identifiers,
                 id=device.id,
             )
         )
@@ -427,6 +453,16 @@ class DeviceRegistry:
                     model=device["model"],
                     name=device["name"],
                     sw_version=device["sw_version"],
+                    # Introduced in 0.118
+                    inactive_config_entries=set(
+                        device.get("inactive_config_entries", [])
+                    ),
+                    inactive_connections={
+                        tuple(conn) for conn in device.get("inactive_connections", [])
+                    },
+                    inactive_identifiers={
+                        tuple(iden) for iden in device.get("inactive_identifiers", [])
+                    },
                     # Introduced in 0.110
                     entry_type=device.get("entry_type"),
                     id=device["id"],
@@ -467,6 +503,9 @@ class DeviceRegistry:
                 "config_entries": list(entry.config_entries),
                 "connections": list(entry.connections),
                 "identifiers": list(entry.identifiers),
+                "inactive_config_entries": list(entry.inactive_config_entries),
+                "inactive_connections": list(entry.inactive_connections),
+                "inactive_identifiers": list(entry.inactive_identifiers),
                 "manufacturer": entry.manufacturer,
                 "model": entry.model,
                 "name": entry.name,
@@ -636,6 +675,11 @@ def _add_device_to_index(
         devices_index[IDX_IDENTIFIERS][identifier] = device.id
     for connection in device.connections:
         devices_index[IDX_CONNECTIONS][connection] = device.id
+    if isinstance(device, DeviceEntry):
+        for identifier in device.inactive_identifiers:
+            devices_index[IDX_IDENTIFIERS][identifier] = device.id
+        for connection in device.inactive_connections:
+            devices_index[IDX_CONNECTIONS][connection] = device.id
 
 
 def _remove_device_from_index(
@@ -648,3 +692,10 @@ def _remove_device_from_index(
     for connection in device.connections:
         if connection in devices_index[IDX_CONNECTIONS]:
             del devices_index[IDX_CONNECTIONS][connection]
+    if isinstance(device, DeviceEntry):
+        for identifier in device.inactive_identifiers:
+            if identifier in devices_index[IDX_IDENTIFIERS]:
+                del devices_index[IDX_IDENTIFIERS][identifier]
+        for connection in device.inactive_connections:
+            if connection in devices_index[IDX_CONNECTIONS]:
+                del devices_index[IDX_CONNECTIONS][connection]
