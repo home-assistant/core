@@ -1,5 +1,6 @@
 """Support for Broadlink switches."""
 from abc import ABC, abstractmethod
+from functools import partial
 import logging
 
 from broadlink.exceptions import BroadlinkException
@@ -354,12 +355,12 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     @property
     def unique_id(self):
         """Return the unique id of the slot."""
-        return f"{self._device.unique_id}-{self._slot}"
+        return f"{self._device.unique_id}-s{self._slot}"
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return f"{self._device.name} {'left' if self._slot == 1 else 'right'}"
+        return f"{self._device.name} S{self._slot}"
 
     @property
     def assumed_state(self):
@@ -370,43 +371,16 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            # Example from https://github.com/mjg59/python-broadlink/blob/master/broadlink/switch.py:
-            # `{"pwr":1,"pwr1":1,"pwr2":0,"maxworktime":60,"maxworktime1":60,"maxworktime2":0,"idcbrightness":50}`
             self._state = self._coordinator.data[f"pwr{self._slot}"]
         self.async_write_ha_state()
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the device on."""
-        await self.async_turn_on_off(True)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        await self.async_turn_on_off(False)
-
-    async def async_turn_on_off(self, state):
-        """Turn the device on or off."""
-        if self._slot == 1:
-            res = await self._device.async_request(
-                self._device.api.set_state, pwr1=int(state)
-            )
-        else:
-            res = await self._device.async_request(
-                self._device.api.set_state, pwr2=int(state)
-            )
-        if res:
-            _LOGGER.debug("Setting device state: %s", res)
-            self._state = int(state)
-            self._coordinator.data[f"pwr{self._slot}"] = self._state
-            self.async_write_ha_state()
-        else:
-            _LOGGER.warning("No response from switch")
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
         try:
-            await self._device.async_request(
-                self._device.api.set_power, self._slot, packet
+            set_state = partial(
+                self._device.api.set_state, **{f"pwr{self._slot}": packet}
             )
+            await self._device.async_request(set_state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

@@ -8,7 +8,7 @@ DOMAIN = "broadlink"
 DOMAINS_AND_TYPES = (
     (REMOTE_DOMAIN, ("RM2", "RM4")),
     (SENSOR_DOMAIN, ("A1", "RM2", "RM4")),
-    (SWITCH_DOMAIN, ("MP1", "RM2", "RM4", "SP1", "SP2", "BG1")),
+    (SWITCH_DOMAIN, ("BG1", "MP1", "RM2", "RM4", "SP1", "SP2")),
 )
 
 DEFAULT_PORT = 80

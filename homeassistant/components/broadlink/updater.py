@@ -26,12 +26,12 @@ def get_update_manager(device):
 
     update_managers = {
         "A1": BroadlinkA1UpdateManager,
+        "BG1": BroadlinkBG1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM2": BroadlinkRMUpdateManager,
         "RM4": BroadlinkRMUpdateManager,
         "SP1": BroadlinkSP1UpdateManager,
         "SP2": BroadlinkSP2UpdateManager,
-        "BG1": BroadlinkBG1UpdateManager,
     }
     return update_managers[device.api.type](device)
 
