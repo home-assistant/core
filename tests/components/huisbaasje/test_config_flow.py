@@ -19,15 +19,20 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("huisbaasje.Huisbaasje.authenticate", return_value=None,), patch(
-        "huisbaasje.Huisbaasje.get_user_id", return_value="test-id",
+        "huisbaasje.Huisbaasje.get_user_id",
+        return_value="test-id",
     ), patch(
         "homeassistant.components.huisbaasje.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.huisbaasje.async_setup_entry", return_value=True,
+        "homeassistant.components.huisbaasje.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password",},
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
         )
         await hass.async_block_till_done()
 
@@ -49,11 +54,15 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeException,
+        "huisbaasje.Huisbaasje.authenticate",
+        side_effect=HuisbaasjeException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password",},
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
         )
 
     assert result2["type"] == "form"
@@ -67,11 +76,15 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeConnectionException,
+        "huisbaasje.Huisbaasje.authenticate",
+        side_effect=HuisbaasjeConnectionException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password",},
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
         )
 
     assert result2["type"] == "form"
