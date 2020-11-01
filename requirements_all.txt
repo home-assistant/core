@@ -2203,7 +2203,7 @@ twentemilieu==0.3.0
 twilio==6.32.0
 
 # homeassistant.components.twinkly
-twinkly-client==0.0.1
+twinkly-client==0.0.2
 
 # homeassistant.components.rainforest_eagle
 uEagle==0.0.1

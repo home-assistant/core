@@ -199,7 +199,7 @@ class TwinklyLight(LightEntity):
             self._is_on = await self._client.get_is_on()
 
             self._brightness = (
-                int(round((await self._client.get_brigthness()) * 2.55))
+                int(round((await self._client.get_brightness()) * 2.55))
                 if self._is_on
                 else 0
             )

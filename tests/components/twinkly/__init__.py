@@ -52,7 +52,7 @@ class ClientMock:
             raise ClientConnectionError()
         self.is_on = is_on
 
-    async def get_brigthness(self) -> int:
+    async def get_brightness(self) -> int:
         """Get the mocked brightness."""
         if self.is_offline:
             raise ClientConnectionError()
