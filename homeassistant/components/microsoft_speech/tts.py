@@ -85,8 +85,6 @@ class MicrosoftProvider(Provider):
             raise AssertionError(
                 f"Selected voice '{self._voice}' not in supported voices list. Please validate the combination of 'language' and 'type' in your configuration."
             )
-        else:
-            pass
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from Microsoft Speech."""
