@@ -111,7 +111,13 @@ class AuroraData:
     def update(self):
         """Get the latest data from the Aurora service."""
         try:
-            self.visibility_level = self.get_aurora_forecast()
+            result = self.get_aurora_forecast()
+            if result == False:
+                _LOGGER.error("Missing data for current location")
+                return False
+            else:
+                self.visibility_level = result
+
             if int(self.visibility_level) > self.threshold:
                 self.is_visible = True
                 self.is_visible_text = "visible!"
@@ -138,5 +144,4 @@ class AuroraData:
             if forecast[0] == converted_longitude and forecast[1] == converted_latitude:
                 return str(forecast[2])
 
-        _LOGGER.error("Missing data for current location")
         return False
