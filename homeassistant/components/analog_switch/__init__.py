@@ -123,16 +123,16 @@ class AnalogSwitchEntity(Entity):
 
     def increment(self) -> None:
         """Increment value."""
-        self.set_value(min(self.state + self.step, self.max_value))
+        self.set_value(min(float(self.state) + self.step, self.max_value))
 
     async def async_increment(self) -> None:
         """Increment value."""
-        await self.async_set_value(min(self.state + self.step, self.max_value))
+        await self.async_set_value(min(float(self.state) + self.step, self.max_value))
 
     def decrement(self) -> None:
         """Decrement value."""
-        self.set_value(max(self.state - self.step, self.min_value))
+        self.set_value(max(float(self.state) - self.step, self.min_value))
 
     async def async_decrement(self) -> None:
         """Decrement value."""
-        await self.async_set_value(max(self.state - self.step, self.min_value))
+        await self.async_set_value(max(float(self.state) - self.step, self.min_value))

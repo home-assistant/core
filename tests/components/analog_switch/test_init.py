@@ -15,7 +15,7 @@ class MockAnalogSwitchEntity(AnalogSwitchEntity):
     @property
     def state(self):
         """Return the current value."""
-        return 0.5
+        return '0.5'
 
 
 async def test_step(hass):
