@@ -352,7 +352,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.9
+google-nest-sdm==0.1.11
 
 # homeassistant.components.gree
 greeclimate==0.9.5
