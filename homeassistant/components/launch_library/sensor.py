@@ -52,10 +52,11 @@ class LaunchLibrarySensor(Entity):
         """Get the latest data."""
         try:
             launches = await self.launches.upcoming_launches()
-            if launches:
-                self.next_launch = launches[0]
         except PyLaunchesException as exception:
             _LOGGER.error("Error getting data, %s", exception)
+        else:
+            if launches:
+                self.next_launch = launches[0]
 
     @property
     def name(self) -> str:
@@ -67,6 +68,7 @@ class LaunchLibrarySensor(Entity):
         """Return the state of the sensor."""
         if self.next_launch:
             return self.next_launch.name
+        return None
 
     @property
     def icon(self) -> str:
@@ -84,3 +86,4 @@ class LaunchLibrarySensor(Entity):
                 ATTR_STREAM: self.next_launch.webcast_live,
                 ATTR_ATTRIBUTION: ATTRIBUTION,
             }
+        return None
