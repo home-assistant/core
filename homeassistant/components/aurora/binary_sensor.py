@@ -1,6 +1,7 @@
 """Support for aurora forecast data sensor."""
 from datetime import timedelta
 import logging
+import json
 from math import floor
 
 from aiohttp.hdrs import USER_AGENT
@@ -21,11 +22,11 @@ DEFAULT_DEVICE_CLASS = "visible"
 DEFAULT_NAME = "Aurora Visibility"
 DEFAULT_THRESHOLD = 75
 
-HA_USER_AGENT = "Home Assistant Aurora Tracker v.0.1.0"
+HA_USER_AGENT = "Home Assistant Aurora Tracker v.0.2.0"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-URL = "http://services.swpc.noaa.gov/text/aurora-nowcast-map.txt"
+URL = "http://services.swpc.noaa.gov/json/ovation_aurora_latest.json"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -125,22 +126,17 @@ class AuroraData:
     def get_aurora_forecast(self):
         """Get forecast data and parse for given long/lat."""
         raw_data = requests.get(URL, headers=self.headers, timeout=5).text
-        # We discard comment rows (#)
-        # We split the raw text by line (\n)
-        # For each line we trim leading spaces and split by spaces
-        forecast_table = [
-            row.strip().split()
-            for row in raw_data.split("\n")
-            if not row.startswith("#")
-        ]
+        forecast_data = json.loads(raw_data)
 
-        # Convert lat and long for data points in table
-        # Assumes self.latitude belongs to [-90;90[ (South to North)
-        # Assumes self.longitude belongs to [-180;180[ (West to East)
-        # No assumptions made regarding the number of rows and columns
-        converted_latitude = floor((self.latitude + 90) * len(forecast_table) / 180)
-        converted_longitude = floor(
-            (self.longitude + 180) * len(forecast_table[converted_latitude]) / 360
-        )
+        # Convert lat and long for data points in json
+        converted_latitude = floor(self.latitude)
+        converted_longitude = floor(self.longitude)
 
-        return forecast_table[converted_latitude][converted_longitude]
+        # Find the forecast for the current location by walking through the one
+        # dimensional list of forcasts
+        for forecast in forecast_data['coordinates']:
+            if forecast[0] == converted_longitude and forecast[1] == converted_latitude:
+                return str(forecast[2])
+
+        _LOGGER.error("Missing data for current location")
+        return False

@@ -8,8 +8,8 @@ from tests.common import load_fixture
 
 def test_setup_and_initial_state(hass, requests_mock):
     """Test that the component is created and initialized as expected."""
-    uri = re.compile(r"http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt")
-    requests_mock.get(uri, text=load_fixture("aurora.txt"))
+    uri = re.compile(r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json")
+    requests_mock.get(uri, text=load_fixture("aurora.json"))
 
     entities = []
 
@@ -35,8 +35,8 @@ def test_setup_and_initial_state(hass, requests_mock):
 
 def test_custom_threshold_works(hass, requests_mock):
     """Test that the config can take a custom forecast threshold."""
-    uri = re.compile(r"http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt")
-    requests_mock.get(uri, text=load_fixture("aurora.txt"))
+    uri = re.compile(r"http://services\.swpc\.noaa\.gov/json/ovation_aurora_latest\.json")
+    requests_mock.get(uri, text=load_fixture("aurora.json"))
 
     entities = []
 
@@ -56,5 +56,5 @@ def test_custom_threshold_works(hass, requests_mock):
     aurora.setup_platform(hass, config, mock_add_entities)
 
     aurora_component = entities[0]
-    assert aurora_component.aurora_data.visibility_level == "16"
+    assert aurora_component.aurora_data.visibility_level == "19"
     assert aurora_component.is_on
