@@ -222,7 +222,7 @@ class WebSocketHandler:
                 self._to_write.put_nowait(None)
                 # Make sure all error messages are written before closing
                 await self._writer_task
-            except:
+            except (asyncio.QueueFull, asyncio.exceptions.CancelledError):
                 self._writer_task.cancel()
 
             await wsock.close()
