@@ -112,7 +112,7 @@ class AuroraData:
         """Get the latest data from the Aurora service."""
         try:
             result = self.get_aurora_forecast()
-            if result == False:
+            if result is False:
                 _LOGGER.error("Missing data for current location")
                 return False
             else:
