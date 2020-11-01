@@ -1,19 +1,19 @@
-"""Device tracker support for OPNSense routers."""
+"""Device tracker support for OPNsense routers."""
 from homeassistant.components.device_tracker import DeviceScanner
 
 from .const import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 
 async def async_get_scanner(hass, config, discovery_info=None):
-    """Configure the OPNSense device_tracker."""
+    """Configure the OPNsense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(
+    scanner = OPNsenseDeviceScanner(
         interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
     )
     return scanner
 
 
-class OPNSenseDeviceScanner(DeviceScanner):
+class OPNsenseDeviceScanner(DeviceScanner):
     """This class queries a router running OPNsense."""
 
     def __init__(self, client, interfaces):
@@ -45,7 +45,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         return hostname
 
     def update_info(self):
-        """Ensure the information from the OPNSense router is up to date.
+        """Ensure the information from the OPNsense router is up to date.
 
         Return boolean if scanning successful.
         """

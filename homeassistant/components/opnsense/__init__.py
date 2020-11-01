@@ -1,4 +1,4 @@
-"""Support for OPNSense Routers."""
+"""Support for OPNsense Routers."""
 import logging
 
 from pyopnsense import diagnostics
