@@ -6,15 +6,30 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "name_exists": "Nimi on juba olemas",
+            "wrong_credentials": "Vale mandaat"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "",
+                    "name": "Nimi",
                     "password": "Salas\u00f5na",
                     "port": "",
-                    "username": "Kasutajanimi"
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kasuta ssl-i"
+                },
+                "title": "Seadista Mikrotik ruuter"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "Luba ARP ping",
+                    "force_dhcp": "Sundskannimine DHCP abil"
                 }
             }
         }

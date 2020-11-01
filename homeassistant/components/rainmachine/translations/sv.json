@@ -17,5 +17,12 @@
                 "title": "Fyll i dina uppgifter"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfigurera RainMachine"
+            }
+        }
     }
 }
