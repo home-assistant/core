@@ -36,8 +36,8 @@ def discover_sensors(topic, payload):
         return ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
-            return ArwnSensor(topic,
-                "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+            return ArwnSensor(
+                topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
             )
         return (
             ArwnSensor(topic, "Total Rainfall", "total", unit, "mdi:water"),
