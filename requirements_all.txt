@@ -559,7 +559,7 @@ enturclient==0.2.1
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.16.1
+envoy_reader==0.16.2
 
 # homeassistant.components.season
 ephem==3.7.7.0
