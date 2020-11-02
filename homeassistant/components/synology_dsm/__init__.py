@@ -17,12 +17,10 @@ from synology_dsm.exceptions import (
     SynologyDSMLoginFailedException,
     SynologyDSMRequestException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -49,7 +47,6 @@ from .const import (
     CONF_SERIAL,
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     ENTITY_CLASS,
@@ -70,23 +67,8 @@ from .const import (
     UTILISATION_SENSORS,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_USE_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DISKS): cv.ensure_list,
-        vol.Optional(CONF_VOLUMES): cv.ensure_list,
-    }
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.120")
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONFIG_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
 
 ATTRIBUTION = "Data provided by Synology"
 
@@ -96,20 +78,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up Synology DSM sensors from legacy config file."""
-
-    conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
-    for dsm_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=dsm_conf,
-            )
-        )
-
     return True
 
 
