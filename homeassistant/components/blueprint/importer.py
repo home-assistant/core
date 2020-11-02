@@ -130,7 +130,7 @@ def _extract_blueprint_from_community_topic(
 
 async def fetch_blueprint_from_community_post(
     hass: HomeAssistant, url: str
-) -> ImportedBlueprint:
+) -> Optional[ImportedBlueprint]:
     """Get blueprints from a community post url.
 
     Method can raise aiohttp client exceptions, vol.Invalid.
