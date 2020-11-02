@@ -435,14 +435,14 @@ class SynoApi:
     async def async_reboot(self):
         """Reboot NAS."""
         if not self.system:
-            _LOGGER.debug("async_reboot - self.system not ready: %s", self)
+            _LOGGER.debug("async_reboot - System API not ready: %s", self)
             return
         self._hass.async_add_executor_job(self.system.reboot)
 
     async def async_shutdown(self):
         """Shutdown NAS."""
         if not self.system:
-            _LOGGER.debug("async_shutdown - self.system not ready: %s", self)
+            _LOGGER.debug("async_shutdown - System API not ready: %s", self)
             return
         self._hass.async_add_executor_job(self.system.shutdown)
 
@@ -460,7 +460,7 @@ class SynoApi:
             async_dispatcher_send(self._hass, self.signal_sensor_update)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
             _LOGGER.warning(
-                "async_update - connection error during update, will fallback to reload entry"
+                "async_update - connection error during update, fallback by reloading the entry"
             )
             _LOGGER.debug("async_update - exception: %s", str(err))
             await self._hass.config_entries.async_reload(self._entry.entry_id)

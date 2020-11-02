@@ -1,5 +1,4 @@
 """Tests for the Synology DSM config flow."""
-# from logging import Logger
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
