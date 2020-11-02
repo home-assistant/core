@@ -1,13 +1,13 @@
 import asyncio
 import logging
+
 import aiohttp
+from moehlenhoff_alpha2 import Alpha2Base
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 
-from moehlenhoff_alpha2 import Alpha2Base
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,13 +1,14 @@
 """Support for the Moehlenhoff Alpha2."""
 import asyncio
-import time
 import logging
+import time
+
+from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from moehlenhoff_alpha2 import Alpha2Base
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
