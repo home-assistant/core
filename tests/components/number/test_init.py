@@ -1,4 +1,4 @@
-"""The tests for the Analog Switch component."""
+"""The tests for the Number component."""
 from unittest.mock import MagicMock
 
 from homeassistant.components.number import NumberEntity
