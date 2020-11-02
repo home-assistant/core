@@ -79,20 +79,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 self._owm_client.one_call, self._latitude, self._longitude
             )
         else:
-            current_weather = await self.hass.async_add_executor_job(
-                self._owm_client.weather_at_coords, self._latitude, self._longitude
+            weather = await self.hass.async_add_executor_job(
+                self._get_legacy_weather_and_forecast
             )
-            interval = self._get_forecast_interval()
-            forecast = await self.hass.async_add_executor_job(
-                self._owm_client.forecast_at_coords,
-                self._latitude,
-                self._longitude,
-                interval,
-                self._forecast_limit,
-            )
-            weather = LegacyWeather(current_weather.weather, forecast.forecast.weathers)
 
         return weather
+
+    def _get_legacy_weather_and_forecast(self):
+        """Get weather and forecast data from OWM."""
+        interval = self._get_forecast_interval()
+        weather = self._owm_client.weather_at_coords(self._latitude, self._longitude)
+        forecast = self._owm_client.forecast_at_coords(
+            self._latitude, self._longitude, interval, self._forecast_limit
+        )
+        return LegacyWeather(weather.weather, forecast.forecast.weathers)
 
     def _get_forecast_interval(self):
         """Get the correct forecast interval depending on the forecast mode."""
