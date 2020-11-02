@@ -221,7 +221,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.4.0
+aioshelly==0.5.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -342,7 +342,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.8
+bimmer_connected==0.7.10
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1122,7 +1122,7 @@ pillow==7.2.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.1.1
+plexapi==4.2.0
 
 # homeassistant.components.plex
 plexauth==0.0.5
