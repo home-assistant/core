@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    t_cpu = Path("/sys/class/thermal/thermal_zone0/temp").read_text().replace("\n", "")
+    t_cpu = Path("/sys/class/thermal/thermal_zone0/temp").read_text().strip()
     return (float(t_cpu)  * 0.001)
 
 
