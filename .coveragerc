@@ -539,7 +539,9 @@ omit =
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/switch.py
     homeassistant/components/modem_callerid/sensor.py
-    homeassistant/components/moehlenhoff_alpha2/*
+    homeassistant/components/moehlenhoff_alpha2/__init__.py
+    homeassistant/components/moehlenhoff_alpha2/climate.py
+    homeassistant/components/moehlenhoff_alpha2/const.py
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
