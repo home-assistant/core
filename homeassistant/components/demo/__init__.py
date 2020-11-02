@@ -12,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "air_quality",
     "alarm_control_panel",
-    "analog_switch",
     "binary_sensor",
     "camera",
     "climate",
@@ -22,6 +21,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "light",
     "lock",
     "media_player",
+    "number",
     "sensor",
     "switch",
     "vacuum",

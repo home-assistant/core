@@ -1,15 +1,15 @@
-"""Demo platform that offers a fake analog switch."""
-from homeassistant.components.analog_switch import AnalogSwitchEntity
+"""Demo platform that offers a fake Number entity."""
+from homeassistant.components.number import NumberEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 from . import DOMAIN
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the demo analog switch."""
+    """Set up the demo Number entity."""
     async_add_entities(
         [
-            DemoAnalogSwitch(
+            DemoNumber(
                 "volume1",
                 "volume",
                 42.0,
@@ -26,11 +26,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoAnalogSwitch(AnalogSwitchEntity):
-    """Representation of a demo analog switch."""
+class DemoNumber(NumberEntity):
+    """Representation of a demo Number entity."""
 
     def __init__(self, unique_id, name, state, icon, assumed, device_class=None):
-        """Initialize the Demo analog switch."""
+        """Initialize the Demo Number entity."""
         self._unique_id = unique_id
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
@@ -56,7 +56,7 @@ class DemoAnalogSwitch(AnalogSwitchEntity):
 
     @property
     def should_poll(self):
-        """No polling needed for a demo analog switch."""
+        """No polling needed for a demo Number entity."""
         return False
 
     @property

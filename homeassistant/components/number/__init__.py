@@ -1,4 +1,4 @@
-"""Component to interface with analog switches that can be controlled remotely."""
+"""Component to allow numeric input for platforms"""
 from datetime import timedelta
 import logging
 from typing import Any, Dict
@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Track states and offer events for switches."""
+    """Track states and offer events for number entities."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
@@ -82,8 +82,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class AnalogSwitchEntity(Entity):
-    """Representation of an analog switch."""
+class NumberEntity(Entity):
+    """Representation of a Number entity."""
 
     @property
     def capability_attributes(self) -> Dict[str, Any]:
@@ -118,7 +118,7 @@ class AnalogSwitchEntity(Entity):
 
     @property
     def mode(self) -> str:
-        """Return the appearance mode of the analog switch."""
+        """Return the appearance mode of the Number entity."""
         return MODE_SLIDER
 
     def set_value(self, value: float) -> None:

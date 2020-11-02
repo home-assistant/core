@@ -1,9 +1,9 @@
-"""The tests for the demo analog switch component."""
+"""The tests for the demo number component."""
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.analog_switch.const import (
+from homeassistant.components.number.const import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
@@ -16,14 +16,14 @@ from homeassistant.components.analog_switch.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.setup import async_setup_component
 
-ENTITY_VOLUME = "analog_switch.volume"
+ENTITY_VOLUME = "number.volume"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_analog_switch(hass):
-    """Initialize setup demo analog switch."""
+async def setup_demo_number(hass):
+    """Initialize setup demo Number entity."""
     assert await async_setup_component(
-        hass, DOMAIN, {"analog_switch": {"platform": "demo"}}
+        hass, DOMAIN, {"number": {"platform": "demo"}}
     )
     await hass.async_block_till_done()
 
@@ -79,7 +79,7 @@ async def test_set_set_value(hass):
 
 
 async def test_increment(hass):
-    """Test setting the hold mode away."""
+    """Test that the increment sets the value correctly."""
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 
@@ -96,7 +96,7 @@ async def test_increment(hass):
 
 
 async def test_decrement(hass):
-    """Test setting the hold mode away."""
+    """Test that the decrement sets the value correctly."""
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "42.0"
 

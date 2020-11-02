@@ -1,4 +1,4 @@
-"""Provides the constants needed for component."""
+"""Provides the constants needed for the component."""
 
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
@@ -15,7 +15,7 @@ DEVICE_CLASS_VOLUME = "volume"
 DEVICE_CLASS_SPEED = "speed"
 DEVICE_CLASS_LEVEL = "level"
 
-DOMAIN = "analog_switch"
+DOMAIN = "number"
 
 MODE_SLIDER = "slider"
 MODE_BOX = "box"

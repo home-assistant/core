@@ -1,7 +1,0 @@
-{
-  "domain": "analog_switch",
-  "name": "Analog Switch",
-  "documentation": "https://www.home-assistant.io/integrations/analog_switch",
-  "codeowners": ["@home-assistant/core", "@Shulyaka"],
-  "quality_scale": "internal"
-}
