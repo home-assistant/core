@@ -6,7 +6,6 @@ from typing import Any, Dict
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -24,7 +23,6 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN,
-    MODE_SLIDER,
     SERVICE_SET_VALUE,
 )
 
@@ -73,7 +71,6 @@ class NumberEntity(Entity):
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
-            ATTR_MODE: self.mode,
         }
         return data
 
@@ -96,11 +93,6 @@ class NumberEntity(Entity):
             while value_range <= step:
                 step /= 10.0
         return step
-
-    @property
-    def mode(self) -> str:
-        """Return the appearance mode of the Number entity."""
-        return MODE_SLIDER
 
     def set_value(self, value: float) -> None:
         """Set new value."""
