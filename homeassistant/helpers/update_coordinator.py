@@ -138,9 +138,9 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+        start = monotonic()
 
         try:
-            start = monotonic()
             self.data = await self._async_update_data()
 
         except (asyncio.TimeoutError, requests.exceptions.Timeout):
@@ -188,6 +188,28 @@ class DataUpdateCoordinator(Generic[T]):
             )
             if self._listeners:
                 self._schedule_refresh()
+
+        for update_callback in self._listeners:
+            update_callback()
+
+    @callback
+    def async_set_updated_data(self, data: T) -> None:
+        """Manually update data, notify listeners and reset refresh interval."""
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
+
+        self.data = data
+        self.last_update_success = True
+        self.logger.debug(
+            "Manually updated %s data",
+            self.name,
+        )
+
+        if self._listeners:
+            self._schedule_refresh()
 
         for update_callback in self._listeners:
             update_callback()
