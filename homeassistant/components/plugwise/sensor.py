@@ -135,7 +135,11 @@ ENERGY_SENSOR_MAP = {
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
-    "gas_consumed_interval": ["Current Consumed Gas", VOLUME_CUBIC_METERS, None],
+    "gas_consumed_interval": [
+        "Current Consumed Gas Interval",
+        VOLUME_CUBIC_METERS,
+        None,
+    ],
     "gas_consumed_cumulative": ["Cumulative Consumed Gas", VOLUME_CUBIC_METERS, None],
     "net_electricity_point": ["Current net Power", POWER_WATT, DEVICE_CLASS_POWER],
     "net_electricity_cumulative": [
