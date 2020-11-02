@@ -84,16 +84,7 @@ def test_blueprint_update_metadata():
 def test_blueprint_inputs(blueprint_1):
     """Test blueprint inputs."""
     inputs = models.BlueprintInputs(
-        models.Blueprint(
-            {
-                "blueprint": {
-                    "name": "Hello",
-                    "domain": "automation",
-                    "input": {"test-placeholder": None},
-                },
-                "example": Placeholder("test-placeholder"),
-            }
-        ),
+        blueprint_1,
         {"use_blueprint": {"path": "bla", "input": {"test-placeholder": 1}}},
     )
     inputs.validate()
@@ -104,16 +95,7 @@ def test_blueprint_inputs(blueprint_1):
 def test_blueprint_inputs_validation(blueprint_1):
     """Test blueprint input validation."""
     inputs = models.BlueprintInputs(
-        models.Blueprint(
-            {
-                "blueprint": {
-                    "name": "Hello",
-                    "domain": "automation",
-                    "input": {"test-placeholder": None},
-                },
-                "example": Placeholder("test-placeholder"),
-            }
-        ),
+        blueprint_1,
         {"use_blueprint": {"path": "bla", "input": {"non-existing-placeholder": 1}}},
     )
     with pytest.raises(errors.MissingPlaceholder):
