@@ -15,7 +15,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 42.0,
                 "mdi:volume-high",
                 False,
-                device_class="volume",
             ),
         ]
     )
@@ -29,14 +28,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
-    def __init__(self, unique_id, name, state, icon, assumed, device_class=None):
+    def __init__(self, unique_id, name, state, icon, assumed):
         """Initialize the Demo Number entity."""
         self._unique_id = unique_id
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
         self._assumed = assumed
-        self._device_class = device_class
 
     @property
     def device_info(self):
@@ -78,11 +76,6 @@ class DemoNumber(NumberEntity):
     def state(self):
         """Return the current value."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return device of entity."""
-        return self._device_class
 
     async def async_set_value(self, value):
         """Update the current value."""
