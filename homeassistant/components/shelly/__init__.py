@@ -46,8 +46,7 @@ async def get_coap_context(hass):
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY] = {}
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
 
     return True
 
