@@ -95,11 +95,23 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def __init__(self, hass, entry, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
+        if device.settings.get("sleep_mode", False):
+            if device.settings["sleep_mode"]["unit"] == "m":
+                sleep_period = device.settings["sleep_mode"]["period"]  # minutes
+            else:
+                sleep_period = (
+                    device.settings["sleep_mode"]["period"] * 60
+                )  # hours to minutes
+
+            update_interval = 1.2 * sleep_period * 60  # minutes to seconds
+        else:
+            update_interval = 2 * device.settings["coiot"]["update_period"]
+
         super().__init__(
             hass,
             _LOGGER,
             name=device.settings["name"] or device.settings["device"]["hostname"],
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.hass = hass
         self.entry = entry
@@ -140,6 +152,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             sw_version=self.device.settings["fw"],
         )
 
+    def shutdown(self):
+        """Shutdown the wrapper."""
+        self.device.shutdown()
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
@@ -152,6 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        wrapper.shutdown()
 
     return unload_ok

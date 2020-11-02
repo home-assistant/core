@@ -52,6 +52,8 @@ async def validate_input(hass: core.HomeAssistant, host, data):
             options,
         )
 
+    device.shutdown()
+
     # Return info that you want to store in the config entry.
     return {
         "title": device.settings["name"],
