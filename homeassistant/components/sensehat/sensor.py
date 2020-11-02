@@ -43,8 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    t_cpu = os.popen("cat /sys/class/thermal/thermal_zone0/temp").readline()
-    return float(t_cpu)
+    t_cpu = Path("/sys/class/thermal/thermal_zone0/temp").read_text().replace("\n", "")
+    return (float(t_cpu)  * 0.001)
 
 
 def get_average(temp_base):
