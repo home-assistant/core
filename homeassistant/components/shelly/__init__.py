@@ -165,7 +165,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
-        wrapper.shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id).shutdown()
 
     return unload_ok
