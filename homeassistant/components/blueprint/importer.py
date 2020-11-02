@@ -37,7 +37,7 @@ COMMUNITY_TOPIC_SCHEMA = vol.Schema(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ImportedBlueprint:
     """Imported blueprint."""
 
