@@ -41,7 +41,6 @@ class GaragesamsterdamSensor(CoordinatorEntity):
         self._name = f"{self.coordinator.data[self.garage_name].garage_name} - {self.info_type}".replace(
             "_", " "
         )
-        self._state = getattr(self.coordinator.data[self.garage_name], self.info_type)
 
     @property
     def name(self):
@@ -64,7 +63,7 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return getattr(self.coordinator.data[self.garage_name], self.info_type)
 
     @property
     def icon(self):

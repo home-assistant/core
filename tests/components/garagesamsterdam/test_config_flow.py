@@ -13,4 +13,3 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
