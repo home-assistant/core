@@ -67,9 +67,5 @@ def test_blueprint_schema(blueprint):
 )
 def test_blueprint_schema_invalid(blueprint):
     """Test different schemas."""
-    try:
+    with pytest.raises(vol.Invalid):
         schemas.BLUEPRINT_SCHEMA(blueprint)
-        _LOGGER.error("%s", blueprint)
-        assert False, "Expected schema to be invalid"
-    except vol.Invalid:
-        pass
