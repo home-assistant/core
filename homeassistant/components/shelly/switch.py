@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from . import ShellyDeviceWrapper
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
+from .utils import async_remove_entity_by_domain
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,6 +28,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             != "light"
         ):
             relay_blocks.append(block)
+            unique_id = wrapper.device.shelly["mac"] + "-light_" + block.channel
+            await async_remove_entity_by_domain(
+                hass,
+                "light",
+                unique_id,
+            )
 
     if not relay_blocks:
         return
