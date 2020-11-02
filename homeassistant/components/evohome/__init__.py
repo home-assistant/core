@@ -423,7 +423,7 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, update_broker=True) -> Any:
+    async def call_client_api(self, api_function, update_state=True) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
@@ -431,7 +431,7 @@ class EvoBroker:
             if not _handle_exception(err):
                 return
 
-        if update_broker:
+        if update_state:
             asyncio.create_task(self.async_update(manual_update=True))
 
         return result
@@ -695,7 +695,7 @@ class EvoChild(EvoDevice):
                 return  # avoid unnecessary I/O - there's nothing to update
 
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), update_broker=False
+            self._evo_device.schedule(), update_state=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
