@@ -505,7 +505,7 @@ class EvoBroker:
         if manual_update:
             await asyncio.sleep(1)
 
-        elif self.client_v1:  # invoking a client API will not change recorded temps
+        elif self.client_v1:  # invoking a client API won't affect temps
             await self._update_v1_api_state()
 
         await self._update_v2_api_state()
