@@ -2382,7 +2382,16 @@ async def async_setup(hass, config):
             language = service.data["language"]
         if "voice" in service.data:
             voice = service.data["voice"]
-        _say_it(hass, text, img, pitch, rate, language, voice)
+
+        _say_it(
+            hass=hass,
+            message=text,
+            img=img,
+            pitch=pitch,
+            rate=rate,
+            language=language,
+            voice=voice,
+        )
 
     def say_in_browser(service):
         """Info to the via browser - this is handled by ais-tts in card"""
@@ -3616,7 +3625,15 @@ def _say_it(
 ):
     # sent the tts message to the panel via http api
     message = message.replace("°C", "stopni Celsjusza")
-    _post_message(message, hass, exclude_say_it, pitch, rate, language, voice)
+    _post_message(
+        message=message,
+        hass=hass,
+        exclude_say_it=exclude_say_it,
+        pitch=pitch,
+        rate=rate,
+        language=language,
+        voice=voice,
+    )
 
     if len(message) > 1999:
         tts_text = message[0:1999] + "..."
