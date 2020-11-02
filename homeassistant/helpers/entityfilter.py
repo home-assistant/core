@@ -223,7 +223,6 @@ def convert_include_exclude_filter(
             "sensor.podcastlist",
             "sensor.audiobookslist",
             "sensor.rssnewstext",
-            "sensor.wersja_zigbee2mqtt",
             "switch.zigbee_tryb_parowania",
             "input_select.book_chapter",
             "input_select.assistant_voice",

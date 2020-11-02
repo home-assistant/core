@@ -998,12 +998,6 @@ def do_install_upgrade(hass, call):
                 shell=True,  # nosec
             )  # nosec
 
-            # the update was OK set the version info
-            attr = hass.states.get("sensor.wersja_zigbee2mqtt").attributes
-            hass.states.set(
-                "sensor.wersja_zigbee2mqtt", zigbee2mqtt_newest_version, attr
-            )
-
             # This was only Zigbee2Mqtt update
             if not reinstall_dom_app and not reinstall_android_app:
                 # set update status

@@ -5,5 +5,11 @@ sensor:
     state_topic: "zigbee2mqtt/bridge/state"
     icon: mdi:usb-port
 
-
+  # temp - remove this in 0.118
+  # Sensor for Showing the Zigbee2mqtt Version
+  - platform: mqtt
+    name: Wersja Zigbee2mqtt
+    state_topic: "zigbee2mqtt/bridge/config"
+    value_template: "{{ value_json.version }}"
+    icon: mdi:zigbee
 
