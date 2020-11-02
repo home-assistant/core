@@ -1,7 +1,7 @@
 """Support for Sense HAT sensors."""
 from datetime import timedelta
-from pathlib import Path
 import logging
+from pathlib import Path
 
 from sense_hat import SenseHat
 import voluptuous as vol
