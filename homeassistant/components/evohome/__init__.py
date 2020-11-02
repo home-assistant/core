@@ -423,16 +423,16 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, refresh=True) -> Any:
-        """Call a client API."""
+    async def call_client_api(self, api_function, update_broker=True) -> Any:
+        """Call a client API and update the broker state if required."""
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return
 
-        if refresh:
-            asyncio.create_task(self.async_update(delay=1))
+        if update_broker:
+            asyncio.create_task(self.async_update(manual_update=True))
 
         return result
 
@@ -492,15 +492,15 @@ class EvoBroker:
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
 
-    async def async_update(self, *args, delay=None, **kwargs) -> None:
+    async def async_update(self, *args, manual_update=None, **kwargs) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
-        if delay:
-            await asyncio.sleep(delay)
+        if manual_update:
+            await asyncio.sleep(1)
 
         elif self.client_v1:
             await self._update_v1_api()
@@ -692,7 +692,7 @@ class EvoChild(EvoDevice):
                 return  # avoid unnecessary I/O - there's nothing to update
 
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), refresh=False
+            self._evo_device.schedule(), update_broker=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
