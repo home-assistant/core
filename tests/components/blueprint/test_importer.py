@@ -112,7 +112,14 @@ async def test_fetch_blueprint_from_community_url(hass, aioclient_mock, communit
     }
 
 
-async def test_fetch_blueprint_from_github_url(hass, aioclient_mock):
+@pytest.mark.parametrize(
+    "url",
+    (
+        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
+        "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+    ),
+)
+async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
@@ -121,14 +128,10 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock):
         ).read_text(),
     )
 
-    for url in (
-        "https://raw.githubusercontent.com/balloob/home-assistant-config/main/blueprints/automation/motion_light.yaml",
-        "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
-    ):
-        imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
-        assert isinstance(imported_blueprint, importer.ImportedBlueprint), url
-        assert imported_blueprint.blueprint.domain == "automation", url
-        assert imported_blueprint.blueprint.placeholders == {
-            "service_to_call",
-            "trigger_event",
-        }, url
+    imported_blueprint = await importer.fetch_blueprint_from_url(hass, url)
+    assert isinstance(imported_blueprint, importer.ImportedBlueprint)
+    assert imported_blueprint.blueprint.domain == "automation"
+    assert imported_blueprint.blueprint.placeholders == {
+        "service_to_call",
+        "trigger_event",
+    }

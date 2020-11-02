@@ -1,6 +1,7 @@
 """Test schemas."""
 import logging
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.components.blueprint import schemas
@@ -8,9 +9,9 @@ from homeassistant.components.blueprint import schemas
 _LOGGER = logging.getLogger(__name__)
 
 
-def test_blueprint_schema():
-    """Test different schemas."""
-    for valid_blueprint in (
+@pytest.mark.parametrize(
+    "blueprint",
+    (
         # Test allow extra
         {
             "trigger": "Test allow extra",
@@ -30,14 +31,20 @@ def test_blueprint_schema():
                 },
             }
         },
-    ):
-        try:
-            schemas.BLUEPRINT_SCHEMA(valid_blueprint)
-        except vol.Invalid:
-            _LOGGER.exception("%s", valid_blueprint)
-            assert False, "Expected schema to be valid"
+    ),
+)
+def test_blueprint_schema(blueprint):
+    """Test different schemas."""
+    try:
+        schemas.BLUEPRINT_SCHEMA(blueprint)
+    except vol.Invalid:
+        _LOGGER.exception("%s", blueprint)
+        assert False, "Expected schema to be valid"
 
-    for invalid_blueprint in (
+
+@pytest.mark.parametrize(
+    "blueprint",
+    (
         # no domain
         {"blueprint": {}},
         # non existing key in blueprint
@@ -56,10 +63,13 @@ def test_blueprint_schema():
                 "input": {"some_placeholder": {"non_existing": "bla"}},
             }
         },
-    ):
-        try:
-            schemas.BLUEPRINT_SCHEMA(invalid_blueprint)
-            _LOGGER.error("%s", invalid_blueprint)
-            assert False, "Expected schema to be invalid"
-        except vol.Invalid:
-            pass
+    ),
+)
+def test_blueprint_schema_invalid(blueprint):
+    """Test different schemas."""
+    try:
+        schemas.BLUEPRINT_SCHEMA(blueprint)
+        _LOGGER.error("%s", blueprint)
+        assert False, "Expected schema to be invalid"
+    except vol.Invalid:
+        pass

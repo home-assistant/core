@@ -1,6 +1,7 @@
 """Import logic for blueprint."""
 from dataclasses import dataclass
 import re
+from typing import Optional
 
 import voluptuous as vol
 import yarl
@@ -88,8 +89,8 @@ def _get_community_post_import_url(url: str) -> str:
 
 
 def _extract_blueprint_from_community_topic(
-    url,
-    topic,
+    url: str,
+    topic: dict,
 ) -> Optional[ImportedBlueprint]:
     """Extract a blueprint from a community post JSON.
 

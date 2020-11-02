@@ -193,23 +193,23 @@ class DomainBlueprints:
 
     async def async_get_blueprint(self, blueprint_path: str) -> Blueprint:
         """Get a blueprint."""
-        if blueprint_name in self._blueprints:
-            return self._blueprints[blueprint_name]
+        if blueprint_path in self._blueprints:
+            return self._blueprints[blueprint_path]
 
         async with self._load_lock:
             # Check it again
-            if blueprint_name in self._blueprints:
-                return self._blueprints[blueprint_name]
+            if blueprint_path in self._blueprints:
+                return self._blueprints[blueprint_path]
 
             try:
                 blueprint = await self.hass.async_add_executor_job(
-                    self._load_blueprint, blueprint_name
+                    self._load_blueprint, blueprint_path
                 )
             except Exception:
-                self._blueprints[blueprint_name] = None
+                self._blueprints[blueprint_path] = None
                 raise
 
-            self._blueprints[blueprint_name] = blueprint
+            self._blueprints[blueprint_path] = blueprint
             return blueprint
 
     async def async_inputs_from_config(

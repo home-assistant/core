@@ -1,7 +1,6 @@
 """Websocket API for blueprint."""
 import asyncio
 import logging
-from pathlib import Path
 from typing import Dict, Optional
 
 import async_timeout
@@ -12,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
 from . import importer, models
-from .const import BLUEPRINT_FOLDER, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -33,19 +32,8 @@ def async_setup(hass: HomeAssistant):
 async def ws_list_blueprints(hass, connection, msg):
     """List available blueprints."""
     domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
-        DOMAIN
+        DOMAIN, {}
     )
-
-    if domain_blueprints is None:
-        connection.send_result(msg["id"], {1: 2})
-        return
-
-    blueprint_folder = Path(hass.config.path(BLUEPRINT_FOLDER))
-
-    if not blueprint_folder.exists():
-        connection.send_result(msg["id"], {2: 3})
-        return
-
     results = {}
 
     for domain, domain_results in zip(
