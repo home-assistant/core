@@ -116,22 +116,22 @@ ENERGY_SENSOR_MAP = {
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_off_peak_point": [
-        "Current Consumed Power (off peak)",
+        "Current Produced Power (off peak)",
         POWER_WATT,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_peak_point": [
-        "Current Consumed Power",
+        "Current Produced Power",
         POWER_WATT,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_off_peak_cumulative": [
-        "Cumulative Consumed Power (off peak)",
+        "Cumulative Produced Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_peak_cumulative": [
-        "Cumulative Consumed Power",
+        "Cumulative Produced Power",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
