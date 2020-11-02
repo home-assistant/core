@@ -1,5 +1,6 @@
 """Support for statistics for sensor values."""
 from collections import deque
+from datetime import timedelta
 import logging
 import statistics
 
@@ -48,6 +49,7 @@ ATTR_VARIANCE = "variance"
 CONF_SAMPLING_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
+CONF_PURGE_TIME = "purge_time"
 
 DEFAULT_NAME = "Stats"
 DEFAULT_SIZE = 20
@@ -63,6 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
+        vol.Optional(CONF_PURGE_TIME): cv.time,
     }
 )
 
@@ -77,9 +80,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE)
     precision = config.get(CONF_PRECISION)
+    purge_time = config.get(CONF_PURGE_TIME)
 
     async_add_entities(
-        [StatisticsSensor(entity_id, name, sampling_size, max_age, precision)], True
+        [
+            StatisticsSensor(
+                entity_id, name, sampling_size, max_age, precision, purge_time
+            )
+        ],
+        True,
     )
 
     return True
@@ -88,7 +97,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, entity_id, name, sampling_size, max_age, precision):
+    def __init__(self, entity_id, name, sampling_size, max_age, precision, purge_time):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
@@ -96,6 +105,7 @@ class StatisticsSensor(Entity):
         self._sampling_size = sampling_size
         self._max_age = max_age
         self._precision = precision
+        self._purge_time = purge_time
         self._unit_of_measurement = None
         self.states = deque(maxlen=self._sampling_size)
         self.ages = deque(maxlen=self._sampling_size)
@@ -213,22 +223,46 @@ class StatisticsSensor(Entity):
         """Remove states which are older than self._max_age."""
         now = dt_util.utcnow()
 
-        _LOGGER.debug(
-            "%s: purging records older then %s(%s)",
-            self.entity_id,
-            dt_util.as_local(now - self._max_age),
-            self._max_age,
-        )
-
-        while self.ages and (now - self.ages[0]) > self._max_age:
+        if self._max_age is not None:
             _LOGGER.debug(
-                "%s: purging record with datetime %s(%s)",
+                "%s: purging records older then %s(%s)",
                 self.entity_id,
-                dt_util.as_local(self.ages[0]),
-                (now - self.ages[0]),
+                dt_util.as_local(now - self._max_age),
+                self._max_age,
             )
-            self.ages.popleft()
-            self.states.popleft()
+
+            while self.ages and (now - self.ages[0]) > self._max_age:
+                _LOGGER.debug(
+                    "%s: purging record with datetime %s(%s)",
+                    self.entity_id,
+                    dt_util.as_local(self.ages[0]),
+                    (now - self.ages[0]),
+                )
+                self.ages.popleft()
+                self.states.popleft()
+
+        if self._purge_time is not None:
+            purge_time = dt_util.as_utc(
+                dt_util.now().replace(
+                    hour=self._purge_time.hour,
+                    minute=self._purge_time.minute,
+                    second=self._purge_time.second,
+                )
+            )
+            _LOGGER.debug(
+                "%s: purging records older then %s",
+                self.entity_id,
+                self._purge_time,
+            )
+
+            while self.ages and self.ages[0] < purge_time:
+                _LOGGER.debug(
+                    "%s: purging record with datetime %s",
+                    self.entity_id,
+                    dt_util.as_local(self.ages[0]),
+                )
+                self.ages.popleft()
+                self.states.popleft()
 
     def _next_to_purge_timestamp(self):
         """Find the timestamp when the next purge would occur."""
@@ -237,12 +271,22 @@ class StatisticsSensor(Entity):
             # If executed after purging old states, the result is the next timestamp
             # in the future when the oldest state will expire.
             return self.ages[0] + self._max_age
+        if self.ages and self._purge_time:
+            now = dt_util.now()
+            purge_time = now.replace(
+                hour=self._purge_time.hour,
+                minute=self._purge_time.minute,
+                second=self._purge_time.second,
+            )
+            if purge_time > now:
+                return purge_time
+            return purge_time + timedelta(days=1)
         return None
 
     async def async_update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
-        if self._max_age is not None:
+        if self._max_age is not None or self._purge_time is not None:
             self._purge_old()
 
         self.count = len(self.states)
