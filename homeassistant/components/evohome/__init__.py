@@ -140,8 +140,8 @@ def _handle_exception(err) -> bool:
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
             "Failed to authenticate with the vendor's server. "
-            "Check your network and the vendor's service status page. "
-            "Also check that your username and password are correct. "
+            "Check your username and password. NB: Some special password characters "
+            "that work correctly via the website will not work via the web API. "
             "Message is: %s",
             err,
         )
