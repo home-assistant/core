@@ -70,11 +70,11 @@ class Alpha2BaseUpdateHandler:
         self._heatarea_update_callbacks = {}
         self._loop = asyncio.get_event_loop()
 
-    def add_heatarea_update_callback(self, callback, nr):
+    def add_heatarea_update_callback(self, callback, heatarea_nr):
         """Add a callback which will be run when data of the given heatarea is updated."""
-        if nr not in self._heatarea_update_callbacks:
-            self._heatarea_update_callbacks[nr] = []
-        self._heatarea_update_callbacks[nr].append(callback)
+        if heatarea_nr not in self._heatarea_update_callbacks:
+            self._heatarea_update_callbacks[heatarea_nr] = []
+        self._heatarea_update_callbacks[heatarea_nr].append(callback)
 
     async def async_update(self):
         """Pull the latest data from the Alpha2 base."""
@@ -83,13 +83,15 @@ class Alpha2BaseUpdateHandler:
             self._last_update = time.monotonic()
             _LOGGER.debug("Updating")
             await self.base.update_data()
-            for ha in self.base.heatareas:
-                _LOGGER.debug("Heatarea: %s", ha)
-                for callback in self._heatarea_update_callbacks.get(ha["NR"], []):
+            for heatarea in self.base.heatareas:
+                _LOGGER.debug("Heatarea: %s", heatarea)
+                for callback in self._heatarea_update_callbacks.get(heatarea["NR"], []):
                     try:
-                        callback(ha)
-                    except Exception as e:
-                        _LOGGER.error("Failed to run callback '%s': %s", callback, e)
+                        callback(heatarea)
+                    except Exception as cb_err:  # pylint: disable=broad-except
+                        _LOGGER.error(
+                            "Failed to run callback '%s': %s", callback, cb_err
+                        )
         else:
             _LOGGER.debug("Skipping update")
 

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up platform."""
-    pass
+    return None
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -123,8 +123,8 @@ class Alpha2Climate(ClimateEntity):
             )
             self._data["T_TARGET"] = target_temperature
             return True
-        except Exception as e:
-            _LOGGER.error("Setting target temperature failed: %s", e)
+        except Exception as update_err:  # pylint: disable=broad-except
+            _LOGGER.error("Setting target temperature failed: %s", update_err)
             return False
 
     @property
@@ -161,8 +161,8 @@ class Alpha2Climate(ClimateEntity):
             elif heatarea_mode == 2:
                 self._data["T_TARGET"] = self._data["T_HEAT_NIGHT"]
             return True
-        except Exception as e:
-            _LOGGER.error("Setting target temperature failed: %s", e)
+        except Exception as update_err:  # pylint: disable=broad-except
+            _LOGGER.error("Setting target temperature failed: %s", update_err)
             return False
 
     @property
