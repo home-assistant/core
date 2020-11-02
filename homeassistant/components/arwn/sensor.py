@@ -40,16 +40,20 @@ def discover_sensors(topic, payload):
                 topic, "Rain Since Midnight", "since_midnight", "in", "mdi:water"
             )
         return (
-            ArwnSensor(topic, "Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor(topic, "Rainfall Rate", "rate", unit, "mdi:water"),
+            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
+            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
         )
     if domain == "barometer":
         return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
     if domain == "wind":
         return (
-            ArwnSensor(topic, "Wind Speed", "speed", unit, "mdi:speedometer"),
-            ArwnSensor(topic, "Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor(topic, "Wind Direction", "direction", DEGREE, "mdi:compass"),
+            ArwnSensor(
+                topic + "/speed", "Wind Speed", "speed", unit, "mdi:speedometer"
+            ),
+            ArwnSensor(topic + "/gust", "Wind Gust", "gust", unit, "mdi:speedometer"),
+            ArwnSensor(
+                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+            ),
         )
 
 
@@ -119,7 +123,8 @@ class ArwnSensor(Entity):
         self.entity_id = _slug(name)
         self._name = name
         # This mqtt topic for the sensor which is its uid
-        self._topic = topic
+        self._uid = slugify(topic)
+        print(self._uid, self._name)
         self._state_key = state_key
         self.event = {}
         self._unit_of_measurement = units
@@ -147,7 +152,7 @@ class ArwnSensor(Entity):
 
         This is based on the topic that comes from mqtt
         """
-        return self._topic
+        return self._uid
 
     @property
     def state_attributes(self):
