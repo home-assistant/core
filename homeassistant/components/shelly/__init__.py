@@ -1,5 +1,6 @@
 """The Shelly integration."""
 import asyncio
+from datetime import timedelta
 import logging
 from socket import gethostbyname
 
@@ -98,26 +99,16 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=device.settings["name"] or device.settings["device"]["hostname"],
+            update_interval=timedelta(seconds=30),
         )
         self.hass = hass
         self.entry = entry
         self.device = device
-        self._update_from_multicast = False
 
-        self.device.subscribe_updates(self._async_multicast_update)
-
-    @callback
-    def _async_multicast_update(self, data):
-        """Handle multicast device update."""
-        self._update_from_multicast = True
-        self.hass.async_create_task(self.async_refresh())
+        self.device.subscribe_updates(self.async_set_updated_data)
 
     async def _async_update_data(self):
         """Fetch data."""
-        if self._update_from_multicast:
-            self._update_from_multicast = False
-            return
-
         try:
             async with async_timeout.timeout(5):
                 return await self.device.update()
