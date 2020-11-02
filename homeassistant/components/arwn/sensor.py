@@ -123,8 +123,7 @@ class ArwnSensor(Entity):
         self.entity_id = _slug(name)
         self._name = name
         # This mqtt topic for the sensor which is its uid
-        self._uid = slugify(topic)
-        print(self._uid, self._name)
+        self._uid = topic
         self._state_key = state_key
         self.event = {}
         self._unit_of_measurement = units
