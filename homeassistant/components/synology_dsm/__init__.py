@@ -166,6 +166,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
+    # Migrate existing entry configuration
+    if entry.data.get(CONF_VERIFY_SSL) is None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
+        )
+
     # Continue setup
     api = SynoApi(hass, entry)
     try:
