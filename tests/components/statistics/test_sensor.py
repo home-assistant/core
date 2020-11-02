@@ -5,6 +5,7 @@ import statistics
 import unittest
 
 import pytest
+from pytz import timezone as pytz_tz
 
 from homeassistant import config as hass_config
 from homeassistant.components import recorder
@@ -449,6 +450,163 @@ class TestStatisticsSensor(unittest.TestCase):
         assert mock_data["return_time"] == state.attributes.get("max_age") + timedelta(
             hours=1
         )
+
+    def test_purge_time(self):
+        """Test value deprecation."""
+        now = dt_util.utcnow()
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+        }
+
+        def mock_now(time_zone=None):
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.now", new=mock_now
+        ):
+            with patch(
+                "homeassistant.components.statistics.sensor.dt_util.utcnow",
+                new=mock_now,
+            ):
+                assert setup_component(
+                    self.hass,
+                    "sensor",
+                    {
+                        "sensor": {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "purge_time": "12:26:00",
+                        }
+                    },
+                )
+
+                self.hass.block_till_done()
+                self.hass.start()
+                self.hass.block_till_done()
+
+                for value in self.values:
+                    self.hass.states.set(
+                        "sensor.test_monitored",
+                        value,
+                        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                    )
+                    self.hass.block_till_done()
+                    # insert the next value one minute later
+                    mock_data["return_time"] += timedelta(minutes=1)
+
+                state = self.hass.states.get("sensor.test")
+
+        assert state.attributes.get("min_value") == 3.8
+        assert state.attributes.get("max_value") == 14
+
+    def test_purge_time_timezone(self):
+        """Test value deprecation with time zone."""
+        time_zone = pytz_tz("US/Eastern")
+        dt_util.set_default_time_zone(time_zone)
+        now = dt_util.now(time_zone)
+
+        mock_data = {
+            "return_time": datetime(now.year + 1, 8, 2, 23, 57, tzinfo=time_zone)
+        }
+
+        def mock_now(time_zone=None):
+            if time_zone:
+                return dt_util.as_utc(mock_data["return_time"])
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.now", new=mock_now
+        ):
+            with patch(
+                "homeassistant.components.statistics.sensor.dt_util.utcnow",
+                new=mock_now,
+            ):
+                assert setup_component(
+                    self.hass,
+                    "sensor",
+                    {
+                        "sensor": {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "purge_time": "00:00:00",
+                        }
+                    },
+                )
+
+                self.hass.block_till_done()
+                self.hass.start()
+                self.hass.block_till_done()
+
+                for value in self.values:
+                    self.hass.states.set(
+                        "sensor.test_monitored",
+                        value,
+                        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                    )
+                    self.hass.block_till_done()
+                    # insert the next value one minute later
+                    mock_data["return_time"] += timedelta(minutes=1)
+
+                state = self.hass.states.get("sensor.test")
+
+        assert state.attributes.get("min_value") == 3.8
+        assert state.attributes.get("max_value") == 14
+
+    def test_purge_time_dst(self):
+        """Test value deprecation with dst."""
+        time_zone = pytz_tz("Australia/Sydney")
+        dt_util.set_default_time_zone(time_zone)
+        now = dt_util.now(time_zone)
+
+        mock_data = {
+            "return_time": datetime(now.year + 1, 11, 2, 23, 57, tzinfo=time_zone)
+        }
+
+        def mock_now(time_zone=None):
+            if time_zone:
+                return dt_util.as_utc(mock_data["return_time"])
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.now", new=mock_now
+        ):
+            with patch(
+                "homeassistant.components.statistics.sensor.dt_util.utcnow",
+                new=mock_now,
+            ):
+                assert setup_component(
+                    self.hass,
+                    "sensor",
+                    {
+                        "sensor": {
+                            "platform": "statistics",
+                            "name": "test",
+                            "entity_id": "sensor.test_monitored",
+                            "purge_time": "00:00:00",
+                        }
+                    },
+                )
+
+                self.hass.block_till_done()
+                self.hass.start()
+                self.hass.block_till_done()
+
+                for value in self.values:
+                    self.hass.states.set(
+                        "sensor.test_monitored",
+                        value,
+                        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                    )
+                    self.hass.block_till_done()
+                    # insert the next value one minute later
+                    mock_data["return_time"] += timedelta(minutes=1)
+
+                state = self.hass.states.get("sensor.test")
+
+        assert state.attributes.get("min_value") == 3.8
+        assert state.attributes.get("max_value") == 14
 
 
 async def test_reload(hass):
