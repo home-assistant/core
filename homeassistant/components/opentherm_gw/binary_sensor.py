@@ -8,7 +8,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
-from .const import BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW
+from .const import (
+    BINARY_SENSOR_INFO,
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    DEFAULT_FORCE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 var,
                 device_class,
                 friendly_name_format,
+                config_entry.options,
             )
         )
 
@@ -34,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermBinarySensor(BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(self, gw_dev, var, device_class, friendly_name_format):
+    def __init__(self, gw_dev, var, device_class, friendly_name_format, options):
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
@@ -46,7 +52,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
         self._friendly_name = friendly_name_format.format(gw_dev.name)
         self._unsub_updates = None
         self._unsub_options = None
-        self._force_update = False
+        self._force_update = options.get(CONF_FORCE_UPDATE, DEFAULT_FORCE_UPDATE)
 
     @callback
     def update_options(self, entry):

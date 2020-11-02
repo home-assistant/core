@@ -29,7 +29,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
-from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
+from .const import (
+    CONF_FLOOR_TEMP,
+    CONF_PRECISION,
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    DEFAULT_FORCE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +69,7 @@ class OpenThermClimate(ClimateEntity):
         self.friendly_name = gw_dev.name
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
         self.temp_precision = options.get(CONF_PRECISION)
+        self._force_update = options.get(CONF_FORCE_UPDATE, DEFAULT_FORCE_UPDATE)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
@@ -75,7 +82,6 @@ class OpenThermClimate(ClimateEntity):
         self._away_state_b = False
         self._unsub_options = None
         self._unsub_updates = None
-        self._force_update = False
 
     @callback
     def update_options(self, entry):

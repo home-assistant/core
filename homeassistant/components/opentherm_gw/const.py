@@ -23,6 +23,8 @@ CONF_PRECISION = "precision"
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
 
+DEFAULT_FORCE_UPDATE = False
+
 DEVICE_CLASS_COLD = "cold"
 DEVICE_CLASS_HEAT = "heat"
 
