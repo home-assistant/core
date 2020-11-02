@@ -12,7 +12,8 @@
             "select_location": {
                 "data": {
                     "location_id": "Asukoht"
-                }
+                },
+                "description": "Vali SmartThingsi asukoht, mille soovid lisada Home Assistanti. Seej\u00e4rel avame uue akna ja palume  sisse logida ning anda volitus paigaldada Home Assistanti sidumine valitud asukoha jaoks."
             }
         }
     }

@@ -30,7 +30,11 @@
             "init": {
                 "data": {
                     "code_arm_required": "N\u00f5ua valvestamiseks PIN koodi"
-                }
+                },
+                "title": "Seadista valikud"
+            },
+            "risco_to_ha": {
+                "title": "Lisa Risco olekud Home Assistanti olekutesse"
             }
         }
     }
