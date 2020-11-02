@@ -1,10 +1,7 @@
 """Support for Sense HAT sensors."""
 from datetime import timedelta
+from pathlib import Path
 import logging
-import os
-
-from sense_hat import SenseHat
-import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
