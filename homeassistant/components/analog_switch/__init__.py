@@ -5,10 +5,8 @@ from typing import Any, Dict
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_MODE,
-)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_MODE
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
