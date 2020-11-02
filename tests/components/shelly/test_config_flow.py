@@ -43,7 +43,6 @@ async def test_form(hass):
         "aioshelly.Device.create",
         new=AsyncMock(
             return_value=Mock(
-                shutdown=AsyncMock(),
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -88,7 +87,6 @@ async def test_title_without_name_and_prefix(hass):
         "aioshelly.Device.create",
         new=AsyncMock(
             return_value=Mock(
-                shutdown=AsyncMock(),
                 settings=settings,
             )
         ),
@@ -137,7 +135,6 @@ async def test_form_auth(hass):
         "aioshelly.Device.create",
         new=AsyncMock(
             return_value=Mock(
-                shutdown=AsyncMock(),
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -309,7 +306,6 @@ async def test_zeroconf(hass):
         "aioshelly.Device.create",
         new=AsyncMock(
             return_value=Mock(
-                shutdown=AsyncMock(),
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -466,7 +462,6 @@ async def test_zeroconf_require_auth(hass):
         "aioshelly.Device.create",
         new=AsyncMock(
             return_value=Mock(
-                shutdown=AsyncMock(),
                 settings=MOCK_SETTINGS,
             )
         ),
