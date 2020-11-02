@@ -24,8 +24,6 @@ from .utils import async_remove_entity_by_domain
 
 _LOGGER = logging.getLogger(__name__)
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up lights for device."""
