@@ -21,7 +21,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Setup Alpha2 integration."""
+    """Set up Alpha2 integration."""
     return True
 
 
@@ -71,7 +71,8 @@ class Alpha2BaseUpdateHandler:
         self._loop = asyncio.get_event_loop()
 
     def add_heatarea_update_callback(self, callback, nr):
-        if not nr in self._heatarea_update_callbacks:
+        """Add a callback which will be run when data of the given heatarea is updated."""
+        if nr not in self._heatarea_update_callbacks:
             self._heatarea_update_callbacks[nr] = []
         self._heatarea_update_callbacks[nr].append(callback)
 
@@ -93,9 +94,11 @@ class Alpha2BaseUpdateHandler:
             _LOGGER.debug("Skipping update")
 
     def update(self):
+        """Pull the latest data from the Alpha2 base (sync version)."""
         asyncio.run_coroutine_threadsafe(self.async_update(), self._loop)
 
     async def async_set_target_temperature(self, heatarea_id, target_temperature):
+        """Set the target temperature of the given heatarea."""
         _LOGGER.info(
             "Setting target temperature of heatarea %s to %0.1f",
             heatarea_id,
@@ -104,6 +107,7 @@ class Alpha2BaseUpdateHandler:
         await self.base.update_heatarea(heatarea_id, {"T_TARGET": target_temperature})
 
     async def async_set_heatarea_mode(self, heatarea_id, heatarea_mode):
+        """Set the mode of the given heatarea."""
         # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
         assert heatarea_mode in (0, 1, 2)
         _LOGGER.info(

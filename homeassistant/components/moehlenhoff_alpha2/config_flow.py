@@ -1,3 +1,4 @@
+"""Alpha2 config flow."""
 import asyncio
 import logging
 
@@ -47,7 +48,7 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except (
                 aiohttp.client_exceptions.ClientConnectorError,
                 asyncio.TimeoutError,
-            ) as err:
+            ):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
