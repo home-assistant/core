@@ -17,6 +17,9 @@ DEVICE_CLASS_LEVEL = "level"
 
 DOMAIN = "analog_switch"
 
+MODE_SLIDER = "slider"
+MODE_BOX = "box"
+
 SERVICE_DECREMENT = "decrement"
 SERVICE_INCREMENT = "increment"
 SERVICE_SET_VALUE = "set_value"

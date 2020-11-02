@@ -1,10 +1,13 @@
 """Component to interface with analog switches that can be controlled remotely."""
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import voluptuous as vol
 
+from homeassistant.const import (
+    ATTR_MODE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -28,6 +31,7 @@ from .const import (
     DEVICE_CLASS_STRENGTH,
     DEVICE_CLASS_VOLUME,
     DOMAIN,
+    MODE_SLIDER,
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
@@ -90,6 +94,7 @@ class AnalogSwitchEntity(Entity):
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
+            ATTR_MODE: self.mode,
         }
         return data
 
@@ -112,6 +117,11 @@ class AnalogSwitchEntity(Entity):
             while value_range <= step:
                 step /= 10.0
         return step
+
+    @property
+    def mode(self) -> float:
+        """Return the appearance mode of the analog switch."""
+        return MODE_SLIDER
 
     def set_value(self, value: float) -> None:
         """Set new value."""

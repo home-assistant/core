@@ -15,7 +15,7 @@ class MockAnalogSwitchEntity(AnalogSwitchEntity):
     @property
     def state(self):
         """Return the current value."""
-        return '0.5'
+        return "0.5"
 
 
 async def test_step(hass):
@@ -36,7 +36,7 @@ async def test_sync_set_value(hass):
     await analog_switch.async_set_value(42)
 
     assert analog_switch.set_value.called
-    assert analog_switch.set_value.call_args.args == (42,)
+    assert analog_switch.set_value.call_args[0][0] == 42
 
 
 async def test_async_increment(hass):
@@ -48,7 +48,7 @@ async def test_async_increment(hass):
     await analog_switch.async_increment()
 
     assert analog_switch.set_value.called
-    assert analog_switch.set_value.call_args.args == (0.6,)
+    assert analog_switch.set_value.call_args[0][0] == 0.6
 
 
 async def test_async_decrement(hass):
@@ -60,7 +60,7 @@ async def test_async_decrement(hass):
     await analog_switch.async_decrement()
 
     assert analog_switch.set_value.called
-    assert analog_switch.set_value.call_args.args == (0.4,)
+    assert analog_switch.set_value.call_args[0][0] == 0.4
 
 
 async def test_sync_increment(hass):
@@ -72,7 +72,7 @@ async def test_sync_increment(hass):
     analog_switch.increment()
 
     assert analog_switch.set_value.called
-    assert analog_switch.set_value.call_args.args == (0.6,)
+    assert analog_switch.set_value.call_args[0][0] == 0.6
 
 
 async def test_sync_decrement(hass):
@@ -84,4 +84,4 @@ async def test_sync_decrement(hass):
     analog_switch.decrement()
 
     assert analog_switch.set_value.called
-    assert analog_switch.set_value.call_args.args == (0.4,)
+    assert analog_switch.set_value.call_args[0][0] == 0.4

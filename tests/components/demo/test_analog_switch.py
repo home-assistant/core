@@ -13,7 +13,7 @@ from homeassistant.components.analog_switch.const import (
     SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.setup import async_setup_component
 
 ENTITY_VOLUME = "analog_switch.volume"
@@ -40,6 +40,7 @@ def test_default_setup_params(hass):
     assert state.attributes.get(ATTR_MIN) == 0.0
     assert state.attributes.get(ATTR_MAX) == 100.0
     assert state.attributes.get(ATTR_STEP) == 1.0
+    assert state.attributes.get(ATTR_MODE) == "slider"
 
 
 async def test_set_value_bad_attr(hass):
@@ -83,7 +84,10 @@ async def test_increment(hass):
     assert state.state == "42.0"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: ENTITY_VOLUME}, blocking=True,
+        DOMAIN,
+        SERVICE_INCREMENT,
+        {ATTR_ENTITY_ID: ENTITY_VOLUME},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -97,7 +101,10 @@ async def test_decrement(hass):
     assert state.state == "42.0"
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: ENTITY_VOLUME}, blocking=True,
+        DOMAIN,
+        SERVICE_DECREMENT,
+        {ATTR_ENTITY_ID: ENTITY_VOLUME},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
