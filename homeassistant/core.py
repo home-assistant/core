@@ -820,7 +820,7 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning("Unable to remove unknown job listener %s", hassjob)
+            _LOGGER.exception("Unable to remove unknown job listener %s", hassjob)
 
 
 class State:
@@ -1530,7 +1530,7 @@ class Config:
         self.safe_mode: bool = False
 
         # Use legacy template behavior
-        self.legacy_templates: bool = False
+        self.legacy_templates: bool = True
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.

@@ -17,5 +17,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Vaiketsooni k\u00e4itamisaeg (sekundites)"
+                },
+                "title": "Seadista RainMachine"
+            }
+        }
     }
 }

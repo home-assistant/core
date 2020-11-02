@@ -18,5 +18,15 @@
                 "title": "Inserisci i tuoi dati"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Tempo di esecuzione della zona di default (in secondi)"
+                },
+                "title": "Configura RainMachine"
+            }
+        }
     }
 }

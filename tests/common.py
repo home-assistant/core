@@ -207,6 +207,7 @@ async def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
+    hass.config.legacy_templates = False
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []

@@ -4,7 +4,31 @@
             "already_configured": "Lisaseade on selle kontrolleriga juba seadistatud.",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "already_paired": "See lisaseade on juba teise seadmega seotud. L\u00e4htesta lisaseade ja proovi uuesti.",
-            "invalid_properties": "Seade tagastas vigase oleku."
+            "ignored_model": "Selle mudeli HomeKiti tugi on blokeeritud, kuna saadaval on t\u00e4iuslikum t\u00e4ielik sidumine.",
+            "invalid_config_entry": "See seade on valmis sidumiseks kuid Home Assistant-is on juba vastuoluline seadeikirje mis tuleb esmalt eemaldada.",
+            "invalid_properties": "Seade tagastas vigase oleku.",
+            "no_devices": "Sidumata seadmeid ei leitud"
+        },
+        "error": {
+            "authentication_error": "Vale HomeKiti kood. Kontrolli seda ja proovi uuesti.",
+            "unable_to_pair": "Ei saa siduda, proovi uuesti.",
+            "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Sidumiskood"
+                },
+                "description": "HomeKiti kontroller suhtleb seadmega {name} kohtv\u00f5rgu kaudu, kasutades turvalist kr\u00fcpteeritud \u00fchendust ilma eraldi HomeKiti kontrolleri v\u00f5i iCloudita. Selle lisaseadme kasutamiseks sisesta oma HomeKiti sidumiskood (vormingus XXX-XX-XXX). See kood on tavaliselt seadmel v\u00f5i pakendil.",
+                "title": "Seadme sidumine HomeKiti tarvikuprotokolli kaudu"
+            },
+            "user": {
+                "data": {
+                    "device": "Seade"
+                },
+                "description": "HomeKiti kontroller suhtleb kohtv\u00f5rgu kaudu turvalise kr\u00fcpteeritud \u00fchenduse abil ilma eraldi HomeKiti kontrolleri v\u00f5i iCloudita. Vali seade, millega soovid siduda:",
+                "title": "Seadme valik"
+            }
         }
     },
     "device_automation": {
@@ -26,5 +50,6 @@
             "long_press": "\" {subtype} \" on pikalt alla vajutatud",
             "single_press": "\" {subtype} \" on vajutatud"
         }
-    }
+    },
+    "title": "HomeKit kontroller"
 }

@@ -7,6 +7,7 @@ from .common import MQTTMessage
 
 from tests.async_mock import patch
 from tests.common import load_fixture
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(name="generic_data", scope="session")

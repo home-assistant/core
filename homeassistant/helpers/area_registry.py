@@ -1,5 +1,5 @@
 """Provide a way to connect devices to one physical location."""
-from asyncio import Event
+from asyncio import Event, gather
 from collections import OrderedDict
 from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 
@@ -64,8 +64,12 @@ class AreaRegistry:
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry, entity_registry = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+        )
         device_registry.async_clear_area_id(area_id)
+        entity_registry.async_clear_area_id(area_id)
 
         del self.areas[area_id]
 

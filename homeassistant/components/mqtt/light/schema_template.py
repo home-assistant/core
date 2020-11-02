@@ -252,7 +252,7 @@ class MqttLightTemplate(
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
-            if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
                 try:
                     self._white_value = int(
                         self._templates[
@@ -441,7 +441,9 @@ class MqttLightTemplate(
         mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -464,7 +466,9 @@ class MqttLightTemplate(
         mqtt.async_publish(
             self.hass,
             self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
+            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
+                parse_result=False, **values
+            ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )

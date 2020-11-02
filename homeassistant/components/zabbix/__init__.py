@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -186,6 +187,7 @@ class ZabbixThread(threading.Thread):
         self.queue.put(None)
         self.join()
 
+    @callback
     def _event_listener(self, event):
         """Listen for new messages on the bus and queue them for Zabbix."""
         item = (time.monotonic(), event)

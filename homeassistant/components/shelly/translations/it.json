@@ -10,7 +10,7 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
                 "description": "Vuoi impostare il {model} presso {host}?\n\nPrima di configurare, il dispositivo alimentato a batteria deve essere svegliato premendo il pulsante sul dispositivo."

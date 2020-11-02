@@ -17,7 +17,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP gateway"
+                    "select_ip": "Indirizzo IP"
                 },
                 "description": "Eseguire nuovamente l'installazione se si desidera connettere gateway adizionali",
                 "title": "Selezionare il Gateway Xiaomi Aqara che si desidera collegare"

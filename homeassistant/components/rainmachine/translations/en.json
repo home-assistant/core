@@ -18,5 +18,15 @@
                 "title": "Fill in your information"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Default zone run time (in seconds)"
+                },
+                "title": "Configure RainMachine"
+            }
+        }
     }
 }

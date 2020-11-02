@@ -67,6 +67,7 @@ ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
+ATTR_MESSAGE_TAG = "message_tag"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -91,6 +92,7 @@ SERVICE_LEAVE_CHAT = "leave_chat"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
+EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
 PARSER_MD = "markdown"
@@ -136,6 +138,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_TAG): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -329,7 +332,9 @@ async def async_setup(hass, config):
                 else:
                     attribute_templ.hass = hass
                     try:
-                        data[attribute] = attribute_templ.async_render()
+                        data[attribute] = attribute_templ.async_render(
+                            parse_result=False
+                        )
                     except TemplateError as exc:
                         _LOGGER.error(
                             "TemplateError in %s: %s -> %s",
@@ -506,6 +511,7 @@ class TelegramNotificationService:
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
             ATTR_TIMEOUT: None,
+            ATTR_MESSAGE_TAG: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
@@ -520,6 +526,8 @@ class TelegramNotificationService:
                 params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
             if ATTR_REPLY_TO_MSGID in data:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
+            if ATTR_MESSAGE_TAG in data:
+                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
@@ -546,12 +554,22 @@ class TelegramNotificationService:
             out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
-                self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
+                message_id = out[ATTR_MESSAGEID]
+                self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
                     self._last_message_id,
                     chat_id,
                 )
+
+                event_data = {
+                    ATTR_CHAT_ID: chat_id,
+                    ATTR_MESSAGEID: message_id,
+                }
+                message_tag = kwargs_msg.get(ATTR_MESSAGE_TAG)
+                if message_tag is not None:
+                    event_data[ATTR_MESSAGE_TAG] = message_tag
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out

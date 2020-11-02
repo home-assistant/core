@@ -65,7 +65,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Genres": MEDIA_TYPE_GENRE,
 }
 
-BROWSE_LIMIT = 500
+BROWSE_LIMIT = 1000
 
 
 async def build_item_response(player, payload):

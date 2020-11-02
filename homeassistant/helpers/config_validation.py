@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import slugify as util_slugify
+from homeassistant.util import sanitize_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -113,6 +113,17 @@ port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 T = TypeVar("T")
 
 
+def path(value: Any) -> str:
+    """Validate it's a safe path."""
+    if not isinstance(value, str):
+        raise vol.Invalid("Expected a string")
+
+    if sanitize_path(value) != value:
+        raise vol.Invalid("Invalid path")
+
+    return value
+
+
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
@@ -123,7 +134,7 @@ def has_at_least_one_key(*keys: str) -> Callable:
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        for k in obj.keys():
+        for k in obj:
             if k in keys:
                 return obj
         raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
@@ -486,7 +497,11 @@ def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is None:
         raise vol.Invalid("string value is None")
-    if isinstance(value, (list, dict)):
+
+    if isinstance(value, template_helper.ResultWrapper):
+        value = value.render_result
+
+    elif isinstance(value, (list, dict)):
         raise vol.Invalid("value should be a string")
 
     return str(value)

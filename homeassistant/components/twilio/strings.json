@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up the Twilio Webhook",
-        "description": "Are you sure you want to set up Twilio?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {

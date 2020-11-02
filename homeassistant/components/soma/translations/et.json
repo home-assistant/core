@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Soma konto.",
-            "connection_error": "SOMA Connect seadmega \u00fchenduse loomine nurjus."
+            "connection_error": "SOMA Connect seadmega \u00fchenduse loomine nurjus.",
+            "result_error": "SOMA Connect vastas t\u00f5rkeolekuga."
         },
         "step": {
             "user": {

@@ -92,6 +92,30 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_OFF
 
 
+async def test_friendly_names(hass, mqtt_mock, setup_tasmota):
+    """Test state update via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    config["swc"][0] = 1
+    config["swc"][1] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
+    assert state.state == "unavailable"
+    assert state.attributes.get("friendly_name") == "Tasmota binary_sensor 1"
+
+    state = hass.states.get("binary_sensor.beer")
+    assert state.state == "unavailable"
+    assert state.attributes.get("friendly_name") == "Beer"
+
+
 async def test_off_delay(hass, mqtt_mock, setup_tasmota):
     """Test off_delay option."""
     config = copy.deepcopy(DEFAULT_CONFIG)

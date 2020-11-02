@@ -138,9 +138,6 @@ class Store:
         """Save data."""
         self._data = {"version": self.version, "key": self.key, "data": data}
 
-        self._async_cleanup_delay_listener()
-        self._async_cleanup_final_write_listener()
-
         if self.hass.state == CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
@@ -153,16 +150,14 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
         self._async_cleanup_delay_listener()
-        self._async_cleanup_final_write_listener()
+        self._async_ensure_final_write_listener()
 
         if self.hass.state == CoreState.stopping:
-            self._async_ensure_final_write_listener()
             return
 
         self._unsub_delay_listener = async_call_later(
             self.hass, delay, self._async_callback_delayed_write
         )
-        self._async_ensure_final_write_listener()
 
     @callback
     def _async_ensure_final_write_listener(self):
@@ -192,20 +187,20 @@ class Store:
         if self.hass.state == CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
-        self._unsub_delay_listener = None
-        self._async_cleanup_final_write_listener()
         await self._async_handle_write_data()
 
     async def _async_callback_final_write(self, _event):
         """Handle a write because Home Assistant is in final write state."""
         self._unsub_final_write_listener = None
-        self._async_cleanup_delay_listener()
         await self._async_handle_write_data()
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
 
         async with self._write_lock:
+            self._async_cleanup_delay_listener()
+            self._async_cleanup_final_write_listener()
+
             if self._data is None:
                 # Another write already consumed the data
                 return
@@ -229,7 +224,7 @@ class Store:
         if not os.path.isdir(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
 
-        _LOGGER.debug("Writing data for %s", self.key)
+        _LOGGER.debug("Writing data for %s to %s", self.key, path)
         json_util.save_json(path, data, self._private, encoder=self._encoder)
 
     async def _async_migrate_func(self, old_version, old_data):
@@ -238,6 +233,9 @@ class Store:
 
     async def async_remove(self):
         """Remove all data."""
+        self._async_cleanup_delay_listener()
+        self._async_cleanup_final_write_listener()
+
         try:
             await self.hass.async_add_executor_job(os.unlink, self.path)
         except FileNotFoundError:

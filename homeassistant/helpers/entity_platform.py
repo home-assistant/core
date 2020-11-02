@@ -79,6 +79,10 @@ class EntityPlatform:
             self.platform_name, []
         ).append(self)
 
+    def __repr__(self):
+        """Represent an EntityPlatform."""
+        return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
+
     @callback
     def _get_parallel_updates_semaphore(
         self, entity_has_async_update: bool
