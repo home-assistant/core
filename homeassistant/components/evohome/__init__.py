@@ -436,7 +436,7 @@ class EvoBroker:
 
         return result
 
-    async def _update_v1_api(self, *args, **kwargs) -> None:
+    async def _update_v1_api_state(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
         def get_session_id(client_v1) -> Optional[str]:
@@ -477,7 +477,7 @@ class EvoBroker:
         if session_id != get_session_id(self.client_v1):
             await self.save_auth_tokens()
 
-    async def _update_v2_api(self, *args, **kwargs) -> None:
+    async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
         access_token = self.client.access_token
 
@@ -498,14 +498,17 @@ class EvoBroker:
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
+
+        The state is updated periodically. It is also updated whenever a client API has
+        been invoked, after waiting a moment for things to quiesce (manual_update=True).
         """
         if manual_update:
             await asyncio.sleep(1)
 
         elif self.client_v1:
-            await self._update_v1_api()
+            await self._update_v1_api_state()
 
-        await self._update_v2_api()
+        await self._update_v2_api_state()
 
         # inform the evohome devices that state data has been updated
         async_dispatcher_send(self.hass, DOMAIN)
