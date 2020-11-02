@@ -82,9 +82,9 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if await self._async_is_addon_installed():
             return await self.async_step_start_addon()
 
-        return await self._async_install_addon()
+        return await self.async_step_install_addon()
 
-    async def _async_install_addon(self):
+    async def async_step_install_addon(self):
         """Install add-on."""
         try:
             await self.hass.components.hassio.async_install_addon("core_zwave")
