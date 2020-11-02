@@ -272,6 +272,7 @@ homeassistant/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
+homeassistant/components/moehlenhoff_alpha2/* @j-a-n
 homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff

@@ -118,6 +118,7 @@ FLOWS = [
     "mill",
     "minecraft_server",
     "mobile_app",
+    "moehlenhoff_alpha2",
     "monoprice",
     "mqtt",
     "myq",
