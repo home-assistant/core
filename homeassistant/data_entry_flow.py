@@ -176,7 +176,6 @@ class FlowManager(abc.ABC):
             if (
                 cur_step["step_id"] != result.get("step_id")
                 or result["type"] == RESULT_TYPE_SHOW_PROGRESS
-                and result["progress_action"] != cur_step["progress_action"]
             ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
