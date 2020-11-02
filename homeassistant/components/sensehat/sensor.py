@@ -3,6 +3,9 @@ from datetime import timedelta
 from pathlib import Path
 import logging
 
+from sense_hat import SenseHat
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
