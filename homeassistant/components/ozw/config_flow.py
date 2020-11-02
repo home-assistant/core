@@ -35,6 +35,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.addon_info = None
         self.network_key = None
         self.usb_path = None
+        self.use_addon = False
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
 
@@ -59,6 +60,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USB_PATH: self.usb_path,
                 CONF_NETWORK_KEY: self.network_key,
+                CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
@@ -67,6 +69,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle logic when on Supervisor host."""
         if user_input is not None:
             if user_input[CONF_USE_ADDON]:
+                self.use_addon = True
                 return await self._async_use_addon()
             return self._async_use_mqtt_integration()
 
