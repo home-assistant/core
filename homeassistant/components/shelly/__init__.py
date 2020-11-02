@@ -47,7 +47,6 @@ async def get_coap_context(hass):
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-
     return True
 
 
@@ -94,13 +93,12 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def __init__(self, hass, entry, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
-        if device.settings.get("sleep_mode", False):
-            if device.settings["sleep_mode"]["unit"] == "m":
-                sleep_period = device.settings["sleep_mode"]["period"]  # minutes
-            else:
-                sleep_period = (
-                    device.settings["sleep_mode"]["period"] * 60
-                )  # hours to minutes
+        sleep_mode = device.settings.get("sleep_mode")
+
+        if sleep_mode:
+            sleep_period = sleep_mode["period"]
+            if sleep_mode["unit"] != "m":  # it's hours if it's not minutes
+                sleep_period *= 60  # hours to minutes
 
             update_interval = 1.2 * sleep_period * 60  # minutes to seconds
         else:
