@@ -9,8 +9,6 @@ from homeassistant.components.number.const import (
     ATTR_STEP,
     ATTR_VALUE,
     DOMAIN,
-    SERVICE_DECREMENT,
-    SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
@@ -76,37 +74,3 @@ async def test_set_set_value(hass):
 
     state = hass.states.get(ENTITY_VOLUME)
     assert state.state == "23.0"
-
-
-async def test_increment(hass):
-    """Test that the increment sets the value correctly."""
-    state = hass.states.get(ENTITY_VOLUME)
-    assert state.state == "42.0"
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_INCREMENT,
-        {ATTR_ENTITY_ID: ENTITY_VOLUME},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_VOLUME)
-    assert state.state == "43.0"
-
-
-async def test_decrement(hass):
-    """Test that the decrement sets the value correctly."""
-    state = hass.states.get(ENTITY_VOLUME)
-    assert state.state == "42.0"
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_DECREMENT,
-        {ATTR_ENTITY_ID: ENTITY_VOLUME},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_VOLUME)
-    assert state.state == "41.0"

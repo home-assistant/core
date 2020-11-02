@@ -1,17 +1,5 @@
 # Describes the format for available Number entity services
 
-decrement:
-  description: Decrement the value of an Number entity by its stepping.
-  fields:
-    entity_id:
-      description: Entity id of the Number that should be decremented.
-      example: number.volume
-increment:
-  description: Increment the value of an Number entity by its stepping.
-  fields:
-    entity_id:
-      description: Entity id of the Number that should be incremented.
-      example: number.volume
 set_value:
   description: Set the value of an Number entity.
   fields:

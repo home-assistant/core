@@ -30,8 +30,6 @@ from .const import (
     DEVICE_CLASS_VOLUME,
     DOMAIN,
     MODE_SLIDER,
-    SERVICE_DECREMENT,
-    SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
 )
 
@@ -61,8 +59,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(ATTR_VALUE): vol.Coerce(float)},
@@ -128,19 +124,3 @@ class NumberEntity(Entity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
-
-    def increment(self) -> None:
-        """Increment value."""
-        self.set_value(min(float(self.state) + self.step, self.max_value))
-
-    async def async_increment(self) -> None:
-        """Increment value."""
-        await self.async_set_value(min(float(self.state) + self.step, self.max_value))
-
-    def decrement(self) -> None:
-        """Decrement value."""
-        self.set_value(max(float(self.state) - self.step, self.min_value))
-
-    async def async_decrement(self) -> None:
-        """Decrement value."""
-        await self.async_set_value(max(float(self.state) - self.step, self.min_value))
