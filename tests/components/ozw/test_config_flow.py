@@ -91,6 +91,7 @@ async def test_user_not_supervisor_create_entry(hass):
     assert result["data"] == {
         "usb_path": None,
         "network_key": None,
+        "use_addon": False,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
@@ -143,6 +144,7 @@ async def test_not_addon(hass, supervisor):
     assert result["data"] == {
         "usb_path": None,
         "network_key": None,
+        "use_addon": False,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
@@ -174,6 +176,7 @@ async def test_addon_running(hass, supervisor, addon_running):
     assert result["data"] == {
         "usb_path": None,
         "network_key": None,
+        "use_addon": True,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
@@ -227,6 +230,7 @@ async def test_addon_installed(
     assert result["data"] == {
         "usb_path": "/test",
         "network_key": "abc123",
+        "use_addon": True,
         "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
@@ -314,6 +318,7 @@ async def test_addon_not_installed(
     assert result["data"] == {
         "usb_path": "/test",
         "network_key": "abc123",
+        "use_addon": True,
         "integration_created_addon": True,
     }
     assert len(mock_setup.mock_calls) == 1
