@@ -1,0 +1,23 @@
+{
+  "title": "Velux KLF200 Gateway",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pick the KLF200 Gateway",
+        "description": "You will find the password on the backside of the gateway",
+        "data": {
+          "host": "Host",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "connection_failed": "Connection could not be established, please check your input."
+    },
+    "abort": {
+      "not_velux_klf200": "The discovered device is not a Velux KLF gateway",
+      "connection_error": "No information provided from zeroconf",
+      "already_configured": "Velux KLF200 gateway is already configured"
+    }
+  }
+}

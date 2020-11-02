@@ -1,9 +1,12 @@
 """Support for Velux covers."""
+import logging
+
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DEVICE_CLASS_AWNING,
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
@@ -11,20 +14,31 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
 
-from . import DATA_VELUX
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up cover(s) for Velux platform."""
+    _LOGGER.debug("Entered velux cover setup")
+
     entities = []
-    for node in hass.data[DATA_VELUX].pyvlx.nodes:
+    gateway = hass.data[DOMAIN][entry.entry_id]
+
+    for node in gateway.nodes:
+        _LOGGER.debug("Node will be added: %s", node.name)
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
     async_add_entities(entities)
@@ -54,7 +68,7 @@ class VeluxCover(CoverEntity):
     @property
     def unique_id(self):
         """Return the unique ID of this cover."""
-        return self.node.serial_number
+        return self.node.node_id
 
     @property
     def name(self):
@@ -69,12 +83,28 @@ class VeluxCover(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+        supported_features = (
+            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+        )
+        if self.current_cover_tilt_position is not None:
+            supported_features |= (
+                SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_SET_TILT_POSITION
+                | SUPPORT_STOP_TILT
+            )
+        return supported_features
 
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
         return 100 - self.node.position.position_percent
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return the current position of the cover."""
+        if isinstance(self.node, Blind):
+            return 100 - self.node.orientation.position_percent
 
     @property
     def device_class(self):
@@ -110,7 +140,6 @@ class VeluxCover(CoverEntity):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position_percent = 100 - kwargs[ATTR_POSITION]
-
             await self.node.set_position(
                 Position(position_percent=position_percent), wait_for_completion=False
             )
@@ -118,3 +147,24 @@ class VeluxCover(CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         await self.node.stop(wait_for_completion=False)
+
+    async def async_close_cover_tilt(self, **kwargs):
+        """Close the cover."""
+        await self.node.close_orientation(wait_for_completion=False)
+
+    async def async_open_cover_tilt(self, **kwargs):
+        """Close the cover."""
+        await self.node.open_orientation(wait_for_completion=False)
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Close the cover."""
+        await self.node.stop_orientation(wait_for_completion=False)
+
+    async def async_set_cover_tilt_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        if ATTR_TILT_POSITION in kwargs:
+            position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+            orientation = Position(position_percent=position_percent)
+            await self.node.set_orientation(
+                orientation=orientation, wait_for_completion=False
+            )
