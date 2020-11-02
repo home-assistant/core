@@ -1,11 +1,9 @@
 """Ratelimit helper."""
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable, Dict, Hashable, Optional
 
-from homeassistant.const import MAX_TIME_TRACKING_ERROR
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +19,7 @@ class KeyedRateLimit:
         """Initialize ratelimit tracker."""
         self.hass = hass
         self._last_triggered: Dict[Hashable, datetime] = {}
-        self._rate_limit_timers: Dict[Hashable, asyncio.TimerHandle] = {}
+        self._rate_limit_timers: Dict[Hashable, CALLBACK_TYPE] = {}
 
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
@@ -42,13 +40,14 @@ class KeyedRateLimit:
         if not self._rate_limit_timers or not self.async_has_timer(key):
             return
 
-        self._rate_limit_timers.pop(key).cancel()
+        unsub_timer = self._rate_limit_timers.pop(key)
+        unsub_timer()
 
     @callback
     def async_remove(self) -> None:
         """Remove all timers."""
-        for timer in self._rate_limit_timers.values():
-            timer.cancel()
+        for unsub_timer in self._rate_limit_timers.values():
+            unsub_timer()
         self._rate_limit_timers.clear()
 
     @callback
@@ -93,11 +92,14 @@ class KeyedRateLimit:
             next_call_time,
         )
 
+        @callback
+        def run_action(_: datetime) -> None:
+            """Run the action with arguments."""
+            action(*args)
+
         if key not in self._rate_limit_timers:
-            self._rate_limit_timers[key] = self.hass.loop.call_later(
-                (next_call_time - now).total_seconds() + MAX_TIME_TRACKING_ERROR,
-                action,
-                *args,
+            self._rate_limit_timers[key] = self.hass.helpers.event.async_call_later(
+                (next_call_time - now).total_seconds(), run_action
             )
 
         return next_call_time
