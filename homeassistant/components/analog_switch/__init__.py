@@ -117,7 +117,7 @@ class AnalogSwitchEntity(Entity):
         return step
 
     @property
-    def mode(self) -> float:
+    def mode(self) -> str:
         """Return the appearance mode of the analog switch."""
         return MODE_SLIDER
 
