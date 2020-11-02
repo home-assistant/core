@@ -15,7 +15,7 @@ from .models import Blueprint
 from .schemas import is_blueprint_config
 
 COMMUNITY_TOPIC_PATTERN = re.compile(
-    r"^https://community.home-assistant.io/t/[a-z-]+/(?P<topic>\d+)(?:/(?P<post>\d+)|)$"
+    r"^https://community.home-assistant.io/t/[a-z0-9-]+/(?P<topic>\d+)(?:/(?P<post>\d+)|)$"
 )
 
 COMMUNITY_CODE_BLOCK = re.compile(
