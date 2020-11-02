@@ -638,7 +638,7 @@ geojson_client==0.4
 geopy==1.21.0
 
 # homeassistant.components.geo_rss_events
-georss_generic_client==0.3
+georss_generic_client==0.4
 
 # homeassistant.components.ign_sismologia
 georss_ign_sismologia_client==0.2
@@ -1185,7 +1185,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.rpi_gpio_pwm
-pwmled==1.5.3
+pwmled==1.6.6
 
 # homeassistant.components.august
 py-august==0.25.0
@@ -1291,7 +1291,7 @@ pybotvac==0.0.17
 pycarwings2==2.9
 
 # homeassistant.components.cloudflare
-pycfdns==1.1.1
+pycfdns==1.2.1
 
 # homeassistant.components.channels
 pychannels==1.0.0
@@ -1490,7 +1490,7 @@ pylitejet==0.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.7.0
+pylutron-caseta==0.7.1
 
 # homeassistant.components.lutron
 pylutron==0.2.5
@@ -2358,7 +2358,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.26.0
+zigpy==0.27.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
