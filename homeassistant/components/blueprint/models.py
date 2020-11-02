@@ -61,7 +61,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = self.placeholders - set(data[CONF_BLUEPRINT][CONF_INPUT])
+        missing = self.placeholders - set(data[CONF_BLUEPRINT].get(CONF_INPUT, {}))
 
         if missing:
             raise InvalidBlueprint(
@@ -112,6 +112,7 @@ class BlueprintInputs:
             )
 
         # In future we can see if entities are correct domain, areas exist etc
+        # using the new selector helper.
 
     @callback
     def async_substitute(self) -> dict:
