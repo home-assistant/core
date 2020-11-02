@@ -97,7 +97,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         if sleep_mode:
             sleep_period = sleep_mode["period"]
-            if sleep_mode["unit"] != "m":  # it's hours if it's not minutes
+            if sleep_mode["unit"] == "h":
                 sleep_period *= 60  # hours to minutes
 
             update_interval = 1.2 * sleep_period * 60  # minutes to seconds
