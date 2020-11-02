@@ -19,6 +19,9 @@
                     "name": "Nimi (valikuline, kasutatakse k\u00f5igi seadmete nime eesliitena)",
                     "pin": "PIN-kood (valikuline)"
                 }
+            },
+            "link": {
+                "description": "HomematicIP registreerimiseks Home Assistanti abil vajuta p\u00e4\u00e4supunkti sinist nuppu ja nuppu Esita.\n\n ![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
             }
         }
     }

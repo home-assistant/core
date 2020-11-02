@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "not_supported_device": "Seda WiLight'i sidumist ei toetata",
+            "not_wilight_device": "See seade ei ole WiLight"
         },
         "step": {
             "confirm": {

@@ -559,7 +559,7 @@ enturclient==0.2.1
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.16.1
+envoy_reader==0.16.2
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -1183,7 +1183,7 @@ pushbullet.py==0.11.0
 pushover_complete==1.1.1
 
 # homeassistant.components.rpi_gpio_pwm
-pwmled==1.5.3
+pwmled==1.6.6
 
 # homeassistant.components.august
 py-august==0.25.0
@@ -1488,7 +1488,7 @@ pylitejet==0.1
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.7.0
+pylutron-caseta==0.7.1
 
 # homeassistant.components.lutron
 pylutron==0.2.5
@@ -2320,7 +2320,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.09.20
+youtube_dl==2020.11.01.1
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2356,7 +2356,7 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.26.0
+zigpy==0.27.0
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
