@@ -1,4 +1,4 @@
-"""Component to allow numeric input for platforms"""
+"""Component to allow numeric input for platforms."""
 from datetime import timedelta
 import logging
 from typing import Any, Dict

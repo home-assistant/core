@@ -20,9 +20,7 @@ ENTITY_VOLUME = "number.volume"
 @pytest.fixture(autouse=True)
 async def setup_demo_number(hass):
     """Initialize setup demo Number entity."""
-    assert await async_setup_component(
-        hass, DOMAIN, {"number": {"platform": "demo"}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "demo"}})
     await hass.async_block_till_done()
 
 
