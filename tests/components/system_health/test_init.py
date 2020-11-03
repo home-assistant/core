@@ -6,7 +6,7 @@ import pytest
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, Mock
-from tests.common import mock_platform
+from tests.common import get_system_health_info, mock_platform
 
 
 @pytest.fixture
@@ -96,7 +96,7 @@ async def test_info_endpoint_register_callback_exc(
     assert data == {"error": "TEST ERROR"}
 
 
-async def test_platform_loading(hass, hass_ws_client):
+async def test_platform_loading(hass):
     """Test registering via platform."""
     hass.config.components.add("fake_integration")
     mock_platform(
@@ -110,12 +110,4 @@ async def test_platform_loading(hass, hass_ws_client):
     )
 
     assert await async_setup_component(hass, "system_health", {})
-    client = await hass_ws_client(hass)
-
-    resp = await client.send_json({"id": 6, "type": "system_health/info"})
-    resp = await client.receive_json()
-    assert resp["success"]
-    data = resp["result"]
-
-    assert len(data) == 2
-    assert data["fake_integration"] == {"hello": "info"}
+    assert await get_system_health_info(hass, "fake_integration") == {"hello": "info"}
