@@ -1143,22 +1143,17 @@ def async_track_point_in_utc_time(
         # as measured by utcnow(). That is bad when callbacks have assumptions
         # about the current time. Thus, we rearm the timer for the remaining
         # time.
-        if now < point_in_time:
-            _LOGGER.debug(
-                "Called %f seconds too early, rearming",
-                (point_in_time - now).total_seconds(),
-            )
+        delta = (point_in_time - now).total_seconds()
+        if delta > 0:
+            _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_at(
-                _datetime_to_loop_time(hass, point_in_time), run_action
-            )
+            cancel_callback = hass.loop.call_later(delta, run_action)
             return
 
         hass.async_run_hass_job(job, now)
 
-    cancel_callback = hass.loop.call_at(
-        _datetime_to_loop_time(hass, point_in_time), run_action
-    )
+    delta = point_in_time.timestamp() - time.time()
+    cancel_callback = hass.loop.call_later(delta, run_action)
 
     @callback
     def unsub_point_in_time_listener() -> None:
@@ -1316,13 +1311,6 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
 track_point_in_utc_time_now = dt_util.utcnow
-
-
-def _datetime_to_loop_time(hass: HomeAssistant, when: datetime) -> float:
-    # We always get time.time() first to avoid time.time()
-    # ticking forward after fetching hass.loop.time()
-    # and callback being scheduled a few microseconds early.
-    return when.timestamp() - time.time() + hass.loop.time()
 
 
 @callback
