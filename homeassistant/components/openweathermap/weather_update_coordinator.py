@@ -1,6 +1,7 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
 from datetime import timedelta
 import logging
+import time
 
 import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
@@ -133,7 +134,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_forecast(self, entry):
         forecast = {
-            ATTR_FORECAST_TIME: entry.reference_time("unix") * 1000,
+            ATTR_FORECAST_TIME: self._convert_time(entry.reference_time("unix")),
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
                 entry.rain, entry.snow
             ),
@@ -190,6 +191,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_condition(weather_code):
         """Get weather condition from weather data."""
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+
+    @staticmethod
+    def _convert_time(timestamp):
+        """Convert time to ISO format."""
+        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
 
 
 class LegacyWeather:
