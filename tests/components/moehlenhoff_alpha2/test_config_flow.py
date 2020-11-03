@@ -59,3 +59,23 @@ async def test_connection_error(hass: HomeAssistantType):
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_unexpected_error(hass: HomeAssistantType):
+    """Test unexpected error."""
+
+    with patch(
+        "moehlenhoff_alpha2.Alpha2Base._fetch_static_data",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"host": "10.10.10.10"}
+        )
+        assert result["type"] == "form"
+        assert result["errors"]["base"] == "unknown"
