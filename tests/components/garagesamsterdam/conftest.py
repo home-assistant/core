@@ -1,0 +1,32 @@
+"""Test helpers."""
+
+import pytest
+
+from tests.async_mock import Mock, patch
+
+
+@pytest.fixture(autouse=True)
+def mock_cases():
+    """Mock garagesamsterdam cases."""
+    with patch(
+        "garagesamsterdam.get_cases",
+        return_value=[
+            Mock(
+                garage_name="IJDok",
+                free_space_short=100,
+                free_space_long=10,
+                short_capacity=120,
+                long_capacity=60,
+                state="ok",
+            ),
+            Mock(
+                garage_name="Arena",
+                free_space_short=200,
+                free_space_long=20,
+                short_capacity=240,
+                long_capacity=80,
+                state="error",
+            ),
+        ],
+    ) as mock_get_cases:
+        yield mock_get_cases

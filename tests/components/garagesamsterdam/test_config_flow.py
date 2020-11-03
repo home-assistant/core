@@ -12,4 +12,16 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"garage_name": "IJDok"},
+    )
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "IJDok"
+    assert result2["result"].unique_id == "IJDok"
+    assert result2["data"] == {
+        "garage_name": "IJDok",
+    }
+
     await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
