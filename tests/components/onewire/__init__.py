@@ -1,5 +1,4 @@
 """Tests for 1-Wire integration."""
-from asynctest.mock import patch
 
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
@@ -11,6 +10,7 @@ from homeassistant.components.onewire.const import (
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

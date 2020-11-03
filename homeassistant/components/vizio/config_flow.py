@@ -348,9 +348,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         assert self.hass
 
-        discovery_info[
-            CONF_HOST
-        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        # If host already has port, no need to add it again
+        if ":" not in discovery_info[CONF_HOST]:
+            discovery_info[
+                CONF_HOST
+            ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`

@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -43,7 +44,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     ENTITY_CLASS,
     ENTITY_ENABLE,
@@ -64,7 +66,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_SSL, default=DEFAULT_USE_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DISKS): cv.ensure_list,
@@ -163,6 +166,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
+    # Migrate existing entry configuration
+    if entry.data.get(CONF_VERIFY_SSL) is None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
+        )
+
     # Continue setup
     api = SynoApi(hass, entry)
     try:
@@ -260,11 +269,11 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
+            self._entry.data[CONF_VERIFY_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
+            device_token=self._entry.data.get("device_token"),
         )
-        await self._hass.async_add_executor_job(
-            self.dsm.login, self._entry.data.get("device_token")
-        )
+        await self._hass.async_add_executor_job(self.dsm.login)
 
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)

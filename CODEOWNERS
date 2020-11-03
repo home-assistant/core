@@ -9,6 +9,12 @@ homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
+# Home Assistant Supervisor
+build.json @home-assistant/supervisor
+machine/* @home-assistant/supervisor
+rootfs/* @home-assistant/supervisor
+Dockerfile @home-assistant/supervisor
+
 # Other code
 homeassistant/scripts/check_config.py @kellerza
 
@@ -58,6 +64,7 @@ homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @gadgetmobile
 homeassistant/components/blink/* @fronzbot
+homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @prystupa
@@ -170,7 +177,7 @@ homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/guardian/* @bachya
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
-homeassistant/components/hassio/* @home-assistant/hass-io
+homeassistant/components/hassio/* @home-assistant/supervisor
 homeassistant/components/hdmi_cec/* @newAM
 homeassistant/components/heatmiser/* @andylockran
 homeassistant/components/heos/* @andrewsayre
@@ -380,7 +387,7 @@ homeassistant/components/seven_segments/* @fabaff
 homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/sharkiq/* @ajmarks
 homeassistant/components/shell_command/* @home-assistant/core
-homeassistant/components/shelly/* @balloob @bieniu
+homeassistant/components/shelly/* @balloob @bieniu @thecode
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/sighthound/* @robmarkcole
@@ -429,7 +436,7 @@ homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
-homeassistant/components/synology_dsm/* @hacf-fr @Quentame
+homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco

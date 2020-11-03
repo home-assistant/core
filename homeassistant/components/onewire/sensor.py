@@ -6,7 +6,6 @@ import os
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import voluptuous as vol
 
-from homeassistant.components.onewire.onewirehub import OneWireHub
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
@@ -23,6 +22,7 @@ from .const import (
     DOMAIN,
 )
 from .onewire_entities import OneWire, OneWireProxy
+from .onewirehub import OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
 

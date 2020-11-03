@@ -16,7 +16,8 @@
                 }
             },
             "discovery_confirm": {
-                "description": "Kas soovid lisada ESPHome'i s\u00f5lme '{name}' Home Assistant-ile?"
+                "description": "Kas soovid lisada ESPHome'i s\u00f5lme '{name}' Home Assistant-ile?",
+                "title": "Avastastud ESPHome'i s\u00f5lm"
             },
             "user": {
                 "data": {
