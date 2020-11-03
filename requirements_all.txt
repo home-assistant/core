@@ -2095,8 +2095,10 @@ spotcrime==1.0.4
 spotipy==2.16.1
 
 # homeassistant.components.recorder
-# homeassistant.components.sql
 sqlalchemy==1.3.20
+
+# homeassistant.components.sql
+sqlalchemy==1.3.20, pyodbc==4.0.30
 
 # homeassistant.components.starline
 starline==0.1.3

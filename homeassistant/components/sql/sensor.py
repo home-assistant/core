@@ -74,11 +74,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
-        if not ("LIMIT" in query or "SELECT TOP" in query):
+        # MSSQL uses TOP and not LIMIT
+        if not ("LIMIT" in query_str or "SELECT TOP" in query_str):
             if "mssql" in db_url:
-                query = query.replace("SELECT", "SELECT TOP 1")
+                query_str = query_str.replace("SELECT", "SELECT TOP 1")
             else:
-                query = query.replace(";", " LIMIT 1;")
+                query_str = query_str.replace(";", " LIMIT 1;")
 
         sensor = SQLSensor(
             name, sessmaker, query_str, column_name, unit, value_template
