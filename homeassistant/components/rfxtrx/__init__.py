@@ -435,7 +435,7 @@ def get_device_id(device, data_bits=None):
 
 
 async def async_connect_auto_add(hass, entry_data, callback):
-    """Conncet to dispatcher for automatic add."""
+    """Connect to dispatcher for automatic add."""
     if entry_data[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_CLEANUP_CALLBACKS].append(
             hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback)
