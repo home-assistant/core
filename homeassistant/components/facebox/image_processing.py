@@ -23,7 +23,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
-    CONF_PROTCOL,
+    CONF_PROTOCOL,
 )
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
