@@ -1353,38 +1353,39 @@ def async_track_utc_time_change(
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
 
-    next_time: datetime = dt_util.utcnow()
-
-    def calculate_next(now: datetime) -> None:
+    def calculate_next(now: datetime) -> datetime:
         """Calculate and set the next time the trigger should fire."""
-        nonlocal next_time
-
         localized_now = dt_util.as_local(now) if local else now
-        next_time = dt_util.find_next_time_expression_time(
+        return dt_util.find_next_time_expression_time(
             localized_now, matching_seconds, matching_minutes, matching_hours
         )
 
-    cancel_callback: Optional[CALLBACK_TYPE] = None
-    calculate_next(next_time)
+    time_listener: Optional[CALLBACK_TYPE] = None
 
     @callback
     def pattern_time_change_listener(now: datetime) -> None:
         """Listen for matching time_changed events."""
-        nonlocal next_time, cancel_callback
+        nonlocal time_listener
 
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
-        calculate_next(now + timedelta(seconds=1))
-
-        cancel_callback = async_track_point_in_utc_time(
-            hass, pattern_time_change_listener, next_time
+        time_listener = async_track_point_in_utc_time(
+            hass,
+            pattern_time_change_listener,
+            calculate_next(now + timedelta(seconds=1)),
         )
 
-    cancel_callback = async_track_point_in_utc_time(
-        hass, pattern_time_change_listener, next_time
+    time_listener = async_track_point_in_utc_time(
+        hass, pattern_time_change_listener, calculate_next(dt_util.utcnow())
     )
 
-    return cancel_callback
+    @callback
+    def unsub_pattern_time_change_listener() -> None:
+        """Cancel the time listener."""
+        assert time_listener is not None
+        time_listener()
+
+    return unsub_pattern_time_change_listener
 
 
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
