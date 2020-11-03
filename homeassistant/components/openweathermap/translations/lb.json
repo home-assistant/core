@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
+        },
         "error": {
             "auth": "Api Schl\u00ebssel ass net korrekt.",
             "cannot_connect": "Feeler beim verbannen",

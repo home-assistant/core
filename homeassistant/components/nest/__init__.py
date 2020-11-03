@@ -30,7 +30,11 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import api, config_flow, local_auth
@@ -92,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "camera"]
 
 # Services for the legacy API
 
@@ -176,7 +180,7 @@ class SignalUpdateCallback(EventCallback):
         # This event triggered an update to a device that changed some
         # properties which the DeviceManager should already have received.
         # Send a signal to refresh state of all listening devices.
-        dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
+        async_dispatcher_send(self._hass, SIGNAL_NEST_UPDATE)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -203,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
     subscriber.set_update_callback(SignalUpdateCallback(hass))
-    hass.loop.create_task(subscriber.start_async())
+    asyncio.create_task(subscriber.start_async())
     hass.data[DOMAIN][entry.entry_id] = subscriber
 
     for component in PLATFORMS:

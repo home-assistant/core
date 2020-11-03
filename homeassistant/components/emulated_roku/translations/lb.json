@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "IP annonc\u00e9ieren",
+                    "advertise_ip": "IP Adresse annonc\u00e9ieren",
                     "advertise_port": "Port annonc\u00e9ieren",
                     "host_ip": "IP vum Apparat",
                     "listen_port": "Port lauschteren",

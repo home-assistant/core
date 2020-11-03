@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
@@ -26,6 +26,7 @@ from homeassistant.util.color import (
 import homeassistant.util.dt as dt_util
 
 from . import CONF_LIGHT, DOMAIN as TPLINK_DOMAIN
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -60,20 +61,15 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up lights."""
-    devices = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    entities = []
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
+    )
 
-    await hass.async_add_executor_job(get_devices_sysinfo, devices)
-    for device in devices:
-        entities.append(TPLinkSmartBulb(device))
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
-    async_add_entities(entities, update_before_add=True)
-
-
-def get_devices_sysinfo(devices):
-    """Get sysinfo for all devices."""
-    for device in devices:
-        device.get_sysinfo()
+    if hass.data[TPLINK_DOMAIN][f"{CONF_LIGHT}_remaining"]:
+        raise PlatformNotReady
 
 
 def brightness_to_percentage(byt):

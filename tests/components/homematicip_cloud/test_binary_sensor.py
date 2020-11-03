@@ -540,3 +540,28 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_wired_multi_contact_interface(hass, default_mock_hap_factory):
+    """Test HomematicipMultiContactInterface."""
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    device_model = "HmIPW-DRI32"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wired Eingangsmodul – 32-fach"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF

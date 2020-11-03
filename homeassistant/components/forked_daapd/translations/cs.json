@@ -5,6 +5,7 @@
             "not_forked_daapd": "Za\u0159\u00edzen\u00ed nen\u00ed server forked-daapd."
         },
         "error": {
+            "forbidden": "Nelze se p\u0159ipojit. Zkontrolujte pros\u00edm opr\u00e1vn\u011bn\u00ed s\u00edt\u011b forked-daapd.",
             "unknown_error": "Neo\u010dek\u00e1van\u00e1 chyba",
             "wrong_password": "Nespr\u00e1vn\u00e9 heslo.",
             "wrong_server_type": "Integrace forked-daapd vy\u017eaduje server forked-daapd s verz\u00ed >= 27.0."

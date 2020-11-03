@@ -7,7 +7,8 @@
         },
         "step": {
             "user": {
-                "description": "Chcete za\u010d\u00edt nastavovat?"
+                "description": "Chcete za\u010d\u00edt nastavovat?",
+                "title": "Nastaven\u00ed Plaato Webhook"
             }
         }
     }

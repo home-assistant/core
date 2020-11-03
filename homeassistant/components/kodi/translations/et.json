@@ -11,20 +11,24 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "credentials": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Sisesta oma Kodi kasutajanimi ja salas\u00f5na. Need leiad System/Settings/Network/Services."
             },
             "discovery_confirm": {
-                "description": "Kas soovid lisada Kodi {name} Home Assistanti?"
+                "description": "Kas soovid lisada Kodi {name} Home Assistanti?",
+                "title": "Avastatud Kodi seadmed"
             },
             "host": {
                 "data": {
                     "host": "",
-                    "port": ""
+                    "port": "",
+                    "ssl": "Loo \u00fchendus SSL-i kaudu"
                 }
             },
             "user": {

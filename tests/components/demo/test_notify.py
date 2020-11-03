@@ -108,7 +108,7 @@ async def test_sending_templated_message(hass, events):
     await hass.async_block_till_done()
     last_event = events[-1]
     assert last_event.data[notify.ATTR_TITLE] == "temperature"
-    assert last_event.data[notify.ATTR_MESSAGE] == 10
+    assert last_event.data[notify.ATTR_MESSAGE] == "10"
 
 
 async def test_method_forwards_correct_data(hass, events):

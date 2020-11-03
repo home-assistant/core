@@ -12,6 +12,7 @@ from homematicip.aio.device import (
     AsyncPlugableSwitchMeasuring,
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
+    AsyncWiredSwitch8,
 )
 from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
@@ -40,6 +41,9 @@ async def async_setup_entry(
             device, (AsyncPlugableSwitchMeasuring, AsyncFullFlushSwitchMeasuring)
         ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
+        elif isinstance(device, AsyncWiredSwitch8):
+            for channel in range(1, 9):
+                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(
             device,
             (
@@ -68,6 +72,27 @@ async def async_setup_entry(
 
     if entities:
         async_add_entities(entities)
+
+
+class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
+    """Representation of the HomematicIP multi switch."""
+
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
+        """Initialize the multi switch device."""
+        super().__init__(hap, device, channel=channel)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if switch is on."""
+        return self._device.functionalChannels[self._channel].on
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the switch on."""
+        await self._device.turn_on(self._channel)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the switch off."""
+        await self._device.turn_off(self._channel)
 
 
 class HomematicipSwitch(HomematicipGenericEntity, SwitchEntity):
@@ -146,24 +171,3 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
         if self._device.energyCounter is None:
             return 0
         return round(self._device.energyCounter)
-
-
-class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
-    """Representation of the HomematicIP multi switch."""
-
-    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
-        """Initialize the multi switch device."""
-        super().__init__(hap, device, channel=channel)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return self._device.functionalChannels[self._channel].on
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the switch on."""
-        await self._device.turn_on(self._channel)
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the switch off."""
-        await self._device.turn_off(self._channel)

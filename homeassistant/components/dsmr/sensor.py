@@ -3,6 +3,7 @@ import asyncio
 from asyncio import CancelledError
 from functools import partial
 import logging
+from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -26,11 +27,15 @@ from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
+    CONF_SERIAL_ID,
+    CONF_SERIAL_ID_GAS,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
+    DEVICE_NAME_ENERGY,
+    DEVICE_NAME_GAS,
     DOMAIN,
     ICON_GAS,
     ICON_POWER,
@@ -106,21 +111,37 @@ async def async_setup_entry(
     ]
 
     # Generate device entities
-    devices = [DSMREntity(name, obis, config) for name, obis in obis_mapping]
+    devices = [
+        DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
+        for name, obis in obis_mapping
+    ]
 
     # Protocol version specific obis
-    if dsmr_version in ("4", "5"):
-        gas_obis = obis_ref.HOURLY_GAS_METER_READING
-    elif dsmr_version in ("5B",):
-        gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
-    else:
-        gas_obis = obis_ref.GAS_METER_READING
+    if CONF_SERIAL_ID_GAS in config:
+        if dsmr_version in ("4", "5"):
+            gas_obis = obis_ref.HOURLY_GAS_METER_READING
+        elif dsmr_version in ("5B",):
+            gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
+        else:
+            gas_obis = obis_ref.GAS_METER_READING
 
-    # Add gas meter reading and derivative for usage
-    devices += [
-        DSMREntity("Gas Consumption", gas_obis, config),
-        DerivativeDSMREntity("Hourly Gas Consumption", gas_obis, config),
-    ]
+        # Add gas meter reading and derivative for usage
+        devices += [
+            DSMREntity(
+                "Gas Consumption",
+                DEVICE_NAME_GAS,
+                config[CONF_SERIAL_ID_GAS],
+                gas_obis,
+                config,
+            ),
+            DerivativeDSMREntity(
+                "Hourly Gas Consumption",
+                DEVICE_NAME_GAS,
+                config[CONF_SERIAL_ID_GAS],
+                gas_obis,
+                config,
+            ),
+        ]
 
     async_add_entities(devices)
 
@@ -209,12 +230,16 @@ async def async_setup_entry(
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, obis, config):
+    def __init__(self, name, device_name, device_serial, obis, config):
         """Initialize entity."""
         self._name = name
         self._obis = obis
         self._config = config
         self.telegram = {}
+
+        self._device_name = device_name
+        self._device_serial = device_serial
+        self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
 
     @callback
     def update_data(self, telegram):
@@ -274,6 +299,19 @@ class DSMREntity(Entity):
         return self.get_dsmr_object_attr("unit")
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._device_serial)},
+            "name": self._device_name,
+        }
+
+    @property
     def force_update(self):
         """Force update."""
         return True
@@ -319,6 +357,16 @@ class DerivativeDSMREntity(DSMREntity):
     def state(self):
         """Return the calculated current hourly rate."""
         return self._state
+
+    @property
+    def force_update(self):
+        """Disable force update."""
+        return False
+
+    @property
+    def should_poll(self):
+        """Enable polling."""
+        return True
 
     async def async_update(self):
         """Recalculate hourly rate if timestamp has changed.

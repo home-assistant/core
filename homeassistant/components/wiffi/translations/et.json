@@ -4,7 +4,8 @@
             "user": {
                 "data": {
                     "port": ""
-                }
+                },
+                "title": "WIFFI seadmete TCP serveri seadistamine"
             }
         }
     }

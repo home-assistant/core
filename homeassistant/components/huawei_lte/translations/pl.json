@@ -16,7 +16,7 @@
             "login_attempts_exceeded": "Przekroczono maksymaln\u0105 liczb\u0119 pr\u00f3b logowania. Spr\u00f3buj ponownie p\u00f3\u017aniej.",
             "response_error": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w urz\u0105dzeniu",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
-            "unknown_connection_error": "Nieznany b\u0142\u0105d podczas \u0142\u0105czenia z urz\u0105dzeniem"
+            "unknown_connection_error": "Nieoczekiwany b\u0142\u0105d podczas \u0142\u0105czenia z urz\u0105dzeniem"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {

@@ -385,7 +385,7 @@ async def help_test_discovery_update_unchanged(
     entity_id="test",
     name="Test",
 ):
-    """Test update of discovered component without changes.
+    """Test update of discovered component with and without changes.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """

@@ -792,11 +792,13 @@ class _TrackTemplateResultInfo:
 
     @callback
     def _setup_time_listener(self, template: Template, has_time: bool) -> None:
-        if template in self._time_listeners:
-            self._time_listeners.pop(template)()
-
-        # now() or utcnow() has left the scope of the template
         if not has_time:
+            if template in self._time_listeners:
+                # now() or utcnow() has left the scope of the template
+                self._time_listeners.pop(template)()
+            return
+
+        if template in self._time_listeners:
             return
 
         track_templates = [
@@ -809,8 +811,8 @@ class _TrackTemplateResultInfo:
         def _refresh_from_time(now: datetime) -> None:
             self._refresh(None, track_templates=track_templates)
 
-        self._time_listeners[template] = async_call_later(
-            self.hass, 60.45, _refresh_from_time
+        self._time_listeners[template] = async_track_utc_time_change(
+            self.hass, _refresh_from_time, second=0
         )
 
     @callback
@@ -986,7 +988,7 @@ def async_track_template_result(
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
 ) -> _TrackTemplateResultInfo:
-    """Add a listener that fires when a the result of a template changes.
+    """Add a listener that fires when the result of a template changes.
 
     The action will fire with the initial result from the template, and
     then whenever the output from the template changes. The template will

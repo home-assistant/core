@@ -40,9 +40,12 @@
         "api_token": "API Token",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
+        "elevation": "Elevation",
         "longitude": "Longitude",
         "latitude": "Latitude",
-        "pin": "PIN Code"
+        "location": "Location",
+        "pin": "PIN Code",
+        "mode": "Mode"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"

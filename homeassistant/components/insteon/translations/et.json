@@ -38,6 +38,10 @@
                 "title": ""
             },
             "init": {
+                "data": {
+                    "hubv1": "",
+                    "hubv2": ""
+                },
                 "title": ""
             },
             "plm": {
@@ -67,13 +71,27 @@
             "add_override": {
                 "title": ""
             },
+            "add_x10": {
+                "data": {
+                    "platform": "Platvorm",
+                    "steps": "H\u00e4mardamise samm (ainult valgustite jaoks, vaikimisi 22)"
+                },
+                "title": ""
+            },
             "change_hub_config": {
                 "data": {
                     "host": "IP aadress",
                     "password": "Salas\u00f5na",
                     "port": "",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": ""
+            },
+            "init": {
+                "title": ""
+            },
+            "remove_override": {
+                "title": ""
             },
             "remove_x10": {
                 "title": ""

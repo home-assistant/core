@@ -27,7 +27,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN as TASMOTA_DOMAIN
+from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
@@ -45,7 +45,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             [TasmotaLight(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    async_dispatcher_connect(
+    hass.data[
+        DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
+    ] = async_dispatcher_connect(
         hass,
         TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN, TASMOTA_DOMAIN),
         async_discover,
@@ -78,10 +80,11 @@ class TasmotaLight(
 
         self._setup_from_entity()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
+        await super().discovery_update(update, write_state=False)
         self._setup_from_entity()
-        await super().discovery_update(update)
+        self.async_write_ha_state()
 
     def _setup_from_entity(self):
         """(Re)Setup the entity."""

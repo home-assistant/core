@@ -162,7 +162,7 @@ class RestSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        body_on_t = self._body_on.async_render()
+        body_on_t = self._body_on.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_on_t)
@@ -178,7 +178,7 @@ class RestSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        body_off_t = self._body_off.async_render()
+        body_off_t = self._body_off.async_render(parse_result=False)
 
         try:
             req = await self.set_device_state(body_off_t)

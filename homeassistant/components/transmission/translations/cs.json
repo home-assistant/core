@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
                     "scan_interval": "Frekvence aktualizac\u00ed"
                 },
                 "title": "Nakonfigurujte mo\u017enosti pro Transmission"

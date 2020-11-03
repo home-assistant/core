@@ -5,7 +5,14 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "cities": {
+                "title": ""
+            },
             "user": {
+                "data": {
+                    "city": "Linn"
+                },
+                "description": "Sisesta sihtnumber (ainult Prantsusmaa, soovitatav) v\u00f5i linna nimi",
                 "title": ""
             }
         }

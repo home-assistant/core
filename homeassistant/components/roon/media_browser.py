@@ -54,7 +54,7 @@ def browse_media(zone_id, roon_server, media_content_type=None, media_content_id
 def item_payload(roon_server, item, list_image_id):
     """Create response payload for a single media item."""
 
-    title = item.get("title")
+    title = item["title"]
     subtitle = item.get("subtitle")
     if subtitle is None:
         display_title = title
@@ -67,7 +67,7 @@ def item_payload(roon_server, item, list_image_id):
     if image_id:
         image = roon_server.roonapi.get_image(image_id)
 
-    media_content_id = item.get("item_key")
+    media_content_id = item["item_key"]
     media_content_type = "library"
 
     hint = item.get("hint")
@@ -118,7 +118,7 @@ def library_payload(roon_server, zone_id, media_content_id):
         content_id = media_content_id
 
     result_header = roon_server.roonapi.browse_browse(opts)
-    _LOGGER.debug("result_header %s", result_header)
+    _LOGGER.debug("Result header %s", result_header)
 
     header = result_header["list"]
     title = header.get("title")
@@ -144,9 +144,9 @@ def library_payload(roon_server, zone_id, media_content_id):
     )
 
     result_detail = roon_server.roonapi.browse_load(opts)
-    _LOGGER.debug("result_detail %s", result_detail)
+    _LOGGER.debug("Result detail %s", result_detail)
 
-    items = result_detail.get("items")
+    items = result_detail["items"]
     count = len(items)
 
     if count < total_count:
