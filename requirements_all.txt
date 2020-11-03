@@ -1565,6 +1565,9 @@ pynzbgetapi==0.2.0
 # homeassistant.components.obihai
 pyobihai==1.2.3
 
+# homeassistant.components.sql
+pyodbc==4.0.30
+
 # homeassistant.components.ombi
 pyombi==0.1.10
 
@@ -2095,10 +2098,8 @@ spotcrime==1.0.4
 spotipy==2.16.1
 
 # homeassistant.components.recorder
-sqlalchemy==1.3.20
-
 # homeassistant.components.sql
-sqlalchemy==1.3.20, pyodbc==4.0.30
+sqlalchemy==1.3.20
 
 # homeassistant.components.starline
 starline==0.1.3
