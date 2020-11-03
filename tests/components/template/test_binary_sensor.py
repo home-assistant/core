@@ -6,12 +6,13 @@ from homeassistant import setup
 from homeassistant.components import binary_sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import EVENT_STATE_CHANGED, CoreState, callback
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
@@ -639,3 +640,56 @@ async def test_template_validation_error(hass, caplog):
 
     state = hass.states.get("binary_sensor.test")
     assert state.attributes.get("icon") is None
+
+
+async def test_icon_and_value_tracking_same_entity_is_one_change_event(hass):
+    """Test that we only get one state change event if the value and icon are the same."""
+    hass.states.async_set("binary_sensor.updater", "on")
+    await hass.async_block_till_done()
+
+    events = []
+
+    @callback
+    def _event_listener(event):
+        events.append(event)
+
+    unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, _event_listener)
+
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test_7585": {
+                    "friendly_name": "Test 7585 Icon",
+                    "value_template": "{{ states('binary_sensor.updater') }}",
+                    "icon_template": "{% if is_state('binary_sensor.updater', 'on') -%}mdi:car-connected{%- else -%}mdi:car{%- endif %}",
+                }
+            },
+        }
+    }
+    with assert_setup_component(1):
+        assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    state = hass.states.get("binary_sensor.test_7585")
+    assert state.state == "on"
+    assert state.attributes[ATTR_ICON] == "mdi:car-connected"
+
+    hass.states.async_set("binary_sensor.updater", "off")
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    state = hass.states.get("binary_sensor.test_7585")
+    assert state.state == "off"
+    assert state.attributes[ATTR_ICON] == "mdi:car"
+
+    unsub()

@@ -1231,13 +1231,17 @@ async def test_icon_and_state(hass, hass_client):
         "light.kitchen", STATE_ON, {"brightness": 400, "icon": "mdi:security"}
     )
     hass.states.async_set("light.kitchen", STATE_OFF, {"icon": "mdi:chemical-weapon"})
+    hass.states.async_set(
+        "light.kitchen", STATE_ON, {"brightness": 400, "icon": "mdi:security"}
+    )
+    hass.states.async_set("light.kitchen", STATE_OFF, {"icon": "mdi:chemical-weapon"})
 
     await _async_commit_and_wait(hass)
 
     client = await hass_client()
     response_json = await _async_fetch_logbook(client)
 
-    assert len(response_json) == 3
+    assert len(response_json) == 5
     assert response_json[0]["domain"] == "homeassistant"
     assert response_json[1]["entity_id"] == "light.kitchen"
     assert response_json[1]["icon"] == "mdi:security"
@@ -1245,6 +1249,10 @@ async def test_icon_and_state(hass, hass_client):
     assert response_json[2]["entity_id"] == "light.kitchen"
     assert response_json[2]["icon"] == "mdi:chemical-weapon"
     assert response_json[2]["state"] == STATE_OFF
+    assert response_json[3]["icon"] == "mdi:security"
+    assert response_json[3]["state"] == STATE_ON
+    assert response_json[4]["icon"] == "mdi:chemical-weapon"
+    assert response_json[4]["state"] == STATE_OFF
 
 
 async def test_exclude_events_domain(hass, hass_client):
