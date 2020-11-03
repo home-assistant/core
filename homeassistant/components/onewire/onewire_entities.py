@@ -15,12 +15,20 @@ _LOGGER = logging.getLogger(__name__)
 class OneWire(Entity):
     """Implementation of a 1-Wire sensor."""
 
-    def __init__(self, name, device_file, sensor_type, device_info=None):
+    def __init__(
+        self,
+        name,
+        device_file,
+        sensor_type: str,
+        sensor_name: str = None,
+        device_info=None,
+    ):
         """Initialize the sensor."""
-        self._name = f"{name} {sensor_type.capitalize()}"
+        self._name = f"{name} {sensor_name or sensor_type.capitalize()}"
         self._device_file = device_file
-        self._device_class = SENSOR_TYPES[sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._sensor_type = sensor_type
+        self._device_class = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][0]
         self._device_info = device_info
         self._state = None
         self._value_raw = None
@@ -64,9 +72,17 @@ class OneWire(Entity):
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
 
-    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
+    def __init__(
+        self,
+        name: str,
+        device_file: str,
+        sensor_type: str,
+        sensor_name: str,
+        device_info: Dict[str, Any],
+        owproxy: protocol._Proxy,
+    ):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, device_info)
+        super().__init__(name, device_file, sensor_type, sensor_name, device_info)
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
