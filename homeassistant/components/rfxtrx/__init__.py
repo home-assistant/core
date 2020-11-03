@@ -434,11 +434,11 @@ def get_device_id(device, data_bits=None):
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
-async def async_connect_auto_add(hass, entry_data, callback):
+async def async_connect_auto_add(hass, entry_data, callback_fun):
     """Connect to dispatcher for automatic add."""
     if entry_data[CONF_AUTOMATIC_ADD]:
         hass.data[DATA_CLEANUP_CALLBACKS].append(
-            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback)
+            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback_fun)
         )
 
 
