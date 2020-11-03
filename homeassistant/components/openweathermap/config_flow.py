@@ -70,6 +70,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _get_schema(self):
+        """Return initial schema for the integration."""
         return vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
