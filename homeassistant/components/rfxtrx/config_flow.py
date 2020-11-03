@@ -360,6 +360,10 @@ class OptionsFlow(config_entries.OptionsFlow):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
         event_code = device_data[CONF_EVENT_CODE]
+
+        if event_code is None:
+            return False
+
         rfx_obj = get_rfx_object(event_code)
         if (
             rfx_obj.device.packettype == self._selected_device_object.device.packettype
