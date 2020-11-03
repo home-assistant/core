@@ -1,7 +1,11 @@
 """The Gree Climate integration."""
+import asyncio
 import logging
 
+from datetime import timedelta
+
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -10,6 +14,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Gree Climate component."""
@@ -45,16 +51,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
+    )
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        entry, CLIMATE_DOMAIN
+    results = asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
+        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
     )
 
+    unload_ok = False not in results
     if unload_ok:
         hass.data[DOMAIN].pop("devices", None)
         hass.data[DOMAIN].pop("pending", None)

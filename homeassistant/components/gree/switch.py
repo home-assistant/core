@@ -1,48 +1,11 @@
 """Support for interface with a Gree climate systems."""
+from datetime import timedelta
 import logging
 from typing import List
 
-from greeclimate.device import (
-    FanSpeed,
-    HorizontalSwing,
-    Mode,
-    TemperatureUnits,
-    VerticalSwing,
-)
 from greeclimate.exceptions import DeviceTimeoutError
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    PRESET_AWAY,
-    PRESET_BOOST,
-    PRESET_ECO,
-    PRESET_NONE,
-    PRESET_SLEEP,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
-    SWING_OFF,
-    SWING_VERTICAL,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
@@ -57,51 +20,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-HVAC_MODES = {
-    Mode.Auto: HVAC_MODE_AUTO,
-    Mode.Cool: HVAC_MODE_COOL,
-    Mode.Dry: HVAC_MODE_DRY,
-    Mode.Fan: HVAC_MODE_FAN_ONLY,
-    Mode.Heat: HVAC_MODE_HEAT,
-}
-HVAC_MODES_REVERSE = {v: k for k, v in HVAC_MODES.items()}
-
-PRESET_MODES = [
-    PRESET_ECO,  # Power saving mode
-    PRESET_AWAY,  # Steady heat, or 8C mode on gree units
-    PRESET_BOOST,  # Turbo mode
-    PRESET_NONE,  # Default operating mode
-    PRESET_SLEEP,  # Sleep mode
-]
-
-FAN_MODES = {
-    FanSpeed.Auto: FAN_AUTO,
-    FanSpeed.Low: FAN_LOW,
-    FanSpeed.MediumLow: FAN_MEDIUM_LOW,
-    FanSpeed.Medium: FAN_MEDIUM,
-    FanSpeed.MediumHigh: FAN_MEDIUM_HIGH,
-    FanSpeed.High: FAN_HIGH,
-}
-FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
-
-SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
-
-SUPPORTED_FEATURES = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_FAN_MODE
-    | SUPPORT_PRESET_MODE
-    | SUPPORT_SWING_MODE
-)
+SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        GreeClimateEntity(device) for device in hass.data[DOMAIN].pop("pending")
+        GreeSwitchEntity(device) for device in hass.data[DOMAIN].pop("pending")
     )
 
 
-class GreeClimateEntity(ClimateEntity):
+class GreeSwitchEntity(SwitchEntity):
     """Representation of a Gree HVAC device."""
 
     def __init__(self, device):
@@ -112,6 +42,7 @@ class GreeClimateEntity(ClimateEntity):
         self._available = False
         self._error_count = 0
 
+    # Investigate https://developers.home-assistant.io/docs/integration_fetching_data/#coordinated-single-api-poll-for-data-for-all-entities
     async def async_update(self):
         """Update the state of the device."""
         try:
