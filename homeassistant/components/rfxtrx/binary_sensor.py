@@ -22,6 +22,7 @@ from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
+    DATA_CLEANUP_CALLBACK,
     SIGNAL_EVENT,
     RfxtrxEntity,
     find_possible_pt2262_device,
@@ -148,8 +149,10 @@ async def async_setup_entry(
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_EVENT, binary_sensor_update
+        hass.data[DATA_CLEANUP_CALLBACK].append(
+            hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_EVENT, binary_sensor_update
+            )
         )
 
 

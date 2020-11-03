@@ -15,6 +15,7 @@ from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
+    DATA_CLEANUP_CALLBACK,
     DEFAULT_SIGNAL_REPETITIONS,
     SIGNAL_EVENT,
     RfxtrxCommandEntity,
@@ -96,7 +97,9 @@ async def async_setup_entry(
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
+        hass.data[DATA_CLEANUP_CALLBACK].append(
+            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, light_update)
+        )
 
 
 class RfxtrxLight(RfxtrxCommandEntity, LightEntity):

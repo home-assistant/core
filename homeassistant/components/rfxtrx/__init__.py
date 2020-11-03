@@ -49,6 +49,9 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
+    DATA_CLEANUP_CALLBACK,
+    DATA_LISTENER,
+    DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -93,8 +96,6 @@ DATA_TYPES = OrderedDict(
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_RFXOBJECT = "rfxobject"
-DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -188,6 +189,8 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
+    hass.data[DATA_CLEANUP_CALLBACK] = []
+
     await async_setup_internal(hass, entry)
 
     for domain in DOMAINS:
@@ -211,6 +214,9 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
         return False
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
+
+    for cleanup_callback in hass.data[DATA_CLEANUP_CALLBACK]:
+        cleanup_callback()
 
     listener = hass.data[DOMAIN][DATA_LISTENER]
     listener()
