@@ -1,4 +1,5 @@
 """Support for Synology DSM cameras."""
+import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
@@ -19,6 +20,8 @@ from .const import (
     SYNO_API,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -35,6 +38,7 @@ async def async_setup_entry(
     cameras = surveillance_station.get_all_cameras()
     entities = [SynoDSMCamera(api, camera) for camera in cameras]
 
+    _LOGGER.debug(f"async_setup_entry - {entities}")
     async_add_entities(entities)
 
 

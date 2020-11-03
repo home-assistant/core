@@ -1,4 +1,5 @@
 """Support for Synology DSM binary sensors."""
+import logging
 from typing import Dict
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -14,6 +15,8 @@ from .const import (
     SYNO_API,
     UPGRADE_BINARY_SENSORS,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,6 +50,7 @@ async def async_setup_entry(
                 for sensor_type in STORAGE_DISK_BINARY_SENSORS
             ]
 
+    _LOGGER.debug(f"async_setup_entry - {entities}")
     async_add_entities(entities)
 
 

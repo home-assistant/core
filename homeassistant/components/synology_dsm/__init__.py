@@ -173,6 +173,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
 
     # Continue setup
+    _LOGGER.debug(f"async_setup_entry - unique_id:{entry.unique_id} - setup SynoApi")
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
@@ -190,11 +191,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
         network = await hass.async_add_executor_job(getattr, api.dsm, "network")
+        _LOGGER.debug(
+            f"async_setup_entry - unique_id:{entry.unique_id} - add macs {network.macs}"
+        )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
     for platform in PLATFORMS:
+        _LOGGER.debug(
+            f"async_setup_entry - unique_id:{entry.unique_id} - setup platform {platform}"
+        )
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -204,6 +211,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
+    _LOGGER.debug(f"async_unload_entry - unique_id:{entry.unique_id} - start unload")
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -214,6 +222,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
 
     if unload_ok:
+        _LOGGER.debug(f"async_unload_entry - unique_id:{entry.unique_id} - unload ok")
         entry_data = hass.data[DOMAIN][entry.unique_id]
         entry_data[UNDO_UPDATE_LISTENER]()
         await entry_data[SYNO_API].async_unload()
@@ -224,6 +233,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
     """Handle options update."""
+    _LOGGER.debug(
+        f"_async_update_listener - unique_id:{entry.unique_id} - reload entity"
+    )
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -232,6 +244,7 @@ class SynoApi:
 
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         """Initialize the API wrapper class."""
+        _LOGGER.debug(f"SynoApi - unique_id:{entry.unique_id} - init")
         self._hass = hass
         self._entry = entry
 
@@ -263,6 +276,9 @@ class SynoApi:
 
     async def async_setup(self):
         """Start interacting with the NAS."""
+        _LOGGER.debug(
+            f"SynoApi.async_setup - unique_id:{self._entry.unique_id} - setup SynologyDSM"
+        )
         self.dsm = SynologyDSM(
             self._entry.data[CONF_HOST],
             self._entry.data[CONF_PORT],
@@ -273,10 +289,17 @@ class SynoApi:
             timeout=self._entry.options.get(CONF_TIMEOUT),
             device_token=self._entry.data.get("device_token"),
         )
+
+        _LOGGER.debug(
+            f"SynoApi.async_setup - unique_id:{self._entry.unique_id} - SynologyDSM.login()"
+        )
         await self._hass.async_add_executor_job(self.dsm.login)
 
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        )
+        _LOGGER.debug(
+            f"SynoApi.async_setup - unique_id:{self._entry.unique_id} - _with_surveillance_station: {self._with_surveillance_station}"
         )
 
         self._async_setup_api_requests()
@@ -311,8 +334,14 @@ class SynoApi:
     @callback
     def _async_setup_api_requests(self):
         """Determine if we should fetch each API, if one entity needs it."""
+        _LOGGER.debug(
+            f"SynoApi._async_setup_api_requests - unique_id:{self._entry.unique_id}"
+        )
         # Entities not added yet, fetch all
         if not self._fetching_entities:
+            _LOGGER.debug(
+                f"SynoApi._async_setup_api_requests - unique_id:{self._entry.unique_id} - fetch all"
+            )
             return
 
         # Determine if we should fetch an API
@@ -356,6 +385,9 @@ class SynoApi:
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
+        _LOGGER.debug(
+            f"SynoApi._fetch_device_configuration - unique_id:{self._entry.unique_id}"
+        )
         self.information = self.dsm.information
         self.network = self.dsm.network
         self.network.update()
@@ -377,10 +409,12 @@ class SynoApi:
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
+        _LOGGER.debug(f"SynoApi.async_unload - unique_id:{self._entry.unique_id}")
         self._unsub_dispatcher()
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
+        _LOGGER.debug(f"SynoApi.async_update - unique_id:{self._entry.unique_id}")
         self._async_setup_api_requests()
         await self._hass.async_add_executor_job(self.dsm.update, self._with_information)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
@@ -407,6 +441,7 @@ class SynologyDSMEntity(Entity):
         self._icon = entity_info[ENTITY_ICON]
         self._unit = entity_info[ENTITY_UNIT]
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
+        _LOGGER.debug(f"SynologyDSMEntity - unique_id:{self._unique_id} - init")
 
     @property
     def unique_id(self) -> str:
@@ -491,6 +526,9 @@ class SynologyDSMDeviceEntity(SynologyDSMEntity):
     ):
         """Initialize the Synology DSM disk or volume entity."""
         super().__init__(api, entity_type, entity_info)
+        _LOGGER.debug(
+            f"SynologyDSMDeviceEntity - device_id:{device_id} type:{entity_type} - init"
+        )
         self._device_id = device_id
         self._device_name = None
         self._device_manufacturer = None

@@ -1,4 +1,5 @@
 """Support for Synology DSM switch."""
+import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
@@ -9,6 +10,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynoApi, SynologyDSMEntity
 from .const import DOMAIN, SURVEILLANCE_SWITCH, SYNO_API
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -30,6 +33,7 @@ async def async_setup_entry(
             for sensor_type in SURVEILLANCE_SWITCH
         ]
 
+    _LOGGER.debug(f"async_setup_entry - {entities}")
     async_add_entities(entities, True)
 
 

@@ -1,5 +1,6 @@
 """Support for Synology DSM sensors."""
 from datetime import timedelta
+import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,6 +27,8 @@ from .const import (
     TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -65,6 +68,7 @@ async def async_setup_entry(
         for sensor_type in INFORMATION_SENSORS
     ]
 
+    _LOGGER.debug(f"async_setup_entry - {entities}")
     async_add_entities(entities)
 
 

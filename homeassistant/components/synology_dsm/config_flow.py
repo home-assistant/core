@@ -77,6 +77,8 @@ def _ordered_shared_schema(schema_input):
 class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    _LOGGER.debug("SynologyDSMFlowHandler")
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
@@ -103,6 +105,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             step_id = "user"
             data_schema = _user_schema_with_defaults(user_input)
+        _LOGGER.debug(f"SynologyDSMFlowHandler._show_setup_form - step_id:{step_id}")
 
         return self.async_show_form(
             step_id=step_id,
@@ -113,6 +116,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
+        _LOGGER.debug("SynologyDSMFlowHandler.async_step_user")
         errors = {}
 
         if user_input is None:
@@ -165,7 +169,13 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         # Check if already configured
+        _LOGGER.debug(
+            f"SynologyDSMFlowHandler.async_step_user - async_set_unique_id({serial})"
+        )
         await self.async_set_unique_id(serial, raise_on_progress=False)
+        _LOGGER.debug(
+            "SynologyDSMFlowHandler.async_step_user - check if already configured"
+        )
         self._abort_if_unique_id_configured()
 
         config_data = {
@@ -184,10 +194,14 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
+        _LOGGER.debug("SynologyDSMFlowHandler.async_step_user - finish config flow")
         return self.async_create_entry(title=host, data=config_data)
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered synology_dsm."""
+        _LOGGER.debug(
+            f"SynologyDSMFlowHandler.async_step_ssdp - discovery_info: {discovery_info}"
+        )
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = (
             discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
@@ -197,6 +211,9 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
         if self._mac_already_configured(mac):
+            _LOGGER.debug(
+                f"SynologyDSMFlowHandler.async_step_ssdp - mac {mac} is already configured"
+            )
             return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac)
@@ -237,11 +254,17 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _mac_already_configured(self, mac):
         """See if we already have configured a NAS with this MAC address."""
+        _LOGGER.debug(
+            f"SynologyDSMFlowHandler._mac_already_configured - check mac {mac}"
+        )
         existing_macs = [
             mac.replace("-", "")
             for entry in self._async_current_entries()
             for mac in entry.data.get(CONF_MAC, [])
         ]
+        _LOGGER.debug(
+            f"SynologyDSMFlowHandler._mac_already_configured - existing macs {existing_macs}"
+        )
         return mac in existing_macs
 
 
