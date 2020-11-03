@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -91,7 +90,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Install add-on."""
         try:
             await self.hass.components.hassio.async_install_addon("core_zwave")
-        except HassioAPIError as err:
+        except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to install OpenZWave add-on: %s", err)
             return self.async_abort(reason="addon_install_failed")
         self.integration_created_addon = True
@@ -118,7 +117,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.components.hassio.async_start_addon("core_zwave")
-            except HassioAPIError as err:
+            except self.hass.components.hassio.HassioAPIError as err:
                 _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
                 errors["base"] = "addon_start_failed"
             else:
@@ -145,7 +144,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.addon_info = (
                     await self.hass.components.hassio.async_get_addon_info("core_zwave")
                 )
-            except HassioAPIError as err:
+            except self.hass.components.hassio.HassioAPIError as err:
                 _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
                 raise AbortFlow("addon_info_failed") from err
 
@@ -173,6 +172,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.components.hassio.async_set_addon_options(
                 "core_zwave", options
             )
-        except HassioAPIError as err:
+        except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to set OpenZWave add-on config: %s", err)
             raise AbortFlow("addon_set_config_failed") from err
