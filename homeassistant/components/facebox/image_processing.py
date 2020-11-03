@@ -23,6 +23,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
+    CONF_PROTCOL,
 )
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
@@ -48,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PROTOCOL): cv.string,
     }
 )
 
@@ -66,7 +68,7 @@ def check_box_health(url, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.get(url, **kwargs)
+        response = requests.get(url, **kwargs, verify=False)
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -114,7 +116,7 @@ def post_image(url, image, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.post(url, json={"base64": encode_image(image)}, **kwargs)
+        response = requests.post(url, json={"base64": encode_image(image)}, **kwargs, verify=False)
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -136,6 +138,7 @@ def teach_file(url, name, file_path, username, password):
                 data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={"file": open_file},
                 **kwargs,
+                verify=False
             )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
@@ -169,7 +172,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config[CONF_PORT]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    url_health = f"http://{ip_address}:{port}/healthz"
+    protocol = config.get(CONF_PROTOCOL) or "http"
+    url_health = f"{protocol}://{ip_address}:{port}/healthz"
     hostname = check_box_health(url_health, username, password)
     if hostname is None:
         return
@@ -182,6 +186,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             username,
             password,
             hostname,
+            protocol
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
         )
@@ -211,12 +216,12 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
     def __init__(
-        self, ip_address, port, username, password, hostname, camera_entity, name=None
+        self, ip_address, port, username, password, hostname, protocol, camera_entity, name=None
     ):
         """Init with the API key and model id."""
         super().__init__()
-        self._url_check = f"http://{ip_address}:{port}/{CLASSIFIER}/check"
-        self._url_teach = f"http://{ip_address}:{port}/{CLASSIFIER}/teach"
+        self._url_check = f"{protocol}://{ip_address}:{port}/{CLASSIFIER}/check"
+        self._url_teach = f"{protocol}://{ip_address}:{port}/{CLASSIFIER}/teach"
         self._username = username
         self._password = password
         self._hostname = hostname
