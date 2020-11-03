@@ -37,6 +37,7 @@ CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
 CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
+CONF_COMPLEX_LIGHT = "complex_light"
 CONF_AUTO_START = "auto_start"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
@@ -61,7 +62,6 @@ CONF_VIDEO_CODEC = "video_codec"
 CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 CONF_STREAM_COUNT = "stream_count"
-CONF_COMPLEX_LIGHT = "complex_light"
 
 # #### Config Defaults ####
 DEFAULT_SUPPORT_AUDIO = False
