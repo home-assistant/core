@@ -191,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     }
 
     # Services
-    _async_setup_services(hass)
+    await _async_setup_services(hass)
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
@@ -270,6 +270,9 @@ async def _async_setup_services(hass: HomeAssistantType):
             await dsm_api.system.shutdown()
 
     for service in SERVICES:
+        _LOGGER.debug(
+            "_async_setup_services - register service %s on domain %s", service, DOMAIN
+        )
         hass.services.async_register(DOMAIN, service, service_handler)
 
 
