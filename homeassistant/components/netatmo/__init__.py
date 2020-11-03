@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import api, config_flow
 from .const import (
@@ -105,6 +106,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
+    async def handle_event(event):
+        """Handle webhook events."""
+        if event["data"]["push_type"] == "webhook_activation":
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, "light")
+            )
+
+    data_handler.listeners.append(
+        async_dispatcher_connect(
+            hass,
+            f"signal-{DOMAIN}-webhook-None",
+            handle_event,
+        )
+    )
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -152,9 +168,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
             )
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, "light")
-            )
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
