@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .__init__ import get_coap_context
+from . import get_coap_context
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
