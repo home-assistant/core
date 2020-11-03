@@ -38,7 +38,7 @@ async def async_setup_entry(
     cameras = surveillance_station.get_all_cameras()
     entities = [SynoDSMCamera(api, camera) for camera in cameras]
 
-    _LOGGER.debug(f"async_setup_entry - {entities}")
+    _LOGGER.debug("async_setup_entry - %s", entities)
     async_add_entities(entities)
 
 

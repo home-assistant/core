@@ -105,7 +105,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             step_id = "user"
             data_schema = _user_schema_with_defaults(user_input)
-        _LOGGER.debug(f"SynologyDSMFlowHandler._show_setup_form - step_id:{step_id}")
+        _LOGGER.debug("SynologyDSMFlowHandler._show_setup_form - step_id:%s", step_id)
 
         return self.async_show_form(
             step_id=step_id,
@@ -170,7 +170,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         _LOGGER.debug(
-            f"SynologyDSMFlowHandler.async_step_user - async_set_unique_id({serial})"
+            "SynologyDSMFlowHandler.async_step_user - async_set_unique_id(%s)", serial
         )
         await self.async_set_unique_id(serial, raise_on_progress=False)
         _LOGGER.debug(
@@ -200,7 +200,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered synology_dsm."""
         _LOGGER.debug(
-            f"SynologyDSMFlowHandler.async_step_ssdp - discovery_info: {discovery_info}"
+            "SynologyDSMFlowHandler.async_step_ssdp - discovery_info: %s",
+            discovery_info,
         )
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = (
@@ -212,7 +213,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # The serial of the NAS is actually its MAC address.
         if self._mac_already_configured(mac):
             _LOGGER.debug(
-                f"SynologyDSMFlowHandler.async_step_ssdp - mac {mac} is already configured"
+                "SynologyDSMFlowHandler.async_step_ssdp - mac %s is already configured",
+                mac,
             )
             return self.async_abort(reason="already_configured")
 
@@ -255,7 +257,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _mac_already_configured(self, mac):
         """See if we already have configured a NAS with this MAC address."""
         _LOGGER.debug(
-            f"SynologyDSMFlowHandler._mac_already_configured - check mac {mac}"
+            "SynologyDSMFlowHandler._mac_already_configured - check mac %s", mac
         )
         existing_macs = [
             mac.replace("-", "")
@@ -263,7 +265,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for mac in entry.data.get(CONF_MAC, [])
         ]
         _LOGGER.debug(
-            f"SynologyDSMFlowHandler._mac_already_configured - existing macs {existing_macs}"
+            "SynologyDSMFlowHandler._mac_already_configured - existing macs %s",
+            existing_macs,
         )
         return mac in existing_macs
 

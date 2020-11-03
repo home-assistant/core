@@ -68,7 +68,7 @@ async def async_setup_entry(
         for sensor_type in INFORMATION_SENSORS
     ]
 
-    _LOGGER.debug(f"async_setup_entry - {entities}")
+    _LOGGER.debug("async_setup_entry - %s", entities)
     async_add_entities(entities)
 
 
