@@ -163,12 +163,14 @@ async def test_lovelace_from_yaml(hass, hass_ws_client):
 async def test_system_health_info_autogen(hass):
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, "system_health", {})
     info = await get_system_health_info(hass, "lovelace")
     assert info == {"dashboards": 1, "mode": "auto-gen", "resources": 0}
 
 
 async def test_system_health_info_storage(hass, hass_storage):
     """Test system health info endpoint."""
+    assert await async_setup_component(hass, "system_health", {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
         "key": "lovelace",
         "version": 1,
@@ -181,6 +183,7 @@ async def test_system_health_info_storage(hass, hass_storage):
 
 async def test_system_health_info_yaml(hass):
     """Test system health info endpoint."""
+    assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     with patch(
         "homeassistant.components.lovelace.dashboard.load_yaml",
@@ -192,6 +195,7 @@ async def test_system_health_info_yaml(hass):
 
 async def test_system_health_info_yaml_not_found(hass):
     """Test system health info endpoint."""
+    assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     info = await get_system_health_info(hass, "lovelace")
     assert info == {
