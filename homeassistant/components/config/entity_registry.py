@@ -114,19 +114,15 @@ async def websocket_update_entity(hass, connection, msg):
         connection.send_message(
             websocket_api.error_message(msg["id"], "invalid_info", str(err))
         )
-    else:
-        result = websocket_api.result_message(
-            msg["id"], {"entity_entry": _entry_ext_dict(entry)}
-        )
-        if "disabled_by" in changes and changes["disabled_by"] is None:
-            config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
-            if config_entry and not config_entry.supports_unload:
-                result["result"]["require_restart"] = True
-            else:
-                result["result"][
-                    "reload_delay"
-                ] = config_entries.RELOAD_AFTER_UPDATE_DELAY
-        connection.send_message(result)
+        return
+    result = {"entity_entry": _entry_ext_dict(entry)}
+    if "disabled_by" in changes and changes["disabled_by"] is None:
+        config_entry = hass.config_entries.async_get_entry(entry.config_entry_id)
+        if config_entry and not config_entry.supports_unload:
+            result["require_restart"] = True
+        else:
+            result["reload_delay"] = config_entries.RELOAD_AFTER_UPDATE_DELAY
+    connection.send_result(msg["id"], result)
 
 
 @require_admin
