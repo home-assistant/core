@@ -49,6 +49,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_COMPLEX_LIGHT,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -186,6 +187,12 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+LIGHT_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_COMPLEX_LIGHT, default=False): cv.boolean
+    }
+)
+
 
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
@@ -259,6 +266,9 @@ def validate_entity_config(values):
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
+            
+        elif domain == "light":
+            config = LIGHT_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
