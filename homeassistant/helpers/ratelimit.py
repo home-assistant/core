@@ -1,9 +1,10 @@
 """Ratelimit helper."""
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable, Dict, Hashable, Optional
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class KeyedRateLimit:
         """Initialize ratelimit tracker."""
         self.hass = hass
         self._last_triggered: Dict[Hashable, datetime] = {}
-        self._rate_limit_timers: Dict[Hashable, CALLBACK_TYPE] = {}
+        self._rate_limit_timers: Dict[Hashable, asyncio.TimerHandle] = {}
 
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
@@ -40,14 +41,13 @@ class KeyedRateLimit:
         if not self._rate_limit_timers or not self.async_has_timer(key):
             return
 
-        unsub_timer = self._rate_limit_timers.pop(key)
-        unsub_timer()
+        self._rate_limit_timers.pop(key).cancel()
 
     @callback
     def async_remove(self) -> None:
         """Remove all timers."""
-        for unsub_timer in self._rate_limit_timers.values():
-            unsub_timer()
+        for timer in self._rate_limit_timers.values():
+            timer.cancel()
         self._rate_limit_timers.clear()
 
     @callback
@@ -92,14 +92,11 @@ class KeyedRateLimit:
             next_call_time,
         )
 
-        @callback
-        def run_action(_: datetime) -> None:
-            """Run the action with arguments."""
-            action(*args)
-
         if key not in self._rate_limit_timers:
-            self._rate_limit_timers[key] = self.hass.helpers.event.async_call_later(
-                (next_call_time - now).total_seconds(), run_action
+            self._rate_limit_timers[key] = self.hass.loop.call_later(
+                (next_call_time - now).total_seconds(),
+                action,
+                *args,
             )
 
         return next_call_time
