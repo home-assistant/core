@@ -86,21 +86,6 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_import(self, import_input=None):
-        """Set the config entry up from yaml."""
-        config = import_input.copy()
-        if CONF_NAME not in config:
-            config[CONF_NAME] = DEFAULT_NAME
-        if CONF_LATITUDE not in config:
-            config[CONF_LATITUDE] = self.hass.config.latitude
-        if CONF_LONGITUDE not in config:
-            config[CONF_LONGITUDE] = self.hass.config.longitude
-        if CONF_MODE not in config:
-            config[CONF_MODE] = DEFAULT_FORECAST_MODE
-        if CONF_LANGUAGE not in config:
-            config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
-        return await self.async_step_user(config)
-
 
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
     """Handle options."""
