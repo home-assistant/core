@@ -18,6 +18,12 @@
                     "ssl": "Kasutab SSL serti",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
+            },
+            "user": {
+                "title": ""
+            },
+            "user_advanced": {
+                "title": ""
             }
         }
     },

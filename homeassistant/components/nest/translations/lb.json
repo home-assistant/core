@@ -10,19 +10,19 @@
             "internal_error": "Interne Feeler beim valid\u00e9ieren vum Code",
             "invalid_code": "Ong\u00ebltege Code",
             "timeout": "Z\u00e4it Iwwerschreidung beim valid\u00e9ieren vum Code",
-            "unknown": "Onbekannte Feeler beim valid\u00e9ieren vum Code"
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Ubidder"
                 },
-                "description": "Wielt den Authentifikatioun Ubidder deen sech mat Nest verbanne soll.",
+                "description": "Wiel Authentifikatioun's Method aus",
                 "title": "Authentifikatioun Ubidder"
             },
             "link": {
                 "data": {
-                    "code": "Pin code"
+                    "code": "PIN code"
                 },
                 "description": "Fir den Nest Kont ze verbannen, [autoris\u00e9iert \u00e4ren Kont]({url}).\nKop\u00e9iert no der Autorisatioun den Pin hei \u00ebnnendr\u00ebnner",
                 "title": "Nest Kont verbannen"

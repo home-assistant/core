@@ -7,7 +7,7 @@
         },
         "step": {
             "user": {
-                "description": "S\u00e9cher fir SpeedTest anzeriichten?",
+                "description": "Soll den Ariichtungs Prozess gestart ginn?",
                 "title": "SpeedTest ariichten"
             }
         }

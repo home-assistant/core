@@ -10,6 +10,7 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

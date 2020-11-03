@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_configured": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech.",
             "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
