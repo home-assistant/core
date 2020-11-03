@@ -59,7 +59,12 @@ DEVICE_SENSORS = {
     ],
     "26": [
         {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE},
-        {"path": "humidity", "name": "Humidity", "type": SENSOR_TYPE_HUMIDITY},
+        {
+            "path": "humidity",
+            "name": "Humidity",
+            "type": SENSOR_TYPE_HUMIDITY,
+            "default_disabled": True,
+        },
         {
             "path": "HIH3600/humidity",
             "name": "Humidity HIH3600",
@@ -84,15 +89,36 @@ DEVICE_SENSORS = {
             "type": SENSOR_TYPE_HUMIDITY,
             "default_disabled": True,
         },
-        {"path": "B1-R1-A/pressure", "name": "Pressure", "type": SENSOR_TYPE_PRESSURE},
+        {
+            "path": "B1-R1-A/pressure",
+            "name": "Pressure",
+            "type": SENSOR_TYPE_PRESSURE,
+            "default_disabled": True,
+        },
         {
             "path": "S3-R1-A/illuminance",
             "name": "Illuminance",
             "type": SENSOR_TYPE_ILLUMINANCE,
+            "default_disabled": True,
         },
-        {"path": "VAD", "name": "Voltage VAD", "type": SENSOR_TYPE_VOLTAGE},
-        {"path": "VDD", "name": "Voltage VDD", "type": SENSOR_TYPE_VOLTAGE},
-        {"path": "IAD", "name": "Current", "type": SENSOR_TYPE_CURRENT},
+        {
+            "path": "VAD",
+            "name": "Voltage VAD",
+            "type": SENSOR_TYPE_VOLTAGE,
+            "default_disabled": True,
+        },
+        {
+            "path": "VDD",
+            "name": "Voltage VDD",
+            "type": SENSOR_TYPE_VOLTAGE,
+            "default_disabled": True,
+        },
+        {
+            "path": "IAD",
+            "name": "Current",
+            "type": SENSOR_TYPE_CURRENT,
+            "default_disabled": True,
+        },
     ],
     "28": [
         {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}

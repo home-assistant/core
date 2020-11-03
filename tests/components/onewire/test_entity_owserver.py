@@ -174,6 +174,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "72.8",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih3600",
@@ -217,6 +218,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "969.3",
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_illuminance",
@@ -225,6 +227,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "65.9",
                 "unit": LIGHT_LUX,
                 "class": DEVICE_CLASS_ILLUMINANCE,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_voltage_vad",
@@ -233,6 +236,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "3.0",
                 "unit": VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_voltage_vdd",
@@ -241,6 +245,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "4.7",
                 "unit": VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_current",
@@ -249,6 +254,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "1.0",
                 "unit": ELECTRICAL_CURRENT_AMPERE,
                 "class": DEVICE_CLASS_CURRENT,
+                "disabled": True,
             },
         ],
     },
