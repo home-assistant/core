@@ -19,12 +19,10 @@ from homeassistant.core import callback
 from homeassistant.helpers import event as evt
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
-    DATA_CLEANUP_CALLBACKS,
-    SIGNAL_EVENT,
     RfxtrxEntity,
+    async_connect_auto_add,
     find_possible_pt2262_device,
     get_device_id,
     get_pt2262_cmd,
@@ -148,12 +146,7 @@ async def async_setup_entry(
         async_add_entities([sensor])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_CLEANUP_CALLBACKS].append(
-            hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, binary_sensor_update
-            )
-        )
+    await async_connect_auto_add(hass, discovery_info, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):

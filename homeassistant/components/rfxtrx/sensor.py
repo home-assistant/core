@@ -20,12 +20,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    DATA_CLEANUP_CALLBACKS,
     DATA_TYPES,
-    SIGNAL_EVENT,
     RfxtrxEntity,
+    async_connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -128,12 +126,7 @@ async def async_setup_entry(
             async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_CLEANUP_CALLBACKS].append(
-            hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, sensor_update
-            )
-        )
+    await async_connect_auto_add(hass, discovery_info, sensor_update)
 
 
 class RfxtrxSensor(RfxtrxEntity):
