@@ -65,26 +65,9 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-                vol.Optional(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Optional(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-                vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
-                    FORECAST_MODES
-                ),
-                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                    LANGUAGES
-                ),
-            }
+        return self.async_show_form(
+            step_id="user", data_schema=self._get_schema(), errors=errors
         )
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     def _get_schema(self):
         return vol.Schema(
@@ -127,10 +110,10 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
     def _get_options_schema(self):
         return vol.Schema(
             {
-                vol.Optional(
+                vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Optional(
+                vol.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
                 vol.Required(
