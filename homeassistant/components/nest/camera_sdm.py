@@ -5,11 +5,14 @@ from typing import Optional
 
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
+from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, SIGNAL_NEST_UPDATE
 from .device_info import DeviceInfo
@@ -45,6 +48,7 @@ class NestCamera(Camera):
         super().__init__()
         self._device = device
         self._device_info = DeviceInfo(device)
+        self._stream = None
 
     @property
     def should_poll(self) -> bool:
@@ -90,11 +94,21 @@ class NestCamera(Camera):
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        rtsp_stream = await trait.generate_rtsp_stream()
-        # Note: This is only valid for a few minutes, and probably needs
-        # to be improved with an occasional call to .extend_rtsp_stream() which
-        # returns a new rtsp_stream object.
-        return rtsp_stream.rtsp_stream_url
+        now = utcnow()
+        if not self._stream:
+            logging.debug("Fetching stream url")
+            self._stream = await trait.generate_rtsp_stream()
+        elif self._stream.expires_at < now:
+            logging.debug("Stream expired, extending stream")
+            new_stream = await self._stream.extend_rtsp_stream()
+            self._stream = new_stream
+        return self._stream.rtsp_stream_url
+
+    async def async_will_remove_from_hass(self):
+        """Invalidates the RTSP token when unloaded."""
+        if self._stream:
+            logging.debug("Invalidating stream")
+            await self._stream.stop_rtsp_stream()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
@@ -109,7 +123,7 @@ class NestCamera(Camera):
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
-        # No support for still images yet.  Still images are only available
-        # in response to an event on the feed.  For now, suppress a
-        # NotImplementedError in the parent class.
-        return None
+        stream_url = await self.stream_source()
+        if not stream_url:
+            return None
+        return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
