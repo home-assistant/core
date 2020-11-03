@@ -186,7 +186,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             username,
             password,
             hostname,
-            protocol
+            protocol,
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
         )
