@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Velux KLF200 gateway is already configured",
-            "connection_error": "No information provided from zeroconf",
-            "not_velux_klf200": "The discovered device is not a Velux KLF gateway"
+            "already_configured_device": "Device is already configured",
+            "no_devices_found": "No devices found on the network"
         },
         "error": {
-            "connection_failed": "Connection could not be established, please check your input."
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_host": "Invalid hostname or IP address"
         },
         "step": {
             "user": {
@@ -14,8 +15,8 @@
                     "host": "Host",
                     "password": "Password"
                 },
-                "description": "You will find the password on the backside of the gateway",
-                "title": "Pick the KLF200 Gateway"
+                "description": "Please enter your password, you will find it on the backside of the KLF200",
+                "title": "Configure the KLF200 Gateway"
             }
         }
     },

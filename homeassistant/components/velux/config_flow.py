@@ -1,4 +1,4 @@
-"""SVelux component config flow."""
+"""Velux component config flow."""
 # https://developers.home-assistant.io/docs/config_entries_config_flow_handler#defining-your-config-flow
 import logging
 
@@ -33,21 +33,6 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: self._host, CONF_PASSWORD: self._password},
         )
 
-    async def _try_connect(self):
-        """Try to connect and check auth."""
-        _LOGGER.debug("Try to connect to KLF200 via Config Flow")
-        self.bridge = PyVLX(host=self._host, password=self._password)
-        try:
-            await self.bridge.connect()
-            await self.bridge.disconnect()
-            return RESULT_SUCCESS
-        except PyVLXException:
-            _LOGGER.debug(PyVLXException)
-            return RESULT_AUTH_FAILED
-        except OSError:
-            _LOGGER.debug(OSError)
-            return RESULT_AUTH_FAILED
-
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
@@ -58,14 +43,19 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._password = user_input[CONF_PASSWORD]
-
-            result = await self._try_connect()
-            if result == RESULT_SUCCESS:
+            self.bridge = PyVLX(host=self._host, password=self._password)
+            try:
+                await self.bridge.connect()
+                await self.bridge.disconnect()
                 await self.async_set_unique_id(self._host)
                 self._abort_if_unique_id_configured()
                 return self._get_entry()
+            except PyVLXException:
+                errors["base"] = "invalid_auth"
+            except OSError:
+                errors["base"] = "invalid_host"
             else:
-                errors["base"] = RESULT_AUTH_FAILED
+                errors["base"] = "cannot_connect"
 
         data_schema = vol.Schema(
             {
@@ -86,13 +76,15 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, info):
         """Handle discovery by zeroconf."""
-        if info is None:
-            return self.async_abort(reason="connection_error")
-
-        if not info.get("hostname") or not info["hostname"].startswith("VELUX_KLF_LAN"):
-            return self.async_abort(reason="not_velux_klf200")
+        if (
+            info is None
+            or not info.get("hostname")
+            or not info["hostname"].startswith("VELUX_KLF_LAN")
+        ):
+            return self.async_abort(reason="no_devices_found")
 
         self._host = info.get("host")
+
         await self.async_set_unique_id(self._host)
         self._abort_if_unique_id_configured()
 

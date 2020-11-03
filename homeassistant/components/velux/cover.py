@@ -32,11 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up cover(s) for Velux platform."""
-    _LOGGER.debug("Entered velux cover setup")
-
     entities = []
     gateway = hass.data[DOMAIN][entry.entry_id]
-
     for node in gateway.nodes:
         _LOGGER.debug("Node will be added: %s", node.name)
         if isinstance(node, OpeningDevice):
@@ -149,15 +146,15 @@ class VeluxCover(CoverEntity):
         await self.node.stop(wait_for_completion=False)
 
     async def async_close_cover_tilt(self, **kwargs):
-        """Close the cover."""
+        """Close cover tilt."""
         await self.node.close_orientation(wait_for_completion=False)
 
     async def async_open_cover_tilt(self, **kwargs):
-        """Close the cover."""
+        """Open cover tilt."""
         await self.node.open_orientation(wait_for_completion=False)
 
     async def async_stop_cover_tilt(self, **kwargs):
-        """Close the cover."""
+        """Stop cover tilt."""
         await self.node.stop_orientation(wait_for_completion=False)
 
     async def async_set_cover_tilt_position(self, **kwargs):

@@ -33,11 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = gateway
 
-    try:
-        await gateway.load_nodes()
-        await gateway.load_scenes()
-    except ConnectionRefusedError:
-        return False
+    await gateway.connect()
+    await gateway.load_nodes()
+    await gateway.load_scenes()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -55,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass, entry):
     """Unloading the Velux platform."""
     gateway = hass.data[DOMAIN][entry.entry_id]
+    await gateway.reboot_gateway()
     await gateway.disconnect()
 
     for component in PLATFORMS:
