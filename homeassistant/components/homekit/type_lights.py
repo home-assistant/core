@@ -68,11 +68,12 @@ class Light(HomeAccessory):
         if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
-        elif self._features & SUPPORT_COLOR_TEMP:
+        if self._features & SUPPORT_COLOR_TEMP:
             # ColorTemperature and Hue characteristic should not be
             # exposed both. Both states are tracked separately in HomeKit,
             # causing "source of truth" problems.
-            self.chars.append(CHAR_COLOR_TEMPERATURE)
+            if !(self._features & SUPPORT_COLOR) || self.config.get(CONF_COMPLEX_LIGHT, False):
+                self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
 
