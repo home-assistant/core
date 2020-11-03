@@ -52,8 +52,10 @@ class ProxmoxBinarySensor(BinarySensorEntity):
         self._item_type = item_type
         self._item_id = item_id
 
-        self._vmname = None
+        self._cpus = None
+        self._memory = None
         self._name = None
+        self._vmname = None
 
         self._state = None
 
@@ -75,6 +77,8 @@ class ProxmoxBinarySensor(BinarySensorEntity):
             "vmid": self._item_id,
             "vmname": self._vmname,
             "type": self._item_type.name,
+            "cpu": self._cpus,
+            "memory": self._memory / (1024 * 1024),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -103,10 +107,9 @@ class ProxmoxBinarySensor(BinarySensorEntity):
             _LOGGER.warning("Couldn't find VM/Container with the ID %s", self._item_id)
             return None
 
-        if self._vmname is None:
-            self._vmname = item["name"]
-
-        if self._name is None:
-            self._name = f"{self._item_node} {self._vmname} running"
+        self._vmname = item.get("name")
+        self._cpus = item.get("cpus")
+        self._memory = item.get("maxmem", 0)
+        self._name = f"{self._item_node} {self._vmname} running"
 
         return item
