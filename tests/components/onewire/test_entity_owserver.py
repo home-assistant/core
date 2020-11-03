@@ -7,6 +7,7 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     PRESSURE_CBAR,
 )
+from homeassistant.components.onewire.sensor import DEVICE_SENSORS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -423,13 +424,9 @@ async def test_owserver_setup_valid_device(hass, device_id):
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
 
-    with patch.dict(
-        "homeassistant.components.onewire.sensor.DEVICE_SENSORS"
-    ) as device_specs, patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy"
-    ) as owproxy:
-        # Ignore disable_startup for testing
-        device_specs["26"][2]["default_disabled"] = False
+    # Ignore default_disabled for testing
+    DEVICE_SENSORS["26"][2]["default_disabled"] = False
+    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
         owproxy.return_value.dir.return_value = dir_return_value
         owproxy.return_value.read.side_effect = read_side_effect
 
