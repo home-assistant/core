@@ -39,6 +39,7 @@ from .const import (
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
+    CONF_COMPLEX_LIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
