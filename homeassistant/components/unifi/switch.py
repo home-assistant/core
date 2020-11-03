@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import ATTR_MANUFACTURER, CONF_DPI_RESTRICTIONS, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -366,9 +366,9 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     def device_info(self) -> dict:
         """Return a service description for device registry."""
         return {
-            "identifiers": {(DOMAIN, f"{CONF_DPI_RESTRICTIONS}_{self._item.site_id}")},
-            "name": "Deep Packet Inspection Restrictions",
+            "identifiers": {(DOMAIN, f"unifi_controller_{self._item.site_id}")},
+            "name": "UniFi Controller",
             "manufacturer": ATTR_MANUFACTURER,
-            "model": "Deep Packet Inspection",
+            "model": "UniFi Controller",
             "entry_type": "service",
         }
