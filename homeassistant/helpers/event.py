@@ -1364,8 +1364,6 @@ def async_track_utc_time_change(
             localized_now, matching_seconds, matching_minutes, matching_hours
         )
 
-    # Make sure rolling back the clock doesn't prevent the timer from
-    # triggering.
     cancel_callback: Optional[CALLBACK_TYPE] = None
     calculate_next(next_time)
 
