@@ -721,3 +721,36 @@ async def test_thermostat_set_fan(hass):
         "command": "sdm.devices.commands.Fan.SetTimer",
         "params": {"timerMode": "OFF"},
     }
+
+
+async def test_thermostat_fan_empty(hass):
+    """Test a fan trait with an empty response."""
+    await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.Fan": {},
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 16.2,
+            },
+        },
+    )
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_OFF
+    assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
+    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_OFF,
+    ]
+    assert ATTR_FAN_MODE not in thermostat.attributes
+    assert ATTR_FAN_MODES not in thermostat.attributes
