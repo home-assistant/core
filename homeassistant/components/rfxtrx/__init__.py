@@ -49,7 +49,7 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
-    DATA_CLEANUP_CALLBACK,
+    DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
     DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
@@ -189,7 +189,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    hass.data[DATA_CLEANUP_CALLBACK] = []
+    hass.data[DATA_CLEANUP_CALLBACKS] = []
 
     await async_setup_internal(hass, entry)
 
@@ -215,7 +215,7 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
 
-    for cleanup_callback in hass.data[DATA_CLEANUP_CALLBACK]:
+    for cleanup_callback in hass.data[DATA_CLEANUP_CALLBACKS]:
         cleanup_callback()
 
     listener = hass.data[DOMAIN][DATA_LISTENER]

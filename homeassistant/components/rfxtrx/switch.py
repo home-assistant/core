@@ -11,7 +11,7 @@ from . import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
-    DATA_CLEANUP_CALLBACK,
+    DATA_CLEANUP_CALLBACKS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     SIGNAL_EVENT,
@@ -94,7 +94,7 @@ async def async_setup_entry(
 
     # Subscribe to main RFXtrx events
     if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_CLEANUP_CALLBACK].append(
+        hass.data[DATA_CLEANUP_CALLBACKS].append(
             hass.helpers.dispatcher.async_dispatcher_connect(
                 SIGNAL_EVENT, switch_update
             )
