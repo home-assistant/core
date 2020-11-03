@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     "dn": "Tasmota",
     "fn": ["Test", "Beer", "Milk", "Four", None],
     "hn": "tasmota_49A3BC-0956",
+    "if": 0,  # iFan
     "lk": 1,  # RGB + white channels linked to a single light
     "mac": "00000049A3BC",
     "md": "Sonoff Basic",
@@ -35,6 +36,7 @@ DEFAULT_CONFIG = {
     "onln": "Online",
     "state": ["OFF", "ON", "TOGGLE", "HOLD"],
     "sw": "8.4.0.2",
+    "swn": [None, None, None, None, None],
     "t": "tasmota_49A3BC",
     "ft": "%topic%/%prefix%/",
     "tp": ["cmnd", "stat", "tele"],
@@ -42,6 +44,7 @@ DEFAULT_CONFIG = {
     "swc": [-1, -1, -1, -1, -1, -1, -1, -1],
     "btn": [0, 0, 0, 0],
     "so": {
+        "4": 0,  # Return MQTT response as RESULT or %COMMAND%
         "11": 0,  # Swap button single and double press functionality
         "13": 0,  # Allow immediate action on single button press
         "17": 1,  # Show Color string as hex or comma-separated
@@ -49,8 +52,8 @@ DEFAULT_CONFIG = {
         "30": 0,  # Enforce Home Assistant auto-discovery as light
         "68": 0,  # Multi-channel PWM instead of a single light
         "73": 0,  # Enable Buttons decoupling and send multi-press and hold MQTT messages
-        "80": 0,  # Blinds and shutters support
         "82": 0,  # Reduce the CT range from 153..500 to 200.380
+        "114": 0,  # Enable sending switch MQTT messages
     },
     "ty": 0,  # Tuya MCU
     "lt_st": 0,
