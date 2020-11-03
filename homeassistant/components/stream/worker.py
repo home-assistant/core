@@ -2,7 +2,6 @@
 from collections import deque
 import io
 import logging
-import time
 
 import av
 
@@ -49,7 +48,6 @@ def stream_worker(hass, stream, quit_event):
 
     wait_timeout = 0
     while not quit_event.wait(timeout=wait_timeout):
-        start_time = time.time()
         try:
             _stream_worker_internal(hass, stream, quit_event)
         except av.error.FFmpegError:  # pylint: disable=c-extension-no-member
@@ -57,7 +55,7 @@ def stream_worker(hass, stream, quit_event):
         if not stream.keepalive or quit_event.is_set():
             break
         # To avoid excessive restarts, don't restart faster than once every 40 seconds.
-        wait_timeout = max(40 - (time.time() - start_time), 0)
+        wait_timeout = 40
         _LOGGER.debug(
             "Restarting stream worker in %d seconds: %s",
             wait_timeout,
