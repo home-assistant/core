@@ -51,6 +51,9 @@ async def test_info_endpoint_register_callback(hass, hass_ws_client, mock_system
     data = data["lovelace"]
     assert data == {"storage": "YAML"}
 
+    # Test our test helper works
+    assert await get_system_health_info(hass, "lovelace") == {"storage": "YAML"}
+
 
 async def test_info_endpoint_register_callback_timeout(
     hass, hass_ws_client, mock_system_info
