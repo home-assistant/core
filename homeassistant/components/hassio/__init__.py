@@ -169,7 +169,7 @@ async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/start"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
