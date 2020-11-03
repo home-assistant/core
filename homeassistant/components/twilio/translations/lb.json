@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "S\u00e9cher fir Twilio anzeriichten?",
+                "description": "Soll den Ariichtungs Prozess gestart ginn?",
                 "title": "Twilio Webhook ariichten"
             }
         }

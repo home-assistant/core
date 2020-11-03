@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ass scho konfigur\u00e9iert",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang."
         },
         "error": {

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave ass scho konfigur\u00e9iert",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "one_instance_only": "Komponent \u00ebnnerst\u00ebtzt n\u00ebmmen eng Z-Wave Instanz"
         },
         "error": {

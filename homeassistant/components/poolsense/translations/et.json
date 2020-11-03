@@ -12,7 +12,8 @@
                     "email": "E-post",
                     "password": "Salas\u00f5na"
                 },
-                "description": "Kas alustan seadistamist?"
+                "description": "Kas alustan seadistamist?",
+                "title": ""
             }
         }
     }
