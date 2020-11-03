@@ -416,6 +416,74 @@ async def test_update_entity_id(hass, client):
     assert hass.states.get("test_domain.planet") is not None
 
 
+async def test_update_existing_entity_id(hass, client):
+    """Test update entity id to an already registered entity id."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            ),
+            "test_domain.planet": RegistryEntry(
+                entity_id="test_domain.planet",
+                unique_id="2345",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            ),
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
+    await platform.async_add_entities(entities)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "new_entity_id": "test_domain.planet",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+
+
+async def test_update_invalid_entity_id(hass, client):
+    """Test update entity id to an invalid entity id."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            )
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
+    await platform.async_add_entities(entities)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "new_entity_id": "another_domain.planet",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+
+
 async def test_remove_entity(hass, client):
     """Test removing entity."""
     registry = mock_registry(
@@ -443,3 +511,20 @@ async def test_remove_entity(hass, client):
 
     assert msg["success"]
     assert len(registry.entities) == 0
+
+
+async def test_remove_non_existing_entity(hass, client):
+    """Test removing non existing entity."""
+    mock_registry(hass, {})
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/remove",
+            "entity_id": "test_domain.world",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
