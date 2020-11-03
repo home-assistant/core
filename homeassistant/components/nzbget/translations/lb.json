@@ -15,9 +15,9 @@
                     "name": "Numm",
                     "password": "Passwuert",
                     "port": "Port",
-                    "ssl": "NZBGet benotzt een SSL Zertifikat",
+                    "ssl": "benotzt een SSL Zertifikat",
                     "username": "Benotzernumm",
-                    "verify_ssl": "NZBGet benotzt ee g\u00ebltegen SSL Zertifikat"
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },
                 "title": "Mat NZBGet verbannen"
             }

@@ -11,7 +11,10 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Wielt Authentifikatiouns Method aus"
+                "title": "Wiel Authentifikatiouns Method aus"
+            },
+            "reauth_confirm": {
+                "title": "Integratioun re-authentifiz\u00e9ieren"
             }
         }
     }

@@ -14,6 +14,13 @@
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
             },
+            "profile": {
+                "data": {
+                    "profile": "Profiili nimi"
+                },
+                "description": "Anna neile andmetele ainulaadne profiilinimi. Tavaliselt on see eelmises etapis valitud profiili nimi.",
+                "title": "Kasutaja profiil."
+            },
             "reauth": {
                 "description": "Withingi andmete jsaamiseks tuleb kasutaja {profile} taastuvastada.",
                 "title": "Taastuvasta profiil"

@@ -25,7 +25,8 @@
                     "password": "Contrasenya",
                     "port": "Port",
                     "ssl": "Utilitza un certificat SSL",
-                    "username": "Nom d'usuari"
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "description": "Vols configurar {name} ({host})?",
                 "title": "Synology DSM"
@@ -36,7 +37,8 @@
                     "password": "Contrasenya",
                     "port": "Port",
                     "ssl": "Utilitza un certificat SSL",
-                    "username": "Nom d'usuari"
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Synology DSM"
             }

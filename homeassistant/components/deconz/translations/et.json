@@ -78,7 +78,14 @@
             "remote_flip_180_degrees": "Seadet p\u00f6\u00f6rati 180 kraadi",
             "remote_flip_90_degrees": "Seadet p\u00f6\u00f6rati 90 kraadi",
             "remote_gyro_activated": "Seadet raputati",
+            "remote_moved": "Seadet liigutati k\u00fcljega \"{subtype}\" \u00fclal",
             "remote_moved_any_side": "Seadet liigutati suvaline k\u00fclg \u00fcleval pool",
+            "remote_rotate_from_side_1": "Seade p\u00f6\u00f6rati k\u00fcljelt \"1\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_2": "Seade p\u00f6\u00f6rati k\u00fcljelt \"2\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_3": "Seade p\u00f6\u00f6rati k\u00fcljelt \"3\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_4": "Seade p\u00f6\u00f6rati k\u00fcljelt \"4\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_5": "Seade p\u00f6\u00f6rati k\u00fcljelt \"5\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_6": "Seade p\u00f6\u00f6rati k\u00fcljelt \"6\u201d asendisse \"{subtype}\"",
             "remote_turned_clockwise": "Seadet p\u00f6\u00f6rati p\u00e4rip\u00e4eva",
             "remote_turned_counter_clockwise": "Seadet p\u00f6\u00f6rati vastup\u00e4eva"
         }
