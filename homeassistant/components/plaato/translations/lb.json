@@ -10,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "S\u00e9cher fir Plaato Airlock anzeriichten?",
+                "description": "Soll den Ariichtungs Prozess gestart ginn?",
                 "title": "Plaato Webhook ariichten"
             }
         }

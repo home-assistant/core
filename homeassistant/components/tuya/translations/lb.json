@@ -24,5 +24,15 @@
                 "title": "Tuya"
             }
         }
+    },
+    "options": {
+        "error": {
+            "dev_not_found": "Apparat net fonnt"
+        },
+        "step": {
+            "init": {
+                "title": "Tuya Optioune konfigur\u00e9ieren"
+            }
+        }
     }
 }
