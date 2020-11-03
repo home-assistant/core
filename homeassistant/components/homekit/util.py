@@ -188,9 +188,7 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
 )
 
 LIGHT_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {
-        vol.Optional(CONF_COMPLEX_LIGHT, default=False): cv.boolean
-    }
+    {vol.Optional(CONF_COMPLEX_LIGHT, default=False): cv.boolean}
 )
 
 
@@ -266,7 +264,7 @@ def validate_entity_config(values):
 
         elif domain == "cover":
             config = COVER_SCHEMA(config)
-            
+
         elif domain == "light":
             config = LIGHT_SCHEMA(config)
 
