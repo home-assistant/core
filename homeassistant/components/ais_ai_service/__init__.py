@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
@@ -102,6 +103,7 @@ INTENT_STATUS = "AisStatusInfo"
 INTENT_PERSON_STATUS = "AisPersonStatusInfo"
 INTENT_TURN_ON = "AisTurnOn"
 INTENT_TURN_OFF = "AisTurnOff"
+INTENT_TOGGLE = "AisToggle"
 INTENT_LAMPS_ON = "AisLampsOn"
 INTENT_LAMPS_OFF = "AisLampsOff"
 INTENT_SWITCHES_ON = "AisSwitchesOn"
@@ -2861,6 +2863,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisClimateSetAllOff())
     hass.helpers.intent.async_register(TurnOnIntent())
     hass.helpers.intent.async_register(TurnOffIntent())
+    hass.helpers.intent.async_register(ToggleIntent())
     hass.helpers.intent.async_register(StatusIntent())
     hass.helpers.intent.async_register(PersonStatusIntent())
     hass.helpers.intent.async_register(PlayRadioIntent())
@@ -2963,7 +2966,6 @@ async def async_setup(hass, config):
             "Włącz radio {item}",
             "Graj radio {item}",
             "Graj {item} radio",
-            "Przełącz [na] radio [na] {item}",
             "Posłuchał bym radio {item}",
             "Włącz stację radiową {item}",
         ],
@@ -2976,7 +2978,6 @@ async def async_setup(hass, config):
             "Włącz podcast {item}",
             "Graj podcast {item}",
             "Graj {item} podcast",
-            "Przełącz [na] podcast {item}",
             "Posłuchał bym podcast {item}",
         ],
     )
@@ -2988,7 +2989,6 @@ async def async_setup(hass, config):
             "Włącz muzykę {item}",
             "Graj muzykę {item}",
             "Graj {item} muzykę",
-            "Przełącz [na] muzykę [na] {item}",
             "Posłuchał bym muzykę {item}",
             "Włącz [z] [na] YouTube {item}",
             "YouTube {item}",
@@ -2997,6 +2997,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_PLAY_SPOTIFY, ["Spotify {item}"])
     async_register(hass, INTENT_TURN_ON, ["Włącz {item}", "Zapal światło w {item}"])
     async_register(hass, INTENT_TURN_OFF, ["Wyłącz {item}", "Zgaś Światło w {item}"])
+    async_register(hass, INTENT_TOGGLE, ["Przełącz {item}"])
     async_register(
         hass,
         INTENT_STATUS,
@@ -4121,7 +4122,7 @@ class TurnOffIntent(intent.IntentHandler):
                     if entity.state == "off":
                         msg = f"Urządzenie {entity.name} jest już wyłączone"
                     elif entity.state == "unavailable":
-                        msg = "Urządzenie {}} jest niedostępne".format(entity.name)
+                        msg = f"Urządzenie {entity.name} jest niedostępne"
                     else:
                         assumed_state = True
                 if assumed_state:
@@ -4134,6 +4135,41 @@ class TurnOffIntent(intent.IntentHandler):
                     success = True
             else:
                 msg = "Urządzenia " + name + " nie można wyłączyć"
+        return msg, success
+
+
+class ToggleIntent(intent.IntentHandler):
+    """Handle toggle item intents."""
+
+    intent_type = INTENT_TOGGLE
+    slot_schema = {"item": cv.string}
+
+    async def async_handle(self, intent_obj):
+        """Handle toggle intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots["item"]["value"]
+        entity = _match_entity(hass, name)
+        success = False
+        if not entity:
+            msg = f"Nie znajduję urządzenia do przełączenia, o nazwie: {name}"
+        else:
+            # check if we can toggle this device
+            if not hass.services.has_service(entity.domain, SERVICE_TOGGLE):
+                msg = f"Urządzenia {entity.name}  nie można przełączyć"
+
+            elif entity.state == "unavailable":
+                msg = f"Urządzenie {entity.name} jest niedostępne"
+                success = True
+            else:
+                await hass.services.async_call(
+                    entity.domain,
+                    SERVICE_TOGGLE,
+                    {ATTR_ENTITY_ID: entity.entity_id},
+                )
+                msg = f"OK, przełączono {entity.name}"
+                success = True
+
         return msg, success
 
 
