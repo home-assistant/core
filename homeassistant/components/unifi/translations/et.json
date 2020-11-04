@@ -22,6 +22,11 @@
     },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "dpi_restrictions": "Luba DPI piirangugruppide juhtimine"
+                }
+            },
             "device_tracker": {
                 "data": {
                     "ssid_filter": "Vali WiFi klientide j\u00e4lgimiseks SSID"

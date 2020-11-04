@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt"
+        },
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
@@ -10,6 +14,9 @@
                 }
             },
             "user": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Falls Host eidel gelass g\u00ebtt, g\u00ebtt eng automatesch Sich gestart"
             }
         }
