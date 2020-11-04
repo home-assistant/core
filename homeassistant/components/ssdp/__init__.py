@@ -129,6 +129,9 @@ class Scanner:
             info_req = self._description_cache.get(entry.location)
 
             if info_req is None:
+                _LOGGER.warning(
+                    "Fetching description from location: %s", entry.location
+                )
                 info_req = self._description_cache[
                     entry.location
                 ] = self.hass.async_create_task(self._fetch_description(entry.location))
