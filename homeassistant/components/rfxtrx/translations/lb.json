@@ -34,6 +34,7 @@
     },
     "options": {
         "error": {
+            "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
             "invalid_event_code": "Ong\u00ebltegen  Evenement Code",
             "invalid_input_2262_off": "Ong\u00eblteg Agab fir Kommando Aus",
             "invalid_input_2262_on": "Ong\u00eblteg Agab fir Kommando Un",

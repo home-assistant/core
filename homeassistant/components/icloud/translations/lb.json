@@ -12,6 +12,9 @@
         },
         "step": {
             "reauth": {
+                "data": {
+                    "password": "Passwuert"
+                },
                 "title": "Integratioun re-authentifiz\u00e9ieren"
             },
             "trusted_device": {

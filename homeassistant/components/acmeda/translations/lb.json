@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Keng nei Pulse Hubs entdeckt."
+            "all_configured": "Keng nei Pulse Hubs entdeckt.",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt"
         },
         "step": {
             "user": {
