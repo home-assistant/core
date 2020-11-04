@@ -2,7 +2,6 @@
 
 Such systems include evohome, Round Thermostat, and others.
 """
-import asyncio
 from datetime import datetime as dt, timedelta
 import logging
 import re
@@ -432,8 +431,7 @@ class EvoBroker:
                 return
 
         if update_state:
-            await asyncio.sleep(1)  # wait a moment for system to quiesce
-            await self._update_v2_api_state()
+            self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
 
         return result
 
