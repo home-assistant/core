@@ -1572,7 +1572,7 @@ pyombi==0.1.10
 pyopenuv==1.0.9
 
 # homeassistant.components.opnsense
-pyopnsense==0.2.0
+pyopnsense==0.3.0
 
 # homeassistant.components.opple
 pyoppleio==1.0.5
