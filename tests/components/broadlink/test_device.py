@@ -1,6 +1,7 @@
 """Tests for Broadlink devices."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
+import broadlink as blk
 import broadlink.exceptions as blke
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -29,6 +30,51 @@ async def test_device_setup(hass):
     ) as mock_init:
         mock_api, mock_entry = await device.setup_entry(hass)
 
+    assert mock_entry.state == ENTRY_STATE_LOADED
+    assert mock_api.auth.call_count == 1
+    assert mock_api.get_fwversion.call_count == 1
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    domains = get_domains(mock_api.type)
+    assert mock_forward.call_count == len(domains)
+    assert forward_entries == domains
+    assert mock_init.call_count == 0
+
+
+async def test_unknown_device_setup(hass):
+    """Test we set up an unknown device."""
+    device = get_device("Attic")
+    forced_type = "RM4PRO"
+
+    mock_entry = device.get_mock_entry({"device_class": forced_type})
+    mock_entry.add_to_hass(hass)
+
+    mock_api = device.get_mock_api()
+    mock_api.type = forced_type
+    mock_api.model = forced_type
+    mock_api.manufacturer = "Unknown"
+
+    with patch(
+        "homeassistant.components.broadlink.device.blk.device.__new__",
+        return_value=mock_api,
+    ) as mock_factory, patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward, patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_init:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_factory.call_count == 1
+    assert mock_factory.call_args == call(
+        blk.rm4pro,
+        mock_api.host,
+        mock_api.mac.hex(),
+        mock_api.devtype,
+        manufacturer=mock_api.manufacturer,
+        model=mock_api.model,
+        name=mock_api.name,
+        timeout=mock_api.timeout,
+    )
     assert mock_entry.state == ENTRY_STATE_LOADED
     assert mock_api.auth.call_count == 1
     assert mock_api.get_fwversion.call_count == 1
