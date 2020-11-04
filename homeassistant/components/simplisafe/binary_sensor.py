@@ -6,6 +6,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
@@ -26,9 +28,9 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
 TRIGGERED_SENSOR_TYPES = {
     EntityTypes.carbon_monoxide: DEVICE_CLASS_GAS,
     EntityTypes.entry: DEVICE_CLASS_DOOR,
-    EntityTypes.carbon_monoxide: DEVICE_CLASS_GAS,
-    EntityTypes.entry: DEVICE_CLASS_DOOR,
+    EntityTypes.glass_break: DEVICE_CLASS_SAFETY,
     EntityTypes.leak: DEVICE_CLASS_MOISTURE,
+    EntityTypes.motion: DEVICE_CLASS_MOTION,
     EntityTypes.smoke: DEVICE_CLASS_SMOKE,
 }
 
