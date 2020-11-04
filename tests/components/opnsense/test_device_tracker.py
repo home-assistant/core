@@ -5,7 +5,11 @@ from unittest import mock
 import pytest
 
 from homeassistant.components import opnsense
-from homeassistant.components.opnsense.const import CONF_API_SECRET, DOMAIN
+from homeassistant.components.opnsense.const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.setup import async_setup_component
 
@@ -52,6 +56,7 @@ async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
                 CONF_API_KEY: "fake_key",
                 CONF_API_SECRET: "fake_secret",
                 CONF_VERIFY_SSL: False,
+                CONF_TRACKER_INTERFACE: ["LAN"],
             }
         },
     )
