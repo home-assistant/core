@@ -84,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if resource_template is not None:
         resource_template.hass = hass
-        resource = resource_template.render(parse_result=False)
+        resource = resource_template.async_render(parse_result=False)
 
     if value_template is not None:
         value_template.hass = hass
@@ -189,6 +189,6 @@ class RestBinarySensor(BinarySensorEntity):
     async def async_update(self):
         """Get the latest data from REST API and updates the state."""
         if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.render(parse_result=False))
+            self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
         await self.rest.async_update()
