@@ -136,7 +136,9 @@ class Scanner:
                     entry.location
                 ] = self.hass.async_create_task(self._fetch_description(entry.location))
             else:
-                _LOGGER.warning("Cache hit for location: %s", entry.location)
+                _LOGGER.warning(
+                    "Cache hit for location: %s = %s", entry.location, info_req
+                )
 
             info.update(await info_req)
 
