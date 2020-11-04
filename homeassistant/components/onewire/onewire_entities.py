@@ -22,6 +22,7 @@ class OneWire(Entity):
         sensor_type: str,
         sensor_name: str = None,
         device_info=None,
+        default_disabled: bool = False,
     ):
         """Initialize the sensor."""
         self._name = f"{name} {sensor_name or sensor_type.capitalize()}"
@@ -32,6 +33,7 @@ class OneWire(Entity):
         self._device_info = device_info
         self._state = None
         self._value_raw = None
+        self._default_disabled = default_disabled
 
     @property
     def name(self) -> Optional[str]:
@@ -68,6 +70,11 @@ class OneWire(Entity):
         """Return device specific attributes."""
         return self._device_info
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._default_disabled
+
 
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
@@ -79,10 +86,13 @@ class OneWireProxy(OneWire):
         sensor_type: str,
         sensor_name: str,
         device_info: Dict[str, Any],
+        disable_startup: bool,
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, sensor_name, device_info)
+        super().__init__(
+            name, device_file, sensor_type, sensor_name, device_info, disable_startup
+        )
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
