@@ -33,7 +33,9 @@
             "pair": {
                 "data": {
                     "pairing_code": "Pairing Code"
-                }
+                },
+                "description": "HomeKit Kontroller kommuniz\u00e9iert mat {name} iwwert lokal Netzwierk m\u00ebttels enger ges\u00e9cherter verschl\u00ebsselter Verbindung ouni ee separate HomeKit Kontroller oder iCloud. G\u00ebff dain HomeKit Kopplung Code (am Format XXX-XX-XXX) an fir den Accessoire ze benotzen. De Code ass normalerweis um Apparat selwer oder op senger K\u00ebscht.",
+                "title": "Een Apparat via Homekit Accessoire Protokoll kopplen"
             },
             "protocol_error": {
                 "description": "Den Apparat ass vill\u00e4icht net am Kopplungs Modus an et muss ee Kn\u00e4ppche gedr\u00e9ckt ginn. Stell s\u00e9cher dass den Apparat am Kopplung Modus ass oder prob\u00e9ier den Apparat fr\u00ebsch ze starten, da versich et nach emol mat der Kopplung.",
@@ -47,6 +49,7 @@
                 "data": {
                     "device": "Apparat"
                 },
+                "description": "HomeKit Kontroller kommuniz\u00e9iert mat {name} iwwert lokal Netzwierk m\u00ebttels enger ges\u00e9cherter verschl\u00ebsselter Verbindung ouni ee separate HomeKit Kontroller oder iCloud. Wiel den Apparat aus fir ze koppelen:",
                 "title": "Appart auswiel"
             }
         }

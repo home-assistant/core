@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Kont ass",
             "no_devices": "Keng Apparater am Netzwierk fonnt",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt",
             "reauth_successful": "Erfollegr\u00e4ich aktualis\u00e9iert"
         },
         "error": {
