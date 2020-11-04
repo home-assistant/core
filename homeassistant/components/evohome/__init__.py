@@ -437,7 +437,7 @@ class EvoBroker:
 
         return result
 
-    async def _update_v1_api_state(self, *args, **kwargs) -> None:
+    async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
         def get_session_id(client_v1) -> Optional[str]:
@@ -502,7 +502,7 @@ class EvoBroker:
         Zones, DHW controller).
         """
         if self.client_v1:
-            await self._update_v1_api_state()
+            await self._update_v1_api_temps()
 
         await self._update_v2_api_state()
 
