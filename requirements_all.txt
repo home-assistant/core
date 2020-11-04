@@ -342,7 +342,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.8
+bimmer_connected==0.7.11
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1252,7 +1252,7 @@ pyaehw4a1==0.3.9
 pyaftership==0.1.2
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.3
+pyairvisual==5.0.4
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1264,7 +1264,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.1.0
+pyatmo==4.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
