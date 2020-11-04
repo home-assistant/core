@@ -432,7 +432,8 @@ class EvoBroker:
                 return
 
         if update_state:
-            asyncio.create_task(self.async_update(manual_update=True))
+            await asyncio.sleep(1)  # wait a moment for system to quiesce
+            await self._update_v2_api_state()
 
         return result
 
@@ -488,6 +489,7 @@ class EvoBroker:
             _handle_exception(err)
         else:
             _LOGGER.debug("Status = %s", status)
+            async_dispatcher_send(self.hass, DOMAIN)
 
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
@@ -498,20 +500,11 @@ class EvoBroker:
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
-
-        The state is updated periodically. It is also updated whenever a client API has
-        been invoked, after waiting a moment for things to quiesce (manual_update=True).
         """
-        if manual_update:
-            await asyncio.sleep(1)
-
-        elif self.client_v1:  # invoking a client API won't affect temps
+        if self.client_v1:
             await self._update_v1_api_state()
 
         await self._update_v2_api_state()
-
-        # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN)
 
 
 class EvoDevice(Entity):
