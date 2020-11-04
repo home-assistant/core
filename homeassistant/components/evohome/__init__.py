@@ -430,7 +430,7 @@ class EvoBroker:
             if not _handle_exception(err):
                 return
 
-        if update_state:
+        if update_state:  # wait a moment for system to quiesce before updating state
             self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
 
         return result
