@@ -188,7 +188,7 @@ class SystemHealthRegistration:
     hass: HomeAssistant
     domain: str
     info_callback: Optional[Callable[[HomeAssistant], Awaitable[Dict]]] = None
-    more_info: Optional[str] = None
+    manage_url: Optional[str] = None
 
     @callback
     def async_register_info(
