@@ -494,7 +494,7 @@ class EvoBroker:
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
 
-    async def async_update(self, *args, manual_update=None, **kwargs) -> None:
+    async def async_update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
