@@ -6,12 +6,11 @@ from homeassistant.const import CONF_DEVICES, STATE_OPEN
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -81,8 +80,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, cover_update)
+    connect_auto_add(hass, discovery_info, cover_update)
 
 
 class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
