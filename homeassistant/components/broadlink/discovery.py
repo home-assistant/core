@@ -1,4 +1,5 @@
 """Support for discovering Broadlink devices."""
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -9,10 +10,10 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import debounce
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LOCK, DOMAIN, SUPPORTED_TYPES
-from .helpers import get_ip_or_none
+from .helpers import get_broadcast_addrs, get_ip_or_none
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,12 +89,16 @@ class BroadlinkScout:
             self.reset_jobs.pop()()
 
     async def async_discover(self):
-        """Discover Broadlink devices available on the local network."""
-        try:
-            discover = partial(blk.discover, timeout=self.timeout)
-            devices = await self.hass.async_add_executor_job(discover)
-
-        except OSError as err:
-            raise UpdateFailed(err) from err
-
-        return devices
+        """Discover Broadlink devices on all available networks."""
+        tasks = [
+            self.hass.async_add_executor_job(
+                partial(blk.discover, timeout=self.timeout, discover_ip_address=addr)
+            )
+            for addr in get_broadcast_addrs()
+        ]
+        results = [
+            result
+            for result in await asyncio.gather(*tasks, return_exceptions=True)
+            if not isinstance(result, Exception)
+        ]
+        return [device for devices in results for device in devices]
