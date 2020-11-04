@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import time
 from typing import (
     Any,
     Awaitable,
@@ -1135,7 +1136,7 @@ def async_track_point_in_utc_time(
         """Call the action."""
         nonlocal cancel_callback
 
-        now = track_time_utcnow()
+        now = track_point_in_utc_time_now()
 
         # Depending on the available clock support (including timer hardware
         # and the OS kernel) it can happen that we fire a little bit too early
@@ -1151,8 +1152,7 @@ def async_track_point_in_utc_time(
 
         hass.async_run_hass_job(job, now)
 
-    now = track_time_utcnow()
-    delta = (point_in_time - now).total_seconds()
+    delta = point_in_time.timestamp() - time.time()
     cancel_callback = hass.loop.call_later(delta, run_action)
 
     @callback
@@ -1196,7 +1196,7 @@ def async_track_time_interval(
 
     def next_interval() -> datetime:
         """Return the next interval."""
-        return track_time_utcnow() + interval
+        return dt_util.utcnow() + interval
 
     @callback
     def interval_listener(now: datetime) -> None:
@@ -1310,7 +1310,7 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-track_time_utcnow = dt_util.utcnow
+track_point_in_utc_time_now = dt_util.utcnow
 
 
 @callback
