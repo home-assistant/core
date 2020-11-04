@@ -23,7 +23,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     EntityTypes.temperature,
 ]
 
-SUPPORTED_SENSOR_TYPES = [
+SUPPORTED_TRIGGERED_SENSOR_TYPES = [
     EntityTypes.carbon_monoxide,
     EntityTypes.entry,
     EntityTypes.leak,
@@ -56,7 +56,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             continue
 
         for sensor in system.sensors.values():
-            if sensor.type in SUPPORTED_SENSOR_TYPES:
+            if sensor.type in SUPPORTED_TRIGGERED_SENSOR_TYPES:
                 sensors.append(TriggeredBinarySensor(simplisafe, system, sensor))
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
