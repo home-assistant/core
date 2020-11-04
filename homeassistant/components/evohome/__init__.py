@@ -488,8 +488,9 @@ class EvoBroker:
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
         else:
-            _LOGGER.debug("Status = %s", status)
             async_dispatcher_send(self.hass, DOMAIN)
+
+            _LOGGER.debug("Status = %s", status)
 
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
