@@ -724,3 +724,15 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
+
+
+class SimpliSafeBaseSensor(SimpliSafeEntity):
+    """Define a SimpliSafe base (binary) sensor."""
+
+    def __init__(self, simplisafe, system, sensor):
+        """Initialize."""
+        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
+        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._device_info["model"] = sensor.type.name
+        self._device_info["name"] = sensor.name
+        self._sensor = sensor
