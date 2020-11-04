@@ -114,7 +114,7 @@ class Scanner:
                 )
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
     async def _fetch_descriptions(self, locations):
         """Fetch descriptions from locations."""
