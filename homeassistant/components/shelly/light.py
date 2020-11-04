@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             == "light"
         ):
             blocks.append(block)
-            unique_id = wrapper.device.shelly["mac"] + "-relay_" + block.channel
+            unique_id = f'{wrapper.device.shelly["mac"]}-relay_{block.channel}'
             await async_remove_entity_by_domain(hass, "switch", unique_id)
 
     if not blocks:
