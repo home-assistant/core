@@ -59,6 +59,18 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
         for cluster_id in source_clusters[endpoint_id][CLUSTER_TYPE_OUT]:
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
+            if target_zha_device.nwk == 0x0000:
+                tgt_zigpy_dev = target_zha_device.device
+                tgt_ep = tgt_zigpy_dev.add_endpoint(1)
+                tgt_cluster = tgt_ep.add_input_cluster(cluster_id)
+                cluster_pair = ClusterPair(
+                    source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
+                        cluster_id
+                    ],
+                    target_cluster=tgt_cluster,
+                )
+                clusters_to_bind.append(cluster_pair)
+                continue
             for t_endpoint_id in target_clusters:
                 if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
                     cluster_pair = ClusterPair(
@@ -76,6 +88,9 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""
+    if target_zha_device.nwk == 0x0000:
+        return True
+
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
 
