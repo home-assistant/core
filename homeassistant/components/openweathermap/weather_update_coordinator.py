@@ -1,7 +1,6 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-import time
 
 import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
@@ -195,7 +194,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _convert_time(timestamp):
         """Convert time to ISO format."""
-        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestamp))
+        return datetime.fromtimestamp(timestamp).isoformat()
 
 
 class LegacyWeather:
