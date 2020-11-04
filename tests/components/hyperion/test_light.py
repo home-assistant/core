@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
+    TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
     TEST_ENTITY_ID_3,
@@ -123,7 +124,9 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
 
     # There should be a config entry with the correct server unique_id.
-    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    assert entry
+    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
 
 
 async def test_setup_yaml_new_style_unique_id_wo_config(
@@ -157,7 +160,9 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     assert registry.async_get(entity_id_to_preserve).unique_id == new_unique_id
 
     # There should be a config entry with the correct server unique_id.
-    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    assert entry
+    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
 
 
 async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
@@ -180,7 +185,9 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     )
 
     # There should be a config entry with the correct server unique_id.
-    assert _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    assert entry
+    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
 
 
 async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:

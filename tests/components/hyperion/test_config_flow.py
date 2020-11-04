@@ -9,14 +9,23 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
+    CONF_PRIORITY,
     DOMAIN,
     SOURCE_IMPORT,
 )
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TOKEN,
+    SERVICE_TURN_ON,
+)
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
+    TEST_ENTITY_ID_1,
     TEST_HOST,
     TEST_INSTANCE,
     TEST_PORT,
@@ -24,6 +33,7 @@ from . import (
     TEST_SERVER_ID,
     TEST_TITLE,
     TEST_TOKEN,
+    add_test_config_entry,
     create_mock_client,
 )
 
@@ -582,3 +592,37 @@ async def test_import_cannot_connect(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_options(hass):
+    """Check an options flow."""
+
+    config_entry = add_test_config_entry(hass)
+
+    client = create_mock_client()
+    with patch("hyperion.client.HyperionClient", return_value=client):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get(TEST_ENTITY_ID_1) is not None
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        new_priority = 1
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_PRIORITY: new_priority}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {CONF_PRIORITY: new_priority}
+
+        # Turn the light on and ensure the new priority is used.
+        client.async_send_set_color = CoroutineMock(return_value=True)
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+            blocking=True,
+        )
+        assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority

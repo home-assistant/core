@@ -182,7 +182,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Could not automatically migrate Hyperion YAML to a config entry."
             )
             return
-        # At a later stage add options migration functionality.
+        config_entry = result.get("result")
+        options = {**config_entry.options, CONF_PRIORITY: config[CONF_PRIORITY]}
+        hass.config_entries.async_update_entry(config_entry, options=options)
+
         _LOGGER.info(
             "Successfully migrated Hyperion YAML configuration to a config entry."
         )
