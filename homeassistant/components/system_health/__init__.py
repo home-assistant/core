@@ -120,6 +120,7 @@ async def handle_info(
 
         data[domain] = domain_data
 
+    # Confirm subscription
     connection.send_result(msg["id"])
 
     stop_event = asyncio.Event()
@@ -132,6 +133,7 @@ async def handle_info(
         )
     )
 
+    # If nothing pending, wrap it up.
     if not pending_info:
         connection.send_message(
             websocket_api.messages.event_message(msg["id"], {"type": "finish"})
@@ -141,7 +143,9 @@ async def handle_info(
     tasks = [asyncio.create_task(stop_event.wait()), *pending_info.values()]
     pending_lookup = {val: key for key, val in pending_info.items()}
 
+    # One task is the stop_event.wait() and is always there
     while len(tasks) > 1 and not stop_event.is_set():
+        # Wait for first completed task
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
         if stop_event.is_set():
@@ -149,6 +153,7 @@ async def handle_info(
                 task.cancel()
             return
 
+        # Update subscription of all finished tasks
         for result in done:
             domain, key = pending_lookup[result]
             event_msg = {
