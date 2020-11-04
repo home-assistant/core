@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import callback
 
-from . import SimpliSafeEntity
+from . import SimpliSafeBaseSensor
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
@@ -23,25 +23,11 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     EntityTypes.temperature,
 ]
 
-SUPPORTED_TRIGGERED_SENSOR_TYPES = [
-    EntityTypes.carbon_monoxide,
-    EntityTypes.entry,
-    EntityTypes.leak,
-    EntityTypes.smoke,
-]
-
-DEVICE_CLASSES = {
+TRIGGERED_SENSOR_TYPES = {
     EntityTypes.carbon_monoxide: DEVICE_CLASS_GAS,
     EntityTypes.entry: DEVICE_CLASS_DOOR,
     EntityTypes.leak: DEVICE_CLASS_MOISTURE,
     EntityTypes.smoke: DEVICE_CLASS_SMOKE,
-}
-
-SENSOR_MODELS = {
-    EntityTypes.carbon_monoxide: "Carbon Monoxide Detector",
-    EntityTypes.entry: "Entry Sensor",
-    EntityTypes.leak: "Water Sensor",
-    EntityTypes.smoke: "Smoke Detector",
 }
 
 
@@ -56,39 +42,34 @@ async def async_setup_entry(hass, entry, async_add_entities):
             continue
 
         for sensor in system.sensors.values():
-            if sensor.type in SUPPORTED_TRIGGERED_SENSOR_TYPES:
-                sensors.append(TriggeredBinarySensor(simplisafe, system, sensor))
+            if sensor.type in TRIGGERED_SENSOR_TYPES:
+                sensors.append(
+                    TriggeredBinarySensor(
+                        simplisafe,
+                        system,
+                        sensor,
+                        TRIGGERED_SENSOR_TYPES[sensor.type],
+                    )
+                )
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
 
     async_add_entities(sensors)
 
 
-class SimpliSafeBinarySensor(SimpliSafeEntity, BinarySensorEntity):
-    """Define a SimpliSafe binary sensor entity."""
-
-    def __init__(self, simplisafe, system, sensor):
-        """Initialize."""
-        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
-        self._device_info["model"] = SENSOR_MODELS[sensor.type]
-        self._device_info["name"] = sensor.name
-
-
-class TriggeredBinarySensor(SimpliSafeBinarySensor):
+class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     """Define a binary sensor related to whether an entity has been triggered."""
 
-    def __init__(self, simplisafe, system, sensor):
+    def __init__(self, simplisafe, system, sensor, device_class):
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
-        self._system = system
-        self._sensor = sensor
+        self._device_class = device_class
         self._is_on = False
 
     @property
     def device_class(self):
         """Return type of sensor."""
-        return DEVICE_CLASSES[self._sensor.type]
+        return self._device_class
 
     @property
     def is_on(self):
@@ -101,13 +82,12 @@ class TriggeredBinarySensor(SimpliSafeBinarySensor):
         self._is_on = self._sensor.triggered
 
 
-class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
+class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
         super().__init__(simplisafe, system, sensor)
-        self._sensor = sensor
         self._is_low = False
 
     @property
