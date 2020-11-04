@@ -30,32 +30,27 @@ DOMAIN = "onewire"
 
 PRESSURE_CBAR = "cbar"
 
+SENSOR_TYPE_COUNT = "count"
+SENSOR_TYPE_CURRENT = "current"
+SENSOR_TYPE_HUMIDITY = "humidity"
+SENSOR_TYPE_ILLUMINANCE = "illuminance"
+SENSOR_TYPE_MOISTURE = "moisture"
+SENSOR_TYPE_PRESSURE = "pressure"
+SENSOR_TYPE_TEMPERATURE = "temperature"
+SENSOR_TYPE_VOLTAGE = "voltage"
+SENSOR_TYPE_WETNESS = "wetness"
+
 SENSOR_TYPES = {
-    # SensorType: [ Measured unit, Unit, DeviceClass ]
-    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih3600": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih4000": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_hih5030": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_htm1735": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "humidity_raw": ["humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "pressure": ["pressure", PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
-    "illuminance": ["illuminance", LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
-    "wetness_0": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_1": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_2": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "wetness_3": ["wetness", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    "moisture_0": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_1": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_2": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "moisture_3": ["moisture", PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    "counter_a": ["counter", "count", None],
-    "counter_b": ["counter", "count", None],
-    "HobbyBoard": ["none", "none", None],
-    "voltage": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VAD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "voltage_VDD": ["voltage", VOLT, DEVICE_CLASS_VOLTAGE],
-    "current": ["current", ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
+    # SensorType: [ Unit, DeviceClass ]
+    SENSOR_TYPE_TEMPERATURE: [TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TYPE_HUMIDITY: [PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    SENSOR_TYPE_PRESSURE: [PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
+    SENSOR_TYPE_ILLUMINANCE: [LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
+    SENSOR_TYPE_WETNESS: [PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    SENSOR_TYPE_MOISTURE: [PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
+    SENSOR_TYPE_COUNT: ["count", None],
+    SENSOR_TYPE_VOLTAGE: [VOLT, DEVICE_CLASS_VOLTAGE],
+    SENSOR_TYPE_CURRENT: [ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
 }
 
 SUPPORTED_PLATFORMS = [

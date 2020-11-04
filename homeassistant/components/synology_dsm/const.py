@@ -27,7 +27,8 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Configuration
 CONF_VOLUMES = "volumes"
 
-DEFAULT_SSL = True
+DEFAULT_USE_SSL = True
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options

@@ -507,7 +507,7 @@ class HomeKit:
         # The bridge itself counts as an accessory
         if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
-                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option",
+                "Cannot add %s as this would exceed the %d device limit. Consider using the filter option",
                 state.entity_id,
                 MAX_DEVICES,
             )

@@ -43,6 +43,7 @@
                     "min_temp": "Minimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
                     "support_color": "Luba v\u00e4rvuse juhtimine",
                     "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "tuya_max_coltemp": "Seadme teatatud maksimaalne v\u00e4rvitemperatuur",
                     "unit_of_measurement": "Seadme temperatuuri\u00fchik"
                 },
                 "description": "Suvandid \u00fcksuse {device_type} {device_name} kuvatava teabe muutmiseks",
@@ -52,6 +53,7 @@
                 "data": {
                     "discovery_interval": "Seadme leidmisp\u00e4ringute intervall (sekundites)",
                     "list_devices": "Vali seadistatavad seadmed v\u00f5i j\u00e4ta s\u00e4tete salvestamiseks t\u00fchjaks",
+                    "query_device": "Vali seade, mis kasutab oleku kiiremaks v\u00e4rskendamiseks p\u00e4ringumeetodit",
                     "query_interval": "P\u00e4ringute intervall (sekundites)"
                 },
                 "description": "\u00c4ra m\u00e4\u00e4ra k\u00fcsitlusintervalli v\u00e4\u00e4rtusi liiga madalaks, vastasel korral v\u00f5ivad p\u00e4ringud logis t\u00f5rketeate genereerida",

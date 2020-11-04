@@ -12,7 +12,8 @@
                 "data": {
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
-                }
+                },
+                "description": "Kasutajap\u00f5histe ja CDC-aruannete j\u00e4lgimine antud asukohas."
             }
         }
     }

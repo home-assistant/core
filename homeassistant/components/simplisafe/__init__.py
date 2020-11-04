@@ -177,6 +177,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -312,7 +314,9 @@ async def async_setup_entry(hass, config_entry):
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    config_entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
+        config_entry.add_update_listener(async_reload_entry)
+    )
 
     return True
 
@@ -329,8 +333,8 @@ async def async_unload_entry(hass, entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        remove_listener()
+        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
+            remove_listener()
 
     return unload_ok
 
@@ -460,10 +464,10 @@ class SimpliSafe:
             """Define an event handler to disconnect from the websocket."""
             await self.websocket.async_disconnect()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][
-            self.config_entry.entry_id
-        ] = self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+            )
         )
 
         self.systems = await self._api.get_systems()
@@ -724,3 +728,15 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
+
+
+class SimpliSafeBaseSensor(SimpliSafeEntity):
+    """Define a SimpliSafe base (binary) sensor."""
+
+    def __init__(self, simplisafe, system, sensor):
+        """Initialize."""
+        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
+        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._device_info["model"] = sensor.type.name
+        self._device_info["name"] = sensor.name
+        self._sensor = sensor

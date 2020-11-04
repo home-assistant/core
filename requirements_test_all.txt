@@ -137,13 +137,13 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.4.0
+aioshelly==0.5.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
 
 # homeassistant.components.unifi
-aiounifi==23
+aiounifi==25
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -349,13 +349,13 @@ gogogate2-api==2.0.3
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==0.39.1
+google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==0.1.9
 
 # homeassistant.components.gree
-greeclimate==0.9.2
+greeclimate==0.9.5
 
 # homeassistant.components.griddy
 griddypower==0.1.0
@@ -545,7 +545,7 @@ pilight==0.1.1
 pillow==7.2.0
 
 # homeassistant.components.plex
-plexapi==4.1.1
+plexapi==4.2.0
 
 # homeassistant.components.plex
 plexauth==0.0.5
@@ -622,7 +622,7 @@ py_nextbusnext==0.1.4
 pyaehw4a1==0.3.9
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.3
+pyairvisual==5.0.4
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -634,7 +634,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.1.0
+pyatmo==4.2.0
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -737,7 +737,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.7.0
+pylutron-caseta==0.7.1
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -790,7 +790,7 @@ pyotgw==0.6b1
 pyotp==2.3.0
 
 # homeassistant.components.openweathermap
-pyowm==2.10.0
+pyowm==3.1.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -957,7 +957,7 @@ samsungtvws==1.4.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.1
+sentry-sdk==0.19.2
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1131,4 +1131,4 @@ zigpy-zigate==0.6.2
 zigpy-znp==0.2.2
 
 # homeassistant.components.zha
-zigpy==0.26.0
+zigpy==0.27.0

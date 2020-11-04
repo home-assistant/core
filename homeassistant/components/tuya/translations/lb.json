@@ -24,5 +24,30 @@
                 "title": "Tuya"
             }
         }
+    },
+    "options": {
+        "error": {
+            "dev_not_config": "Typ vun Apparat net konfigur\u00e9ierbar",
+            "dev_not_found": "Apparat net fonnt"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Hellegkeetsber\u00e4ich vum Apparat",
+                    "curr_temp_divider": "Aktuell Temperatur W\u00e4erter Deeler (0= benotz Standard)",
+                    "ext_temp_sensor": "Sensor fir aktuell Temperatur",
+                    "max_kelvin": "Maximal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",
+                    "min_kelvin": "Minimal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",
+                    "support_color": "Forc\u00e9ier Faarf \u00cbnnerst\u00ebtzung",
+                    "temp_divider": "Temperatur W\u00e4erter Deeler (0= benotz Standard)",
+                    "tuya_max_coltemp": "Max Faarftemperatur vum Apparat gemellt",
+                    "unit_of_measurement": "Temperatur Eenheet vum Apparat"
+                },
+                "title": "Tuya Apparat ariichten"
+            },
+            "init": {
+                "title": "Tuya Optioune konfigur\u00e9ieren"
+            }
+        }
     }
 }
