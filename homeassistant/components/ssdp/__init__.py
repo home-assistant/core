@@ -98,7 +98,8 @@ class Scanner:
         if not entries_to_process:
             return
 
-        await self._fetch_descriptions(list(unseen_locations))
+        if unseen_locations:
+            await self._fetch_descriptions(list(unseen_locations))
 
         tasks = []
 
