@@ -4,7 +4,10 @@ Regression tests for Aqara Gateway V3.
 https://github.com/home-assistant/core/issues/20885
 """
 
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.climate.const import (
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
+)
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -29,7 +32,7 @@ async def test_lennox_e30_setup(hass):
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes["friendly_name"] == "Lennox"
     assert climate_state.attributes["supported_features"] == (
-        SUPPORT_TARGET_TEMPERATURE
+        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
     )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()

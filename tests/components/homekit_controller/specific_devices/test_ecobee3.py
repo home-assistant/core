@@ -12,6 +12,7 @@ from aiohomekit.testing import FakePairing
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 
@@ -40,7 +41,9 @@ async def test_ecobee3_setup(hass):
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes["friendly_name"] == "HomeW"
     assert climate_state.attributes["supported_features"] == (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY
+        SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_TARGET_HUMIDITY
     )
 
     assert climate_state.attributes["hvac_modes"] == [
