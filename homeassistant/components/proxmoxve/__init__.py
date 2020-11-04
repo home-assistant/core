@@ -26,6 +26,7 @@ CONF_NODE = "node"
 CONF_NODES = "nodes"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
+PLATFORMS = ["binary_sensor", "sensor"]
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
@@ -104,9 +105,10 @@ def setup(hass, config):
         hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
 
     if hass.data[PROXMOX_CLIENTS]:
-        hass.helpers.discovery.load_platform(
-            "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
-        )
+        for platform in PLATFORMS:
+            hass.helpers.discovery.load_platform(
+                platform, DOMAIN, {"entries": config[DOMAIN]}, config
+            )
         return True
 
     return False
