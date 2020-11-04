@@ -22,3 +22,7 @@ CONF_CATEGORIES = "categories"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 DOMAIN = DEFAULT_NAME
+
+DATA_KEY_CLIENT = "client"
+DATA_KEY_COORDINATOR = "coordinator"
+DATA_KEY_NAME = "name"

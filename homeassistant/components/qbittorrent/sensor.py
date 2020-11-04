@@ -2,27 +2,21 @@
 
 import logging
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+
 from homeassistant.const import (
-    CONF_MONITORED_VARIABLES,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_USERNAME,
     DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from . import QBittorrentEntity
 
 # from . import QBittorrentEntity
 from .const import (
-    DEFAULT_NAME,
+    DATA_KEY_CLIENT,
+    DATA_KEY_COORDINATOR,
+    DATA_KEY_NAME,
     SENSOR_TYPE_ACTIVE_TORRENTS,
     SENSOR_TYPE_COMPLETED_TORRENTS,
     SENSOR_TYPE_CURRENT_STATUS,
@@ -35,6 +29,7 @@ from .const import (
     SENSOR_TYPE_TOTAL_TORRENTS,
     SENSOR_TYPE_UPLOAD_SPEED,
     TRIM_SIZE,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,44 +49,24 @@ SENSOR_TYPES = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
-)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the qBittorrent sensor."""
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the qBittorrent sensors."""
-
-    try:
-        client = Client(config[CONF_URL])
-        client.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
-
-    name = config.get(CONF_NAME)
-
-    dev = []
-    variables = config[CONF_MONITORED_VARIABLES]
-    if len(variables) == 0:
-        variables = SENSOR_TYPES
-
-    for variable in variables:
-        sensor = QBittorrentSensor(variable, client, name, LoginRequired)
-        dev.append(sensor)
-
-    add_entities(dev, True)
+    qbit_data = hass.data[DOMAIN][entry.entry_id]
+    name = qbit_data[DATA_KEY_NAME]
+    variables = SENSOR_TYPES
+    sensors = [
+        QBittorrentSensor(
+            sensor_name,
+            qbit_data[DATA_KEY_CLIENT],
+            qbit_data[DATA_KEY_COORDINATOR],
+            name,
+            LoginRequired,
+            entry.entry_id,
+        )
+        for sensor_name in variables
+    ]
+    async_add_entities(sensors, True)
 
 
 def format_speed(speed):
@@ -100,11 +75,21 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-class QBittorrentSensor(Entity):
+class QBittorrentSensor(QBittorrentEntity):
     """Representation of an qBittorrent sensor."""
 
-    def __init__(self, sensor_type, qbittorrent_client, client_name, exception):
+    def __init__(
+        self,
+        sensor_type,
+        qbittorrent_client,
+        coordinator,
+        client_name,
+        exception,
+        server_unique_id,
+    ):
         """Initialize the qBittorrent sensor."""
+        super().__init__(qbittorrent_client, coordinator, client_name, server_unique_id)
+
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
         self.type = sensor_type
@@ -119,6 +104,11 @@ class QBittorrentSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return f"{self.client_name} {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"{self._server_unique_id}/{self._name}"
 
     @property
     def state(self):
