@@ -102,7 +102,7 @@ async def test_setup_minimum_resource_template(hass):
         {
             "sensor": {
                 "platform": "rest",
-                "resource_template": "http://localhost",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
             }
         },
     )

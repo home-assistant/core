@@ -346,7 +346,7 @@ goalzero==0.1.4
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==0.39.1
+google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==0.1.9

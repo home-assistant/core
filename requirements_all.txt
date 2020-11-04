@@ -342,7 +342,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.10
+bimmer_connected==0.7.11
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -675,7 +675,7 @@ goalzero==0.1.4
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==0.39.1
+google-cloud-pubsub==2.1.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
