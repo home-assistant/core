@@ -82,19 +82,14 @@ stages:
       matrix:
         amd64:
           buildArch: 'amd64'
-          buildMachine: 'qemux86-64,intel-nuc'
         i386:
           buildArch: 'i386'
-          buildMachine: 'qemux86'
         armhf:
           buildArch: 'armhf'
-          buildMachine: 'qemuarm,raspberrypi'
         armv7:
           buildArch: 'armv7'
-          buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
           buildArch: 'aarch64'
-          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,odroid-n2'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: |
@@ -111,14 +106,6 @@ stages:
           -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
           --generic $(homeassistantRelease) "--$(buildArch)" -t /data \
-
-        docker run --rm --privileged \
-          -v ~/.docker:/root/.docker \
-          -v /run/docker.sock:/run/docker.sock:rw \
-          -v $(pwd):/data:ro \
-          homeassistant/amd64-builder:$(versionBuilder) \
-          --homeassistant-machine "$(homeassistantRelease)=$(buildMachine)" \
-          -t /data/machine --docker-hub homeassistant
       displayName: 'Build Release'
   - job: 'ReleaseMachine'
     dependsOn:
