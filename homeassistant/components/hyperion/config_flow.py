@@ -9,6 +9,7 @@ from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hyperion import create_hyperion_client
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
 from homeassistant.core import callback
@@ -103,7 +104,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_client(self, raw_connection=False) -> client.HyperionClient:
         """Create and connect a client instance."""
-        return client.HyperionClient(
+        return create_hyperion_client(
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),

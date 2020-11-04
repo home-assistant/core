@@ -122,7 +122,9 @@ async def _create_mock_entry(hass):
 
     # Setup
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -170,7 +172,9 @@ async def test_user_existing_id_abort(hass):
 
     await _create_mock_entry(hass)
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -184,7 +188,9 @@ async def test_user_client_errors(hass):
 
     # Fail the connection.
     client.async_client_connect = CoroutineMock(return_value=False)
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"]["base"] == "cannot_connect"
@@ -192,7 +198,9 @@ async def test_user_client_errors(hass):
     # Fail the auth check call.
     client.async_client_connect = CoroutineMock(return_value=True)
     client.async_is_auth_required = CoroutineMock(return_value={"success": False})
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "auth_required_error"
@@ -208,7 +216,10 @@ async def test_user_confirm_cannot_connect(hass):
     bad_client.async_client_connect = CoroutineMock(return_value=False)
 
     # Confirmation sync_client_connect fails.
-    with patch("hyperion.client.HyperionClient", side_effect=[good_client, bad_client]):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        side_effect=[good_client, bad_client],
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "cannot_connect"
@@ -222,7 +233,9 @@ async def test_user_confirm_id_error(hass):
     client.async_id = CoroutineMock(return_value=None)
 
     # Confirmation sync_client_connect fails.
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "no_id"
@@ -233,7 +246,9 @@ async def test_user_noauth_flow_success(hass):
     result = await _init_flow(hass)
 
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -251,7 +266,9 @@ async def test_user_auth_required(hass):
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
@@ -263,7 +280,9 @@ async def test_auth_static_token_auth_required_fail(hass):
 
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=None)
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "auth_required_error"
@@ -277,7 +296,9 @@ async def test_auth_static_token_success(hass):
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
@@ -305,7 +326,9 @@ async def test_auth_static_token_login_fail(hass):
         return_value={"command": "authorize-login", "success": False, "tan": 0}
     )
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
@@ -322,14 +345,19 @@ async def test_auth_create_token_approval_declined(hass):
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = CoroutineMock(return_value=TEST_REQUEST_TOKEN_FAIL)
-    with patch("hyperion.client.HyperionClient", return_value=client), patch(
-        "hyperion.client.generate_random_auth_id", return_value=TEST_AUTH_ID
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
     ):
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
@@ -360,14 +388,19 @@ async def test_auth_create_token_when_issued_token_fails(hass):
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = CoroutineMock(return_value=TEST_REQUEST_TOKEN_SUCCESS)
-    with patch("hyperion.client.HyperionClient", return_value=client), patch(
-        "hyperion.client.generate_random_auth_id", return_value=TEST_AUTH_ID
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
     ):
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
@@ -399,14 +432,19 @@ async def test_auth_create_token_success(hass):
     client = create_mock_client()
     client.async_is_auth_required = CoroutineMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
 
     client.async_request_token = CoroutineMock(return_value=TEST_REQUEST_TOKEN_SUCCESS)
-    with patch("hyperion.client.HyperionClient", return_value=client), patch(
-        "hyperion.client.generate_random_auth_id", return_value=TEST_AUTH_ID
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
     ):
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
@@ -436,12 +474,16 @@ async def test_ssdp_success(hass):
     """Check an SSDP flow."""
 
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO)
         await hass.async_block_till_done()
 
     # Accept the confirmation.
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _configure_flow(hass, result)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -459,7 +501,9 @@ async def test_ssdp_cannot_connect(hass):
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO)
         await hass.async_block_till_done()
 
@@ -474,7 +518,9 @@ async def test_ssdp_missing_serial(hass):
     bad_data = {**TEST_SSDP_SERVICE_INFO}
     del bad_data["serialNumber"]
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
         await hass.async_block_till_done()
 
@@ -489,7 +535,9 @@ async def test_ssdp_failure_bad_port_json(hass):
     bad_data = {**TEST_SSDP_SERVICE_INFO}
     bad_data["ports"]["jsonServer"] = "not_a_port"
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
         result = await _configure_flow(hass, result)
         await hass.async_block_till_done()
@@ -507,8 +555,11 @@ async def test_ssdp_failure_bad_port_ui(hass):
     bad_data = {**TEST_SSDP_SERVICE_INFO}
     bad_data["ssdp_location"] = f"http://{TEST_HOST}:not_a_port/description.xml"
 
-    with patch("hyperion.client.HyperionClient", return_value=client), patch(
-        "hyperion.client.generate_random_auth_id", return_value=TEST_AUTH_ID
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
     ):
         result = await _init_flow(hass, source=SOURCE_SSDP, data=bad_data)
 
@@ -534,7 +585,9 @@ async def test_ssdp_abort_duplicates(hass):
     """Check an SSDP flow where no id is provided."""
 
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result_1 = await _init_flow(
             hass, source=SOURCE_SSDP, data=TEST_SSDP_SERVICE_INFO
         )
@@ -552,7 +605,9 @@ async def test_import_success(hass):
     """Check an import flow from the old-style YAML."""
 
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(
             hass,
             source=SOURCE_IMPORT,
@@ -579,7 +634,9 @@ async def test_import_cannot_connect(hass):
     client = create_mock_client()
     client.async_client_connect = CoroutineMock(return_value=False)
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         result = await _init_flow(
             hass,
             source=SOURCE_IMPORT,
@@ -600,7 +657,9 @@ async def test_options(hass):
     config_entry = add_test_config_entry(hass)
 
     client = create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.states.get(TEST_ENTITY_ID_1) is not None

@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_registry import async_get_registry
 import homeassistant.util.color as color_util
 
-from . import async_create_connect_client, get_hyperion_unique_id
+from . import async_create_connect_hyperion_client, get_hyperion_unique_id
 from .const import (
     CONF_ON_UNLOAD,
     CONF_PRIORITY,
@@ -117,7 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # First, connect to the server and get the server id (which will be unique_id on a config_entry
     # if there is one).
-    hyperion_client = await async_create_connect_client(host, port)
+    hyperion_client = await async_create_connect_hyperion_client(host, port)
     if not hyperion_client:
         raise PlatformNotReady
     hyperion_id = await hyperion_client.async_id()
@@ -229,7 +229,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             desired_unique_ids.add(unique_id)
             if unique_id in current_entities:
                 continue
-            hyperion_client = await async_create_connect_client(
+            hyperion_client = await async_create_connect_hyperion_client(
                 host, port, instance=instance_id, token=token
             )
             if not hyperion_client:

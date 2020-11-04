@@ -56,7 +56,9 @@ async def _setup_entity_yaml(
 ) -> None:
     """Add a test Hyperion entity to hass."""
     client = client or create_mock_client()
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         assert await setup.async_setup_component(
             hass,
             LIGHT_DOMAIN,
@@ -126,7 +128,7 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
+    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
 
 
 async def test_setup_yaml_new_style_unique_id_wo_config(
@@ -162,7 +164,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
+    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
 
 
 async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
@@ -187,7 +189,7 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert TEST_CONFIG_ENTRY_OPTIONS == entry.options
+    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
 
 
 async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
@@ -223,7 +225,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     entity_client.instances = master_client.instances
 
     with patch(
-        "hyperion.client.HyperionClient",
+        "homeassistant.components.hyperion.client.HyperionClient",
         side_effect=[master_client, entity_client, entity_client],
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -237,7 +239,10 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     instance_callback = master_client.set_callbacks.call_args[0][0][
         f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}"
     ]
-    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        return_value=entity_client,
+    ):
         instance_callback(
             {
                 const.KEY_SUCCESS: True,
@@ -251,7 +256,10 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
     # Inject a new instances update (re-add instance 1, but not running)
-    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        return_value=entity_client,
+    ):
         instance_callback(
             {
                 const.KEY_SUCCESS: True,
@@ -269,7 +277,10 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
     # Inject a new instances update (re-add instance 1, running)
-    with patch("hyperion.client.HyperionClient", return_value=entity_client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        return_value=entity_client,
+    ):
         instance_callback(
             {
                 const.KEY_SUCCESS: True,
