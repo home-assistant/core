@@ -86,12 +86,12 @@ class OneWireProxy(OneWire):
         sensor_type: str,
         sensor_name: str,
         device_info: Dict[str, Any],
-        disable_startup: bool,
+        default_disabled: bool,
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""
         super().__init__(
-            name, device_file, sensor_type, sensor_name, device_info, disable_startup
+            name, device_file, sensor_type, sensor_name, device_info, default_disabled
         )
         self._owproxy = owproxy
 
