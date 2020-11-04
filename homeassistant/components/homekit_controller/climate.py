@@ -18,6 +18,8 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -29,6 +31,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_OFF,
     SWING_VERTICAL,
 )
@@ -328,7 +331,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         return [
             CharacteristicsTypes.HEATING_COOLING_CURRENT,
             CharacteristicsTypes.HEATING_COOLING_TARGET,
+            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD,
             CharacteristicsTypes.TEMPERATURE_CURRENT,
+            CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD,
             CharacteristicsTypes.TEMPERATURE_TARGET,
             CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
@@ -337,10 +342,23 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
-
-        await self.async_put_characteristics(
-            {CharacteristicsTypes.TEMPERATURE_TARGET: temp}
-        )
+        heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}:
+            if temp is None:
+                temp = (cool_temp + heat_temp) / 2
+            await self.async_put_characteristics(
+                {
+                    CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: heat_temp,
+                    CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: cool_temp,
+                    CharacteristicsTypes.TEMPERATURE_TARGET: temp,
+                }
+            )
+        else:
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.TEMPERATURE_TARGET: temp}
+            )
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
@@ -366,7 +384,26 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) not in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
+            return None
         return self.service.value(CharacteristicsTypes.TEMPERATURE_TARGET)
+
+    @property
+    def target_temperature_high(self):
+        """Return the highbound target temperature we try to reach."""
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) not in {HVAC_MODE_HEAT_COOL}:
+            return None
+        return self.service.value(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
+
+    @property
+    def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) not in {HVAC_MODE_HEAT_COOL}:
+            return None
+        return self.service.value(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
 
     @property
     def min_temp(self):
@@ -441,6 +478,12 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
         if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
             features |= SUPPORT_TARGET_TEMPERATURE
+
+        if self.service.has(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD):
+            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+
+        if self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
+            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if self.service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET):
             features |= SUPPORT_TARGET_HUMIDITY
