@@ -80,7 +80,7 @@ class Scanner:
     async def _process_entries(self, entries):
         """Process SSDP entries."""
         entries_to_process = []
-        unseen_locations = []
+        unseen_locations = set()
 
         for entry in entries:
             key = (entry.st, entry.location)
@@ -93,12 +93,12 @@ class Scanner:
             entries_to_process.append(entry)
 
             if entry.location not in self._description_cache:
-                unseen_locations.append(entry.location)
+                unseen_locations.add(entry.location)
 
         if not entries_to_process:
             return
 
-        await self._fetch_descriptions(unseen_locations)
+        await self._fetch_descriptions(list(unseen_locations))
 
         tasks = []
 
