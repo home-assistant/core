@@ -474,6 +474,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         """Implement the websocket media browsing helper."""
 
         if not self._scope_ok:
+            _LOGGER.warning(
+                "Spotify scopes are not set correctly, this can impact media browsing. Re-adding the integration can "
+                "fix this issue. See https://github.com/home-assistant/core/issues/42072 for more info."
+            )
             raise NotImplementedError
 
         if media_content_type in [None, "library"]:
