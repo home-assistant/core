@@ -61,7 +61,10 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
                 continue
             if target_zha_device.nwk == 0x0000:
                 tgt_zigpy_dev = target_zha_device.device
-                tgt_ep = tgt_zigpy_dev.add_endpoint(1)
+                tgt_ep_id = tgt_zigpy_dev.application.get_endpoint_id(
+                    cluster_id, is_server_cluster=True
+                )
+                tgt_ep = tgt_zigpy_dev.add_endpoint(tgt_ep_id)
                 tgt_cluster = tgt_ep.add_input_cluster(cluster_id)
                 cluster_pair = ClusterPair(
                     source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
