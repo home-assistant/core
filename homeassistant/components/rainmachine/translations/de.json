@@ -17,5 +17,12 @@
                 "title": "Informationen eingeben"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "RainMachine konfigurieren"
+            }
+        }
     }
 }

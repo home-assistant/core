@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kont ass scho registr\u00e9iert",
             "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Logi Circle Kont konfigur\u00e9ieren.",
             "external_error": "Ausnam vun engem anere Floss.",
             "external_setup": "Logi Circle gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",

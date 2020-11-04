@@ -11,6 +11,7 @@
             "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
             "invalid_username": "Ung\u00fcltiger Benutzername",
             "unexpected": "Unerwarteter Fehler bei der Kommunikation mit dem Life360-Server",
+            "unknown": "Unerwarteter Fehler",
             "user_already_configured": "Konto wurde bereits konfiguriert"
         },
         "step": {

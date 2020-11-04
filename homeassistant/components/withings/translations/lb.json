@@ -11,6 +11,7 @@
         },
         "error": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "already_configured_account": "Kont ass scho konfigur\u00e9iert",
             "profile_exists": "Benotzer Profil ass scho konfigur\u00e9iert. G\u00ebff eem eenzegartege Profil Numm un"
         },
         "flow_title": "Withing: {profile}",

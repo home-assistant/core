@@ -9,7 +9,8 @@
             "device_fail": "Onerwaarte Feeler",
             "device_timeout": "Feeler beim verbannen",
             "forbidden": "Ong\u00eblteg Authentifikatioun",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

@@ -1,6 +1,15 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "type": "Verbindungstyp"
