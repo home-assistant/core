@@ -44,6 +44,4 @@ async def test_config_entry_no_authentication(
     )
 
     entry = await init_integration_without_auth(hass, aioclient_mock)
-
-    entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
