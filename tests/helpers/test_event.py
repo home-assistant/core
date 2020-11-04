@@ -2867,14 +2867,8 @@ async def test_periodic_task_entering_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = timezone.localize(
-        datetime(now.year + 1, 3, 25, 2, 31, 0)
-    )
-
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
+    start = timezone.localize(datetime(2018, 3, 25, 0, 0, 0))
+    with patch("homeassistant.util.dt.utcnow", return_value=dt_util.as_utc(start)):
         unsub = async_track_time_change(
             hass,
             callback(lambda x: specific_runs.append(x)),
@@ -2884,25 +2878,33 @@ async def test_periodic_task_entering_dst(hass):
         )
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 25, 1, 50, 0, 999999))
+        hass,
+        timezone.localize(datetime(2018, 3, 25, 1, 50, 0)),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 25, 3, 50, 0, 999999))
+        hass,
+        timezone.localize(datetime(2018, 3, 25, 3, 50, 0)),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 26, 1, 50, 0, 999999))
+        hass,
+        timezone.localize(datetime(2018, 3, 26, 1, 50, 0)),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 26, 2, 50, 0, 999999))
+        hass,
+        timezone.localize(datetime(2018, 3, 26, 2, 50, 0)),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
@@ -2916,14 +2918,10 @@ async def test_periodic_task_leaving_dst(hass):
     dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
-    now = dt_util.utcnow()
-
-    time_that_will_not_match_right_away = timezone.localize(
-        datetime(now.year + 1, 10, 28, 2, 28, 0), is_dst=True
-    )
-
+    start = timezone.localize(datetime(2018, 10, 28, 0, 0, 0), is_dst=True)
     with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(start),
     ):
         unsub = async_track_time_change(
             hass,
@@ -2935,45 +2933,32 @@ async def test_periodic_task_leaving_dst(hass):
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 1, 10, 28, 2, 5, 0, 999999), is_dst=False
-        ),
+        timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 1, 10, 28, 2, 55, 0, 999999), is_dst=False
-        ),
+        timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 45, 0, 999999), is_dst=True
-        ),
+        timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False),
+        fire_all=True,
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 2
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 55, 0, 999999), is_dst=True
-        ),
-    )
-    await hass.async_block_till_done()
-    assert len(specific_runs) == 2
-
-    async_fire_time_changed(
-        hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 55, 0, 999999), is_dst=True
-        ),
+        timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False),
+        fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2

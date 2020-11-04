@@ -301,7 +301,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.track_point_in_utc_time_now",
+                "homeassistant.helpers.event.track_time_utcnow",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()
