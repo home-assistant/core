@@ -15,15 +15,25 @@ _LOGGER = logging.getLogger(__name__)
 class OneWire(Entity):
     """Implementation of a 1-Wire sensor."""
 
-    def __init__(self, name, device_file, sensor_type, device_info=None):
+    def __init__(
+        self,
+        name,
+        device_file,
+        sensor_type: str,
+        sensor_name: str = None,
+        device_info=None,
+        default_disabled: bool = False,
+    ):
         """Initialize the sensor."""
-        self._name = f"{name} {sensor_type.capitalize()}"
+        self._name = f"{name} {sensor_name or sensor_type.capitalize()}"
         self._device_file = device_file
-        self._device_class = SENSOR_TYPES[sensor_type][2]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._sensor_type = sensor_type
+        self._device_class = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][0]
         self._device_info = device_info
         self._state = None
         self._value_raw = None
+        self._default_disabled = default_disabled
 
     @property
     def name(self) -> Optional[str]:
@@ -60,13 +70,29 @@ class OneWire(Entity):
         """Return device specific attributes."""
         return self._device_info
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._default_disabled
+
 
 class OneWireProxy(OneWire):
     """Implementation of a 1-Wire sensor through owserver."""
 
-    def __init__(self, name, device_file, sensor_type, device_info, owproxy):
+    def __init__(
+        self,
+        name: str,
+        device_file: str,
+        sensor_type: str,
+        sensor_name: str,
+        device_info: Dict[str, Any],
+        disable_startup: bool,
+        owproxy: protocol._Proxy,
+    ):
         """Initialize the sensor."""
-        super().__init__(name, device_file, sensor_type, device_info)
+        super().__init__(
+            name, device_file, sensor_type, sensor_name, device_info, disable_startup
+        )
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
@@ -76,16 +102,14 @@ class OneWireProxy(OneWire):
     def update(self):
         """Get the latest data from the device."""
         value = None
-        value_read = False
         try:
-            value_read = self._read_value_ownet()
+            self._value_raw = float(self._read_value_ownet())
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
-        if value_read:
+        else:
             if "count" in self._unit_of_measurement:
-                value = int(value_read)
+                value = int(self._value_raw)
             else:
-                value = round(float(value_read), 1)
-            self._value_raw = float(value_read)
+                value = round(self._value_raw, 1)
 
         self._state = value

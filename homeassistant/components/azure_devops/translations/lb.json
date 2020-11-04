@@ -2,10 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "reauth_successful": "Acc\u00e8s Jeton erfollegr\u00e4ich aktualis\u00e9iert"
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "error": {
             "authorization_error": "Feeler bei der Authorisatioun. Iwwerpr\u00e9if ob d\u00e4in Kont den acc\u00e8s zum Projet souw\u00e9i d\u00e9i richteg Umeldungsinformatioune huet",
+            "cannot_connect": "Feeler beim verbannen",
             "connection_error": "Konnt sech net mat Azure DevOps verbannen",
             "project_error": "Konnt keng Projet Informatiounen ausliesen."
         },

@@ -227,7 +227,7 @@ aioshelly==0.5.0
 aioswitcher==1.2.1
 
 # homeassistant.components.unifi
-aiounifi==23
+aiounifi==25
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -342,7 +342,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.10
+bimmer_connected==0.7.11
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -678,7 +678,7 @@ gogogate2-api==2.0.3
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==0.39.1
+google-cloud-pubsub==2.1.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==0.4.0
@@ -1268,7 +1268,7 @@ pyarlo==0.2.3
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.1.0
+pyatmo==4.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1589,7 +1589,7 @@ pyotgw==0.6b1
 pyotp==2.3.0
 
 # homeassistant.components.openweathermap
-pyowm==2.10.0
+pyowm==3.1.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2003,7 +2003,7 @@ sense-hat==2.2.0
 sense_energy==0.8.1
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.1
+sentry-sdk==0.19.2
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2210,7 +2210,7 @@ twentemilieu==0.3.0
 twilio==6.32.0
 
 # homeassistant.components.rainforest_eagle
-uEagle==0.0.1
+uEagle==0.0.2
 
 # homeassistant.components.unifiled
 unifiled==0.11

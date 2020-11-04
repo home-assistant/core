@@ -128,6 +128,11 @@ class TasmotaLight(
                 white_value = float(attributes["white_value"])
                 percent_white = white_value / TASMOTA_BRIGHTNESS_MAX
                 self._white_value = percent_white * 255
+            if self._white_value == 0:
+                self._color_temp = None
+                self._white_value = None
+            if self._white_value is not None and self._white_value > 0:
+                self._hs = None
         self.async_write_ha_state()
 
     @property

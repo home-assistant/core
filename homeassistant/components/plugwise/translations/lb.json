@@ -16,8 +16,13 @@
                     "password": "Smile ID",
                     "port": "Port"
                 },
-                "description": "Detailler",
-                "title": "Mat Smile verbannen"
+                "description": "Produkt:",
+                "title": "Typ vu Plugwise"
+            },
+            "user_gateway": {
+                "data": {
+                    "port": "Port"
+                }
             }
         }
     },

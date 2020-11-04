@@ -166,6 +166,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
+    # Migrate existing entry configuration
+    if entry.data.get(CONF_VERIFY_SSL) is None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
+        )
+
     # Continue setup
     api = SynoApi(hass, entry)
     try:
@@ -265,10 +271,9 @@ class SynoApi:
             self._entry.data[CONF_SSL],
             self._entry.data[CONF_VERIFY_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
+            device_token=self._entry.data.get("device_token"),
         )
-        await self._hass.async_add_executor_job(
-            self.dsm.login, self._entry.data.get("device_token")
-        )
+        await self._hass.async_add_executor_job(self.dsm.login)
 
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
