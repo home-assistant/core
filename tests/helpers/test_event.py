@@ -1,7 +1,7 @@
 """Test event helpers."""
 # pylint: disable=protected-access
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from astral import Astral
 import jinja2
@@ -3154,7 +3154,7 @@ async def test_track_point_in_utc_time_cancel(hass):
     await asyncio.sleep(0.2)
 
     assert len(times) == 1
-    assert times[0].tzinfo == timezone.utc
+    assert times[0].tzinfo == dt_util.UTC
 
 
 async def test_async_track_point_in_time_cancel(hass):
