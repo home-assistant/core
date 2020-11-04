@@ -100,26 +100,25 @@ async def handle_info(
 
     pending_info = {}
 
-    if registrations:
-        for domain, domain_data in zip(
-            registrations,
-            await asyncio.gather(
-                *(
-                    get_integration_info(hass, registration)
-                    for registration in registrations.values()
-                )
-            ),
-        ):
-            for key, value in domain_data["info"].items():
-                if asyncio.iscoroutine(value):
-                    value = asyncio.create_task(value)
-                if isinstance(value, asyncio.Task):
-                    pending_info[(domain, key)] = value
-                    domain_data["info"][key] = {"type": "pending"}
-                else:
-                    domain_data["info"][key] = _format_value(value)
+    for domain, domain_data in zip(
+        registrations,
+        await asyncio.gather(
+            *(
+                get_integration_info(hass, registration)
+                for registration in registrations.values()
+            )
+        ),
+    ):
+        for key, value in domain_data["info"].items():
+            if asyncio.iscoroutine(value):
+                value = asyncio.create_task(value)
+            if isinstance(value, asyncio.Task):
+                pending_info[(domain, key)] = value
+                domain_data["info"][key] = {"type": "pending"}
+            else:
+                domain_data["info"][key] = _format_value(value)
 
-            data[domain] = domain_data
+        data[domain] = domain_data
 
     connection.send_result(msg["id"])
 
