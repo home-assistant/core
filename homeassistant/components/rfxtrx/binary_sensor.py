@@ -22,7 +22,7 @@ from . import (
     CONF_DATA_BITS,
     CONF_OFF_DELAY,
     RfxtrxEntity,
-    async_connect_auto_add,
+    connect_auto_add,
     find_possible_pt2262_device,
     get_device_id,
     get_pt2262_cmd,
@@ -146,7 +146,7 @@ async def async_setup_entry(
         async_add_entities([sensor])
 
     # Subscribe to main RFXtrx events
-    await async_connect_auto_add(hass, discovery_info, binary_sensor_update)
+    connect_auto_add(hass, discovery_info, binary_sensor_update)
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):

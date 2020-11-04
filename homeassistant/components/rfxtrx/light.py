@@ -16,7 +16,7 @@ from . import (
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     RfxtrxCommandEntity,
-    async_connect_auto_add,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -94,7 +94,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    await async_connect_auto_add(hass, discovery_info, light_update)
+    connect_auto_add(hass, discovery_info, light_update)
 
 
 class RfxtrxLight(RfxtrxCommandEntity, LightEntity):

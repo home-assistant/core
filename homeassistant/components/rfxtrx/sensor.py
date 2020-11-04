@@ -23,7 +23,7 @@ from . import (
     CONF_DATA_BITS,
     DATA_TYPES,
     RfxtrxEntity,
-    async_connect_auto_add,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -126,7 +126,7 @@ async def async_setup_entry(
             async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    await async_connect_auto_add(hass, discovery_info, sensor_update)
+    connect_auto_add(hass, discovery_info, sensor_update)
 
 
 class RfxtrxSensor(RfxtrxEntity):
