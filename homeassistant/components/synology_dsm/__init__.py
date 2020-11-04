@@ -258,10 +258,9 @@ class SynoApi:
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
+            device_token=self._entry.data.get("device_token"),
         )
-        await self._hass.async_add_executor_job(
-            self.dsm.login, self._entry.data.get("device_token")
-        )
+        await self._hass.async_add_executor_job(self.dsm.login)
 
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
