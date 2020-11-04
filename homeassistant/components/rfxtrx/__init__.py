@@ -49,6 +49,9 @@ from .const import (
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_SIGNAL_REPETITIONS,
+    DATA_CLEANUP_CALLBACKS,
+    DATA_LISTENER,
+    DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     EVENT_RFXTRX_EVENT,
     SERVICE_SEND,
@@ -93,8 +96,6 @@ DATA_TYPES = OrderedDict(
 )
 
 _LOGGER = logging.getLogger(__name__)
-DATA_RFXOBJECT = "rfxobject"
-DATA_LISTENER = "ha_stop"
 
 
 def _bytearray_string(data):
@@ -188,6 +189,8 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
+    hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
+
     await async_setup_internal(hass, entry)
 
     for domain in DOMAINS:
@@ -212,11 +215,16 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
 
+    for cleanup_callback in hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS]:
+        cleanup_callback()
+
     listener = hass.data[DOMAIN][DATA_LISTENER]
     listener()
 
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
+
+    hass.data.pop(DOMAIN)
 
     return True
 
@@ -426,6 +434,14 @@ def get_device_id(device, data_bits=None):
             id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+
+
+def connect_auto_add(hass, entry_data, callback_fun):
+    """Connect to dispatcher for automatic add."""
+    if entry_data[CONF_AUTOMATIC_ADD]:
+        hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS].append(
+            hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback_fun)
+        )
 
 
 class RfxtrxEntity(RestoreEntity):
