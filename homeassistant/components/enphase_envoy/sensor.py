@@ -245,7 +245,10 @@ class Envoy(Entity):
                     "inverters_production"
                 ).get(serial_number)[1]
                 _LOGGER.debug(
-                    "Updating: %s (%s) - %s.", self._type, serial_number, self._state,
+                    "Updating: %s (%s) - %s.",
+                    self._type,
+                    serial_number,
+                    self._state,
                 )
             else:
                 _LOGGER.debug(
