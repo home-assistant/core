@@ -189,7 +189,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    hass.data[DATA_CLEANUP_CALLBACKS] = []
+    hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
 
     await async_setup_internal(hass, entry)
 
@@ -215,7 +215,7 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
 
-    for cleanup_callback in hass.data[DATA_CLEANUP_CALLBACKS]:
+    for cleanup_callback in hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS]:
         cleanup_callback()
 
     listener = hass.data[DOMAIN][DATA_LISTENER]
@@ -223,6 +223,8 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
 
     rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
     await hass.async_add_executor_job(rfx_object.close_connection)
+
+    hass.data.pop(DOMAIN)
 
     return True
 
@@ -437,7 +439,7 @@ def get_device_id(device, data_bits=None):
 def connect_auto_add(hass, entry_data, callback_fun):
     """Connect to dispatcher for automatic add."""
     if entry_data[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_CLEANUP_CALLBACKS].append(
+        hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS].append(
             hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, callback_fun)
         )
 
