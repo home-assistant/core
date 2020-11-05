@@ -3,6 +3,24 @@
         "error": {
             "already_configured": "L\u00fc\u00fcs on juba m\u00e4\u00e4ratud",
             "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "id": "",
+                    "name": "Nimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "P\u00f5randa temperatuur",
+                    "precision": "T\u00e4psus"
+                }
+            }
         }
     }
 }

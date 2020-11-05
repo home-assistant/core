@@ -21,7 +21,7 @@
                 "data": {
                     "type": "Typ tisk\u00e1rny"
                 },
-                "description": "Chcete p\u0159idat tisk\u00e1rnu Brother {model} se s\u00e9riov\u00fdm \u010d\u00edslem \"{serial_number}\" do Home Assistant?",
+                "description": "Chcete p\u0159idat tisk\u00e1rnu Brother {model} se s\u00e9riov\u00fdm \u010d\u00edslem `{serial_number}` do Home Assistant?",
                 "title": "Objeven\u00e1 tisk\u00e1rna Brother"
             }
         }
