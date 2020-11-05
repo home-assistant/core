@@ -9,6 +9,10 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "house_number": "Maja number",
+                    "post_code": "Sihtnumber"
+                },
                 "title": ""
             }
         }

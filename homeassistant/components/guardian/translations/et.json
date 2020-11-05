@@ -11,7 +11,8 @@
                 "data": {
                     "ip_address": "IP aadress",
                     "port": ""
-                }
+                },
+                "description": "Seadista kohalik Elexa Guardiani seade."
             },
             "zeroconf_confirm": {
                 "description": "Kas soovid seadistada seda Guardian'i seadet?"

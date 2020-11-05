@@ -6,7 +6,8 @@
         },
         "error": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "port_exists": "See port on juba h\u00e4\u00e4lestatud"
         }
     }
 }

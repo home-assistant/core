@@ -11,9 +11,16 @@
         },
         "flow_title": "",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kood"
+                }
+            },
             "link": {
                 "data": {
                     "password": "Salas\u00f5na",
+                    "port": "",
+                    "ssl": "Kasutab SSL sertifikaati",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
@@ -22,7 +29,11 @@
             },
             "user": {
                 "data": {
+                    "host": "",
                     "password": "Salas\u00f5na",
+                    "port": "",
+                    "ssl": "Kasutab SSL sertifikaati",
+                    "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
                 "title": ""
@@ -33,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "scan_interval": "P\u00e4ringute vahe minutites",
                     "timeout": "Ajal\u00f5pp (sekundites)"
                 }
             }
