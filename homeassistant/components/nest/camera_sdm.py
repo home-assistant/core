@@ -21,8 +21,8 @@ from .device_info import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-# Every 30 seconds, check if the stream is within 1 minute of expiration
-STREAM_REFRESH_CHECK_INTERVAL = datetime.timedelta(seconds=30)
+# Every 20 seconds, check if the stream is within 1 minute of expiration
+STREAM_REFRESH_CHECK_INTERVAL = datetime.timedelta(seconds=20)
 STREAM_EXPIRATION_BUFFER = datetime.timedelta(minutes=1)
 
 
@@ -118,8 +118,8 @@ class NestCamera(Camera):
         """Alarm that fires to check if the stream should be refreshed."""
         if not self._stream:
             return
-        if self._stream.expires_at >= (now - STREAM_EXPIRATION_BUFFER):
-            _LOGGER.debug("Stream expired, extending stream")
+        if (self._stream.expires_at - STREAM_EXPIRATION_BUFFER) < now:
+            _LOGGER.debug("Steaming url expired, extending stream")
             new_stream = await self._stream.extend_rtsp_stream()
             self._stream = new_stream
             self.async_write_ha_state()

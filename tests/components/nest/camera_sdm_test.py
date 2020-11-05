@@ -170,8 +170,8 @@ async def test_camera_stream(hass, aiohttp_client):
 async def test_refresh_expired_stream_token(hass, aiohttp_client):
     """Test a camera stream expiration and refresh."""
     now = utcnow()
-    expiration = now + datetime.timedelta(seconds=120)
-    new_expiration = now + datetime.timedelta(seconds=300)
+    expiration = now + datetime.timedelta(seconds=90)
+    new_expiration = now + datetime.timedelta(seconds=180)
     responses = [
         FakeResponse(
             {
@@ -209,15 +209,20 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    # Fire alarm. The stream has not yet expired, so the url is not refreshed
-    async_fire_time_changed(hass, now + datetime.timedelta(seconds=30))
-    await hass.async_block_till_done()
+    # Fire alarm (> refresh interval). The stream has not yet expired, so the
+    # url is not refreshed
+    next_update = now + datetime.timedelta(seconds=25)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    # Fire alarm when stream is nearing expiration, causing it to be refreshed
-    async_fire_time_changed(hass, now + datetime.timedelta(seconds=100))
-    await hass.async_block_till_done()
+    # Fire alarm when stream is nearing expiration, causing it to be extended
+    next_update = now + datetime.timedelta(seconds=45)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
