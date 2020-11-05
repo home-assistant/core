@@ -331,9 +331,9 @@ async def _async_cached_load_translations(
         ),
     }
 
-    cached_components.update(components_to_load)
-    # The cache must be set while holding the lock
-    cache.async_set_cache(language, category, cached_components, resources)
+    cache.async_set_cache(
+        language, category, {*cached_components, *components_to_load}, resources
+    )
 
     return resources
 
