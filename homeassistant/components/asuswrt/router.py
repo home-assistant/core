@@ -1,8 +1,9 @@
 """Represent the AsusWrt router and its devices and sensors."""
-from aioasuswrt.asuswrt import AsusWrt
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, Optional
+
+from aioasuswrt.asuswrt import AsusWrt
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
