@@ -1139,12 +1139,14 @@ def async_track_point_in_utc_time(
         """Call the action."""
         nonlocal cancel_callback
 
+        now = time_tracker_utcnow()
+
         # Depending on the available clock support (including timer hardware
         # and the OS kernel) it can happen that we fire a little bit too early
         # as measured by utcnow(). That is bad when callbacks have assumptions
         # about the current time. Thus, we rearm the timer for the remaining
         # time.
-        delta = point_in_time.timestamp() - time.time()
+        delta = (utc_point_in_time - now).total_seconds()
         if delta > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
@@ -1153,7 +1155,7 @@ def async_track_point_in_utc_time(
 
         hass.async_run_hass_job(job, utc_point_in_time)
 
-    delta = point_in_time.timestamp() - time.time()
+    delta = utc_point_in_time.timestamp() - time.time()
     cancel_callback = hass.loop.call_later(delta, run_action)
 
     @callback
@@ -1311,7 +1313,7 @@ def async_track_sunset(
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
-track_point_in_utc_time_now = dt_util.utcnow
+time_tracker_utcnow = dt_util.utcnow
 
 
 @callback
@@ -1352,10 +1354,11 @@ def async_track_utc_time_change(
     time_listener: Optional[CALLBACK_TYPE] = None
 
     @callback
-    def pattern_time_change_listener(now: datetime) -> None:
+    def pattern_time_change_listener(_: datetime) -> None:
         """Listen for matching time_changed events."""
         nonlocal time_listener
 
+        now = time_tracker_utcnow()
         hass.async_run_hass_job(job, dt_util.as_local(now) if local else now)
 
         time_listener = async_track_point_in_utc_time(
