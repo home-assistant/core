@@ -243,9 +243,6 @@ async def test_translation_merging(hass, caplog):
 
         assert "component.sensor.state.moon__phase.first_quarter" in translations
 
-    import pprint
-
-    pprint.pprint([caplog.text])
     assert (
         "An integration providing translations for sensor provided invalid data: bad data"
         in caplog.text
