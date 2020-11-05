@@ -222,9 +222,9 @@ class TranslationCache:
     @callback
     def async_get_cache(
         self, language: str, category: str
-    ) -> Optional[Tuple[Set[str], Dict[str, str]]]:
+    ) -> Tuple[Set[str], Dict[str, str]]:
         """Get cache."""
-        return self.cache.setdefault(language, {}).get(category)
+        return self.cache.setdefault(language, {}).get(category, (set(), {}))
 
     @callback
     def async_set_cache(
@@ -298,20 +298,11 @@ async def _async_cached_load_translations(
     category: str,
     components: Set,
 ) -> Dict[str, Any]:
-    cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
-    if cache is None:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = TranslationCache(hass)
-
-    cached_translations = {}
-    cached_components = set()
-    cache_entry = cache.async_get_cache(language, category)
-
-    if cache_entry is not None:
-        cached_components, cached_translations = cache_entry
-        components_to_load = components - cached_components
-    else:
-        components_to_load = components
-
+    cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, TranslationCache(hass))
+    cached_components: Set[str]
+    cached_translations: Dict[str, str]
+    cached_components, cached_translations = cache.async_get_cache(language, category)
+    components_to_load = components - cached_components
     if not components_to_load:
         return cached_translations
 
