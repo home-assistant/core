@@ -202,10 +202,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
                 None,
-                LAT_NE=area.lat_ne,
-                LON_NE=area.lon_ne,
-                LAT_SW=area.lat_sw,
-                LON_SW=area.lon_sw,
+                lat_ne=area.lat_ne,
+                lon_ne=area.lon_ne,
+                lat_sw=area.lat_sw,
+                lon_sw=area.lon_sw,
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
@@ -473,10 +473,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes.append(
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -563,10 +563,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes = [
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -577,10 +577,10 @@ class NetatmoPublicSensor(NetatmoBase):
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
             self.async_update_callback,
-            LAT_NE=area.lat_ne,
-            LON_NE=area.lon_ne,
-            LAT_SW=area.lat_sw,
-            LON_SW=area.lon_sw,
+            lat_ne=area.lat_ne,
+            lon_ne=area.lon_ne,
+            lat_sw=area.lat_sw,
+            lon_sw=area.lon_sw,
         )
 
     @callback
