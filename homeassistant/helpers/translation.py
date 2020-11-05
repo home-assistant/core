@@ -1,10 +1,9 @@
 """Translation string lookup helpers."""
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import Event, callback
+from homeassistant.core import callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -19,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
+LOCALE_EN = "en"
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -120,19 +120,7 @@ def merge_resources(
         if new_value is None:
             continue
 
-        cur_value = domain_resources.get(category)
-
-        # If not exists, set value.
-        if cur_value is None:
-            domain_resources[category] = new_value
-
-        # If exists, and a list, append
-        elif isinstance(cur_value, list):
-            cur_value.append(new_value)
-
-        # If exists, and a dict make it a list with 2 entries.
-        else:
-            domain_resources[category] = [cur_value, new_value]
+        domain_resources.setdefault(category, []).append(new_value)
 
     # Merge all the lists
     for domain, domain_resources in list(resources.items()):
@@ -226,35 +214,27 @@ async def async_get_component_strings(
     return translations
 
 
-class FlatCache:
+class TranslationCache:
     """Cache for flattened translations."""
 
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the cache."""
         self.hass = hass
-        self.cache: Dict[str, Dict[str, Dict[str, str]]] = {}
+        self.cache: Dict[str, Dict[str, Tuple[Set[str], Dict[str, str]]]] = {}
 
     @callback
-    def async_setup(self) -> None:
-        """Initialize the cache clear listeners."""
-        self.hass.bus.async_listen(EVENT_COMPONENT_LOADED, self._async_component_loaded)
-
-    @callback
-    def _async_component_loaded(self, event: Event) -> None:
-        """Clear cache when a new component is loaded."""
-        self.cache = {}
-
-    @callback
-    def async_get_cache(self, language: str, category: str) -> Optional[Dict[str, str]]:
+    def async_get_cache(
+        self, language: str, category: str
+    ) -> Optional[Tuple[Set[str], Dict[str, str]]]:
         """Get cache."""
         return self.cache.setdefault(language, {}).get(category)
 
     @callback
     def async_set_cache(
-        self, language: str, category: str, data: Dict[str, str]
+        self, language: str, category: str, components: Set[str], data: Dict[str, str]
     ) -> None:
         """Set cache."""
-        self.cache.setdefault(language, {})[category] = data
+        self.cache.setdefault(language, {})[category] = (components, data)
 
 
 @bind_hass
@@ -275,6 +255,9 @@ async def async_get_translations(
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
 
+    load_func = _async_load_translations
+    resource_func = build_resources
+
     if integration is not None:
         components = {integration}
     elif config_flow:
@@ -283,8 +266,10 @@ async def async_get_translations(
         # We can't cache with config flow, as we can't monitor it during runtime.
         components = (await async_get_config_flows(hass)) - hass.config.components
     else:
+        load_func = _async_cached_load_translations
         # Only 'state' supports merging, so remove platforms from selection
         if category == "state":
+            resource_func = merge_resources
             components = set(hass.config.components)
         else:
             components = {
@@ -294,54 +279,84 @@ async def async_get_translations(
             }
 
     async with lock:
-        use_cache = integration is None and not config_flow
-        if use_cache:
-            cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
-            if cache is None:
-                cache = hass.data[TRANSLATION_FLATTEN_CACHE] = FlatCache(hass)
-                cache.async_setup()
-
-            cached_translations = cache.async_get_cache(language, category)
-
-            if cached_translations is not None:
-                return cached_translations
-
-        tasks = [async_get_component_strings(hass, language, components)]
-
-        # Fetch the English resources, as a fallback for missing keys
-        if language != "en":
-            tasks.append(async_get_component_strings(hass, "en", components))
-
-        _LOGGER.debug(
-            "Cache miss (use_cache=%s) for %s, %s: %s",
-            use_cache,
-            language,
-            category,
-            ", ".join(components),
-        )
-
-        results = await asyncio.gather(*tasks)
-
-        _LOGGER.debug("Results: %s", results)
-
-        if category == "state":
-            resource_func = merge_resources
-        else:
-            resource_func = build_resources
-
-        resources = flatten(resource_func(results[0], components, category))
-
-        if language != "en":
-            base_resources = flatten(resource_func(results[1], components, category))
-            resources = {**base_resources, **resources}
-
-        # The cache must be set while holding the lock
-        if use_cache:
-            assert cache is not None
-            cache.async_set_cache(language, category, resources)
+        resources = await load_func(hass, resource_func, language, category, components)
 
     if config_flow:
         loaded_comp_resources = await async_get_translations(hass, language, category)
         resources.update(loaded_comp_resources)
 
     return resources
+
+
+async def _async_load_translations(
+    hass: HomeAssistantType,
+    resource_func: Callable,
+    language: str,
+    category: str,
+    components: Set,
+) -> Dict[str, Any]:
+    results = await _async_gather_load_tasks(hass, language, components)
+
+    resources = flatten(resource_func(results[0], components, category))
+
+    if language == LOCALE_EN:
+        return resources
+
+    base_resources = flatten(resource_func(results[1], components, category))
+    return {**base_resources, **resources}
+
+
+async def _async_cached_load_translations(
+    hass: HomeAssistantType,
+    resource_func: Callable,
+    language: str,
+    category: str,
+    components: Set,
+) -> Dict[str, Any]:
+    cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
+    if cache is None:
+        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = TranslationCache(hass)
+
+    cached_translations = {}
+    cache_entry = cache.async_get_cache(language, category)
+
+    if cache_entry is not None:
+        cached_components, cached_translations = cache_entry
+        if cached_components == components:
+            return cached_translations
+        components_to_load = components - cached_components
+    else:
+        components_to_load = components
+
+    _LOGGER.debug(
+        "Cache miss for %s, %s: %s",
+        language,
+        category,
+        ", ".join(components_to_load),
+    )
+
+    resources = {
+        **cached_translations,
+        **(
+            await _async_load_translations(
+                hass, resource_func, language, category, components_to_load
+            )
+        ),
+    }
+
+    # The cache must be set while holding the lock
+    cache.async_set_cache(language, category, components, resources)
+
+    return resources
+
+
+async def _async_gather_load_tasks(
+    hass: HomeAssistantType, language: str, components: Set
+) -> List[Dict[str, Any]]:
+    # Fetch the English resources, as a fallback for missing keys
+    languages = [LOCALE_EN] if language == LOCALE_EN else [language, LOCALE_EN]
+
+    results: List[Dict[str, Any]] = await asyncio.gather(
+        *[async_get_component_strings(hass, lang, components) for lang in languages]
+    )
+    return results
