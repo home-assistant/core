@@ -93,37 +93,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initiated by the user."""
-        errors = {}
-
-        if user_input is None:
-            return self._show_setup_form(user_input, errors)
-
-        pwd = user_input.get(CONF_PASSWORD)
-        ssh = user_input.get(CONF_SSH_KEY)
-
-        if not (pwd or ssh):
-            errors["base"] = "pwd_or_ssh"
-        elif ssh:
-            if pwd:
-                errors["base"] = "pwd_and_ssh"
-            elif not isfile(ssh):
-                errors["base"] = "ssh_not_file"
-
-        if errors:
-            return self._show_setup_form(user_input, errors)
-
-        self._host = user_input[CONF_HOST]
-        self._name = user_input.get(CONF_NAME, self._host)
-
-        # Check if already configured
-        await self.async_set_unique_id(self._host)
-        self._abort_if_unique_id_configured()
-
-        return await self.async_check_connection(user_input)
-
-    async def async_check_connection(self, user_input):
+    async def _async_check_connection(self, user_input):
         """Attempt to connect the AsusWrt router."""
 
         errors = {}
@@ -154,6 +124,36 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return self._show_setup_form(user_input, errors)
+
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initiated by the user."""
+        errors = {}
+
+        if user_input is None:
+            return self._show_setup_form(user_input, errors)
+
+        pwd = user_input.get(CONF_PASSWORD)
+        ssh = user_input.get(CONF_SSH_KEY)
+
+        if not (pwd or ssh):
+            errors["base"] = "pwd_or_ssh"
+        elif ssh:
+            if pwd:
+                errors["base"] = "pwd_and_ssh"
+            elif not isfile(ssh):
+                errors["base"] = "ssh_not_file"
+
+        if errors:
+            return self._show_setup_form(user_input, errors)
+
+        self._host = user_input[CONF_HOST]
+        self._name = user_input.get(CONF_NAME, self._host)
+
+        # Check if already configured
+        await self.async_set_unique_id(self._host)
+        self._abort_if_unique_id_configured()
+
+        return await self._async_check_connection(user_input)
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""

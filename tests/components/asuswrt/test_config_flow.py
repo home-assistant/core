@@ -167,15 +167,6 @@ async def test_abort_if_already_setup(hass):
         unique_id=HOST,
     ).add_to_hass(hass)
 
-    # Should fail, same HOST (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=CONFIG_DATA,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
     # Should fail, same HOST (flow)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -185,20 +176,28 @@ async def test_abort_if_already_setup(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-
-async def test_on_connect_failed(hass):
-    """Test when we have errors during linking the router."""
+    # Should fail, same HOST (import)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_IMPORT},
         data=CONFIG_DATA,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_on_connect_failed(hass):
+    """Test when we have errors connecting the router."""
+    flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
 
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
         AsusWrt.return_value.connection.async_connect = AsyncMock()
         AsusWrt.return_value.is_connected = False
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_DATA
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
@@ -206,7 +205,7 @@ async def test_on_connect_failed(hass):
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
         AsusWrt.return_value.connection.async_connect = AsyncMock(side_effect=OSError)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_DATA
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
@@ -214,7 +213,7 @@ async def test_on_connect_failed(hass):
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
         AsusWrt.return_value.connection.async_connect = AsyncMock(side_effect=TypeError)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONFIG_DATA
+            flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "unknown"}
