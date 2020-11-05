@@ -124,11 +124,8 @@ def merge_resources(
 
     # Merge all the lists
     for domain, domain_resources in list(resources.items()):
-        if not isinstance(domain_resources.get(category), list):
-            continue
-
         merged = {}
-        for entry in domain_resources[category]:
+        for entry in domain_resources.get(category, []):
             if isinstance(entry, dict):
                 merged.update(entry)
             else:
@@ -261,9 +258,7 @@ async def async_get_translations(
     if integration is not None:
         components = {integration}
     elif config_flow:
-        # When it's a config flow, we're going to merge the cached loaded component results
-        # with the integrations that have not been loaded yet. We merge this at the end.
-        # We can't cache with config flow, as we can't monitor it during runtime.
+        load_func = _async_cached_load_translations
         components = (await async_get_config_flows(hass)) - hass.config.components
     else:
         load_func = _async_cached_load_translations
