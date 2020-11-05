@@ -155,26 +155,21 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
 
-        if result == RESULT_SUCCESS:
-            if CONF_PHONEBOOK in user_input:
-                self._phonebook_id = user_input[CONF_PHONEBOOK]
-                self._phonebook_name = user_input[CONF_NAME]
+        if CONF_PHONEBOOK in user_input:
+            self._phonebook_id = user_input[CONF_PHONEBOOK]
+            self._phonebook_name = user_input[CONF_NAME]
 
-            elif len(self._phonebook_ids) > 1:
-                return await self.async_step_phonebook()
+        elif len(self._phonebook_ids) > 1:
+            return await self.async_step_phonebook()
 
-            else:
-                self._phonebook_id = DEFAULT_PHONEBOOK
-                self._phonebook_name = await self._get_name_of_phonebook(
-                    self._phonebook_id
-                )
+        else:
+            self._phonebook_id = DEFAULT_PHONEBOOK
+            self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
 
-            await self.async_set_unique_id(
-                f"{self._serial_number}-{self._phonebook_id}"
-            )
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
+        self._abort_if_unique_id_configured()
 
-            return self._get_config_entry()
+        return self._get_config_entry()
 
     async def async_step_phonebook(self, user_input=None):
         """Handle a flow to chose one of multiple available phonebooks."""
