@@ -252,16 +252,15 @@ async def async_get_translations(
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
 
-    load_func = _async_load_translations
+    load_func = _async_cached_load_translations
     resource_func = build_resources
 
     if integration is not None:
         components = {integration}
+        load_func = _async_load_translations
     elif config_flow:
-        load_func = _async_cached_load_translations
         components = (await async_get_config_flows(hass)) - hass.config.components
     else:
-        load_func = _async_cached_load_translations
         # Only 'state' supports merging, so remove platforms from selection
         if category == "state":
             resource_func = merge_resources
@@ -274,13 +273,7 @@ async def async_get_translations(
             }
 
     async with lock:
-        resources = await load_func(hass, resource_func, language, category, components)
-
-    if config_flow:
-        loaded_comp_resources = await async_get_translations(hass, language, category)
-        resources.update(loaded_comp_resources)
-
-    return resources
+        return await load_func(hass, resource_func, language, category, components)
 
 
 async def _async_load_translations(
