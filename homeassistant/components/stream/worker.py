@@ -2,6 +2,7 @@
 from collections import deque
 import io
 import logging
+import time
 
 import av
 
@@ -48,14 +49,20 @@ def stream_worker(hass, stream, quit_event):
 
     wait_timeout = 0
     while not quit_event.wait(timeout=wait_timeout):
+        start_time = time.time()
         try:
             _stream_worker_internal(hass, stream, quit_event)
         except av.error.FFmpegError:  # pylint: disable=c-extension-no-member
             _LOGGER.exception("Stream connection failed: %s", stream.source)
         if not stream.keepalive or quit_event.is_set():
             break
-        # To avoid excessive restarts, don't restart faster than once every 40 seconds.
-        wait_timeout = 40
+        # To avoid excessive restarts, wait before restarting
+        # As the required recovery time may be different for different setups, start
+        # with trying a short wait_timeout and increase it on each reconnection attempt.
+        # Reset the wait_timeout after the worker has been up for several minutes
+        if time.time() - start_time > 300:
+            wait_timeout = 0
+        wait_timeout += 10
         _LOGGER.debug(
             "Restarting stream worker in %d seconds: %s",
             wait_timeout,
