@@ -258,17 +258,14 @@ async def async_get_translations(
         components = {integration}
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    else:
+    elif category == "state":
         # Only 'state' supports merging, so remove platforms from selection
-        if category == "state":
-            resource_func = merge_resources
-            components = set(hass.config.components)
-        else:
-            components = {
-                component
-                for component in hass.config.components
-                if "." not in component
-            }
+        resource_func = merge_resources
+        components = set(hass.config.components)
+    else:
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
 
     async with lock:
         return await _async_cached_load_translations(
