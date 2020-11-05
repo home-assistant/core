@@ -7,7 +7,6 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     PRESSURE_CBAR,
 )
-from homeassistant.components.onewire.sensor import DEVICE_SENSORS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -415,7 +414,8 @@ MOCK_DEVICE_SENSORS = {
 async def test_owserver_setup_valid_device(hass, device_id):
     """Test for 1-Wire device.
 
-    As they would be on a clean setup: all binary-sensors and switches disabled."""
+    As they would be on a clean setup: all binary-sensors and switches disabled.
+    """
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
