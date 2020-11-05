@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             # Only add Window Shutters
-            if device.is_windowshutter():
+            if cube.is_windowshutter(device):
                 devices.append(MaxCubeShutter(handler, name, device.rf_address))
 
     if devices:
