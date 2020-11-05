@@ -185,11 +185,8 @@ class ProxmoxSensor(Entity):
         elif self._sensor_type == "disk":
             self._state = round(item["maxdisk"] / (1024 ** 3), 1)
         elif self._sensor_type == "disk_free":
-            if self._item_type == ProxmoxItemType.lxc:
-                self._state = round((item["maxdisk"] - item["disk"]) / (1024 ** 3), 0)
+            self._state = round((item["maxdisk"] - item["disk"]) / (1024 ** 3), 0)
         elif self._sensor_type == "disk_use":
-            if self._item_type == ProxmoxItemType.lxc:
-                self._state = round(item["disk"] / (1024 ** 3), 1)
+            self._state = round(item["disk"] / (1024 ** 3), 1)
         elif self._sensor_type == "disk_use_percent":
-            if self._item_type == ProxmoxItemType.lxc:
-                self._state = round(item["disk"] / item["maxdisk"] * 100, 1)
+            self._state = round(item["disk"] / item["maxdisk"] * 100, 1)
