@@ -2,7 +2,7 @@
 import asyncio
 from collections import ChainMap
 import logging
-from typing import Any, Callable, ChainMap as ChainMapType, Dict, Optional, Set, Tuple
+from typing import Any, ChainMap as ChainMapType, Dict, Optional, Set, Tuple
 
 from homeassistant.core import callback
 from homeassistant.loader import (
@@ -250,7 +250,6 @@ async def async_get_translations(
     integrations if config_flow is true.
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
-    resource_func = build_resources
 
     if integration is not None:
         components = {integration}
@@ -258,7 +257,6 @@ async def async_get_translations(
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":
         # Only 'state' supports merging, so remove platforms from selection
-        resource_func = merge_resources
         components = set(hass.config.components)
     else:
         components = {
@@ -267,13 +265,12 @@ async def async_get_translations(
 
     async with lock:
         return await _async_cached_load_translations(
-            hass, resource_func, language, category, components
+            hass, language, category, components
         )
 
 
 async def _async_load_translations(
     hass: HomeAssistantType,
-    resource_func: Callable,
     language: str,
     category: str,
     components: Set,
@@ -285,6 +282,8 @@ async def _async_load_translations(
         *[async_get_component_strings(hass, lang, components) for lang in languages]
     )
 
+    resource_func = merge_resources if category == "state" else build_resources
+
     return ChainMap(
         *[flatten(resource_func(result, components, category)) for result in results]
     )
@@ -292,7 +291,6 @@ async def _async_load_translations(
 
 async def _async_cached_load_translations(
     hass: HomeAssistantType,
-    resource_func: Callable,
     language: str,
     category: str,
     components: Set,
@@ -313,9 +311,7 @@ async def _async_cached_load_translations(
     )
 
     resources.update(
-        await _async_load_translations(
-            hass, resource_func, language, category, components_to_load
-        )
+        await _async_load_translations(hass, language, category, components_to_load)
     )
 
     cache.async_set(
