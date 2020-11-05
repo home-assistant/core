@@ -106,27 +106,27 @@ async def async_generate_encodings(hass, faces):
 
 async def async_extract_face_encoding(hass, face_file):
     """Extract face encoding from an image."""
-    try:
-        image = await hass.async_add_executor_job(
-            face_recognition.load_image_file, face_file
+    image = await hass.async_add_executor_job(
+        face_recognition.load_image_file, face_file
+    )
+
+    encodings_list = await hass.async_add_executor_job(
+        face_recognition.face_encodings, image
+    )
+
+    num_of_faces = len(encodings_list)
+
+    if num_of_faces != 1:
+        error_message = (
+            "More than one face detected in image for a known person"
+            if num_of_faces > 1
+            else "No faces detected in the image"
         )
 
-        encodings_list = await hass.async_add_executor_job(
-            face_recognition.face_encodings, image
-        )
-
-        if len(encodings_list) > 1:
-            _LOGGER.error(
-                "Failed to parse %s. More than one face detected in image for a known person",
-                face_file,
-            )
-            return None
-
-        return encodings_list[0]
-
-    except IndexError as err:
-        _LOGGER.error("Failed to parse %s. Error: %s", face_file, err)
+        _LOGGER.error("Failed to parse %s. %s", face_file, error_message)
         return None
+
+    return encodings_list[0]
 
 
 class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
@@ -152,12 +152,11 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         """Update known face encodings when the task has finished."""
         try:
             encodings = future.result()
-
-            for name, face_encoding_list in encodings.items():
-                self._faces[name] = face_encoding_list
-
         except asyncio.InvalidStateError:
             _LOGGER.error("Generating known face encodings failed")
+
+        for name, face_encoding_list in encodings.items():
+            self._faces[name] = face_encoding_list
 
     @property
     def camera_entity(self):
