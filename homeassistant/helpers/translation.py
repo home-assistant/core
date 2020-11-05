@@ -282,6 +282,8 @@ async def _async_load_translations(
         *[async_get_component_strings(hass, lang, components) for lang in languages]
     )
 
+    _LOGGER.debug("async_get_component_strings: %s", results)
+
     resource_func = merge_resources if category == "state" else build_resources
 
     return ChainMap(
