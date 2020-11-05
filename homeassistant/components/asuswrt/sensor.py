@@ -1,184 +1,187 @@
 """Asuswrt status sensors."""
 import logging
+from typing import Dict
 
-from aioasuswrt.asuswrt import AsusWrt
-
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DATA_RATE_MEGABITS_PER_SECOND,
+    DATA_GIGABYTES,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DATA_ASUSWRT
+from .const import (
+    DOMAIN,
+    SENSOR_CONNECTED_DEVICE,
+    SENSOR_RX_BYTES,
+    SENSOR_RX_RATES,
+    SENSOR_TX_BYTES,
+    SENSOR_TX_RATES,
+)
+from .router import AsusWrtRouter
+
+SENSOR_DEVICE_CLASS = "device_class"
+SENSOR_ICON = "icon"
+SENSOR_NAME = "name"
+SENSOR_UNIT = "unit"
+SENSOR_FACTOR = "factor"
+
+CONNECTION_SENSORS = {
+    SENSOR_CONNECTED_DEVICE: {
+        SENSOR_NAME: "AsusWrt connected device",
+        SENSOR_UNIT: None,
+        SENSOR_FACTOR: 0,
+        SENSOR_ICON: None,
+        SENSOR_DEVICE_CLASS: None,
+    },
+    SENSOR_RX_RATES: {
+        SENSOR_NAME: "AsusWrt download speed",
+        SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
+        SENSOR_FACTOR: 125000,
+        SENSOR_ICON: "mdi:download-network",
+        SENSOR_DEVICE_CLASS: None,
+    },
+    SENSOR_TX_RATES: {
+        SENSOR_NAME: "AsusWrt upload speed",
+        SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
+        SENSOR_FACTOR: 125000,
+        SENSOR_ICON: "mdi:upload-network",
+        SENSOR_DEVICE_CLASS: None,
+    },
+    SENSOR_RX_BYTES: {
+        SENSOR_NAME: "AsusWrt download",
+        SENSOR_UNIT: DATA_GIGABYTES,
+        SENSOR_FACTOR: 1000000000,
+        SENSOR_ICON: "mdi:download-network",
+        SENSOR_DEVICE_CLASS: None,
+    },
+    SENSOR_TX_BYTES: {
+        SENSOR_NAME: "AsusWrt upload",
+        SENSOR_UNIT: DATA_GIGABYTES,
+        SENSOR_FACTOR: 1000000000,
+        SENSOR_ICON: "mdi:upload-network",
+        SENSOR_DEVICE_CLASS: None,
+    },
+}
+
+TEMPERATURE_SENSOR_TEMPLATE = {
+    SENSOR_NAME: None,
+    SENSOR_UNIT: TEMP_CELSIUS,
+    SENSOR_FACTOR: None,
+    SENSOR_ICON: "mdi:thermometer",
+    SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
-UPLOAD_ICON = "mdi:upload-network"
-DOWNLOAD_ICON = "mdi:download-network"
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up the sensors."""
+    router = hass.data[DOMAIN][entry.unique_id]
+    entities = []
+
+    for sensor_key in CONNECTION_SENSORS:
+        entities.append(
+            AsusWrtSensor(router, sensor_key, CONNECTION_SENSORS[sensor_key])
+        )
+
+    for sensor_name in router.sensors_temperature:
+        entities.append(
+            AsusWrtSensor(
+                router,
+                sensor_name,
+                {**TEMPERATURE_SENSOR_TEMPLATE, SENSOR_NAME: f"AsusWrt {sensor_name}"},
+            )
+        )
+
+    async_add_entities(entities, True)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the asuswrt sensors."""
-    if discovery_info is None:
-        return
+class AsusWrtSensor(Entity):
+    """Representation of a AsusWrt sensor."""
 
-    api = hass.data[DATA_ASUSWRT]
-
-    devices = []
-
-    if "devices" in discovery_info:
-        devices.append(AsuswrtDevicesSensor(api))
-    if "download" in discovery_info:
-        devices.append(AsuswrtTotalRXSensor(api))
-    if "upload" in discovery_info:
-        devices.append(AsuswrtTotalTXSensor(api))
-    if "download_speed" in discovery_info:
-        devices.append(AsuswrtRXSensor(api))
-    if "upload_speed" in discovery_info:
-        devices.append(AsuswrtTXSensor(api))
-
-    add_entities(devices)
-
-
-class AsuswrtSensor(Entity):
-    """Representation of a asuswrt sensor."""
-
-    _name = "generic"
-
-    def __init__(self, api: AsusWrt):
-        """Initialize the sensor."""
-        self._api = api
+    def __init__(
+        self, router: AsusWrtRouter, sensor_type: str, sensor: Dict[str, any]
+    ) -> None:
+        """Initialize a AsusWrt sensor."""
         self._state = None
-        self._devices = None
-        self._rates = None
-        self._speed = None
-        self._connect_error = False
+        self._router = router
+        self._sensor_type = sensor_type
+        self._name = sensor[SENSOR_NAME]
+        self._unit = sensor[SENSOR_UNIT]
+        self._factor = sensor[SENSOR_FACTOR]
+        self._icon = sensor[SENSOR_ICON]
+        self._device_class = sensor[SENSOR_DEVICE_CLASS]
+        self._unique_id = f"{self._router.host} {self._name}"
+
+    @callback
+    def async_update_state(self) -> None:
+        """Update the AsusWrt sensor."""
+        state = self._router.sensors[self._sensor_type]
+        if self._factor:
+            self._state = round(state / self._factor, 2)
+        else:
+            self._state = state
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def state(self) -> str:
+        """Return the state."""
         return self._state
 
-    async def async_update(self):
-        """Fetch status from asuswrt."""
-        try:
-            self._devices = await self._api.async_get_connected_devices()
-            self._rates = await self._api.async_get_bytes_total()
-            self._speed = await self._api.async_get_current_transfer_rates()
-            if self._connect_error:
-                self._connect_error = False
-                _LOGGER.info("Reconnected to ASUS router for %s update", self.entity_id)
-        except OSError as err:
-            if not self._connect_error:
-                self._connect_error = True
-                _LOGGER.error(
-                    "Error connecting to ASUS router for %s update: %s",
-                    self.entity_id,
-                    err,
-                )
-
-
-class AsuswrtDevicesSensor(AsuswrtSensor):
-    """Representation of a asuswrt download speed sensor."""
-
-    _name = "Asuswrt Devices Connected"
-
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._devices:
-            self._state = len(self._devices)
-
-
-class AsuswrtRXSensor(AsuswrtSensor):
-    """Representation of a asuswrt download speed sensor."""
-
-    _name = "Asuswrt Download Speed"
-    _unit = DATA_RATE_MEGABITS_PER_SECOND
-
     @property
-    def icon(self):
-        """Return the icon."""
-        return DOWNLOAD_ICON
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    def unit_of_measurement(self) -> str:
+        """Return the unit."""
         return self._unit
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._speed:
-            self._state = round(self._speed[0] / 125000, 2)
-
-
-class AsuswrtTXSensor(AsuswrtSensor):
-    """Representation of a asuswrt upload speed sensor."""
-
-    _name = "Asuswrt Upload Speed"
-    _unit = DATA_RATE_MEGABITS_PER_SECOND
-
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
-        return UPLOAD_ICON
+        return self._icon
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
-
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._speed:
-            self._state = round(self._speed[1] / 125000, 2)
-
-
-class AsuswrtTotalRXSensor(AsuswrtSensor):
-    """Representation of a asuswrt total download sensor."""
-
-    _name = "Asuswrt Download"
-    _unit = DATA_GIGABYTES
+    def device_class(self) -> str:
+        """Return the device_class."""
+        return self._device_class
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return DOWNLOAD_ICON
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return self._router.device_info
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._rates:
-            self._state = round(self._rates[0] / 1000000000, 1)
+    @callback
+    def async_on_demand_update(self):
+        """Update state."""
+        self.async_update_state()
+        self.async_write_ha_state()
 
-
-class AsuswrtTotalTXSensor(AsuswrtSensor):
-    """Representation of a asuswrt total upload sensor."""
-
-    _name = "Asuswrt Upload"
-    _unit = DATA_GIGABYTES
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return UPLOAD_ICON
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
-
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await super().async_update()
-        if self._rates:
-            self._state = round(self._rates[1] / 1000000000, 1)
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self.async_update_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_sensor_update,
+                self.async_on_demand_update,
+            )
+        )

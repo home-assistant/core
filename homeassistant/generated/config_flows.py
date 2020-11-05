@@ -19,6 +19,7 @@ FLOWS = [
     "ambiclimate",
     "ambient_station",
     "arcam_fmj",
+    "asuswrt",
     "atag",
     "august",
     "aurora",
