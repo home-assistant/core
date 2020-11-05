@@ -56,9 +56,14 @@ def volumio_exception_handler(func):
             if self.available:
                 # Currently this always returns True.
                 # TO DO: Implement better handling of loss of connection.
-                # Combine this with better update handling, using DataUpdateCoordinator and CoordinatorEntity?
+                # Combine this with better update handling,
+                # using DataUpdateCoordinator and CoordinatorEntity?
                 # Look at Roku integration for example
-                _LOGGER.error("Error communicating with API in function %s: %s", func.__name__,error)
+                _LOGGER.error(
+                    "Error communicating with API in function %s: %s",
+                    func.__name__,
+                    error,
+                )
 
     return handler
 

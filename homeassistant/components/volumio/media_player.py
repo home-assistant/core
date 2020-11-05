@@ -33,9 +33,9 @@ from homeassistant.const import (
 )
 from homeassistant.util import Throttle
 
+from . import volumio_exception_handler
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
-from . import volumio_exception_handler
 
 _CONFIGURING = {}
 
