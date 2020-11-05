@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "mqtt_required": "The MQTT integration is not set up",
+            "mqtt_required": "Set up the MQTT integration first; it's used to communicate with the OpenZWave daemon.",
             "one_instance_allowed": "The integration only supports one Z-Wave instance",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },

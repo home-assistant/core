@@ -7,7 +7,7 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "mqtt_required": "The MQTT integration is not set up"
+      "mqtt_required": "Set up the MQTT integration first; it's used to communicate with the OpenZWave daemon."
     }
   }
 }
