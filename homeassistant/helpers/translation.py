@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
+LOCALE_EN = "en"
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -120,19 +121,6 @@ def merge_resources(
             continue
 
         domain_resources.setdefault(category, []).append(new_value)
-    #        cur_value = domain_resources.get(category)
-    #
-    #        # If not exists, set value.
-    #        if cur_value is None:
-    #            domain_resources[category] = [new_value]
-
-    # If exists, and a list, append
-    #        elif isinstance(cur_value, list):
-    #            cur_value.append(new_value)
-
-    # If exists, and a dict make it a list with 2 entries.
-    #        else:
-    #            domain_resources[category] = [cur_value, new_value]
 
     # Merge all the lists
     for domain, domain_resources in list(resources.items()):
@@ -311,7 +299,7 @@ async def _async_load_translations(
 
     resources = flatten(resource_func(results[0], components, category))
 
-    if language == "en":
+    if language == LOCALE_EN:
         return resources
 
     base_resources = flatten(resource_func(results[1], components, category))
@@ -365,10 +353,10 @@ async def _async_cached_load_translations(
 async def _async_gather_load_tasks(
     hass: HomeAssistantType, language: str, components: Set
 ) -> List[Dict[str, Any]]:
-    tasks = [async_get_component_strings(hass, language, components)]
     # Fetch the English resources, as a fallback for missing keys
-    if language != "en":
-        tasks.append(async_get_component_strings(hass, "en", components))
+    languages = [LOCALE_EN] if language == LOCALE_EN else [language, LOCALE_EN]
 
-    results: List[Dict[str, Any]] = await asyncio.gather(*tasks)
+    results: List[Dict[str, Any]] = await asyncio.gather(
+        *[async_get_component_strings(hass, lang, components) for lang in languages]
+    )
     return results
