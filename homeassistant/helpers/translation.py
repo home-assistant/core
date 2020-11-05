@@ -316,8 +316,9 @@ async def _async_cached_load_translations(
         if cached_components == components:
             return cached_translations
         components_to_load = components - cached_components
+        cached_components.update(components_to_load)
     else:
-        components_to_load = components
+        cached_components = components_to_load = components
 
     _LOGGER.debug(
         "Cache miss for %s, %s: %s",
@@ -336,7 +337,7 @@ async def _async_cached_load_translations(
     }
 
     # The cache must be set while holding the lock
-    cache.async_set_cache(language, category, components, resources)
+    cache.async_set_cache(language, category, cached_components, resources)
 
     return resources
 
