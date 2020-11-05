@@ -38,11 +38,16 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         await hass.async_add_executor_job(phonebook.init_phonebook)
-    except (
-        RequestsConnectionError,
-        FritzSecurityError,
-        FritzConnectionException,
-    ) as ex:
+    except FritzSecurityError as ex:
+        _LOGGER.error(
+            "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks: %s",
+            ex,
+        )
+        return False
+    except FritzConnectionException as ex:
+        _LOGGER.error("Invalid authentication: %s", ex)
+        return False
+    except RequestsConnectionError as ex:
         _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 
