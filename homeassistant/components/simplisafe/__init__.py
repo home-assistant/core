@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
+from simplipy.entity import EntityTypes
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
@@ -590,6 +591,13 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             self._serial = system.serial
 
+        try:
+            sensor_type = EntityTypes(
+                simplisafe.initial_event_to_use[system.system_id].get("sensorType")
+            )
+        except ValueError:
+            sensor_type = EntityTypes.unknown
+
         self._attrs = {
             ATTR_LAST_EVENT_INFO: simplisafe.initial_event_to_use[system.system_id].get(
                 "info"
@@ -597,9 +605,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             ATTR_LAST_EVENT_SENSOR_NAME: simplisafe.initial_event_to_use[
                 system.system_id
             ].get("sensorName"),
-            ATTR_LAST_EVENT_SENSOR_TYPE: simplisafe.initial_event_to_use[
-                system.system_id
-            ].get("sensorType"),
+            ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type.name,
             ATTR_LAST_EVENT_TIMESTAMP: simplisafe.initial_event_to_use[
                 system.system_id
             ].get("eventTimestamp"),
@@ -736,3 +742,11 @@ class SimpliSafeBaseSensor(SimpliSafeEntity):
         self._device_info["model"] = sensor.type.name
         self._device_info["name"] = sensor.name
         self._sensor = sensor
+        self._sensor_type_human_name = " ".join(
+            [w.title() for w in self._sensor.type.name.split("_")]
+        )
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._system.address} {self._name} {self._sensor_type_human_name}"
