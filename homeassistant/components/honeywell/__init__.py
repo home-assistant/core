@@ -44,7 +44,19 @@ def __async_wrap(func):
 
 @__async_wrap
 def __some_comfort_refresh_async_wrap(device):
-    device.refresh()
+    retries = 3
+    while retries > 0:
+        try:
+            device.refresh()
+            break
+        except Exception as exp:
+            retries -= 1
+            if retries == 0:
+                raise exp
+            else:
+                _LOGGER.error(
+                    "SomeComfort update failed. Trying again - Error: %s", exp
+                )
 
 
 @__async_wrap
