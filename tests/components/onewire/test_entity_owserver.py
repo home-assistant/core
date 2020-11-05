@@ -1,9 +1,9 @@
 """Tests for 1-Wire devices connected on OWServer."""
+import sys
+
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.onewire.binary_sensor import DEVICE_BINARY_SENSORS
 from homeassistant.components.onewire.const import (
     DEFAULT_OWSERVER_PORT,
     DOMAIN,
@@ -89,6 +89,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": STATE_ON,
                 "unit": None,
                 "class": None,
+                "disabled": True,
             },
             {
                 "entity_id": "binary_sensor.12_111111111111_sensed_b",
@@ -97,6 +98,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": STATE_OFF,
                 "unit": None,
                 "class": None,
+                "disabled": True,
             },
         ],
         "sensors": [
@@ -383,6 +385,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": STATE_OFF,
                 "unit": None,
                 "class": None,
+                "disabled": True,
             },
         ],
     },
@@ -525,7 +528,6 @@ async def test_owserver_setup_valid_device(hass, device_id, platform):
     As they would be on a clean setup: all binary-sensors and switches disabled.
     """
     await async_setup_component(hass, "persistent_notification", {})
-    await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -580,3 +582,62 @@ async def test_owserver_setup_valid_device(hass, device_id, platform):
             assert state is None
         else:
             assert state.state == expected_sensor["result"]
+
+
+@pytest.mark.parametrize("device_id", ["12.111111111111"])
+@pytest.mark.parametrize("platform", ["binary_sensor"])
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="Python 3.7 doesn't like patch.dict."
+)
+async def test_owserver_binary_sensor(hass, device_id, platform):
+    """Test for 1-Wire binary sensor.
+
+    This test forces all entities to be enabled.
+    """
+    await async_setup_component(hass, "persistent_notification", {})
+    entity_registry = mock_registry(hass)
+
+    mock_device_sensor = MOCK_DEVICE_SENSORS[device_id]
+
+    device_family = device_id[0:2]
+    dir_return_value = [f"/{device_id}/"]
+    read_side_effect = [device_family.encode()]
+    if "inject_reads" in mock_device_sensor:
+        read_side_effect += mock_device_sensor["inject_reads"]
+
+    expected_sensors = mock_device_sensor.get(f"{platform}s", [])
+    for expected_sensor in expected_sensors:
+        read_side_effect.append(expected_sensor["injected_value"])
+
+    # Ensure enough read side effect
+    read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
+
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy"
+    ) as owproxy, patch(
+        "homeassistant.components.onewire.SUPPORTED_PLATFORMS", [platform]
+    ), patch.dict(
+        "homeassistant.components.onewire.binary_sensor.DEVICE_BINARY_SENSORS"
+    ) as device_specs:
+        # Force enable binary sensors
+        for item in device_specs[device_family]:
+            item["default_disabled"] = False
+
+        owproxy.return_value.dir.return_value = dir_return_value
+        owproxy.return_value.read.side_effect = read_side_effect
+
+        assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_CONFIG)
+        await hass.async_block_till_done()
+
+    assert len(entity_registry.entities) == len(expected_sensors)
+
+    for expected_sensor in expected_sensors:
+        entity_id = expected_sensor["entity_id"]
+        registry_entry = entity_registry.entities.get(entity_id)
+        assert registry_entry is not None
+        assert registry_entry.unique_id == expected_sensor["unique_id"]
+        assert registry_entry.unit_of_measurement == expected_sensor["unit"]
+        assert registry_entry.device_class == expected_sensor["class"]
+        assert registry_entry.disabled is False
+        state = hass.states.get(entity_id)
+        assert state.state == expected_sensor["result"]
