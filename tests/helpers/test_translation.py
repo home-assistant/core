@@ -5,7 +5,6 @@ import pathlib
 
 import pytest
 
-from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -218,17 +217,13 @@ async def test_get_translation_categories(hass):
 async def test_translation_merging(hass, caplog):
     """Test we merge translations of two integrations."""
     hass.config.components.add("sensor.moon")
-    hass.config.components.add("sensor.season")
     hass.config.components.add("sensor")
 
     translations = await translation.async_get_translations(hass, "en", "state")
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
-    assert "component.sensor.state.season__season.summer" in translations
 
-    # Clear cache
-    hass.bus.async_fire(EVENT_COMPONENT_LOADED)
-    await hass.async_block_till_done()
+    hass.config.components.add("sensor.season")
 
     # Patch in some bad translation data
 
@@ -248,6 +243,9 @@ async def test_translation_merging(hass, caplog):
 
         assert "component.sensor.state.moon__phase.first_quarter" in translations
 
+    import pprint
+
+    pprint.pprint([caplog.text])
     assert (
         "An integration providing translations for sensor provided invalid data: bad data"
         in caplog.text
@@ -268,13 +266,6 @@ async def test_caching(hass):
 
         await translation.async_get_translations(hass, "en", "state")
         assert len(mock_merge.mock_calls) == 1
-
-        # This event clears the cache so we should record another call
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED)
-        await hass.async_block_till_done()
-
-        await translation.async_get_translations(hass, "en", "state")
-        assert len(mock_merge.mock_calls) == 2
 
 
 async def test_custom_component_translations(hass):
