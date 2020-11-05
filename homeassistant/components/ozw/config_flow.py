@@ -66,15 +66,14 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_on_supervisor(self, user_input=None):
         """Handle logic when on Supervisor host."""
-        if user_input is not None:
-            if user_input[CONF_USE_ADDON]:
-                self.use_addon = True
-                return await self._async_use_addon()
-            return self._async_use_mqtt_integration()
-
-        return self.async_show_form(
-            step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
-        )
+        if user_input is None:
+            return self.async_show_form(
+                step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
+            )
+        if user_input[CONF_USE_ADDON]:
+            self.use_addon = True
+            return await self._async_use_addon()
+        return self._async_use_mqtt_integration()
 
     async def _async_use_addon(self):
         """Handle logic when using the OpenZWave add-on."""
