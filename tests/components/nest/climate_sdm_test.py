@@ -479,6 +479,8 @@ async def test_thermostat_set_eco_preset(hass):
                     "sdm.devices.traits.ThermostatEco": {
                         "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
                         "mode": "MANUAL_ECO",
+                        "heatCelsius": 15.0,
+                        "coolCelsius": 28.0,
                     },
                 },
             },

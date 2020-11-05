@@ -90,8 +90,6 @@ async def async_setup_sdm_entry(
     subscriber = hass.data[DOMAIN][entry.entry_id]
     device_manager = await subscriber.async_get_device_manager()
 
-    # Fetch initial data so we have data when entities subscribe.
-
     entities = []
     for device in device_manager.devices.values():
         if ThermostatHvacTrait.NAME in device.traits:
@@ -106,6 +104,7 @@ class ThermostatEntity(ClimateEntity):
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = DeviceInfo(device)
+        self._supported_features = 0
 
     @property
     def should_poll(self) -> bool:
@@ -133,6 +132,7 @@ class ThermostatEntity(ClimateEntity):
         # Event messages trigger the SIGNAL_NEST_UPDATE, which is intercepted
         # here to re-fresh the signals from _device.  Unregister this callback
         # when the entity is removed.
+        self._supported_features = self._get_supported_features()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -269,6 +269,10 @@ class ThermostatEntity(ClimateEntity):
     @property
     def supported_features(self):
         """Bitmap of supported features."""
+        return self._supported_features
+
+    def _get_supported_features(self):
+        """Compute the bitmap of supported features from the current state."""
         features = 0
         if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
             if self.hvac_mode in THERMOSTAT_RANGE_MODES:
