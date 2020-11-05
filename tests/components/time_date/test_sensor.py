@@ -20,16 +20,16 @@ def restore_ts():
 async def test_intervals(hass):
     """Test timing intervals of sensors."""
     device = time_date.TimeDateSensor(hass, "time")
-    now = dt_util.utc_from_timestamp(45)
+    now = dt_util.utc_from_timestamp(45.5)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         next_time = device.get_next_interval()
     assert next_time == dt_util.utc_from_timestamp(60)
 
     device = time_date.TimeDateSensor(hass, "beat")
-    now = dt_util.utc_from_timestamp(29)
+    now = dt_util.parse_datetime("2020-11-13 00:00:29+01:00")
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         next_time = device.get_next_interval()
-    assert next_time == dt_util.utc_from_timestamp(86.4)
+    assert next_time == dt_util.parse_datetime("2020-11-13 00:01:26.4+01:00")
 
     device = time_date.TimeDateSensor(hass, "date_time")
     now = dt_util.utc_from_timestamp(1495068899)
