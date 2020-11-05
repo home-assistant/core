@@ -119,19 +119,20 @@ def merge_resources(
         if new_value is None:
             continue
 
-        cur_value = domain_resources.get(category)
+        domain_resources.setdefault(category, []).append(new_value)
+    #        cur_value = domain_resources.get(category)
+    #
+    #        # If not exists, set value.
+    #        if cur_value is None:
+    #            domain_resources[category] = [new_value]
 
-        # If not exists, set value.
-        if cur_value is None:
-            domain_resources[category] = [new_value]
+    # If exists, and a list, append
+    #        elif isinstance(cur_value, list):
+    #            cur_value.append(new_value)
 
-        # If exists, and a list, append
-        elif isinstance(cur_value, list):
-            cur_value.append(new_value)
-
-        # If exists, and a dict make it a list with 2 entries.
-        else:
-            domain_resources[category] = [cur_value, new_value]
+    # If exists, and a dict make it a list with 2 entries.
+    #        else:
+    #            domain_resources[category] = [cur_value, new_value]
 
     # Merge all the lists
     for domain, domain_resources in list(resources.items()):
@@ -331,17 +332,10 @@ async def _async_cached_load_translations(
     cached_translations = {}
     cache_entry = cache.async_get_cache(language, category)
 
-    import pprint
-
-    pprint.pprint(["cache_entry", cache_entry])
-
     if cache_entry is not None:
         cached_components, cached_translations = cache_entry
         if cached_components == components:
             return cached_translations
-        import pprint
-
-        pprint.pprint([components, cached_components])
         components_to_load = components - cached_components
     else:
         components_to_load = components
