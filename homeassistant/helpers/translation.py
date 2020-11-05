@@ -306,13 +306,14 @@ async def _async_cached_load_translations(
         cache = hass.data[TRANSLATION_FLATTEN_CACHE] = TranslationCache(hass)
 
     cached_translations = {}
+    cached_components = set()
     cache_entry = cache.async_get_cache(language, category)
 
     if cache_entry is not None:
         cached_components, cached_translations = cache_entry
         components_to_load = components - cached_components
     else:
-        cached_components = components_to_load = components
+        components_to_load = components
 
     if not components_to_load:
         return cached_translations
