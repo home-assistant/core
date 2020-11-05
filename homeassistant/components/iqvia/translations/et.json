@@ -5,6 +5,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "zip_code": "Sihtnumber"
+                },
                 "title": ""
             }
         }
