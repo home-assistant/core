@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "pwd_or_ssh": "Only provide password or SSH key file",
+            "pwd_and_ssh": "Only provide password or SSH key file",
+            "pwd_or_ssh": "Please provide password or SSH key file",
             "ssh_not_file": "SSH key file not found",
             "unknown": "Unexpected error"
         },

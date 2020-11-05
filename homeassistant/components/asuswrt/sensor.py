@@ -32,7 +32,7 @@ SENSOR_FACTOR = "factor"
 
 CONNECTION_SENSORS = {
     SENSOR_CONNECTED_DEVICE: {
-        SENSOR_NAME: "AsusWrt connected device",
+        SENSOR_NAME: "AsusWrt connected devices",
         SENSOR_UNIT: None,
         SENSOR_FACTOR: 0,
         SENSOR_ICON: None,

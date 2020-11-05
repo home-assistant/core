@@ -39,6 +39,17 @@ from .router import get_api
 _LOGGER = logging.getLogger(__name__)
 
 
+def isfile(value) -> bool:
+    """Validate that the value is an existing file."""
+    file_in = os.path.expanduser(str(value))
+
+    if not os.path.isfile(file_in):
+        return False
+    if not os.access(file_in, os.R_OK):
+        return False
+    return True
+
+
 class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -91,24 +102,17 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)
-        if ssh:
 
-            def isfile(value) -> bool:
-                """Validate that the value is an existing file."""
-                file_in = os.path.expanduser(str(value))
-
-                if not os.path.isfile(file_in):
-                    return False
-                if not os.access(file_in, os.R_OK):
-                    return False
-                return True
-
+        if not (pwd or ssh):
+            errors["base"] = "pwd_or_ssh"
+        elif ssh:
             if pwd:
-                errors["base"] = "pwd_or_ssh"
+                errors["base"] = "pwd_and_ssh"
             elif not isfile(ssh):
                 errors["base"] = "ssh_not_file"
-            if errors:
-                return self._show_setup_form(user_input, errors)
+
+        if errors:
+            return self._show_setup_form(user_input, errors)
 
         self._host = user_input[CONF_HOST]
         self._name = user_input.get(CONF_NAME, self._host)
