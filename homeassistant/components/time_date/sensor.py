@@ -100,10 +100,13 @@ class TimeDateSensor(Entity):
             return now + timedelta(seconds=86400)
 
         if self.type == "beat":
+            # Add 1 hour because 23:00:00 UTC marks @0 beats.
+            timestamp = dt_util.as_timestamp(now + timedelta(hours=1))
             interval = 86.4
         else:
+            timestamp = dt_util.as_timestamp(now)
             interval = 60
-        timestamp = int(dt_util.as_timestamp(now))
+
         delta = interval - (timestamp % interval)
         next_interval = now + timedelta(seconds=delta)
         _LOGGER.debug("%s + %s -> %s (%s)", now, delta, next_interval, self.type)
