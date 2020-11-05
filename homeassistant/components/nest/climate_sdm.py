@@ -67,8 +67,7 @@ THERMOSTAT_SETPOINT_TRAIT_MAP = {
     HVAC_MODE_HEAT_COOL: ThermostatTemperatureSetpointTrait.NAME,
     HVAC_MODE_AUTO: ThermostatEcoTrait.NAME,
 }
-THERMOSTAT_TARGET_LOW_MODES = [HVAC_MODE_HEAT, HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
-THERMOSTAT_TARGET_HIGH_MODES = [HVAC_MODE_COOL, HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+THERMOSTAT_RANGE_MODES = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 
 PRESET_MODE_MAP = {
     "MANUAL_ECO": PRESET_ECO,
@@ -158,24 +157,19 @@ class ThermostatEntity(ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature currently set to be reached."""
-        if not self.target_temperature_high and not self.target_temperature_low:
+        trait = self._target_temperature_trait
+        if not trait:
             return None
-        # If there is both a high and low temperature set, then we must be
-        # in HEAT_COOL or AUTO/ECO mode.  Infer the target temperature based on
-        # whether the unit is currently heating or cooling.
-        if self.target_temperature_high and self.target_temperature_low:
-            if self.hvac_action == CURRENT_HVAC_HEAT:
-                return self.target_temperature_low
-            if self.hvac_action == CURRENT_HVAC_COOL:
-                return self.target_temperature_low
-        if self.target_temperature_high:
-            return self.target_temperature_high
-        return self.target_temperature_low
+        if self.hvac_mode == HVAC_MODE_HEAT:
+            return trait.heat_celsius
+        if self.hvac_mode == HVAC_MODE_COOL:
+            return trait.cool_celsius
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound target temperature."""
-        if self.hvac_mode not in THERMOSTAT_TARGET_HIGH_MODES:
+        if self.hvac_mode not in THERMOSTAT_RANGE_MODES:
             return None
         trait = self._target_temperature_trait
         if not trait:
@@ -185,7 +179,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def target_temperature_low(self):
         """Return the lower bound target temperature."""
-        if self.hvac_mode not in THERMOSTAT_TARGET_LOW_MODES:
+        if self.hvac_mode not in THERMOSTAT_RANGE_MODES:
             return None
         trait = self._target_temperature_trait
         if not trait:
@@ -277,9 +271,10 @@ class ThermostatEntity(ClimateEntity):
         """Bitmap of supported features."""
         features = 0
         if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
-            features = (
-                features | SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_RANGE
-            )
+            if self.hvac_mode in THERMOSTAT_RANGE_MODES:
+                features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
+            else:
+                features = features | SUPPORT_TARGET_TEMPERATURE
         if ThermostatEcoTrait.NAME in self._device.traits:
             features = features | SUPPORT_PRESET_MODE
         if FanTrait.NAME in self._device.traits:

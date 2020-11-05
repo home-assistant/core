@@ -31,6 +31,7 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_NONE,
 )
+from homeassistant.const import ATTR_TEMPERATURE
 
 from .common import async_setup_sdm_platform
 
@@ -139,9 +140,9 @@ async def test_thermostat_heat(hass):
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
     ]
-    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
-    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
-    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
+    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
+    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
@@ -179,8 +180,9 @@ async def test_thermostat_cool(hass):
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
     ]
-    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] == 28.0
-    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 28.0
+    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
+    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
