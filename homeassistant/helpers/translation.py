@@ -252,28 +252,25 @@ async def async_get_translations(
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
 
-    load_func = _async_cached_load_translations
     resource_func = build_resources
 
     if integration is not None:
         components = {integration}
-        load_func = _async_load_translations
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    else:
+    elif category == "state":
         # Only 'state' supports merging, so remove platforms from selection
-        if category == "state":
-            resource_func = merge_resources
-            components = set(hass.config.components)
-        else:
-            components = {
-                component
-                for component in hass.config.components
-                if "." not in component
-            }
+        resource_func = merge_resources
+        components = set(hass.config.components)
+    else:
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
 
     async with lock:
-        return await load_func(hass, resource_func, language, category, components)
+        return await _async_cached_load_translations(
+            hass, resource_func, language, category, components
+        )
 
 
 async def _async_load_translations(
@@ -306,15 +303,17 @@ async def _async_cached_load_translations(
         cache = hass.data[TRANSLATION_FLATTEN_CACHE] = TranslationCache(hass)
 
     cached_translations = {}
+    cached_components = set()
     cache_entry = cache.async_get_cache(language, category)
 
     if cache_entry is not None:
         cached_components, cached_translations = cache_entry
-        if cached_components == components:
-            return cached_translations
         components_to_load = components - cached_components
     else:
         components_to_load = components
+
+    if not components_to_load:
+        return cached_translations
 
     _LOGGER.debug(
         "Cache miss for %s, %s: %s",
@@ -332,8 +331,9 @@ async def _async_cached_load_translations(
         ),
     }
 
+    cached_components.update(components_to_load)
     # The cache must be set while holding the lock
-    cache.async_set_cache(language, category, components, resources)
+    cache.async_set_cache(language, category, cached_components, resources)
 
     return resources
 
