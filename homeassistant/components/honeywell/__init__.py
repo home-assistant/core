@@ -49,14 +49,16 @@ def __some_comfort_refresh_async_wrap(device):
         try:
             device.refresh()
             break
-        except Exception as exp:
+        except (
+            somecomfort.client.APIRateLimited,
+            OSError,
+            requests.exceptions.ReadTimeout,
+            somecomfort.SomeComfortError,
+        ) as exp:
             retries -= 1
             if retries == 0:
                 raise exp
-            else:
-                _LOGGER.error(
-                    "SomeComfort update failed. Trying again - Error: %s", exp
-                )
+            _LOGGER.error("SomeComfort update failed. Trying again - Error: %s", exp)
 
 
 @__async_wrap
