@@ -267,7 +267,7 @@ async def test_set_username(hass):
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
 
 
-async def test_login_recovers_bad_internet(hass):
+async def test_login_recovers_bad_internet(hass, caplog):
     """Test Alexa can recover bad auth."""
     prefs = Mock(
         alexa_enabled=True,
@@ -281,6 +281,7 @@ async def test_login_recovers_bad_internet(hass):
     )
     await client.logged_in()
     assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
+    assert "Unable to activate Alexa Report State" in caplog.text
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()

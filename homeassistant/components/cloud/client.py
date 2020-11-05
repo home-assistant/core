@@ -1,5 +1,6 @@
 """Interface implementation for cloud client."""
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any, Dict
 
@@ -111,7 +112,11 @@ class CloudClient(Interface):
             """Enable Alexa."""
             try:
                 await self.alexa_config.async_enable_proactive_mode()
-            except aiohttp.ClientError:  # If no internet available yet
+            except aiohttp.ClientError as err:  # If no internet available yet
+                logging.getLogger(__package__).warning(
+                    "Unable to activate Alexa Report State: %s. Retrying in 30 seconds",
+                    err,
+                )
                 async_call_later(self._hass, 30, enable_alexa)
             except alexa_errors.NoTokenAvailable:
                 pass
@@ -133,8 +138,8 @@ class CloudClient(Interface):
         if self._prefs.google_enabled:
             tasks.append(enable_google)
 
-        for task in tasks:
-            await task(None)
+        if tasks:
+            await asyncio.gather(*[task(None) for task in tasks])
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
