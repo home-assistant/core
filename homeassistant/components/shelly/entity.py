@@ -78,25 +78,6 @@ def shelly_rest_parser(self, path: str):
     return _attribute_value
 
 
-def shelly_rest_parser(self, path: str):
-    """Parser for REST path from device status."""
-
-    if "/" not in path:
-        _attribute_value = self.wrapper.device.status[path]
-    else:
-        _attribute_value = self.wrapper.device.status[path.split("/")[0]][
-            path.split("/")[1]
-        ]
-    if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
-        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-        _attribute_value = last_boot.replace(microsecond=0).isoformat()
-
-    if "new_version" in path:
-        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
-
-    return _attribute_value
-
-
 async def async_setup_entry_attribute_entities(
     hass, config_entry, async_add_entities, sensors, sensor_class
 ):
