@@ -12,7 +12,7 @@ httpx==0.16.1
 importlib-metadata==1.6.0;python_version<'3.8'
 jinja2>=2.11.2
 PyJWT==1.7.1
-cryptography==3.2.0
+cryptography==3.2
 pip>=8.0.3
 python-slugify==4.0.1
 pytz>=2020.1
