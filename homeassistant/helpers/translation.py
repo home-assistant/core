@@ -273,9 +273,7 @@ async def async_get_translations(
             }
 
     async with lock:
-        resources = await load_func(hass, resource_func, language, category, components)
-
-    return resources
+        return await load_func(hass, resource_func, language, category, components)
 
 
 async def _async_load_translations(
