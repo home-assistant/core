@@ -318,6 +318,8 @@ async def async_get_translations(
 
         results = await asyncio.gather(*tasks)
 
+        _LOGGER.debug("Results: %s", results)
+
         if category == "state":
             resource_func = merge_resources
         else:
