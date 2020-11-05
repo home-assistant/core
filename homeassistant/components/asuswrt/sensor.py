@@ -4,8 +4,8 @@ from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DATA_RATE_MEGABITS_PER_SECOND,
     DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
