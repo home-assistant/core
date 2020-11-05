@@ -1,5 +1,4 @@
 """Light for Shelly."""
-import logging
 from typing import Optional
 
 from aioshelly import Block
@@ -21,8 +20,6 @@ from . import ShellyDeviceWrapper
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 from .utils import async_remove_entity_by_domain
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
