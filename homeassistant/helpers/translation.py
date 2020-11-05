@@ -252,12 +252,10 @@ async def async_get_translations(
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
 
-    load_func = _async_cached_load_translations
     resource_func = build_resources
 
     if integration is not None:
         components = {integration}
-        load_func = _async_load_translations
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     else:
@@ -273,7 +271,9 @@ async def async_get_translations(
             }
 
     async with lock:
-        return await load_func(hass, resource_func, language, category, components)
+        return await _async_cached_load_translations(
+            hass, resource_func, language, category, components
+        )
 
 
 async def _async_load_translations(
