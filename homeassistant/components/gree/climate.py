@@ -9,9 +9,8 @@ from greeclimate.device import (
     TemperatureUnits,
     VerticalSwing,
 )
-from greeclimate.exceptions import DeviceTimeoutError
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -44,12 +43,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
-    MAX_ERRORS,
     MAX_TEMP,
     MIN_TEMP,
     TARGET_TEMPERATURE_STEP,
@@ -97,85 +97,19 @@ SUPPORTED_FEATURES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        GreeClimateEntity(device) for device in hass.data[DOMAIN].pop("pending")
+        GreeClimateEntity(device) for device in hass.data[DOMAIN].pop(CLIMATE_DOMAIN)
     )
 
 
-class GreeClimateEntity(ClimateEntity):
+class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
     def __init__(self, device):
         """Initialize the Gree device."""
+        super().__init__(device)
         self._device = device
         self._name = device.device_info.name
         self._mac = device.device_info.mac
-        self._available = False
-        self._error_count = 0
-
-    async def async_update(self):
-        """Update the state of the device."""
-        try:
-            await self._device.update_state()
-
-            if not self._available and self._error_count:
-                _LOGGER.warning(
-                    "Device is available: %s (%s)",
-                    self._name,
-                    str(self._device.device_info),
-                )
-
-            self._available = True
-            self._error_count = 0
-        except DeviceTimeoutError:
-            self._error_count += 1
-
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available and self._error_count >= MAX_ERRORS:
-                self._available = False
-                _LOGGER.warning(
-                    "Device is unavailable: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-        except Exception:  # pylint: disable=broad-except
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available:
-                self._available = False
-                _LOGGER.exception(
-                    "Unknown exception caught during update by gree device: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-
-    async def _push_state_update(self):
-        """Send state updates to the physical device."""
-        try:
-            return await self._device.push_state_update()
-        except DeviceTimeoutError:
-            self._error_count += 1
-
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available and self._error_count >= MAX_ERRORS:
-                self._available = False
-                _LOGGER.warning(
-                    "Device timedout while sending state update: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-        except Exception:  # pylint: disable=broad-except
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available:
-                self._available = False
-                _LOGGER.exception(
-                    "Unknown exception caught while sending state update to: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
 
     @property
     def name(self) -> str:
@@ -231,7 +165,8 @@ class GreeClimateEntity(ClimateEntity):
         )
 
         self._device.target_temperature = round(temperature)
-        await self._push_state_update()
+        await self._device.push_state_update()
+        await self.async_write_ha_state()
 
     @property
     def min_temp(self) -> float:
@@ -269,14 +204,16 @@ class GreeClimateEntity(ClimateEntity):
 
         if hvac_mode == HVAC_MODE_OFF:
             self._device.power = False
-            await self._push_state_update()
+            await self._device.push_state_update()
+            await self.async_write_ha_state()
             return
 
         if not self._device.power:
             self._device.power = True
 
         self._device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
-        await self._push_state_update()
+        await self._device.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -323,7 +260,8 @@ class GreeClimateEntity(ClimateEntity):
         elif preset_mode == PRESET_SLEEP:
             self._device.sleep = True
 
-        await self._push_state_update()
+        await self._device.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def preset_modes(self) -> List[str]:
@@ -342,7 +280,8 @@ class GreeClimateEntity(ClimateEntity):
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
         self._device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
-        await self._push_state_update()
+        await self._device.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def fan_modes(self) -> List[str]:
@@ -381,7 +320,8 @@ class GreeClimateEntity(ClimateEntity):
         if swing_mode in (SWING_BOTH, SWING_VERTICAL):
             self._device.vertical_swing = VerticalSwing.FullSwing
 
-        await self._push_state_update()
+        await self._device.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def swing_modes(self) -> List[str]:

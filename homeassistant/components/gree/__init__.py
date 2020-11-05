@@ -1,21 +1,20 @@
 """The Gree Climate integration."""
 import asyncio
-import logging
-
 from datetime import timedelta
+import logging
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .bridge import CannotConnect, DeviceHelper
+from .bridge import CannotConnect, DeviceDataUpdateCoordinator, DeviceHelper
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=60)
 PARALLEL_UPDATES = 0
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Gree Climate component."""
@@ -46,8 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         devices.append(device)
 
-    hass.data[DOMAIN]["devices"] = devices
-    hass.data[DOMAIN]["pending"] = devices
+    coordinators = [DeviceDataUpdateCoordinator(hass, d) for d in devices]
+    hass.data[DOMAIN]["devices"] = coordinators
+    hass.data[DOMAIN][CLIMATE_DOMAIN] = coordinators
+    hass.data[DOMAIN][SWITCH_DOMAIN] = coordinators
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )
@@ -65,9 +66,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
     )
 
-    unload_ok = False not in results
+    unload_ok = False not in await results
     if unload_ok:
         hass.data[DOMAIN].pop("devices", None)
-        hass.data[DOMAIN].pop("pending", None)
+        hass.data[DOMAIN].pop(CLIMATE_DOMAIN, None)
+        hass.data[DOMAIN].pop(SWITCH_DOMAIN, None)
 
     return unload_ok
