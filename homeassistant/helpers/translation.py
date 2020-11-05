@@ -313,7 +313,11 @@ async def async_get_translations(
             tasks.append(async_get_component_strings(hass, "en", components))
 
         _LOGGER.debug(
-            "Cache miss for %s, %s: %s", language, category, ", ".join(components)
+            "Cache miss (use_cache=%s) for %s, %s: %s",
+            use_cache,
+            language,
+            category,
+            ", ".join(components),
         )
 
         results = await asyncio.gather(*tasks)
