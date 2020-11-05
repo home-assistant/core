@@ -120,38 +120,6 @@ class AuroraSensor(AuroraDevice):
         """Return the device class."""
         return self._device_class
 
-    # async io update not supported yet.
-    #
-    # async def async_update(self):
-    #     _LOGGER.debug("Updating sensor (async): %s", self._name)
-    #     try:
-    #         await self.client.connect()
-    #         if self.type == "instantaneouspower":
-    #             # read ADC channel 3 (grid power output)
-    #             power_watts = await self.client.measure(3, True)
-    #             self._state = round(power_watts, 1)
-    #         elif self.type == "temperature":
-    #             temperature_c = await self.client.measure(21)
-    #             self._state = round(power_watts, 1)
-    #     except AuroraError as error:
-    #         # aurorapy does not have different exceptions (yet) for dealing
-    #         # with timeout vs other comms errors.
-    #         # This means the (normal) situation of no response during darkness
-    #         # raises an exception.
-    #         # aurorapy (gitlab) pull request merged 29/5/2019. When >0.2.6 is
-    #         # released, this could be modified to :
-    #         # except AuroraTimeoutError as e:
-    #         # Workaround: look at the text of the exception
-    #         if "No response after" in str(error):
-    #             _LOGGER.debug("No response from inverter (could be dark)")
-    #         else:
-    #             # print("Exception!!: {}".format(str(e)))
-    #             raise error
-    #         self._state = None
-    #     finally:
-    #         if self.client.serline.isOpen():
-    #             await self.client.close()
-
     def update(self):
         """Fetch new state data for the sensor.
 
