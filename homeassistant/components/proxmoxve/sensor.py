@@ -59,7 +59,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sensor platform."""
 
     sensors = []
@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                             )
                         )
 
-    add_entities(sensors, True)
+    async_add_devices(sensors, True)
 
 
 class ProxmoxSensor(Entity):
