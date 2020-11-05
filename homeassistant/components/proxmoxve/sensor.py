@@ -10,52 +10,54 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_CONTAINERS, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS, ProxmoxItemType
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODES,
+    CONF_VMS,
+    GUESTTYPE_ALL,
+    GUESTTYPE_LXC,
+    GUESTTYPE_QEMU,
+    PROXMOX_CLIENTS,
+)
 
-ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_AVAIL_LXC = ProxmoxItemType.lxc
-SENSOR_AVAIL_QEMU = ProxmoxItemType.qemu
-SENSOR_AVAIL_ALL = [SENSOR_AVAIL_LXC, SENSOR_AVAIL_QEMU]
-
 
 # Schema: [name, unit of measurement, icon, availablility]
 SENSOR_TYPES = {
-    "cpu_use_percent": ["CPU use", PERCENTAGE, "mdi:chip", None, SENSOR_AVAIL_ALL],
-    "cpu": ["CPU count", None, "mdi:chip", None, SENSOR_AVAIL_ALL],
+    "cpu_use_percent": ["CPU use", PERCENTAGE, "mdi:chip", None, GUESTTYPE_ALL],
+    "cpu": ["CPU count", None, "mdi:chip", None, GUESTTYPE_ALL],
     "memory_free": [
         "Memory free",
         DATA_MEBIBYTES,
         "mdi:memory",
         None,
-        SENSOR_AVAIL_ALL,
+        GUESTTYPE_ALL,
     ],
-    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, SENSOR_AVAIL_ALL],
+    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, GUESTTYPE_ALL],
     "memory_use_percent": [
         "Memory use (percent)",
         PERCENTAGE,
         "mdi:memory",
         None,
-        SENSOR_AVAIL_ALL,
+        GUESTTYPE_ALL,
     ],
-    "mem": ["Memory size", DATA_MEBIBYTES, "mdi:memory", None, SENSOR_AVAIL_ALL],
+    "mem": ["Memory size", DATA_MEBIBYTES, "mdi:memory", None, GUESTTYPE_ALL],
     "disk_free": [
         "Disk free",
         DATA_GIBIBYTES,
         "mdi:harddisk",
         None,
-        [SENSOR_AVAIL_LXC],
+        GUESTTYPE_LXC,
     ],
-    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, [SENSOR_AVAIL_LXC]],
+    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, GUESTTYPE_LXC],
     "disk_use_percent": [
         "Disk use (percent)",
         PERCENTAGE,
         "mdi:harddisk",
         None,
-        [SENSOR_AVAIL_LXC],
+        GUESTTYPE_LXC,
     ],
-    "disk": ["Disk size", DATA_GIBIBYTES, "mdi:harddisk", None, SENSOR_AVAIL_ALL],
+    "disk": ["Disk size", DATA_GIBIBYTES, "mdi:harddisk", None, GUESTTYPE_ALL],
 }
 
 
@@ -70,14 +72,14 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         for node in entry[CONF_NODES]:
             for virtual_machine in node[CONF_VMS]:
                 for sensor in SENSOR_TYPES:
-                    if ProxmoxItemType.qemu in SENSOR_TYPES[sensor][4]:
+                    if GUESTTYPE_QEMU in SENSOR_TYPES[sensor][4]:
                         sensors.append(
                             ProxmoxSensor(
                                 hass.data[PROXMOX_CLIENTS][
                                     f"{entry[CONF_HOST]}:{port}"
                                 ],
                                 node["node"],
-                                ProxmoxItemType.qemu,
+                                GUESTTYPE_QEMU,
                                 virtual_machine,
                                 sensor,
                             )
@@ -85,14 +87,14 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
 
             for container in node[CONF_CONTAINERS]:
                 for sensor in SENSOR_TYPES:
-                    if ProxmoxItemType.lxc in SENSOR_TYPES[sensor][4]:
+                    if GUESTTYPE_LXC in SENSOR_TYPES[sensor][4]:
                         sensors.append(
                             ProxmoxSensor(
                                 hass.data[PROXMOX_CLIENTS][
                                     f"{entry[CONF_HOST]}:{port}"
                                 ],
                                 node["node"],
-                                ProxmoxItemType.lxc,
+                                GUESTTYPE_LXC,
                                 container,
                                 sensor,
                             )
@@ -153,7 +155,7 @@ class ProxmoxSensor(Entity):
         items = (
             self._proxmox_client.get_api_client()
             .nodes(self._item_node)
-            .get(self._item_type.name)
+            .get(self._item_type)
         )
         item = next(
             (item for item in items if item["vmid"] == str(self._item_id)), None

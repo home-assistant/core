@@ -1,5 +1,4 @@
 """Support for Proxmox VE."""
-from enum import Enum
 import logging
 
 from proxmoxer import ProxmoxAPI
@@ -16,21 +15,21 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_VMS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PLATFORMS,
+    PROXMOX_CLIENTS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-
-DOMAIN = "proxmoxve"
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
-PLATFORMS = ["binary_sensor", "sensor"]
-
-DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -112,13 +111,6 @@ def setup(hass, config):
         return True
 
     return False
-
-
-class ProxmoxItemType(Enum):
-    """Represents the different types of machines in Proxmox."""
-
-    qemu = 0
-    lxc = 1
 
 
 class ProxmoxClient:

@@ -4,9 +4,17 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
-from . import CONF_CONTAINERS, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS, ProxmoxItemType
+from .const import (
+    ATTRIBUTION,
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_VMS,
+    GUESTTYPE_LXC,
+    GUESTTYPE_QEMU,
+    PROXMOX_CLIENTS,
+)
 
-ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -23,8 +31,8 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 sensors.append(
                     ProxmoxBinarySensor(
                         hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{port}"],
-                        node["node"],
-                        ProxmoxItemType.qemu,
+                        node[CONF_NODE],
+                        GUESTTYPE_QEMU,
                         virtual_machine,
                     )
                 )
@@ -33,8 +41,8 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 sensors.append(
                     ProxmoxBinarySensor(
                         hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{port}"],
-                        node["node"],
-                        ProxmoxItemType.lxc,
+                        node[CONF_NODE],
+                        GUESTTYPE_LXC,
                         container,
                     )
                 )
@@ -76,7 +84,7 @@ class ProxmoxBinarySensor(BinarySensorEntity):
             "node": self._item_node,
             "vmid": self._item_id,
             "vmname": self._vmname,
-            "type": self._item_type.name,
+            "type": self._item_type,
             "cpu": self._cpus,
             "memory": self._memory / (1024 * 1024),
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -97,7 +105,7 @@ class ProxmoxBinarySensor(BinarySensorEntity):
         items = (
             self._proxmox_client.get_api_client()
             .nodes(self._item_node)
-            .get(self._item_type.name)
+            .get(self._item_type)
         )
         item = next(
             (item for item in items if item["vmid"] == str(self._item_id)), None
