@@ -31,7 +31,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Set up flow instance."""
         self.addon_config = None
-        self.addon_info = None
         self.network_key = None
         self.usb_path = None
         self.use_addon = False
@@ -138,16 +137,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_addon_info(self):
         """Return and cache add-on info."""
-        if self.addon_info is None:
-            try:
-                self.addon_info = (
-                    await self.hass.components.hassio.async_get_addon_info("core_zwave")
-                )
-            except self.hass.components.hassio.HassioAPIError as err:
-                _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
-                raise AbortFlow("addon_info_failed") from err
+        try:
+            addon_info = await self.hass.components.hassio.async_get_addon_info(
+                "core_zwave"
+            )
+        except self.hass.components.hassio.HassioAPIError as err:
+            _LOGGER.error("Failed to get OpenZWave add-on info: %s", err)
+            raise AbortFlow("addon_info_failed") from err
 
-        return self.addon_info
+        return addon_info
 
     async def _async_is_addon_running(self):
         """Return True if add-on is running."""
