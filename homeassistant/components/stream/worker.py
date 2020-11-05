@@ -73,7 +73,13 @@ def stream_worker(hass, stream, quit_event):
 def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
-    container = av.open(stream.source, options=stream.options, timeout=STREAM_TIMEOUT)
+    try:
+        container = av.open(
+            stream.source, options=stream.options, timeout=STREAM_TIMEOUT
+        )
+    except av.AVError:
+        _LOGGER.error("Error opening stream %s", stream.source)
+        return
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
