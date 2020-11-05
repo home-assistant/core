@@ -342,7 +342,7 @@ beautifulsoup4==4.9.1
 bellows==0.20.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.11
+bimmer_connected==0.7.12
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -732,7 +732,7 @@ hass-nabucasa==0.37.1
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.25
+hatasmota==0.0.25.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
