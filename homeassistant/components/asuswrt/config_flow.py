@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
+# pylint:disable=unused-import
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,

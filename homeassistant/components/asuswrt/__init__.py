@@ -22,9 +22,9 @@ from .const import (
     CONF_INTERFACE,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
-    DEFAULT_SSH_PORT,
-    DEFAULT_INTERFACE,
     DEFAULT_DNSMASQ,
+    DEFAULT_INTERFACE,
+    DEFAULT_SSH_PORT,
     DOMAIN,
 )
 from .router import AsusWrtRouter
