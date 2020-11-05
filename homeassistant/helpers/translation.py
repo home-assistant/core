@@ -298,10 +298,7 @@ async def _async_cached_load_translations(
     category: str,
     components: Set,
 ) -> Dict[str, Any]:
-    cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
-    if cache is None:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = TranslationCache(hass)
-
+    cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, TranslationCache(hass))
     cached_translations = {}
     cached_components = set()
     cache_entry = cache.async_get_cache(language, category)
