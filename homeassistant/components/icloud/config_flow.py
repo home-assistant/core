@@ -21,7 +21,8 @@ from .const import (
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
-    STORAGE_KEY,
+    STORAGE_KEY_COOKIES,
+    STORAGE_KEY_SESSION,
     STORAGE_VERSION,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -114,7 +115,12 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 PyiCloudService,
                 self._username,
                 self._password,
-                self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path,
+                self.hass.helpers.storage.Store(
+                    STORAGE_VERSION, STORAGE_KEY_COOKIES
+                ).path,
+                self.hass.helpers.storage.Store(
+                    STORAGE_VERSION, STORAGE_KEY_SESSION
+                ).path,
                 True,
                 None,
                 self._with_family,
@@ -124,6 +130,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.api = None
             errors = {CONF_PASSWORD: "invalid_auth"}
             return self._show_setup_form(user_input, errors, step_id)
+
+        if self.api.requires_2fa:
+            return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
@@ -161,10 +170,18 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        icloud_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        icloud_cookies_dir = self.hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY_COOKIES
+        )
+        icloud_session_dir = self.hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY_SESSION
+        )
 
-        if not os.path.exists(icloud_dir.path):
-            await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
+        if not os.path.exists(icloud_cookies_dir.path):
+            await self.hass.async_add_executor_job(os.makedirs, icloud_cookies_dir.path)
+
+        if not os.path.exists(icloud_session_dir.path):
+            await self.hass.async_add_executor_job(os.makedirs, icloud_session_dir.path)
 
         if user_input is None:
             return self._show_setup_form(user_input, errors)
@@ -253,12 +270,18 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
 
         try:
-            if not await self.hass.async_add_executor_job(
-                self.api.validate_verification_code,
-                self._trusted_device,
-                self._verification_code,
-            ):
-                raise PyiCloudException("The code you entered is not valid.")
+            if self.api.requires_2fa:
+                if not await self.hass.async_add_executor_job(
+                    self.api.validate_2fa_code, self._verification_code
+                ):
+                    raise PyiCloudException("The code you entered is not valid.")
+            else:
+                if not await self.hass.async_add_executor_job(
+                    self.api.validate_verification_code,
+                    self._trusted_device,
+                    self._verification_code,
+                ):
+                    raise PyiCloudException("The code you entered is not valid.")
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)

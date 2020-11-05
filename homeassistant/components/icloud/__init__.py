@@ -19,7 +19,8 @@ from .const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
     PLATFORMS,
-    STORAGE_KEY,
+    STORAGE_KEY_COOKIES,
+    STORAGE_KEY_SESSION,
     STORAGE_VERSION,
 )
 
@@ -118,13 +119,19 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=username)
 
-    icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    icloud_cookies_dir = hass.helpers.storage.Store(
+        STORAGE_VERSION, STORAGE_KEY_COOKIES
+    )
+    icloud_session_dir = hass.helpers.storage.Store(
+        STORAGE_VERSION, STORAGE_KEY_SESSION
+    )
 
     account = IcloudAccount(
         hass,
         username,
         password,
-        icloud_dir,
+        icloud_cookies_dir,
+        icloud_session_dir,
         with_family,
         max_interval,
         gps_accuracy_threshold,
