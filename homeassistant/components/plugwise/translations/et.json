@@ -16,7 +16,9 @@
                     "host": "IP aadress",
                     "password": "Smile ID",
                     "port": "Smile pordi number"
-                }
+                },
+                "description": "Toode:",
+                "title": "Plugwise t\u00fc\u00fcp"
             },
             "user_gateway": {
                 "data": {

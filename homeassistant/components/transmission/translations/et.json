@@ -20,5 +20,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "limit": "Piirang",
+                    "order": "J\u00e4rjekord",
+                    "scan_interval": "V\u00e4rskendussagedus"
+                }
+            }
+        }
     }
 }

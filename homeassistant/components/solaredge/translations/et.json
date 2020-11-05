@@ -1,12 +1,9 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Teenus on juba seadistatud"
-        },
         "step": {
             "user": {
                 "data": {
-                    "mmi": ""
+                    "api_key": "API v\u00f5ti"
                 }
             }
         }

@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
+            "existing_config_entry_found": "Olemasolev sama seerianumbriga konfiguratsioonikirje [VOID] on juba seadistatud. Selle seadistamiseks pead olemasoleva kirje kustutama.",
             "host_exists": "Selle hostiga [VOID] seade on juba h\u00e4\u00e4lestatud.",
             "name_exists": "Selle nimega [VOID] seade on juba h\u00e4\u00e4lestatud."
         },

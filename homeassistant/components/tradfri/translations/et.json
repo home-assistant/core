@@ -10,8 +10,10 @@
         "step": {
             "auth": {
                 "data": {
-                    "host": ""
-                }
+                    "host": "",
+                    "security_code": "Turvakood"
+                },
+                "title": "Sisesta turvakood"
             }
         }
     }
