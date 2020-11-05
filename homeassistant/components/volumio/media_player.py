@@ -35,6 +35,7 @@ from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
+from . import volumio_exception_handler
 
 _CONFIGURING = {}
 
@@ -84,6 +85,7 @@ class Volumio(MediaPlayerEntity):
         self._playlists = []
         self._currentplaylist = None
 
+    @volumio_exception_handler
     async def async_update(self):
         """Update state."""
         self._state = await self._volumio.get_state()
@@ -190,18 +192,22 @@ class Volumio(MediaPlayerEntity):
         """Flag of media commands that are supported."""
         return SUPPORT_VOLUMIO
 
+    @volumio_exception_handler
     async def async_media_next_track(self):
         """Send media_next command to media player."""
         await self._volumio.next()
 
+    @volumio_exception_handler
     async def async_media_previous_track(self):
         """Send media_previous command to media player."""
         await self._volumio.previous()
 
+    @volumio_exception_handler
     async def async_media_play(self):
         """Send media_play command to media player."""
         await self._volumio.play()
 
+    @volumio_exception_handler
     async def async_media_pause(self):
         """Send media_pause command to media player."""
         if self._state["trackType"] == "webradio":
@@ -209,22 +215,27 @@ class Volumio(MediaPlayerEntity):
         else:
             await self._volumio.pause()
 
+    @volumio_exception_handler
     async def async_media_stop(self):
         """Send media_stop command to media player."""
         await self._volumio.stop()
 
+    @volumio_exception_handler
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
         await self._volumio.set_volume_level(int(volume * 100))
 
+    @volumio_exception_handler
     async def async_volume_up(self):
         """Service to send the Volumio the command for volume up."""
         await self._volumio.volume_up()
 
+    @volumio_exception_handler
     async def async_volume_down(self):
         """Service to send the Volumio the command for volume down."""
         await self._volumio.volume_down()
 
+    @volumio_exception_handler
     async def async_mute_volume(self, mute):
         """Send mute command to media player."""
         if mute:
@@ -232,29 +243,35 @@ class Volumio(MediaPlayerEntity):
         else:
             await self._volumio.unmute()
 
+    @volumio_exception_handler
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         await self._volumio.set_shuffle(shuffle)
 
+    @volumio_exception_handler
     async def async_select_source(self, source):
         """Choose an available playlist and play it."""
         await self._volumio.play_playlist(source)
         self._currentplaylist = source
 
+    @volumio_exception_handler
     async def async_clear_playlist(self):
         """Clear players playlist."""
         await self._volumio.clear_playlist()
         self._currentplaylist = None
 
+    @volumio_exception_handler
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     async def _async_update_playlists(self, **kwargs):
         """Update available Volumio playlists."""
         self._playlists = await self._volumio.get_playlists()
 
+    @volumio_exception_handler
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
         await self._volumio.replace_and_play(json.loads(media_id))
 
+    @volumio_exception_handler
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
         if media_content_type in [None, "library"]:

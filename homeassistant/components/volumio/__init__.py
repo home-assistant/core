@@ -1,5 +1,6 @@
 """The Volumio integration."""
 import asyncio
+import logging
 
 from pyvolumio import CannotConnectError, Volumio
 
@@ -12,6 +13,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
 
 PLATFORMS = ["media_player"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -41,6 +44,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+def volumio_exception_handler(func):
+    """Decorate Volumio calls to handle Volumio exceptions."""
+
+    async def handler(self, *args, **kwargs):
+        try:
+            return await func(self, *args, **kwargs)
+        except CannotConnectError as error:
+            if self.available:
+                # Currently this always returns True.
+                # TO DO: Implement better handling of loss of connection.
+                # Combine this with better update handling, using DataUpdateCoordinator and CoordinatorEntity?
+                # Look at Roku integration for example
+                _LOGGER.error("Error communicating with API in function %s: %s", func.__name__,error)
+
+    return handler
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
