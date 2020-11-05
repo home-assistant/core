@@ -7,7 +7,6 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     PRESSURE_CBAR,
 )
-from homeassistant.components.onewire.sensor import DEVICE_SENSORS
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -183,6 +182,7 @@ MOCK_DEVICE_SENSORS = {
                 "result": "73.8",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                "disabled": True,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih4000",
@@ -412,7 +412,11 @@ MOCK_DEVICE_SENSORS = {
 
 @pytest.mark.parametrize("device_id", MOCK_DEVICE_SENSORS.keys())
 async def test_owserver_setup_valid_device(hass, device_id):
-    """Test for 1-Wire device."""
+    """Test for 1-Wire device.
+
+    As they would be on a clean setup: all binary-sensors and switches disabled.
+    """
+    await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
     device_registry = mock_device_registry(hass)
 
@@ -430,8 +434,6 @@ async def test_owserver_setup_valid_device(hass, device_id):
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
 
-    # Ignore default_disabled for testing
-    DEVICE_SENSORS["26"][2]["default_disabled"] = False
     with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
         owproxy.return_value.dir.return_value = dir_return_value
         owproxy.return_value.read.side_effect = read_side_effect
