@@ -249,10 +249,7 @@ async def async_get_translations(
     Otherwise default to loaded intgrations combined with config flow
     integrations if config_flow is true.
     """
-    lock = hass.data.get(TRANSLATION_LOAD_LOCK)
-    if lock is None:
-        lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
-
+    lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
     resource_func = build_resources
 
     if integration is not None:
