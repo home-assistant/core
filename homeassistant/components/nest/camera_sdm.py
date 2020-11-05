@@ -1,5 +1,6 @@
 """Support for Google Nest SDM Cameras."""
 
+import datetime
 import logging
 from typing import Optional
 
@@ -11,6 +12,7 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
@@ -18,6 +20,10 @@ from .const import DOMAIN, SIGNAL_NEST_UPDATE
 from .device_info import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+# Every 30 seconds, check if the stream is within 1 minute of expiration
+STREAM_REFRESH_CHECK_INTERVAL = datetime.timedelta(seconds=30)
+STREAM_EXPIRATION_BUFFER = datetime.timedelta(minutes=1)
 
 
 async def async_setup_sdm_entry(
@@ -49,6 +55,7 @@ class NestCamera(Camera):
         self._device = device
         self._device_info = DeviceInfo(device)
         self._stream = None
+        self._stream_refresh_unsub = None
 
     @property
     def should_poll(self) -> bool:
@@ -94,21 +101,36 @@ class NestCamera(Camera):
         if CameraLiveStreamTrait.NAME not in self._device.traits:
             return None
         trait = self._device.traits[CameraLiveStreamTrait.NAME]
-        now = utcnow()
         if not self._stream:
-            logging.debug("Fetching stream url")
+            _LOGGER.debug("Fetching stream url")
             self._stream = await trait.generate_rtsp_stream()
-        elif self._stream.expires_at < now:
-            logging.debug("Stream expired, extending stream")
+            # Schedule an alarm to check for stream expiration
+            self._stream_refresh_unsub = async_track_time_interval(
+                self.hass,
+                self._handle_stream_refresh,
+                STREAM_REFRESH_CHECK_INTERVAL,
+            )
+        if self._stream.expires_at < utcnow():
+            _LOGGER.warning("API response stream already expired")
+        return self._stream.rtsp_stream_url
+
+    async def _handle_stream_refresh(self, now):
+        """Alarm that fires to check if the stream should be refreshed."""
+        if not self._stream:
+            return
+        if self._stream.expires_at >= (now - STREAM_EXPIRATION_BUFFER):
+            _LOGGER.debug("Stream expired, extending stream")
             new_stream = await self._stream.extend_rtsp_stream()
             self._stream = new_stream
-        return self._stream.rtsp_stream_url
+            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Invalidates the RTSP token when unloaded."""
         if self._stream:
-            logging.debug("Invalidating stream")
+            _LOGGER.debug("Invalidating stream")
             await self._stream.stop_rtsp_stream()
+        if self._stream_refresh_unsub:
+            self._stream_refresh_unsub()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""

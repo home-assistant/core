@@ -18,6 +18,7 @@ from homeassistant.util.dt import utcnow
 from .common import async_setup_sdm_platform
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 PLATFORM = "camera"
 CAMERA_DEVICE_TYPE = "sdm.devices.types.CAMERA"
@@ -169,8 +170,8 @@ async def test_camera_stream(hass, aiohttp_client):
 async def test_refresh_expired_stream_token(hass, aiohttp_client):
     """Test a camera stream expiration and refresh."""
     now = utcnow()
-    past = now - datetime.timedelta(seconds=100)
-    future = now + datetime.timedelta(seconds=100)
+    expiration = now + datetime.timedelta(seconds=120)
+    new_expiration = now + datetime.timedelta(seconds=300)
     responses = [
         FakeResponse(
             {
@@ -180,19 +181,16 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
                     },
                     "streamExtensionToken": "g.1.extensionToken",
                     "streamToken": "g.0.streamingToken",
-                    "expiresAt": past.isoformat(timespec="seconds"),
+                    "expiresAt": expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
         FakeResponse(
             {
                 "results": {
-                    "streamUrls": {
-                        "rtspUrl": "rtsp://some/url?auth=g.2.streamingToken"
-                    },
                     "streamExtensionToken": "g.3.extensionToken",
                     "streamToken": "g.2.streamingToken",
-                    "expiresAt": future.isoformat(timespec="seconds"),
+                    "expiresAt": new_expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
@@ -211,11 +209,15 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    # On second fetch, notice the stream is expired and fetch again
+    # Fire alarm. The stream has not yet expired, so the url is not refreshed
+    async_fire_time_changed(hass, now + datetime.timedelta(seconds=30))
+    await hass.async_block_till_done()
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
-    assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    # Stream is not expired; Same url returned
+    # Fire alarm when stream is nearing expiration, causing it to be refreshed
+    async_fire_time_changed(hass, now + datetime.timedelta(seconds=100))
+    await hass.async_block_till_done()
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
