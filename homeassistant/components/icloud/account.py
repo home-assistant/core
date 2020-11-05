@@ -78,7 +78,8 @@ class IcloudAccount:
         hass: HomeAssistantType,
         username: str,
         password: str,
-        icloud_dir: Store,
+        icloud_cookies_dir: Store,
+        icloud_session_dir: Store,
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
@@ -93,7 +94,8 @@ class IcloudAccount:
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
-        self._icloud_dir = icloud_dir
+        self._icloud_cookies_dir = icloud_cookies_dir
+        self._icloud_session_dir = icloud_session_dir
 
         self.api: Optional[PyiCloudService] = None
         self._owner_fullname = None
@@ -110,9 +112,16 @@ class IcloudAccount:
             self.api = PyiCloudService(
                 self._username,
                 self._password,
-                self._icloud_dir.path,
+                self._icloud_cookies_dir.path,
+                self._icloud_session_dir.path,
                 with_family=self._with_family,
             )
+
+            if not self.api.is_trusted_session:
+                # Session is no longer trusted
+                # Trigger a new log in to ensure the user enters the 2FA code again.
+                raise PyiCloudFailedLoginException
+
         except PyiCloudFailedLoginException:
             self.api = None
             # Login failed which means credentials need to be updated.
@@ -125,16 +134,7 @@ class IcloudAccount:
                 self._config_entry.data[CONF_USERNAME],
             )
 
-            self.hass.add_job(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data={
-                        **self._config_entry.data,
-                        "unique_id": self._config_entry.unique_id,
-                    },
-                )
-            )
+            self._require_reauth()
             return
 
         try:
@@ -163,6 +163,10 @@ class IcloudAccount:
     def update_devices(self) -> None:
         """Update iCloud devices."""
         if self.api is None:
+            return
+
+        if not self.api.is_trusted_session:
+            self._require_reauth()
             return
 
         api_devices = {}
@@ -226,6 +230,19 @@ class IcloudAccount:
             self.hass,
             self.keep_alive,
             utcnow() + timedelta(minutes=self._fetch_interval),
+        )
+
+    def _require_reauth(self):
+        """Require the user to log in again."""
+        self.hass.add_job(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data={
+                    **self._config_entry.data,
+                    "unique_id": self._config_entry.unique_id,
+                },
+            )
         )
 
     def _determine_interval(self) -> int:
