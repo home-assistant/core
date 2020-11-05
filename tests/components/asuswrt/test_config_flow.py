@@ -1,7 +1,6 @@
 """Tests for the AsusWrt config flow."""
-import pytest
-
 from aioasuswrt.asuswrt import Device
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import sensor
@@ -16,7 +15,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
