@@ -156,12 +156,53 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         translations = await translation.async_get_translations(
             hass, "en", "hello", config_flow=True
         )
+        translations_again = await translation.async_get_translations(
+            hass, "en", "hello", config_flow=True
+        )
+
+        assert translations == translations_again
 
     assert translations == {
         "component.component1.hello": "world",
     }
 
     assert "component1" not in hass.config.components
+
+    mock_config_flows.append("component2")
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 2"
+
+    with patch(
+        "homeassistant.helpers.translation.component_translation_path",
+        return_value="bla.json",
+    ), patch(
+        "homeassistant.helpers.translation.load_translations_files",
+        return_value={"component2": {"hello": "world"}},
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integration",
+        return_value=integration,
+    ):
+        translations = await translation.async_get_translations(
+            hass, "en", "hello", config_flow=True
+        )
+        translations_again = await translation.async_get_translations(
+            hass, "en", "hello", config_flow=True
+        )
+
+        assert translations == translations_again
+
+    assert translations == {
+        "component.component1.hello": "world",
+        "component.component2.hello": "world",
+    }
+
+    translations_all_cached = await translation.async_get_translations(
+        hass, "en", "hello", config_flow=True
+    )
+    assert translations == translations_all_cached
+
+    assert "component1" not in hass.config.components
+    assert "component2" not in hass.config.components
 
 
 async def test_get_translations_while_loading_components(hass):
@@ -258,11 +299,13 @@ async def test_caching(hass):
         "homeassistant.helpers.translation.merge_resources",
         side_effect=translation.merge_resources,
     ) as mock_merge:
-        await translation.async_get_translations(hass, "en", "state")
+        load1 = await translation.async_get_translations(hass, "en", "state")
         assert len(mock_merge.mock_calls) == 1
 
-        await translation.async_get_translations(hass, "en", "state")
+        load2 = await translation.async_get_translations(hass, "en", "state")
         assert len(mock_merge.mock_calls) == 1
+
+        assert load1 == load2
 
 
 async def test_custom_component_translations(hass):
