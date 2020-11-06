@@ -87,7 +87,7 @@ def load_translations_files(
     return loaded
 
 
-def merge_resources(
+def _merge_resources(
     translation_strings: Dict[str, Dict[str, Any]],
     components: Set[str],
     category: str,
@@ -128,7 +128,7 @@ def merge_resources(
     return resources
 
 
-def build_resources(
+def _build_resources(
     translation_strings: Dict[str, Dict[str, Any]],
     components: Set[str],
     category: str,
@@ -196,7 +196,7 @@ async def async_get_component_strings(
     return translations
 
 
-class TranslationCache:
+class _TranslationCache:
     """Cache for flattened translations."""
 
     def __init__(self, hass: HomeAssistantType) -> None:
@@ -228,7 +228,7 @@ class TranslationCache:
         cache = self.async_get_cache(language, category)
 
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
-        resource_func = merge_resources if category == "state" else build_resources
+        resource_func = _merge_resources if category == "state" else _build_resources
 
         for result in await asyncio.gather(
             *[
@@ -279,30 +279,20 @@ async def async_get_translations(
         }
 
     async with lock:
-        return await _async_cached_load_translations(
-            hass, language, category, components
+        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+        components_to_load = components - cache.async_get_loaded_components(
+            language, category
         )
 
+        if components_to_load:
+            _LOGGER.debug(
+                "Cache miss for %s, %s: %s",
+                language,
+                category,
+                ", ".join(components_to_load),
+            )
+            await cache.async_load(language, category, components_to_load)
 
-async def _async_cached_load_translations(
-    hass: HomeAssistantType,
-    language: str,
-    category: str,
-    components: Set,
-) -> Dict[str, Any]:
-    cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, TranslationCache(hass))
-    components_to_load = components - cache.async_get_loaded_components(
-        language, category
-    )
+        cached = cache.async_get_cache(language, category)
 
-    if components_to_load:
-        _LOGGER.debug(
-            "Cache miss for %s, %s: %s",
-            language,
-            category,
-            ", ".join(components_to_load),
-        )
-        await cache.async_load(language, category, components_to_load)
-
-    cached = cache.async_get_cache(language, category)
     return dict(ChainMap(*[cached[k] for k in components if k in cached and cached[k]]))
