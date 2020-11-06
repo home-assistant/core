@@ -920,7 +920,7 @@ pyzerproc==0.2.5
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==2.1.0
+regenmaschine==3.0.0
 
 # homeassistant.components.python_script
 restrictedpython==5.0
