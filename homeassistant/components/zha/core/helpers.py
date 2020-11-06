@@ -7,7 +7,7 @@ https://home-assistant.io/integrations/zha/
 
 import asyncio
 import binascii
-import collections
+from dataclasses import dataclass
 import functools
 import itertools
 import logging
@@ -19,13 +19,29 @@ import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
 import zigpy.util
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.core import State, callback
 
 from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
+from .typing import ZhaDeviceType, ZigpyClusterType
 
-ClusterPair = collections.namedtuple("ClusterPair", "source_cluster target_cluster")
+
+@dataclass
+class BindingPair:
+    """Information for binding."""
+
+    source_cluster: ZigpyClusterType
+    target_ieee: zigpy.types.EUI64
+    target_ep_id: int
+
+    @property
+    def destination_address(self) -> zdo_types.MultiAddress:
+        """Return a ZDO multi address instance."""
+        return zdo_types.MultiAddress(
+            addrmode=3, ieee=self.target_ieee, endpoint=self.target_ep_id
+        )
 
 
 async def safe_read(
@@ -49,7 +65,9 @@ async def safe_read(
         return {}
 
 
-async def get_matched_clusters(source_zha_device, target_zha_device):
+async def get_matched_clusters(
+    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+) -> List[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -59,15 +77,26 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
         for cluster_id in source_clusters[endpoint_id][CLUSTER_TYPE_OUT]:
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
+            if target_zha_device.nwk == 0x0000:
+                cluster_pair = BindingPair(
+                    source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
+                        cluster_id
+                    ],
+                    target_ieee=target_zha_device.ieee,
+                    target_ep_id=target_zha_device.device.application.get_endpoint_id(
+                        cluster_id, is_server_cluster=True
+                    ),
+                )
+                clusters_to_bind.append(cluster_pair)
+                continue
             for t_endpoint_id in target_clusters:
                 if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
-                    cluster_pair = ClusterPair(
+                    cluster_pair = BindingPair(
                         source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
                             cluster_id
                         ],
-                        target_cluster=target_clusters[t_endpoint_id][CLUSTER_TYPE_IN][
-                            cluster_id
-                        ],
+                        target_ieee=target_zha_device.ieee,
+                        target_ep_id=t_endpoint_id,
                     )
                     clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
@@ -76,6 +105,9 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""
+    if target_zha_device.nwk == 0x0000:
+        return True
+
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
 
