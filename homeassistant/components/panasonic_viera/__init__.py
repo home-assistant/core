@@ -3,16 +3,15 @@ import asyncio
 from functools import partial
 import logging
 from urllib.request import URLError
-
+import subprocess
+import platform
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
-
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_REMOTE,
@@ -66,7 +65,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Panasonic Viera from a config entry."""
-
     panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
 
     config = config_entry.data
@@ -129,6 +127,13 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
+def ping(host):
+    """Ping a host."""
+    param = "-n" if platform.system().lower() == "windows" else "-c"
+    command = ["ping", param, "1", host]
+    return subprocess.call(command) == 0
+
+
 class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
@@ -162,7 +167,6 @@ class Remote:
 
     async def async_create_remote_control(self, during_setup=False):
         """Create remote control."""
-        control_existed = self._control is not None
         try:
             params = {}
             if self._app_id and self._encryption_key:
@@ -173,21 +177,18 @@ class Remote:
                 partial(RemoteControl, self._host, self._port, **params)
             )
 
-            self.state = STATE_ON
-            self.available = True
+            if during_setup:
+                await self.async_update()
         except (TimeoutError, URLError, SOAPError, OSError) as err:
-            if control_existed or during_setup:
-                _LOGGER.debug("Could not establish remote connection: %s", err)
-
+            _LOGGER.debug("Could not establish remote connection: %s", err)
             self._control = None
             self.state = STATE_OFF
             self.available = self._on_action is not None
         except Exception as err:  # pylint: disable=broad-except
-            if control_existed or during_setup:
-                _LOGGER.exception("An unknown error occurred: %s", err)
-                self._control = None
-                self.state = STATE_OFF
-                self.available = self._on_action is not None
+            _LOGGER.exception("An unknown error occurred: %s", err)
+            self._control = None
+            self.state = STATE_OFF
+            self.available = self._on_action is not None
 
     async def async_update(self):
         """Update device data."""
@@ -199,6 +200,10 @@ class Remote:
 
     def _update(self):
         """Retrieve the latest data."""
+        if not ping(self._host):
+            self.available = self._on_action is not None
+            return
+        self.available = True
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
@@ -215,16 +220,15 @@ class Remote:
         """Turn on the TV."""
         if self._on_action is not None:
             await self._on_action.async_run(context=context)
-            self.state = STATE_ON
+            await self.async_update()
         elif self.state != STATE_ON:
             await self.async_send_key(Keys.power)
-            self.state = STATE_ON
+            await self.async_update()
 
     async def async_turn_off(self):
         """Turn off the TV."""
         if self.state != STATE_OFF:
             await self.async_send_key(Keys.power)
-            self.state = STATE_OFF
             await self.async_update()
 
     async def async_set_mute(self, enable):
@@ -252,16 +256,16 @@ class Remote:
     async def _handle_errors(self, func, *args):
         """Handle errors from func, set available and reconnect if needed."""
         try:
-            return await self._hass.async_add_executor_job(func, *args)
+            result = await self._hass.async_add_executor_job(func, *args)
+            self.state = STATE_ON
+            return result
         except EncryptionRequired:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
-            self.available = self._on_action is not None
             await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF
-            self.available = self._on_action is not None
