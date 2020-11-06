@@ -68,7 +68,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             return None
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if self._node.uom == UOM_PERCENTAGE:
-            return int(self._node.status * 255.0 / 100.0)
+            return round(self._node.status * 255.0 / 100.0)
         return int(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
@@ -83,7 +83,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             self._last_brightness = (
                 self._node.status
                 if self._node.uom != UOM_PERCENTAGE
-                else int(self._node.status * 255.0 / 100.0)
+                else round(self._node.status * 255.0 / 100.0)
             )
         super().on_update(event)
 
@@ -94,7 +94,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             brightness = self._last_brightness
         # Special Case for ISY Z-Wave Devices using % instead of 0-255:
         if brightness is not None and self._node.uom == UOM_PERCENTAGE:
-            brightness = int(brightness * 100.0 / 255.0)
+            brightness = round(brightness * 100.0 / 255.0)
         if not self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
 
