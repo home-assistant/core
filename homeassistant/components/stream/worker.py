@@ -11,6 +11,8 @@ from .const import (
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    STREAM_RESTART_INCREMENT,
+    STREAM_RESTART_RESET_TIME,
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
@@ -60,9 +62,9 @@ def stream_worker(hass, stream, quit_event):
         # As the required recovery time may be different for different setups, start
         # with trying a short wait_timeout and increase it on each reconnection attempt.
         # Reset the wait_timeout after the worker has been up for several minutes
-        if time.time() - start_time > 300:
+        if time.time() - start_time > STREAM_RESTART_RESET_TIME:
             wait_timeout = 0
-        wait_timeout += 10
+        wait_timeout += STREAM_RESTART_INCREMENT
         _LOGGER.debug(
             "Restarting stream worker in %d seconds: %s",
             wait_timeout,
