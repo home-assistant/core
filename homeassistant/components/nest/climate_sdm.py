@@ -286,16 +286,16 @@ class ThermostatEntity(ClimateEntity):
         """Compute the bitmap of supported features from the current state."""
         features = 0
         if HVAC_MODE_HEAT_COOL in self.hvac_modes or HVAC_MODE_AUTO in self.hvac_modes:
-            features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
+            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
         if HVAC_MODE_HEAT in self.hvac_modes or HVAC_MODE_COOL in self.hvac_modes:
-            features = features | SUPPORT_TARGET_TEMPERATURE
+            features |= SUPPORT_TARGET_TEMPERATURE
         if ThermostatEcoTrait.NAME in self._device.traits:
-            features = features | SUPPORT_PRESET_MODE
+            features |= SUPPORT_PRESET_MODE
         if FanTrait.NAME in self._device.traits:
             # Fan trait may be present without actually support fan mode
             fan_trait = self._device.traits[FanTrait.NAME]
             if fan_trait.timer_mode is not None:
-                features = features | SUPPORT_FAN_MODE
+                features |= SUPPORT_FAN_MODE
         return features
 
     async def async_set_hvac_mode(self, hvac_mode):
