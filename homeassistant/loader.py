@@ -236,7 +236,7 @@ class Integration:
                 manifest = json.loads(manifest_path.read_text())
             except ValueError as err:
                 _LOGGER.error(
-                    "Error parsing manifest.json file at %s: %s", manifest_path, err
+                    f"Error parsing manifest.json file at {manifest_path}: {err}"
                 )
                 continue
 
@@ -287,7 +287,7 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
-        _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+        _LOGGER.info(f"Loaded {self.domain} from {pkg_path}")
 
     @property
     def name(self) -> str:
@@ -391,17 +391,12 @@ class Integration:
             self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  we are unable to resolve (sub)dependency %s",
-                self.domain,
-                err.domain,
+                f"Unable to resolve dependencies for {self.domain}:  we are unable to resolve (sub)dependency {err.domain}"
             )
             self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
-                "Unable to resolve dependencies for %s:  it contains a circular dependency: %s -> %s",
-                self.domain,
-                err.from_domain,
-                err.to_domain,
+                f"Unable to resolve dependencies for {self.domain}:  it contains a circular dependency: {err.from_domain} -> {err.to_domain}"
             )
             self._all_dependencies_resolved = False
 
@@ -570,7 +565,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all dependencies are installed"), path
+                    f"Error loading {path}. Make sure all dependencies are installed"
                 )
 
     return None
