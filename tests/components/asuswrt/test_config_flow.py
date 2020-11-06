@@ -1,9 +1,7 @@
 """Tests for the AsusWrt config flow."""
-from aioasuswrt.asuswrt import Device
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components import sensor
 from homeassistant.components.asuswrt.const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -11,6 +9,7 @@ from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
     DOMAIN,
 )
+from homeassistant.components.device_tracker.const import CONF_TRACK_NEW
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -39,14 +38,6 @@ CONFIG_DATA = {
     CONF_DNSMASQ: "/var/lib/misc",
 }
 
-MOCK_DEVICES = {
-    "a1:b1:c1:d1:e1:f1": Device("a1:b1:c1:d1:e1:f1", "192.168.1.2", "Test"),
-    "a2:b2:c2:d2:e2:f2": Device("a2:b2:c2:d2:e2:f2", "192.168.1.3", "TestTwo"),
-    "a3:b3:c3:d3:e3:f3": Device("a3:b3:c3:d3:e3:f3", "192.168.1.4", "TestThree"),
-}
-MOCK_BYTES_TOTAL = [60000000000, 50000000000]
-MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
-
 
 @pytest.fixture(name="connect")
 def mock_controller_connect():
@@ -55,22 +46,6 @@ def mock_controller_connect():
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = AsyncMock()
-        service_mock.return_value.async_get_nvram = AsyncMock(
-            return_value={
-                "model": "abcd",
-                "firmver": "efg",
-                "buildno": "123",
-            }
-        )
-        service_mock.return_value.async_get_connected_devices = AsyncMock(
-            return_value=MOCK_DEVICES
-        )
-        service_mock.return_value.async_get_bytes_total = AsyncMock(
-            return_value=MOCK_BYTES_TOTAL
-        )
-        service_mock.return_value.async_get_current_transfer_rates = AsyncMock(
-            return_value=MOCK_CURRENT_TRANSFER_RATES
-        )
         yield service_mock
 
 
@@ -83,37 +58,44 @@ async def test_user(hass, connect):
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=CONFIG_DATA,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.asuswrt.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == HOST
-    assert result["title"] == HOST
-    assert result["data"] == CONFIG_DATA
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "3"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download_speed").state == "160.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download").state == "60.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload_speed").state == "80.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload").state == "50.0"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == HOST
+        assert result["title"] == HOST
+        assert result["data"] == CONFIG_DATA
+
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_import(hass, connect):
     """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=CONFIG_DATA,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.asuswrt.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA,
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == HOST
-    assert result["title"] == HOST
-    assert result["data"] == CONFIG_DATA
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == HOST
+        assert result["title"] == HOST
+        assert result["data"] == CONFIG_DATA
+
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_error_no_password_ssh(hass):
@@ -217,3 +199,27 @@ async def test_on_connect_failed(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=HOST,
+        options={CONF_TRACK_NEW: True},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.asuswrt.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_TRACK_NEW: False}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options[CONF_TRACK_NEW] is False
