@@ -24,7 +24,9 @@
             "select_server": {
                 "data": {
                     "server": ""
-                }
+                },
+                "description": "Saadaval on mitu serverit, vali \u00fcks:",
+                "title": "Vali Plex'i server"
             },
             "user": {
                 "description": "Plexi serveri linkimiseks mine lehele [plex.tv] (https://plex.tv).",
@@ -44,8 +46,10 @@
                 "data": {
                     "ignore_new_shared_users": "Eira uusi hallatud / jagatud kasutajaid",
                     "ignore_plex_web_clients": "Eira Plex Web'i kliente",
-                    "monitored_users": "J\u00e4lgitavad kasutajad"
-                }
+                    "monitored_users": "J\u00e4lgitavad kasutajad",
+                    "use_episode_art": "Kasuta jao kujundust"
+                },
+                "description": "Plex Media Players'i valikud"
             }
         }
     }

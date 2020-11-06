@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "site_exists": "See site_id on juba konfigureeritud"
+        },
+        "error": {
+            "site_exists": "See site_id on juba konfigureeritud"
+        },
         "step": {
             "user": {
                 "data": {

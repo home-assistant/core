@@ -17,7 +17,8 @@
                     "password": "Salas\u00f5na",
                     "port": "",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Seadista Transmission'i klient"
             }
         }
     },

@@ -6,6 +6,9 @@
             "unknown": "Ootamatu t\u00f5rge",
             "user_already_configured": "Konto on juba seadistatud"
         },
+        "create_entry": {
+            "default": "T\u00e4psemate suvandite kohta leiad teemat [Life360 documentation]({docs_url})."
+        },
         "error": {
             "already_configured": "Kasutaja on juba seadistatud",
             "invalid_auth": "Tuvastamise viga",
@@ -20,7 +23,9 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "T\u00e4psemate suvandite kohta leiad teemat [Life360 documentation]({docs_url}).\nTee seda enne uute kontode lisamist.",
+                "title": "Life360 konto teave"
             }
         }
     }

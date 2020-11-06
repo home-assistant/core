@@ -25,7 +25,8 @@
                     "password": "Password",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "username": "Nome utente"
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "description": "Vuoi impostare {name} ({host})?",
                 "title": "Synology DSM"
@@ -36,7 +37,8 @@
                     "password": "Password",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "username": "Nome utente"
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "title": "Synology DSM"
             }
