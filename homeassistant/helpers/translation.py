@@ -203,40 +203,40 @@ class _TranslationCache:
         """Initialize the cache."""
         self.hass = hass
         self.loaded: Dict[str, Dict[str, Set[str]]] = {}
-        self.cache: Dict[str, Dict[str, Dict[str, str]]] = {}
-
-    @callback
-    def async_get_loaded_components(self, language: str, category: str) -> Set[str]:
-        """Get cache or a default entry."""
-        return self.loaded.setdefault(language, {}).setdefault(category, set())
-
-    @callback
-    def async_get_cache(self, language: str, category: str) -> Dict[str, Any]:
-        """Get cache or a default entry."""
-        return self.cache.setdefault(language, {}).setdefault(category, {})
+        self.cache: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
     async def async_load(
         self,
         language: str,
         category: str,
         components: Set,
-    ) -> None:
+    ) -> Dict[str, Dict[str, Any]]:
         """Load resources into the cache."""
         # Fetch the English resources, as a fallback for missing keys
-        self.async_get_loaded_components(language, category).update(components)
+        loaded = self.loaded.setdefault(language, {}).setdefault(category, set())
+        cache = self.cache.setdefault(language, {}).setdefault(category, {})
 
-        cache = self.async_get_cache(language, category)
+        components_to_load = components - loaded
 
+        if not components_to_load:
+            return cache
+
+        _LOGGER.debug(
+            "Cache miss for %s, %s: %s",
+            language,
+            category,
+            ", ".join(components_to_load),
+        )
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
         resource_func = _merge_resources if category == "state" else _build_resources
 
         for result in await asyncio.gather(
             *[
-                async_get_component_strings(self.hass, lang, components)
+                async_get_component_strings(self.hass, lang, components_to_load)
                 for lang in languages
             ]
         ):
-            new_resources = resource_func(result, components, category)
+            new_resources = resource_func(result, components_to_load, category)
             for component, resource in new_resources.items():
                 comp_cache: Dict[str, Any] = cache.setdefault(component, {})
                 if isinstance(resource, dict):
@@ -248,6 +248,9 @@ class _TranslationCache:
                     )
                 else:
                     comp_cache[f"component.{component}.{category}"] = resource
+
+        loaded.update(components_to_load)
+        return cache
 
 
 @bind_hass
@@ -280,19 +283,6 @@ async def async_get_translations(
 
     async with lock:
         cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
-        components_to_load = components - cache.async_get_loaded_components(
-            language, category
-        )
-
-        if components_to_load:
-            _LOGGER.debug(
-                "Cache miss for %s, %s: %s",
-                language,
-                category,
-                ", ".join(components_to_load),
-            )
-            await cache.async_load(language, category, components_to_load)
-
-        cached = cache.async_get_cache(language, category)
+        cached = await cache.async_load(language, category, components)
 
     return dict(ChainMap(*[cached[k] for k in components if k in cached and cached[k]]))
