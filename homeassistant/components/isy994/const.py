@@ -193,6 +193,7 @@ UOM_HVAC_MODE_INSTEON = "98"
 UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
+UOM_PERCENTAGE = "51"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
@@ -369,7 +370,7 @@ UOM_FRIENDLY_NAME = {
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "Ω",
-    "51": PERCENTAGE,
+    UOM_PERCENTAGE: PERCENTAGE,
     "52": MASS_POUNDS,
     "53": "pf",
     "54": CONCENTRATION_PARTS_PER_MILLION,
