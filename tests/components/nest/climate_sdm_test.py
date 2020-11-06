@@ -93,14 +93,15 @@ async def test_thermostat_off(hass):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
-    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
-    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
+    }
+    assert thermostat.attributes[ATTR_TEMPERATURE] is None
+    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
     assert ATTR_FAN_MODE not in thermostat.attributes
@@ -134,15 +135,15 @@ async def test_thermostat_heat(hass):
     assert thermostat.state == HVAC_MODE_HEAT
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_TEMPERATURE] == 22.0
-    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
-    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
+    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
@@ -174,15 +175,15 @@ async def test_thermostat_cool(hass):
     assert thermostat.state == HVAC_MODE_COOL
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_TEMPERATURE] == 28.0
-    assert ATTR_TARGET_TEMP_LOW not in thermostat.attributes
-    assert ATTR_TARGET_TEMP_HIGH not in thermostat.attributes
+    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
@@ -215,14 +216,15 @@ async def test_thermostat_heatcool(hass):
     assert thermostat.state == HVAC_MODE_HEAT_COOL
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
     assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] == 28.0
+    assert thermostat.attributes[ATTR_TEMPERATURE] is None
     assert ATTR_PRESET_MODE not in thermostat.attributes
     assert ATTR_PRESET_MODES not in thermostat.attributes
 
@@ -261,14 +263,16 @@ async def test_thermostat_eco_off(hass):
     assert thermostat.state == HVAC_MODE_HEAT_COOL
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_AUTO,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
     assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] == 28.0
+    assert thermostat.attributes[ATTR_TEMPERATURE] is None
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_NONE
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
@@ -307,14 +311,16 @@ async def test_thermostat_eco_on(hass):
     assert thermostat.state == HVAC_MODE_AUTO
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 29.9
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_AUTO,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 21.0
     assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] == 29.0
+    assert thermostat.attributes[ATTR_TEMPERATURE] is None
     assert thermostat.attributes[ATTR_PRESET_MODE] == PRESET_ECO
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
@@ -639,12 +645,12 @@ async def test_thermostat_fan_off(hass):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
@@ -677,12 +683,12 @@ async def test_thermostat_fan_on(hass):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
@@ -750,11 +756,74 @@ async def test_thermostat_fan_empty(hass):
     assert thermostat.state == HVAC_MODE_OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
     assert thermostat.attributes[ATTR_CURRENT_TEMPERATURE] == 16.2
-    assert thermostat.attributes[ATTR_HVAC_MODES] == [
+    assert set(thermostat.attributes[ATTR_HVAC_MODES]) == {
         HVAC_MODE_HEAT,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    ]
+    }
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
+
+
+async def test_thermostat_target_temp(hass):
+    """Test a thermostat changing hvac modes and affected on target temps."""
+    auth = FakeAuth()
+    subscriber = await setup_climate(
+        hass,
+        {
+            "sdm.devices.traits.ThermostatHvac": {
+                "status": "HEATING",
+            },
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEAT",
+            },
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 20.1,
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                "heatCelsius": 23.0,
+            },
+        },
+        auth=auth,
+    )
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_HEAT
+    assert thermostat.attributes[ATTR_TEMPERATURE] == 23.0
+    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] is None
+    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] is None
+
+    # Simulate pubsub message changing modes
+    event = EventMessage(
+        {
+            "eventId": "some-event-id",
+            "timestamp": "2019-01-01T00:00:01Z",
+            "resourceUpdate": {
+                "name": "some-device-id",
+                "traits": {
+                    "sdm.devices.traits.ThermostatMode": {
+                        "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                        "mode": "HEATCOOL",
+                    },
+                    "sdm.devices.traits.ThermostatTemperatureSetpoint": {
+                        "heatCelsius": 22.0,
+                        "coolCelsius": 28.0,
+                    },
+                },
+            },
+        },
+        auth=None,
+    )
+    subscriber.receive_event(event)
+    await hass.async_block_till_done()  # Process dispatch/update signal
+
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVAC_MODE_HEAT_COOL
+    assert thermostat.attributes[ATTR_TARGET_TEMP_LOW] == 22.0
+    assert thermostat.attributes[ATTR_TARGET_TEMP_HIGH] == 28.0
+    assert thermostat.attributes[ATTR_TEMPERATURE] is None

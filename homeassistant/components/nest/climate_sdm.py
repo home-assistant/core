@@ -46,6 +46,7 @@ THERMOSTAT_MODE_MAP = {
     "HEAT": HVAC_MODE_HEAT,
     "COOL": HVAC_MODE_COOL,
     "HEATCOOL": HVAC_MODE_HEAT_COOL,
+    "MANUAL_ECO": HVAC_MODE_AUTO,
 }
 THERMOSTAT_INV_MODE_MAP = {v: k for k, v in THERMOSTAT_MODE_MAP.items()}
 
@@ -215,12 +216,22 @@ class ThermostatEntity(ClimateEntity):
     def hvac_modes(self):
         """List of available operation modes."""
         supported_modes = []
+        for mode in self._get_device_hvac_modes:
+            if mode in THERMOSTAT_MODE_MAP:
+                supported_modes.append(THERMOSTAT_MODE_MAP[mode])
+        return supported_modes
+
+    @property
+    def _get_device_hvac_modes(self):
+        """Return the set of SDM API hvac modes supported by the device."""
+        modes = []
         if ThermostatModeTrait.NAME in self._device.traits:
             trait = self._device.traits[ThermostatModeTrait.NAME]
-            for mode in trait.available_modes:
-                if mode in THERMOSTAT_MODE_MAP:
-                    supported_modes.append(THERMOSTAT_MODE_MAP[mode])
-        return supported_modes
+            modes.extend(trait.available_modes)
+        if ThermostatEcoTrait.NAME in self._device.traits:
+            trait = self._device.traits[ThermostatEcoTrait.NAME]
+            modes.extend(trait.available_modes)
+        return set(modes)
 
     @property
     def hvac_action(self):
@@ -274,11 +285,10 @@ class ThermostatEntity(ClimateEntity):
     def _get_supported_features(self):
         """Compute the bitmap of supported features from the current state."""
         features = 0
-        if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
-            if self.hvac_mode in THERMOSTAT_RANGE_MODES:
-                features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
-            else:
-                features = features | SUPPORT_TARGET_TEMPERATURE
+        if HVAC_MODE_HEAT_COOL in self.hvac_modes or HVAC_MODE_AUTO in self.hvac_modes:
+            features = features | SUPPORT_TARGET_TEMPERATURE_RANGE
+        if HVAC_MODE_HEAT in self.hvac_modes or HVAC_MODE_COOL in self.hvac_modes:
+            features = features | SUPPORT_TARGET_TEMPERATURE
         if ThermostatEcoTrait.NAME in self._device.traits:
             features = features | SUPPORT_PRESET_MODE
         if FanTrait.NAME in self._device.traits:
