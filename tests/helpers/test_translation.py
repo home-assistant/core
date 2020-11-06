@@ -374,7 +374,7 @@ async def test_caching(hass):
         assert load_light_only
         for key in load_light_only:
             assert key == "component.media_player.title"
-        assert len(mock_build.mock_calls) == len(translation.CATEGORIES) - 1
+        assert len(mock_build.mock_calls) > 1
 
 
 async def test_custom_component_translations(hass):

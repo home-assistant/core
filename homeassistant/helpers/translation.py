@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
-CATEGORIES = {"title", "state", "config", "options", "device_automation", "mfa_setup"}
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -231,28 +230,34 @@ class _TranslationCache:
         )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
-        for resources in await asyncio.gather(
+        for translation_strings in await asyncio.gather(
             *[
                 async_get_component_strings(self.hass, lang, components)
                 for lang in languages
             ]
         ):
-            self._build_category_cache(language, components, resources)
+            self._build_category_cache(language, components, translation_strings)
 
         self.loaded[language].update(components)
 
     @callback
     def _build_category_cache(
-        self, language: str, components: Set, resources: Dict[str, Any]
+        self,
+        language: str,
+        components: Set,
+        translation_strings: Dict[str, Dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
         cached = self.cache.setdefault(language, {})
+        categories: Set[str] = set()
+        for resource in translation_strings.values():
+            categories.update(resource)
 
-        for category in CATEGORIES:
+        for category in categories:
             resource_func = (
                 _merge_resources if category == "state" else _build_resources
             )
-            new_resources = resource_func(resources, components, category)
+            new_resources = resource_func(translation_strings, components, category)
 
             for component, resource in new_resources.items():
                 category_cache: Dict[str, Any] = cached.setdefault(
@@ -284,9 +289,6 @@ async def async_get_translations(
     Otherwise default to loaded intgrations combined with config flow
     integrations if config_flow is true.
     """
-    if category not in CATEGORIES:
-        raise ValueError(f"{category} is not one of {CATEGORIES}")
-
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
     if integration is not None:
