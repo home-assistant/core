@@ -213,7 +213,6 @@ class _TranslationCache:
         components: Set,
     ) -> List[Dict[str, Dict[str, Any]]]:
         """Load resources into the cache."""
-        # Fetch the English resources, as a fallback for missing keys
         components_to_load = components - self.loaded.setdefault(language, set())
 
         if components_to_load:
@@ -230,8 +229,8 @@ class _TranslationCache:
             language,
             ", ".join(components),
         )
+        # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
-
         for resources in await asyncio.gather(
             *[
                 async_get_component_strings(self.hass, lang, components)
