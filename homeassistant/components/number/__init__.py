@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Track states and offer events for number entities."""
+    """Set up Number entities."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )

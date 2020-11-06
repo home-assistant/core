@@ -19,7 +19,7 @@ class MockNumberEntity(NumberEntity):
 
 
 async def test_step(hass):
-    """Test if calculation of step."""
+    """Test the step calculation."""
     number = NumberEntity()
     assert number.step == 1.0
 
