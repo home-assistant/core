@@ -5,6 +5,7 @@
             "reauth_successful": "Taasautentimine \u00f5nnestus"
         },
         "error": {
+            "identifier_exists": "Konto on juba registreeritud",
             "invalid_auth": "Tuvastamise viga",
             "invalid_credentials": "Sobimatu mandaat",
             "unknown": "Tundmatu viga"
@@ -25,7 +26,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "E-post"
-                }
+                },
+                "title": "Sisesta oma teave."
             }
         }
     }

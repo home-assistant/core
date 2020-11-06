@@ -2,14 +2,18 @@
     "config": {
         "error": {
             "already_configured": "L\u00fc\u00fcs on juba m\u00e4\u00e4ratud",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "serial_error": "Viga seadmega \u00fchendumisel",
+            "timeout": "\u00dchenduse ajal\u00f5pp"
         },
         "step": {
             "init": {
                 "data": {
+                    "device": "Rada v\u00f5i URL",
                     "id": "",
                     "name": "Nimi"
-                }
+                },
+                "title": ""
             }
         }
     },

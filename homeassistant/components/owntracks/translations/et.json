@@ -9,7 +9,8 @@
         },
         "step": {
             "user": {
-                "description": "Kas soovid OwnTracks'i seadistada?"
+                "description": "Kas soovid OwnTracks'i seadistada?",
+                "title": "Seadista OwnTracks"
             }
         }
     }
