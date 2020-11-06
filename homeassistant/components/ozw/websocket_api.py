@@ -15,6 +15,7 @@ from openzwavemqtt.util.node import (
     set_config_parameter,
 )
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -213,7 +214,64 @@ def websocket_get_code_slots(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    _call_util_function(hass, connection, msg, True, get_config_parameters)
+    # _call_util_function(hass, connection, msg, True, get_config_parameters)
+    try:
+        node = get_node_from_manager(
+            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
+        )
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            websocket_api.const.ERR_NOT_FOUND,
+            err.args[0],
+        )
+        return
+
+    raw_values = get_config_parameters(node)
+    config_params = []
+
+    for param in raw_values:
+
+        if param["type"] in ["Byte", "Int", "Short"]:
+            schema = vol.Schema(
+                {vol.Required(param["label"], default=param["value"]): int}
+            )
+            data = {param["label"]: param["value"]}
+
+        if param["type"] == "List":
+
+            for options in param["options"]:
+                if options["Label"] == param["value"]:
+                    selected = options
+                    break
+
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"],): vol.In(
+                        {
+                            option["Value"]: option["Label"]
+                            for option in param["options"]
+                        }
+                    )
+                }
+            )
+            data = {param["label"]: selected["Value"]}
+
+        config_params.append(
+            {
+                "type": param["type"],
+                "label": param["label"],
+                "parameter": param["parameter"],
+                "help": param["help"],
+                "value": param["value"],
+                "schema": voluptuous_serialize.convert(
+                    schema, custom_serializer=cv.custom_serializer
+                ),
+                "data": data,
+            }
+        )
+
+    connection.send_result(msg[ID], config_params)
 
 
 @websocket_api.websocket_command(
@@ -245,7 +303,7 @@ def websocket_get_config_parameters(hass, connection, msg):
 def websocket_set_config_parameter(hass, connection, msg):
     """Set a config parameter to a node."""
     _call_util_function(
-        hass, connection, msg, False, set_config_parameter, msg[PARAMETER], msg[VALUE]
+        hass, connection, msg, True, set_config_parameter, msg[PARAMETER], msg[VALUE]
     )
 
 
