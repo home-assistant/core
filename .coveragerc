@@ -401,6 +401,7 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
+    homeassistant/components/i2c/*
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py

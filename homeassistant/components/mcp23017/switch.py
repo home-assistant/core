@@ -1,19 +1,23 @@
-"""Support for switch sensor using I2C MCP23017 chip."""
-from adafruit_mcp230xx.mcp23017 import MCP23017  # pylint: disable=import-error
-import board  # pylint: disable=import-error
-import busio  # pylint: disable=import-error
-import digitalio  # pylint: disable=import-error
+"""Platform for mcp23017-based switch."""
+
+import functools
+import logging
+
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.mcp23017 import MCP23017
+from homeassistant.components.switch import PLATFORM_SCHEMA, ToggleEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 
-CONF_INVERT_LOGIC = "invert_logic"
-CONF_I2C_ADDRESS = "i2c_address"
+from .const import DOMAIN, DOMAIN_I2C
+
+_LOGGER = logging.getLogger(__name__)
+
 CONF_PINS = "pins"
+CONF_INVERT_LOGIC = "invert_logic"
 CONF_PULL_MODE = "pull_mode"
+CONF_I2C_ADDRESS = "i2c_address"
 
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_I2C_ADDRESS = 0x20
@@ -29,34 +33,50 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MCP23017 devices."""
-    invert_logic = config.get(CONF_INVERT_LOGIC)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the MCP23017 for switch entities."""
 
-    i2c = busio.I2C(board.SCL, board.SDA)
-    mcp = MCP23017(i2c, address=i2c_address)
+    # Bail out if i2c device manager is not available
+    if DOMAIN_I2C not in hass.data:
+        _LOGGER.warning(
+            "Umable to setup %s switch (missing %s platform)", DOMAIN, DOMAIN_I2C
+        )
+        return
+
+    pins = config[CONF_PINS]
+    invert_logic = config[CONF_INVERT_LOGIC]
+
+    i2c_address = config[CONF_I2C_ADDRESS]
+    i2c_bus = hass.data[DOMAIN_I2C]
 
     switches = []
-    pins = config.get(CONF_PINS)
     for pin_num, pin_name in pins.items():
-        pin = mcp.get_pin(pin_num)
-        switches.append(MCP23017Switch(pin_name, pin, invert_logic))
-    add_entities(switches)
+        switch_entity = MCP23017Switch(pin_num, pin_name, invert_logic)
+        if await hass.async_add_executor_job(
+            functools.partial(switch_entity.bind, MCP23017, i2c_bus, i2c_address)
+        ):
+            switches.append(switch_entity)
+
+    async_add_entities(switches, False)
 
 
 class MCP23017Switch(ToggleEntity):
-    """Representation of a  MCP23017 output pin."""
+    """Represent a switch that uses MCP23017."""
 
-    def __init__(self, name, pin, invert_logic):
-        """Initialize the pin."""
-        self._name = name or DEVICE_DEFAULT_NAME
-        self._pin = pin
+    def __init__(self, pin_num, pin_name, invert_logic):
+        """Initialize the MCP23017 switch."""
+        self._name = pin_name or DEVICE_DEFAULT_NAME
+        self._pin_num = pin_num
         self._invert_logic = invert_logic
+        self._device = None
         self._state = False
 
-        self._pin.direction = digitalio.Direction.OUTPUT
-        self._pin.value = self._invert_logic
+        _LOGGER.info(
+            "%s(pin %d:'%s') created",
+            type(self).__name__,
+            pin_num,
+            pin_name,
+        )
 
     @property
     def name(self):
@@ -64,28 +84,58 @@ class MCP23017Switch(ToggleEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
 
-    @property
-    def assumed_state(self):
-        """Return true if optimistic updates are used."""
-        return True
-
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._pin.value = not self._invert_logic
+        await self.hass.async_add_executor_job(
+            functools.partial(
+                self._device.set_pin_value, self._pin_num, not self._invert_logic
+            )
+        )
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self._pin.value = self._invert_logic
+        await self.hass.async_add_executor_job(
+            functools.partial(
+                self._device.set_pin_value, self._pin_num, self._invert_logic
+            )
+        )
         self._state = False
         self.schedule_update_ha_state()
+
+    # Sync functions executed outside of hass async loop.
+
+    def bind(self, device_class, bus, address):
+        """Register a device to the given {bus, address}.
+
+        This function should be called from the thread pool (call blocking functions).
+        """
+        # Bind a MCP23017 device to this switch entity
+        self._device = bus.register_device(device_class, address)
+        if self._device:
+            # Default device configuration for a switch
+            self._device.set_input(self._pin_num, False)
+            self._state = self._device.get_pin_value(self._pin_num)
+
+            _LOGGER.info(
+                "%s(pin %d:'%s') attached to I2C device@0x%02x",
+                type(self).__name__,
+                self._pin_num,
+                self._name,
+                address,
+            )
+        else:
+            _LOGGER.warning(
+                "Failed to bind %s(pin %d:'%s') to I2C device@0x%02x",
+                type(self).__name__,
+                self._pin_num,
+                self._name,
+                address,
+            )
+
+        return self._device

@@ -67,7 +67,6 @@ PyViCare==0.2.5
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
-# homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.7.0
 
@@ -97,9 +96,6 @@ accuweather==0.0.11
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
-
-# homeassistant.components.mcp23017
-adafruit-circuitpython-mcp230xx==2.2.2
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.2.1
@@ -2064,6 +2060,9 @@ smarthab==0.21
 # homeassistant.components.htu21d
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
+
+# homeassistant.components.i2c
+smbus2==0.3.0
 
 # homeassistant.components.smhi
 smhi-pkg==1.0.13

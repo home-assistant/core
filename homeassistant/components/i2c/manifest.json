@@ -1,0 +1,7 @@
+{
+  "domain": "i2c",
+  "name": "I2C bus platform",
+  "documentation": "https://www.home-assistant.io/integrations/i2c",
+  "requirements": ["smbus2==0.3.0"],
+  "codeowners": []
+}
