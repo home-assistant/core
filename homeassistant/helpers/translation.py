@@ -135,13 +135,12 @@ def build_resources(
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources: Dict[str, Dict[str, Any]] = {
+    return {
         component: translation_strings[component][category]
         for component in components
         if category in translation_strings[component]
         and translation_strings[component][category] is not None
     }
-    return resources
 
 
 async def async_get_component_strings(
