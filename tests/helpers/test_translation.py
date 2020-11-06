@@ -293,6 +293,7 @@ async def test_translation_merging(hass, caplog):
 async def test_caching(hass):
     """Test we cache data."""
     hass.config.components.add("sensor")
+    hass.config.components.add("light")
 
     # Patch with same method so we can count invocations
     with patch(
@@ -306,6 +307,51 @@ async def test_caching(hass):
         assert len(mock_merge.mock_calls) == 1
 
         assert load1 == load2
+
+        for key in load1:
+            assert key.startswith("component.sensor.state.") or key.startswith(
+                "component.light.state."
+            )
+
+    load_sensor_only = await translation.async_get_translations(
+        hass, "en", "state", integration="sensor"
+    )
+    assert load_sensor_only
+    for key in load_sensor_only:
+        assert key.startswith("component.sensor.state.")
+
+    load_light_only = await translation.async_get_translations(
+        hass, "en", "state", integration="light"
+    )
+    assert load_light_only
+    for key in load_light_only:
+        assert key.startswith("component.light.state.")
+
+    # Patch with same method so we can count invocations
+    with patch(
+        "homeassistant.helpers.translation.build_resources",
+        side_effect=translation.build_resources,
+    ) as mock_build:
+        load_sensor_only = await translation.async_get_translations(
+            hass, "en", "title", integration="sensor"
+        )
+        assert load_sensor_only
+        for key in load_sensor_only:
+            assert key == "component.sensor.title"
+        assert len(mock_build.mock_calls) == 1
+
+        assert await translation.async_get_translations(
+            hass, "en", "title", integration="sensor"
+        )
+        assert len(mock_build.mock_calls) == 1
+
+        load_light_only = await translation.async_get_translations(
+            hass, "en", "title", integration="light"
+        )
+        assert load_light_only
+        for key in load_light_only:
+            assert key == "component.light.title"
+        assert len(mock_build.mock_calls) == 2
 
 
 async def test_custom_component_translations(hass):
