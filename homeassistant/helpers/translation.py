@@ -2,7 +2,7 @@
 import asyncio
 from collections import ChainMap
 import logging
-from typing import Any, ChainMap as ChainMapType, Dict, Optional, Set, Tuple
+from typing import Any, ChainMap as ChainMapType, Dict, Optional, Set
 
 from homeassistant.core import callback
 from homeassistant.loader import (
@@ -121,23 +121,16 @@ def merge_resources(
         if new_value is None:
             continue
 
-        domain_resources.setdefault(category, []).append(new_value)
+        if isinstance(new_value, dict):
+            domain_resources.update(new_value)
+        else:
+            _LOGGER.error(
+                "An integration providing translations for %s provided invalid data: %s",
+                domain,
+                new_value,
+            )
 
-    # Merge all the lists
-    for domain, domain_resources in list(resources.items()):
-        merged = {}
-        for entry in domain_resources.get(category, []):
-            if isinstance(entry, dict):
-                merged.update(entry)
-            else:
-                _LOGGER.error(
-                    "An integration providing translations for %s provided invalid data: %s",
-                    domain,
-                    entry,
-                )
-        domain_resources[category] = merged
-
-    return {"component": resources}
+    return resources
 
 
 def build_resources(
@@ -147,16 +140,13 @@ def build_resources(
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources: Dict[str, Dict[str, Any]] = {}
-    for component in components:
-        new_value = translation_strings[component].get(category)
-
-        if new_value is None:
-            continue
-
-        resources[component] = {category: new_value}
-
-    return {"component": resources}
+    resources: Dict[str, Dict[str, Any]] = {
+        component: translation_strings[component][category]
+        for component in components
+        if category in translation_strings[component]
+        and translation_strings[component][category] is not None
+    }
+    return resources
 
 
 async def async_get_component_strings(
@@ -218,21 +208,52 @@ class TranslationCache:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the cache."""
         self.hass = hass
-        self.cache: Dict[str, Dict[str, Tuple[Set[str], Dict[str, str]]]] = {}
+        self.loaded: Dict[str, Dict[str, Set[str]]] = {}
+        self.cache: Dict[str, Dict[str, Dict[str, str]]] = {}
 
     @callback
-    def async_get(
-        self, language: str, category: str
-    ) -> Tuple[Set[str], Dict[str, str]]:
+    def async_get_loaded_components(self, language: str, category: str) -> Set[str]:
         """Get cache or a default entry."""
-        return self.cache.setdefault(language, {}).get(category, (set(), {}))
+        return self.loaded.setdefault(language, {}).setdefault(category, set())
 
     @callback
-    def async_set(
-        self, language: str, category: str, components: Set[str], data: Dict[str, str]
+    def async_get_cache(self, language: str, category: str) -> Dict[str, Any]:
+        """Get cache or a default entry."""
+        return self.cache.setdefault(language, {}).setdefault(category, {})
+
+    async def async_load(
+        self,
+        language: str,
+        category: str,
+        components: Set,
     ) -> None:
-        """Set cache."""
-        self.cache.setdefault(language, {})[category] = (components, data)
+        """Load resources into the cache."""
+        # Fetch the English resources, as a fallback for missing keys
+        self.async_get_loaded_components(language, category).update(components)
+
+        cache = self.async_get_cache(language, category)
+
+        languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
+        resource_func = merge_resources if category == "state" else build_resources
+
+        for result in await asyncio.gather(
+            *[
+                async_get_component_strings(self.hass, lang, components)
+                for lang in languages
+            ]
+        ):
+            new_resources = resource_func(result, components, category)
+            for component, resource in new_resources.items():
+                comp_cache: Dict[str, Any] = cache.setdefault(component, {})
+                if isinstance(resource, dict):
+                    comp_cache.update(
+                        recursive_flatten(
+                            f"component.{component}.{category}.",
+                            resource,
+                        )
+                    )
+                else:
+                    comp_cache[f"component.{component}.{category}"] = resource
 
 
 @bind_hass
@@ -242,7 +263,7 @@ async def async_get_translations(
     category: str,
     integration: Optional[str] = None,
     config_flow: Optional[bool] = None,
-) -> Dict[str, Any]:
+) -> ChainMapType[str, Any]:
     """Return all backend translations.
 
     If integration specified, load it for that one.
@@ -269,55 +290,26 @@ async def async_get_translations(
         )
 
 
-async def _async_load_translations(
-    hass: HomeAssistantType,
-    language: str,
-    category: str,
-    components: Set,
-) -> ChainMapType[str, Any]:
-    # Fetch the English resources, as a fallback for missing keys
-    languages = [LOCALE_EN] if language == LOCALE_EN else [language, LOCALE_EN]
-
-    results = await asyncio.gather(
-        *[async_get_component_strings(hass, lang, components) for lang in languages]
-    )
-
-    _LOGGER.debug("async_get_component_strings: %s", results)
-
-    resource_func = merge_resources if category == "state" else build_resources
-
-    return ChainMap(
-        *[flatten(resource_func(result, components, category)) for result in results]
-    )
-
-
 async def _async_cached_load_translations(
     hass: HomeAssistantType,
     language: str,
     category: str,
     components: Set,
-) -> Dict[str, Any]:
+) -> ChainMapType[str, Any]:
     cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, TranslationCache(hass))
-    cached_components: Set[str]
-    resources: Dict[str, str]
-    cached_components, resources = cache.async_get(language, category)
-    components_to_load = components - cached_components
-    if not components_to_load:
-        return resources
-
-    _LOGGER.debug(
-        "Cache miss for %s, %s: %s",
-        language,
-        category,
-        ", ".join(components_to_load),
+    components_to_load = components - cache.async_get_loaded_components(
+        language, category
     )
 
-    resources.update(
-        await _async_load_translations(hass, language, category, components_to_load)
-    )
+    if components_to_load:
+        _LOGGER.debug(
+            "Cache miss for %s, %s: %s",
+            language,
+            category,
+            ", ".join(components_to_load),
+        )
+        await cache.async_load(language, category, components_to_load)
 
-    cache.async_set(
-        language, category, {*cached_components, *components_to_load}, resources
-    )
+    cached = cache.async_get_cache(language, category)
 
-    return resources
+    return ChainMap(*[cached[k] for k in components if k in cached])
