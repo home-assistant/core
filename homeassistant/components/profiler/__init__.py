@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def _log_loggers(*_):
-        _LOGGER.debug("Task: %s", objgraph.by_type("Task"))
+        _LOGGER.debug("list: %s", objgraph.by_type("list"))
 
     async_track_time_interval(hass, _log_objects, timedelta(seconds=30))
     async_track_time_interval(hass, _log_loggers, timedelta(seconds=60))
