@@ -2,16 +2,19 @@
 import asyncio
 from functools import partial
 import logging
-from urllib.request import URLError
-import subprocess
 import platform
+import subprocess
+from urllib.request import URLError
+
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
+
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
+
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_REMOTE,
