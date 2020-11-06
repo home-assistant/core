@@ -307,4 +307,4 @@ async def _async_cached_load_translations(
 
     cached = cache.async_get_cache(language, category)
 
-    return dict(ChainMap(*[cached[k] for k in components if k in cached]))
+    return dict(ChainMap(*[cached[k] for k in components if k in cached and cached[k]]))
