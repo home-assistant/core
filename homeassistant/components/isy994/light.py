@@ -80,11 +80,10 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     def on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
-            self._last_brightness = (
-                self._node.status
-                if self._node.uom != UOM_PERCENTAGE
-                else round(self._node.status * 255.0 / 100.0)
-            )
+            if self._node.uom == UOM_PERCENTAGE:
+                self._last_brightness = round(self._node.status * 255.0 / 100.0)
+            else:
+                self._last_brightness = self._node.status
         super().on_update(event)
 
     # pylint: disable=arguments-differ
