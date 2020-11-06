@@ -25,8 +25,7 @@ from homeassistant.const import (
 from homeassistant.util.dt import utcnow
 
 from tests.async_mock import AsyncMock, patch
-from tests.common import MockConfigEntry
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 HOST = "myrouter.asuswrt.com"
 
