@@ -304,6 +304,12 @@ async def test_translation_merging_loaded_apart(hass, caplog):
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
+    translations = await translation.async_get_translations(
+        hass, "en", "state", integration="sensor"
+    )
+
+    assert "component.sensor.state.moon__phase.first_quarter" in translations
+
 
 async def test_caching(hass):
     """Test we cache data."""
