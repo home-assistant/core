@@ -2,6 +2,7 @@
 import asyncio
 from functools import partial
 
+from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
@@ -56,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     )
                 )
             )
-    except ConnectionError as err:
+    except (ConnectionError, GatewayOfflineError) as err:
         raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:
