@@ -29,7 +29,7 @@ from .typing import ZhaDeviceType, ZigpyClusterType
 
 
 @dataclass
-class ClusterPair:
+class BindingPair:
     """Information for binding."""
 
     source_cluster: ZigpyClusterType
@@ -67,7 +67,7 @@ async def safe_read(
 
 async def get_matched_clusters(
     source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
-) -> List[ClusterPair]:
+) -> List[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -78,7 +78,7 @@ async def get_matched_clusters(
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
             if target_zha_device.nwk == 0x0000:
-                cluster_pair = ClusterPair(
+                cluster_pair = BindingPair(
                     source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
                         cluster_id
                     ],
@@ -91,7 +91,7 @@ async def get_matched_clusters(
                 continue
             for t_endpoint_id in target_clusters:
                 if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
-                    cluster_pair = ClusterPair(
+                    cluster_pair = BindingPair(
                         source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
                             cluster_id
                         ],

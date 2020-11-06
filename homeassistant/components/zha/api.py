@@ -809,10 +809,10 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
     zdo = source_device.device.zdo
     bind_tasks = []
-    for cluster_pair in clusters_to_bind:
+    for binding_pair in clusters_to_bind:
         op_msg = "cluster: %s %s --> [%s]"
         op_params = (
-            cluster_pair.source_cluster.cluster_id,
+            binding_pair.source_cluster.cluster_id,
             operation.name,
             target_ieee,
         )
@@ -823,9 +823,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
                 zdo.request(
                     operation,
                     source_device.ieee,
-                    cluster_pair.source_cluster.endpoint.endpoint_id,
-                    cluster_pair.source_cluster.cluster_id,
-                    cluster_pair.destination_address,
+                    binding_pair.source_cluster.endpoint.endpoint_id,
+                    binding_pair.source_cluster.cluster_id,
+                    binding_pair.destination_address,
                 ),
                 op_msg,
                 op_params,
