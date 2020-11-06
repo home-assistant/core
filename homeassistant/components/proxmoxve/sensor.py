@@ -22,42 +22,81 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Schema: [name, unit of measurement, icon, availablility]
+# Schema: [name, unit of measurement, icon, availablility, getter]
 SENSOR_TYPES = {
-    "cpu_use_percent": ["CPU use", PERCENTAGE, "mdi:chip", None, GUESTTYPE_ALL],
-    "cpu": ["CPU count", None, "mdi:chip", None, GUESTTYPE_ALL],
+    "cpu_use_percent": [
+        "CPU use",
+        PERCENTAGE,
+        "mdi:chip",
+        None,
+        GUESTTYPE_ALL,
+        lambda x: round(x["cpu"] * 100, 1),
+    ],
+    "cpu": ["CPU count", None, "mdi:chip", None, GUESTTYPE_ALL, lambda x: x["cpus"]],
     "memory_free": [
         "Memory free",
         DATA_MEBIBYTES,
         "mdi:memory",
         None,
         GUESTTYPE_ALL,
+        lambda x: round((x["maxmem"] - x["mem"]) / (1024 ** 2), 1),
     ],
-    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, GUESTTYPE_ALL],
+    "memory_use": [
+        "Memory use",
+        DATA_MEBIBYTES,
+        "mdi:memory",
+        None,
+        GUESTTYPE_ALL,
+        lambda x: round(x["mem"] / (1024 ** 2), 1),
+    ],
     "memory_use_percent": [
         "Memory use (percent)",
         PERCENTAGE,
         "mdi:memory",
         None,
         GUESTTYPE_ALL,
+        lambda x: round(x["mem"] / x["maxmem"] * 100, 1),
     ],
-    "mem": ["Memory size", DATA_MEBIBYTES, "mdi:memory", None, GUESTTYPE_ALL],
+    "mem": [
+        "Memory size",
+        DATA_MEBIBYTES,
+        "mdi:memory",
+        None,
+        GUESTTYPE_ALL,
+        lambda x: round(x["maxmem"] / (1024 ** 2), 1),
+    ],
     "disk_free": [
         "Disk free",
         DATA_GIBIBYTES,
         "mdi:harddisk",
         None,
         GUESTTYPE_LXC,
+        lambda x: round((int(x["maxdisk"]) - int(x["disk"])) / (1024 ** 3), 0),
     ],
-    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, GUESTTYPE_LXC],
+    "disk_use": [
+        "Disk use",
+        DATA_GIBIBYTES,
+        "mdi:harddisk",
+        None,
+        GUESTTYPE_LXC,
+        lambda x: round(int(x["disk"]) / (1024 ** 3), 1),
+    ],
     "disk_use_percent": [
         "Disk use (percent)",
         PERCENTAGE,
         "mdi:harddisk",
         None,
         GUESTTYPE_LXC,
+        lambda x: round(int(x["disk"]) / int(x["maxdisk"]) * 100, 1),
     ],
-    "disk": ["Disk size", DATA_GIBIBYTES, "mdi:harddisk", None, GUESTTYPE_ALL],
+    "disk": [
+        "Disk size",
+        DATA_GIBIBYTES,
+        "mdi:harddisk",
+        None,
+        GUESTTYPE_ALL,
+        lambda x: round(int(x["maxdisk"]) / (1024 ** 3), 1),
+    ],
 }
 
 
@@ -119,6 +158,7 @@ class ProxmoxSensor(Entity):
         self._sensor_type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._getter = SENSOR_TYPES[sensor_type][5]
 
     @property
     def name(self):
@@ -169,26 +209,4 @@ class ProxmoxSensor(Entity):
             f"{self._item_node} {item['name']} {SENSOR_TYPES[self._sensor_type][0]}"
         )
 
-        item["disk"] = int(item["disk"])
-        item["maxdisk"] = int(item["maxdisk"])
-
-        if self._sensor_type == "cpu":
-            self._state = item["cpus"]
-        elif self._sensor_type == "cpu_use_percent":
-            self._state = round(item["cpu"] * 100, 1)
-        elif self._sensor_type == "mem":
-            self._state = round(item["maxmem"] / (1024 ** 2), 1)
-        elif self._sensor_type == "memory_free":
-            self._state = round((item["maxmem"] - item["mem"]) / (1024 ** 2), 1)
-        elif self._sensor_type == "memory_use":
-            self._state = round(item["mem"] / (1024 ** 2), 1)
-        elif self._sensor_type == "memory_use_percent":
-            self._state = round(item["mem"] / item["maxmem"] * 100, 1)
-        elif self._sensor_type == "disk":
-            self._state = round(item["maxdisk"] / (1024 ** 3), 1)
-        elif self._sensor_type == "disk_free":
-            self._state = round((item["maxdisk"] - item["disk"]) / (1024 ** 3), 0)
-        elif self._sensor_type == "disk_use":
-            self._state = round(item["disk"] / (1024 ** 3), 1)
-        elif self._sensor_type == "disk_use_percent":
-            self._state = round(item["disk"] / item["maxdisk"] * 100, 1)
+        self._state = self._getter(item)
