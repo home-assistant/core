@@ -119,6 +119,11 @@ DEFINITIONS = {
         "icon": "mdi:flash",
         "unit": ELECTRICAL_CURRENT_AMPERE,
     },
+    "dsmr/reading/timestamp": {
+        "name": "Telegram timestamp",
+        "icon": "mdi:clock",
+        "unit": "",
+    },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
         "icon": "mdi:fire",
