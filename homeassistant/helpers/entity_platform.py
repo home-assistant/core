@@ -281,6 +281,21 @@ class EntityPlatform:
             self.async_add_entities(new_entities, update_before_add=update_before_add),
         )
 
+    @callback
+    def _async_schedule_add_entities_nowait(
+        self, new_entities: Iterable["Entity"], update_before_add: bool = False
+    ) -> asyncio.tasks.Task:
+        """Schedule adding entities for a single platform async.
+
+        Unlike _async_schedule_add_entities, these are not tracked
+        in self._tasks as _async_setup_platform will not be able to clear
+        them as these are setup from config entries where we use
+        async_forward_entry_setup.
+        """
+        return self.hass.async_create_task(
+            self.async_add_entities(new_entities, update_before_add=update_before_add),
+        )
+
     def add_entities(
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
     ) -> None:
