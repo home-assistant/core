@@ -106,6 +106,8 @@ class Store:
 
     async def _async_load(self):
         """Load the data."""
+        self._load_task = None
+
         # Check if we have a pending write
         if self._data is not None:
             data = self._data
@@ -131,7 +133,6 @@ class Store:
             )
             stored = await self._async_migrate_func(data["version"], data["data"])
 
-        self._load_task = None
         return stored
 
     async def async_save(self, data: Union[Dict, List]) -> None:
