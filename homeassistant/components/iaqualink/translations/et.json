@@ -14,7 +14,8 @@
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta oma iAqualinki konto kasutajanimi ja salas\u00f5na."
+                "description": "Sisesta oma iAqualinki konto kasutajanimi ja salas\u00f5na.",
+                "title": "Loo \u00fchendus iAqualink-iga"
             }
         }
     }

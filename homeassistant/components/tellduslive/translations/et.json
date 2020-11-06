@@ -7,13 +7,18 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
+            "auth_error": "Autentimisviga, proovi uuesti",
             "invalid_auth": "Tuvastamise viga"
         },
         "step": {
+            "auth": {
+                "description": "TelldusLive'i konto linkimiseks toimi j\u00e4rgmiselt:\n 1. Kl\u00f5psa allolevat linki\n 2. Logi sisse Telldus Live'i\n 3. Autendi {app_name} ** {app_name} ** (kl\u00f5psa ** Jah **).\n 4. Tule siia tagasi ja kl\u00f5psa ** ESITA **.\n\n [Link TelldusLive account] ( {auth_url} )"
+            },
             "user": {
                 "data": {
                     "host": ""
-                }
+                },
+                "title": "Vali l\u00f5pppunkt."
             }
         }
     }

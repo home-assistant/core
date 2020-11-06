@@ -94,8 +94,11 @@
         "step": {
             "deconz_devices": {
                 "data": {
+                    "allow_clip_sensor": "Luba deCONZ CLIP andurid",
+                    "allow_deconz_groups": "Luba deCONZi valgustgrupid",
                     "allow_new_devices": "Luba uute seadmete automaatne lisamine"
                 },
+                "description": "Seadista deCONZ-i seadmet\u00fc\u00fcpide n\u00e4htavus",
                 "title": "deCONZi valikud"
             }
         }
