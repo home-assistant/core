@@ -2,7 +2,7 @@
 import asyncio
 from collections import ChainMap
 import logging
-from typing import Any, ChainMap as ChainMapType, Dict, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 from homeassistant.core import callback
 from homeassistant.loader import (
@@ -258,7 +258,7 @@ async def async_get_translations(
     category: str,
     integration: Optional[str] = None,
     config_flow: Optional[bool] = None,
-) -> ChainMapType[str, Any]:
+) -> Dict[str, Any]:
     """Return all backend translations.
 
     If integration specified, load it for that one.
@@ -290,7 +290,7 @@ async def _async_cached_load_translations(
     language: str,
     category: str,
     components: Set,
-) -> ChainMapType[str, Any]:
+) -> Dict[str, Any]:
     cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, TranslationCache(hass))
     components_to_load = components - cache.async_get_loaded_components(
         language, category
@@ -307,4 +307,4 @@ async def _async_cached_load_translations(
 
     cached = cache.async_get_cache(language, category)
 
-    return ChainMap(*[cached[k] for k in components if k in cached])
+    return dict(ChainMap(*[cached[k] for k in components if k in cached]))
