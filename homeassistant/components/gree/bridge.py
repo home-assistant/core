@@ -39,7 +39,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.last_update_success and self._error_count:
                 _LOGGER.warning(
                     "Device is available: %s (%s)",
-                    self._name,
+                    self.name,
                     str(self._device.device_info),
                 )
 

@@ -9,7 +9,6 @@ from homeassistant.components.switch import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        GreeSwitchEntity(device) for device in hass.data[DOMAIN].pop(SWITCH_DOMAIN)
+        [GreeSwitchEntity(device) for device in hass.data[DOMAIN].pop(SWITCH_DOMAIN)]
     )
 
 

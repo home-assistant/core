@@ -1,6 +1,5 @@
 """The Gree Climate integration."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -46,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         devices.append(device)
 
     coordinators = [DeviceDataUpdateCoordinator(hass, d) for d in devices]
+    await asyncio.gather(*[x.async_refresh() for x in coordinators])
+
     hass.data[DOMAIN]["devices"] = coordinators
     hass.data[DOMAIN][CLIMATE_DOMAIN] = coordinators
     hass.data[DOMAIN][SWITCH_DOMAIN] = coordinators

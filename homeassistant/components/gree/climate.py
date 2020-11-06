@@ -45,7 +45,6 @@ from homeassistant.const import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     DOMAIN,
     FAN_MEDIUM_HIGH,
@@ -97,7 +96,7 @@ SUPPORTED_FEATURES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        GreeClimateEntity(device) for device in hass.data[DOMAIN].pop(CLIMATE_DOMAIN)
+        [GreeClimateEntity(device) for device in hass.data[DOMAIN].pop(CLIMATE_DOMAIN)]
     )
 
 
@@ -166,7 +165,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
 
         self._device.target_temperature = round(temperature)
         await self._device.push_state_update()
-        await self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     def min_temp(self) -> float:
@@ -205,7 +204,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         if hvac_mode == HVAC_MODE_OFF:
             self._device.power = False
             await self._device.push_state_update()
-            await self.async_write_ha_state()
+            self.async_write_ha_state()
             return
 
         if not self._device.power:
