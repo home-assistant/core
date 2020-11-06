@@ -60,7 +60,7 @@ async def test_firing_event_basic(hass, caplog):
     assert len(events) == 1
     assert events[0].context is context
     assert events[0].data.get("hello") == "world"
-    assert ".test_name:" in caplog.text
+    assert "[test_name]" in caplog.text
     assert "Test Name: Running test script" in caplog.text
 
 
