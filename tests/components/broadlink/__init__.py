@@ -1,4 +1,5 @@
 """Tests for the Broadlink integration."""
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -67,6 +68,26 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Garden": (
+        "192.168.1.14",
+        "34ea34b44e2c",
+        "MP1-1K3S2U",
+        "Broadlink",
+        "MP1",
+        0x4F65,
+        20025,
+        5,
+    ),
+    "Rooftop": (
+        "192.168.1.15",
+        "34ea34b44e2d",
+        "SP2",
+        "Broadlink",
+        "SP2",
+        0x7530,
+        20025,
+        5,
+    ),
 }
 
 
@@ -87,23 +108,35 @@ class BroadlinkDevice:
         self.timeout: int = timeout
         self.fwversion: int = fwversion
 
-    async def setup_entry(self, hass, mock_api=None, mock_entry=None):
+    async def setup_entry(
+        self, hass, mock_api=None, mock_entry=None, mock_discovery=None
+    ):
         """Set up the device."""
         mock_api = mock_api or self.get_mock_api()
+        mock_discovery = mock_discovery or self.get_mock_discovery(mock_api)
         mock_entry = mock_entry or self.get_mock_entry()
         mock_entry.add_to_hass(hass)
 
         with patch(
             "homeassistant.components.broadlink.device.blk.gendevice",
             return_value=mock_api,
-        ), patch(
-            "homeassistant.components.broadlink.discovery.blk.discover",
-            return_value=[],
-        ):
+        ), patch_discovery(mock_discovery) as mock_discovery:
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
 
-        return mock_api, mock_entry
+        return mock_api, mock_entry, mock_discovery
+
+    def patch_discovery(self):
+        """Patch device discovery with this device."""
+        return patch_discovery(self.get_mock_discovery())
+
+    def get_mock_discovery(self, mock_api=None):
+        """Return a mock discovery."""
+        mock_api = mock_api or self.get_mock_api()
+        broadcast_addr = mock_api.host[0].split(".")
+        broadcast_addr[3] = "255"
+        broadcast_addr = ".".join(broadcast_addr)
+        return {broadcast_addr: [mock_api]}
 
     def get_mock_api(self):
         """Return a mock device (API)."""
@@ -153,3 +186,16 @@ class BroadlinkDevice:
 def get_device(name):
     """Get a device by name."""
     return BroadlinkDevice(name, *BROADLINK_DEVICES[name])
+
+
+@contextmanager
+def patch_discovery(results):
+    """Patch device discovery."""
+    with patch(
+        "homeassistant.components.broadlink.discovery.blk.discover",
+        side_effect=list(results.values()),
+    ) as mock_discovery, patch(
+        "homeassistant.components.broadlink.discovery.get_broadcast_addrs",
+        return_value=list(results),
+    ):
+        yield mock_discovery
