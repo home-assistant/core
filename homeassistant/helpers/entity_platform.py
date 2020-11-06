@@ -200,6 +200,7 @@ class EntityPlatform:
             if self._tasks:
                 pending = [task for task in self._tasks if not task.done()]
                 self._tasks.clear()
+                self.logger.warning("_async_setup_platform: %s %s", self, self._tasks)
 
                 if pending:
                     await asyncio.gather(*pending)
@@ -265,6 +266,7 @@ class EntityPlatform:
                 ),
             )
         )
+        self.logger.warning("_async_schedule_add_entities: %s %s", self, self._tasks)
 
     def add_entities(
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
