@@ -290,6 +290,21 @@ async def test_translation_merging(hass, caplog):
     )
 
 
+async def test_translation_merging_loaded_apart(hass, caplog):
+    """Test we merge translations of two integrations when they are not loaded at the same time."""
+    hass.config.components.add("sensor")
+
+    translations = await translation.async_get_translations(hass, "en", "state")
+
+    assert "component.sensor.state.moon__phase.first_quarter" not in translations
+
+    hass.config.components.add("sensor.moon")
+
+    translations = await translation.async_get_translations(hass, "en", "state")
+
+    assert "component.sensor.state.moon__phase.first_quarter" in translations
+
+
 async def test_caching(hass):
     """Test we cache data."""
     hass.config.components.add("sensor")
