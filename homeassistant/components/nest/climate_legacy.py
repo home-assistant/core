@@ -107,7 +107,7 @@ class NestThermostat(ClimateEntity):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(HVAC_MODE_AUTO)
-            self._support_flags = self._support_flags | SUPPORT_TARGET_TEMPERATURE_RANGE
+            self._support_flags |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         # Add supported nest thermostat features
         if self.device.can_heat:
@@ -121,7 +121,7 @@ class NestThermostat(ClimateEntity):
         # feature of device
         self._has_fan = self.device.has_fan
         if self._has_fan:
-            self._support_flags = self._support_flags | SUPPORT_FAN_MODE
+            self._support_flags |= SUPPORT_FAN_MODE
 
         # data attributes
         self._away = None
