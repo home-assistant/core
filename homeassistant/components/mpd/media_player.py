@@ -374,10 +374,8 @@ class MpdDevice(MediaPlayerEntity):
         if self._status["repeat"] == "1":
             if self._status["single"] == "1":
                 return REPEAT_MODE_ONE
-            else:
-                return REPEAT_MODE_ALL
-        else:
-            return REPEAT_MODE_OFF
+            return REPEAT_MODE_ALL
+        return REPEAT_MODE_OFF
 
     def set_repeat(self, repeat):
         """Set repeat mode."""
