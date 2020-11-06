@@ -85,8 +85,6 @@ class ProxmoxBinarySensor(BinarySensorEntity):
             "vmid": self._item_id,
             "vmname": self._vmname,
             "type": self._item_type,
-            "cpu": self._cpus,
-            "memory": self._memory / (1024 * 1024),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -116,8 +114,6 @@ class ProxmoxBinarySensor(BinarySensorEntity):
             return None
 
         self._vmname = item.get("name")
-        self._cpus = item.get("cpus")
-        self._memory = item.get("maxmem", 0)
         self._name = f"{self._item_node} {self._vmname} running"
 
         return item
