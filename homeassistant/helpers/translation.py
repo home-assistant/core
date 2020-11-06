@@ -33,11 +33,6 @@ def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     return output
 
 
-def flatten(data: Dict) -> Dict[str, Any]:
-    """Return a flattened representation of dict data."""
-    return recursive_flatten("", data)
-
-
 @callback
 def component_translation_path(
     component: str, language: str, integration: Integration

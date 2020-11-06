@@ -21,16 +21,16 @@ def mock_config_flows():
         yield flows
 
 
-def test_flatten():
+def test_recursive_flatten():
     """Test the flatten function."""
     data = {"parent1": {"child1": "data1", "child2": "data2"}, "parent2": "data3"}
 
-    flattened = translation.flatten(data)
+    flattened = translation.recursive_flatten("prefix.", data)
 
     assert flattened == {
-        "parent1.child1": "data1",
-        "parent1.child2": "data2",
-        "parent2": "data3",
+        "prefix.parent1.child1": "data1",
+        "prefix.parent1.child2": "data2",
+        "prefix.parent2": "data3",
     }
 
 
