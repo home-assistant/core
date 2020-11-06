@@ -47,7 +47,7 @@ class WebSocketAdapter(logging.LoggerAdapter):
 
     def process(self, msg, kwargs):
         """Add connid to websocket log messages."""
-        return "[{}] {}".format(self.extra["connid"], msg), kwargs
+        return f'[{self.extra["connid"]}] {msg}', kwargs
 
 
 class WebSocketHandler:
