@@ -65,7 +65,8 @@ async def test_form(hass):
     for p in fakecomports:
         print("fake port = %s" % p)
     with patch(
-        "serial.tools.list_ports.comports", return_value=fakecomports,
+        "serial.tools.list_ports.comports",
+        return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,13 +75,17 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None,), patch(
-        "aurorapy.client.AuroraSerialClient.serial_number", return_value="9876543",
+        "aurorapy.client.AuroraSerialClient.serial_number",
+        return_value="9876543",
     ), patch(
-        "aurorapy.client.AuroraSerialClient.version", return_value="9.8.7.6",
+        "aurorapy.client.AuroraSerialClient.version",
+        return_value="9.8.7.6",
     ), patch(
-        "aurorapy.client.AuroraSerialClient.pn", return_value="A.B.C",
+        "aurorapy.client.AuroraSerialClient.pn",
+        return_value="A.B.C",
     ), patch(
-        "aurorapy.client.AuroraSerialClient.firmware", return_value="1.234",
+        "aurorapy.client.AuroraSerialClient.firmware",
+        return_value="1.234",
     ), patch(
         "homeassistant.components.aurora_abb_powerone.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -89,7 +94,8 @@ async def test_form(hass):
     ) as mock_setup_entry:
 
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -111,7 +117,8 @@ async def test_form_no_comports(hass):
 
     fakecomports = []
     with patch(
-        "serial.tools.list_ports.comports", return_value=fakecomports,
+        "serial.tools.list_ports.comports",
+        return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -127,7 +134,8 @@ async def test_form_invalid_com_ports(hass):
     fakecomports = []
     fakecomports.append(list_ports_common.ListPortInfo("/dev/ttyUSB7"))
     with patch(
-        "serial.tools.list_ports.comports", return_value=fakecomports,
+        "serial.tools.list_ports.comports",
+        return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -142,7 +150,8 @@ async def test_form_invalid_com_ports(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
     assert result2["errors"] == {"base": "invalid_serial_port"}
 
@@ -152,7 +161,8 @@ async def test_form_invalid_com_ports(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
     assert result2["errors"] == {"base": "cannot_open_serial_port"}
 
@@ -162,7 +172,8 @@ async def test_form_invalid_com_ports(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -172,7 +183,8 @@ async def test_form_invalid_com_ports(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
     assert result2["errors"] == {"base": "cannot_connect"}
 

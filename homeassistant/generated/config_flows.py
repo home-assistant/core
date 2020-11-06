@@ -30,6 +30,7 @@ FLOWS = [
     "awair",
     "aurora_abb_powerone",
     "avri",
+    "awair",
     "axis",
     "azure_devops",
     "blebox",
