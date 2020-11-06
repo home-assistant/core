@@ -1,4 +1,6 @@
 """Demo platform that offers a fake Number entity."""
+import voluptuous as vol
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
@@ -79,5 +81,12 @@ class DemoNumber(NumberEntity):
 
     async def async_set_value(self, value):
         """Update the current value."""
-        self._state = value
+        num_value = float(value)
+
+        if num_value < self.min_value or num_value > self.max_value:
+            raise vol.Invalid(
+                f"Invalid value for {self.entity_id}: {value} (range {self.min_value} - {self.max_value})"
+            )
+
+        self._state = num_value
         self.async_write_ha_state()

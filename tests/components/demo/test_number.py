@@ -56,6 +56,24 @@ async def test_set_value_bad_attr(hass):
     assert state.state == "42.0"
 
 
+async def test_set_value_bad_range(hass):
+    """Test setting the value out of range."""
+    state = hass.states.get(ENTITY_VOLUME)
+    assert state.state == "42.0"
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_VALUE: 1024, ATTR_ENTITY_ID: ENTITY_VOLUME},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_VOLUME)
+    assert state.state == "42.0"
+
+
 async def test_set_set_value(hass):
     """Test the setting of the value."""
     state = hass.states.get(ENTITY_VOLUME)
