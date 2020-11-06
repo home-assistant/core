@@ -5,7 +5,9 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_key": "Sisestatud v\u00f5tmega registreerimine nurjus. Kui see juhtub, proovi l\u00fc\u00fcs taask\u00e4ivitada.",
+            "timeout": "Koodi kinnitamise ajal\u00f5pp."
         },
         "step": {
             "auth": {
@@ -13,6 +15,7 @@
                     "host": "",
                     "security_code": "Turvakood"
                 },
+                "description": "Turvakoodi leiad l\u00fc\u00fcsiseadme tagak\u00fcljelt.",
                 "title": "Sisesta turvakood"
             }
         }

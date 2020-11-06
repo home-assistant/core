@@ -14,9 +14,11 @@
                     "host": "",
                     "password": "Salas\u00f5na",
                     "port": "",
+                    "site": "",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
-                }
+                },
+                "title": "Seadista UniFi kontroller"
             }
         }
     },
@@ -29,7 +31,11 @@
             },
             "device_tracker": {
                 "data": {
-                    "ssid_filter": "Vali WiFi klientide j\u00e4lgimiseks SSID"
+                    "detection_time": "Aeg sekundites alates viimasest ilmnemisest kuni olekuni '\u00e4ra'",
+                    "ssid_filter": "Vali WiFi klientide j\u00e4lgimiseks SSID",
+                    "track_clients": "J\u00e4lgi v\u00f5rgu kliente",
+                    "track_devices": "V\u00f5rguseadmete j\u00e4lgimine (Ubiquiti seadmed)",
+                    "track_wired_clients": "Kaasa juhtmega v\u00f5rgukliendid"
                 },
                 "description": "Seadista seadme j\u00e4lgimine",
                 "title": "UniFi valikud 1/3"
