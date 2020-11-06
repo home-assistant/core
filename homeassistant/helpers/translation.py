@@ -2,7 +2,7 @@
 import asyncio
 from collections import ChainMap
 import logging
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from homeassistant.core import callback
 from homeassistant.loader import (
@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
+CATEGORIES = {"title", "state", "config", "options", "device_automation", "mfa_setup"}
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -202,7 +203,7 @@ class _TranslationCache:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the cache."""
         self.hass = hass
-        self.loaded: Dict[str, Dict[str, Set[str]]] = {}
+        self.loaded: Dict[str, Set[str]] = {}
         self.cache: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
     async def async_load(
@@ -210,47 +211,64 @@ class _TranslationCache:
         language: str,
         category: str,
         components: Set,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> List[Dict[str, Dict[str, Any]]]:
         """Load resources into the cache."""
         # Fetch the English resources, as a fallback for missing keys
-        loaded = self.loaded.setdefault(language, {}).setdefault(category, set())
-        cache = self.cache.setdefault(language, {}).setdefault(category, {})
+        components_to_load = components - self.loaded.setdefault(language, set())
 
-        components_to_load = components - loaded
+        if components_to_load:
+            await self._load(language, components_to_load)
 
-        if not components_to_load:
-            return cache
+        cached = self.cache.get(language, {})
 
+        return [cached.get(component, {}).get(category, {}) for component in components]
+
+    async def _load(self, language: str, components: Set) -> None:
+        """Populate the cache for a given set of components."""
         _LOGGER.debug(
-            "Cache miss for %s, %s: %s",
+            "Cache miss for %s: %s",
             language,
-            category,
-            ", ".join(components_to_load),
+            ", ".join(components),
         )
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
-        resource_func = _merge_resources if category == "state" else _build_resources
 
-        for result in await asyncio.gather(
+        for resources in await asyncio.gather(
             *[
-                async_get_component_strings(self.hass, lang, components_to_load)
+                async_get_component_strings(self.hass, lang, components)
                 for lang in languages
             ]
         ):
-            new_resources = resource_func(result, components_to_load, category)
+            self._build_category_cache(language, components, resources)
+
+        self.loaded[language].update(components)
+
+    @callback
+    def _build_category_cache(
+        self, language: str, components: Set, resources: Dict[str, Any]
+    ) -> None:
+        """Extract resources into the cache."""
+        cached = self.cache.setdefault(language, {})
+
+        for category in CATEGORIES:
+            resource_func = (
+                _merge_resources if category == "state" else _build_resources
+            )
+            new_resources = resource_func(resources, components, category)
+
             for component, resource in new_resources.items():
-                comp_cache: Dict[str, Any] = cache.setdefault(component, {})
+                category_cache: Dict[str, Any] = cached.setdefault(
+                    component, {}
+                ).setdefault(category, {})
+
                 if isinstance(resource, dict):
-                    comp_cache.update(
+                    category_cache.update(
                         recursive_flatten(
                             f"component.{component}.{category}.",
                             resource,
                         )
                     )
                 else:
-                    comp_cache[f"component.{component}.{category}"] = resource
-
-        loaded.update(components_to_load)
-        return cache
+                    category_cache[f"component.{component}.{category}"] = resource
 
 
 @bind_hass
@@ -267,6 +285,9 @@ async def async_get_translations(
     Otherwise default to loaded intgrations combined with config flow
     integrations if config_flow is true.
     """
+    if category not in CATEGORIES:
+        raise ValueError(f"{category} is not one of {CATEGORIES}")
+
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
     if integration is not None:
@@ -285,4 +306,4 @@ async def async_get_translations(
         cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
         cached = await cache.async_load(language, category, components)
 
-    return dict(ChainMap(*[cached[k] for k in components if k in cached and cached[k]]))
+    return dict(ChainMap(*cached))

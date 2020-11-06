@@ -148,22 +148,22 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         return_value="bla.json",
     ), patch(
         "homeassistant.helpers.translation.load_translations_files",
-        return_value={"component1": {"hello": "world"}},
+        return_value={"component1": {"title": "world"}},
     ), patch(
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
         translations = await translation.async_get_translations(
-            hass, "en", "hello", config_flow=True
+            hass, "en", "title", config_flow=True
         )
         translations_again = await translation.async_get_translations(
-            hass, "en", "hello", config_flow=True
+            hass, "en", "title", config_flow=True
         )
 
         assert translations == translations_again
 
     assert translations == {
-        "component.component1.hello": "world",
+        "component.component1.title": "world",
     }
 
     assert "component1" not in hass.config.components
@@ -177,27 +177,27 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         return_value="bla.json",
     ), patch(
         "homeassistant.helpers.translation.load_translations_files",
-        return_value={"component2": {"hello": "world"}},
+        return_value={"component2": {"title": "world"}},
     ), patch(
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
         translations = await translation.async_get_translations(
-            hass, "en", "hello", config_flow=True
+            hass, "en", "title", config_flow=True
         )
         translations_again = await translation.async_get_translations(
-            hass, "en", "hello", config_flow=True
+            hass, "en", "title", config_flow=True
         )
 
         assert translations == translations_again
 
     assert translations == {
-        "component.component1.hello": "world",
-        "component.component2.hello": "world",
+        "component.component1.title": "world",
+        "component.component2.title": "world",
     }
 
     translations_all_cached = await translation.async_get_translations(
-        hass, "en", "hello", config_flow=True
+        hass, "en", "title", config_flow=True
     )
     assert translations == translations_all_cached
 
@@ -218,7 +218,7 @@ async def test_get_translations_while_loading_components(hass):
         load_count += 1
         # Mimic race condition by loading a component during setup
         setup_component(hass, "persistent_notification", {})
-        return {"component1": {"hello": "world"}}
+        return {"component1": {"title": "world"}}
 
     with patch(
         "homeassistant.helpers.translation.component_translation_path",
@@ -231,12 +231,12 @@ async def test_get_translations_while_loading_components(hass):
         return_value=integration,
     ):
         tasks = [
-            translation.async_get_translations(hass, "en", "hello") for _ in range(5)
+            translation.async_get_translations(hass, "en", "title") for _ in range(5)
         ]
         all_translations = await asyncio.gather(*tasks)
 
     assert all_translations[0] == {
-        "component.component1.hello": "world",
+        "component.component1.title": "world",
     }
     assert load_count == 1
 
@@ -327,6 +327,8 @@ async def test_caching(hass):
     for key in load_light_only:
         assert key.startswith("component.light.state.")
 
+    hass.config.components.add("media_player")
+
     # Patch with same method so we can count invocations
     with patch(
         "homeassistant.helpers.translation._build_resources",
@@ -338,20 +340,20 @@ async def test_caching(hass):
         assert load_sensor_only
         for key in load_sensor_only:
             assert key == "component.sensor.title"
-        assert len(mock_build.mock_calls) == 1
+        assert len(mock_build.mock_calls) == 0
 
         assert await translation.async_get_translations(
             hass, "en", "title", integration="sensor"
         )
-        assert len(mock_build.mock_calls) == 1
+        assert len(mock_build.mock_calls) == 0
 
         load_light_only = await translation.async_get_translations(
-            hass, "en", "title", integration="light"
+            hass, "en", "title", integration="media_player"
         )
         assert load_light_only
         for key in load_light_only:
-            assert key == "component.light.title"
-        assert len(mock_build.mock_calls) == 2
+            assert key == "component.media_player.title"
+        assert len(mock_build.mock_calls) == len(translation.CATEGORIES) - 1
 
 
 async def test_custom_component_translations(hass):
