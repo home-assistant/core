@@ -18,11 +18,11 @@ from .helpers import get_broadcast_addrs, get_ip_or_none
 _LOGGER = logging.getLogger(__name__)
 
 
-class BroadlinkScout:
+class BroadlinkDiscovery:
     """Manages device discovery."""
 
     def __init__(self, hass):
-        """Initialize the scout."""
+        """Initialize the entity."""
         self.hass = hass
         self.timeout = 5
         self.coordinator = DataUpdateCoordinator(
@@ -30,20 +30,41 @@ class BroadlinkScout:
             _LOGGER,
             name="discovery",
             update_method=self.async_discover,
-            update_interval=timedelta(minutes=15),
+            update_interval=timedelta(minutes=10),
             request_refresh_debouncer=debounce.Debouncer(
                 hass, _LOGGER, cooldown=self.timeout, immediate=True
             ),
         )
-        self.reset_jobs = []
+        self._unsubscribe = None
 
-    @property
-    def is_on(self):
-        """Return True if device discovery is activated."""
-        return bool(self.reset_jobs)
+    async def async_setup(self):
+        """Set up device discovery."""
+        self._unsubscribe = self.coordinator.async_add_listener(self.update)
+        await self.coordinator.async_refresh()
+
+    async def async_unload(self):
+        """Unload device discovery."""
+        if self._unsubscribe is not None:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    async def async_discover(self):
+        """Discover Broadlink devices on all available networks."""
+        tasks = [
+            self.hass.async_add_executor_job(
+                partial(blk.discover, timeout=self.timeout, discover_ip_address=addr)
+            )
+            for addr in get_broadcast_addrs()
+        ]
+        results = [
+            result
+            for result in await asyncio.gather(*tasks, return_exceptions=True)
+            if not isinstance(result, Exception)
+        ]
+        return [device for devices in results for device in devices]
 
     @callback
-    def update_listener(self):
+    def update(self):
         """Create config flows for new devices found."""
         devices = self.coordinator.data
         if not (self.coordinator.last_update_success and devices):
@@ -75,30 +96,3 @@ class BroadlinkScout:
                     },
                 )
             )
-
-    async def async_start(self):
-        """Start device discovery."""
-        self.reset_jobs.append(
-            self.coordinator.async_add_listener(self.update_listener)
-        )
-        await self.coordinator.async_request_refresh()
-
-    async def async_stop(self):
-        """Stop device discovery."""
-        while self.reset_jobs:
-            self.reset_jobs.pop()()
-
-    async def async_discover(self):
-        """Discover Broadlink devices on all available networks."""
-        tasks = [
-            self.hass.async_add_executor_job(
-                partial(blk.discover, timeout=self.timeout, discover_ip_address=addr)
-            )
-            for addr in get_broadcast_addrs()
-        ]
-        results = [
-            result
-            for result in await asyncio.gather(*tasks, return_exceptions=True)
-            if not isinstance(result, Exception)
-        ]
-        return [device for devices in results for device in devices]

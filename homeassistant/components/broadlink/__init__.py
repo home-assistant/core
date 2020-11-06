@@ -3,15 +3,15 @@ from dataclasses import dataclass, field
 
 from .const import DOMAIN
 from .device import BroadlinkDevice
-from .discovery import BroadlinkScout
+from .discovery import BroadlinkDiscovery
 
 
 @dataclass
 class BroadlinkData:
-    """Class for sharing data within the Broadlink integration."""
+    """Class for sharing data in the Broadlink integration."""
 
     config: dict = None
-    discovery: BroadlinkScout = None
+    discovery: BroadlinkDiscovery = None
     devices: dict = field(default_factory=dict)
     platforms: dict = field(default_factory=dict)
 
@@ -19,17 +19,19 @@ class BroadlinkData:
 async def async_setup(hass, config):
     """Set up the Broadlink integration."""
     config = config.get(DOMAIN)
-    discovery = BroadlinkScout(hass)
+    discovery = BroadlinkDiscovery(hass)
     hass.data[DOMAIN] = BroadlinkData(config, discovery)
-    await discovery.async_start()
+    await discovery.async_setup()
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up a Broadlink device from a config entry."""
-    discovery = hass.data[DOMAIN].discovery
-    if not discovery.is_on:
-        await discovery.async_start()
+    data = hass.data[DOMAIN]
+
+    if data.discovery is None:
+        data.discovery = BroadlinkDiscovery(hass)
+        await data.discovery.async_setup()
 
     device = BroadlinkDevice(hass, entry)
     return await device.async_setup()
@@ -37,14 +39,13 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    config = hass.data[DOMAIN].config
-    discovery = hass.data[DOMAIN].discovery
-    devices = hass.data[DOMAIN].devices
+    data = hass.data[DOMAIN]
 
-    device = devices.pop(entry.entry_id)
+    device = data.devices.pop(entry.entry_id)
     result = await device.async_unload()
 
-    if not devices and config is None:
-        await discovery.async_stop()
+    if not data.devices and data.config is None:
+        await data.discovery.async_unload()
+        data.discovery = None
 
     return result
