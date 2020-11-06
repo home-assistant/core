@@ -238,6 +238,14 @@ async def async_setup(hass, config):
     return True
 
 
+class AutomationLoggerAdapter(logging.LoggerAdapter):
+    """Add automation name to script log messages."""
+
+    def process(self, msg, kwargs):
+        """Add automation name to script log messages."""
+        return f'[{self.extra["name"]}] {msg}', kwargs
+
+
 class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
 
@@ -341,8 +349,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
-        self._logger = logging.getLogger(
-            f"{__name__}.{split_entity_id(self.entity_id)[1]}"
+        self._logger = AutomationLoggerAdapter(
+            _LOGGER, {"name": split_entity_id(self.entity_id)[1]}
         )
         self.action_script.update_logger(self._logger)
 

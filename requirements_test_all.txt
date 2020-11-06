@@ -349,7 +349,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.9
+google-nest-sdm==0.1.12
 
 # homeassistant.components.gree
 greeclimate==0.9.5
@@ -920,7 +920,7 @@ pyzerproc==0.2.5
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==2.1.0
+regenmaschine==3.0.0
 
 # homeassistant.components.python_script
 restrictedpython==5.0
