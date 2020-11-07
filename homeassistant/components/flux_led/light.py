@@ -275,10 +275,6 @@ class FluxLight(LightEntity):
         return None
 
     def turn_on(self, **kwargs):
-        """Turn the specified or all lights on."""
-        if not self.is_on:
-            self._bulb.turnOn()
-
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
