@@ -199,7 +199,7 @@ class EntityPlatform:
                 await asyncio.shield(task)
 
             # Block till all entities are done
-            if self._tasks:
+            while self._tasks:
                 pending = [task for task in self._tasks if not task.done()]
                 self._tasks.clear()
 
