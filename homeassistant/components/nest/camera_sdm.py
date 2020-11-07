@@ -124,6 +124,7 @@ class NestCamera(Camera):
             _LOGGER.debug("Steaming url expired, extending stream")
             new_stream = await self._stream.extend_rtsp_stream()
             self._stream = new_stream
+            _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
             self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):

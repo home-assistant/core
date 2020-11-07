@@ -219,7 +219,7 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     # Fire alarm when stream is nearing expiration, causing it to be extended
-    next_update = now + datetime.timedelta(seconds=45)
+    next_update = now + datetime.timedelta(seconds=65)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
