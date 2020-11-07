@@ -267,11 +267,6 @@ class EntityPlatform:
 
         if not self._setup_complete:
             self._tasks.append(task)
-        else:
-            self.logger.warning(
-                "_async_schedule_add_entities called after setup was completed for %s",
-                self,
-            )
 
     def add_entities(
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
