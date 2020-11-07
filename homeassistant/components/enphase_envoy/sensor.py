@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     ENERGY_WATT_HOUR,
     POWER_WATT,
@@ -21,6 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +47,8 @@ SENSORS = {
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
 
+MIN_SCAN_INTERVAL = timedelta(60)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
@@ -54,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(list(SENSORS))]
         ),
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=60): cv.time_period,
     }
 )
 
@@ -67,6 +72,7 @@ async def async_setup_platform(
     name = config[CONF_NAME]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
+    scan_interval = config[CONF_SCAN_INTERVAL]
 
     envoy_reader = EnvoyReader(ip_address, username, password)
 
@@ -106,7 +112,7 @@ async def async_setup_platform(
         _LOGGER,
         name="sensor",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
+        update_interval=scan_interval,
     )
 
     await coordinator.async_refresh()
@@ -217,6 +223,7 @@ class Envoy(Entity):
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
+    @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
         """Update the energy production data."""
 
