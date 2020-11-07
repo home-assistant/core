@@ -715,9 +715,7 @@ class MQTT:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
-        else:
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
+        self._mqttc = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._mqttc.enable_logger()
