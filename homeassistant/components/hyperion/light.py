@@ -549,7 +549,7 @@ class Hyperion(LightEntity):
         """Update Hyperion effects."""
         if not self._client.effects:
             return
-        effect_list = []
+        effect_list: List[str] = []
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
                 effect_list.append(effect[const.KEY_NAME])
