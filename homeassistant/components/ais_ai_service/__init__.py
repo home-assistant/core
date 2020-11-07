@@ -3725,6 +3725,12 @@ def _process_code(hass, data):
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set("binary_sensor.ais_remote_button", code)
+    event_data = {
+        "action": action,
+        "code": code,
+        "long": CURR_BUTTON_LONG_PRESS,
+    }
+    hass.bus.fire("ais_key_event", event_data)
 
     # remove selected action
     remove_selected_action(code)
