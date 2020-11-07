@@ -22,5 +22,12 @@
                 "title": "Tuya"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configureer Tuya opties"
+            }
+        }
     }
 }

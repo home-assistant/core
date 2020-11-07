@@ -5,7 +5,12 @@
         },
         "step": {
             "pairing": {
-                "description": "Niipea kui {name} on valmis, on sidumine saadaval jaotises \"Notifications\" kui \"HomeKit Bridge Setup\"."
+                "description": "Niipea kui {name} on valmis, on sidumine saadaval jaotises \"Notifications\" kui \"HomeKit Bridge Setup\".",
+                "title": "HomeKiti sidumine"
+            },
+            "user": {
+                "description": "HomeKiti integreerimine v\u00f5imaldab teil p\u00e4\u00e4seda juurde HomeKiti \u00fcksustele Home Assistant. Sildire\u017eiimis on HomeKit Bridges piiratud 150 lisaseadmega, sealhulgas sild ise. Kui soovid \u00fchendada rohkem lisatarvikuid, on soovitatav kasutada erinevate domeenide jaoks mitut HomeKiti silda. \u00dcksuse \u00fcksikasjalik konfiguratsioon on esmase silla jaoks saadaval ainult YAML-i kaudu.",
+                "title": "Aktiveeri HomeKit"
             }
         }
     },

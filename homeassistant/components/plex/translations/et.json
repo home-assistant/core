@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
+            "all_configured": "K\u00f5ik lingitud serverid on juba seadistatud",
             "already_configured": "Plex-i server on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "reauth_successful": "Taastuvastamine oli edukas",
+            "token_request_timeout": "Tuvastusstringi hankimise ajal\u00f5pp",
             "unknown": "Tundmatu viga"
         },
         "error": {
+            "faulty_credentials": "API autoriseerimine nurjus.",
             "host_or_token": "Pead esitama v\u00e4hemalt \u00fche hosti v\u00f5i ligip\u00e4\u00e4suloa",
+            "no_servers": "Plex kontol pole seotud servereid",
+            "not_found": "Plexi serverit ei leitud",
             "ssl_error": "Kontrolli SSL sertifikaati"
         },
         "flow_title": "",

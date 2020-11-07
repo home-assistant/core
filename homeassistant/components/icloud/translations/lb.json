@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "no_device": "Kee vun dengen Apparater huet \"Find my iPhone\" aktiv\u00e9iert"
+            "no_device": "Kee vun dengen Apparater huet \"Find my iPhone\" aktiv\u00e9iert",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "error": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
@@ -15,6 +16,7 @@
                 "data": {
                     "password": "Passwuert"
                 },
+                "description": "D\u00e4in Passwuert fir {username} funktionn\u00e9iert net m\u00e9i. Aktualis\u00e9ier d\u00e4in Passwuert fir d\u00ebs Integratioun weider ze benotzen.",
                 "title": "Integratioun re-authentifiz\u00e9ieren"
             },
             "trusted_device": {
