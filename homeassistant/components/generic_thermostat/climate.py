@@ -66,6 +66,7 @@ CONF_COLD_TOLERANCE = "cold_tolerance"
 CONF_HOT_TOLERANCE = "hot_tolerance"
 CONF_KEEP_ALIVE = "keep_alive"
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
+CONF_AWAY_TEMP = "away_temp"
 CONF_PRESETS = "presets"
 CONF_DEFAULT_PRESET = "default_preset"
 CONF_PRECISION = "precision"
@@ -87,6 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
             [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
         ),
+        vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float),
         vol.Optional(CONF_PRESETS): vol.All(
             dict,
             vol.Schema(
@@ -127,6 +129,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
     initial_hvac_mode = config.get(CONF_INITIAL_HVAC_MODE)
+    away_temp = config.get(CONF_AWAY_TEMP)
     presets = config.get(CONF_PRESETS)
     default_preset = config.get(CONF_DEFAULT_PRESET)
     precision = config.get(CONF_PRECISION)
@@ -147,6 +150,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hot_tolerance,
                 keep_alive,
                 initial_hvac_mode,
+                away_temp,
                 presets,
                 default_preset,
                 precision,
@@ -173,6 +177,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         hot_tolerance,
         keep_alive,
         initial_hvac_mode,
+        away_temp,
         presets,
         default_preset,
         precision,
@@ -201,18 +206,24 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._target_temp = target_temp
         self._unit = unit
 
-        self._default_preset = default_preset
         if presets and len(presets) > 0:
             self._presets = presets
-            self._presets[PRESET_NONE] = self._target_temp
-            self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
-            self._current_preset = self._default_preset or list(self._presets.keys())[0]
         else:
             self._presets = collections.OrderedDict()
-            self._presets[PRESET_NONE] = self._target_temp
-            self._support_flags = SUPPORT_FLAGS
-            self._current_preset = PRESET_NONE
+            if away_temp:
+                self._presets[PRESET_AWAY] = away_temp
 
+        self._presets[PRESET_NONE] = self._target_temp
+        if len(self._presets) > 1:
+            self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
+        else:
+            self._support_flags = SUPPORT_FLAGS
+
+        if default_preset in self._presets:
+            self._default_preset = default_preset
+        else:
+            self._default_preset = list(self._presets.keys())[0]
+        self._current_preset = self._default_preset
         self._target_temp = target_temp or self._presets[self._current_preset]
 
     async def async_added_to_hass(self):
