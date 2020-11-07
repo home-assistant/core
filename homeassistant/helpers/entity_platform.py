@@ -204,7 +204,13 @@ class EntityPlatform:
                 self._tasks.clear()
 
                 if pending:
+                    logger.warning(
+                        "_async_setup_platform Waiting for %s: %s", full_name, pending
+                    )
                     await asyncio.gather(*pending)
+                    logger.warning(
+                        "_async_setup_platform Finished for %s: %s", full_name, pending
+                    )
 
             hass.config.components.add(full_name)
             self._setup_complete = True
