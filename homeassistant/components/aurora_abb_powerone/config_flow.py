@@ -59,7 +59,7 @@ def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False
         else:
             raise err
     finally:
-        if client.serline.isOpen:
+        if client.serline.isOpen():
             client.close()
 
     # Return info we want to store in the config entry.
