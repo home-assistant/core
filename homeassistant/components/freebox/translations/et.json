@@ -9,6 +9,9 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "link": {
+                "title": "Lingi Freebox ruuter"
+            },
             "user": {
                 "data": {
                     "host": "",
