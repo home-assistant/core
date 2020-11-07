@@ -941,7 +941,9 @@ class MediaPlayerImageView(HomeAssistantView):
         browse_image = request.query.get("browse_image")
 
         if browse_image:
-            data, content_type = await player.async_get_browse_image(media_content_type, media_content_id, browse_image)
+            data, content_type = await player.async_get_browse_image(
+                media_content_type, media_content_id, browse_image
+            )
         else:
             data, content_type = await player.async_get_media_image()
 
