@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
             "pwd_and_ssh": "Only provide password or SSH key file",
             "pwd_or_ssh": "Please provide password or SSH key file",
             "ssh_not_file": "SSH key file not found",

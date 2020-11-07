@@ -28,6 +28,7 @@ from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 HOST = "myrouter.asuswrt.com"
+IP_ADDRESS = "192.168.1.1"
 
 CONFIG_DATA = {
     CONF_HOST: HOST,
@@ -80,7 +81,7 @@ async def test_sensors(hass, connect):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=HOST,
+        unique_id=IP_ADDRESS,
         options={CONF_CONSIDER_HOME: 0},
     )
     config_entry.add_to_hass(hass)

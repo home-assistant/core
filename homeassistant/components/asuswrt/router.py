@@ -106,6 +106,7 @@ class AsusWrtRouter:
         self._entry = entry
 
         self._api: AsusWrt = None
+        self._unique_id = entry.unique_id
         self._host = entry.data[CONF_HOST]
         self._name = entry.data.get(CONF_NAME, self._host)
         self._model = None
@@ -270,7 +271,7 @@ class AsusWrtRouter:
     def device_info(self) -> Dict[str, Any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self._host)},
+            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self._name,
             "model": self._model,
             "manufacturer": "Asus",
@@ -280,22 +281,32 @@ class AsusWrtRouter:
     @property
     def signal_device_new(self) -> str:
         """Event specific per AsusWrt entry to signal new device."""
-        return f"{DOMAIN}-{self._host}-device-new"
+        return f"{DOMAIN}-{self._unique_id}-device-new"
 
     @property
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
-        return f"{DOMAIN}-{self._host}-device-update"
+        return f"{DOMAIN}-{self._unique_id}-device-update"
 
     @property
     def signal_sensor_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in sensors."""
-        return f"{DOMAIN}-{self._host}-sensor-update"
+        return f"{DOMAIN}-{self._unique_id}-sensor-update"
+
+    @property
+    def unique_id(self) -> str:
+        """Return router unique ID."""
+        return self._unique_id
 
     @property
     def host(self) -> str:
-        """Return devices."""
+        """Return router hostname."""
         return self._host
+
+    @property
+    def name(self) -> str:
+        """Return router name."""
+        return self._name
 
     @property
     def devices(self) -> Dict[str, Any]:
