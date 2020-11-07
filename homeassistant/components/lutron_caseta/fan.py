@@ -8,6 +8,7 @@ from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
+    SPEED_MEDIUM_HIGH,
     SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
@@ -22,7 +23,7 @@ VALUE_TO_SPEED = {
     FAN_OFF: SPEED_OFF,
     FAN_LOW: SPEED_LOW,
     FAN_MEDIUM: SPEED_MEDIUM,
-    FAN_MEDIUM_HIGH: SPEED_MEDIUM,
+    FAN_MEDIUM_HIGH: SPEED_MEDIUM_HIGH,
     FAN_HIGH: SPEED_HIGH,
 }
 
@@ -30,10 +31,11 @@ SPEED_TO_VALUE = {
     SPEED_OFF: FAN_OFF,
     SPEED_LOW: FAN_LOW,
     SPEED_MEDIUM: FAN_MEDIUM,
+    SPEED_MEDIUM_HIGH: FAN_MEDIUM_HIGH,
     SPEED_HIGH: FAN_HIGH,
 }
 
-FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_MEDIUM_HIGH, SPEED_HIGH]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -92,6 +94,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         return VALUE_TO_SPEED[self._device["fan_speed"]] in [
             SPEED_LOW,
             SPEED_MEDIUM,
+            SPEED_MEDIUM_HIGH,
             SPEED_HIGH,
         ]
 
