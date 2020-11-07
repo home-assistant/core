@@ -1,7 +1,9 @@
 """Constants for the Shelly integration."""
 
+COAP = "coap"
 DATA_CONFIG_ENTRY = "config_entry"
 DOMAIN = "shelly"
+REST = "rest"
 
 # Used to calculate the timeout in "_async_update_data" used for polling data from devices.
 POLLING_TIMEOUT_MULTIPLIER = 1.2

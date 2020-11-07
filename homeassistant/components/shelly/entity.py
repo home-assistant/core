@@ -10,9 +10,8 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity
 
-from . import ShellyDeviceWrapper
-from .const import DATA_CONFIG_ENTRY, DOMAIN
-from .utils import get_entity_name
+from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
+from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
 
 
 def temperature_unit(block_info: dict) -> str:
@@ -52,10 +51,13 @@ def shelly_naming(self, block, entity_type: str):
             else:
                 base = ord("1")
             entity_name = f"{self.wrapper.name} channel {chr(int(block.channel)+base)}"
+
     if entity_type == "switch":
         return entity_name
+
     if entity_type == "sensor":
         return f"{entity_name} {self.description.name}"
+
     raise ValueError
 
 
@@ -84,7 +86,7 @@ async def async_setup_entry_attribute_entities(
     """Set up entities for block attributes."""
     wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
-    ]
+    ][COAP]
     blocks = []
 
     for block in wrapper.device.blocks:
@@ -114,7 +116,9 @@ async def async_setup_entry_rest(
     hass, config_entry, async_add_entities, sensors, sensor_class
 ):
     """Set up entities for REST sensors."""
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][config_entry.entry_id]
+    wrapper: ShellyDeviceRestWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][REST]
 
     blocks = []
     for sensor_id in sensors:

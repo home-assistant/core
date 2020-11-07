@@ -82,10 +82,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (asyncio.TimeoutError, OSError) as err:
         raise ConfigEntryNotReady from err
 
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        entry.entry_id
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
+    coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+        COAP
     ] = ShellyDeviceWrapper(hass, entry, device)
-    await wrapper.async_setup()
+    await coap_wrapper.async_setup()
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+        REST
+    ] = ShellyDeviceRestWrapper(hass, entry, device)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -169,6 +174,39 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device.shutdown()
 
 
+class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
+    """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
+
+    def __init__(self, hass, entry, device: aioshelly.Device):
+        """Initialize the Shelly device wrapper."""
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=device.settings["name"] or device.settings["device"]["hostname"],
+            update_interval=timedelta(seconds=60),
+        )
+        self.hass = hass
+        self.entry = entry
+        self.device = device
+
+    async def _async_update_data(self):
+        """Fetch data."""
+        try:
+            async with async_timeout.timeout(5):
+                _LOGGER.debug(
+                    "REST update for %s", self.device.settings["device"]["hostname"]
+                )
+                return await self.device.update_status()
+        except OSError as err:
+            raise update_coordinator.UpdateFailed("Error fetching data") from err
+
+    @property
+    def mac(self):
+        """Mac address of the device."""
+        return self.device.settings["device"]["mac"]
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -180,6 +218,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id).shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][COAP].shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
     return unload_ok
