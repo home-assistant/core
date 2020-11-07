@@ -1,6 +1,6 @@
 {
   "domain": "fritzbox",
-  "name": "AVM FRITZ!Box",
+  "name": "AVM FRITZ!SmartHome",
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",
   "requirements": ["pyfritzhome==0.4.2"],
   "ssdp": [
