@@ -49,12 +49,12 @@ def edge_detect(port, event_callback, bounce):
 
 
 def rising_edge_detect(port, event_callback, bounce):
-    """Add detection for RISING"""
+    """Add detection for RISING."""
     GPIO.add_event_detect(port, GPIO.RISING, callback=event_callback, bouncetime=bounce)
 
 
 def falling_edge_detect(port, event_callback, bounce):
-    """Add detection for FALLING"""
+    """Add detection for FALLING."""
     GPIO.add_event_detect(
         port, GPIO.FALLING, callback=event_callback, bouncetime=bounce
     )
