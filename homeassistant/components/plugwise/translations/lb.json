@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "Typ vun der Verbindung",
                     "host": "IP Adresse",
                     "password": "Smile ID",
                     "port": "Port"
@@ -21,8 +22,11 @@
             },
             "user_gateway": {
                 "data": {
+                    "host": "IP Adress",
+                    "password": "Smile ID",
                     "port": "Port"
-                }
+                },
+                "title": "Mam Smile verbannen"
             }
         }
     },

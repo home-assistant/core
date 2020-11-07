@@ -30,5 +30,15 @@
                 "title": "Sisesta oma teave."
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)"
+                },
+                "title": "Seadista SimpliSafe"
+            }
+        }
     }
 }

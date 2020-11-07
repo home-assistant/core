@@ -14,6 +14,7 @@
                 "title": "Wiel Authentifikatiouns Method aus"
             },
             "reauth_confirm": {
+                "description": "Spotify Integratioun muss sec hbei Spotify fr\u00ebsch umellen fir de Kont: {acount}",
                 "title": "Integratioun re-authentifiz\u00e9ieren"
             }
         }

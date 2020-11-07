@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Locatie is al geconfigureerd"
+        },
         "error": {
             "identifier_exists": "Locatie al geregistreerd"
         },
