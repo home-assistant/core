@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         await hass.async_add_executor_job(_log_objects)
         log_interval_sub = async_track_time_interval(
-            hass, _log_objects, call[CONF_SCAN_INTERVAL]
+            hass, _log_objects, call.data[CONF_SCAN_INTERVAL]
         )
 
     async def _async_stop_log_objects(call: ServiceCall):
@@ -78,10 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         log_interval_sub = None
 
     def _dump_log_objects(call: ServiceCall):
-        _LOGGER.log(
+        _LOGGER.critical(
             "%s objects in memory: %s",
-            call[CONF_TYPE],
-            objgraph.by_type(call[CONF_TYPE]),
+            call.data[CONF_TYPE],
+            objgraph.by_type(call.data[CONF_TYPE]),
         )
 
     async_register_admin_service(
@@ -199,4 +199,4 @@ def _write_memory_profile(heap, heap_path):
 
 
 def _log_objects(*_):
-    _LOGGER.log("Memory Growth: %s", objgraph.growth(limit=100))
+    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=100))
