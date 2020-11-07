@@ -97,8 +97,8 @@ class AsusWrtDevInfo:
         """Return device last activity."""
         if not self._last_activity:
             return None
-        d = self._last_activity
-        round_date = d - timedelta(microseconds=d.microsecond)
+        full_date = self._last_activity
+        round_date = full_date - timedelta(microseconds=full_date.microsecond)
         return dt_util.as_local(round_date)
 
 
