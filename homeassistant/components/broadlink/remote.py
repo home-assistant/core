@@ -42,9 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 LEARNING_TIMEOUT = timedelta(seconds=30)
 
-INFRARED = "ir"
-RADIOFREQUENCY = "rf"
-COMMAND_TYPES = [INFRARED, RADIOFREQUENCY]
+COMMAND_TYPE_IR = "ir"
+COMMAND_TYPE_RF = "rf"
+COMMAND_TYPES = [COMMAND_TYPE_IR, COMMAND_TYPE_RF]
 
 CODE_STORAGE_VERSION = 1
 FLAG_STORAGE_VERSION = 1
@@ -304,7 +304,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
         learn_command = (
             self._async_learn_ir_command
-            if command_type == INFRARED
+            if command_type == COMMAND_TYPE_IR
             else self._async_learn_rf_command
         )
         should_store = False
