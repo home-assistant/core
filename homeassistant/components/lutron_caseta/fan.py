@@ -14,6 +14,8 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 
+from .const import SPEED_MEDIUM_HIGH
+
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
