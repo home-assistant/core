@@ -26,7 +26,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util.dt import utcnow
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DNSMASQ,
@@ -59,15 +59,16 @@ class AsusWrtDevInfo:
 
     def update(self, dev_info=None, consider_home=0):
         """Update AsusWrt device info."""
+        utc_point_in_time = dt_util.utcnow()
         if dev_info:
             self._name = dev_info.name
             self._ip_address = dev_info.ip
-            self._last_activity = utcnow()
+            self._last_activity = utc_point_in_time
             self._connected = True
 
         elif self._connected:
             self._connected = (
-                utcnow() - self._last_activity
+                utc_point_in_time - self._last_activity
             ).total_seconds() < consider_home
             self._ip_address = None
 
@@ -94,7 +95,11 @@ class AsusWrtDevInfo:
     @property
     def last_activity(self):
         """Return device last activity."""
-        return self._last_activity
+        if not self._last_activity:
+            return None
+        d = self._last_activity
+        round_date = d - timedelta(microseconds=d.microsecond)
+        return dt_util.as_local(round_date)
 
 
 class AsusWrtRouter:

@@ -163,7 +163,7 @@ class AsusWrtSensor(Entity):
     @property
     def device_state_attributes(self) -> Dict[str, any]:
         """Return the attributes."""
-        return {"Hostname": self._router.host}
+        return {"hostname": self._router.host}
 
     @property
     def device_info(self) -> Dict[str, any]:
