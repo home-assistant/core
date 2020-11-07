@@ -58,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Hue Gruppen erlaaben"
+                    "allow_hue_groups": "Hue Gruppen erlaaben",
+                    "allow_unreachable": "Erlaabt net erreechbar Bieren hir Zoust\u00e4nn richteg ze mellen"
                 }
             }
         }

@@ -66,6 +66,7 @@
                     "7": "Zone 7",
                     "out": "UIT"
                 },
+                "description": "Heeft een {model} bij {host} . Selecteer hieronder de basisconfiguratie van elke I / O - afhankelijk van de I / O kan het binaire sensoren (open / dicht contacten), digitale sensoren (dht en ds18b20) of schakelbare uitgangen mogelijk maken. U kunt in de volgende stappen gedetailleerde opties configureren.",
                 "title": "Configureer I/O"
             },
             "options_io_ext": {
@@ -79,11 +80,13 @@
                     "alarm2_out2": "OUT2 / ALARM2",
                     "out1": "OUT1"
                 },
+                "description": "Selecteer hieronder de configuratie van de resterende I/O. U kunt in de volgende stappen gedetailleerde opties configureren.",
                 "title": "Configureer uitgebreide I/O"
             },
             "options_misc": {
                 "data": {
                     "api_host": "API host-URL overschrijven (optioneel)",
+                    "blink": "Led knipperen bij het verzenden van statuswijziging",
                     "override_api_host": "Overschrijf standaard Home Assistant API hostpaneel-URL"
                 },
                 "description": "Selecteer het gewenste gedrag voor uw paneel",

@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Hvor lenge, i minutter, for \u00e5 sl\u00e5 p\u00e5 en stasjon n\u00e5r bryteren er aktivert."
+                    "manual_run_mins": "Varighet i minutter \u00e5 kj\u00f8re n\u00e5r du aktiverer en sonebryter"
                 }
             }
         }

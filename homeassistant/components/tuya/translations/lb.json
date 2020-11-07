@@ -27,6 +27,7 @@
     },
     "options": {
         "error": {
+            "dev_multi_type": "Multiple ausgewielte Ger\u00e4ter fir ze konfigur\u00e9ieren musse vum selwechten Typ sinn",
             "dev_not_config": "Typ vun Apparat net konfigur\u00e9ierbar",
             "dev_not_found": "Apparat net fonnt"
         },
@@ -37,15 +38,21 @@
                     "curr_temp_divider": "Aktuell Temperatur W\u00e4erter Deeler (0= benotz Standard)",
                     "ext_temp_sensor": "Sensor fir aktuell Temperatur",
                     "max_kelvin": "Maximal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",
+                    "max_temp": "Maximal Zil Temperatur (benotz min a max = 0 fir standard)",
                     "min_kelvin": "Minimal Faarftemperatur \u00ebnnerst\u00ebtzt a Kelvin",
+                    "min_temp": "Minimal Zil Temperatur (benotz min a max = 0 fir standard)",
                     "support_color": "Forc\u00e9ier Faarf \u00cbnnerst\u00ebtzung",
                     "temp_divider": "Temperatur W\u00e4erter Deeler (0= benotz Standard)",
                     "tuya_max_coltemp": "Max Faarftemperatur vum Apparat gemellt",
                     "unit_of_measurement": "Temperatur Eenheet vum Apparat"
                 },
+                "description": "Konfigur\u00e9ier Optioune fir ugewisen Informatioune fir {device_type} Apparat `{device_name}` unzepassen",
                 "title": "Tuya Apparat ariichten"
             },
             "init": {
+                "data": {
+                    "list_devices": "Wiel d'Apparater fir ze konfigur\u00e9ieren aus oder  loss se eidel fir d'Konfiguratioun ze sp\u00e4icheren"
+                },
                 "title": "Tuya Optioune konfigur\u00e9ieren"
             }
         }

@@ -11,7 +11,8 @@
         "error": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "invalid_credentials": "Ong\u00eblteg Login Informatioune",
-            "unexpected_error": "Onerwaarte Feeler"
+            "unexpected_error": "Onerwaarte Feeler",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {
