@@ -94,18 +94,18 @@ async def ws_import_blueprint(hass, connection, msg):
     {
         vol.Required("type"): "blueprint/save",
         vol.Required("domain"): cv.string,
-        vol.Required("filename"): cv.string,
+        vol.Required("path"): cv.path,
         vol.Required("data"): cv.string,
     }
 )
 async def ws_save_blueprint(hass, connection, msg):
     """Save a blueprint."""
 
-    filename = msg["filename"]
+    filename = msg["path"]
     domain = msg["domain"]
 
     blueprint_path = pathlib.Path(
-        hass.config.path(BLUEPRINT_FOLDER, domain, f"{filename}.yaml")
+        hass.config.path(BLUEPRINT_FOLDER, domain, f"{path}.yaml")
     )
 
     if blueprint_path.exists():
@@ -114,14 +114,14 @@ async def ws_save_blueprint(hass, connection, msg):
         )
         return
 
-    def createFile():
+    def create_file():
         """Create blueprint file."""
         blueprint_path.parent.mkdir(parents=True, exist_ok=True)
         with open(blueprint_path, "x") as file:
             file.write(msg["data"])
 
     try:
-        await hass.async_add_executor_job(createFile)
+        await hass.async_add_executor_job(create_file)
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
         return
@@ -141,7 +141,7 @@ async def ws_save_blueprint(hass, connection, msg):
     {
         vol.Required("type"): "blueprint/delete",
         vol.Required("domain"): cv.string,
-        vol.Required("path"): cv.string,
+        vol.Required("path"): cv.path,
     }
 )
 async def ws_delete_blueprint(hass, connection, msg):
