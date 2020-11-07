@@ -1,27 +1,22 @@
-"""The tests for the generic_thermostat, not dependant on preset/away_temp config."""
+"""The tests for the generic_thermostat, not dependent on preset/away_temp config."""
 import datetime
 from os import path
 
 import pytest
 import pytz
-import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
-    ATTR_PRESET_MODE,
     DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    PRESET_AWAY,
-    PRESET_NONE,
 )
 from homeassistant.components.generic_thermostat import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -33,7 +28,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.core as ha
-from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -41,7 +36,6 @@ from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    mock_restore_cache,
 )
 from tests.components.climate import common
 
