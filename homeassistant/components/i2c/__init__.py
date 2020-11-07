@@ -103,7 +103,7 @@ class I2cDeviceManager(threading.Thread):
             # Check for an existing instance at the same address and return it if it exists already
             for device in self._devices:
                 if device["instance"].address == address:
-                    if type(device["instance"]) != device_class:
+                    if not isinstance(device["instance"], device_class):
                         _LOGGER.warning(
                             "Conflicting request for address 0x%02x: %s requested while %s exists already [UNCHANGED]",
                             address,
