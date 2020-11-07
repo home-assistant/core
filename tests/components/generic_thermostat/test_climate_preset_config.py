@@ -31,9 +31,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import (
-    mock_restore_cache,
-)
+from tests.common import mock_restore_cache
 from tests.components.climate import common
 
 ENTITY = "climate.test"

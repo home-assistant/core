@@ -33,10 +33,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.async_mock import patch
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-)
+from tests.common import assert_setup_component, async_fire_time_changed
 from tests.components.climate import common
 
 ENTITY = "climate.test"
