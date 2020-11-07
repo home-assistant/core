@@ -10,6 +10,7 @@ import os
 import ssl
 import time
 from typing import Any, Callable, List, Optional, Union
+import uuid
 
 import attr
 import certifi
@@ -711,7 +712,8 @@ class MQTT:
 
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
-            self._mqttc = mqtt.Client(protocol=proto)
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+            self._mqttc = mqtt.Client(client_id, protocol=proto)
         else:
             self._mqttc = mqtt.Client(client_id, protocol=proto)
 
