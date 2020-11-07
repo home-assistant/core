@@ -63,6 +63,8 @@ class EntityPlatform:
         self.config_entry: Optional[config_entries.ConfigEntry] = None
         self.entities: Dict[str, Entity] = {}  # pylint: disable=used-before-assignment
         self._tasks: List[asyncio.Future] = []
+        # Stop tracking tasks after setup is completed
+        self._setup_complete = False
         # Method to cancel the state change listener
         self._async_unsub_polling: Optional[CALLBACK_TYPE] = None
         # Method to cancel the retry of setup
@@ -163,7 +165,7 @@ class EntityPlatform:
         def async_create_setup_task():
             """Get task to set up platform."""
             return platform.async_setup_entry(  # type: ignore
-                self.hass, config_entry, self._async_schedule_add_entities_nowait
+                self.hass, config_entry, self._async_schedule_add_entities
             )
 
         return await self._async_setup_platform(async_create_setup_task)
@@ -205,6 +207,7 @@ class EntityPlatform:
                     await asyncio.gather(*pending)
 
             hass.config.components.add(full_name)
+            self._setup_complete = True
             return True
         except PlatformNotReady:
             tries += 1
@@ -258,26 +261,12 @@ class EntityPlatform:
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        self._tasks.append(
-            self._async_schedule_add_entities_nowait(
-                new_entities, update_before_add=update_before_add
-            )
-        )
-
-    @callback
-    def _async_schedule_add_entities_nowait(
-        self, new_entities: Iterable["Entity"], update_before_add: bool = False
-    ) -> asyncio.tasks.Task:
-        """Schedule adding entities for a single platform async.
-
-        Unlike _async_schedule_add_entities, these are not tracked
-        in self._tasks as _async_setup_platform will not be able to clear
-        them as these are setup from config entries where we use
-        async_forward_entry_setup.
-        """
-        return self.hass.async_create_task(
+        task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
         )
+
+        if not self._setup_complete:
+            self._tasks.append(task)
 
     def add_entities(
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
@@ -536,6 +525,7 @@ class EntityPlatform:
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
+        self._setup_complete = False
 
     async def async_destroy(self) -> None:
         """Destroy an entity platform.
