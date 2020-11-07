@@ -302,11 +302,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             )
             return
 
-        learn_command = (
-            self._async_learn_ir_command
-            if command_type == COMMAND_TYPE_IR
-            else self._async_learn_rf_command
-        )
+        if command_type == COMMAND_TYPE_IR:
+            learn_command = self._async_learn_ir_command
+        else:
+            learn_command = self._async_learn_rf_command
+
         should_store = False
 
         for command in commands:
