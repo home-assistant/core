@@ -23,4 +23,4 @@ dump_log_objects:
   fields:
     type:
       description: The type of objects to dump to the log
-      example: States
+      example: State
