@@ -9,11 +9,12 @@ from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hyperion import create_hyperion_client
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
+
+from . import create_hyperion_client
 
 # pylint: disable=unused-import
 from .const import (
