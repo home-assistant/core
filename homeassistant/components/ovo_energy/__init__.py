@@ -37,16 +37,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         authenticated = await client.authenticate(
             entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
-        if not authenticated:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "reauth"}, data=entry.data
-                )
-            )
-            return False
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
+
+    if not authenticated:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=entry.data
+            )
+        )
+        return False
 
     async def async_update_data() -> OVODailyUsage:
         """Fetch data from OVO Energy."""
@@ -55,16 +56,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
                 )
-                if not authenticated:
-                    hass.async_create_task(
-                        hass.config_entries.flow.async_init(
-                            DOMAIN, context={"source": "reauth"}, data=entry.data
-                        )
-                    )
-                    raise UpdateFailed("Not authenticated with OVO Energy")
-                return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
             except aiohttp.ClientError as exception:
                 raise UpdateFailed(exception) from exception
+            if not authenticated:
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "reauth"}, data=entry.data
+                    )
+                )
+                raise UpdateFailed("Not authenticated with OVO Energy")
+            return await client.get_daily_usage(datetime.utcnow().strftime("%Y-%m"))
 
     coordinator = DataUpdateCoordinator(
         hass,
