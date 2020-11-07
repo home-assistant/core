@@ -121,7 +121,7 @@ class RPiGPIOLight(LightEntity):
         rpi_gpio.setup_input(self._light_button_pin, self._light_button_pull_mode)
         rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
 
-        def toggle_light_switch(port):
+        def toggle_light_from_button(port):
             time.sleep(self._light_button_double_check_time_millis / 2000)
             if rpi_gpio.read_input(self._light_button_pin) != self._invert_light_button:
                 time.sleep(
@@ -136,13 +136,13 @@ class RPiGPIOLight(LightEntity):
         if self._invert_light_button:
             rpi_gpio.falling_edge_detect(
                 self._light_button_pin,
-                toggle_light_switch,
+                toggle_light_from_button,
                 self._light_button_bouncetime_millis,
             )
         else:
             rpi_gpio.rising_edge_detect(
                 self._light_button_pin,
-                toggle_light_switch,
+                toggle_light_from_button,
                 self._light_button_bouncetime_millis,
             )
 
