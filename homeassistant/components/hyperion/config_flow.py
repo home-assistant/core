@@ -8,8 +8,13 @@ from urllib.parse import urlparse
 from hyperion import client, const
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
+from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_PUSH,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
@@ -89,21 +94,21 @@ _LOGGER.setLevel(logging.DEBUG)
 # the favored discovery implementation.
 
 
-class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Hyperion config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Instantiate config flow."""
-        self._data: Optional[Dict[str, Any]] = None
-        self._request_token_task = None
-        self._auth_id = None
-        self._require_confirm = False
-        self._port_ui = const.DEFAULT_PORT_UI
+        self._data: Dict[str, Any] = {}
+        self._request_token_task: Optional[asyncio.Task] = None
+        self._auth_id: Optional[str] = None
+        self._require_confirm: bool = False
+        self._port_ui: int = const.DEFAULT_PORT_UI
 
-    def _create_client(self, raw_connection=False) -> client.HyperionClient:
+    def _create_client(self, raw_connection: bool = False) -> client.HyperionClient:
         """Create and connect a client instance."""
         return create_hyperion_client(
             self._data[CONF_HOST],
@@ -113,30 +118,30 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _advance_to_auth_step_if_necessary(
-        self, hyperion_client
+        self, hyperion_client: client.HyperionClient
     ) -> Dict[str, Any]:
         """Determine if auth is required."""
         auth_resp = await hyperion_client.async_is_auth_required()
 
         # Could not determine if auth is required.
-        if not client.ResponseOK(auth_resp):
+        if not auth_resp or not client.ResponseOK(auth_resp):
             return self.async_abort(reason="auth_required_error")
         auth_required = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_REQUIRED, False)
         if auth_required:
             return await self.async_step_auth()
         return await self.async_step_confirm()
 
-    async def async_step_import(
-        self, import_data: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+    async def async_step_import(self, import_data: ConfigType) -> Dict[str, Any]:
         """Handle a flow initiated by a YAML config import."""
-        self._data = import_data
+        self._data.update(import_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
-    async def async_step_ssdp(self, discovery_info: ConfigType) -> Dict[str, Any]:
+    async def async_step_ssdp(  # type: ignore[override]
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
         #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
@@ -173,8 +178,6 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # SSDP requires user confirmation.
         self._require_confirm = True
-
-        self._data = {}
         self._data[CONF_HOST] = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         try:
             self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
@@ -214,7 +217,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:
-            self._data = user_input
+            self._data.update(user_input)
 
             async with self._create_client(raw_connection=True) as hyperion_client:
                 if hyperion_client:
@@ -248,13 +251,14 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _request_token_task_func(self, auth_id: str) -> None:
         """Send an async_request_token request."""
-        auth_resp = {}
+        auth_resp: Optional[Dict[str, Any]] = None
         async with self._create_client(raw_connection=True) as hyperion_client:
             if hyperion_client:
                 # The Hyperion-py client has a default timeout of 3 minutes on this request.
                 auth_resp = await hyperion_client.async_request_token(
                     comment=DEFAULT_ORIGIN, id=auth_id
                 )
+            assert self.hass
             await self.hass.config_entries.flow.async_configure(
                 flow_id=self.flow_id, user_input=auth_resp
             )
@@ -274,8 +278,10 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return None
-            return client.LoginResponseOK(
-                await hyperion_client.async_login(token=self._data[CONF_TOKEN])
+            return bool(
+                client.LoginResponseOK(
+                    await hyperion_client.async_login(token=self._data[CONF_TOKEN])
+                )
             )
 
     async def async_step_auth(
@@ -326,6 +332,8 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Start a task in the background requesting a new token. The next step will
         # wait on the response (which includes the user needing to visit the Hyperion
         # UI to approve the request for a new token).
+        assert self.hass
+        assert self._auth_id is not None
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id)
         )
@@ -337,7 +345,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, auth_resp: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
         """Handle completion of the request for a new token."""
-        if client.ResponseOK(auth_resp):
+        if auth_resp is not None and client.ResponseOK(auth_resp):
             token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
             if token:
                 self._data[CONF_TOKEN] = token
@@ -402,19 +410,21 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> "HyperionOptionsFlow":
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow(config_entry)
 
 
-class HyperionOptionsFlow(config_entries.OptionsFlow):
+class HyperionOptionsFlow(OptionsFlow):
     """Hyperion options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry):
         """Initialize a Hyperion options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
