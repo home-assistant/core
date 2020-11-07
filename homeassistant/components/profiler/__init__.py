@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             domain_data[LOG_INTERVAL_SUB]()
 
         hass.components.persistent_notification.async_create(
-            "Object growth logging has started. Review the log for to track the growth of new objects.",
+            "Object growth logging has started. See [the logs](/config/logs) for to track the growth of new objects.",
             title="Object growth logging started",
             notification_id="profile_object_logging",
         )
@@ -86,10 +86,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         domain_data.pop(LOG_INTERVAL_SUB)
 
     def _dump_log_objects(call: ServiceCall):
+        obj_type = call.data[CONF_TYPE]
+
         _LOGGER.critical(
             "%s objects in memory: %s",
-            call.data[CONF_TYPE],
-            objgraph.by_type(call.data[CONF_TYPE]),
+            obj_type,
+            objgraph.by_type(obj_type),
+        )
+
+        hass.components.persistent_notification.create(
+            f"Objects with type {obj_type} have been dumped to the log. See [the logs](/config/logs) to review the repr of the objects.",
+            title="Object dump completed",
+            notification_id="profile_object_dump",
         )
 
     async_register_admin_service(
