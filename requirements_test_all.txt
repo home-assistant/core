@@ -137,7 +137,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.5.0
+aioshelly==0.5.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -294,6 +294,9 @@ enocean==0.50
 
 # homeassistant.components.season
 ephem==3.7.7.0
+
+# homeassistant.components.epson
+epson-projector==0.2.3
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
@@ -497,6 +500,9 @@ numpy==1.19.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
+
+# homeassistant.components.profiler
+objgraph==3.4.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.2
