@@ -258,7 +258,7 @@ class ThermostatEntity(ClimateEntity):
     def fan_modes(self):
         """Return the list of available fan modes."""
         if FanTrait.NAME in self._device.traits:
-            return list(FAN_INV_MODE_MAP.keys())
+            return list(FAN_INV_MODE_MAP)
         return []
 
     @property
@@ -304,11 +304,11 @@ class ThermostatEntity(ClimateEntity):
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         if self.preset_mode == PRESET_ECO or self.hvac_mode == HVAC_MODE_HEAT_COOL:
             if low_temp and high_temp:
-                return await trait.set_range(low_temp, high_temp)
+                await trait.set_range(low_temp, high_temp)
         elif self.hvac_mode == HVAC_MODE_COOL and temp:
-            return await trait.set_cool(temp)
+            await trait.set_cool(temp)
         elif self.hvac_mode == HVAC_MODE_HEAT and temp:
-            return await trait.set_heat(temp)
+            await trait.set_heat(temp)
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
