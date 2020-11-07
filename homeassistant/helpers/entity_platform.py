@@ -270,7 +270,7 @@ class EntityPlatform:
         else:
             self.logger.warning(
                 "_async_schedule_add_entities called after setup was completed for %s",
-                self.full_name,
+                self,
             )
 
     def add_entities(
