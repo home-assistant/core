@@ -58,6 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if log_interval_sub is not None:
             log_interval_sub()
 
+        hass.components.persistent_notification.async_create(
+            "Object growth logging has started. Review the log for to track the growth of new objects.",
+            title="Object growth logging started",
+            notification_id="profile_object_logging",
+        )
         await hass.async_add_executor_job(_log_objects)
         log_interval_sub = async_track_time_interval(
             hass, _log_objects, call[CONF_SCAN_INTERVAL]
@@ -68,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if log_interval_sub is None:
             return
 
+        hass.components.persistent_notification.async_dismiss("profile_object_logging")
         log_interval_sub()
         log_interval_sub = None
 
