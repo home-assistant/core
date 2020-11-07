@@ -68,12 +68,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Most common types: %s", objgraph.most_common_types(limit=100))
         _LOGGER.debug("Growth: %s", objgraph.growth(limit=100))
 
-    #    @callback
-    #    def _log_loggers(*_):
-    #        _LOGGER.debug("tuple: %s", objgraph.by_type("tuple"))
+    @callback
+    def _log_loggers(*_):
+        _LOGGER.debug("tuple: %s", objgraph.by_type("tuple"))
 
     async_track_time_interval(hass, _log_objects, timedelta(seconds=30))
-    #    async_track_time_interval(hass, _log_loggers, timedelta(seconds=60))
+    async_track_time_interval(hass, _log_loggers, timedelta(seconds=60))
 
     return True
 
