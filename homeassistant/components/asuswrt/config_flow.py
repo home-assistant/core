@@ -152,8 +152,10 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         elif ssh:
             if pwd:
                 errors["base"] = "pwd_and_ssh"
-            elif not _is_file(ssh):
-                errors["base"] = "ssh_not_file"
+            else:
+                isfile = await self.hass.async_add_executor_job(_is_file, ssh)
+                if not isfile:
+                    errors["base"] = "ssh_not_file"
 
         if not errors:
             ip_address = await self.hass.async_add_executor_job(_get_ip, host)

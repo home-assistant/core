@@ -107,6 +107,40 @@ async def test_import(hass, connect):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_import_ssh(hass, connect):
+    """Test import step with ssh file."""
+    config_data = CONFIG_DATA.copy()
+    config_data.pop(CONF_PASSWORD)
+    config_data[CONF_SSH_KEY] = SSH_KEY
+
+    with patch(
+        "homeassistant.components.asuswrt.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        return_value=IP_ADDRESS,
+    ), patch(
+        "homeassistant.components.asuswrt.config_flow.os.path.isfile",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.asuswrt.config_flow.os.access",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config_data,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == IP_ADDRESS
+        assert result["title"] == HOST
+        assert result["data"] == config_data
+
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_error_no_password_ssh(hass):
     """Test we abort if component is already setup."""
     config_data = CONFIG_DATA.copy()
