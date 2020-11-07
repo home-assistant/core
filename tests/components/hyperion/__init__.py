@@ -102,7 +102,9 @@ async def setup_test_config_entry(hass, client=None):
     # pylint: disable=attribute-defined-outside-init
     client.instances = [TEST_INSTANCE_1]
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     return config_entry

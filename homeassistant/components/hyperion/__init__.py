@@ -59,14 +59,20 @@ def split_hyperion_unique_id(unique_id) -> Tuple[str, int]:
         return None
 
 
-async def async_create_connect_client(
-    host: str,
-    port: int,
-    instance: int = hyperion_const.DEFAULT_INSTANCE,
-    token: str = None,
+def create_hyperion_client(
+    *args: Any,
+    **kwargs: Any,
+) -> client.HyperionClient:
+    """Create a Hyperion Client."""
+    return client.HyperionClient(*args, **kwargs)
+
+
+async def async_create_connect_hyperion_client(
+    *args: Any,
+    **kwargs: Any,
 ):
     """Create and connect a Hyperion Client."""
-    hyperion_client = client.HyperionClient(host, port, token=token, instance=instance)
+    hyperion_client = create_hyperion_client(*args, **kwargs)
 
     if not await hyperion_client.async_client_connect():
         return None
@@ -85,7 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     port = config_entry.data[CONF_PORT]
     token = config_entry.data.get(CONF_TOKEN)
 
-    hyperion_client = await async_create_connect_client(host, port, token=token)
+    hyperion_client = await async_create_connect_hyperion_client(
+        host, port, token=token
+    )
     if not hyperion_client:
         raise ConfigEntryNotReady
 
@@ -103,14 +111,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONF_ROOT_CLIENT: hyperion_client,
-        CONF_ON_UNLOAD: [config_entry.add_update_listener(_async_options_updated)],
+        CONF_ON_UNLOAD: [],
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+    # Must only listen for option updates after the setup is complete, as otherwise
+    # the YAML->ConfigEntry migration code triggers an options update, which causes a
+    # reload -- which clashes with the initial load (causing entity_id / unique_id
+    # clashes).
+    async def setup_then_listen():
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+        hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
+            config_entry.add_update_listener(_async_options_updated)
         )
 
+    hass.async_create_task(setup_then_listen())
     return True
 
 

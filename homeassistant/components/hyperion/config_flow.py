@@ -11,10 +11,20 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_ID, CONF_PORT, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType
 
+from . import create_hyperion_client
+
 # pylint: disable=unused-import
-from .const import CONF_AUTH_ID, CONF_CREATE_TOKEN, DEFAULT_ORIGIN, DOMAIN
+from .const import (
+    CONF_AUTH_ID,
+    CONF_CREATE_TOKEN,
+    CONF_PRIORITY,
+    DEFAULT_ORIGIN,
+    DEFAULT_PRIORITY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -95,7 +105,7 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_client(self, raw_connection=False) -> client.HyperionClient:
         """Create and connect a client instance."""
-        return client.HyperionClient(
+        return create_hyperion_client(
             self._data[CONF_HOST],
             self._data[CONF_PORT],
             token=self._data.get(CONF_TOKEN),
@@ -388,4 +398,37 @@ class HyperionConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167
         return self.async_create_entry(
             title=f"{self._data[CONF_HOST]}:{self._data[CONF_PORT]}", data=self._data
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the Hyperion Options flow."""
+        return HyperionOptionsFlow(config_entry)
+
+
+class HyperionOptionsFlow(config_entries.OptionsFlow):
+    """Hyperion options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize a Hyperion options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PRIORITY,
+                        default=self._config_entry.options.get(
+                            CONF_PRIORITY, DEFAULT_PRIORITY
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+                }
+            ),
         )
