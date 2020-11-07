@@ -171,7 +171,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
     lms = Server(session, host, port, username, password)
-    internal_artwork_url = lms.generate_image_url("")
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -194,7 +193,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player, internal_artwork_url)
+                entity = SqueezeBoxEntity(player)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -257,10 +256,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     Wraps a pysqueezebox.Player() object.
     """
 
-    def __init__(self, player, internal_artwork_url=None):
+    def __init__(self, player):
         """Initialize the SqueezeBox device."""
         self._player = player
-        self._internal_artwork_url = internal_artwork_url
         self._last_update = None
         self._query_result = {}
         self._available = True
@@ -592,10 +590,10 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
         return await build_item_response(self, payload)
 
-    async def async_get_browse_image(self, browse_image):
+    async def async_get_browse_image(self, media_content_type, media_content_id, browse_image):
         """Get album art from Squeezebox server."""
-        internal_url = f"{self._internal_artwork_url}{browse_image}"
-        result = await self._async_fetch_image(internal_url)
+        image_url = self._player.generate_image_url_from_track_id(browse_image)
+        result = await self._async_retrieve_image(image_url)
         if result == (None, None):
             _LOGGER.info("Error retrieving proxied album art from %s", internal_url)
         return result
@@ -603,10 +601,3 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_browse(self, *args, **kwargs):
         """Browse player's media library."""
         return await self._player.async_browse(*args, **kwargs)
-
-    def get_thumbnail_url(self, image_url):
-        """Get thumbnail image url for media browser."""
-        if image_url is not None and image_url.startswith(self._internal_artwork_url):
-            thumbnail = image_url.replace(self._internal_artwork_url, "")
-            return self.get_browse_image_url(thumbnail)
-        return image_url

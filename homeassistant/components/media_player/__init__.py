@@ -899,12 +899,12 @@ class MediaPlayerEntity(Entity):
 
         return content, content_type
 
-    def get_browse_image_url(self, browse_image):
-        """Generate an externally accessible url for a media browser image."""
-        base_url = get_url(self.hass, prefer_external=True)
+    def get_browse_image_url(self, media_content_type, media_content_id, browse_image):
+        """Generate an url for a media browser image."""
+        base_url = get_url(self.hass)
         url = (
             f"{base_url}/api/media_player_proxy/{self.entity_id}"
-            f"?token={self.access_token}&browse_image={browse_image}"
+            f"?token={self.access_token}&media_content_type={media_content_type}&media_content_id={media_content_id}&browse_image={browse_image}"
         )
         return url
 
@@ -935,10 +935,12 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=HTTP_UNAUTHORIZED)
 
+        media_content_type = request.query.get("media_content_type")
+        media_content_id = request.query.get("media_content_id")
         browse_image = request.query.get("browse_image")
 
         if browse_image:
-            data, content_type = await player.async_get_browse_image(browse_image)
+            data, content_type = await player.async_get_browse_image(media_content_type, media_content_id, browse_image)
         else:
             data, content_type = await player.async_get_media_image()
 

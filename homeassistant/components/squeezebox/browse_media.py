@@ -99,7 +99,7 @@ async def build_item_response(entity, payload):
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=entity.get_thumbnail_url(item.get("image_url")),
+                    thumbnail=entity.get_browse_image_url(item_type, str(item["id"]), item.get("artwork_track_id")),
                 )
             )
 
