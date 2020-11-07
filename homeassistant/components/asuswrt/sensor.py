@@ -32,35 +32,35 @@ SENSOR_FACTOR = "factor"
 
 CONNECTION_SENSORS = {
     SENSOR_CONNECTED_DEVICE: {
-        SENSOR_NAME: "AsusWrt connected devices",
+        SENSOR_NAME: "connected devices",
         SENSOR_UNIT: None,
         SENSOR_FACTOR: 0,
         SENSOR_ICON: None,
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_RX_RATES: {
-        SENSOR_NAME: "AsusWrt download speed",
+        SENSOR_NAME: "download speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:download-network",
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_TX_RATES: {
-        SENSOR_NAME: "AsusWrt upload speed",
+        SENSOR_NAME: "upload speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:upload-network",
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_RX_BYTES: {
-        SENSOR_NAME: "AsusWrt download",
+        SENSOR_NAME: "download",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:download-network",
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_TX_BYTES: {
-        SENSOR_NAME: "AsusWrt upload",
+        SENSOR_NAME: "upload",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:upload-network",
@@ -113,12 +113,13 @@ class AsusWrtSensor(Entity):
         self._state = None
         self._router = router
         self._sensor_type = sensor_type
-        self._name = sensor[SENSOR_NAME]
+        prefix = "AsusWrt" if router.name == router.host else router.name
+        self._name = f"{prefix} {sensor[SENSOR_NAME]}"
         self._unit = sensor[SENSOR_UNIT]
         self._factor = sensor[SENSOR_FACTOR]
         self._icon = sensor[SENSOR_ICON]
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
-        self._unique_id = f"{self._router.host} {self._name}"
+        self._unique_id = f"{self._router.unique_id} {self._name}"
 
     @callback
     def async_update_state(self) -> None:
@@ -158,6 +159,11 @@ class AsusWrtSensor(Entity):
     def device_class(self) -> str:
         """Return the device_class."""
         return self._device_class
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return the attributes."""
+        return {"Hostname": self._router.host}
 
     @property
     def device_info(self) -> Dict[str, any]:

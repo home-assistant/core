@@ -21,6 +21,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "pwd_and_ssh": "Only provide password or SSH key file",
       "pwd_or_ssh": "Please provide password or SSH key file",
       "ssh_not_file": "SSH key file not found",

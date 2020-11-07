@@ -1,4 +1,6 @@
 """Tests for the AsusWrt config flow."""
+from socket import gaierror
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -24,6 +26,7 @@ from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.asuswrt.com"
+IP_ADDRESS = "192.168.1.1"
 SSH_KEY = "1234"
 
 CONFIG_DATA = {
@@ -61,7 +64,10 @@ async def test_user(hass, connect):
     with patch(
         "homeassistant.components.asuswrt.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        return_value=IP_ADDRESS,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -70,7 +76,7 @@ async def test_user(hass, connect):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == HOST
+        assert result["result"].unique_id == IP_ADDRESS
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
 
@@ -82,7 +88,10 @@ async def test_import(hass, connect):
     with patch(
         "homeassistant.components.asuswrt.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        return_value=IP_ADDRESS,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -91,7 +100,7 @@ async def test_import(hass, connect):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == HOST
+        assert result["result"].unique_id == IP_ADDRESS
         assert result["title"] == HOST
         assert result["data"] == CONFIG_DATA
 
@@ -141,31 +150,51 @@ async def test_error_invalid_ssh(hass):
     assert result["errors"] == {"base": "ssh_not_file"}
 
 
+async def test_error_invalid_host(hass):
+    """Test we abort if host name is invalid."""
+    with patch(
+        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        side_effect=gaierror,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "invalid_host"}
+
+
 async def test_abort_if_already_setup(hass):
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=HOST,
+        unique_id=IP_ADDRESS,
     ).add_to_hass(hass)
 
-    # Should fail, same HOST (flow)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=CONFIG_DATA,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    with patch(
+        "homeassistant.components.asuswrt.config_flow.socket.gethostbyname",
+        return_value=IP_ADDRESS,
+    ):
+        # Should fail, same HOST (flow)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=CONFIG_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
-    # Should fail, same HOST (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=CONFIG_DATA,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+        # Should fail, same HOST (import)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=CONFIG_DATA,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_on_connect_failed(hass):
@@ -206,7 +235,7 @@ async def test_options_flow(hass):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        unique_id=HOST,
+        unique_id=IP_ADDRESS,
         options={CONF_TRACK_NEW: True},
     )
     config_entry.add_to_hass(hass)

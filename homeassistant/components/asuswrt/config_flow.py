@@ -1,6 +1,7 @@
 """Config flow to configure the AsusWrt integration."""
 import logging
 import os
+import socket
 
 import voluptuous as vol
 
@@ -39,7 +40,7 @@ from .router import get_api
 _LOGGER = logging.getLogger(__name__)
 
 
-def isfile(value) -> bool:
+def _is_file(value) -> bool:
     """Validate that the value is an existing file."""
     file_in = os.path.expanduser(str(value))
 
@@ -48,6 +49,16 @@ def isfile(value) -> bool:
     if not os.access(file_in, os.R_OK):
         return False
     return True
+
+
+def _get_ip(host):
+    """Get the ip address from the host name."""
+    if host is None:
+        return None
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        return None
 
 
 class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -132,6 +143,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form(user_input, errors)
 
+        host = user_input[CONF_HOST]
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)
 
@@ -140,17 +152,22 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         elif ssh:
             if pwd:
                 errors["base"] = "pwd_and_ssh"
-            elif not isfile(ssh):
+            elif not _is_file(ssh):
                 errors["base"] = "ssh_not_file"
+
+        if not errors:
+            ip_address = await self.hass.async_add_executor_job(_get_ip, host)
+            if not ip_address:
+                errors["base"] = "invalid_host"
 
         if errors:
             return self._show_setup_form(user_input, errors)
 
-        self._host = user_input[CONF_HOST]
-        self._name = user_input.get(CONF_NAME, self._host)
+        self._host = host
+        self._name = user_input.get(CONF_NAME, host)
 
         # Check if already configured
-        await self.async_set_unique_id(self._host)
+        await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
 
         return await self._async_check_connection(user_input)
