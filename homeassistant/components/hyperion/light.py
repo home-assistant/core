@@ -1,4 +1,6 @@
 """Support for Hyperion-NG remotes."""
+from __future__ import annotations
+
 import logging
 import re
 from types import MappingProxyType
@@ -294,7 +296,7 @@ class Hyperion(LightEntity):
         self,
         unique_id: str,
         name: str,
-        options: "MappingProxyType[str, Any]",
+        options: MappingProxyType[str, Any],
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the light."""

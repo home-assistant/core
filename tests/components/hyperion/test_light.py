@@ -1,5 +1,6 @@
 """Tests for the Hyperion integration."""
 import logging
+from types import MappingProxyType
 from typing import Any, Optional
 
 from hyperion import const
@@ -127,7 +128,7 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
+    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
 
 async def test_setup_yaml_new_style_unique_id_wo_config(
@@ -163,7 +164,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
+    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
 
 async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
@@ -188,7 +189,7 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     # There should be a config entry with the correct server unique_id.
     entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
     assert entry
-    assert entry.options == TEST_CONFIG_ENTRY_OPTIONS
+    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
 
 async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
@@ -201,7 +202,7 @@ async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
 
 async def test_setup_config_entry(hass: HomeAssistantType) -> None:
     """Test setting up the component via config entries."""
-    await setup_test_config_entry(hass, client=create_mock_client())
+    await setup_test_config_entry(hass, hyperion_client=create_mock_client())
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
@@ -209,7 +210,7 @@ async def test_setup_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
@@ -296,7 +297,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
 async def test_light_basic_properies(hass: HomeAssistantType) -> None:
     """Test the basic properties."""
     client = create_mock_client()
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
@@ -317,7 +318,7 @@ async def test_light_basic_properies(hass: HomeAssistantType) -> None:
 async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     """Test turning the light on."""
     client = create_mock_client()
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     # On (=), 100% (=), solid (=), [255,255,255] (=)
     client.async_send_set_color = AsyncMock(return_value=True)
@@ -518,7 +519,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
     """Test turning the light off."""
     client = create_mock_client()
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
@@ -557,7 +558,7 @@ async def test_light_async_updates_from_hyperion_client(
 ) -> None:
     """Test receiving a variety of Hyperion client callbacks."""
     client = create_mock_client()
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     # Bright change gets accepted.
     brightness = 10
@@ -666,7 +667,7 @@ async def test_full_state_loaded_on_start(hass: HomeAssistantType) -> None:
     }
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
 
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
@@ -679,7 +680,7 @@ async def test_full_state_loaded_on_start(hass: HomeAssistantType) -> None:
 async def test_unload_entry(hass: HomeAssistantType) -> None:
     """Test unload."""
     client = create_mock_client()
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert client.async_client_connect.called
     assert not client.async_client_disconnect.called

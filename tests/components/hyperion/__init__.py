@@ -1,4 +1,5 @@
 """Tests for the Hyperion component."""
+from __future__ import annotations
 
 import logging
 from types import TracebackType
@@ -30,7 +31,7 @@ TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
-TEST_CONFIG_ENTRY_OPTIONS = {CONF_PRIORITY: TEST_PRIORITY}
+TEST_CONFIG_ENTRY_OPTIONS: Dict[str, Any] = {CONF_PRIORITY: TEST_PRIORITY}
 
 TEST_INSTANCE_1: Dict[str, Any] = {
     "friendly_name": "Test instance 1",
@@ -54,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 class AsyncContextManagerMock(Mock):  # type: ignore[misc]
     """An async context manager mock for Hyperion."""
 
-    async def __aenter__(self) -> Optional["AsyncContextManagerMock"]:
+    async def __aenter__(self) -> Optional[AsyncContextManagerMock]:
         """Enter context manager and connect the client."""
         result = await self.async_client_connect()
         return self if result else None
@@ -115,16 +116,19 @@ def add_test_config_entry(hass: HomeAssistantType) -> ConfigEntry:
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType, client: Optional[client.HyperionClient] = None
+    hass: HomeAssistantType, hyperion_client: Optional[client.HyperionClient] = None
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
     config_entry = add_test_config_entry(hass)
 
-    client = client or create_mock_client()
+    hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init
-    client.instances = [TEST_INSTANCE_1]  # type: ignore[misc]
+    hyperion_client.instances = [TEST_INSTANCE_1]  # type: ignore[misc]
 
-    with patch("hyperion.client.HyperionClient", return_value=client):
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient",
+        return_value=hyperion_client,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     return config_entry

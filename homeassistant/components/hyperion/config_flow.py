@@ -1,4 +1,5 @@
 """Hyperion config flow."""
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -410,7 +411,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "HyperionOptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> HyperionOptionsFlow:
         """Get the Hyperion Options flow."""
         return HyperionOptionsFlow(config_entry)
 
