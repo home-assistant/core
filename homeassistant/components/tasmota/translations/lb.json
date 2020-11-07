@@ -13,6 +13,9 @@
                 },
                 "description": "F\u00ebll Tasmota Konfiguratioun aus.",
                 "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Soll Tasmota konfigur\u00e9iert ginn?"
             }
         }
     }

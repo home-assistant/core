@@ -29,7 +29,8 @@
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
-                    "username": "E-post"
+                    "username": "E-post",
+                    "with_family": "Perega"
                 },
                 "description": "Sisesta oma mandaat.",
                 "title": "iCloudi tuvastusandmed"

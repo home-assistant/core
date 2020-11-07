@@ -137,7 +137,7 @@ aiopvpc==2.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.shelly
-aioshelly==0.5.0
+aioshelly==0.5.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -155,7 +155,7 @@ airly==1.0.0
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.52
+androidtv[async]==0.0.54
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -295,6 +295,9 @@ enocean==0.50
 # homeassistant.components.season
 ephem==3.7.7.0
 
+# homeassistant.components.epson
+epson-projector==0.2.3
+
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
 
@@ -352,7 +355,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.9
+google-nest-sdm==0.1.12
 
 # homeassistant.components.gree
 greeclimate==0.9.5
@@ -613,7 +616,7 @@ pyMetno==0.8.1
 pyRFXtrx==0.26
 
 # homeassistant.components.tibber
-pyTibber==0.15.7
+pyTibber==0.16.0
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -920,7 +923,7 @@ pyzerproc==0.2.5
 rachiopy==1.0.3
 
 # homeassistant.components.rainmachine
-regenmaschine==2.1.0
+regenmaschine==3.0.0
 
 # homeassistant.components.python_script
 restrictedpython==5.0

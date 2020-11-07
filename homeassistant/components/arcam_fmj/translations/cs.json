@@ -9,7 +9,7 @@
         "flow_title": "Arcam FMJ na {host}",
         "step": {
             "confirm": {
-                "description": "Chcete p\u0159idat Arcam FMJ na \"{host}\" do Home Assistant?"
+                "description": "Chcete p\u0159idat Arcam FMJ na `{host}` do Home Assistant?"
             },
             "user": {
                 "data": {

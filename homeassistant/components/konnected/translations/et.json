@@ -14,6 +14,9 @@
                 "description": "",
                 "title": "Konnected seade on valmis"
             },
+            "import_confirm": {
+                "title": "Konnektedi seadme import"
+            },
             "user": {
                 "data": {
                     "host": "IP aadress",
@@ -81,6 +84,7 @@
                 "data": {
                     "api_host": "Alista API hosti URL (valikuline)",
                     "blink": "Vilguts paneeli LEDi oleku muudatuse saatmisel",
+                    "discovery": "V\u00f5rgus esitatud tuvastusp\u00e4ringutele vastamine",
                     "override_api_host": "Alista Home Assistanti API hostipaneeli vaikimisi URL"
                 },
                 "description": "Vali oma paneeli jaoks soovitud k\u00e4itumine",

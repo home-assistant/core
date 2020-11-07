@@ -6,7 +6,8 @@
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
             "connection_error": "\u00dchendamine nurjus",
-            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
+            "timeout": "Tibberiga \u00fchenduse loomise ajal\u00f5pp"
         },
         "step": {
             "user": {

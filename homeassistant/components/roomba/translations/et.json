@@ -6,8 +6,21 @@
         "step": {
             "user": {
                 "data": {
+                    "blid": "",
+                    "continuous": "Pidev",
+                    "delay": "Viivitus",
                     "host": "",
                     "password": "Salas\u00f5na"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Pidev",
+                    "delay": "Viivitus"
                 }
             }
         }

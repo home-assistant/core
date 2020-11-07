@@ -17,6 +17,7 @@
             },
             "user": {
                 "data": {
+                    "scan_interval": "Update-interval (seconden, minimaal 30)",
                     "usn": "Apparaat"
                 }
             }

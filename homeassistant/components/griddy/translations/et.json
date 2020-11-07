@@ -6,6 +6,11 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "title": "Seadista oma Griddy Load Zone"
+            }
         }
     }
 }

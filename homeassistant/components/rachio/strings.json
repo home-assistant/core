@@ -22,7 +22,7 @@
     "step": {
       "init": {
         "data": {
-          "manual_run_mins": "For how long, in minutes, to turn on a station when the switch is enabled."
+          "manual_run_mins": "Duration in minutes to run when activating a zone switch"
         }
       }
     }

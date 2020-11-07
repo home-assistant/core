@@ -14,7 +14,8 @@
                 "data": {
                     "pin": "PIN kood"
                 },
-                "description": "Sisesta teleris kuvatud PIN kood"
+                "description": "Sisesta teleris kuvatud PIN kood",
+                "title": "Sidumine"
             },
             "user": {
                 "data": {

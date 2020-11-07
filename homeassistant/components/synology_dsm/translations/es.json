@@ -25,7 +25,8 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario"
+                    "username": "Usuario",
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "description": "\u00bfQuieres configurar {name} ({host})?",
                 "title": "Synology DSM"
@@ -36,7 +37,8 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario"
+                    "username": "Usuario",
+                    "verify_ssl": "Verificar certificado SSL"
                 },
                 "title": "Synology DSM"
             }
