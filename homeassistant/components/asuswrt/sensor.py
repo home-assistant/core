@@ -1,5 +1,6 @@
 """Asuswrt status sensors."""
 import logging
+from numbers import Number
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,12 +31,14 @@ SENSOR_NAME = "name"
 SENSOR_UNIT = "unit"
 SENSOR_FACTOR = "factor"
 
+UNIT_DEVICES = "Devices"
+
 CONNECTION_SENSORS = {
     SENSOR_CONNECTED_DEVICE: {
         SENSOR_NAME: "connected devices",
-        SENSOR_UNIT: None,
+        SENSOR_UNIT: UNIT_DEVICES,
         SENSOR_FACTOR: 0,
-        SENSOR_ICON: None,
+        SENSOR_ICON: "mdi:router-network",
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_RX_RATES: {
@@ -56,14 +59,14 @@ CONNECTION_SENSORS = {
         SENSOR_NAME: "download",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
-        SENSOR_ICON: "mdi:download-network",
+        SENSOR_ICON: "mdi:download",
         SENSOR_DEVICE_CLASS: None,
     },
     SENSOR_TX_BYTES: {
         SENSOR_NAME: "upload",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
-        SENSOR_ICON: "mdi:upload-network",
+        SENSOR_ICON: "mdi:upload",
         SENSOR_DEVICE_CLASS: None,
     },
 }
@@ -125,7 +128,7 @@ class AsusWrtSensor(Entity):
     def async_update_state(self) -> None:
         """Update the AsusWrt sensor."""
         state = self._router.sensors[self._sensor_type]
-        if self._factor:
+        if self._factor and isinstance(state, Number):
             self._state = round(state / self._factor, 2)
         else:
             self._state = state
