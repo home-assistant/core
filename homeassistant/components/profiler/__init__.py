@@ -25,11 +25,21 @@ SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
 
+SERVICES = (
+    SERVICE_START,
+    SERVICE_MEMORY,
+    SERVICE_START_LOG_OBJECTS,
+    SERVICE_STOP_LOG_OBJECTS,
+    SERVICE_DUMP_LOG_OBJECTS,
+)
+
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_SECONDS = "seconds"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TYPE = "type"
+
+LOG_INTERVAL_SUB = "log_interval_subscription"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Profiler from a config entry."""
 
     lock = asyncio.Lock()
-    log_interval_sub = None
+    domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall):
         async with lock:
@@ -54,9 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             await _async_generate_memory_profile(hass, call)
 
     async def _async_start_log_objects(call: ServiceCall):
-        nonlocal log_interval_sub
-        if log_interval_sub is not None:
-            log_interval_sub()
+        if LOG_INTERVAL_SUB in domain_data:
+            domain_data[LOG_INTERVAL_SUB]()
 
         hass.components.persistent_notification.async_create(
             "Object growth logging has started. Review the log for to track the growth of new objects.",
@@ -64,18 +73,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             notification_id="profile_object_logging",
         )
         await hass.async_add_executor_job(_log_objects)
-        log_interval_sub = async_track_time_interval(
+        domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
             hass, _log_objects, call.data[CONF_SCAN_INTERVAL]
         )
 
     async def _async_stop_log_objects(call: ServiceCall):
-        nonlocal log_interval_sub
-        if log_interval_sub is None:
+        if LOG_INTERVAL_SUB not in domain_data:
             return
 
         hass.components.persistent_notification.async_dismiss("profile_object_logging")
-        log_interval_sub()
-        log_interval_sub = None
+        domain_data[LOG_INTERVAL_SUB]()
+        domain_data.pop(LOG_INTERVAL_SUB)
 
     def _dump_log_objects(call: ServiceCall):
         _LOGGER.critical(
@@ -139,7 +147,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_START)
+    for service in SERVICES:
+        hass.services.async_remove(domain=DOMAIN, service=service)
+    if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
+        hass.data[DOMAIN][LOG_INTERVAL_SUB]()
+    hass.data.pop(DOMAIN)
     return True
 
 
