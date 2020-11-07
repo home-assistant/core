@@ -8,6 +8,7 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -67,11 +68,11 @@ def _get_with_state():
     return device
 
 
-def _get_purecool_with_filter_state():
+def _get_purecool_device():
     """Return a valid device with filters life state values."""
     device = mock.Mock(spec=DysonPureCool)
     load_mock_device(device)
-    device.name = "PureCool_with_filter_state"
+    device.name = "PureCool"
     device.state.carbon_filter_state = "0096"
     device.state.hepa_filter_state = "0056"
     device.environmental_state.dust = 5
@@ -82,11 +83,11 @@ def _get_purecool_with_filter_state():
     return device
 
 
-def _get_purecool_humidify_with_filter_state():
+def _get_purecool_humidify_device():
     """Return a valid device with filters life state values."""
     device = mock.Mock(spec=DysonPureCool)
     load_mock_device(device)
-    device.name = "PureCool_Humidify_with_filter_state"
+    device.name = "PureCool_Humidify"
     device.state.carbon_filter_state = "INV"
     device.state.hepa_filter_state = "0075"
     device.environmental_state.dust = 5
@@ -131,38 +132,18 @@ class DysonTest(unittest.TestCase):
         """Test setup component with devices."""
 
         def _add_device(devices):
-            assert len(devices) == 12
+            assert len(devices) == 5
             assert devices[0].name == "Device_name Filter Life"
             assert devices[1].name == "Device_name Dust"
             assert devices[2].name == "Device_name Humidity"
             assert devices[3].name == "Device_name Temperature"
             assert devices[4].name == "Device_name AQI"
-            assert devices[5].name == "PureCool_with_filter_state Temperature"
-            assert devices[6].name == "PureCool_with_filter_state Humidity"
-            assert (
-                devices[7].name
-                == "PureCool_with_filter_state HEPA Filter Remaining Life"
-            )
-            assert (
-                devices[8].name
-                == "PureCool_with_filter_state Carbon Filter Remaining Life"
-            )
-            assert devices[9].name == "PureCool_Humidify_with_filter_state Temperature"
-            assert devices[10].name == "PureCool_Humidify_with_filter_state Humidity"
-            assert (
-                devices[11].name
-                == "PureCool_Humidify_with_filter_state Combi Filter Remaining Life"
-            )
 
         device_fan = _get_device_without_state()
         device_non_fan = _get_with_state()
-        device_purecool = _get_purecool_with_filter_state()
-        device_purecool_humidify = _get_purecool_humidify_with_filter_state()
         self.hass.data[dyson.DYSON_DEVICES] = [
             device_fan,
             device_non_fan,
-            device_purecool,
-            device_purecool_humidify,
         ]
         dyson.setup_platform(self.hass, None, _add_device, mock.MagicMock())
 
@@ -187,83 +168,6 @@ class DysonTest(unittest.TestCase):
         assert sensor.state == 100
         assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_hepa_filter_state_sensor(self):
-        """Test filter life sensor with no value."""
-        sensor = dyson.DysonHepaFilterLifeSensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.name == "Device_name HEPA Filter Remaining Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_hepa_filter_state_sensor_with_values(self):
-        """Test filter sensor with values."""
-        sensor = dyson.DysonHepaFilterLifeSensor(_get_purecool_with_filter_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 56
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.name == "PureCool_with_filter_state HEPA Filter Remaining Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_carbon_filter_state_sensor(self):
-        """Test filter life sensor with no value."""
-        sensor = dyson.DysonCarbonFilterLifeSensor(_get_device_without_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.name == "Device_name Carbon Filter Remaining Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_carbon_filter_state_sensor_with_values(self):
-        """Test filter sensor with values."""
-        sensor = dyson.DysonCarbonFilterLifeSensor(_get_purecool_with_filter_state())
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 96
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.name == "PureCool_with_filter_state Carbon Filter Remaining Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_combi_filter_state_sensor(self):
-        """Test filter life sensor with no value."""
-        sensor = dyson.DysonHepaFilterLifeSensor(_get_device_without_state(), "Combi")
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state is None
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert sensor.name == "Device_name Combi Filter Remaining Life"
-        assert sensor.entity_id == "sensor.dyson_1"
-        sensor.on_message("message")
-
-    def test_dyson_combi_filter_state_sensor_with_values(self):
-        """Test filter sensor with values."""
-        sensor = dyson.DysonHepaFilterLifeSensor(
-            _get_purecool_humidify_with_filter_state(), "Combi"
-        )
-        sensor.hass = self.hass
-        sensor.entity_id = "sensor.dyson_1"
-        assert not sensor.should_poll
-        assert sensor.state == 75
-        assert sensor.unit_of_measurement == PERCENTAGE
-        assert (
-            sensor.name
-            == "PureCool_Humidify_with_filter_state Combi Filter Remaining Life"
-        )
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")
 
@@ -403,3 +307,49 @@ async def test_purecool_component_setup_only_once(devices, login, hass):
     await hass.async_block_till_done()
 
     assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 4
+
+
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_purecool_device()],
+)
+async def test_dyson_purecool_filter_state_sensor(devices, login, hass):
+    """Test filter sensor with values."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.purecool_hepa_filter_remaining_life")
+    assert state is not None
+    assert state.state == "56"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool HEPA Filter Remaining Life"
+
+    state = hass.states.get("sensor.purecool_carbon_filter_remaining_life")
+    assert state is not None
+    assert state.state == "96"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool Carbon Filter Remaining Life"
+
+
+@patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_purecool_humidify_device()],
+)
+async def test_dyson_purecool_humidify_filter_state_sensor(devices, login, hass):
+    """Test filter sensor with values."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.purecool_humidify_combi_filter_remaining_life")
+    assert state is not None
+    assert state.state == "75"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.name == "PureCool_Humidify Combi Filter Remaining Life"
