@@ -8,3 +8,5 @@ STEP_IMPORT_FAILED = "import_failed"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_ALREADY_CONFIGURED = "already_configured"
+
+SPEED_MEDIUM_HIGH = "medium_high"
