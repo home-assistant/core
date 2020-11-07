@@ -91,15 +91,24 @@ async def build_item_response(entity, payload):
 
         children = []
         for item in result["items"]:
+            item_id = str(item["id"])
+            item_thumbnail = None
+
+            artwork_track_id = item.get("artwork_track_id")
+            if artwork_track_id:
+                item_thumbnail = entity.get_browse_image_url(
+                    item_type, item_id, artwork_track_id
+                )
+
             children.append(
                 BrowseMedia(
                     title=item["title"],
                     media_class=child_media_class["item"],
-                    media_content_id=str(item["id"]),
+                    media_content_id=item_id,
                     media_content_type=item_type,
                     can_play=True,
                     can_expand=child_media_class["children"] is not None,
-                    thumbnail=entity.get_browse_image_url(item_type, str(item["id"]), item.get("artwork_track_id")),
+                    thumbnail=item_thumbnail,
                 )
             )
 
