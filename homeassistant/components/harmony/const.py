@@ -12,6 +12,3 @@ ATTR_LAST_ACTIVITY = "last_activity"
 ATTR_CURRENT_ACTIVITY = "current_activity"
 ATTR_ACTIVITY_STARTING = "activity_starting"
 PREVIOUS_ACTIVE_ACTIVITY = "Previous Active Activity"
-
-SIGNAL_UPDATE_ACTIVITY = DOMAIN + "_activity_update"
-CONNECTION_UPDATE_ACTIVITY = DOMAIN + "_connection_update"
