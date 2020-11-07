@@ -1,12 +1,12 @@
 """Support for controlling a Raspberry Pi light."""
 
 import time
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
 from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from . import DOMAIN, PLATFORMS
 
