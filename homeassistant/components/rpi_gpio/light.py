@@ -4,13 +4,11 @@ import time
 
 import voluptuous as vol
 
-from RPi import GPIO  # pylint: disable=import-error
 from homeassistant.components import rpi_gpio
 from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
-import uuid
 import logging
 from . import DOMAIN, PLATFORMS
 
@@ -27,12 +25,12 @@ CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS = "light_button_double_check_time_mil
 DEFAULT_LIGHT_BUTTON_PULL_MODE = "UP"
 DEFAULT_INVERT_LIGHT_BUTTON = False
 DEFAULT_INVERT_RELAY = False
-DEFAULT_LIGHT_BUTTON_BOUNCETIME_MILLIS=100
-DEFAULT_LIGHT_DOUBLE_CHECK_TIME_MILLIS=25
+DEFAULT_LIGHT_BUTTON_BOUNCETIME_MILLIS = 150
+DEFAULT_LIGHT_DOUBLE_CHECK_TIME_MILLIS = 25
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        CONF_LIGHT:[
+        CONF_LIGHT: [
             vol.Schema(
                 {
                     vol.Required(CONF_NAME): cv.string,
@@ -41,10 +39,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 }
             )
         ],
-        vol.Optional(CONF_LIGHT_BUTTON_PULL_MODE, default=DEFAULT_LIGHT_BUTTON_PULL_MODE): cv.string,
-        vol.Optional(CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS, default=DEFAULT_LIGHT_BUTTON_BOUNCETIME_MILLIS): cv.positive_int,
-        vol.Optional(CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS, default=DEFAULT_LIGHT_DOUBLE_CHECK_TIME_MILLIS): cv.positive_int,
-        vol.Optional(CONF_INVERT_LIGHT_BUTTON, default=DEFAULT_INVERT_LIGHT_BUTTON): cv.boolean,
+        vol.Optional(
+            CONF_LIGHT_BUTTON_PULL_MODE, default=DEFAULT_LIGHT_BUTTON_PULL_MODE
+        ): cv.string,
+        vol.Optional(
+            CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS,
+            default=DEFAULT_LIGHT_BUTTON_BOUNCETIME_MILLIS,
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS,
+            default=DEFAULT_LIGHT_DOUBLE_CHECK_TIME_MILLIS,
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_INVERT_LIGHT_BUTTON, default=DEFAULT_INVERT_LIGHT_BUTTON
+        ): cv.boolean,
         vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
     }
 )
@@ -59,7 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     invert_light_button = config.get(CONF_INVERT_LIGHT_BUTTON)
     invert_relay = config.get(CONF_INVERT_RELAY)
     light_button_bouncetime_millis = config.get(CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS)
-    light_button_double_check_time_millis = config.get(CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS)
+    light_button_double_check_time_millis = config.get(
+        CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS
+    )
     lights = []
     lights_conf = config.get(CONF_LIGHT)
 
@@ -101,8 +111,10 @@ class RPiGPIOLight(LightEntity):
         self._relay_pin = relay_pin
         self._light_button_pin = light_button_pin
         self._light_button_pull_mode = light_button_pull_mode
-        self._light_button_bouncetime_millis=light_button_bouncetime_millis
-        self._light_button_double_check_time_millis = light_button_double_check_time_millis
+        self._light_button_bouncetime_millis = light_button_bouncetime_millis
+        self._light_button_double_check_time_millis = (
+            light_button_double_check_time_millis
+        )
         self._invert_light_button = invert_light_button
         self._invert_relay = invert_relay
         rpi_gpio.setup_output(self._relay_pin)
@@ -111,16 +123,28 @@ class RPiGPIOLight(LightEntity):
 
         def toggle_light_switch(port):
             time.sleep(self._light_button_double_check_time_millis / 2000)
-            if rpi_gpio.read_input(self._light_button_pin)!=self._invert_light_button:
-                time.sleep(self._light_button_double_check_time_millis/2000) #double check to avoid electrical disturbance
-                if rpi_gpio.read_input(self._light_button_pin) != self._invert_light_button:
+            if rpi_gpio.read_input(self._light_button_pin) != self._invert_light_button:
+                time.sleep(
+                    self._light_button_double_check_time_millis / 2000
+                )  # double check to avoid electrical disturbance
+                if (
+                    rpi_gpio.read_input(self._light_button_pin)
+                    != self._invert_light_button
+                ):
                     self.toggle()
 
-
-        if(self._invert_light_button):
-            rpi_gpio.falling_edge_detect(self._light_button_pin, toggle_light_switch, self._light_button_bouncetime_millis)
+        if self._invert_light_button:
+            rpi_gpio.falling_edge_detect(
+                self._light_button_pin,
+                toggle_light_switch,
+                self._light_button_bouncetime_millis,
+            )
         else:
-            rpi_gpio.rising_edge_detect(self._light_button_pin, toggle_light_switch, self._light_button_bouncetime_millis)
+            rpi_gpio.rising_edge_detect(
+                self._light_button_pin,
+                toggle_light_switch,
+                self._light_button_bouncetime_millis,
+            )
 
     @property
     def name(self):
@@ -137,7 +161,7 @@ class RPiGPIOLight(LightEntity):
         rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
         self._state = True
 
-    def turn_off(self,  **kwargs):
+    def turn_off(self, **kwargs):
         """turn_off the light."""
         rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
         self._state = False
