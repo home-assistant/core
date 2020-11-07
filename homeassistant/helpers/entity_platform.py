@@ -204,13 +204,7 @@ class EntityPlatform:
                 self._tasks.clear()
 
                 if pending:
-                    logger.warning(
-                        "_async_setup_platform Waiting for %s: %s", full_name, pending
-                    )
                     await asyncio.gather(*pending)
-                    logger.warning(
-                        "_async_setup_platform Finished for %s: %s", full_name, pending
-                    )
 
             hass.config.components.add(full_name)
             self._setup_complete = True
@@ -273,6 +267,11 @@ class EntityPlatform:
 
         if not self._setup_complete:
             self._tasks.append(task)
+        else:
+            self.logger.warning(
+                "_async_schedule_add_entities called after setup was completed for %s",
+                self.full_name,
+            )
 
     def add_entities(
         self, new_entities: Iterable["Entity"], update_before_add: bool = False
