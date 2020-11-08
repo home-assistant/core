@@ -221,8 +221,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
         if default_preset in self._presets:
             self._default_preset = default_preset
-        else:
-            self._default_preset = list(self._presets.keys())[0]
+
         self._current_preset = self._default_preset
         self._target_temp = target_temp or self._presets[self._current_preset]
 
@@ -279,10 +278,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
             if old_state.attributes.get(ATTR_PRESET_MODE) is None:
-                if self._default_preset is None:
-                    self._current_preset = PRESET_NONE
-                else:
-                    self._current_preset = self._default_preset
+                self._current_preset = self._default_preset
                 _LOGGER.warning(
                     "Undefined preset, falling back to %s",
                     self._current_preset,
