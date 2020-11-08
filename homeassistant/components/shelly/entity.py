@@ -1,17 +1,16 @@
 """Shelly entity helper."""
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Any, Callable, Optional, Union
 
 import aioshelly
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
+from .utils import get_rest_value_from_path
 
 
 def temperature_unit(block_info: dict) -> str:
@@ -59,25 +58,6 @@ def shelly_naming(self, block, entity_type: str):
         return f"{entity_name} {self.description.name}"
 
     raise ValueError
-
-
-def shelly_rest_parser(self, path: str):
-    """Parser for REST path from device status."""
-
-    if "/" not in path:
-        _attribute_value = self.wrapper.device.status[path]
-    else:
-        _attribute_value = self.wrapper.device.status[path.split("/")[0]][
-            path.split("/")[1]
-        ]
-    if self.description.device_class == DEVICE_CLASS_TIMESTAMP:
-        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
-        _attribute_value = last_boot.replace(microsecond=0).isoformat()
-
-    if "new_version" in path:
-        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
-
-    return _attribute_value
 
 
 async def async_setup_entry_attribute_entities(
@@ -331,7 +311,9 @@ class ShellyRestAttributeEntity(entity.Entity):
     @property
     def attribute_value(self):
         """Attribute."""
-        return shelly_rest_parser(self, self.path)
+        return get_rest_value_from_path(
+            self.wrapper, self.description.device_class, self.path
+        )
 
     @property
     def unit_of_measurement(self):
@@ -361,7 +343,9 @@ class ShellyRestAttributeEntity(entity.Entity):
             return None
 
         _description = self._attributes.get("description")
-        _attribute_value = shelly_rest_parser(self, self._attributes.get("path"))
+        _attribute_value = get_rest_value_from_path(
+            self.wrapper, self.description.device_class, self._attributes.get("path")
+        )
 
         return {_description: _attribute_value}
 
