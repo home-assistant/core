@@ -1601,7 +1601,4 @@ async def test_state_change_events_match_state_time(hass):
     await hass.async_block_till_done()
     state = hass.states.get("light.bedroom")
 
-    import pprint
-
-    pprint.pprint(events)
     assert state.last_updated == events[0].time_fired
