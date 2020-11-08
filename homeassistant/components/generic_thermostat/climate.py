@@ -214,7 +214,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             warning = '"away_temp" is deprecated. Please migrate to the new "presets" configuration.'
 
             if PRESET_AWAY in self._presets:
-                warning = 'Using "away_temp" in combination with the away preset wont work. Preset value will be overridden. Please remove "away_temp" from the thermostat configuration.'
+                warning = 'Using "away_temp" in combination with the away preset won\'t work. Preset value will be overridden. Please remove "away_temp" from the thermostat configuration.'
 
             _LOGGER.warning(warning)
             self._presets[PRESET_AWAY] = away_temp
@@ -404,7 +404,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             return
         # If you are setting a custom temp, you are going out preset. Preset, as the name suggest, need to be read only.
         # For example if you using PRESET_AWAY (with 16°) but you want temporary set temp to 18°
-        # if the thermostat keep the preset PRESET_AWAY, you cant set PRESET_AWAY directly to restore 16°
+        # if the thermostat keep the preset PRESET_AWAY, you can't set PRESET_AWAY directly to restore 16°
         self._presets[PRESET_NONE] = temperature
         self._current_preset = PRESET_NONE
         self._target_temp = self._presets[PRESET_NONE]
