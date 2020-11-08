@@ -1,6 +1,8 @@
 """The tests for the Yamaha Media player platform."""
 import pytest
 
+import rxv
+
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
 from homeassistant.components.yamaha.const import DOMAIN
@@ -10,12 +12,34 @@ from homeassistant.setup import async_setup_component
 from tests.async_mock import MagicMock, PropertyMock, call, patch
 
 CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
+CONFIG_WITH_IGNORED_SOURCES = {
+    "media_player": {
+        "platform": "yamaha",
+        "host": "127.0.0.1",
+        "source_ignore": ["NET RADIO"],
+    }
+}
+CONFIG_WITH_RENAMED_SOURCES = {
+    "media_player": {
+        "platform": "yamaha",
+        "host": "127.0.0.1",
+        "source_names": {"AV1": "Karaoke"},
+    }
+}
 
 
 def _create_zone_mock(name, url):
-    zone = MagicMock()
+    zone = MagicMock(spec=rxv.RXV)
     zone.ctrl_url = url
     zone.zone = name
+
+    zone.inputs.return_value = {
+        "AV1": None,
+        "AV2": None,
+        "NET RADIO": "NET_RADIO",
+        "HDMI1": "Osdname:Test Device",
+    }
+
     return zone
 
 
@@ -165,3 +189,54 @@ async def test_select_scene(hass, device, main_zone, caplog):
     await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
 
     assert f"Scene '{missing_scene}' does not exist!" in caplog.text
+
+
+async def test_sources(hass, device):
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+    assert state is not None
+
+    main_zone = hass.data[mp.DOMAIN].get_entity(
+        "media_player.yamaha_receiver_main_zone"
+    )
+    assert main_zone
+
+    main_zone.update()
+    assert len(main_zone.source_list) == 4
+    assert main_zone.source_list == ["AV1", "AV2", "NET RADIO", "Test Device"]
+
+
+async def test_sources_ignored(hass, device):
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG_WITH_IGNORED_SOURCES)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+    assert state is not None
+
+    main_zone = hass.data[mp.DOMAIN].get_entity(
+        "media_player.yamaha_receiver_main_zone"
+    )
+    assert main_zone
+
+    main_zone.update()
+    assert len(main_zone.source_list) == 3
+    assert main_zone.source_list == ["AV1", "AV2", "Test Device"]
+
+
+async def test_sources_renamed(hass, device):
+    assert await async_setup_component(hass, mp.DOMAIN, CONFIG_WITH_RENAMED_SOURCES)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+    assert state is not None
+
+    main_zone = hass.data[mp.DOMAIN].get_entity(
+        "media_player.yamaha_receiver_main_zone"
+    )
+    assert main_zone
+
+    main_zone.update()
+    assert len(main_zone.source_list) == 4
+    assert main_zone.source_list == ["AV2", "Karaoke", "NET RADIO", "Test Device"]

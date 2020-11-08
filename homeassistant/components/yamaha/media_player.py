@@ -191,6 +191,7 @@ class YamahaDevice(MediaPlayerEntity):
 
     def update(self):
         """Get the latest details from the device."""
+        _LOGGER.info("Updating receiver: %s", self._name)
         try:
             self._play_status = self.receiver.play_status()
         except requests.exceptions.ConnectionError:
@@ -229,15 +230,35 @@ class YamahaDevice(MediaPlayerEntity):
 
     def build_source_list(self):
         """Build the source list."""
+
+        # First, expand the source aliases based on what is visible from the
+        # receiver.
+        _LOGGER.debug("available inputs: %r", self.receiver.inputs())
+        for source_name, source_param in self.receiver.inputs().items():
+            if source_name in self._source_ignore:
+                continue
+
+            # If the source is already aliased in the configuration, prefer
+            # that alias.
+            if source_name in self._source_names:
+                continue
+
+            # Names that start with "Osdname:" are reported via HDMI CEC, use
+            # those if they are present. Otherwise, ignore the internal name.
+            if source_param and source_param.startswith("Osdname:"):
+                alias = source_param[8:]
+            else:
+                alias = source_name
+
+            self._source_names[source_name] = alias
+
+        _LOGGER.debug("source name mappings: %r", self._source_names)
+
         self._reverse_mapping = {
             alias: source for source, alias in self._source_names.items()
         }
 
-        self._source_list = sorted(
-            self._source_names.get(source, source)
-            for source in self.receiver.inputs()
-            if source not in self._source_ignore
-        )
+        self._source_list = sorted(self._source_names.values())
 
     @property
     def name(self):
