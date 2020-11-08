@@ -23,7 +23,14 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from .const import (
+    DATA_CONFIG_ENTRY,
+    DOMAIN,
+    POLLING_TIMEOUT_MULTIPLIER,
+    SETUP_ENTRY_TIMEOUT_SEC,
+    SLEEP_PERIOD_MULTIPLIER,
+    UPDATE_PERIOD_MULTIPLIER,
+)
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coap_context = await get_coap_context(hass)
 
     try:
-        async with async_timeout.timeout(5):
+        async with async_timeout.timeout(SETUP_ENTRY_TIMEOUT_SEC):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 coap_context,
@@ -100,9 +107,13 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             if sleep_mode["unit"] == "h":
                 sleep_period *= 60  # hours to minutes
 
-            update_interval = 1.2 * sleep_period * 60  # minutes to seconds
+            update_interval = (
+                SLEEP_PERIOD_MULTIPLIER * sleep_period * 60
+            )  # minutes to seconds
         else:
-            update_interval = 2 * device.settings["coiot"]["update_period"]
+            update_interval = (
+                UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
+            )
 
         super().__init__(
             hass,
@@ -118,8 +129,12 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
+        _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
-            async with async_timeout.timeout(5):
+            async with async_timeout.timeout(
+                POLLING_TIMEOUT_MULTIPLIER
+                * self.device.settings["coiot"]["update_period"]
+            ):
                 return await self.device.update()
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
