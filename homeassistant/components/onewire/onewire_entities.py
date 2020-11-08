@@ -7,7 +7,7 @@ from pyownet import protocol
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 
-from .const import SENSOR_TYPES
+from .const import SENSOR_TYPE_COUNT, SENSOR_TYPE_SENSED, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,12 +86,12 @@ class OneWireProxy(OneWire):
         sensor_type: str,
         sensor_name: str,
         device_info: Dict[str, Any],
-        disable_startup: bool,
+        default_disabled: bool,
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""
         super().__init__(
-            name, device_file, sensor_type, sensor_name, device_info, disable_startup
+            name, device_file, sensor_type, sensor_name, device_info, default_disabled
         )
         self._owproxy = owproxy
 
@@ -107,8 +107,10 @@ class OneWireProxy(OneWire):
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
         else:
-            if "count" in self._unit_of_measurement:
+            if self._sensor_type == SENSOR_TYPE_COUNT:
                 value = int(self._value_raw)
+            elif self._sensor_type == SENSOR_TYPE_SENSED:
+                value = int(self._value_raw) == 1
             else:
                 value = round(self._value_raw, 1)
 
