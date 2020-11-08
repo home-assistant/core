@@ -303,8 +303,6 @@ async def test_purecool_component_setup_only_once(devices, login, hass):
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
     await hass.async_block_till_done()
-    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
-    await hass.async_block_till_done()
 
     assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 4
 
@@ -318,8 +316,6 @@ async def test_dyson_purecool_filter_state_sensor(devices, login, hass):
     """Test filter sensor with values."""
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
-    await hass.async_block_till_done()
-    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.purecool_hepa_filter_remaining_life")
@@ -344,8 +340,6 @@ async def test_dyson_purecool_humidify_filter_state_sensor(devices, login, hass)
     """Test filter sensor with values."""
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
-    await hass.async_block_till_done()
-    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.purecool_humidify_combi_filter_remaining_life")
