@@ -6,7 +6,6 @@
   "requirements": [
     "aioguardian==1.0.1"
   ],
-  "ssdp": [],
   "zeroconf": [
     "_api._udp.local."
   ],
