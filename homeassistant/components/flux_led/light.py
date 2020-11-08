@@ -48,6 +48,9 @@ MODE_WHITE = "w"
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
 
+# (Maximum) time in seconds for the controller to transition between two states
+STATE_TRANSITION_TIME = 1
+
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
 EFFECT_GREEN_FADE = "green_fade"
@@ -275,6 +278,17 @@ class FluxLight(LightEntity):
         return None
 
     def turn_on(self, **kwargs):
+        """Turn on the entity and schedule state update."""
+        self._turn_on(**kwargs)
+
+        # schedule state update for after transition
+        self.hass.loop.call_later(
+            STATE_TRANSITION_TIME,
+            self.hass.async_add_job,
+            self.async_update_ha_state(True),
+        )
+
+    def _turn_on(self, **kwargs):
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
