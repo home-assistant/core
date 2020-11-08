@@ -39,8 +39,9 @@ class BroadlinkDiscovery:
 
     async def async_setup(self):
         """Set up device discovery."""
-        self._unsubscribe = self.coordinator.async_add_listener(self.update)
-        await self.coordinator.async_refresh()
+        if self._unsubscribe is None:
+            self._unsubscribe = self.coordinator.async_add_listener(self.update)
+            await self.coordinator.async_refresh()
 
     async def async_unload(self):
         """Unload device discovery."""
