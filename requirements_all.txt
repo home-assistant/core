@@ -543,6 +543,9 @@ elkm1-lib==0.8.7
 # homeassistant.components.mobile_app
 emoji==0.5.4
 
+# homeassistant.components.motion_blinds
+motionblinds==0.0.0
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
