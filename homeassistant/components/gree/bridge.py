@@ -25,7 +25,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
             self,
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{device.name}",
+            name=f"{DOMAIN}-{device.device_info.name}",
             update_interval=timedelta(seconds=60),
         )
         self._device = device

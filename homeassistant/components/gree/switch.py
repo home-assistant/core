@@ -1,5 +1,6 @@
 """Support for interface with a Gree climate systems."""
 import logging
+from typing import Optional
 
 from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
@@ -30,6 +31,7 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
         self._device = device
         self._name = device.device_info.name + " Panel Light"
         self._mac = device.device_info.mac
+        self._icon = "mdi:lightbulb"
 
     @property
     def name(self) -> str:
@@ -40,6 +42,11 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
     def unique_id(self) -> str:
         """Return a unique id for the device."""
         return self._mac
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return the icon for the device."""
+        return self._icon
 
     @property
     def device_info(self):
