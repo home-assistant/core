@@ -298,7 +298,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
 
 class BroadlinkSP4Switch(BroadlinkSP1Switch):
-    """Representation of a Broadlink SP2 switch."""
+    """Representation of a Broadlink SP4 switch."""
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
