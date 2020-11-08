@@ -92,6 +92,7 @@ DATA_MQTT = "mqtt"
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
+CONF_CLEAN_SESSION = "clean_session"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
 CONF_CERTIFICATE = "certificate"
@@ -119,6 +120,7 @@ CONF_DEPRECATED_VIA_HUB = "via_hub"
 
 PROTOCOL_31 = "3.1"
 
+DEFAULT_CLEAN_SESSION = False
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
@@ -214,6 +216,9 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
+                    vol.Optional(
+                        CONF_CLEAN_SESSION, default=DEFAULT_CLEAN_SESSION
+                    ): cv.boolean,
                     vol.Optional(
                         CONF_WILL_MESSAGE, default=DEFAULT_WILL
                     ): MQTT_WILL_BIRTH_SCHEMA,
@@ -709,11 +714,19 @@ class MQTT:
         else:
             proto = mqtt.MQTTv311
 
+        clean_session = self.conf.get(CONF_CLEAN_SESSION)
+
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
             self._mqttc = mqtt.Client(protocol=proto)
+            if clean_session:
+                _LOGGER.warning(
+                    "Client ID is not provided, clean_session has to be ignored"
+                )
         else:
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
+            self._mqttc = mqtt.Client(
+                client_id, clean_session=clean_session, protocol=proto
+            )
 
         # Enable logging
         self._mqttc.enable_logger()
