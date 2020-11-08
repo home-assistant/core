@@ -1,4 +1,4 @@
-"""Support for 1-Wire environment binary sensors."""
+"""Support for 1-Wire environment switches."""
 import logging
 import os
 
