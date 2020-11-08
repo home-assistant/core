@@ -336,7 +336,7 @@ class Hyperion(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if not black."""
-        return self._client.is_on()
+        return bool(self._client.is_on())
 
     @property
     def icon(self) -> str:
@@ -353,7 +353,7 @@ class Hyperion(LightEntity):
         """Return the list of supported effects."""
         return (
             self._effect_list
-            + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            + list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
             + [KEY_EFFECT_SOLID]
         )
 
@@ -365,7 +365,7 @@ class Hyperion(LightEntity):
     @property
     def available(self) -> bool:
         """Return server availability."""
-        return self._client.has_loaded_state
+        return bool(self._client.has_loaded_state)
 
     @property
     def unique_id(self) -> str:

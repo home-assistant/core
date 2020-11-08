@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Any, Dict, Optional, Type
 
 from asynctest import CoroutineMock, Mock, patch
-from hyperion import client, const
+from hyperion import const
 
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -116,14 +116,14 @@ def add_test_config_entry(hass: HomeAssistantType) -> ConfigEntry:
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType, hyperion_client: Optional[client.HyperionClient] = None
+    hass: HomeAssistantType, hyperion_client: Optional[Mock] = None
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
     config_entry = add_test_config_entry(hass)
 
     hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init
-    hyperion_client.instances = [TEST_INSTANCE_1]  # type: ignore[misc]
+    hyperion_client.instances = [TEST_INSTANCE_1]
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient",
