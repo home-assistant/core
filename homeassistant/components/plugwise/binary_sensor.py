@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if device_properties["class"] == "heater_central":
             data = api.get_device_data(dev_id)
-            for binary_sensor, dummy in BINARY_SENSOR_MAP.items():
+            for binary_sensor in BINARY_SENSOR_MAP:
                 if binary_sensor not in data:
                     continue
 
