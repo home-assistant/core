@@ -8,6 +8,7 @@ from homeassistant.components import plugwise
 from homeassistant.components.plugwise import DOMAIN
 from homeassistant.components.plugwise.gateway import SERVICE_DELETE
 from homeassistant.config_entries import (
+    ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
