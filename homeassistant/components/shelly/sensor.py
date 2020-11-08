@@ -16,7 +16,6 @@ from .entity import (
     ShellyBlockAttributeEntity,
     async_setup_entry_attribute_entities,
 )
-
 from .utils import temperature_unit
 
 SENSORS = {
