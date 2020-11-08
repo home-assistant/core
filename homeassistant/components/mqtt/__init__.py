@@ -93,6 +93,7 @@ DATA_MQTT = "mqtt"
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
+CONF_CLEAN_SESSION = "clean_session"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_KEEPALIVE = "keepalive"
 CONF_CERTIFICATE = "certificate"
@@ -120,6 +121,7 @@ CONF_DEPRECATED_VIA_HUB = "via_hub"
 
 PROTOCOL_31 = "3.1"
 
+DEFAULT_CLEAN_SESSION = False
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
@@ -215,6 +217,9 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.All(
                         cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])
                     ),
+                    vol.Optional(
+                        CONF_CLEAN_SESSION, default=DEFAULT_CLEAN_SESSION
+                    ): cv.boolean,
                     vol.Optional(
                         CONF_WILL_MESSAGE, default=DEFAULT_WILL
                     ): MQTT_WILL_BIRTH_SCHEMA,
@@ -710,12 +715,16 @@ class MQTT:
         else:
             proto = mqtt.MQTTv311
 
+        clean_session = self.conf.get(CONF_CLEAN_SESSION)
+
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
-        self._mqttc = mqtt.Client(client_id, protocol=proto)
+        self._mqttc = mqtt.Client(
+            client_id, clean_session=clean_session, protocol=proto
+        )
 
         # Enable logging
         self._mqttc.enable_logger()
