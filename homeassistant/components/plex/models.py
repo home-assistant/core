@@ -59,10 +59,12 @@ class PlexSession:
         """Update attributes from a media object."""
         self.media_content_id = media.ratingKey
         self.media_content_rating = getattr(media, "contentRating", None)
-        self.media_duration = int(media.duration / 1000)
         self.media_image_url = self.get_media_image_url(media)
         self.media_summary = media.summary
         self.media_title = media.title
+
+        if media.duration:
+            self.media_duration = int(media.duration / 1000)
 
         if media.librarySectionID == LIVE_TV_SECTION:
             self.media_library_title = "Live TV"
