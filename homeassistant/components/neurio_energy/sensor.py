@@ -82,7 +82,6 @@ class NeurioData:
         neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
         self.neurio_client = neurio.Client(token_provider=neurio_tp)
 
-
     @property
     def daily_usage(self):
         """Return latest daily usage value."""
