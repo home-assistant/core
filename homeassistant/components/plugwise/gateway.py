@@ -33,6 +33,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TIMEOUT,
+    DEFAULT_USERNAME,
     DOMAIN,
     SENSOR_PLATFORMS,
     UNDO_UPDATE_LISTENER,
@@ -49,7 +50,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = Smile(
         host=entry.data[CONF_HOST],
-        username=entry.data[CONF_USERNAME],
+        username=entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
         password=entry.data[CONF_PASSWORD],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         timeout=30,

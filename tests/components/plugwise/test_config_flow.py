@@ -9,7 +9,14 @@ from homeassistant.components.plugwise.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 
 from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
@@ -68,17 +75,17 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "password": TEST_PASSWORD},
+            {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
         )
 
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "host": TEST_HOST,
-        "password": TEST_PASSWORD,
-        "port": DEFAULT_PORT,
-        "username": TEST_USERNAME,
+        CONF_HOST: TEST_HOST,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_USERNAME: TEST_USERNAME,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -108,17 +115,17 @@ async def test_zeroconf_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"password": TEST_PASSWORD},
+            {CONF_PASSWORD: TEST_PASSWORD},
         )
 
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "host": TEST_HOST,
-        "password": TEST_PASSWORD,
-        "port": DEFAULT_PORT,
-        "username": TEST_USERNAME,
+        CONF_HOST: TEST_HOST,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_USERNAME: TEST_USERNAME,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -145,17 +152,21 @@ async def test_form_username(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": TEST_HOST, "password": TEST_PASSWORD, "username": TEST_USERNAME2},
+            {
+                CONF_HOST: TEST_HOST,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_USERNAME: TEST_USERNAME2,
+            },
         )
 
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["data"] == {
-        "host": TEST_HOST,
-        "password": TEST_PASSWORD,
-        "port": DEFAULT_PORT,
-        "username": TEST_USERNAME2,
+        CONF_HOST: TEST_HOST,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_PORT: DEFAULT_PORT,
+        CONF_USERNAME: TEST_USERNAME2,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -181,7 +192,7 @@ async def test_form_username(hass):
     ) as mock_setup_entry:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
-            {"password": TEST_PASSWORD},
+            {CONF_PASSWORD: TEST_PASSWORD},
         )
 
     await hass.async_block_till_done()
@@ -201,7 +212,7 @@ async def test_form_invalid_auth(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": TEST_HOST, "password": TEST_PASSWORD},
+        {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -219,7 +230,7 @@ async def test_form_cannot_connect(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": TEST_HOST, "password": TEST_PASSWORD},
+        {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -237,7 +248,7 @@ async def test_form_cannot_connect_port(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": TEST_HOST, "password": TEST_PASSWORD, "port": TEST_PORT},
+        {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD, CONF_PORT: TEST_PORT},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -255,7 +266,7 @@ async def test_form_other_problem(hass, mock_smile):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"host": TEST_HOST, "password": TEST_PASSWORD},
+        {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
