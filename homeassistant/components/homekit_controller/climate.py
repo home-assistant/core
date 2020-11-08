@@ -408,17 +408,33 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum target temp."""
-        if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
-            char = self.service[CharacteristicsTypes.TEMPERATURE_TARGET]
-            return char.minValue
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}:
+            min_temp = self.service[
+                CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD
+            ].minValue
+            if min_temp is not None:
+                return min_temp
+        if MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
+            min_temp = self.service[CharacteristicsTypes.TEMPERATURE_TARGET].minValue
+            if min_temp is not None:
+                return min_temp
         return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum target temp."""
-        if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
-            char = self.service[CharacteristicsTypes.TEMPERATURE_TARGET]
-            return char.maxValue
+        value = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT_COOL}:
+            max_temp = self.service[
+                CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+            ].maxValue
+            if max_temp is not None:
+                return max_temp
+        if MODE_HOMEKIT_TO_HASS.get(value) in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
+            max_temp = self.service[CharacteristicsTypes.TEMPERATURE_TARGET].maxValue
+            if max_temp is not None:
+                return max_temp
         return super().max_temp
 
     @property
@@ -479,10 +495,9 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
         if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
             features |= SUPPORT_TARGET_TEMPERATURE
 
-        if self.service.has(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD):
-            features |= SUPPORT_TARGET_TEMPERATURE_RANGE
-
-        if self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
+        if self.service.has(
+            CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD
+        ) and self.service.has(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD):
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if self.service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET):

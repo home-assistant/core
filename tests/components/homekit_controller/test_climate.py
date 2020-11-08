@@ -51,13 +51,13 @@ def create_thermostat_service(accessory):
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
-    char.minValue = 7
-    char.maxValue = 35
+    char.minValue = 15
+    char.maxValue = 40
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD)
-    char.minValue = 7
-    char.maxValue = 35
+    char.minValue = 4
+    char.maxValue = 30
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_TARGET)
@@ -142,6 +142,41 @@ async def test_climate_change_thermostat_state(hass, utcnow):
         blocking=True,
     )
     assert helper.characteristics[HEATING_COOLING_TARGET].value == 0
+
+
+async def test_climate_check_min_max_values_per_mode(hass, utcnow):
+    """Test that we we get the appropriate min/max values for each mode."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 4
+    assert climate_state.attributes["max_temp"] == 40
 
 
 async def test_climate_change_thermostat_temperature(hass, utcnow):
