@@ -10,7 +10,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -43,6 +49,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = Smile(
         host=entry.data[CONF_HOST],
+        username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         timeout=30,
