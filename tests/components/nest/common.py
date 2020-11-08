@@ -22,14 +22,14 @@ CONFIG = {
     },
 }
 
+CONFIG_ENTRY_ID = "config-entry-id"
 CONFIG_ENTRY_DATA = {
     "sdm": {},  # Indicates new SDM API, not legacy API
-    "auth_implementation": "local",
+    "auth_implementation": DOMAIN,
     "token": {
         "expires_at": time.time() + 86400,
-        "access_token": {
-            "token": "some-token",
-        },
+        "access_token": "some-token",
+        "refresh_token": "some-refresh-token",
     },
 }
 
@@ -84,14 +84,19 @@ class FakeSubscriber(GoogleNestSubscriber):
         self._callback.handle_event(event_message)
 
 
-async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
+async def async_setup_sdm_platform(hass, platform=None, devices={}, structures={}):
     """Set up the platform and prerequisites."""
-    MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA).add_to_hass(hass)
+    MockConfigEntry(
+        entry_id=CONFIG_ENTRY_ID, domain=DOMAIN, data=CONFIG_ENTRY_DATA
+    ).add_to_hass(hass)
     device_manager = FakeDeviceManager(devices=devices, structures=structures)
     subscriber = FakeSubscriber(device_manager)
+    platforms = []
+    if platform:
+        platforms.append(platform)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [platform]), patch(
+    ), patch("homeassistant.components.nest.PLATFORMS", platforms), patch(
         "homeassistant.components.nest.GoogleNestSubscriber", return_value=subscriber
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)

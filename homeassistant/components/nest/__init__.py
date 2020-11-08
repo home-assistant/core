@@ -141,21 +141,46 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
-    project_id = config[DOMAIN][CONF_PROJECT_ID]
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
-        ),
+        hass, get_local_oauth(hass, config[DOMAIN])
     )
 
     return True
+
+
+def get_local_oauth(
+    hass: HomeAssistant, nest_config: dict
+) -> config_entry_oauth2_flow.LocalOAuth2Implementation:
+    """Create the LocalOAuth2Implementation."""
+    project_id = nest_config[CONF_PROJECT_ID]
+    return config_entry_oauth2_flow.LocalOAuth2Implementation(
+        hass,
+        DOMAIN,
+        nest_config[CONF_CLIENT_ID],
+        nest_config[CONF_CLIENT_SECRET],
+        OAUTH2_AUTHORIZE.format(project_id=project_id),
+        OAUTH2_TOKEN,
+    )
+
+
+async def async_get_auth(
+    hass: HomeAssistant, nest_config: dict, entry: ConfigEntry
+) -> api.AsyncConfigEntryAuth:
+    """Create the auth library for use with the nest API."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    local_oauth = get_local_oauth(hass, nest_config)
+    return api.AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass),
+        API_URL,
+        session,
+        local_oauth,
+    )
 
 
 class SignalUpdateCallback(EventCallback):
@@ -190,20 +215,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-
     config = hass.data[DOMAIN][DATA_NEST_CONFIG]
+    auth = await async_get_auth(hass, config, entry)
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        API_URL,
-    )
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
     )
