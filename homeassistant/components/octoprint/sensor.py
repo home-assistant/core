@@ -1,8 +1,6 @@
 """Support for monitoring OctoPrint sensors."""
 import logging
 
-import requests
-
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -129,7 +127,7 @@ class OctoPrintSensor(Entity):
             self._state = self.api.update(
                 self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
             )
-        except requests.exceptions.ConnectionError:
+        except Exception:
             # Error calling the api, already logged in api.update()
             return
 
