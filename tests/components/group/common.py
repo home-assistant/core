@@ -5,9 +5,9 @@ components. Instead call the service directly.
 """
 from homeassistant.components.group import (
     ATTR_ADD_ENTITIES,
-    ATTR_REMOVE_ENTITIES,
     ATTR_ENTITIES,
     ATTR_OBJECT_ID,
+    ATTR_REMOVE_ENTITIES,
     DOMAIN,
     SERVICE_REMOVE,
     SERVICE_SET,
