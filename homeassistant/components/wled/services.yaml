@@ -19,6 +19,15 @@ effect:
     reverse:
       description: Reverse the effect. Either true to reverse or false otherwise.
       example: false
+live:
+  description: Sets the live override status on a WLED light
+  fields:
+    entity_id:
+      description: Name of the WLED light entity.
+      example: "light.wled"
+    live:
+      description: 0 is off, 1 is override until live data ends, 2 is override until reboot
+      example: 1
 preset:
   description: Calls a preset on the WLED device
   fields:

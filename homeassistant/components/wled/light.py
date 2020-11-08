@@ -33,6 +33,7 @@ from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handle
 from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
+    ATTR_LIVE,
     ATTR_ON,
     ATTR_PALETTE,
     ATTR_PLAYLIST,
@@ -42,6 +43,7 @@ from .const import (
     ATTR_SPEED,
     DOMAIN,
     SERVICE_EFFECT,
+    SERVICE_LIVE,
     SERVICE_PRESET,
 )
 
@@ -72,6 +74,16 @@ async def async_setup_entry(
             ),
         },
         "async_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_LIVE,
+        {
+            vol.Required(ATTR_LIVE): vol.All(
+                vol.Coerce(int), vol.Range(min=-1, max=2)
+            ),
+        },
+        "async_live",
     )
 
     platform.async_register_entity_service(
@@ -382,6 +394,16 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
             data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.segment(**data)
+
+    @wled_exception_handler
+    async def async_live(
+        self,
+        live: int,
+    ) -> None:
+        """Set the live override status on a WLED light."""
+        data = {ATTR_LIVE: live}
+
+        await self.coordinator.wled.live(**data)
 
     @wled_exception_handler
     async def async_preset(

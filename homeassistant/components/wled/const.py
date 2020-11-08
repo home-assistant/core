@@ -10,6 +10,7 @@ ATTR_FADE = "fade"
 ATTR_IDENTIFIERS = "identifiers"
 ATTR_INTENSITY = "intensity"
 ATTR_LED_COUNT = "led_count"
+ATTR_LIVE = "live"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MAX_POWER = "max_power"
 ATTR_MODEL = "model"
@@ -29,4 +30,5 @@ CURRENT_MA = "mA"
 
 # Services
 SERVICE_EFFECT = "effect"
+SERVICE_LIVE = "live"
 SERVICE_PRESET = "preset"
