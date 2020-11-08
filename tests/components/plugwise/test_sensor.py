@@ -74,7 +74,7 @@ async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     assert float(state.state) == 442.9
 
     state = hass.states.get("sensor.p1_gas_consumed_cumulative")
-    assert float(state.state) == 584.9
+    assert float(state.state) == 584.85
 
 
 async def test_stretch_sensor_entities(hass, mock_stretch):
