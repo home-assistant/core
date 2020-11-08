@@ -218,7 +218,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._name = f"Spotify {name}"
         self._session = session
         self._spotify = spotify
-        self._scope_ok = set(session.token["scope"].split(" ")) == set(SPOTIFY_SCOPES)
+        self._scope_ok = set(session.token["scope"].split(" ")).issuperset(
+            SPOTIFY_SCOPES
+        )
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
@@ -474,9 +476,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         """Implement the websocket media browsing helper."""
 
         if not self._scope_ok:
-            _LOGGER.warning(
-                "Spotify scopes are not set correctly, this can impact media browsing. Re-adding the integration can "
-                "fix this issue. See https://github.com/home-assistant/core/issues/42072 for more info."
+            _LOGGER.debug(
+                "Spotify scopes are not set correctly, this can impact features such as media browsing."
             )
             raise NotImplementedError
 
