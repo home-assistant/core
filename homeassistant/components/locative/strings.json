@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up the Locative Webhook",
-        "description": "Are you sure you want to set up the Locative Webhook?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
