@@ -15,6 +15,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -189,7 +190,17 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_condition(weather_code):
         """Get weather condition from weather data."""
-        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
+        condition = [k for k, v in CONDITION_CLASSES.items() if 800 in v][0]
+
+        if condition == "sunny/clear-night":
+            hour = dt.now().hour
+
+            if hour >= 6 and hour <= 18:
+                return "sunny"
+            else:
+                return "clear-night"
+
+        return condition
 
 
 class LegacyWeather:
