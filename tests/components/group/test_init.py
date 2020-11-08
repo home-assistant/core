@@ -516,6 +516,14 @@ async def test_service_group_set_group_remove_group(hass):
         ["test.entity_bla1", "test.entity_id2"]
     )
 
+    common.async_set_group(
+        hass,
+        "user_test_group",
+        remove=["test.entity_id2"],
+    )
+    await hass.async_block_till_done()
+    assert list(group_state.attributes["entity_id"]) == ["test.entity_bla1"]
+
     common.async_remove(hass, "user_test_group")
     await hass.async_block_till_done()
 

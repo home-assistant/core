@@ -5,6 +5,7 @@ components. Instead call the service directly.
 """
 from homeassistant.components.group import (
     ATTR_ADD_ENTITIES,
+    ATTR_REMOVE_ENTITIES,
     ATTR_ENTITIES,
     ATTR_OBJECT_ID,
     DOMAIN,
@@ -59,6 +60,7 @@ def async_set_group(
     entity_ids=None,
     icon=None,
     add=None,
+    remove=None,
 ):
     """Create/Update a group."""
     data = {
@@ -69,6 +71,7 @@ def async_set_group(
             (ATTR_ENTITIES, entity_ids),
             (ATTR_ICON, icon),
             (ATTR_ADD_ENTITIES, add),
+            (ATTR_REMOVE_ENTITIES, remove),
         ]
         if value is not None
     }
