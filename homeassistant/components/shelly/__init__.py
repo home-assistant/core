@@ -31,6 +31,7 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
+from .const import DATA_CONFIG_ENTRY, DOMAIN  # pylint: disable=import-error
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
+    # pylint: disable=no-member
     context = aioshelly.COAP()
     await context.initialize()
 
