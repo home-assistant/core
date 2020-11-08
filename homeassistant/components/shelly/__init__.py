@@ -24,9 +24,11 @@ from homeassistant.helpers import (
 )
 
 from .const import (
+    COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     POLLING_TIMEOUT_MULTIPLIER,
+    REST,
     SETUP_ENTRY_TIMEOUT_SEC,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
