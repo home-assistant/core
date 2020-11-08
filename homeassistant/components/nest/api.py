@@ -6,11 +6,13 @@ The auth object is used for two use cases:
       This relies on the logic in OAuth2Session to determine if the token is
       valid.  OAuth2Session manages the logic for checking expiration times
       and exchanging a refresh token for a new access token.  This is used when
-      directly talking to the API from the python library.
+      directly talking to the API from the python library, following:
+      https://developers.google.com/nest/device-access/api/authorization#oauth_flow
 
   async_get_creds:
-      This is used for the google pubsub subcriber, which supports its own
-      OAuth token refresh logic in a background thread.
+      This is used for the google pubsub subcsriber.  This uses a service
+      account, which is recommended by the guidance for using Events:
+      https://developers.google.com/nest/device-access/api/events#service_accounts
 """
 
 import logging
