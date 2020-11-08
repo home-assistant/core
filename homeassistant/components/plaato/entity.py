@@ -15,9 +15,9 @@ class PlaatoEntity(entity.Entity):
         self._coordinator = coordinator
         self._sensor_data: PlaatoDevice = sensor_data
         self._sensor_type = sensor_type
-        self._device_id = data[DEVICE].get(DEVICE_ID)
-        self._device_type = data[DEVICE].get(DEVICE_TYPE)
-        self._device_name = data[DEVICE].get(DEVICE_NAME)
+        self._device_id = data[DEVICE][DEVICE_ID]
+        self._device_type = data[DEVICE][DEVICE_TYPE]
+        self._device_name = data[DEVICE][DEVICE_NAME]
         self._name = (
             f"{self._device_name} {self._sensor_data.get_sensor_name(sensor_type)}"
         )

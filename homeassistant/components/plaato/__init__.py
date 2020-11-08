@@ -40,7 +40,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, InvalidStateError
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -112,58 +112,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Init webhook based on config entry."""
-    if entry.data[CONF_WEBHOOK_ID] is not None:
-        webhook_id = entry.data.get(CONF_WEBHOOK_ID)
-        device_name = entry.data.get(CONF_DEVICE_NAME)
-        device_type = entry.data.get(CONF_DEVICE_TYPE)
-        device = {DEVICE_NAME: device_name, DEVICE_TYPE: device_type}
-        undo_listener = entry.add_update_listener(_async_update_listener)
-
-        hass.data[DOMAIN][entry.entry_id] = {
-            COORDINATOR: None,
-            DEVICE: device,
-            SENSOR_DATA: None,
-            UNDO_UPDATE_LISTENER: undo_listener,
-        }
-
-        hass.components.webhook.async_register(
-            DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
-        )
-    else:
+    if entry.data[CONF_WEBHOOK_ID] is None:
         raise InvalidStateError
+
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    device_name = entry.data[CONF_DEVICE_NAME]
+
+    __set_entry_data(entry, hass)
+
+    hass.components.webhook.async_register(
+        DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
+    )
 
 
 async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     """Init auth token based on config entry."""
-    auth_token = entry.data.get(CONF_TOKEN)
-    device_type = entry.data.get(CONF_DEVICE_TYPE)
-    undo_listener = entry.add_update_listener(_async_update_listener)
-    device = {
-        DEVICE_NAME: entry.data.get(CONF_DEVICE_NAME),
-        DEVICE_TYPE: device_type,
-        DEVICE_ID: auth_token,
-    }
+    auth_token = entry.data[CONF_TOKEN]
+    device_type = entry.data[CONF_DEVICE_TYPE]
 
     coordinator = PlaatoCoordinator(hass, auth_token, device_type)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        COORDINATOR: coordinator,
-        DEVICE: device,
-        SENSOR_DATA: None,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    __set_entry_data(entry, hass, coordinator, auth_token)
 
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
             coordinator.platforms.append(platform)
 
 
+def __set_entry_data(entry, hass, coordinator=None, device_id=None):
+    device = {
+        DEVICE_NAME: entry.data[CONF_DEVICE_NAME],
+        DEVICE_TYPE: entry.data[CONF_DEVICE_TYPE],
+        DEVICE_ID: device_id,
+    }
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: coordinator,
+        DEVICE: device,
+        SENSOR_DATA: None,
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
+    }
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    use_webhook = entry.data.get(CONF_USE_WEBHOOK)
+    use_webhook = entry.data[CONF_USE_WEBHOOK]
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if use_webhook:
@@ -254,11 +250,8 @@ class PlaatoCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update data via library."""
-        try:
-            data = await self.api.get_data(
-                session=aiohttp_client.async_get_clientsession(self.hass),
-                device_type=self.device_type,
-            )
-            return data
-        except Exception as exception:
-            raise UpdateFailed from exception
+        data = await self.api.get_data(
+            session=aiohttp_client.async_get_clientsession(self.hass),
+            device_type=self.device_type,
+        )
+        return data

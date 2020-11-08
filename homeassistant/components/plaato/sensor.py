@@ -29,9 +29,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     async def _update_sensor(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
+        entry_data = hass.data[DOMAIN][entry.entry_id]
+        entry_data[SENSOR_DATA] = sensor_data
+
         if entry.entry_id not in devices:
-            hass.data[DOMAIN][entry.entry_id][SENSOR_DATA] = sensor_data
-            hass.data[DOMAIN][entry.entry_id][DEVICE][DEVICE_ID] = device_id
+            entry_data[DEVICE][DEVICE_ID] = device_id
 
             entities = [
                 PlaatoSensor(hass.data[DOMAIN][entry.entry_id], sensor_type)
@@ -40,7 +42,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
             devices[entry.entry_id] = entities
             async_add_devices(entities)
         else:
-            hass.data[DOMAIN][entry.entry_id][SENSOR_DATA] = sensor_data
             for entity in devices[entry.entry_id]:
                 async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
 

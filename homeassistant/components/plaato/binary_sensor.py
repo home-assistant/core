@@ -16,27 +16,26 @@ from .entity import PlaatoEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Plaato sensor."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Plaato from a config entry."""
 
-    if not config_entry.data.get(CONF_USE_WEBHOOK, False):
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-        if coordinator.data is not None:
-            async_add_devices(
-                PlaatoBinarySensor(
-                    hass.data[DOMAIN][config_entry.entry_id],
-                    sensor_type,
-                    coordinator,
-                )
-                for sensor_type in coordinator.data.binary_sensors.keys()
-            )
-        return True
+    if config_entry.data.get(CONF_USE_WEBHOOK, False):
+        return False
 
-    return False
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    if coordinator.data is None:
+        return False
+
+    async_add_devices(
+        PlaatoBinarySensor(
+            hass.data[DOMAIN][config_entry.entry_id],
+            sensor_type,
+            coordinator,
+        )
+        for sensor_type in coordinator.data.binary_sensors.keys()
+    )
+
+    return True
 
 
 class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
