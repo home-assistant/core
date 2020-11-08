@@ -287,14 +287,18 @@ async def async_setup(hass, config):
         if service.service == SERVICE_SET:
             need_update = False
 
-            if ATTR_REMOVE_ENTITIES in service.data:
-                delta = service.data[ATTR_REMOVE_ENTITIES]
-                entity_ids = set(group.tracking) - set(delta)
-                await group.async_update_tracked_entity_ids(entity_ids)
-
-            if ATTR_ADD_ENTITIES in service.data:
-                delta = service.data[ATTR_ADD_ENTITIES]
-                entity_ids = set(group.tracking) | set(delta)
+            if ATTR_ADD_ENTITIES in service.data or ATTR_REMOVE_ENTITIES in service.data:
+                entity_ids = set(group.tracking)
+                
+                if ATTR_ADD_ENTITIES in service.data:
+                    delta = service.data[ATTR_ADD_ENTITIES]
+                    entity_ids |= set(delta)
+                    
+                if ATTR_REMOVE_ENTITIES in service.data:
+                    # note: if an entity was included in both add and remove lists in the same service call, the entity will be removed
+                    delta = service.data[ATTR_REMOVE_ENTITIES]
+                    entity_ids -= set(delta)
+            
                 await group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_ENTITIES in service.data:
