@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebsen WLED Apparat ass scho konfigur\u00e9iert.",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert.",
             "cannot_connect": "Feeler beim verbannen",
             "connection_error": "Feeler beim verbannen mam WLED Apparat."
         },

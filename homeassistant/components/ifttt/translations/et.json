@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "not_internet_accessible": "IFTTT s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu ligip\u00e4\u00e4setav.",
+            "one_instance_allowed": "Lubatud on ainult \u00fcks sidumine.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "create_entry": {
@@ -8,7 +10,8 @@
         },
         "step": {
             "user": {
-                "description": "Kas soovid kindlasti IFTTT seadistada?"
+                "description": "Kas soovid kindlasti IFTTT seadistada?",
+                "title": "Seadista IFTTT Webhook Applet"
             }
         }
     }

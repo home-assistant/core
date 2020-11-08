@@ -633,7 +633,3 @@ CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
 
 # The ID of the Home Assistant Cast App
 CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"
-
-# The tracker error allow when converting
-# loop time to human readable time
-MAX_TIME_TRACKING_ERROR = 0.001

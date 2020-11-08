@@ -9,6 +9,12 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Seade"
+                },
+                "title": "Vali WOLF seade"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

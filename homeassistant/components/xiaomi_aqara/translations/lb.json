@@ -17,7 +17,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP vun der Gateway"
+                    "select_ip": "IP Adresse"
                 },
                 "description": "Setup nach emol ausf\u00e9ieren fir eng zous\u00e4tzlech Gateway dob\u00e4i ze setzen",
                 "title": "Xiaomi Aqara Gateway auswielen mat der sech soll verbonne ginn"

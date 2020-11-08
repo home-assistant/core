@@ -26,7 +26,7 @@
                 "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
             },
             "zeroconf_confirm": {
-                "description": "Chcete p\u0159idat za\u0159\u00edzen\u00ed Smappee se s\u00e9riov\u00fdm \u010d\u00edslem \"{serialnumber}\" do Home Assistant?",
+                "description": "Chcete p\u0159idat za\u0159\u00edzen\u00ed Smappee se s\u00e9riov\u00fdm \u010d\u00edslem `{serialnumber}` do Home Assistant?",
                 "title": "Objeven\u00e9 za\u0159\u00edzen\u00ed Smappee"
             }
         }

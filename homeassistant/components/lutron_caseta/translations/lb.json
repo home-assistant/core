@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cas\u00e9ta Bridge ass schon konfigur\u00e9iert.",
-            "cannot_connect": "Ariichten vun der Cas\u00e9ta Bridge ofgebrach w\u00e9inst engem Problem mat der Verbindung."
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbanne mat der Cas\u00e9ta Bridge; iwwerpr\u00e9if den Numm an Zertifikat"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "import_failed": {

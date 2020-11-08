@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Bridge ass schon konfigur\u00e9iert",
-            "already_in_progress": "Konfiguratioun fir d\u00ebsen Apparat ass schonn am gaang.",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
             "no_bridges": "Keng dECONZ bridges fonnt",
             "no_hardware_available": "Keng Radio Hardware verbonne mat deCONZ",
             "not_deconz_bridge": "Keng deCONZ Bridge",

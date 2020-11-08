@@ -5,6 +5,9 @@
             "invalid_auth": "Tuvastamise viga",
             "invalid_credentials": "Sobimatu mandaat"
         },
+        "create_entry": {
+            "default": "Vaata [Neato documentation] ( {docs_url} )."
+        },
         "error": {
             "invalid_auth": "Tuvastamise viga",
             "invalid_credentials": "Sobimatu mandaat",
@@ -17,7 +20,9 @@
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi",
                     "vendor": "Tootja"
-                }
+                },
+                "description": "Vaata [Neato documentation] ( {docs_url} ).",
+                "title": "Neato konto teave"
             }
         }
     }

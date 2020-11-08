@@ -28,12 +28,24 @@
                 "description": "Te nastavitve je treba prilagoditi le, \u010de most HomeKit ni funkcionalen.",
                 "title": "Napredna konfiguracija"
             },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamere, ki podpirajo izvorne tokove H.264"
+                },
+                "title": "Izberite video kodek kamere."
+            },
             "exclude": {
                 "data": {
                     "exclude_entities": "Subjekti, ki jih je treba izklju\u010diti"
                 },
                 "description": "Izberite entitete, ki jih NE \u017eelite premostiti.",
                 "title": "Iz mostu izklju\u010dite subjekte izbranih domen"
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entitete"
+                },
+                "title": "Izberite entitete, ki jih \u017eelite izpostaviti"
             },
             "init": {
                 "data": {
@@ -48,5 +60,5 @@
             }
         }
     },
-    "title": "HomeKit Most"
+    "title": "Most za HomeKit"
 }

@@ -207,7 +207,6 @@ async def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
-    hass.config.legacy_templates = False
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
@@ -301,7 +300,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.pattern_utc_now",
+                "homeassistant.helpers.event.time_tracker_utcnow",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()

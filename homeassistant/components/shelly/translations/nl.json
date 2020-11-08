@@ -6,6 +6,7 @@
         "error": {
             "auth_not_supported": "Shelly apparaten die verificatie vereisen, worden momenteel niet ondersteund.",
             "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "Shelly: {name}",

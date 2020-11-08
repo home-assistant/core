@@ -14,7 +14,8 @@
                     "ip_address": "Hostinimi v\u00f5i IP-aadress",
                     "password": "Salas\u00f5na",
                     "port": ""
-                }
+                },
+                "title": "Sisesta oma teave"
             }
         }
     },

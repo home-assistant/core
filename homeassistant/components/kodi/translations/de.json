@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "flow_title": "Kodi: {name}",
         "step": {
             "credentials": {
@@ -22,7 +25,8 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Verwendet ein SSL Zertifikat"
                 }
             },
             "ws_port": {

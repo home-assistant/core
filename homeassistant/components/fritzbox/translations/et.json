@@ -9,6 +9,7 @@
             "auth_failed": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
             "invalid_auth": "Tuvastamise viga"
         },
+        "flow_title": "",
         "step": {
             "confirm": {
                 "data": {

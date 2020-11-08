@@ -29,6 +29,7 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "Luba ARP ping",
+                    "detection_time": "M\u00e4\u00e4ra n\u00e4htavuse aeg",
                     "force_dhcp": "Sundskannimine DHCP abil"
                 }
             }

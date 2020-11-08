@@ -8,6 +8,7 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

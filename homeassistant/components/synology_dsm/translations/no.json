@@ -25,7 +25,8 @@
                     "password": "Passord",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "description": "Vil du konfigurere {name} ({host})?",
                 "title": ""
@@ -36,7 +37,8 @@
                     "password": "Passord",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": ""
             }
