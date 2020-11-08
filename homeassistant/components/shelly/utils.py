@@ -77,13 +77,13 @@ def get_entity_name(
 
     return entity_name
 
-def get_rest_value_from_path(wrapper, device_class, path: str):
+def get_rest_value_from_path(status, device_class, path: str):
     """Parser for REST path from device status."""
 
     if "/" not in path:
-        _attribute_value = wrapper.device.status[path]
+        _attribute_value = status[path]
     else:
-        _attribute_value = wrapper.device.status[path.split("/")[0]][path.split("/")[1]]
+        _attribute_value = status[path.split("/")[0]][path.split("/")[1]]
     if device_class == DEVICE_CLASS_TIMESTAMP:
         last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
         _attribute_value = last_boot.replace(microsecond=0).isoformat()

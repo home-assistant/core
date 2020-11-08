@@ -312,7 +312,7 @@ class ShellyRestAttributeEntity(entity.Entity):
     def attribute_value(self):
         """Attribute."""
         return get_rest_value_from_path(
-            self.wrapper, self.description.device_class, self.path
+            self.wrapper.device.status, self.description.device_class, self.path
         )
 
     @property
@@ -344,7 +344,9 @@ class ShellyRestAttributeEntity(entity.Entity):
 
         _description = self._attributes.get("description")
         _attribute_value = get_rest_value_from_path(
-            self.wrapper, self.description.device_class, self._attributes.get("path")
+            self.wrapper.device.status,
+            self.description.device_class,
+            self._attributes.get("path"),
         )
 
         return {_description: _attribute_value}
