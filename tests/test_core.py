@@ -906,7 +906,7 @@ def test_config_defaults():
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
     assert config.safe_mode is False
-    assert config.legacy_templates is True
+    assert config.legacy_templates is False
 
 
 def test_config_path_with_file():
