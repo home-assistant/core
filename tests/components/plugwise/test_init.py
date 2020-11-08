@@ -62,15 +62,6 @@ async def test_unload_entry(hass, mock_smile_adam):
     assert not hass.data[DOMAIN]
 
 
-async def test_unload_gateway_entry(hass, mock_smile_adam):
-    """Test being able to unload an entry."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-
-    mock_smile_adam.async_reset = AsyncMock(return_value=True)
-    assert await plugwise.gateway.async_unload_entry(hass, entry)
-    assert not hass.data[DOMAIN]
-
-
 async def test_async_setup_entry_fail(hass):
     """Test async_setup_entry."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
