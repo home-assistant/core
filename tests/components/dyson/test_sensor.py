@@ -303,6 +303,8 @@ async def test_purecool_component_setup_only_once(devices, login, hass):
     config = _get_config()
     await async_setup_component(hass, dyson_parent.DOMAIN, config)
     await hass.async_block_till_done()
+    discovery.load_platform(hass, "sensor", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
 
     assert len(hass.data[dyson.DYSON_SENSOR_DEVICES]) == 4
 
