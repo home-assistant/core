@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "unable_to_connect": "Es konnte keine Verbindung mit dem Ger\u00e4t hergestellt werden."
         },
         "step": {
