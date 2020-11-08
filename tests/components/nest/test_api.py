@@ -15,8 +15,4 @@ async def test_auth_creds(hass):
     assert "some-token" == access_token
 
     creds = await auth.async_get_creds()
-    assert "some-token" == creds.token
-    assert "some-refresh-token" == creds.refresh_token
-    assert "https://www.googleapis.com/oauth2/v4/token" == creds.token_uri
-    assert "some-client-id" == creds.client_id
-    assert "some-client-secret" == creds.client_secret
+    assert "example@service.iam.gserviceaccount.com" == creds.service_account_email

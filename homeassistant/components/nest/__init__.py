@@ -2,9 +2,11 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import json
 import logging
 import threading
 
+from google.oauth2 import service_account
 from google_nest_sdm.event import EventCallback, EventMessage
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 from nest import Nest
@@ -44,6 +46,7 @@ from .const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    SDM_SCOPES,
     SIGNAL_NEST_UPDATE,
 )
 
@@ -52,6 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
+CONF_SUBSCRIBER_SERVICE_ACCOUNT = "subscriber_service_account"
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -59,6 +63,7 @@ SERVICE_SET_ETA = "set_eta"
 
 DATA_NEST = "nest"
 DATA_NEST_CONFIG = "nest_config"
+DATA_SERVICE_ACCOUNT_INFO = "service_account_info"
 
 NEST_CONFIG_FILE = "nest.conf"
 
@@ -86,6 +91,7 @@ CONFIG_SCHEMA = vol.Schema(
                 # Required to use the new API (optional for compatibility)
                 vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
+                vol.Optional(CONF_SUBSCRIBER_SERVICE_ACCOUNT): cv.string,
                 # Config that only currently works on the old API
                 vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
@@ -136,32 +142,45 @@ async def async_setup(hass: HomeAssistant, config: dict):
         return await async_setup_legacy(hass, config)
 
     if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
+        _LOGGER.error("Configuration option '%s' required", CONF_SUBSCRIBER_ID)
         return False
+
+    if CONF_SUBSCRIBER_SERVICE_ACCOUNT not in config[DOMAIN]:
+        _LOGGER.error(
+            "Configuration option '%s' required", CONF_SUBSCRIBER_SERVICE_ACCOUNT
+        )
+        return False
+
+    try:
+        service_account_info = json.loads(
+            config[DOMAIN][CONF_SUBSCRIBER_SERVICE_ACCOUNT]
+        )
+    except json.JSONDecodeError as err:
+        _LOGGER.error(
+            "Invalid JSON string in configuration '%s': %s",
+            CONF_SUBSCRIBER_SERVICE_ACCOUNT,
+            err,
+        )
+        return False
+    hass.data[DOMAIN][DATA_SERVICE_ACCOUNT_INFO] = service_account_info
 
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
+    project_id = config[DOMAIN][CONF_PROJECT_ID]
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
-        hass, get_local_oauth(hass, config[DOMAIN])
+        hass,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        ),
     )
 
     return True
-
-
-def get_local_oauth(
-    hass: HomeAssistant, nest_config: dict
-) -> config_entry_oauth2_flow.LocalOAuth2Implementation:
-    """Create the LocalOAuth2Implementation."""
-    project_id = nest_config[CONF_PROJECT_ID]
-    return config_entry_oauth2_flow.LocalOAuth2Implementation(
-        hass,
-        DOMAIN,
-        nest_config[CONF_CLIENT_ID],
-        nest_config[CONF_CLIENT_SECRET],
-        OAUTH2_AUTHORIZE.format(project_id=project_id),
-        OAUTH2_TOKEN,
-    )
 
 
 async def async_get_auth(
@@ -174,12 +193,11 @@ async def async_get_auth(
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    local_oauth = get_local_oauth(hass, nest_config)
+    subscriber_creds = service_account.Credentials.from_service_account_info(
+        hass.data[DOMAIN][DATA_SERVICE_ACCOUNT_INFO]
+    ).with_scopes(scopes=SDM_SCOPES)
     return api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        API_URL,
-        session,
-        local_oauth,
+        aiohttp_client.async_get_clientsession(hass), API_URL, session, subscriber_creds
     )
 
 

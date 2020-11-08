@@ -4,6 +4,8 @@ from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .common import SERVICE_ACCOUNT_INFO
+
 from tests.async_mock import patch
 
 CLIENT_ID = "1234"
@@ -23,6 +25,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
                 "subscriber_id": SUBSCRIBER_ID,
                 CONF_CLIENT_ID: CLIENT_ID,
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
+                "subscriber_service_account": SERVICE_ACCOUNT_INFO,
             },
             "http": {"base_url": "https://example.com"},
         },

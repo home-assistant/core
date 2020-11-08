@@ -16,12 +16,10 @@ The auth object is used for two use cases:
 import logging
 
 from aiohttp import ClientSession
-from google.oauth2.credentials import Credentials
+from google.auth.credentials import Credentials
 from google_nest_sdm.auth import AbstractAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from .const import SDM_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,32 +34,20 @@ class AsyncConfigEntryAuth(AbstractAuth):
         websession: ClientSession,
         api_url: str,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-        local_oauth: config_entry_oauth2_flow.LocalOAuth2Implementation,
+        subscriber_creds: Credentials,
     ):
         """Initialize Google Nest Device Access auth."""
         super().__init__(websession, api_url)
         self._oauth_session = oauth_session
-        self._local_oauth = local_oauth
+        self._subscriber_creds = subscriber_creds
 
-    async def async_get_access_token(self):
+    async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
 
-    async def async_get_creds(self):
+    async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential that supports refresh."""
-        if not self._oauth_session.valid_token:
-            await self._oauth_session.async_ensure_token_valid()
-
-        token = self._oauth_session.token
-        _LOGGER.debug("Credentials for token: %s", token)
-        return Credentials(
-            token=token["access_token"],
-            refresh_token=token["refresh_token"],
-            token_uri=self._local_oauth.token_url,
-            client_id=self._local_oauth.client_id,
-            client_secret=self._local_oauth.client_secret,
-            scopes=tuple(SDM_SCOPES),
-        )
+        return self._subscriber_creds
