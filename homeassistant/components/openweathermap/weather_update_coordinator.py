@@ -6,6 +6,8 @@ import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -36,6 +38,7 @@ from .const import (
     FORECAST_MODE_HOURLY,
     FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODE_ONECALL_HOURLY,
+    WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -190,17 +193,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_condition(weather_code):
         """Get weather condition from weather data."""
-        condition = [k for k, v in CONDITION_CLASSES.items() if 800 in v][0]
-
-        if condition == "sunny/clear-night":
+        if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
             hour = dt.now().hour
 
             if hour >= 6 and hour <= 18:
-                return "sunny"
+                return ATTR_CONDITION_SUNNY
             else:
-                return "clear-night"
+                return ATTR_CONDITION_CLEAR_NIGHT
 
-        return condition
+        return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
 
 
 class LegacyWeather:

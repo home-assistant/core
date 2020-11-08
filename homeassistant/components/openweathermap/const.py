@@ -135,6 +135,7 @@ LANGUAGES = [
     "zh_tw",
     "zu",
 ]
+WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT = 800
 CONDITION_CLASSES = {
     "cloudy": [803, 804],
     "fog": [701, 741],
