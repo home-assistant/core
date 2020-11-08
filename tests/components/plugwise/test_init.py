@@ -4,7 +4,6 @@ import asyncio
 
 from Plugwise_Smile.Smile import Smile
 
-from homeassistant.components import plugwise
 from homeassistant.components.plugwise import DOMAIN
 from homeassistant.components.plugwise.gateway import SERVICE_DELETE
 from homeassistant.config_entries import (
@@ -12,7 +11,6 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.components.plugwise.common import async_init_integration
@@ -65,11 +63,11 @@ async def test_unload_entry(hass, mock_smile_adam):
 async def test_async_setup_entry_fail(hass):
     """Test async_setup_entry."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
-    config = {}
 
-    await async_setup_component(hass, "plugwise", config)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert not await plugwise.async_setup_entry(hass, entry)
+    assert entry.state == ENTRY_STATE_SETUP_ERROR
 
 
 async def test_async_notification_delete(hass, mock_smile_adam):
