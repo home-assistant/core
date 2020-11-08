@@ -21,9 +21,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the SHC binary sensor platform."""
     entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id]
-    if session.information.macAddress is None:
+    if session.mac_address is None:
         raise ConfigEntryNotReady
-    mac = format_mac(session.information.macAddress)
+    mac = format_mac(session.mac_address)
 
     for binarysensor in session.device_helper.shutter_contacts:
         entities.append(

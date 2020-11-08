@@ -45,9 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = session
 
-    if shc_info.macAddress is None:
+    if session.mac_address is None:
         raise ConfigEntryNotReady
-    mac = dr.format_mac(shc_info.macAddress)
+    mac = dr.format_mac(session.mac_address)
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

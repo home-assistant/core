@@ -98,6 +98,10 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "bosch_shc",
+            "name": "Bosch SHC*"
+        },
+        {
             "domain": "nam",
             "name": "nam-*"
         },

@@ -3,7 +3,10 @@
   "name": "Bosch Smart Home Controller Interface API",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bosch_shc",
-  "requirements": ["boschshcpy==0.1.14"],
+  "requirements": ["boschshcpy==0.1.15.dev1"],
+  "zeroconf": [
+    {"type": "_http._tcp.local.", "name": "Bosch SHC*"}
+  ],
   "codeowners": [
     "@tschamm",
     "@cabrust"

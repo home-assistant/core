@@ -220,7 +220,7 @@ blinkpy==0.17.0
 bond-api==0.1.12
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.1.14
+boschshcpy==0.1.15.dev1
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
