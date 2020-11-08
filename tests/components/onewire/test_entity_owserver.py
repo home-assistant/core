@@ -2,10 +2,11 @@
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.onewire.const import (
-    DEFAULT_OWSERVER_PORT,
     DOMAIN,
     PRESSURE_CBAR,
+    SUPPORTED_PLATFORMS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -19,31 +20,24 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
+    STATE_OFF,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLT,
 )
 from homeassistant.setup import async_setup_component
 
+from . import setup_onewire_patched_owserver_integration
+
 from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
-
-MOCK_CONFIG = {
-    SENSOR_DOMAIN: {
-        "platform": DOMAIN,
-        "host": "localhost",
-        "port": DEFAULT_OWSERVER_PORT,
-        "names": {
-            "10.111111111111": "My DS18B20",
-        },
-    }
-}
 
 MOCK_DEVICE_SENSORS = {
     "00.111111111111": {
         "inject_reads": [
             b"",  # read device type
         ],
-        "sensors": [],
+        SENSOR_DOMAIN: [],
     },
     "10.111111111111": {
         "inject_reads": [
@@ -55,7 +49,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS18S20",
             "name": "10.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.my_ds18b20_temperature",
                 "unique_id": "/10.111111111111/temperature",
@@ -76,7 +70,27 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS2406",
             "name": "12.111111111111",
         },
-        "sensors": [
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.12_111111111111_sensed_a",
+                "unique_id": "/12.111111111111/sensed.A",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.12_111111111111_sensed_b",
+                "unique_id": "/12.111111111111/sensed.B",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+        ],
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.12_111111111111_temperature",
                 "unique_id": "/12.111111111111/TAI8570/temperature",
@@ -107,7 +121,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS2423",
             "name": "1D.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.1d_111111111111_counter_a",
                 "unique_id": "/1D.111111111111/counter.A",
@@ -136,7 +150,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS1822",
             "name": "22.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.22_111111111111_temperature",
                 "unique_id": "/22.111111111111/temperature",
@@ -157,7 +171,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS2438",
             "name": "26.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.26_111111111111_temperature",
                 "unique_id": "/26.111111111111/temperature",
@@ -268,7 +282,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS18B20",
             "name": "28.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.28_111111111111_temperature",
                 "unique_id": "/28.111111111111/temperature",
@@ -276,6 +290,91 @@ MOCK_DEVICE_SENSORS = {
                 "result": "27.0",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+            },
+        ],
+    },
+    "29.111111111111": {
+        "inject_reads": [
+            b"DS2408",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "29.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2408",
+            "name": "29.111111111111",
+        },
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_0",
+                "unique_id": "/29.111111111111/sensed.0",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_1",
+                "unique_id": "/29.111111111111/sensed.1",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_2",
+                "unique_id": "/29.111111111111/sensed.2",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_3",
+                "unique_id": "/29.111111111111/sensed.3",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_4",
+                "unique_id": "/29.111111111111/sensed.4",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_5",
+                "unique_id": "/29.111111111111/sensed.5",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_6",
+                "unique_id": "/29.111111111111/sensed.6",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+            {
+                "entity_id": "binary_sensor.29_111111111111_sensed_7",
+                "unique_id": "/29.111111111111/sensed.7",
+                "injected_value": b"    0",
+                "result": STATE_OFF,
+                "unit": None,
+                "class": None,
+                "disabled": True,
             },
         ],
     },
@@ -289,7 +388,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS1825",
             "name": "3B.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.3b_111111111111_temperature",
                 "unique_id": "/3B.111111111111/temperature",
@@ -310,7 +409,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "DS28EA00",
             "name": "42.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.42_111111111111_temperature",
                 "unique_id": "/42.111111111111/temperature",
@@ -331,7 +430,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "HobbyBoards_EF",
             "name": "EF.111111111111",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.ef_111111111111_humidity",
                 "unique_id": "/EF.111111111111/humidity/humidity_corrected",
@@ -372,7 +471,7 @@ MOCK_DEVICE_SENSORS = {
             "model": "HB_MOISTURE_METER",
             "name": "EF.111111111112",
         },
-        "sensors": [
+        SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.ef_111111111112_wetness_0",
                 "unique_id": "/EF.111111111112/moisture/sensor.0",
@@ -411,7 +510,9 @@ MOCK_DEVICE_SENSORS = {
 
 
 @pytest.mark.parametrize("device_id", MOCK_DEVICE_SENSORS.keys())
-async def test_owserver_setup_valid_device(hass, device_id):
+@pytest.mark.parametrize("platform", SUPPORTED_PLATFORMS)
+@patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
+async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
     """Test for 1-Wire device.
 
     As they would be on a clean setup: all binary-sensors and switches disabled.
@@ -422,23 +523,23 @@ async def test_owserver_setup_valid_device(hass, device_id):
 
     mock_device_sensor = MOCK_DEVICE_SENSORS[device_id]
 
+    device_family = device_id[0:2]
     dir_return_value = [f"/{device_id}/"]
-    read_side_effect = [device_id[0:2].encode()]
+    read_side_effect = [device_family.encode()]
     if "inject_reads" in mock_device_sensor:
         read_side_effect += mock_device_sensor["inject_reads"]
 
-    expected_sensors = mock_device_sensor["sensors"]
+    expected_sensors = mock_device_sensor.get(platform, [])
     for expected_sensor in expected_sensors:
         read_side_effect.append(expected_sensor["injected_value"])
 
     # Ensure enough read side effect
     read_side_effect.extend([ProtocolError("Missing injected value")] * 10)
+    owproxy.return_value.dir.return_value = dir_return_value
+    owproxy.return_value.read.side_effect = read_side_effect
 
-    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
-        owproxy.return_value.dir.return_value = dir_return_value
-        owproxy.return_value.read.side_effect = read_side_effect
-
-        assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_CONFIG)
+    with patch("homeassistant.components.onewire.SUPPORTED_PLATFORMS", [platform]):
+        await setup_onewire_patched_owserver_integration(hass)
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_sensors)

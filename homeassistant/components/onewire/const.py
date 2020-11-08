@@ -1,4 +1,5 @@
 """Constants for 1-Wire component."""
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -36,6 +37,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_ILLUMINANCE = "illuminance"
 SENSOR_TYPE_MOISTURE = "moisture"
 SENSOR_TYPE_PRESSURE = "pressure"
+SENSOR_TYPE_SENSED = "sensed"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_WETNESS = "wetness"
@@ -51,8 +53,10 @@ SENSOR_TYPES = {
     SENSOR_TYPE_COUNT: ["count", None],
     SENSOR_TYPE_VOLTAGE: [VOLT, DEVICE_CLASS_VOLTAGE],
     SENSOR_TYPE_CURRENT: [ELECTRICAL_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
+    SENSOR_TYPE_SENSED: [None, None],
 }
 
 SUPPORTED_PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
     SENSOR_DOMAIN,
 ]
