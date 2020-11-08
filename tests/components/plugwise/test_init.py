@@ -55,7 +55,9 @@ async def test_unload_entry(hass, mock_smile_adam):
     entry = await async_init_integration(hass, mock_smile_adam)
 
     mock_smile_adam.async_reset = AsyncMock(return_value=True)
-    assert await plugwise.async_unload_entry(hass, entry)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data[DOMAIN]
 
 
