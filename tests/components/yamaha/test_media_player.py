@@ -1,6 +1,5 @@
 """The tests for the Yamaha Media player platform."""
 import pytest
-
 import rxv
 
 import homeassistant.components.media_player as mp
@@ -192,6 +191,7 @@ async def test_select_scene(hass, device, main_zone, caplog):
 
 
 async def test_sources(hass, device):
+    """Test that the source list from the device is reported back."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
@@ -209,6 +209,7 @@ async def test_sources(hass, device):
 
 
 async def test_sources_ignored(hass, device):
+    """Test that sources explicitly ignored are *not* reported back."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG_WITH_IGNORED_SOURCES)
     await hass.async_block_till_done()
 
@@ -226,6 +227,7 @@ async def test_sources_ignored(hass, device):
 
 
 async def test_sources_renamed(hass, device):
+    """Test that sources with an explicit configured alias are reported with it."""
     assert await async_setup_component(hass, mp.DOMAIN, CONFIG_WITH_RENAMED_SOURCES)
     await hass.async_block_till_done()
 
