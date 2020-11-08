@@ -1584,3 +1584,24 @@ async def test_reserving_states(hass):
     assert hass.states.async_available("light.bedroom") is False
     hass.states.async_remove("light.bedroom")
     assert hass.states.async_available("light.bedroom") is True
+
+
+async def test_state_change_events_match_state_time(hass):
+    """Test last_updated and timed_fired only call utcnow once."""
+
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.bedroom")
+
+    import pprint
+
+    pprint.pprint(events)
+    assert state.last_updated == events[0].time_fired
