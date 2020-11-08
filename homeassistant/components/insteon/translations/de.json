@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
             "hub2": {
                 "data": {
@@ -34,6 +40,7 @@
     },
     "options": {
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "select_single": "W\u00e4hle eine Option aus."
         },
         "step": {
