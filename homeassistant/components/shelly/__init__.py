@@ -23,7 +23,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 
-from .const import (
+from .const import (  # pylint: disable=import-error
     DATA_CONFIG_ENTRY,
     DOMAIN,
     POLLING_TIMEOUT_MULTIPLIER,
@@ -31,7 +31,6 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .const import DATA_CONFIG_ENTRY, DOMAIN  # pylint: disable=import-error
 
 PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
