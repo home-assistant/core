@@ -20,7 +20,8 @@ TEST_HOST = "test"
 TEST_PORT = const.DEFAULT_PORT_JSON + 1
 TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
-TEST_SERVER_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
+TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
+TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
 TEST_PRIORITY = 180
 TEST_YAML_NAME = f"{TEST_HOST}_{TEST_PORT}_{TEST_INSTANCE}"
 TEST_YAML_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_YAML_NAME}"
@@ -88,7 +89,8 @@ def create_mock_client() -> Mock:
         return_value={"command": "authorize-login", "success": True, "tan": 0}
     )
 
-    mock_client.async_id = CoroutineMock(return_value=TEST_SERVER_ID)
+    mock_client.async_sysinfo_id = CoroutineMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_version = CoroutineMock(return_value=TEST_SYSINFO_ID)
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.instances = [
@@ -107,8 +109,8 @@ def add_test_config_entry(hass: HomeAssistantType) -> ConfigEntry:
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
         },
-        title=f"Hyperion {TEST_SERVER_ID}",
-        unique_id=TEST_SERVER_ID,
+        title=f"Hyperion {TEST_SYSINFO_ID}",
+        unique_id=TEST_SYSINFO_ID,
         options=TEST_CONFIG_ENTRY_OPTIONS,
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]

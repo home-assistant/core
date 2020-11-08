@@ -33,7 +33,7 @@ from . import (
     TEST_INSTANCE_3,
     TEST_PORT,
     TEST_PRIORITY,
-    TEST_SERVER_ID,
+    TEST_SYSINFO_ID,
     TEST_YAML_ENTITY_ID,
     TEST_YAML_NAME,
     add_test_config_entry,
@@ -79,7 +79,7 @@ def _get_config_entry_from_unique_id(
     hass: HomeAssistantType, unique_id: str
 ) -> Optional[ConfigEntry]:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if TEST_SERVER_ID == entry.unique_id:
+        if TEST_SYSINFO_ID == entry.unique_id:
             return entry
     return None
 
@@ -121,12 +121,12 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SERVER_ID, 0
+        TEST_SYSINFO_ID, 0
     )
     assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
 
     # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
     assert entry
     assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
@@ -139,7 +139,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     # Assistant should this combination, but verify correct behavior for defense in
     # depth.
 
-    new_unique_id = get_hyperion_unique_id(TEST_SERVER_ID, 0)
+    new_unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, 0)
     entity_id_to_preserve = "light.magic_entity"
 
     # Add a pre-existing registry entry.
@@ -162,7 +162,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
     assert registry.async_get(entity_id_to_preserve).unique_id == new_unique_id
 
     # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
     assert entry
     assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
@@ -183,11 +183,11 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     # The unique_id should have been updated in the registry (rather than the one
     # specified above).
     assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SERVER_ID, 0
+        TEST_SYSINFO_ID, 0
     )
 
     # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
     assert entry
     assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
 
@@ -684,8 +684,28 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert client.async_client_connect.called
     assert not client.async_client_disconnect.called
-    entry = _get_config_entry_from_unique_id(hass, TEST_SERVER_ID)
+    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
     assert entry
 
     await hass.config_entries.async_unload(entry.entry_id)
     assert client.async_client_disconnect.called
+
+
+async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:
+    """Test warning on old version."""
+    client = create_mock_client()
+    client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
+    await setup_test_config_entry(hass, client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+    assert any(["Please consider upgrading" in m for _, _, m in caplog.record_tuples])
+
+
+async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:
+    """Test no warning on acceptable version."""
+    client = create_mock_client()
+    client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.8")
+    await setup_test_config_entry(hass, client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is not None
+    assert not any(
+        ["Please consider upgrading" in m for _, _, m in caplog.record_tuples]
+    )
