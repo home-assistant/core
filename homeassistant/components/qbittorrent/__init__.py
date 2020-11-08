@@ -1,13 +1,10 @@
 """The qbittorrent component."""
-import asyncio
 import logging
-from aiohttp import client
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -16,10 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
@@ -88,28 +82,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
-
-
-class QBittorrentEntity(CoordinatorEntity):
-    """Representation of a QBittorrent entity."""
-
-    def __init__(self, client, coordinator, name, server_unique_id):
-        """Initialize a QBittorrent entity."""
-        super().__init__(coordinator)
-        self.client = client
-        self._name = name
-        self._server_unique_id = server_unique_id
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:cloud-download"
-
-    @property
-    def device_info(self):
-        """Return the device information of the entity."""
-        return {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "name": self._name,
-            "manufacturer": "QBittorrent",
-        }

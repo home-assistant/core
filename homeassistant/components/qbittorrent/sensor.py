@@ -2,7 +2,6 @@
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import logging
-import json
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
@@ -127,6 +126,20 @@ class QBittorrentSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return "mdi:cloud-download"
+
+    @property
+    def device_info(self):
+        """Return the device information of the entity."""
+        return {
+            "identifiers": {(DOMAIN, self._server_unique_id)},
+            "name": self.client_name,
+            "manufacturer": "QBittorrent",
+        }
 
     async def async_update(self):
         """Get the latest data from qBittorrent and updates the state."""

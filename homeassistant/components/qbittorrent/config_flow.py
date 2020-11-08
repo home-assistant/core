@@ -1,12 +1,13 @@
 """Config flow for qBittorrent integration."""
 import logging
 
-from qbittorrent.client import Client, LoginRequired
+from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from .wrapper_functions import create_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -35,8 +36,12 @@ class qBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                client = Client(user_input[CONF_URL])
-                client.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                await self.hass.async_add_executor_job(
+                    create_client,
+                    user_input[CONF_URL],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
             except LoginRequired:
                 errors["auth"] = "Invalid authentication"
                 return
