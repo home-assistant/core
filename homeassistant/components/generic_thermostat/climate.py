@@ -206,14 +206,24 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._target_temp = target_temp
         self._unit = unit
 
-        if presets and len(presets) > 0:
-            self._presets = presets
-        else:
-            self._presets = collections.OrderedDict()
-            if away_temp:
-                self._presets[PRESET_AWAY] = away_temp
+        self._presets = collections.OrderedDict()
 
+        if presets:
+            self._presets = presets
+        if away_temp:
+            warning = '"away_temp" is deprecated. Please migrate to the new "presets" configuration.'
+
+            if PRESET_AWAY in self._presets:
+                warning = 'Using "away_temp" in combination with the away preset wont work. Preset value will be overridden. Please remove "away_temp" from the thermostat configuration.'
+
+            _LOGGER.warning(warning)
+            self._presets[PRESET_AWAY] = away_temp
+
+        # PRESET_NONE is not a real preset, are used to store custom temp outside preset
         self._presets[PRESET_NONE] = self._target_temp
+
+        # self._presets always contains PRESET_NONE as target temp
+        # because of this to add SUPPORT_PRESET_MODE we require 2 or more presets.
         if len(self._presets) > 1:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
         else:
@@ -392,6 +402,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        # If you are setting a custom temp, you are going out preset. Preset, as the name suggest, need to be read only.
+        # For example if you using PRESET_AWAY (with 16°) but you want temporary set temp to 18°
+        # if the thermostat keep the preset PRESET_AWAY, you cant set PRESET_AWAY directly to restore 16°
         self._presets[PRESET_NONE] = temperature
         self._current_preset = PRESET_NONE
         self._target_temp = self._presets[PRESET_NONE]
