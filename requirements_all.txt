@@ -138,7 +138,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.3
 
 # homeassistant.components.gdacs
-aio_georss_gdacs==0.3
+aio_georss_gdacs==0.4
 
 # homeassistant.components.ambient_station
 aioambient==1.2.1
@@ -380,7 +380,7 @@ boto3==1.9.252
 bravia-tv==1.0.6
 
 # homeassistant.components.broadlink
-broadlink==0.15.0
+broadlink==0.16.0
 
 # homeassistant.components.brother
 brother==0.1.18
@@ -431,7 +431,7 @@ coinbase==2.1.0
 coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
-colorlog==4.2.1
+colorlog==4.5.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -738,7 +738,7 @@ hass-nabucasa==0.37.1
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.0.26
+hatasmota==0.0.27
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12

@@ -1,0 +1,15 @@
+{
+    "options": {
+        "error": {
+            "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
+            "dev_not_found": "Ger\u00e4t nicht gefunden"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "ext_temp_sensor": "Sensor f\u00fcr aktuelle Temperatuur"
+                }
+            }
+        }
+    }
+}
