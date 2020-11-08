@@ -1,6 +1,8 @@
 """Support for monitoring the qBittorrent API."""
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import logging
+import json
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
@@ -10,12 +12,11 @@ from homeassistant.const import (
     DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
-from . import QBittorrentEntity
+from homeassistant.helpers.entity import Entity
+from .wrapper_functions import get_main_data_client, retrieve_torrentdata
 
-# from . import QBittorrentEntity
 from .const import (
     DATA_KEY_CLIENT,
-    DATA_KEY_COORDINATOR,
     DATA_KEY_NAME,
     SENSOR_TYPE_ACTIVE_TORRENTS,
     SENSOR_TYPE_COMPLETED_TORRENTS,
@@ -59,7 +60,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         QBittorrentSensor(
             sensor_name,
             qbit_data[DATA_KEY_CLIENT],
-            qbit_data[DATA_KEY_COORDINATOR],
             name,
             LoginRequired,
             entry.entry_id,
@@ -75,21 +75,18 @@ def format_speed(speed):
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-class QBittorrentSensor(QBittorrentEntity):
+class QBittorrentSensor(Entity):
     """Representation of an qBittorrent sensor."""
 
     def __init__(
         self,
         sensor_type,
         qbittorrent_client,
-        coordinator,
         client_name,
         exception,
         server_unique_id,
     ):
         """Initialize the qBittorrent sensor."""
-        super().__init__(qbittorrent_client, coordinator, client_name, server_unique_id)
-
         self._name = SENSOR_TYPES[sensor_type][0]
         self.client = qbittorrent_client
         self.type = sensor_type
@@ -98,6 +95,7 @@ class QBittorrentSensor(QBittorrentEntity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._available = False
         self._exception = exception
+        self._server_unique_id = server_unique_id
         self._attribute = {}
 
     @property
@@ -130,11 +128,13 @@ class QBittorrentSensor(QBittorrentEntity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from qBittorrent and updates the state."""
 
         try:
-            data = self.client.sync_main_data()
+            data = await self.hass.async_add_executor_job(
+                get_main_data_client, self.client
+            )
             self._available = True
         except RequestException:
             _LOGGER.error("Connection lost")
@@ -169,12 +169,15 @@ class QBittorrentSensor(QBittorrentEntity):
             torrents = data["torrents"]
 
             for torrent in torrents:
-                attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
+                torrentattr = torrents[torrent]
+                attributes[trim_name(torrentattr, TRIM_SIZE - 5)] = torrentattr["state"]
 
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
-            torrents = self.client.torrents(filter="active")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "active"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
@@ -182,7 +185,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_INACTIVE_TORRENTS:
-            torrents = self.client.torrents(filter="inactive")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "inactive"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent, TRIM_SIZE - 5)] = torrent["state"]
@@ -190,7 +195,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
-            torrents = self.client.torrents(filter="downloading")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "downloading"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
@@ -198,8 +205,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_SEEDING_TORRENTS:
-            torrents = self.client.torrents(filter="seeding")
-
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "seeding"
+            )
             for torrent in torrents:
                 ratio = torrent["ratio"]
                 ratio = float(ratio)
@@ -210,7 +218,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_RESUMED_TORRENTS:
-            torrents = self.client.torrents(filter="resumed")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "resumed"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
@@ -218,7 +228,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_PAUSED_TORRENTS:
-            torrents = self.client.torrents(filter="paused")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "paused"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent)] = format_progress(torrent)
@@ -226,7 +238,9 @@ class QBittorrentSensor(QBittorrentEntity):
             self._state = len(torrents)
             self._attribute = attributes
         elif self.type == SENSOR_TYPE_COMPLETED_TORRENTS:
-            torrents = self.client.torrents(filter="completed")
+            torrents = await self.hass.async_add_executor_job(
+                retrieve_torrentdata, self.client, "completed"
+            )
 
             for torrent in torrents:
                 attributes[trim_name(torrent)] = "100.0%"
