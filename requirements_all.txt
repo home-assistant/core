@@ -220,6 +220,9 @@ aiopvpc==2.0.2
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
 
+# homeassistant.components.recollect_waste
+aiorecollect==0.2.1
+
 # homeassistant.components.shelly
 aioshelly==0.5.1
 
@@ -1916,9 +1919,6 @@ raincloudy==0.0.7
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
-
-# homeassistant.components.recollect_waste
-recollect-waste==1.0.1
 
 # homeassistant.components.rainmachine
 regenmaschine==3.0.0
