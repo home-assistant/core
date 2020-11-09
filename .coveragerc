@@ -717,7 +717,6 @@ omit =
     homeassistant/components/repetier/__init__.py
     homeassistant/components/repetier/sensor.py
     homeassistant/components/remote_rpi_gpio/*
-    homeassistant/components/remote_rpi_gpio_light/*
     homeassistant/components/rest/notify.py
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
@@ -738,6 +737,7 @@ omit =
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
+    homeassistant/components/rpi_gpio_light/*
     homeassistant/components/rpi_gpio/cover.py
     homeassistant/components/rpi_gpio_pwm/light.py
     homeassistant/components/rpi_pfio/*
