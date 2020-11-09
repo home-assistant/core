@@ -4,7 +4,6 @@ from RPi import GPIO  # pylint: disable=import-error
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 DOMAIN = "rpi_gpio"
-PLATFORMS = ["binary_sensor", "cover", "switch"]
 
 
 def setup(hass, config):
@@ -46,15 +45,3 @@ def read_input(port):
 def edge_detect(port, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
     GPIO.add_event_detect(port, GPIO.BOTH, callback=event_callback, bouncetime=bounce)
-
-
-def rising_edge_detect(port, event_callback, bounce):
-    """Add detection for RISING."""
-    GPIO.add_event_detect(port, GPIO.RISING, callback=event_callback, bouncetime=bounce)
-
-
-def falling_edge_detect(port, event_callback, bounce):
-    """Add detection for FALLING."""
-    GPIO.add_event_detect(
-        port, GPIO.FALLING, callback=event_callback, bouncetime=bounce
-    )
