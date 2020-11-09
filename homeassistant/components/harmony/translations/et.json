@@ -27,8 +27,10 @@
         "step": {
             "init": {
                 "data": {
+                    "activity": "Vaiketegevus, mis k\u00e4ivitatakse, kui \u00fchtegi ei ole m\u00e4\u00e4ratud.",
                     "delay_secs": "Viivitus k\u00e4skude saatmise vahel."
-                }
+                },
+                "description": "Kohanda Harmony Hub'i valikuid"
             }
         }
     }
