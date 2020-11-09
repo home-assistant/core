@@ -62,6 +62,7 @@ def async_evaluate_event(hass, event_data):
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 
+            _LOGGER.debug("%s: %s", event_type, person_event_data)
             async_send_event(hass, event_type, person_event_data)
 
     else:

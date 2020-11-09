@@ -15,6 +15,19 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_type": {
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on",
+            "human": "{entity_name} detected a human",
+            "movement": "{entity_name} detected movement",
+            "person": "{entity_name} detected a person",
+            "person_away": "{entity_name} detected a person has left",
+            "animal": "{entity_name} detected an animal",
+            "outdoor": "{entity_name} detected an outdoor event",
+            "vehicle": "{entity_name} detected a vehicle"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

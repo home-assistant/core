@@ -4,12 +4,15 @@ API = "api"
 DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
 
+MODEL_NOC = "Smart Outdoor Camera"
+MODEL_NACAMERA = "Smart Indoor Camera"
+
 MODELS = {
     "NAPlug": "Relay",
     "NATherm1": "Smart Thermostat",
     "NRV": "Smart Radiator Valves",
-    "NACamera": "Smart Indoor Camera",
-    "NOC": "Smart Outdoor Camera",
+    "NACamera": MODEL_NACAMERA,
+    "NOC": MODEL_NOC,
     "NSD": "Smart Smoke Alarm",
     "NACamDoorTag": "Smart Door and Window Sensors",
     "NHC": "Smart Indoor Air Quality Monitor",
@@ -82,6 +85,13 @@ EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
 EVENT_TYPE_SET_POINT = "set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
+EVENT_TYPE_CAMERA_OUTDOOR = "outdoor"
+EVENT_TYPE_CAMERA_ANIMAL = "animal"
+EVENT_TYPE_CAMERA_HUMAN = "human"
+EVENT_TYPE_CAMERA_VEHICLE = "vehicle"
+EVENT_TYPE_CAMERA_MOVEMENT = "movement"
+EVENT_TYPE_CAMERA_PERSON = "person"
+EVENT_TYPE_CAMERA_PERSON_AWAY = "person_away"
 
 MODE_LIGHT_ON = "on"
 MODE_LIGHT_OFF = "off"
