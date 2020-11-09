@@ -117,32 +117,32 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_NAME,
-                        default=self.config_entry.get(CONF_NAME),
+                        default=self.config_entry.data.get(CONF_NAME),
                     ): str,
                     vol.Required(
                         CONF_LONGITUDE,
-                        default=self.config_entry.get(CONF_LONGITUDE),
+                        default=self.config_entry.data.get(CONF_LONGITUDE),
                     ): vol.All(
                         vol.Coerce(float),
                         vol.Range(min=-180, max=180),
                     ),
                     vol.Required(
                         CONF_LATITUDE,
-                        default=self.config_entry.get(CONF_LATITUDE),
+                        default=self.config_entry.data.get(CONF_LATITUDE),
                     ): vol.All(
                         vol.Coerce(float),
                         vol.Range(min=-90, max=90),
                     ),
                     vol.Required(
                         CONF_THRESHOLD,
-                        default=self.config_entry.get(CONF_THRESHOLD),
+                        default=self.config_entry.data.get(CONF_THRESHOLD),
                     ): vol.All(
                         vol.Coerce(int),
                         vol.Range(min=0, max=100),
                     ),
                     vol.Required(
                         CONF_SCAN_INTERVAL,
-                        default=self.config_entry.get(CONF_SCAN_INTERVAL),
+                        default=self.config_entry.data.get(CONF_SCAN_INTERVAL),
                     ): vol.All(
                         vol.Coerce(int),
                         vol.Range(min=1),

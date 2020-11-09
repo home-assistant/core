@@ -18,15 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    AURORA_API,
-    CONF_THRESHOLD,
-    COORDINATOR,
-    DEFAULT_NAME,
-    DEFAULT_POLLING_INTERVAL,
-    DEFAULT_THRESHOLD,
-    DOMAIN,
-)
+from .const import AURORA_API, CONF_THRESHOLD, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up SpaceX from a config entry."""
+    """Set up Aurora from a config entry."""
 
     conf = entry.data
 
@@ -50,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     longitude = conf[CONF_LONGITUDE]
     latitude = conf[CONF_LATITUDE]
-    polling_interval = conf[CONF_SCAN_INTERVAL, DEFAULT_POLLING_INTERVAL]
-    threshold = conf[CONF_THRESHOLD, DEFAULT_THRESHOLD]
-    name = conf[CONF_NAME, DEFAULT_NAME]
+    polling_interval = conf[CONF_SCAN_INTERVAL]
+    threshold = conf[CONF_THRESHOLD]
+    name = conf[CONF_NAME]
 
     try:
         await api.get_forecast_data(longitude, latitude)
