@@ -27,7 +27,7 @@ async def validate_projector(hass: HomeAssistant, host, port):
         port=port,
     )
     _power = await epson_proj.get_property(POWER)
-    if not _power or _power == STATE_UNAVAILABLE:
+    if not _power or _power == EPSON_STATE_UNAVAILABLE:
         raise CannotConnect
     return epson_proj
 

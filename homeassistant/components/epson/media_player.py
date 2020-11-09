@@ -17,7 +17,7 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
-    STATE_UNAVAILABLE,
+    STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE,
     TURN_OFF,
     TURN_ON,
     VOL_DOWN,
@@ -37,7 +37,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -121,7 +128,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 self._volume = volume
         elif power_state == BUSY:
             self._state = STATE_ON
-        elif power_state == STATE_UNAVAILABLE:
+        elif power_state == EPSON_STATE_UNAVAILABLE:
             self._state = STATE_UNAVAILABLE
         else:
             self._state = STATE_OFF
