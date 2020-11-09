@@ -24,9 +24,10 @@
                 "data": {
                     "host": "IP Address",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Smile Username"
                 },
-                "description": "Please enter:",
+                "description": "Please enter",
                 "title": "Connect to the Smile"
             }
         }
