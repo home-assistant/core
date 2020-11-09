@@ -35,6 +35,11 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         )
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._unique_id}-nightlight_sensor"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return f"{self._device.name} nightlight"
