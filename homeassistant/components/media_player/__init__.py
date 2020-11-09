@@ -431,7 +431,7 @@ class MediaPlayerEntity(Entity):
         if url is None:
             return None, None
 
-        return await self._async_fetch_image(url)
+        return await self._async_fetch_image_from_cache(url)
 
     async def async_get_browse_image(
         self, media_content_type, media_content_id, browse_image
@@ -856,7 +856,7 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
-    async def _async_fetch_image(self, url):
+    async def _async_fetch_image_from_cache(self, url):
         """Fetch image.
 
         Images are cached in memory (the images are typically 10-100kB in size).
@@ -874,7 +874,7 @@ class MediaPlayerEntity(Entity):
             if CACHE_CONTENT in cache_images[url]:
                 return cache_images[url][CACHE_CONTENT]
 
-        (content, content_type) = await self._async_retrieve_image(url)
+        (content, content_type) = await self._async_fetch_image(url)
 
         async with cache_images[url][CACHE_LOCK]:
             cache_images[url][CACHE_CONTENT] = content, content_type
@@ -883,7 +883,7 @@ class MediaPlayerEntity(Entity):
 
         return content, content_type
 
-    async def _async_retrieve_image(self, url):
+    async def _async_fetch_image(self, url):
         """Retrieve an image."""
         content, content_type = (None, None)
         websession = async_get_clientsession(self.hass)

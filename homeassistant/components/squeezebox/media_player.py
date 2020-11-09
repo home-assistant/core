@@ -595,7 +595,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     ):
         """Get album art from Squeezebox server."""
         image_url = self._player.generate_image_url_from_track_id(browse_image)
-        result = await self._async_retrieve_image(image_url)
+        result = await self._async_fetch_image(image_url)
         if result == (None, None):
             _LOGGER.info("Error retrieving proxied album art from %s", image_url)
         return result
