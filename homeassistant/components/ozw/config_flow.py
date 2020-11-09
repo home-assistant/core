@@ -49,7 +49,11 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_use_mqtt_integration(self):
-        """Handle logic when using the MQTT integration."""
+        """Handle logic when using the MQTT integration.
+        
+        This is the entry point for the logic that is needed
+        when this integration will depend on the MQTT integration.
+        """
         if "mqtt" not in self.hass.config.components:
             return self.async_abort(reason="mqtt_required")
 
