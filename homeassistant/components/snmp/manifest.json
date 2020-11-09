@@ -2,6 +2,6 @@
   "domain": "snmp",
   "name": "SNMP",
   "documentation": "https://www.home-assistant.io/integrations/snmp",
-  "requirements": ["pysnmp==4.4.12","pysnmpcrypto==0.0.4"],
+  "requirements": ["pysnmp==4.4.12"],
   "codeowners": []
 }
