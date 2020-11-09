@@ -55,7 +55,11 @@ async def ws_list_blueprints(hass, connection, msg):
         results[domain] = domain_results
 
     if msg.get("domain"):
-        get_domain_blueprint(msg["domain"], domain_blueprints[msg["domain"]])
+        if msg["domain"] in domain_blueprints:
+            get_domain_blueprint(
+                msg["domain"],
+                await domain_blueprints[msg["domain"]].async_get_blueprints(),
+            )
     else:
         for domain, domain_results in zip(
             domain_blueprints,
