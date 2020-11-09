@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     POLLING_TIMEOUT_MULTIPLIER,
     REST,
+    REST_SENSORS_UPDATE_INTERVAL,
     SETUP_ENTRY_TIMEOUT_SEC,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
@@ -186,7 +187,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=device.settings["name"] or device.settings["device"]["hostname"],
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL),
         )
         self.device = device
 
