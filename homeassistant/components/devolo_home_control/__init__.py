@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                         gateway_id=gateway_id,
                         mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
-                        url=entry.data[CONF_HOMECONTROL],
                     )
                 )
             )
@@ -119,13 +118,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 def _mydevolo(conf: dict) -> Mydevolo:
     """Configure mydevolo."""
-    try:
-        mydevolo = Mydevolo.get_instance()
-    except SyntaxError:
-        mydevolo = Mydevolo()
-
+    mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
     mydevolo.url = conf[CONF_MYDEVOLO]
-
     return mydevolo
