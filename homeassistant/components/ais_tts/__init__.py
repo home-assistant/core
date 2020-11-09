@@ -19,10 +19,12 @@ ATTR_NAME = "name"
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = "aistts_list_updated"
+EVENT_PLAY_ITEM = "aistts_play_item"
 ITEM_UPDATE_SCHEMA = vol.Schema({"complete": bool, ATTR_NAME: str})
 PERSISTENCE = ".dom/.aistts.json"
 
 SERVICE_ADD_ITEM = "add_item"
+SERVICE_PLAY_ITEM = "play_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
 
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
@@ -31,6 +33,7 @@ WS_TYPE_AISTTS_ITEMS = "aistts/items"
 WS_TYPE_AISTTS_ADD_ITEM = "aistts/items/add"
 WS_TYPE_AISTTS_UPDATE_ITEM = "aistts/items/update"
 WS_TYPE_AISTTS_CLEAR_ITEMS = "aistts/items/clear"
+WS_TYPE_AISTTS_REORDER_ITEMS = "aistts/items/reorder"
 
 SCHEMA_WEBSOCKET_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_AISTTS_ITEMS}
@@ -58,6 +61,13 @@ SCHEMA_WEBSOCKET_UPDATE_ITEM = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_AISTTS_CLEAR_ITEMS}
+)
+
+SCHEMA_WEBSOCKET_REORDER_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        vol.Required("type"): WS_TYPE_AISTTS_REORDER_ITEMS,
+        vol.Required("item_ids"): [str],
+    }
 )
 
 
@@ -91,12 +101,23 @@ async def async_setup(hass, config):
         else:
             data.async_update(item["id"], {"name": name, "complete": True})
 
+    async def play_item_service(call):
+        """Play the item """
+        item_no = 0
+        if "item" in call.data:
+            item_no = call.data.get("item")
+        if item_no == 0:
+            hass.bus.async_fire(EVENT_PLAY_ITEM)
+        else:
+            hass.data[DOMAIN].async_play_item(item_no)
+
     data = hass.data[DOMAIN] = AisTtsData(hass)
     await data.async_load()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
     )
+    hass.services.async_register(DOMAIN, SERVICE_PLAY_ITEM, play_item_service)
     hass.services.async_register(
         DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
     )
@@ -125,10 +146,17 @@ async def async_setup(hass, config):
         websocket_handle_update,
         SCHEMA_WEBSOCKET_UPDATE_ITEM,
     )
+
     hass.components.websocket_api.async_register_command(
         WS_TYPE_AISTTS_CLEAR_ITEMS,
         websocket_handle_clear,
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
+    )
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_AISTTS_REORDER_ITEMS,
+        websocket_handle_reorder,
+        SCHEMA_WEBSOCKET_REORDER_ITEMS,
     )
 
     return True
@@ -176,6 +204,52 @@ class AisTtsData:
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
         self.hass.async_add_job(self.save)
+
+    @callback
+    def async_play_item(self, item_no):
+        """Clear completed items."""
+        try:
+            item = self.items[item_no - 1]
+            self.hass.async_add_job(
+                self.hass.services.async_call(
+                    "ais_ai_service",
+                    "say_it",
+                    {
+                        "text": item["name"],
+                        "pitch": item["pitch"],
+                        "rate": item["rate"],
+                        "language": item["language"],
+                        "voice": item["voice"],
+                    },
+                )
+            )
+        except Exception as e:
+            _LOGGER.error("async_play_item: " + str(e))
+
+    @callback
+    def async_reorder(self, item_ids):
+        """Reorder items."""
+        # The array for sorted items.
+        new_items = []
+        all_items_mapping = {item["id"]: item for item in self.items}
+        # Append items by the order of passed in array.
+        for item_id in item_ids:
+            if item_id not in all_items_mapping:
+                raise KeyError
+            new_items.append(all_items_mapping[item_id])
+            # Remove the item from mapping after it's appended in the result array.
+            del all_items_mapping[item_id]
+        # Append the rest of the items
+        for key in all_items_mapping:
+            # All the unchecked items must be passed in the item_ids array,
+            # so all items left in the mapping should be checked items.
+            if all_items_mapping[key]["complete"] is False:
+                raise vol.Invalid(
+                    "The item ids array doesn't contain all the unchecked shopping list items."
+                )
+            new_items.append(all_items_mapping[key])
+        self.items = new_items
+        self.hass.async_add_executor_job(self.save)
 
     async def async_load(self):
         """Load items."""
@@ -294,3 +368,20 @@ def websocket_handle_clear(hass, connection, msg):
     hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+def websocket_handle_reorder(hass, connection, msg):
+    """Handle reordering shopping_list items."""
+    msg_id = msg.pop("id")
+    try:
+        hass.data[DOMAIN].async_reorder(msg.pop("item_ids"))
+        hass.bus.async_fire(EVENT, {"action": "reorder"})
+        connection.send_result(msg_id)
+    except KeyError:
+        connection.send_error(
+            msg_id,
+            websocket_api.const.ERR_NOT_FOUND,
+            "One or more item id(s) not found.",
+        )
+    except vol.Invalid as err:
+        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
