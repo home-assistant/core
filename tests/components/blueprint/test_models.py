@@ -17,7 +17,10 @@ def blueprint_1():
             "blueprint": {
                 "name": "Hello",
                 "domain": "automation",
-                "input": {"test-placeholder": None},
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+                "input": {
+                    "test-placeholder": {"name": "Name", "description": "Description"}
+                },
             },
             "example": Placeholder("test-placeholder"),
         }
@@ -59,7 +62,8 @@ def test_blueprint_properties(blueprint_1):
     assert blueprint_1.metadata == {
         "name": "Hello",
         "domain": "automation",
-        "input": {"test-placeholder": None},
+        "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+        "input": {"test-placeholder": {"name": "Name", "description": "Description"}},
     }
     assert blueprint_1.domain == "automation"
     assert blueprint_1.name == "Hello"
