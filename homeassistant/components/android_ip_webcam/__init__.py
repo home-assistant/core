@@ -1,7 +1,6 @@
 """Support for Android IP Webcam."""
 import asyncio
 from datetime import timedelta
-import logging
 
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
@@ -30,8 +29,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_AUD_CONNS = "Audio Connections"
 ATTR_HOST = "host"

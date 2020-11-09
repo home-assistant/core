@@ -16,9 +16,9 @@
                     "name": "\u540d\u7a31",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "NZBGet \u4f7f\u7528 SSL \u8a8d\u8b49",
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
-                    "verify_ssl": "NZBGet \u4f7f\u7528\u5c0d\u61c9\u8a8d\u8b49"
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
                 "title": "\u9023\u7dda\u81f3 NZBGet"
             }

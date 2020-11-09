@@ -2,7 +2,7 @@
 import copy
 
 from plexapi.exceptions import BadRequest, NotFound
-from requests.exceptions import RequestException
+from requests.exceptions import ConnectionError, RequestException
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
@@ -28,6 +28,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update
 from .mock_classes import (
+    MockGDM,
     MockPlexAccount,
     MockPlexAlbum,
     MockPlexArtist,
@@ -125,6 +126,24 @@ async def test_network_error_during_refresh(
     )
 
 
+async def test_gdm_client_failure(hass, mock_websocket, setup_plex_server):
+    """Test connection failure to a GDM discovered client."""
+    mock_plex_server = await setup_plex_server(disable_gdm=False)
+
+    with patch(
+        "homeassistant.components.plex.server.PlexClient", side_effect=ConnectionError
+    ):
+        trigger_plex_update(mock_websocket)
+        await hass.async_block_till_done()
+
+    sensor = hass.states.get("sensor.plex_plex_server_1")
+    assert sensor.state == str(len(mock_plex_server.accounts))
+
+    with patch.object(mock_plex_server, "clients", side_effect=RequestException):
+        trigger_plex_update(mock_websocket)
+        await hass.async_block_till_done()
+
+
 async def test_mark_sessions_idle(hass, mock_plex_server, mock_websocket):
     """Test marking media_players as idle when sessions end."""
     server_id = mock_plex_server.machineIdentifier
@@ -156,7 +175,7 @@ async def test_ignore_plex_web_client(hass, entry, mock_websocket):
 
     with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
         "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(players=0)
-    ):
+    ), patch("homeassistant.components.plex.GDM", return_value=MockGDM(disabled=True)):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

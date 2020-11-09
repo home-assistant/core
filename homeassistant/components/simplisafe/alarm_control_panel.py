@@ -119,11 +119,11 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if not self._simplisafe.options.get(CONF_CODE):
+        if not self._simplisafe.config_entry.options.get(CONF_CODE):
             return None
-        if isinstance(self._simplisafe.options[CONF_CODE], str) and re.search(
-            "^\\d+$", self._simplisafe.options[CONF_CODE]
-        ):
+        if isinstance(
+            self._simplisafe.config_entry.options[CONF_CODE], str
+        ) and re.search("^\\d+$", self._simplisafe.config_entry.options[CONF_CODE]):
             return FORMAT_NUMBER
         return FORMAT_TEXT
 
@@ -140,10 +140,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     @callback
     def _is_code_valid(self, code, state):
         """Validate that a code matches the required one."""
-        if not self._simplisafe.options.get(CONF_CODE):
+        if not self._simplisafe.config_entry.options.get(CONF_CODE):
             return True
 
-        if not code or code != self._simplisafe.options[CONF_CODE]:
+        if not code or code != self._simplisafe.config_entry.options[CONF_CODE]:
             LOGGER.warning(
                 "Incorrect alarm code entered (target state: %s): %s", state, code
             )
@@ -159,7 +159,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_off()
         except SimplipyError as err:
-            LOGGER.error('Error while disarming "%s": %s', self._system.name, err)
+            LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
             return
 
         self._state = STATE_ALARM_DISARMED
@@ -172,7 +172,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_home()
         except SimplipyError as err:
-            LOGGER.error('Error while arming "%s" (home): %s', self._system.name, err)
+            LOGGER.error(
+                'Error while arming "%s" (home): %s', self._system.system_id, err
+            )
             return
 
         self._state = STATE_ALARM_ARMED_HOME
@@ -185,7 +187,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.set_away()
         except SimplipyError as err:
-            LOGGER.error('Error while arming "%s" (away): %s', self._system.name, err)
+            LOGGER.error(
+                'Error while arming "%s" (away): %s', self._system.system_id, err
+            )
             return
 
         self._state = STATE_ALARM_ARMING

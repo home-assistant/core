@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "cannot_connect": "No s'ha pogut connectar, verifica l'adre\u00e7a de l'amfitri\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {

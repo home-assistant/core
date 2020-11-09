@@ -934,7 +934,6 @@ async def test_icon_template(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
-
     assert state.attributes["icon"] == "mdi:check"
 
 
@@ -1113,7 +1112,7 @@ async def test_color_template(hass, expected_hs, template):
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("hs_color") == expected_hs
-
+    
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cas\u00e9ta bridge already configured.",
-            "cannot_connect": "Cancelled setup of Cas\u00e9ta bridge due to connection failure."
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
         },
         "error": {
-            "cannot_connect": "Failed to connect to Cas\u00e9ta bridge; check your host and certificate configuration."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "import_failed": {

@@ -18,9 +18,9 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Porta",
-                    "ssl": "AdGuard Home utilizza un certificato SSL",
+                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "AdGuard Home utilizza un certificato appropriato"
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "description": "Configura l'istanza di AdGuard Home per consentire il monitoraggio e il controllo."
             }

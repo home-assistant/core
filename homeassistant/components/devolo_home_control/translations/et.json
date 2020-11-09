@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Vale kasutajanimi v\u00f5i salas\u00f5na."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "Home Control'i URL",
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Salas\u00f5na",
+                    "username": "E-post / devolo ID"
+                },
+                "title": ""
+            }
+        }
+    },
+    "title": ""
+}

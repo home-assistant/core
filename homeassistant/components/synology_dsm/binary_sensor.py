@@ -12,6 +12,7 @@ from .const import (
     SECURITY_BINARY_SENSORS,
     STORAGE_DISK_BINARY_SENSORS,
     SYNO_API,
+    UPGRADE_BINARY_SENSORS,
 )
 
 
@@ -27,6 +28,13 @@ async def async_setup_entry(
             api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type]
         )
         for sensor_type in SECURITY_BINARY_SENSORS
+    ]
+
+    entities += [
+        SynoDSMUpgradeBinarySensor(
+            api, sensor_type, UPGRADE_BINARY_SENSORS[sensor_type]
+        )
+        for sensor_type in UPGRADE_BINARY_SENSORS
     ]
 
     # Handle all disks
@@ -67,7 +75,18 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_type)(self._device_id)
-        if attr is None:
-            return None
-        return attr
+        return getattr(self._api.storage, self.entity_type)(self._device_id)
+
+
+class SynoDSMUpgradeBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+    """Representation a Synology Upgrade binary sensor."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state."""
+        return getattr(self._api.upgrade, self.entity_type)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._api.upgrade)

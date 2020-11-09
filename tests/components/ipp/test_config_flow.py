@@ -65,7 +65,7 @@ async def test_connection_error(
 
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_zeroconf_connection_error(
@@ -82,7 +82,7 @@ async def test_zeroconf_connection_error(
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_confirm_connection_error(
@@ -97,7 +97,7 @@ async def test_zeroconf_confirm_connection_error(
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_user_connection_upgrade_required(

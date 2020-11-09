@@ -2,16 +2,11 @@
 import voluptuous as vol
 
 from homeassistant.components.geo_location import DOMAIN
-from homeassistant.const import (
-    CONF_EVENT,
-    CONF_PLATFORM,
-    CONF_SOURCE,
-    CONF_ZONE,
-    EVENT_STATE_CHANGED,
-)
-from homeassistant.core import callback
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
+from homeassistant.helpers.event import TrackStates, async_track_state_change_filtered
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -41,13 +36,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
     source = config.get(CONF_SOURCE).lower()
     zone_entity_id = config.get(CONF_ZONE)
     trigger_event = config.get(CONF_EVENT)
+    job = HassJob(action)
 
     @callback
     def state_change_listener(event):
         """Handle specific state changes."""
-        # Skip if the event is not a geo_location entity.
-        if not event.data.get("entity_id").startswith(DOMAIN):
-            return
         # Skip if the event's source does not match the trigger's source.
         from_state = event.data.get("old_state")
         to_state = event.data.get("new_state")
@@ -66,8 +59,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
             and from_match
             and not to_match
         ):
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": "geo_location",
@@ -83,4 +76,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 event.context,
             )
 
-    return hass.bus.async_listen(EVENT_STATE_CHANGED, state_change_listener)
+    return async_track_state_change_filtered(
+        hass, TrackStates(False, set(), {DOMAIN}), state_change_listener
+    ).async_remove

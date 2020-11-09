@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud lights."""
-import logging
 from typing import Any, Dict
 
 from homematicip.aio.device import (
@@ -28,8 +27,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
 ATTR_CURRENT_POWER_W = "current_power_w"

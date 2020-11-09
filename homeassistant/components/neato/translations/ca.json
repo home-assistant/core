@@ -1,15 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja configurat",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_credentials": "Credencials inv\u00e0lides"
         },
         "create_entry": {
             "default": "Consulta la [documentaci\u00f3 de Neato]({docs_url})."
         },
         "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_credentials": "Credencials inv\u00e0lides",
-            "unexpected_error": "Error inesperat"
+            "unexpected_error": "Error inesperat",
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {

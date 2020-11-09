@@ -1,6 +1,4 @@
 """Config flow for Speedtest.net."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,8 +15,6 @@ from .const import (
     DEFAULT_SERVER,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

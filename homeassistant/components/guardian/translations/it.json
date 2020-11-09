@@ -1,8 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo Guardian \u00e8 gi\u00e0 stato configurato",
-            "already_in_progress": "La configurazione del dispositivo Guardian \u00e8 gi\u00e0 in corso.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "connection_error": "Impossibile connettersi al dispositivo Guardian."
         },
         "step": {

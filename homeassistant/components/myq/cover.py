@@ -1,5 +1,4 @@
 """Support for MyQ-Enabled Garage Doors."""
-import logging
 import time
 
 from pymyq.const import (
@@ -42,9 +41,6 @@ from .const import (
     TRANSITION_COMPLETE_DURATION,
     TRANSITION_START_DURATION,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

@@ -16,5 +16,5 @@ MEDIA_CLASS_MAP = {
 }
 URI_SCHEME = "media-source://"
 URI_SCHEME_REGEX = re.compile(
-    r"^media-source:\/\/(?:(?P<domain>(?!.+__)(?!_)[\da-z_]+(?<!_))(?:\/(?P<identifier>(?!\/).+))?)?$"
+    r"^media-source:\/\/(?:(?P<domain>(?!_)[\da-z_]+(?<!_))(?:\/(?P<identifier>(?!\/).+))?)?$"
 )

@@ -2,7 +2,6 @@
 from datetime import timedelta
 from itertools import groupby
 import json
-import logging
 import re
 
 import sqlalchemy
@@ -52,8 +51,6 @@ ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
 ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
 DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
 ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MESSAGE = "message"
 
@@ -147,7 +144,7 @@ async def async_setup(hass, config):
             domain = DOMAIN
 
         message.hass = hass
-        message = message.async_render()
+        message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id)
 
     hass.components.frontend.async_register_built_in_panel(

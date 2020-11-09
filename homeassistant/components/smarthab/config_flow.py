@@ -65,13 +65,13 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password}
                 )
 
-            errors["base"] = "wrong_login"
+            errors["base"] = "invalid_auth"
         except pysmarthab.RequestFailedException:
             _LOGGER.exception("Error while trying to reach SmartHab API")
             errors["base"] = "service"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error during login")
-            errors["base"] = "unknown_error"
+            errors["base"] = "unknown"
 
         return self._show_setup_form(user_input, errors)
 

@@ -1,6 +1,5 @@
 """Support for the Brother service."""
 from datetime import timedelta
-import logging
 
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -36,8 +35,6 @@ ATTR_FIRMWARE = "firmware"
 ATTR_MODEL = "model"
 ATTR_REMAINING_PAGES = "remaining_pages"
 ATTR_SERIAL = "serial"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

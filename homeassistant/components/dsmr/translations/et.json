@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "one": "\u00fcks",
+            "other": "mitu"
+        },
+        "step": {
+            "one": "\u00fcks",
+            "other": "mitu"
+        }
+    }
+}

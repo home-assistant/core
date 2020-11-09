@@ -7,7 +7,7 @@ from simplipy.errors import (
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
@@ -54,7 +54,7 @@ async def test_invalid_credentials(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_options_flow(hass):
@@ -88,37 +88,11 @@ async def test_options_flow(hass):
 async def test_show_form(hass):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-async def test_step_import(hass):
-    """Test that the import step works."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_CODE: "1234",
-    }
-
-    with patch(
-        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
-    ), patch(
-        "simplipy.API.login_via_credentials", new=AsyncMock(return_value=mock_api())
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user@email.com"
-        assert result["data"] == {
-            CONF_USERNAME: "user@email.com",
-            CONF_TOKEN: "12345abc",
-            CONF_CODE: "1234",
-        }
 
 
 async def test_step_reauth(hass):

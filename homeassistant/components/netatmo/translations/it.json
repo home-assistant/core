@@ -22,8 +22,8 @@
                     "area_name": "Nome dell'area",
                     "lat_ne": "Latitudine angolo Nord-Est",
                     "lat_sw": "Latitudine angolo Sud-Ovest",
-                    "lon_ne": "Longitudine angolo Nord-Est",
-                    "lon_sw": "Longitudine angolo Sud-Ovest",
+                    "lon_ne": "Logitudine angolo Nord-Est",
+                    "lon_sw": "Logitudine angolo Sud-Ovest",
                     "mode": "Calcolo",
                     "show_on_map": "Mostra sulla mappa"
                 },

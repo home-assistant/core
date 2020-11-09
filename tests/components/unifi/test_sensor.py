@@ -71,7 +71,7 @@ async def test_no_clients(hass):
         },
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
@@ -88,7 +88,7 @@ async def test_sensors(hass):
         clients_response=CLIENTS,
     )
 
-    assert len(controller.mock_requests) == 4
+    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")

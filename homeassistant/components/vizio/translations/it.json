@@ -14,7 +14,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "Codice PIN"
                 },
                 "description": "La TV dovrebbe visualizzare un codice. Immettere quel codice nel modulo e quindi continuare con il passaggio successivo per completare l'associazione.",
                 "title": "Processo di associazione completo"

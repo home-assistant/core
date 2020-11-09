@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Zem\u011b"
+                },
+                "title": "Vyberte zemi, kterou chcete sledovat"
+            }
+        }
+    }
+}

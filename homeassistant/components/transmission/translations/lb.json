@@ -4,7 +4,8 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Kann sech net mam Server verbannen.",
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "name_exists": "Numm g\u00ebtt et schonn",
             "wrong_credentials": "Falsche Benotzernumm oder Passwuert"
         },

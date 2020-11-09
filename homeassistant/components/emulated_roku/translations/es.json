@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "name_exists": "El nombre ya existe"
         },
         "step": {
@@ -17,5 +18,5 @@
             }
         }
     },
-    "title": "EmulatedRoku"
+    "title": "Roku emulado"
 }

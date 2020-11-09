@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "one_instance_allowed": "Vajalik on ainult \u00fcks sidumine.",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "wrong_server_id": "Serveri ID ei sobi"
         },
         "step": {

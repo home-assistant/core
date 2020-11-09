@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione per bridge \u00e8 gi\u00e0 in corso.",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_bridges": "Nessun bridge deCONZ rilevato",
             "no_hardware_available": "Nessun hardware radio collegato a deCONZ",
             "not_deconz_bridge": "Non \u00e8 un bridge deCONZ",
@@ -67,6 +67,7 @@
             "remote_button_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte",
             "remote_button_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte",
             "remote_button_rotated": "Pulsante ruotato \"{subtype}\"",
+            "remote_button_rotated_fast": "Pulsante ruotato velocemente \"{subtype}\"",
             "remote_button_rotation_stopped": "La rotazione dei pulsanti \"{subtype}\" si \u00e8 arrestata",
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",

@@ -784,7 +784,7 @@ class AlexaInputController(AlexaCapability):
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )
-            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys():
+            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP:
                 input_list.append(
                     {"name": Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
                 )

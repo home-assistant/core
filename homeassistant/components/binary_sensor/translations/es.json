@@ -96,11 +96,11 @@
         },
         "battery": {
             "off": "Normal",
-            "on": "Bajo"
+            "on": "Baja"
         },
         "cold": {
             "off": "Normal",
-            "on": "Frio"
+            "on": "Fr\u00edo"
         },
         "connectivity": {
             "off": "Desconectado",

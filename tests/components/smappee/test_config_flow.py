@@ -72,7 +72,7 @@ async def test_show_zeroconf_connection_error_form(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
@@ -95,7 +95,7 @@ async def test_connection_error(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"}
         )
-        assert result["reason"] == "connection_error"
+        assert result["reason"] == "cannot_connect"
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 

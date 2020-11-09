@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "mqtt_required": "MQTT-integrasjonen er ikke satt opp",
-            "one_instance_allowed": "Integrasjonen st\u00f8tter bare \u00e9n Z-Wave-forekomst"
+            "one_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "user": {
