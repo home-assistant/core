@@ -7,7 +7,7 @@ from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from tests.common import MockEntity, MockEntityPlatform, mock_registry
+from tests.common import MockConfigEntry, MockEntity, MockEntityPlatform, mock_registry
 
 
 @pytest.fixture
@@ -162,18 +162,20 @@ async def test_update_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
-        "area_id": "mock-area-id",
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.world",
-        "name": "after update",
-        "icon": "icon:after update",
-        "original_name": None,
-        "original_icon": None,
-        "capabilities": None,
-        "unique_id": "1234",
+        "entity_entry": {
+            "config_entry_id": None,
+            "device_id": None,
+            "area_id": "mock-area-id",
+            "disabled_by": None,
+            "platform": "test_platform",
+            "entity_id": "test_domain.world",
+            "name": "after update",
+            "icon": "icon:after update",
+            "original_name": None,
+            "original_icon": None,
+            "capabilities": None,
+            "unique_id": "1234",
+        }
     }
 
     state = hass.states.get("test_domain.world")
@@ -208,18 +210,75 @@ async def test_update_entity(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
-        "area_id": "mock-area-id",
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.world",
-        "name": "after update",
-        "icon": "icon:after update",
-        "original_name": None,
-        "original_icon": None,
-        "capabilities": None,
-        "unique_id": "1234",
+        "entity_entry": {
+            "config_entry_id": None,
+            "device_id": None,
+            "area_id": "mock-area-id",
+            "disabled_by": None,
+            "platform": "test_platform",
+            "entity_id": "test_domain.world",
+            "name": "after update",
+            "icon": "icon:after update",
+            "original_name": None,
+            "original_icon": None,
+            "capabilities": None,
+            "unique_id": "1234",
+        },
+        "reload_delay": 30,
+    }
+
+
+async def test_update_entity_require_restart(hass, client):
+    """Test updating entity."""
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                config_entry_id=config_entry.entry_id,
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            )
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id="1234")
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get("test_domain.world")
+    assert state is not None
+
+    # UPDATE DISABLED_BY TO NONE
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "disabled_by": None,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "entity_entry": {
+            "config_entry_id": config_entry.entry_id,
+            "device_id": None,
+            "area_id": None,
+            "disabled_by": None,
+            "platform": "test_platform",
+            "entity_id": "test_domain.world",
+            "name": None,
+            "icon": None,
+            "original_name": None,
+            "original_icon": None,
+            "capabilities": None,
+            "unique_id": "1234",
+        },
+        "require_restart": True,
     }
 
 
@@ -257,18 +316,20 @@ async def test_update_entity_no_changes(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
-        "area_id": None,
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.world",
-        "name": "name of entity",
-        "icon": None,
-        "original_name": None,
-        "original_icon": None,
-        "capabilities": None,
-        "unique_id": "1234",
+        "entity_entry": {
+            "config_entry_id": None,
+            "device_id": None,
+            "area_id": None,
+            "disabled_by": None,
+            "platform": "test_platform",
+            "entity_id": "test_domain.world",
+            "name": "name of entity",
+            "icon": None,
+            "original_name": None,
+            "original_icon": None,
+            "capabilities": None,
+            "unique_id": "1234",
+        }
     }
 
     state = hass.states.get("test_domain.world")
@@ -335,22 +396,92 @@ async def test_update_entity_id(hass, client):
     msg = await client.receive_json()
 
     assert msg["result"] == {
-        "config_entry_id": None,
-        "device_id": None,
-        "area_id": None,
-        "disabled_by": None,
-        "platform": "test_platform",
-        "entity_id": "test_domain.planet",
-        "name": None,
-        "icon": None,
-        "original_name": None,
-        "original_icon": None,
-        "capabilities": None,
-        "unique_id": "1234",
+        "entity_entry": {
+            "config_entry_id": None,
+            "device_id": None,
+            "area_id": None,
+            "disabled_by": None,
+            "platform": "test_platform",
+            "entity_id": "test_domain.planet",
+            "name": None,
+            "icon": None,
+            "original_name": None,
+            "original_icon": None,
+            "capabilities": None,
+            "unique_id": "1234",
+        }
     }
 
     assert hass.states.get("test_domain.world") is None
     assert hass.states.get("test_domain.planet") is not None
+
+
+async def test_update_existing_entity_id(hass, client):
+    """Test update entity id to an already registered entity id."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            ),
+            "test_domain.planet": RegistryEntry(
+                entity_id="test_domain.planet",
+                unique_id="2345",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            ),
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
+    await platform.async_add_entities(entities)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "new_entity_id": "test_domain.planet",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+
+
+async def test_update_invalid_entity_id(hass, client):
+    """Test update entity id to an invalid entity id."""
+    mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntry(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                # Using component.async_add_entities is equal to platform "domain"
+                platform="test_platform",
+            )
+        },
+    )
+    platform = MockEntityPlatform(hass)
+    entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
+    await platform.async_add_entities(entities)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "new_entity_id": "another_domain.planet",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
 
 
 async def test_remove_entity(hass, client):
@@ -380,3 +511,20 @@ async def test_remove_entity(hass, client):
 
     assert msg["success"]
     assert len(registry.entities) == 0
+
+
+async def test_remove_non_existing_entity(hass, client):
+    """Test removing non existing entity."""
+    mock_registry(hass, {})
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/entity_registry/remove",
+            "entity_id": "test_domain.world",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
