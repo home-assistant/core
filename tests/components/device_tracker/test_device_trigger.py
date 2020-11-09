@@ -200,6 +200,6 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             "name": "zone",
             "required": True,
             "type": "select",
-            "options": [("zone.test", "zone.test"), ("zone.home", "zone.home")],
+            "options": [("zone.test", "test"), ("zone.home", "test home")],
         }
     ]
