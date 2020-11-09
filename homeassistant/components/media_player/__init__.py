@@ -15,6 +15,7 @@ from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
