@@ -53,7 +53,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_on_supervisor()
 
-    def _async_get_entry(self):
+    def _async_create_entry_from_vars(self):
         """Return a config entry for the flow."""
         return self.async_create_entry(
             title=TITLE,
@@ -72,7 +72,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This is the entry point for the logic that is needed
         when this integration will depend on the MQTT integration.
         """
-        return self._async_get_entry()
+        return self._async_create_entry_from_vars()
 
     async def async_step_on_supervisor(self, user_input=None):
         """Handle logic when on Supervisor host."""
@@ -81,12 +81,12 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
             )
         if not user_input[CONF_USE_ADDON]:
-            return self._async_get_entry()
+            return self._async_create_entry_from_vars()
 
         self.use_addon = True
 
         if await self._async_is_addon_running():
-            return self._async_get_entry()
+            return self._async_create_entry_from_vars()
 
         if await self._async_is_addon_installed():
             return await self.async_step_start_addon()
@@ -128,7 +128,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
                 errors["base"] = "addon_start_failed"
             else:
-                return self._async_get_entry()
+                return self._async_create_entry_from_vars()
 
         self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
         self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
