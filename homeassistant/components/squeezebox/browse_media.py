@@ -65,7 +65,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 BROWSE_LIMIT = 1000
 
 
-async def build_item_response(entity, payload):
+async def build_item_response(player, payload):
     """Create response payload for search described by payload."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -77,7 +77,7 @@ async def build_item_response(entity, payload):
     else:
         browse_id = None
 
-    result = await entity.async_browse(
+    result = await player.async_browse(
         MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
         limit=BROWSE_LIMIT,
         browse_id=browse_id,
