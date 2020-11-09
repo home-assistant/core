@@ -2,20 +2,19 @@
   "title": "Plaato",
   "config": {
     "step": {
-      "device_type": {
+      "user": {
         "title": "Set up the Plaato devices",
         "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
           "device_name": "Name your device",
-          "device_type": "Type of Plaato device",
-          "token": "The Auth Token obtained from Plaato"
+          "device_type": "Type of Plaato device"
         }
       },
-      "validate": {
+      "api_method": {
         "title": "Select API method",
         "description": "To be able to query the API an `auth_token` is required which can be obtained by following [these](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instructions\n\n Selected device: **{device_type}** \n\nIf you rather use the built in webhook method (Airlock only) please check the box below and leave Auth Token blank",
         "data": {
-          "use_webhook": "Use webhook (Airlock only)",
+          "use_webhook": "Use webhook",
           "token": "Paste Auth Token here"
         }
       },
@@ -30,7 +29,6 @@
       "no_api_method": "You need to add an auth token or select webhook"
     },
     "abort": {
-      "no_device": "No device was selected",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]",
       "already_configured": "Already configured"

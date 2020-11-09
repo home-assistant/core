@@ -15,11 +15,7 @@ from homeassistant.components.plaato.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.common import MockConfigEntry
 
@@ -59,14 +55,14 @@ async def test_show_config_form(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "device_type"
+    assert result["step_id"] == "user"
 
 
 async def test_show_config_form_device_type_airlock(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "device_type"},
+        context={"source": "user"},
         data={
             CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
             CONF_DEVICE_NAME: "device_name",
@@ -74,7 +70,7 @@ async def test_show_config_form_device_type_airlock(hass):
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "validate"
+    assert result["step_id"] == "api_method"
     assert result["data_schema"].schema.get(CONF_TOKEN) == str
     assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) == bool
 
@@ -83,12 +79,12 @@ async def test_show_config_form_device_type_keg(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "device_type"},
+        context={"source": "user"},
         data={CONF_DEVICE_TYPE: PlaatoDeviceType.Keg, CONF_DEVICE_NAME: "device_name"},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "validate"
+    assert result["step_id"] == "api_method"
     assert result["data_schema"].schema.get(CONF_TOKEN) == str
     assert result["data_schema"].schema.get(CONF_USE_WEBHOOK) is None
 
@@ -97,7 +93,11 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
     """Test show configuration form."""
 
     flow = await init_config_flow(hass)
-    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_USE_WEBHOOK: True,
+        CONF_TOKEN: "",
+    }
 
     async def return_async_value(val):
         return val
@@ -109,21 +109,21 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
         "homeassistant.components.cloud.async_create_cloudhook",
         return_value=return_async_value("https://hooks.nabu.casa/ABCD"),
     ):
-        result = await flow.async_step_validate(
-            user_input={CONF_USE_WEBHOOK: True, CONF_TOKEN: ""}
-        )
+        result = await flow.async_step_webhook()
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "webhook"
 
-    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Keg}
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+        CONF_USE_WEBHOOK: True,
+        CONF_TOKEN: "",
+    }
 
-    result = await flow.async_step_validate(
-        user_input={CONF_USE_WEBHOOK: True, CONF_TOKEN: ""}
-    )
+    result = await flow.async_step_webhook()
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "validate"
+    assert result["step_id"] == "api_method"
     assert len(flow._errors) == 1
     assert flow._errors["base"] == "invalid_webhook_device"
 
@@ -133,12 +133,15 @@ async def test_show_config_form_validate_token(hass):
 
     flow = await init_config_flow(hass)
     flow.context = {}
-    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_USE_WEBHOOK: False,
+        CONF_TOKEN: "token",
+        CONF_DEVICE_NAME: "device_name",
+    }
 
     with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
-        result = await flow.async_step_validate(
-            user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: "token"}
-        )
+        result = await flow.async_step_webhook()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == PlaatoDeviceType.Airlock.name
@@ -146,50 +149,63 @@ async def test_show_config_form_validate_token(hass):
         CONF_TOKEN: "token",
         CONF_USE_WEBHOOK: False,
         CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_DEVICE_NAME: "device_name",
     }
 
 
-async def test_show_config_form_validate_no_device(hass):
+async def test_show_config_form_api_method(hass, webhook_id):
     """Test show configuration form."""
 
     flow = await init_config_flow(hass)
     flow.context = {}
-    flow._init_info = {CONF_DEVICE_TYPE: None}
 
-    result = await flow.async_step_validate(
-        user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: "token"}
+    # Using Airlock
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_DEVICE_NAME: "device_name",
+    }
+    result = await flow.async_step_api_method(
+        user_input={CONF_USE_WEBHOOK: True, CONF_TOKEN: None}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "no_device"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "webhook"
+    assert len(flow._errors) == 0
 
 
-async def test_show_config_form_validate_no_auth_token(hass, webhook_id):
+async def test_show_config_form_api_method_no_auth_token(hass, webhook_id):
     """Test show configuration form."""
 
     flow = await init_config_flow(hass)
+    flow.context = {}
 
     # Using Airlock
-    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock}
-    result = await flow.async_step_validate(
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_DEVICE_NAME: "device_name",
+    }
+    result = await flow.async_step_api_method(
         user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: None}
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "validate"
+    assert result["step_id"] == "api_method"
     assert len(flow._errors) == 1
     assert flow._errors["base"] == "no_api_method"
 
     # Using Keg
-    flow._init_info = {CONF_DEVICE_TYPE: PlaatoDeviceType.Keg}
-    result = await flow.async_step_validate(
+    flow._init_info = {
+        CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
+        CONF_DEVICE_NAME: "device_name",
+    }
+    result = await flow.async_step_api_method(
         user_input={CONF_USE_WEBHOOK: False, CONF_TOKEN: None}
     )
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "validate"
+    assert result["step_id"] == "api_method"
     assert len(flow._errors) == 1
-    assert flow._errors["base"] == "no_api_method"
+    assert flow._errors["base"] == "no_auth_token"
 
 
 async def test_show_config_form_webhook(hass):
@@ -200,19 +216,29 @@ async def test_show_config_form_webhook(hass):
     flow._init_info = {
         CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
         CONF_USE_WEBHOOK: True,
+        CONF_DEVICE_NAME: "device_name",
+        CONF_TOKEN: None,
         CONF_WEBHOOK_ID: WEBHOOK_ID,
         CONF_CLOUDHOOK: WEBHOOK_ID,
     }
 
-    result = await flow.async_step_webhook()
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+        result = await flow.async_step_webhook(
+            user_input={
+                CONF_WEBHOOK_ID: WEBHOOK_ID,
+                CONF_CLOUDHOOK: WEBHOOK_ID,
+            }
+        )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == PlaatoDeviceType.Airlock.name
     assert result["data"] == {
+        CONF_TOKEN: None,
         CONF_USE_WEBHOOK: True,
         CONF_WEBHOOK_ID: WEBHOOK_ID,
         CONF_CLOUDHOOK: WEBHOOK_ID,
         CONF_DEVICE_TYPE: PlaatoDeviceType.Airlock,
+        CONF_DEVICE_NAME: "device_name",
     }
 
 
@@ -232,7 +258,10 @@ async def test_options(hass):
     result = await options_flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    result = await options_flow.async_step_user({CONF_UPDATE_INTERVAL: 10})
+
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+        result = await options_flow.async_step_user({CONF_UPDATE_INTERVAL: 10})
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_UPDATE_INTERVAL] == 10
 
@@ -254,3 +283,9 @@ async def test_options_webhook(hass, webhook_id):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "webhook"
     assert result["description_placeholders"] == {"webhook_url": ""}
+
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+        result = await options_flow.async_step_webhook({CONF_WEBHOOK_ID: WEBHOOK_ID})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_WEBHOOK_ID] == CONF_WEBHOOK_ID
