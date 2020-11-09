@@ -10,10 +10,15 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -23,15 +28,15 @@ _LOGGER = logging.getLogger(__name__)
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
 
-@pytest.fixture
-def calls(hass):
+@pytest.fixture(name="calls")
+def fixture_calls(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 async def test_template_state_invalid(hass):
     """Test template state with render error."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -72,7 +77,7 @@ async def test_template_state_invalid(hass):
 
 async def test_template_state_text(hass):
     """Test the state text of a template."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -126,7 +131,7 @@ async def test_template_state_text(hass):
 )
 async def test_template_state_boolean(hass, expected_state, template):
     """Test the setting of the state with boolean on."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -167,7 +172,7 @@ async def test_template_state_boolean(hass, expected_state, template):
 
 async def test_template_syntax_error(hass):
     """Test templating syntax error."""
-    with assert_setup_component(0, "light"):
+    with assert_setup_component(0, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -207,7 +212,7 @@ async def test_template_syntax_error(hass):
 
 async def test_invalid_name_does_not_create(hass):
     """Test invalid name."""
-    with assert_setup_component(0, "light"):
+    with assert_setup_component(0, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -247,7 +252,7 @@ async def test_invalid_name_does_not_create(hass):
 
 async def test_invalid_light_does_not_create(hass):
     """Test invalid light."""
-    with assert_setup_component(0, "light"):
+    with assert_setup_component(0, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -268,7 +273,7 @@ async def test_invalid_light_does_not_create(hass):
 
 async def test_no_lights_does_not_create(hass):
     """Test if there are no lights no creation."""
-    with assert_setup_component(0, "light"):
+    with assert_setup_component(0, light.DOMAIN):
         assert await setup.async_setup_component(
             hass, "light", {"light": {"platform": "template"}}
         )
@@ -285,7 +290,7 @@ async def test_no_lights_does_not_create(hass):
 )
 async def test_missing_key(hass, missing_key, count):
     """Test missing template."""
-    light = {
+    light_config = {
         "light": {
             "platform": "template",
             "lights": {
@@ -311,9 +316,9 @@ async def test_missing_key(hass, missing_key, count):
         }
     }
 
-    del light["light"]["lights"]["light_one"][missing_key]
-    with assert_setup_component(count, "light"):
-        assert await setup.async_setup_component(hass, "light", light)
+    del light_config["light"]["lights"]["light_one"][missing_key]
+    with assert_setup_component(count, light.DOMAIN):
+        assert await setup.async_setup_component(hass, light.DOMAIN, light_config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -369,7 +374,6 @@ async def test_on_action(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
 
@@ -418,7 +422,6 @@ async def test_on_action_optimistic(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
     assert len(calls) == 1
@@ -470,7 +473,6 @@ async def test_off_action(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
 
@@ -516,7 +518,6 @@ async def test_off_action_optimistic(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert len(calls) == 1
     state = hass.states.get("light.test_template_light")
@@ -567,7 +568,6 @@ async def test_white_value_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_WHITE_VALUE: 124},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["white_value"] == "124"
 
@@ -588,7 +588,7 @@ async def test_white_value_action_no_template(hass, calls):
 )
 async def test_white_value_template(hass, expected_white_value, template):
     """Test the template for the white value."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -673,7 +673,6 @@ async def test_level_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_BRIGHTNESS: 124},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["brightness"] == "124"
 
@@ -695,7 +694,7 @@ async def test_level_action_no_template(hass, calls):
 )
 async def test_level_template(hass, expected_level, template):
     """Test the template for the level."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -749,7 +748,7 @@ async def test_level_template(hass, expected_level, template):
 )
 async def test_temperature_template(hass, expected_temp, template):
     """Test the template for the temperature."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -834,7 +833,6 @@ async def test_temperature_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 345},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["color_temp"] == "345"
 
@@ -846,7 +844,7 @@ async def test_temperature_action_no_template(hass, calls):
 
 async def test_friendly_name(hass):
     """Test the accessibility of the friendly_name attribute."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -890,7 +888,7 @@ async def test_friendly_name(hass):
 
 async def test_icon_template(hass):
     """Test icon template."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -942,7 +940,7 @@ async def test_icon_template(hass):
 
 async def test_entity_picture_template(hass):
     """Test entity_picture template."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
@@ -1047,7 +1045,6 @@ async def test_color_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[0].data["h"] == "40"
     assert calls[0].data["s"] == "50"
@@ -1077,7 +1074,7 @@ async def test_color_action_no_template(hass, calls):
 )
 async def test_color_template(hass, expected_hs, template):
     """Test the template for the color."""
-    with assert_setup_component(1, "light"):
+    with assert_setup_component(1, light.DOMAIN):
         assert await setup.async_setup_component(
             hass,
             light.DOMAIN,
