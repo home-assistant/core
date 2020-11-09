@@ -22,6 +22,8 @@ from .const import CONF_MYDEVOLO, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass, config):
     """Get all devices and add them to hass."""
