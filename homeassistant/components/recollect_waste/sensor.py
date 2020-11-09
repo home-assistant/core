@@ -22,6 +22,7 @@ DEFAULT_NAME = "recollect_waste"
 ICON = "mdi:trash-can-outline"
 SCAN_INTERVAL = timedelta(days=1)
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLACE_ID): cv.string,
