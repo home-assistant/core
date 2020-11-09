@@ -13,7 +13,7 @@ from homeassistant.helpers import debounce
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LOCK, DOMAIN, SUPPORTED_TYPES
-from .helpers import get_broadcast_addrs, get_ip_or_none
+from .helpers import get_ip_or_none
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,11 +51,12 @@ class BroadlinkDiscovery:
 
     async def async_discover(self):
         """Discover Broadlink devices on all available networks."""
+        broadcast_addrs = self.hass.data[DOMAIN].config["broadcast_addrs"]
         tasks = [
             self.hass.async_add_executor_job(
                 partial(blk.discover, timeout=self.timeout, discover_ip_address=addr)
             )
-            for addr in get_broadcast_addrs()
+            for addr in broadcast_addrs
         ]
         results = [
             result

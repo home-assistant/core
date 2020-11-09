@@ -2,8 +2,6 @@
 from base64 import b64decode
 import socket
 
-import psutil
-
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -60,15 +58,15 @@ def get_ip_or_none(host):
         return None
 
 
-def get_broadcast_addrs():
+def get_broadcast_addrs(nics):
     """Return all available IPv4/L3 broadcast addresses."""
     return [
-        snic.broadcast
-        for _, snics in psutil.net_if_addrs().items()
-        for snic in snics
+        addr.broadcast
+        for addrs in nics.values()
+        for addr in addrs
         if (
-            snic.broadcast is not None
-            and snic.family == socket.AF_INET
-            and snic.netmask == "255.255.255.0"
+            addr.broadcast is not None
+            and addr.family == socket.AF_INET
+            and addr.netmask == "255.255.255.0"
         )
     ]

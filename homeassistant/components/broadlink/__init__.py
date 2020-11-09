@@ -1,9 +1,12 @@
 """The Broadlink integration."""
 from dataclasses import dataclass, field
 
+import psutil
+
 from .const import DOMAIN
 from .device import BroadlinkDevice
 from .discovery import BroadlinkDiscovery
+from .helpers import get_broadcast_addrs
 
 
 @dataclass
@@ -11,13 +14,16 @@ class BroadlinkData:
     """Class for sharing data in the Broadlink integration."""
 
     discovery: BroadlinkDiscovery = None
+    config: dict = field(default_factory=dict)
     devices: dict = field(default_factory=dict)
     platforms: dict = field(default_factory=dict)
 
 
 async def async_setup(hass, config):
     """Set up the Broadlink integration."""
-    hass.data[DOMAIN] = BroadlinkData()
+    data = hass.data[DOMAIN] = BroadlinkData()
+    nics = await hass.async_add_executor_job(psutil.net_if_addrs)
+    data.config["broadcast_addrs"] = get_broadcast_addrs(nics)
     return True
 
 
