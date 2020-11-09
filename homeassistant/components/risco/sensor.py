@@ -1,8 +1,10 @@
 """Sensor for Risco Events."""
+from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_ZONES, DOMAIN, EVENTS_COORDINATOR
+from .const import DOMAIN, EVENTS_COORDINATOR
+from .entity import binary_sensor_unique_id
 
 CATEGORIES = {
     2: "Alarm",
@@ -51,6 +53,7 @@ class RiscoSensor(CoordinatorEntity):
         self._excludes = excludes
         self._name = name
         self._entry_id = entry_id
+        self._entity_registry = None
 
     @property
     def name(self):
@@ -64,6 +67,9 @@ class RiscoSensor(CoordinatorEntity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        self._entity_registry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
         self.async_on_remove(
             self.coordinator.async_add_listener(self._refresh_from_coordinator)
         )
@@ -96,10 +102,14 @@ class RiscoSensor(CoordinatorEntity):
 
         attrs = {atr: getattr(self._event, atr, None) for atr in EVENT_ATTRIBUTES}
         if self._event.zone_id is not None:
-            zones = self.hass.data[DOMAIN][self._entry_id][DATA_ZONES]
-            zone = zones.get(self._event.zone_id)
-            if zone is not None:
-                attrs["zone_entity_id"] = zone.entity_id
+            zone_unique_id = binary_sensor_unique_id(
+                self.coordinator.risco, self._event.zone_id
+            )
+            zone_entity_id = self._entity_registry.async_get_entity_id(
+                BS_DOMAIN, DOMAIN, zone_unique_id
+            )
+            if zone_entity_id is not None:
+                attrs["zone_entity_id"] = zone_entity_id
 
         return attrs
 
