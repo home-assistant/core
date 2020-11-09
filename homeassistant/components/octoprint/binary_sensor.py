@@ -1,6 +1,8 @@
 """Support for monitoring OctoPrint binary sensors."""
 import logging
 
+import requests
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import BINARY_SENSOR_TYPES, DOMAIN as COMPONENT_DOMAIN
@@ -76,6 +78,6 @@ class OctoPrintBinarySensor(BinarySensorEntity):
             self._state = self.api.update(
                 self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
             )
-        except Exception:  # pylint: disable=broad-except
+        except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
