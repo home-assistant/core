@@ -26,8 +26,20 @@ from .const import (
     EVENT_TYPE_CAMERA_PERSON,
     EVENT_TYPE_CAMERA_PERSON_AWAY,
     EVENT_TYPE_CAMERA_VEHICLE,
+    MODEL_NACAMDOORTAG,
     MODEL_NACAMERA,
+    MODEL_NAMAIN,
+    MODEL_NAMODULE1,
+    MODEL_NAMODULE2,
+    MODEL_NAMODULE3,
+    MODEL_NAMODULE4,
+    MODEL_NAPLUG,
+    MODEL_NATHERM1,
+    MODEL_NHC,
     MODEL_NOC,
+    MODEL_NRV,
+    MODEL_NSD,
+    MODEL_PUBLIC,
 )
 
 OUTDOOR_CAMERA_TRIGGERS = [
@@ -45,7 +57,21 @@ INDOOR_CAMERA_TRIGGERS = [
 DEVICES = {
     MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
     MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
+    MODEL_NAPLUG: [],
+    MODEL_NATHERM1: [],
+    MODEL_NRV: [],
+    MODEL_NSD: [],
+    MODEL_NACAMDOORTAG: [],
+    MODEL_NHC: [],
+    MODEL_NAMAIN: [],
+    MODEL_NAMODULE1: [],
+    MODEL_NAMODULE4: [],
+    MODEL_NAMODULE3: [],
+    MODEL_NAMODULE2: [],
+    MODEL_PUBLIC: [],
 }
+
+CAMERAS = {MODEL_NACAMERA, MODEL_NOC}
 
 TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS
 
@@ -66,29 +92,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         device_registry = await hass.helpers.device_registry.async_get_registry()
         device = device_registry.async_get(device_id)
 
-        if entry.domain == "camera" and device.model == "Smart Outdoor Camera":
-            for trigger in OUTDOOR_CAMERA_TRIGGERS:
-                triggers.append(
-                    {
-                        CONF_PLATFORM: "device",
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: trigger,
-                    }
-                )
-
-        if entry.domain == "camera" and device.model == "Smart Indoor Camera":
-            for trigger in INDOOR_CAMERA_TRIGGERS:
-                triggers.append(
-                    {
-                        CONF_PLATFORM: "device",
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_ENTITY_ID: entry.entity_id,
-                        CONF_TYPE: trigger,
-                    }
-                )
+        for trigger in DEVICES.get(device.model, []):
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: trigger,
+                }
+            )
 
     return triggers
 
@@ -105,18 +118,19 @@ async def async_attach_trigger(
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: "netatmo_event",
-        event_trigger.CONF_EVENT_DATA: {
-            "data": {
-                "event_type": config[CONF_TYPE],
-                "camera_id": next(iter(device.identifiers))[-1],
-            }
-        },
-    }
+    if device.model in CAMERAS:
+        event_config = {
+            event_trigger.CONF_PLATFORM: "event",
+            event_trigger.CONF_EVENT_TYPE: "netatmo_event",
+            event_trigger.CONF_EVENT_DATA: {
+                "data": {
+                    "event_type": config[CONF_TYPE],
+                    "camera_id": next(iter(device.identifiers))[-1],
+                }
+            },
+        }
 
-    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
-    return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
-    )
+        event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+        return await event_trigger.async_attach_trigger(
+            hass, event_config, action, automation_info, platform_type="device"
+        )

@@ -4,24 +4,36 @@ API = "api"
 DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
 
+MODEL_NAPLUG = "Relay"
+MODEL_NATHERM1 = "Smart Thermostat"
+MODEL_NRV = "Smart Radiator Valves"
 MODEL_NOC = "Smart Outdoor Camera"
 MODEL_NACAMERA = "Smart Indoor Camera"
+MODEL_NSD = "Smart Smoke Alarm"
+MODEL_NACAMDOORTAG = "Smart Door and Window Sensors"
+MODEL_NHC = "Smart Indoor Air Quality Monitor"
+MODEL_NAMAIN = "Smart Home Weather station – indoor module"
+MODEL_NAMODULE1 = "Smart Home Weather station – outdoor module"
+MODEL_NAMODULE4 = "Smart Additional Indoor module"
+MODEL_NAMODULE3 = "Smart Rain Gauge"
+MODEL_NAMODULE2 = "Smart Anemometer"
+MODEL_PUBLIC = "Public Weather stations"
 
 MODELS = {
-    "NAPlug": "Relay",
-    "NATherm1": "Smart Thermostat",
-    "NRV": "Smart Radiator Valves",
+    "NAPlug": MODEL_NAPLUG,
+    "NATherm1": MODEL_NATHERM1,
+    "NRV": MODEL_NRV,
     "NACamera": MODEL_NACAMERA,
     "NOC": MODEL_NOC,
-    "NSD": "Smart Smoke Alarm",
-    "NACamDoorTag": "Smart Door and Window Sensors",
-    "NHC": "Smart Indoor Air Quality Monitor",
-    "NAMain": "Smart Home Weather station – indoor module",
-    "NAModule1": "Smart Home Weather station – outdoor module",
-    "NAModule4": "Smart Additional Indoor module",
-    "NAModule3": "Smart Rain Gauge",
-    "NAModule2": "Smart Anemometer",
-    "public": "Public Weather stations",
+    "NSD": MODEL_NSD,
+    "NACamDoorTag": MODEL_NACAMDOORTAG,
+    "NHC": MODEL_NHC,
+    "NAMain": MODEL_NAMAIN,
+    "NAModule1": MODEL_NAMODULE1,
+    "NAModule4": MODEL_NAMODULE4,
+    "NAModule3": MODEL_NAMODULE3,
+    "NAModule2": MODEL_NAMODULE2,
+    "public": MODEL_PUBLIC,
 }
 
 AUTH = "netatmo_auth"
