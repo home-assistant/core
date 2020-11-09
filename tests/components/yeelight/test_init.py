@@ -96,7 +96,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == ID
+    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == f"{ID}-nightlight_sensor"
     assert er.async_get(ENTITY_LIGHT).unique_id == ID
     assert er.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
     assert er.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
@@ -120,7 +120,10 @@ async def test_unique_ids_entry(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == config_entry.entry_id
+    assert (
+        er.async_get(ENTITY_BINARY_SENSOR).unique_id
+        == f"{config_entry.entry_id}-nightlight_sensor"
+    )
     assert er.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
     assert (
         er.async_get(ENTITY_NIGHTLIGHT).unique_id
