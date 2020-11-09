@@ -49,13 +49,20 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"ATTRIBUTION": ATTRIBUTION}
+        return {"attribution": ATTRIBUTION}
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return "mdi:hazard-lights"
 
     @property
     def device_info(self):
         """Define the device based on name."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator._name)},
+            ATTR_IDENTIFIERS: {
+                (DOMAIN, self.coordinator._name.lower().replace(" ", "_"))
+            },
             ATTR_NAME: self.coordinator._name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",
