@@ -2,6 +2,8 @@
 
 import logging
 
+from motionblinds.motion_blinds import BlindType
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -13,8 +15,6 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHUTTER,
     CoverEntity,
 )
-
-from motionblinds.motion_blinds import BlindType
 
 from .const import DOMAIN, MANUFACTURER
 
