@@ -17,6 +17,7 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
+    STATE_UNAVAILABLE,
     TURN_OFF,
     TURN_ON,
     VOL_DOWN,
@@ -36,14 +37,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -84,7 +78,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
         SERVICE_SELECT_CMODE,
     )
-    return True
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

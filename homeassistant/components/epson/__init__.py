@@ -3,11 +3,11 @@ import asyncio
 import logging
 
 from epson_projector import Projector
-from epson_projector.const import POWER
+from epson_projector.const import POWER, STATE_UNAVAILABLE
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
