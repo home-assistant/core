@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control integration."""
+from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
 from homeassistant.components.devolo_home_control import (
@@ -43,6 +44,16 @@ async def test_setup_connection_error(hass: HomeAssistant):
     with patch(
         "devolo_home_control_api.homecontrol.HomeControl.__init__",
         side_effect=ConnectionError,
+    ), pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, entry)
+
+
+async def test_setup_gateway_offline(hass: HomeAssistant):
+    """Test setup entry fails on gateway offline."""
+    entry = configure_integration(hass)
+    with patch(
+        "devolo_home_control_api.homecontrol.HomeControl.__init__",
+        side_effect=GatewayOfflineError,
     ), pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, entry)
 
