@@ -194,6 +194,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         await async_setup_internal(hass, entry)
     except asyncio.TimeoutError:
         # Library currently doesn't support reload
+        _LOGGER.exception("Connection timeout: failed to receive response from RFXCom device")
         return False
 
     for domain in DOMAINS:
