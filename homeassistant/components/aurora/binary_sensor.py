@@ -35,6 +35,14 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
         """Define the binary sensor for the Aurora integration."""
         self._name = name
         self.coordinator = coordinator
+        self._unique_id = (
+            f"{str(self.coordinator._latitude)}_{str(self.coordinator._longitude)}"
+        )
+
+    @property
+    def unique_id(self):
+        """Define the unique id based on the latitude and longitude."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -60,9 +68,7 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
     def device_info(self):
         """Define the device based on name."""
         return {
-            ATTR_IDENTIFIERS: {
-                (DOMAIN, self.coordinator._name.lower().replace(" ", "_"))
-            },
+            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
             ATTR_NAME: self.coordinator._name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",
