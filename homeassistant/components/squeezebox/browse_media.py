@@ -65,7 +65,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
 BROWSE_LIMIT = 1000
 
 
-async def build_item_response(player, payload):
+async def build_item_response(entity, player, payload):
     """Create response payload for search described by payload."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
