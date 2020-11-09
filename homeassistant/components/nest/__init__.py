@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import datetime, timedelta
-import json
 import logging
 import threading
 
@@ -56,6 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PROJECT_ID = "project_id"
 CONF_SUBSCRIBER_ID = "subscriber_id"
 CONF_SUBSCRIBER_SERVICE_ACCOUNT = "subscriber_service_account"
+CONF_PRIVATE_KEY = "private_key"
+CONF_CLIENT_EMAIL = "client_email"
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -63,7 +64,6 @@ SERVICE_SET_ETA = "set_eta"
 
 DATA_NEST = "nest"
 DATA_NEST_CONFIG = "nest_config"
-DATA_SERVICE_ACCOUNT_INFO = "service_account_info"
 
 NEST_CONFIG_FILE = "nest.conf"
 
@@ -82,6 +82,18 @@ SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
 )
 
+# Pubsub subscriber service account is configured with a json file included
+# inline.  This marks some of the fields as required as a basic verification
+# check to make sure the right kind of file is included.  See docs for example:
+# https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
+SERVICE_ACCOUNT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PRIVATE_KEY): cv.string,
+        vol.Required(CONF_CLIENT_EMAIL): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -91,7 +103,7 @@ CONFIG_SCHEMA = vol.Schema(
                 # Required to use the new API (optional for compatibility)
                 vol.Optional(CONF_PROJECT_ID): cv.string,
                 vol.Optional(CONF_SUBSCRIBER_ID): cv.string,
-                vol.Optional(CONF_SUBSCRIBER_SERVICE_ACCOUNT): cv.string,
+                vol.Optional(CONF_SUBSCRIBER_SERVICE_ACCOUNT): SERVICE_ACCOUNT_SCHEMA,
                 # Config that only currently works on the old API
                 vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, [cv.string]),
                 vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
@@ -151,19 +163,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
         )
         return False
 
-    try:
-        service_account_info = json.loads(
-            config[DOMAIN][CONF_SUBSCRIBER_SERVICE_ACCOUNT]
-        )
-    except json.JSONDecodeError as err:
-        _LOGGER.error(
-            "Invalid JSON string in configuration '%s': %s",
-            CONF_SUBSCRIBER_SERVICE_ACCOUNT,
-            err,
-        )
-        return False
-    hass.data[DOMAIN][DATA_SERVICE_ACCOUNT_INFO] = service_account_info
-
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
@@ -194,7 +193,7 @@ async def async_get_auth(
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     subscriber_creds = service_account.Credentials.from_service_account_info(
-        hass.data[DOMAIN][DATA_SERVICE_ACCOUNT_INFO]
+        nest_config[CONF_SUBSCRIBER_SERVICE_ACCOUNT]
     ).with_scopes(scopes=SDM_SCOPES)
     return api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), API_URL, session, subscriber_creds
