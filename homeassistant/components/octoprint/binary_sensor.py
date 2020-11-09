@@ -76,6 +76,6 @@ class OctoPrintBinarySensor(BinarySensorEntity):
             self._state = self.api.update(
                 self.sensor_type, self.api_endpoint, self.api_group, self.api_tool
             )
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             # Error calling the api, already logged in api.update()
             return

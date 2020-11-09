@@ -261,7 +261,7 @@ class OctoPrintAPI:
 
             return None
 
-        except requests.HTTPError as ex_http:  # pylint: disable=broad-except
+        except requests.HTTPError as ex_http:
             status_code = ex_http.response.status_code
 
             log_string = "Failed to update OctoPrint status. Error: %s" % ex_http
