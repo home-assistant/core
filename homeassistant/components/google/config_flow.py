@@ -2,24 +2,21 @@
 
 import logging
 
-from oauth2client.client import (
-    FlowExchangeError,
-    OAuth2DeviceCodeError,
-    OAuth2WebServerFlow,
-)
+import aiohttp
 from oauth2client.file import Storage
 
 from homeassistant import config_entries
 from homeassistant.components import ais_cloud
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
-from . import CONF_TRACK_NEW, DOMAIN, TOKEN_FILE, async_do_setup, do_setup
+from . import CONF_TRACK_NEW, DOMAIN, TOKEN_FILE, async_do_setup
 
 _LOGGER = logging.getLogger(__name__)
 CONF_OAUTH_INFO = "oauth_info"
-DEV_FLOW = None
-OAUTH = None
+AUTH_CALLBACK_PATH = "/api/ais_calendar_service/authorize"
+AUTH_CALLBACK_NAME = "ais_calendar_service:authorize"
 
 
 @callback
@@ -28,6 +25,27 @@ def configured_google_calendar(hass):
     return {
         entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
     }
+
+
+class AuthorizationCallbackView(HomeAssistantView):
+    requires_auth = False
+    url = AUTH_CALLBACK_PATH
+    name = AUTH_CALLBACK_NAME
+
+    async def get(self, request):
+        hass = request.app["hass"]
+        flow_id = request.query["flow_id"]
+
+        # the call was from ais-dom finish the integration
+        hass.async_create_task(
+            hass.config_entries.flow.async_configure(flow_id=flow_id, user_input="ok")
+        )
+        js_text = (
+            "<script>window.location.href='/config/integrations/dashboard'</script>"
+        )
+        return aiohttp.web_response.Response(
+            headers={"content-type": "text/html"}, text=js_text
+        )
 
 
 class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,29 +66,27 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(self, user_input=None):
         """Handle a flow start."""
-        global OAUTH
-        global DEV_FLOW
+        from homeassistant.components.ais_dom import ais_global
+
         errors = {}
         if user_input is not None:
             try:
                 ais_dom = ais_cloud.AisCloudWS(self.hass)
-                json_ws_resp = ais_dom.key("gcalendar_client_id")
+                json_ws_resp = ais_dom.key("google_calendar_web_client_id")
                 client_id = json_ws_resp["key"]
-                json_ws_resp = ais_dom.key("gcalendar_secret")
+                json_ws_resp = ais_dom.key("google_calendar_web_secret")
                 client_secret = json_ws_resp["key"]
-                # oAuth
-                OAUTH = OAuth2WebServerFlow(
-                    client_id=client_id,
-                    client_secret=client_secret,
-                    scope="https://www.googleapis.com/auth/calendar",
-                    redirect_uri="Home-Assistant.io",
+                gate_id = ais_global.get_sercure_android_id_dom()
+                verification_url = (
+                    "https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?client_id="
+                    + client_id
+                    + "&redirect_uri=https://powiedz.co/ords/dom/auth/google_calendar_callback"
+                    "&response_type=code&scope=https://www.googleapis.com/auth/calendar"
+                    "&state=" + gate_id
                 )
-                DEV_FLOW = OAUTH.step1_get_device_and_user_codes()
-
                 description_placeholders = {
                     "error_info": "",
-                    "verification_url": DEV_FLOW.verification_url,
-                    "user_code": DEV_FLOW.user_code,
+                    "verification_url": verification_url,
                 }
 
                 return self.async_show_form(
@@ -96,12 +112,11 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_oauth(self, user_input=None):
         """Handle a flow start."""
-        global DEV_FLOW
         errors = {}
         description_placeholders = {"error_info": ""}
         if user_input is not None:
             try:
-                credentials = OAUTH.step2_exchange(device_flow_info=DEV_FLOW)
+                credentials = "xxxx"
                 storage = Storage(self.hass.config.path(TOKEN_FILE))
                 storage.put(credentials)
                 conf = {

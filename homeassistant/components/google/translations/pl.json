@@ -6,7 +6,7 @@
                   "title": "AIS Kalendarze Google"
              },
             "oauth": {
-                "description": "Aby zezwolić Asystentowi domowemu na dostęp do Twoich kalendarzy: \n 1. Skopiuj kod: **{user_code}** \n 2. Wklej skopiowany kod na stronie, która się otworzy po kliknięciu w [ten link]({verification_url}) \n 3. Gdy urządzenie zostanie autoryzowane, wróć tu i naciśnij znajdujący się poniżej przycisk **ZATWIERDŹ** \n\n###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\n{error_info}",
+                "description": "Aby zezwolić Asystentowi domowemu na dostęp do Twoich kalendarzy: \n 1. Kliknij poniższy link \n 2. Zaloguj się u dostawcy kalendarzy i  Autoryzuj **Asystenta domowego**. \n 3. Po wykonaniu autoryzacji, wróć tu i naciśnij znajdujący się poniżej przycisk **ZATWIERDŹ** \n\n [ten link]({verification_url})\n\n ###### ![AIS logo](/static/icons/ais_google_calendar.png)\n\n{error_info}",
                 "title": "Uwierzytelnianie urządzenia w Google"
             }
         },
