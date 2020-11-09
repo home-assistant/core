@@ -103,7 +103,9 @@ async def async_setup_entry_rest(
     entities = []
     for sensor_id in sensors:
         _desc = sensors.get(sensor_id)
-        entities.append(_desc)
+
+        if not wrapper.device.settings.get("sleep_mode"):
+            entities.append(_desc)
 
     if not entities:
         return
