@@ -15,6 +15,7 @@
                 "data": {
                     "pin": "PIN kood"
                 },
+                "description": "Teler peaks kuvama koodi. Sisest see kood vormile ja j\u00e4tka sidumise l\u00f5petamiseks j\u00e4rgmise sammuga.",
                 "title": "Sidumise l\u00f5puleviimine"
             },
             "pairing_complete": {

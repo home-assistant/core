@@ -906,7 +906,7 @@ def test_config_defaults():
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
     assert config.safe_mode is False
-    assert config.legacy_templates is True
+    assert config.legacy_templates is False
 
 
 def test_config_path_with_file():
@@ -1601,7 +1601,4 @@ async def test_state_change_events_match_state_time(hass):
     await hass.async_block_till_done()
     state = hass.states.get("light.bedroom")
 
-    import pprint
-
-    pprint.pprint(events)
     assert state.last_updated == events[0].time_fired

@@ -7,7 +7,13 @@ from pyownet import protocol
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import StateType
 
-from .const import SENSOR_TYPES
+from .const import (
+    SENSOR_TYPE_COUNT,
+    SENSOR_TYPE_SENSED,
+    SENSOR_TYPES,
+    SWITCH_TYPE_LATCH,
+    SWITCH_TYPE_PIO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,18 +92,22 @@ class OneWireProxy(OneWire):
         sensor_type: str,
         sensor_name: str,
         device_info: Dict[str, Any],
-        disable_startup: bool,
+        default_disabled: bool,
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""
         super().__init__(
-            name, device_file, sensor_type, sensor_name, device_info, disable_startup
+            name, device_file, sensor_type, sensor_name, device_info, default_disabled
         )
         self._owproxy = owproxy
 
     def _read_value_ownet(self):
         """Read a value from the owserver."""
         return self._owproxy.read(self._device_file).decode().lstrip()
+
+    def _write_value_ownet(self, value: bytes):
+        """Write a value to the owserver."""
+        return self._owproxy.write(self._device_file, value)
 
     def update(self):
         """Get the latest data from the device."""
@@ -107,8 +117,14 @@ class OneWireProxy(OneWire):
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
         else:
-            if "count" in self._unit_of_measurement:
+            if self._sensor_type == SENSOR_TYPE_COUNT:
                 value = int(self._value_raw)
+            elif self._sensor_type in [
+                SENSOR_TYPE_SENSED,
+                SWITCH_TYPE_LATCH,
+                SWITCH_TYPE_PIO,
+            ]:
+                value = int(self._value_raw) == 1
             else:
                 value = round(self._value_raw, 1)
 

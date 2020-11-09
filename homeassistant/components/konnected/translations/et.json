@@ -15,6 +15,7 @@
                 "title": "Konnected seade on valmis"
             },
             "import_confirm": {
+                "description": "Configuration.yaml kirjest leiti Konnected Alarm Panel ID-ga {id}. See voog v\u00f5imaldabl selle importida seadistusikirjesse.",
                 "title": "Konnektedi seadme import"
             },
             "user": {

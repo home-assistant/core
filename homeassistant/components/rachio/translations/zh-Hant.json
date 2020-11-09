@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "\u7576\u958b\u95dc\u958b\u555f\u5f8c\u3001\u5de5\u4f5c\u7ad9\u6240\u8981\u958b\u555f\u7684\u5206\u9418\u6578\u3002"
+                    "manual_run_mins": "\u7576\u5340\u57df\u958b\u95dc\u958b\u555f\u5f8c\u3001\u6240\u8981\u958b\u555f\u7684\u5206\u9418\u6578\u3002"
                 }
             }
         }

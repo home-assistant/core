@@ -31,6 +31,8 @@ def get_update_manager(device):
         "RM4": BroadlinkRMUpdateManager,
         "SP1": BroadlinkSP1UpdateManager,
         "SP2": BroadlinkSP2UpdateManager,
+        "SP4": BroadlinkSP4UpdateManager,
+        "SP4B": BroadlinkSP4UpdateManager,
     }
     return update_managers[device.api.type](device)
 
@@ -153,3 +155,11 @@ class BroadlinkSP2UpdateManager(BroadlinkUpdateManager):
         except (CommandNotSupportedError, StorageError):
             data["load_power"] = None
         return data
+
+
+class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
+    """Manages updates for Broadlink SP4 devices."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_state)

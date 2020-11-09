@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Position ist bereits konfiguriert"
+        },
         "error": {
             "invalid_house_number": "Ung\u00fcltige Hausnummer"
         },
