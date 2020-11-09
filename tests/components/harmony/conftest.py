@@ -1,81 +1,110 @@
 """Fixtures for harmony tests."""
+import logging
+
+from aioharmony.const import ClientCallbackType
 import pytest
 
+from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
+
 from tests.async_mock import AsyncMock, MagicMock, PropertyMock
+
+_LOGGER = logging.getLogger(__name__)
 
 WATCH_TV_ACTIVITY_ID = 123
 PLAY_MUSIC_ACTIVITY_ID = 456
 
 ACTIVITIES_TO_IDS = {
+    ACTIVITY_POWER_OFF: -1,
     "Watch TV": WATCH_TV_ACTIVITY_ID,
     "Play Music": PLAY_MUSIC_ACTIVITY_ID,
 }
 
 IDS_TO_ACTIVITIES = {
+    -1: ACTIVITY_POWER_OFF,
     WATCH_TV_ACTIVITY_ID: "Watch TV",
     PLAY_MUSIC_ACTIVITY_ID: "Play Music",
 }
 
 
-class FakeHarmonyStates:
-    """Class to keep track of activity states based on calls to the client mock."""
+class FakeHarmonyClient:
+    """FakeHarmonyClient to mock away network calls."""
 
-    def __init__(self, client_mock):
-        """Initialize FakeHarmonyStates class."""
+    def __init__(
+        self, ip_address: str = "", callbacks: ClientCallbackType = MagicMock()
+    ):
+        """Initialize FakeHarmonyClient class."""
         self._activity_name = "Watch TV"
-        self._client_mock = client_mock
+        self.close = AsyncMock()
+        self._callbacks = callbacks
+
+    async def connect(self):
+        """Connect and call the appropriate callbacks."""
+        self._callbacks.connect(None)
+        return AsyncMock(return_value=(True))
 
     def get_activity_name(self, *args):
         """Return the current activity."""
         return self._activity_name
 
-    def start_activity(self, *args, **kwargs):
+    async def start_activity(self, activity_id):
         """Update the current activity and call the appropriate callbacks."""
-        activity_id = kwargs["activity_id"]
         self._activity_name = IDS_TO_ACTIVITIES.get(activity_id)
         activity_tuple = (activity_id, self._activity_name)
-        self._client_mock.callbacks.new_activity_starting(activity_tuple)
-        self._client_mock.callbacks.new_activity(activity_tuple)
+        self._callbacks.new_activity_starting(activity_tuple)
+        self._callbacks.new_activity(activity_tuple)
 
         return AsyncMock(return_value=(True, "unused message"))
+
+    async def power_off(self):
+        """Power off all activities."""
+        await self.start_activity(-1)
 
     def get_activity_id(self, activity_name):
         """Return the mapping of an activity name to the internal id."""
         return ACTIVITIES_TO_IDS.get(activity_name)
 
+    @property
+    def current_activity(self):
+        """Return the current activity tuple."""
+        return (
+            self.get_activity_id(self.get_activity_name()),
+            self.get_activity_name(),
+        )
+
+    @property
+    def config(self):
+        """Return the config object."""
+        return self.hub_config.config
+
+    @property
+    def hub_config(self):
+        """Return the client_config type."""
+        config = MagicMock()
+        type(config).activities = PropertyMock(
+            return_value=[
+                {"name": "Watch TV", "id": WATCH_TV_ACTIVITY_ID},
+                {"name": "Play Music", "id": PLAY_MUSIC_ACTIVITY_ID},
+            ]
+        )
+        type(config).devices = PropertyMock(
+            return_value=[{"name": "My TV", "id": 1234}]
+        )
+        type(config).info = PropertyMock(return_value={})
+        type(config).hub_state = PropertyMock(return_value={})
+        type(config).config = PropertyMock(
+            return_value={
+                "activity": [
+                    {"id": WATCH_TV_ACTIVITY_ID, "label": "Watch TV"},
+                    {"id": PLAY_MUSIC_ACTIVITY_ID, "label": "Play Music"},
+                ]
+            }
+        )
+        return config
+
 
 @pytest.fixture()
 def mock_harmonyclient():
     """Create a mock HarmonyClient."""
-    harmonyclient_mock = MagicMock()
-    stateHandler = FakeHarmonyStates(harmonyclient_mock)
-    type(harmonyclient_mock).connect = AsyncMock()
-    type(harmonyclient_mock).close = AsyncMock()
-    type(harmonyclient_mock).get_activity_name = MagicMock(
-        side_effect=stateHandler.get_activity_name
-    )
-    type(harmonyclient_mock).get_activity_id = stateHandler.get_activity_id
-    type(harmonyclient_mock).start_activity = AsyncMock(
-        side_effect=stateHandler.start_activity
-    )
-    type(harmonyclient_mock.hub_config).activities = PropertyMock(
-        return_value=[
-            {"name": "Watch TV", "id": WATCH_TV_ACTIVITY_ID},
-            {"name": "Play Music", "id": PLAY_MUSIC_ACTIVITY_ID},
-        ]
-    )
-    type(harmonyclient_mock.hub_config).devices = PropertyMock(
-        return_value=[{"name": "My TV", "id": 1234}]
-    )
-    type(harmonyclient_mock.hub_config).info = PropertyMock(return_value={})
-    type(harmonyclient_mock.hub_config).hub_state = PropertyMock(return_value={})
-    type(harmonyclient_mock.hub_config).config = PropertyMock(
-        return_value={
-            "activity": [
-                {"id": WATCH_TV_ACTIVITY_ID, "label": "Watch TV"},
-                {"id": PLAY_MUSIC_ACTIVITY_ID, "label": "Play Music"},
-            ]
-        }
-    )
+    fake = FakeHarmonyClient()
 
-    yield harmonyclient_mock
+    yield fake
