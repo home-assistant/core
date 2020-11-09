@@ -125,6 +125,8 @@ class OpenSkySensor(Entity):
                 ATTR_CALLSIGN: flight,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
+                ATTR_LONGITUDE: flight.get(ATTR_LONGITUDE),
+                ATTR_LATITUDE: flight.get(ATTR_LATITUDE),
             }
             self._hass.bus.fire(event, data)
 

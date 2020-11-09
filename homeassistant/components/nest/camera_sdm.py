@@ -84,10 +84,9 @@ class NestCamera(Camera):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = 0
         if CameraLiveStreamTrait.NAME in self._device.traits:
-            features = features | SUPPORT_STREAM
-        return features
+            return SUPPORT_STREAM
+        return 0
 
     async def stream_source(self):
         """Return the source of the stream."""

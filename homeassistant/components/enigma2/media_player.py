@@ -134,6 +134,11 @@ class Enigma2Device(MediaPlayerEntity):
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
 
     @property
+    def available(self):
+        """Return True if the device is available."""
+        return self.e2_box.is_offline
+
+    @property
     def supported_features(self):
         """Flag of media commands that are supported."""
         return SUPPORTED_ENIGMA2

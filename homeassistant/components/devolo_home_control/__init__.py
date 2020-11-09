@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
+from .const import CONF_MYDEVOLO, DOMAIN, PLATFORMS
 
 
 async def async_setup(hass, config):
@@ -24,11 +24,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up the devolo account from a config entry."""
     conf = entry.data
     hass.data.setdefault(DOMAIN, {})
-    try:
-        mydevolo = Mydevolo.get_instance()
-    except SyntaxError:
-        mydevolo = Mydevolo()
 
+    mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
     mydevolo.url = conf[CONF_MYDEVOLO]
@@ -52,8 +49,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     partial(
                         HomeControl,
                         gateway_id=gateway_id,
+                        mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
-                        url=conf[CONF_HOMECONTROL],
                     )
                 )
             )
