@@ -77,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     vol.Required(
                         CONF_LATITUDE,
-                        default=self.hass.config.longitude,
+                        default=self.hass.config.latitude,
                     ): vol.All(
                         vol.Coerce(float),
                         vol.Range(min=-90, max=90),
