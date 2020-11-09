@@ -98,7 +98,7 @@ async def ws_import_blueprint(hass, connection, msg):
         vol.Required("domain"): cv.string,
         vol.Required("path"): cv.path,
         vol.Required("data"): cv.string,
-        vol.Required("source_url"): cv.url,
+        vol.Optional("source_url"): cv.url,
     }
 )
 async def ws_save_blueprint(hass, connection, msg):
@@ -116,7 +116,8 @@ async def ws_save_blueprint(hass, connection, msg):
             raise HomeAssistantError("File already exists")
 
         blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
-        blueprint.update_metadata(source_url=msg["source_url"])
+        if msg["source_url"]:
+            blueprint.update_metadata(source_url=msg["source_url"])
 
         blueprint_path.parent.mkdir(parents=True, exist_ok=True)
         with open(blueprint_path, "x") as file:
