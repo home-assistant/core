@@ -113,10 +113,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, "light")
             )
 
-    async def unload_light_platform():
-        """Unload light platform when webhook is unregistered."""
-        await hass.config_entries.async_forward_entry_unload(entry, "light")
-
     data_handler.listeners.append(
         async_dispatcher_connect(
             hass,
@@ -135,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await unload_light_platform()
+        await hass.config_entries.async_forward_entry_unload(entry, "light")
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:
