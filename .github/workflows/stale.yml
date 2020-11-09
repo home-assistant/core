@@ -15,7 +15,6 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          debug-only: true
           days-before-stale: 90
           days-before-close: 7
           operations-per-run: 25
@@ -52,7 +51,6 @@ jobs:
         uses: actions/stale@v3.0.13
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          debug-only: true
           # PRs have a CLA signed label, we can misuse it to apply this policy
           only-labels: "cla-signed,needs-more-information"
           days-before-stale: 30
