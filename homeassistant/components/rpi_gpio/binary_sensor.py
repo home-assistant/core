@@ -1,46 +1,31 @@
 """Support for binary sensor using RPi GPIO."""
-import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import DEVICE_DEFAULT_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
-
-from . import DOMAIN, PLATFORMS
-
-CONF_BOUNCETIME = "bouncetime"
-CONF_INVERT_LOGIC = "invert_logic"
-CONF_PORTS = "ports"
-CONF_PULL_MODE = "pull_mode"
-
-DEFAULT_BOUNCETIME = 50
-DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = "UP"
-
-_SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
-        vol.Optional(CONF_BOUNCETIME, default=DEFAULT_BOUNCETIME): cv.positive_int,
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-        vol.Optional(CONF_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
-    }
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.rpi_gpio.const import (
+    CONF_SENSOR,
+    CONF_SENSOR_BOUNCETIME,
+    CONF_SENSOR_INVERT_LOGIC,
+    CONF_SENSOR_PORTS,
+    CONF_SENSOR_PULL_MODE,
+    DOMAIN,
+    PLATFORMS,
 )
+from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers.reload import setup_reload_service
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    pull_mode = config.get(CONF_PULL_MODE)
-    bouncetime = config.get(CONF_BOUNCETIME)
-    invert_logic = config.get(CONF_INVERT_LOGIC)
+    config_sensor = hass.data[DOMAIN][CONF_SENSOR]
+    pull_mode = config_sensor[CONF_SENSOR_PULL_MODE]
+    bouncetime = config_sensor[CONF_SENSOR_BOUNCETIME]
+    invert_logic = config_sensor[CONF_SENSOR_INVERT_LOGIC]
 
     binary_sensors = []
-    ports = config.get("ports")
+    ports = config_sensor[CONF_SENSOR_PORTS]
     for port_num, port_name in ports.items():
         binary_sensors.append(
             RPiGPIOBinarySensor(

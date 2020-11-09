@@ -5,42 +5,43 @@ import time
 
 from homeassistant.components import rpi_gpio_light
 from homeassistant.components.light import LightEntity
-from homeassistant.const import CONF_NAME
-
-from .const import (
-    CONF_INVERT_LIGHT_BUTTON,
-    CONF_INVERT_RELAY,
+from homeassistant.components.rpi_gpio.const import (
     CONF_LIGHT,
     CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS,
     CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS,
     CONF_LIGHT_BUTTON_PIN,
     CONF_LIGHT_BUTTON_PULL_MODE,
-    CONF_RELAY_PIN,
+    CONF_LIGHT_INVERT_BUTTON,
+    CONF_LIGHT_INVERT_RELAY,
+    CONF_LIGHT_LIST,
+    CONF_LIGHT_RELAY_PIN,
     DOMAIN,
+    PLATFORMS,
 )
+from homeassistant.const import CONF_NAME
+from homeassistant.helpers.reload import setup_reload_service
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RPi light platform."""
-
-    light_button_pull_mode = hass.data[DOMAIN][CONF_LIGHT_BUTTON_PULL_MODE]
-    invert_light_button = hass.data[DOMAIN][CONF_INVERT_LIGHT_BUTTON]
-    invert_relay = hass.data[DOMAIN][CONF_INVERT_RELAY]
-    light_button_bouncetime_millis = hass.data[DOMAIN][
-        CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS
-    ]
-    light_button_double_check_time_millis = hass.data[DOMAIN][
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    config_light = hass.data[DOMAIN][CONF_LIGHT]
+    light_button_pull_mode = config_light[CONF_LIGHT_BUTTON_PULL_MODE]
+    invert_light_button = config_light[CONF_LIGHT_INVERT_BUTTON]
+    invert_relay = config_light[CONF_LIGHT_INVERT_RELAY]
+    light_button_bouncetime_millis = config_light[CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS]
+    light_button_double_check_time_millis = config_light[
         CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS
     ]
     lights = []
 
-    for light in hass.data[DOMAIN][CONF_LIGHT]:
+    for light in config_light[CONF_LIGHT_LIST]:
         lights.append(
             RPiGPIOLight(
                 light[CONF_NAME],
-                light[CONF_RELAY_PIN],
+                light[CONF_LIGHT_RELAY_PIN],
                 light[CONF_LIGHT_BUTTON_PIN],
                 light_button_pull_mode,
                 light_button_bouncetime_millis,

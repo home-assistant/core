@@ -1,70 +1,42 @@
 """Support for controlling a Raspberry Pi cover."""
 from time import sleep
 
-import voluptuous as vol
-
 from homeassistant.components import rpi_gpio
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import CoverEntity
+from homeassistant.components.rpi_gpio.const import (
+    CONF_COVER,
+    CONF_COVER_INVERT_RELAY,
+    CONF_COVER_INVERT_STATE,
+    CONF_COVER_LIST,
+    CONF_COVER_RELAY_PIN,
+    CONF_COVER_RELAY_TIME,
+    CONF_COVER_STATE_PIN,
+    CONF_COVER_STATE_PULL_MODE,
+    DOMAIN,
+    PLATFORMS,
+)
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
-
-from . import DOMAIN, PLATFORMS
-
-CONF_COVERS = "covers"
-CONF_RELAY_PIN = "relay_pin"
-CONF_RELAY_TIME = "relay_time"
-CONF_STATE_PIN = "state_pin"
-CONF_STATE_PULL_MODE = "state_pull_mode"
-CONF_INVERT_STATE = "invert_state"
-CONF_INVERT_RELAY = "invert_relay"
-
-DEFAULT_RELAY_TIME = 0.2
-DEFAULT_STATE_PULL_MODE = "UP"
-DEFAULT_INVERT_STATE = False
-DEFAULT_INVERT_RELAY = False
-_COVERS_SCHEMA = vol.All(
-    cv.ensure_list,
-    [
-        vol.Schema(
-            {
-                CONF_NAME: cv.string,
-                CONF_RELAY_PIN: cv.positive_int,
-                CONF_STATE_PIN: cv.positive_int,
-            }
-        )
-    ],
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COVERS): _COVERS_SCHEMA,
-        vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE): cv.string,
-        vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
-        vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
-        vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
-    }
-)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RPi cover platform."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    relay_time = config.get(CONF_RELAY_TIME)
-    state_pull_mode = config.get(CONF_STATE_PULL_MODE)
-    invert_state = config.get(CONF_INVERT_STATE)
-    invert_relay = config.get(CONF_INVERT_RELAY)
+    config_cover = hass.data[DOMAIN][CONF_COVER]
+    relay_time = config_cover[CONF_COVER_RELAY_TIME]
+    state_pull_mode = config_cover[CONF_COVER_STATE_PULL_MODE]
+    invert_state = config_cover[CONF_COVER_INVERT_STATE]
+    invert_relay = config_cover[CONF_COVER_INVERT_RELAY]
     covers = []
-    covers_conf = config.get(CONF_COVERS)
+    covers_conf = config_cover[CONF_COVER_LIST]
 
     for cover in covers_conf:
         covers.append(
             RPiGPIOCover(
                 cover[CONF_NAME],
-                cover[CONF_RELAY_PIN],
-                cover[CONF_STATE_PIN],
+                cover[CONF_COVER_RELAY_PIN],
+                cover[CONF_COVER_STATE_PIN],
                 state_pull_mode,
                 relay_time,
                 invert_state,
