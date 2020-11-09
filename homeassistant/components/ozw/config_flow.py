@@ -80,13 +80,11 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
             )
-        if user_input[CONF_USE_ADDON]:
-            self.use_addon = True
-            return await self._async_use_addon()
-        return self._async_get_entry()
+        if not user_input[CONF_USE_ADDON]:
+            return self._async_get_entry()
 
-    async def _async_use_addon(self):
-        """Handle logic when using the OpenZWave add-on."""
+        self.use_addon = True
+
         if await self._async_is_addon_running():
             return self._async_get_entry()
 
@@ -96,7 +94,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_install_addon()
 
     async def async_step_install_addon(self):
-        """Install add-on."""
+        """Install OpenZWave add-on."""
         try:
             await self.hass.components.hassio.async_install_addon("core_zwave")
         except self.hass.components.hassio.HassioAPIError as err:
@@ -107,7 +105,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_start_addon()
 
     async def async_step_start_addon(self, user_input=None):
-        """Ask for config and start add-on."""
+        """Ask for config and start OpenZWave add-on."""
         if self.addon_config is None:
             self.addon_config = await self._async_get_addon_config()
 
@@ -147,7 +145,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_get_addon_info(self):
-        """Return and cache add-on info."""
+        """Return and cache OpenZWave add-on info."""
         try:
             addon_info = await self.hass.components.hassio.async_get_addon_info(
                 "core_zwave"
@@ -159,22 +157,22 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return addon_info
 
     async def _async_is_addon_running(self):
-        """Return True if add-on is running."""
+        """Return True if OpenZWave add-on is running."""
         addon_info = await self._async_get_addon_info()
         return addon_info["state"] == "started"
 
     async def _async_is_addon_installed(self):
-        """Return True if add-on is installed."""
+        """Return True if OpenZWave add-on is installed."""
         addon_info = await self._async_get_addon_info()
         return addon_info["version"] is not None
 
     async def _async_get_addon_config(self):
-        """Get add-on config."""
+        """Get OpenZWave add-on config."""
         addon_info = await self._async_get_addon_info()
         return addon_info["options"]
 
     async def _async_set_addon_config(self, config):
-        """Set add-on config."""
+        """Set OpenZWave add-on config."""
         options = {"options": config}
         try:
             await self.hass.components.hassio.async_set_addon_options(
