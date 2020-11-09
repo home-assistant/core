@@ -909,7 +909,7 @@ class MediaPlayerEntity(Entity):
             .with_query(
                 {
                     "token": self.access_token,
-                    "media_content_type"; media_content_type,
+                    "media_content_type": media_content_type,
                     "media_content_id": media_content_id,
                     "browse_image": browse_image,
                 }
