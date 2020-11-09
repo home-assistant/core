@@ -588,7 +588,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self, payload)
+        return await build_item_response(self, self._player, payload)
 
     async def async_get_browse_image(
         self, media_content_type, media_content_id, browse_image
@@ -599,7 +599,3 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         if result == (None, None):
             _LOGGER.info("Error retrieving proxied album art from %s", image_url)
         return result
-
-    async def async_browse(self, *args, **kwargs):
-        """Browse player's media library."""
-        return await self._player.async_browse(*args, **kwargs)
