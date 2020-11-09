@@ -53,6 +53,7 @@ def get_entity_name(
     channels = channels or 1
 
     if channels > 1 and block.type != "device":
+        entity_name = None
         mode = block.type + "s"
         if mode in wrapper.device.settings:
             entity_name = wrapper.device.settings[mode][int(block.channel)].get("name")
@@ -64,12 +65,11 @@ def get_entity_name(
                 base = ord("1")
             entity_name = f"{wrapper.name} channel {chr(int(block.channel)+base)}"
 
+    # Shelly Dimmer has two input channels and missing "num_inputs"
+    if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
+        entity_name = f"{entity_name} channel {int(block.channel)+1}"
+
     if description:
         entity_name = f"{entity_name} {description}"
-
-    # Shelly Dimmer has two inputs and one channel
-    if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
-        channel = str(int(block.channel) + 1)
-        entity_name = f"{entity_name} {channel}"
 
     return entity_name
