@@ -36,7 +36,6 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
