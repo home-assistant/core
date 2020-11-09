@@ -449,7 +449,7 @@ SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): vol.All(vol.Coerce(int), vol.Range(min=0))}
+    {vol.Required(ATTR_FEATURES): cv.positive_int}
 )
 
 SERVICE_SCHEMA_TARGET_HUMIDITY = AIRPURIFIER_SERVICE_SCHEMA.extend(
@@ -655,8 +655,10 @@ class XiaomiGenericDevice(FanEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
@@ -785,8 +787,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:
@@ -1029,8 +1032,9 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:
@@ -1138,8 +1142,9 @@ class XiaomiAirFresh(XiaomiGenericDevice):
             )
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
     def speed_list(self) -> list:

@@ -343,6 +343,15 @@ class GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if not isinstance(features, int):
+            _LOGGER.warning(
+                "Entity %s contains invalid supported_features value %s",
+                self.entity_id,
+                features,
+            )
+            return []
+
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         self._traits = [

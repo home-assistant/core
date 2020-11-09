@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec"
+        },
+        "step": {
+            "credentials": {
+                "description": "Kodi \uc0ac\uc6a9\uc790\uba85\uacfc \uc554\ud638\ub97c \uc785\ub825\ud558\uc2ed\uc2dc\uc624. \uc774\ub7ec\ud55c \ub0b4\uc6a9\uc740 \uc2dc\uc2a4\ud15c/\uc124\uc815/\ub124\ud2b8\uc6cc\ud06c/\uc11c\ube44\uc2a4\uc5d0\uc11c \ucc3e\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+            },
+            "discovery_confirm": {
+                "description": "Kodi (` {name} `)\ub97c Home Assistant\uc5d0 \ucd94\uac00 \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "Kodi \ubc1c\uacac"
+            },
+            "host": {
+                "data": {
+                    "ssl": "SSL\uc744 \ud1b5\ud574 \uc5f0\uacb0"
+                },
+                "description": "Kodi \uc5f0\uacb0 \uc815\ubcf4. \uc2dc\uc2a4\ud15c / \uc124\uc815 / \ub124\ud2b8\uc6cc\ud06c / \uc11c\ube44\uc2a4\uc5d0\uc11c \"HTTP\ub97c \ud1b5\ud55c Kodi \uc81c\uc5b4 \ud5c8\uc6a9\"\uc744 \ud65c\uc131\ud654\ud588\ub294\uc9c0 \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
+            },
+            "user": {
+                "description": "Kodi \uc5f0\uacb0 \uc815\ubcf4. \uc2dc\uc2a4\ud15c / \uc124\uc815 / \ub124\ud2b8\uc6cc\ud06c / \uc11c\ube44\uc2a4\uc5d0\uc11c \"HTTP\ub97c \ud1b5\ud55c Kodi \uc81c\uc5b4 \ud5c8\uc6a9\"\uc744 \ud65c\uc131\ud654\ud588\ub294\uc9c0 \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
+            },
+            "ws_port": {
+                "description": "WebSocket \ud3ec\ud2b8 (Kodi\uc5d0\uc11c TCP \ud3ec\ud2b8\ub77c\uace0\ub3c4 \ud568). WebSocket\uc744 \ud1b5\ud574 \uc5f0\uacb0\ud558\ub824\uba74 \uc2dc\uc2a4\ud15c / \uc124\uc815 / \ub124\ud2b8\uc6cc\ud06c / \uc11c\ube44\uc2a4\uc5d0\uc11c \"\ud504\ub85c\uadf8\ub7a8\uc774 Kodi\ub97c \uc81c\uc5b4\ud558\ub3c4\ub85d \ud5c8\uc6a9\"\uc744 \ud65c\uc131\ud654\ud574\uc57c\ud569\ub2c8\ub2e4. WebSocket\uc774 \ud65c\uc131\ud654\ub418\uc9c0 \uc54a\uc740 \uacbd\uc6b0 \ud3ec\ud2b8\ub97c \uc81c\uac70\ud558\uace0 \ube44\uc6cc \ub461\ub2c8\ub2e4."
+            }
+        }
+    }
+}

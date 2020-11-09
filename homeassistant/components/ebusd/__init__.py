@@ -1,5 +1,4 @@
 """Support for Ebusd daemon for communication with eBUS heating systems."""
-from datetime import timedelta
 import logging
 import socket
 
@@ -14,7 +13,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.util import Throttle
 
 from .const import DOMAIN, SENSOR_TYPES
 
@@ -25,8 +23,6 @@ DEFAULT_PORT = 8888
 CONF_CIRCUIT = "circuit"
 CACHE_TTL = 900
 SERVICE_EBUSD_WRITE = "ebusd_write"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 
 def verify_ebusd_config(config):
@@ -59,6 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the eBusd component."""
+    _LOGGER.debug("Integration setup started")
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     circuit = conf[CONF_CIRCUIT]
@@ -66,7 +63,6 @@ def setup(hass, config):
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-        _LOGGER.debug("Ebusd integration setup started")
 
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
@@ -95,7 +91,6 @@ class EbusdData:
         self._address = address
         self.value = {}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name, stype):
         """Call the Ebusd API to update the data."""
         try:

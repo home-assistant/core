@@ -19,3 +19,7 @@ MAX_SEGMENTS = 3  # Max number of segments to keep around
 MIN_SEGMENT_DURATION = 1.5  # Each segment is at least this many seconds
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio
+MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably reasonable
+
+MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
+STREAM_TIMEOUT = 30  # Timeout for reading stream

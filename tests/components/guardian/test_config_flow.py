@@ -138,4 +138,4 @@ async def test_step_zeroconf_no_discovery_info(hass):
         DOMAIN, context={"source": SOURCE_ZEROCONF}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"

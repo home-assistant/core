@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "already_configured_account": "Kasutaja on juba lisatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "connection_error": "Viga \u00fchenduse loomisel:  kontrolli v\u00f5rku ja proovi uuesti",
+            "identifier_exists": "E-post on juba registreeritud",
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_credentials": "Sobimatu mandaat",
+            "unknown_error": "Tundmatu viga, palun lisa logid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "E-post"
+                },
+                "description": "Palun sisesta oma andmed.",
+                "title": "Tesla - seadistamine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute vahe sekundites"
+                }
+            }
+        }
+    }
+}

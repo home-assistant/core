@@ -16,7 +16,7 @@
             },
             "reauth_confirm": {
                 "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}",
-                "title": "Re-authenticate with Spotify"
+                "title": "Reauthenticate Integration"
             }
         }
     }

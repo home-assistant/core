@@ -53,12 +53,15 @@
             "simple_options": {
                 "data": {
                     "block_client": "Cli\u00ebnten met netwerktoegang",
-                    "track_clients": "Volg netwerkclients"
-                }
+                    "track_clients": "Volg netwerkclients",
+                    "track_devices": "Volg netwerkapparaten (Ubiquiti-apparaten)"
+                },
+                "description": "Configureer UniFi-integratie"
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
+                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients",
+                    "allow_uptime_sensors": "Uptime-sensoren voor netwerkclients"
                 },
                 "description": "Configureer statistische sensoren",
                 "title": "UniFi-opties 3/3"

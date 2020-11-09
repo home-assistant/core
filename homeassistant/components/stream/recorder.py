@@ -78,7 +78,7 @@ class RecorderOutput(StreamOutput):
     @property
     def audio_codecs(self) -> str:
         """Return desired audio codec."""
-        return {"aac", "ac3", "mp3"}
+        return {"aac", "mp3"}
 
     @property
     def video_codecs(self) -> tuple:

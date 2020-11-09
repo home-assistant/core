@@ -1,6 +1,4 @@
 """Smart energy channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.const import (
@@ -15,8 +13,6 @@ from homeassistant.core import callback
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)

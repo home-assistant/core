@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "UPB PIM selle aadressiga on juba m\u00e4\u00e4ratud",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_upb_file": "Puuduv v\u00f5i kehtetu UPB UPStart ekspordifail, kontrolli faili nime ja rada.",
+            "unknown": "Ootamatu t\u00f5rge."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Aadress (vt \u00fclaltoodud kirjeldust)"
+                }
+            }
+        }
+    }
+}

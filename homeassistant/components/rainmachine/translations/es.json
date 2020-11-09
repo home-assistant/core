@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este controlador RainMachine ya est\u00e1 configurado."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "identifier_exists": "Cuenta ya registrada",
+            "identifier_exists": "La cuenta ya ha sido configurada",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_credentials": "Credenciales no v\u00e1lidas"
         },
         "step": {
@@ -15,6 +16,16 @@
                     "port": "Puerto"
                 },
                 "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Tiempo de ejecuci\u00f3n de zona predeterminado (en segundos)"
+                },
+                "title": "Configurar RainMachine"
             }
         }
     }

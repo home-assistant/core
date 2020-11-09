@@ -1,6 +1,4 @@
 """Support for tracking the moon phases."""
-import logging
-
 from astral import Astral
 import voluptuous as vol
 
@@ -9,8 +7,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Moon"
 

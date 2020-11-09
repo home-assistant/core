@@ -16,9 +16,9 @@
                     "name": "Nom",
                     "password": "Contrasenya",
                     "port": "Port",
-                    "ssl": "NZBGet utilitza un certificat SSL",
+                    "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari",
-                    "verify_ssl": "NZBGet utilitza un certificat adequat"
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "title": "Connexi\u00f3 amb NZBGet"
             }

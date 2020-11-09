@@ -60,7 +60,6 @@ def server_id_valid(server_id):
 
 async def async_setup(hass, config):
     """Import integration from config."""
-
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -139,6 +138,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         try:
             server_list = self.api.get_servers()
         except speedtest.ConfigRetrievalError:
+            _LOGGER.debug("Error retrieving server list")
             return
 
         self.servers[DEFAULT_SERVER] = {}

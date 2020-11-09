@@ -38,6 +38,9 @@
                     "other": "Tomma"
                 }
             },
+            "simple_options": {
+                "description": "Konfigurera UniFi-integrationen"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter"

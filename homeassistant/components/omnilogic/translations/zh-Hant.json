@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u79d2\uff09"
+                }
+            }
+        }
+    },
+    "title": "Omnilogic"
+}

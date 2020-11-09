@@ -23,7 +23,8 @@
                     "password": "Passwort",
                     "port": "Port",
                     "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
-                    "username": "Benutzername"
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL Zertifikat verifizieren"
                 },
                 "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
                 "title": "Synology DSM"
@@ -34,7 +35,8 @@
                     "password": "Passwort",
                     "port": "Port",
                     "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
-                    "username": "Benutzername"
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL Zertifikat verifizieren"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minuten zwischen den Scans"
+                    "scan_interval": "Minuten zwischen den Scans",
+                    "timeout": "Timeout (Sekunden)"
                 }
             }
         }

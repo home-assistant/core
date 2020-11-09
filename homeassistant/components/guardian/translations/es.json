@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Este dispositivo Guardian ya ha sido configurado",
             "already_in_progress": "La configuraci\u00f3n del dispositivo Guardian ya est\u00e1 en proceso.",
+            "cannot_connect": "No se pudo conectar",
             "connection_error": "No se ha podido conectar con el dispositivo Guardian."
         },
         "step": {

@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    CAST_APP_ID_HOMEASSISTANT,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -287,7 +288,10 @@ class CameraStreamTrait(_Trait):
         url = await self.hass.components.camera.async_request_stream(
             self.state.entity_id, "hls"
         )
-        self.stream_info = {"cameraStreamAccessUrl": f"{get_url(self.hass)}{url}"}
+        self.stream_info = {
+            "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
+        }
 
 
 @register_trait

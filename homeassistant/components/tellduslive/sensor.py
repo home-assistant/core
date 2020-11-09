@@ -1,12 +1,11 @@
 """Support for Tellstick Net/Telstick Live sensors."""
-import logging
-
 from homeassistant.components import sensor, tellduslive
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     SPEED_METERS_PER_SECOND,
@@ -17,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_TEMPERATURE = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"
@@ -53,7 +50,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WINDGUST: ["Wind gust", SPEED_METERS_PER_SECOND, "", None],
     SENSOR_TYPE_UV: ["UV", UV_INDEX, "", None],
     SENSOR_TYPE_WATT: ["Power", POWER_WATT, "", None],
-    SENSOR_TYPE_LUMINANCE: ["Luminance", "lx", None, DEVICE_CLASS_ILLUMINANCE],
+    SENSOR_TYPE_LUMINANCE: ["Luminance", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT: ["Dew Point", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_BAROMETRIC_PRESSURE: ["Barometric Pressure", "kPa", "", None],
 }

@@ -1,6 +1,5 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -20,8 +19,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from .const import DEFAULT_PORT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 

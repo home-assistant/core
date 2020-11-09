@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def _render(value):
             try:
-                return value_template.async_render({"value": value})
+                return value_template.async_render({"value": value}, parse_result=False)
             except TemplateError:
                 _LOGGER.exception("Error parsing value")
                 return value

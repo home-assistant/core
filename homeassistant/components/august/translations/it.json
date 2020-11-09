@@ -5,7 +5,7 @@
             "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare.",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },

@@ -22,7 +22,18 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Zaloguj si\u0119 za pomoc\u0105 konta Blink"
+                "title": "Logowanie za pomoc\u0105 konta Blink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania (w sekundach)"
+                },
+                "description": "Konfigurowanie integracji Blink",
+                "title": "Opcje Blink"
             }
         }
     }

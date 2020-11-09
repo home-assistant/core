@@ -30,6 +30,9 @@ send_message:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 send_photo:
   description: Send a photo.
@@ -67,6 +70,9 @@ send_photo:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 send_sticker:
   description: Send a sticker.
@@ -101,6 +107,9 @@ send_sticker:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 send_video:
   description: Send a video.
@@ -138,6 +147,9 @@ send_video:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 send_document:
   description: Send a document.
@@ -175,6 +187,9 @@ send_document:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 send_location:
   description: Send a location.
@@ -200,9 +215,12 @@ send_location:
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
 
 edit_message:
-  description: Edit a previusly sent message.
+  description: Edit a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.
@@ -227,7 +245,7 @@ edit_message:
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_caption:
-  description: Edit the caption of a previusly sent message.
+  description: Edit the caption of a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.
@@ -243,7 +261,7 @@ edit_caption:
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_replymarkup:
-  description: Edit the inline keyboard of a previusly sent message.
+  description: Edit the inline keyboard of a previously sent message.
   fields:
     message_id:
       description: id of the message to edit.

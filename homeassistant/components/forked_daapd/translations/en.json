@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured.",
+            "already_configured": "Device is already configured",
             "not_forked_daapd": "Device is not a forked-daapd server."
         },
         "error": {
-            "unknown_error": "Unknown error.",
+            "forbidden": "Unable to connect. Please check your forked-daapd network permissions.",
+            "unknown_error": "Unexpected error",
             "websocket_not_enabled": "forked-daapd server websocket not enabled.",
             "wrong_host_or_port": "Unable to connect. Please check host and port.",
             "wrong_password": "Incorrect password.",

@@ -1,14 +1,40 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "create_entry": {
+            "default": "AlarmDecoderiga \u00fchendamine \u00f5nnestus."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "service_unavailable": "\u00dchendamine nurjus"
+        },
         "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Seadme edastuskiirus",
+                    "device_path": "Seadme asukoht",
+                    "host": "",
+                    "port": ""
+                },
+                "title": "M\u00e4\u00e4ra \u00fchenduse seaded"
+            },
             "user": {
                 "data": {
                     "protocol": "Protokoll"
-                }
+                },
+                "title": "Vali AlarmDecoderi protokoll"
             }
         }
     },
     "options": {
+        "error": {
+            "int": "Allolev v\u00e4li peab olema t\u00e4isarv.",
+            "loop_range": "RF Loop peab olema t\u00e4isarv vahemikus 1\u20134.",
+            "loop_rfid": "RF Loopi ei saa kasutada ilma RF Serial-ita.",
+            "relay_inclusive": "Releeaadress ja releekanal s\u00f5ltuvad \u00fcksteisest ja need peavad olema koos."
+        },
         "step": {
             "arm_settings": {
                 "data": {

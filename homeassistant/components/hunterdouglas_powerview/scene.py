@@ -1,5 +1,4 @@
 """Support for Powerview scenes from a Powerview hub."""
-import logging
 from typing import Any
 
 from aiopvapi.resources.scene import Scene as PvScene
@@ -22,8 +21,6 @@ from .const import (
     STATE_ATTRIBUTE_ROOM_NAME,
 )
 from .entity import HDEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): DOMAIN, vol.Required(HUB_ADDRESS): cv.string}

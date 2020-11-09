@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     hub: BondHub = hass.data[DOMAIN][entry.entry_id]
 
-    lights: List[Entity] = [
+    fan_lights: List[Entity] = [
         BondLight(hub, device)
         for device in hub.devices
         if DeviceType.is_fan(device.type) and device.supports_light()
@@ -41,15 +41,23 @@ async def async_setup_entry(
         if DeviceType.is_fireplace(device.type)
     ]
 
-    async_add_entities(lights + fireplaces, True)
+    fp_lights: List[Entity] = [
+        BondLight(hub, device, "light")
+        for device in hub.devices
+        if DeviceType.is_fireplace(device.type) and device.supports_light()
+    ]
+
+    async_add_entities(fan_lights + fireplaces + fp_lights, True)
 
 
 class BondLight(BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(
+        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
+    ):
         """Create HA entity representing Bond fan."""
-        super().__init__(hub, device)
+        super().__init__(hub, device, sub_device)
         self._brightness: Optional[int] = None
         self._light: Optional[int] = None
 
@@ -122,7 +130,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
-        _LOGGER.debug("fireplace async_turn_on called with: %s", kwargs)
+        _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness:
@@ -133,7 +141,7 @@ class BondFireplace(BondEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fireplace off."""
-        _LOGGER.debug("fireplace async_turn_off called with: %s", kwargs)
+        _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat",
-            "already_in_progress": "La configuraci\u00f3 de l'enlla\u00e7 ja est\u00e0 en curs."
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar a la passarel\u00b7la d'enlla\u00e7",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_key": "Ha fallat el registre amb la clau proporcionada. Si aix\u00f2 continua passant, intenta reiniciar la passarel\u00b7la d'enlla\u00e7.",
             "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi."
         },

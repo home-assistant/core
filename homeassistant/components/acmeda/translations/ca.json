@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "all_configured": "No s'han descobert nous hubs de Pulse."
+            "all_configured": "No s'han descobert nous hubs de Pulse.",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
         },
         "step": {
             "user": {

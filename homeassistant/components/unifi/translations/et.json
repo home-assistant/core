@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontroller on juba seadistatud"
+        },
+        "error": {
+            "faulty_credentials": "Tuvastamine nurjus",
+            "service_unavailable": "\u00dchendamine nurjus",
+            "unknown_client_mac": "Sellel MAC-aadressil pole \u00fchtegi klienti saadaval"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "site": "",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "title": "Seadista UniFi kontroller"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "dpi_restrictions": "Luba DPI piirangugruppide juhtimine"
+                },
+                "title": "UniFi valikud 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Aeg sekundites alates viimasest ilmnemisest kuni olekuni '\u00e4ra'",
+                    "ssid_filter": "Vali WiFi klientide j\u00e4lgimiseks SSID",
+                    "track_clients": "J\u00e4lgi v\u00f5rgu kliente",
+                    "track_devices": "V\u00f5rguseadmete j\u00e4lgimine (Ubiquiti seadmed)",
+                    "track_wired_clients": "Kaasa juhtmega v\u00f5rgukliendid"
+                },
+                "description": "Seadista seadme j\u00e4lgimine",
+                "title": "UniFi valikud 1/3"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Ribalaiuse andurid v\u00f5rguklientidele",
+                    "allow_uptime_sensors": "V\u00f5rguklientide t\u00f6\u00f6soleku andurid"
+                },
+                "description": "Seadista statistikaandurid",
+                "title": "UniFi valikud 3/3"
+            }
+        }
+    }
+}

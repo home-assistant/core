@@ -245,7 +245,7 @@ class SensorFilter(Entity):
 
             # Retrieve the largest window_size of each type
             if largest_window_items > 0:
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.get_last_state_changes,
                         self.hass,
@@ -257,7 +257,7 @@ class SensorFilter(Entity):
                     history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.state_changes_during_period,
                         self.hass,
@@ -319,8 +319,7 @@ class SensorFilter(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {ATTR_ENTITY_ID: self._entity}
-        return state_attr
+        return {ATTR_ENTITY_ID: self._entity}
 
 
 class FilterState:

@@ -1,5 +1,4 @@
 """Support for Vera scenes."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import pyvera as veraApi
@@ -12,8 +11,6 @@ from homeassistant.util import slugify
 
 from .common import ControllerData, get_controller_data
 from .const import VERA_ID_FORMAT
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

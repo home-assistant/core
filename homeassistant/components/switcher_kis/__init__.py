@@ -1,8 +1,7 @@
 """Home Assistant Switcher Component."""
-
 from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
 from datetime import datetime, timedelta
-from logging import getLogger
+import logging
 from typing import Dict, Optional
 
 from aioswitcher.api import SwitcherV2Api
@@ -28,7 +27,7 @@ from homeassistant.helpers.typing import (
 )
 from homeassistant.loader import bind_hass
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "switcher_kis"
 

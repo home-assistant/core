@@ -1,5 +1,4 @@
 """Platform for climate integration."""
-import logging
 from typing import List, Optional
 
 from homeassistant.components.climate import (
@@ -10,13 +9,11 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_HALVES
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-from .devolo_device import DevoloDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 
 async def async_setup_entry(
@@ -25,46 +22,52 @@ async def async_setup_entry(
     """Get all cover devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_switch_devices:
-        for multi_level_switch in device.multi_level_switch_property:
-            if device.device_model_uid in [
-                "devolo.model.Thermostat:Valve",
-                "devolo.model.Room:Thermostat",
-            ]:
-                entities.append(
-                    DevoloClimateDeviceEntity(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
-                        device_instance=device,
-                        element_uid=multi_level_switch,
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.multi_level_switch_devices:
+            for multi_level_switch in device.multi_level_switch_property:
+                if device.device_model_uid in [
+                    "devolo.model.Thermostat:Valve",
+                    "devolo.model.Room:Thermostat",
+                    "devolo.model.Eurotronic:Spirit:Device",
+                ]:
+                    entities.append(
+                        DevoloClimateDeviceEntity(
+                            homecontrol=gateway,
+                            device_instance=device,
+                            element_uid=multi_level_switch,
+                        )
                     )
-                )
 
     async_add_entities(entities, False)
 
 
-class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
+class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntity):
     """Representation of a climate/thermostat device within devolo Home Control."""
-
-    def __init__(self, homecontrol, device_instance, element_uid):
-        """Initialize a devolo climate/thermostat device."""
-        super().__init__(
-            homecontrol=homecontrol,
-            device_instance=device_instance,
-            element_uid=element_uid,
-            name=device_instance.item_name,
-            sync=self._sync,
-        )
-
-        self._multi_level_switch_property = (
-            device_instance.multi_level_switch_property.get(element_uid)
-        )
-
-        self._temperature = self._multi_level_switch_property.value
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._temperature
+        if hasattr(self._device_instance, "multi_level_sensor_property"):
+            return next(
+                (
+                    multi_level_sensor.value
+                    for multi_level_sensor in self._device_instance.multi_level_sensor_property.values()
+                    if multi_level_sensor.sensor_type == "temperature"
+                ),
+                None,
+            )
+
+        return None
+
+    @property
+    def target_temperature(self) -> Optional[float]:
+        """Return the target temperature."""
+        return self._value
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return the precision of the target temperature."""
+        return PRECISION_HALVES
 
     @property
     def hvac_mode(self) -> str:
@@ -89,7 +92,7 @@ class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
     @property
     def precision(self) -> float:
         """Return the precision of the set temperature."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def supported_features(self):
@@ -101,16 +104,9 @@ class DevoloClimateDeviceEntity(DevoloDeviceEntity, ClimateEntity):
         """Return the supported unit of temperature."""
         return TEMP_CELSIUS
 
+    def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Do nothing as devolo devices do not support changing the hvac mode."""
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE])
-
-    def _sync(self, message=None):
-        """Update the climate entity triggered by web socket connection."""
-        if message[0] == self._unique_id:
-            self._temperature = message[1]
-        elif message[0].startswith("hdm"):
-            self._available = self._device_instance.is_online()
-        else:
-            _LOGGER.debug("Not valid message received: %s", message)
-        self.schedule_update_ha_state()

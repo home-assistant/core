@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Vajalik on ainult \u00fcks sidumine.",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "wrong_server_id": "Serveri ID ei sobi"
+        },
+        "step": {
+            "user": {
+                "description": "Kas soovid seadistada SpeedTesti?",
+                "title": "Seadista SpeedTest"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "retrive_error": "Viga serverite loendi hankimisel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Keela automaatne v\u00e4rskendamine",
+                    "scan_interval": "Uuendamise sagedus (minutites)",
+                    "server_name": "Testiserveri valimine"
+                }
+            }
+        }
+    }
+}

@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     DEGREE,
     EVENT_HOMEASSISTANT_STOP,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_INHG,
@@ -214,7 +215,7 @@ SENSOR_TYPES = {
         TYPE_SENSOR,
         None,
     ),
-    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", "lx", TYPE_SENSOR, "illuminance"),
+    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, TYPE_SENSOR, "illuminance"),
     TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
@@ -310,9 +311,10 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, ambient.client.websocket.disconnect()
-    )
+    async def _async_disconnect_websocket(*_):
+        await ambient.client.websocket.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
 
     return True
 

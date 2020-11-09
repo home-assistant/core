@@ -849,6 +849,14 @@ async def test_get_current_request_url_with_known_host(
         )
 
     with patch(
+        "homeassistant.helpers.network._get_request_host",
+        return_value="homeassistant",
+    ):
+        assert (
+            get_url(hass, require_current_request=True) == "http://homeassistant:8123"
+        )
+
+    with patch(
         "homeassistant.helpers.network._get_request_host", return_value="unknown.local"
     ), pytest.raises(NoURLAvailableError):
         get_url(hass, require_current_request=True)

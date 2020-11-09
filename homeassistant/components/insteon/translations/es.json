@@ -57,7 +57,7 @@
             },
             "plm": {
                 "data": {
-                    "device": "Dispositivo PLM (es decir, /dev/ttyUSB0 o COM3)"
+                    "device": "Ruta del dispositivo USB"
                 },
                 "description": "Configure el M\u00f3dem Insteon PowerLink (PLM).",
                 "title": "Insteon PLM"
@@ -77,7 +77,7 @@
             "cannot_connect": "No se puede conectar al m\u00f3dem Insteon"
         },
         "error": {
-            "cannot_connect": "No se conect\u00f3 al m\u00f3dem Insteon, por favor, int\u00e9ntelo de nuevo.",
+            "cannot_connect": "No se pudo conectar",
             "input_error": "Entradas no v\u00e1lidas, compruebe sus valores.",
             "select_single": "Selecciona una opci\u00f3n"
         },
@@ -103,10 +103,10 @@
             },
             "change_hub_config": {
                 "data": {
-                    "host": "Nuevo nombre del host o direcci\u00f3n IP",
-                    "password": "Nueva contrase\u00f1a",
-                    "port": "Nuevo n\u00famero de puerto",
-                    "username": "Nuevo nombre de usuario"
+                    "host": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
                 },
                 "description": "Cambiar la informaci\u00f3n de la conexi\u00f3n del Hub Insteon. Debes reiniciar el Home Assistant despu\u00e9s de hacer este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n del Hub usa la aplicaci\u00f3n Hub.",
                 "title": "Insteon"

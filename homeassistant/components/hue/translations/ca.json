@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Tots els enlla\u00e7os Philips Hue ja estan configurats",
-            "already_configured": "L'enlla\u00e7 ja est\u00e0 configurat",
-            "already_in_progress": "El flux de dades de configuraci\u00f3 per l'enlla\u00e7 ja est\u00e0 en curs.",
-            "cannot_connect": "No s'ha pogut connectar amb l'enlla\u00e7",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "discover_timeout": "No s'han pogut descobrir enlla\u00e7os Hue",
             "no_bridges": "No s'han trobat enlla\u00e7os Philips Hue",
             "not_hue_bridge": "No \u00e9s un enlla\u00e7 Hue",
-            "unknown": "S'ha produ\u00eft un error desconegut"
+            "unknown": "Error inesperat"
         },
         "error": {
-            "linking": "S'ha produ\u00eft un error desconegut al vincular.",
+            "linking": "Error inesperat",
             "register_failed": "No s'ha pogut registrar, torna-ho a provar"
         },
         "step": {

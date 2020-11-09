@@ -1,26 +1,31 @@
 """Offer event listening automation rules."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv
 
 # mypy: allow-untyped-defs
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_DATA = "event_data"
-
-_LOGGER = logging.getLogger(__name__)
+CONF_EVENT_CONTEXT = "context"
 
 TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): "event",
         vol.Required(CONF_EVENT_TYPE): cv.string,
         vol.Optional(CONF_EVENT_DATA): dict,
+        vol.Optional(CONF_EVENT_CONTEXT): dict,
     }
 )
+
+
+def _schema_value(value):
+    if isinstance(value, list):
+        return vol.In(value)
+
+    return value
 
 
 async def async_attach_trigger(
@@ -28,6 +33,7 @@ async def async_attach_trigger(
 ):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
+
     event_data_schema = None
     if config.get(CONF_EVENT_DATA):
         event_data_schema = vol.Schema(
@@ -38,20 +44,34 @@ async def async_attach_trigger(
             extra=vol.ALLOW_EXTRA,
         )
 
+    event_context_schema = None
+    if config.get(CONF_EVENT_CONTEXT):
+        event_context_schema = vol.Schema(
+            {
+                vol.Required(key): _schema_value(value)
+                for key, value in config.get(CONF_EVENT_CONTEXT).items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+
+    job = HassJob(action)
+
     @callback
     def handle_event(event):
         """Listen for events and calls the action when data matches."""
-        if event_data_schema:
-            # Check that the event data matches the configured
+        try:
+            # Check that the event data and context match the configured
             # schema if one was provided
-            try:
+            if event_data_schema:
                 event_data_schema(event.data)
-            except vol.Invalid:
-                # If event data doesn't match requested schema, skip event
-                return
+            if event_context_schema:
+                event_context_schema(event.context.as_dict())
+        except vol.Invalid:
+            # If event doesn't match, skip event
+            return
 
-        hass.async_run_job(
-            action,
+        hass.async_run_hass_job(
+            job,
             {
                 "trigger": {
                     "platform": platform_type,

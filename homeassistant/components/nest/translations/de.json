@@ -9,6 +9,7 @@
         "error": {
             "internal_error": "Ein interner Fehler ist aufgetreten",
             "invalid_code": "Ung\u00fcltiger Code",
+            "invalid_pin": "Ung\u00fcltiger PIN-Code",
             "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
             "unknown": "Ein unbekannter Fehler ist aufgetreten"
         },

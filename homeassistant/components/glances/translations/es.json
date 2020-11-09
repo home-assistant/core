@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El host ya est\u00e1 configurado."
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se puede conectar al host",
+            "cannot_connect": "No se pudo conectar",
             "wrong_version": "Versi\u00f3n no soportada (s\u00f3lo 2 o 3)"
         },
         "step": {
@@ -14,9 +14,9 @@
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "ssl": "Utilice SSL/TLS para conectarse al sistema Glances",
+                    "ssl": "Utiliza un certificado SSL",
                     "username": "Usuario",
-                    "verify_ssl": "Verificar la certificaci\u00f3n del sistema",
+                    "verify_ssl": "Verificar certificado SSL",
                     "version": "Versi\u00f3n API Glances (2 o 3)"
                 },
                 "title": "Configurar Glances"

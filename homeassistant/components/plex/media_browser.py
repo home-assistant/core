@@ -103,7 +103,7 @@ def browse_media(
                 children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
             except KeyError as err:
                 raise BrowseError(
-                    f"Media not found: {media_content_type} / {media_content_id}"
+                    f"Unknown type received: {library_or_section.TYPE}"
                 ) from err
         else:
             raise BrowseError(
@@ -218,9 +218,9 @@ def server_payload(plex_server):
         media_content_type="server",
         can_play=False,
         can_expand=True,
+        children_media_class=MEDIA_CLASS_DIRECTORY,
     )
     server_info.children = []
-    server_info.children_media_class = MEDIA_CLASS_DIRECTORY
     server_info.children.append(special_library_payload(server_info, "On Deck"))
     server_info.children.append(special_library_payload(server_info, "Recently Added"))
     for library in plex_server.library.sections():

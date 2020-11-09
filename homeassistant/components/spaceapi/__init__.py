@@ -1,6 +1,4 @@
 """Support for the SpaceAPI."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -20,8 +18,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud",
+            "already_setup": "Saad h\u00e4\u00e4lestada ainult \u00fche Logi Circle konto.",
+            "external_error": "V\u00e4lise voo viga.",
+            "external_setup": "Logi Circle on teisest voost edukalt seadistatud.",
+            "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
+            "no_flows": "Enne tuvastamist pead Logi Circle konfigureerima. [Palun lugege juhiseid] (https://www.home-assistant.io/components/logi_circle/)."
+        },
+        "create_entry": {
+            "default": "Edukalt Logi Circle'ga autenditud."
+        },
+        "error": {
+            "auth_error": "API autoriseerimine nurjus.",
+            "auth_timeout": "Juurdep\u00e4\u00e4sut\u00f5endi hankimise ajal\u00f5pp.",
+            "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
+            "follow_link": "Palun j\u00e4rgige linki ja tuvasta enne Submit vajutamist.",
+            "invalid_auth": "Tuvastamine eba\u00f5nnestus"
+        },
+        "step": {
+            "auth": {
+                "description": "J\u00e4rgi seda linki [link] ( {authorization_url} ) ja ** Luba** juurdep\u00e4\u00e4s oma Logi Circle kontole, siis tule tagasi ja vajuta allolevat nuppu ** Esita **.\n\n [Link]({authorization_url})",
+                "title": "Autentimine Logi Circle'ga"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Teenuse pakkuja"
+                },
+                "description": "Vali millise autentimisteenuse pakkujaga soovid Logi Circle't autentida.",
+                "title": "Autentimisteenuse pakkuja"
+            }
+        }
+    }
+}

@@ -175,11 +175,6 @@ class HistoryStatsSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self.value is None:
@@ -230,7 +225,7 @@ class HistoryStatsSensor(Entity):
             self.hass, start, end, str(self._entity_id)
         )
 
-        if self._entity_id not in history_list.keys():
+        if self._entity_id not in history_list:
             return
 
         # Get the first state
@@ -276,7 +271,8 @@ class HistoryStatsSensor(Entity):
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "start")
                 return
-            start = dt_util.parse_datetime(start_rendered)
+            if isinstance(start_rendered, str):
+                start = dt_util.parse_datetime(start_rendered)
             if start is None:
                 try:
                     start = dt_util.as_local(
@@ -295,7 +291,8 @@ class HistoryStatsSensor(Entity):
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "end")
                 return
-            end = dt_util.parse_datetime(end_rendered)
+            if isinstance(end_rendered, str):
+                end = dt_util.parse_datetime(end_rendered)
             if end is None:
                 try:
                     end = dt_util.as_local(

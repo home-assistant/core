@@ -14,6 +14,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
@@ -59,12 +60,12 @@ class Events(Base):  # type: ignore
     )
 
     @staticmethod
-    def from_event(event):
+    def from_event(event, event_data=None):
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=json.dumps(event.data, cls=JSONEncoder),
-            origin=str(event.origin),
+            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
             context_user_id=event.context.user_id,
@@ -105,7 +106,9 @@ class States(Base):  # type: ignore
     last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
     last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(Integer)
+    old_state_id = Column(Integer, ForeignKey("states.state_id"))
+    event = relationship("Events", uselist=False)
+    old_state = relationship("States", remote_side=[state_id])
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -218,7 +221,8 @@ def process_timestamp_to_utc_isoformat(ts):
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None
+    if ts.tzinfo == dt_util.UTC:
+        return ts.isoformat()
     if ts.tzinfo is None:
         return f"{ts.isoformat()}{DB_TIMEZONE}"
-
-    return dt_util.as_utc(ts).isoformat()
+    return ts.astimezone(dt_util.UTC).isoformat()

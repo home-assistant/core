@@ -1,5 +1,4 @@
 """This platform allows several cover to be grouped into one cover."""
-import logging
 from typing import Dict, Optional, Set
 
 import voluptuous as vol
@@ -39,7 +38,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import State
+from homeassistant.core import CoreState, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -47,8 +46,6 @@ from . import GroupEntity
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 KEY_OPEN_CLOSE = "open_close"
 KEY_STOP = "stop"
@@ -162,6 +159,10 @@ class CoverGroup(GroupEntity, CoverEntity):
                 self.hass, self._entities, self._update_supported_features_event
             )
         )
+
+        if self.hass.state == CoreState.running:
+            await self.async_update()
+            return
         await super().async_added_to_hass()
 
     @property

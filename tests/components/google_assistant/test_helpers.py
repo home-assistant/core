@@ -9,6 +9,7 @@ from homeassistant.components.google_assistant.const import (  # noqa: F401
     NOT_EXPOSE_LOCAL,
 )
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -242,3 +243,12 @@ async def test_sync_entities_all(agents, result):
         res = await config.async_sync_entities_all()
         assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
         assert res == result
+
+
+def test_supported_features_string(caplog):
+    """Test bad supported features."""
+    entity = helpers.GoogleEntity(
+        None, None, State("test.entity_id", "on", {"supported_features": "invalid"})
+    )
+    assert entity.is_supported() is False
+    assert "Entity test.entity_id contains invalid supported_features value invalid"

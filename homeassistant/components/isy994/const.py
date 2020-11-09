@@ -58,6 +58,7 @@ from homeassistant.const import (
     LENGTH_METERS,
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     MASS_POUNDS,
     PERCENTAGE,
@@ -192,6 +193,7 @@ UOM_HVAC_MODE_INSTEON = "98"
 UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
+UOM_PERCENTAGE = "51"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
@@ -199,7 +201,7 @@ UOM_ON_OFF = "2"
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
-        FILTER_UOM: [],
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
@@ -281,7 +283,7 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
-        FILTER_UOM: [UOM_ON_OFF, "78"],
+        FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
@@ -321,6 +323,7 @@ NODE_FILTERS = {
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
+    UOM_ON_OFF: "",  # Binary, no unit
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
     "5": LENGTH_CENTIMETERS,
@@ -352,7 +355,7 @@ UOM_FRIENDLY_NAME = {
     "33": ENERGY_KILO_WATT_HOUR,
     "34": "liedu",
     "35": VOLUME_LITERS,
-    "36": "lx",
+    "36": LIGHT_LUX,
     "37": "mercalli",
     "38": LENGTH_METERS,
     "39": f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
@@ -367,7 +370,7 @@ UOM_FRIENDLY_NAME = {
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "Ω",
-    "51": PERCENTAGE,
+    UOM_PERCENTAGE: PERCENTAGE,
     "52": MASS_POUNDS,
     "53": "pf",
     "54": CONCENTRATION_PARTS_PER_MILLION,

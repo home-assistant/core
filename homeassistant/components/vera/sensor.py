@@ -1,21 +1,18 @@
 """Support for Vera sensors."""
 from datetime import timedelta
-import logging
 from typing import Callable, List, Optional, cast
 
 import pyvera as veraApi
 
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, ENTITY_ID_FORMAT
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -60,7 +57,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
         if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return "lx"
+            return LIGHT_LUX
         if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return "level"
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
