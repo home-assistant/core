@@ -185,6 +185,7 @@ async def test_addon_running(hass, supervisor, addon_running):
 
 async def test_addon_info_failure(hass, supervisor, addon_info):
     """Test add-on info failure."""
+    hass.config.components.add("mqtt")
     addon_info.side_effect = HassioAPIError()
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -241,6 +242,7 @@ async def test_set_addon_config_failure(
     hass, supervisor, addon_installed, addon_options, set_addon_options
 ):
     """Test add-on set config failure."""
+    hass.config.components.add("mqtt")
     set_addon_options.side_effect = HassioAPIError()
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -263,6 +265,7 @@ async def test_start_addon_failure(
     hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
 ):
     """Test add-on start failure."""
+    hass.config.components.add("mqtt")
     start_addon.side_effect = HassioAPIError()
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -291,8 +294,8 @@ async def test_addon_not_installed(
     start_addon,
 ):
     """Test add-on not installed."""
-    addon_installed.return_value["version"] = None
     hass.config.components.add("mqtt")
+    addon_installed.return_value["version"] = None
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -327,6 +330,7 @@ async def test_addon_not_installed(
 
 async def test_install_addon_failure(hass, supervisor, addon_installed, install_addon):
     """Test add-on install failure."""
+    hass.config.components.add("mqtt")
     addon_installed.return_value["version"] = None
     install_addon.side_effect = HassioAPIError()
     await setup.async_setup_component(hass, "persistent_notification", {})

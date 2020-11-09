@@ -42,21 +42,19 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        # Currently all flow results need the MQTT integration.
+        # This will change when we have the direct MQTT client connection.
+        # When that is implemented, move this check to _async_use_mqtt_integration.
+        if "mqtt" not in self.hass.config.components:
+            return self.async_abort(reason="mqtt_required")
+
         if not self.hass.components.hassio.is_hassio():
             return self._async_use_mqtt_integration()
 
         return await self.async_step_on_supervisor()
 
-    @callback
-    def _async_use_mqtt_integration(self):
-        """Handle logic when using the MQTT integration.
-        
-        This is the entry point for the logic that is needed
-        when this integration will depend on the MQTT integration.
-        """
-        if "mqtt" not in self.hass.config.components:
-            return self.async_abort(reason="mqtt_required")
-
+    def _async_get_entry(self):
+        """Return a config entry for the flow."""
         return self.async_create_entry(
             title=TITLE,
             data={
@@ -67,6 +65,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @callback
+    def _async_use_mqtt_integration(self):
+        """Handle logic when using the MQTT integration.
+
+        This is the entry point for the logic that is needed
+        when this integration will depend on the MQTT integration.
+        """
+        return self._async_get_entry()
+
     async def async_step_on_supervisor(self, user_input=None):
         """Handle logic when on Supervisor host."""
         if user_input is None:
@@ -76,12 +83,12 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_USE_ADDON]:
             self.use_addon = True
             return await self._async_use_addon()
-        return self._async_use_mqtt_integration()
+        return self._async_get_entry()
 
     async def _async_use_addon(self):
         """Handle logic when using the OpenZWave add-on."""
         if await self._async_is_addon_running():
-            return self._async_use_mqtt_integration()
+            return self._async_get_entry()
 
         if await self._async_is_addon_installed():
             return await self.async_step_start_addon()
@@ -123,7 +130,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Failed to start OpenZWave add-on: %s", err)
                 errors["base"] = "addon_start_failed"
             else:
-                return self._async_use_mqtt_integration()
+                return self._async_get_entry()
 
         self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
         self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
