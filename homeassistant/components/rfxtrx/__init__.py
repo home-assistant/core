@@ -193,9 +193,9 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
 
     try:
         await async_setup_internal(hass, entry)
-    except ConfigEntryNotReady:
+    except asyncio.TimeoutError:
         # Library currently doesn't support reload
-        return False        
+        return False
 
     for domain in DOMAINS:
         hass.async_create_task(
@@ -267,11 +267,8 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     config = entry.data
 
     # Initialize library
-    try:
-        async with async_timeout.timeout(30):
-            rfx_object = await hass.async_add_executor_job(_create_rfx, config)
-    except asyncio.TimeoutError as err:
-        raise ConfigEntryNotReady from err
+    async with async_timeout.timeout(30):
+        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
