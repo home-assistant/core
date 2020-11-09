@@ -5,8 +5,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers import entity_platform
 
-from .const import DATA_COORDINATOR, DATA_ZONES, DOMAIN
-from .entity import RiscoEntity
+from .const import DATA_COORDINATOR, DOMAIN
+from .entity import RiscoEntity, binary_sensor_unique_id
 
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
@@ -21,12 +21,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    entities = {
-        zone_id: RiscoBinarySensor(coordinator, zone_id, zone)
+    entities = [
+        RiscoBinarySensor(coordinator, zone_id, zone)
         for zone_id, zone in coordinator.data.zones.items()
-    }
-    hass.data[DOMAIN][config_entry.entry_id][DATA_ZONES] = entities
-    async_add_entities(entities.values(), False)
+    ]
+    async_add_entities(entities, False)
 
 
 class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
@@ -58,7 +57,7 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
     @property
     def unique_id(self):
         """Return a unique id for this zone."""
-        return f"{self._risco.site_uuid}_zone_{self._zone_id}"
+        return binary_sensor_unique_id(self._risco, self._zone_id)
 
     @property
     def device_state_attributes(self):
