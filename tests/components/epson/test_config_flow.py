@@ -61,6 +61,9 @@ async def test_import(hass):
     with patch(
         "homeassistant.components.epson.Projector.get_property",
         return_value="04",
+    ), patch("homeassistant.components.epson.async_setup", return_value=True), patch(
+        "homeassistant.components.epson.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
