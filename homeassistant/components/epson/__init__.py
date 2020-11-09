@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from epson_projector import Projector
-from epson_projector.const import POWER, STATE_UNAVAILABLE
+from epson_projector.const import POWER, STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
