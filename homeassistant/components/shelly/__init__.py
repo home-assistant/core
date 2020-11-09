@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         REST
-    ] = ShellyDeviceRestWrapper(hass, entry, device)
+    ] = ShellyDeviceRestWrapper(hass, device)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -179,7 +179,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass, entry, device: aioshelly.Device):
+    def __init__(self, hass, device: aioshelly.Device):
         """Initialize the Shelly device wrapper."""
 
         super().__init__(
@@ -188,8 +188,6 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             name=device.settings["name"] or device.settings["device"]["hostname"],
             update_interval=timedelta(seconds=60),
         )
-        self.hass = hass
-        self.entry = entry
         self.device = device
 
     async def _async_update_data(self):
