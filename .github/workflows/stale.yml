@@ -32,7 +32,7 @@ jobs:
             check if that solves the issue. Let us know if that works for you by
             adding a comment 👍
 
-            This issue now has been marked as stale and will be closed if no
+            This issue has now been marked as stale and will be closed if no
             further activity occurs. Thank you for your contributions.
 
           stale-pr-label: "stale"
@@ -71,7 +71,7 @@ jobs:
             check if that solves the issue. Let us know if that works for you by
             adding a comment 👍
 
-            This issue now has been marked as stale and will be closed if no
+            This issue has now been marked as stale and will be closed if no
             further activity occurs. Thank you for your contributions.
 
           stale-pr-label: "stale"
