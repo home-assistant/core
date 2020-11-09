@@ -1,10 +1,20 @@
 {
-    "title": "Bosch Smart Home Controller",
+    "title": "Bosch SHC",
     "config": {
+        "flow_title": "{name}",
         "step": {
+            "confirm_discovery": {
+                "description": "Do you want to set up the {model} at {host}?"
+            },
+            "credentials": {
+                "data": {
+                    "ssl_certificate": "SSL certificate public key",
+                    "ssl_key": "SSL certificate private key"
+                }
+            },
             "user": {
                 "description": "Set up your Bosch SHC instance to allow monitoring and control.",
-                "title": "SHC access parameters",
+                "title": "SHC authentication parameters",
                 "data": {
                     "host": "Host",
                     "ssl_certificate": "SSL certificate public key",
@@ -13,6 +23,7 @@
             }
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

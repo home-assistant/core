@@ -3,7 +3,13 @@ import asyncio
 import logging
 
 from boschshcpy import SHCSession
+from boschshcpy.exceptions import (
+    SHCAuthenticationError,
+    SHCConnectionError,
+    SHCmDNSError,
+)
 
+from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -29,31 +35,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Bosch SHC from a config entry."""
     data = entry.data
 
-    session = await hass.async_add_executor_job(
-        SHCSession,
-        data[CONF_HOST],
-        data[CONF_SSL_CERTIFICATE],
-        data[CONF_SSL_KEY],
-    )
+    zeroconf = await async_get_instance(hass)
+    try:
+        session = await hass.async_add_executor_job(
+            SHCSession,
+            data[CONF_HOST],
+            data[CONF_SSL_CERTIFICATE],
+            data[CONF_SSL_KEY],
+            False,
+            zeroconf,
+        )
+    except SHCAuthenticationError as err:
+        _LOGGER.warning("Unable to authenticate on Bosch Smart Home Controller API")
+        raise ConfigEntryNotReady from err
+    except (SHCConnectionError, SHCmDNSError) as err:
+        raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    if shc_info is None:
-        _LOGGER.warning("Unable to connect to Bosch Smart Home Controller API")
-        raise ConfigEntryNotReady
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     hass.data[DOMAIN][entry.entry_id] = session
 
-    if session.mac_address is None:
-        raise ConfigEntryNotReady
-    mac = dr.format_mac(session.mac_address)
-
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-        identifiers={(DOMAIN, mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(shc_info.mac_address))},
+        identifiers={(DOMAIN, shc_info.name)},
         manufacturer="Bosch",
         name=entry.title,
         model="SmartHomeController",

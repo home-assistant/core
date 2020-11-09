@@ -8,8 +8,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .entity import SHCEntity
@@ -21,16 +19,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the SHC binary sensor platform."""
     entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id]
-    if session.mac_address is None:
-        raise ConfigEntryNotReady
-    mac = format_mac(session.mac_address)
 
     for binarysensor in session.device_helper.shutter_contacts:
         entities.append(
             ShutterContactSensor(
                 device=binarysensor,
                 room_name=session.room(binarysensor.room_id).name,
-                shc_uid=mac,
+                shc_uid=session.information.name,
             )
         )
 
