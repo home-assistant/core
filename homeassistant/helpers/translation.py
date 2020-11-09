@@ -296,9 +296,9 @@ async def async_get_translations(
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":
-        # Only 'state' supports merging, so remove platforms from selection
         components = set(hass.config.components)
     else:
+        # Only 'state' supports merging, so remove platforms from selection
         components = {
             component for component in hass.config.components if "." not in component
         }
