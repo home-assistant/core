@@ -196,10 +196,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
             hour = dt.now().hour
 
-            if hour >= 6 and hour <= 18:
+            if 6 <= hour <= 18:
                 return ATTR_CONDITION_SUNNY
-            else:
-                return ATTR_CONDITION_CLEAR_NIGHT
+            return ATTR_CONDITION_CLEAR_NIGHT
 
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
 
