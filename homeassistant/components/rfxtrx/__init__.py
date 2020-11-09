@@ -194,7 +194,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         await async_setup_internal(hass, entry)
     except asyncio.TimeoutError:
         # Library currently doesn't support reload
-        _LOGGER.exception(
+        _LOGGER.error(
             "Connection timeout: failed to receive response from RFXtrx device"
         )
         return False
