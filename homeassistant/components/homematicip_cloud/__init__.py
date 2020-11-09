@@ -91,16 +91,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     # Register hap as device in registry.
     device_registry = await dr.async_get_registry(hass)
+
     home = hap.home
-    # Add the HAP name from configuration if set.
-    hapname = home.label if not home.name else f"{home.name} {home.label}"
+    hapname = home.label if home.label != entry.unique_id else f"Home-{home.label}"
+
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, home.id)},
         manufacturer="eQ-3",
+        # Add the name from config entry.
         name=hapname,
-        model=home.modelType,
-        sw_version=home.currentAPVersion,
     )
     return True
 
