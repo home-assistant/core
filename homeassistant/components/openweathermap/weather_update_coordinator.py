@@ -121,9 +121,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_RAIN: self._get_rain(current_weather.rain),
             ATTR_API_SNOW: self._get_snow(current_weather.snow),
             ATTR_API_WEATHER: current_weather.detailed_status,
-            ATTR_API_CONDITION: self._get_condition(
-                self.hass, current_weather.weather_code
-            ),
+            ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
             ATTR_API_WEATHER_CODE: current_weather.weather_code,
             ATTR_API_FORECAST: forecast_weather,
         }
@@ -147,7 +145,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
             ATTR_FORECAST_WIND_BEARING: entry.wind().get("deg"),
             ATTR_FORECAST_CONDITION: self._get_condition(
-                self.hass, entry.weather_code, entry.reference_time("unix")
+                entry.weather_code, entry.reference_time("unix")
             ),
         }
 
@@ -195,15 +193,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
         return round(rain_value + snow_value, 1)
 
-    @staticmethod
-    def _get_condition(hass, weather_code, timestamp=None):
+    def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
         if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
 
             if timestamp:
                 timestamp = dt.utc_from_timestamp(timestamp)
 
-            if sun.is_up(hass, timestamp):
+            if sun.is_up(self.hass, timestamp):
                 return ATTR_CONDITION_SUNNY
             return ATTR_CONDITION_CLEAR_NIGHT
 
