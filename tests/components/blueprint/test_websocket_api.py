@@ -46,6 +46,21 @@ async def test_list_blueprints(hass, hass_ws_client):
     }
 
 
+async def test_list_blueprints_non_existing_domain(hass, hass_ws_client):
+    """Test listing blueprints."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "blueprint/list", "domain": "not_existsing"}
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    blueprints = msg["result"]
+    assert blueprints == {}
+
+
 async def test_import_blueprint(hass, aioclient_mock, hass_ws_client):
     """Test importing blueprints."""
     raw_data = Path(
@@ -136,6 +151,27 @@ async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
     assert msg["id"] == 7
     assert not msg["success"]
     assert msg["error"] == {"code": "already_exists", "message": "File already exists"}
+
+
+async def test_save_file_error(hass, aioclient_mock, hass_ws_client):
+    """Test saving blueprints with OS error."""
+    with patch("pathlib.Path.write_text", side_effect=OSError):
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 8,
+                "type": "blueprint/save",
+                "path": "test_save",
+                "data": "raw_data",
+                "domain": "automation",
+                "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert msg["id"] == 8
+        assert not msg["success"]
 
 
 async def test_save_invalid_blueprint(hass, aioclient_mock, hass_ws_client):
