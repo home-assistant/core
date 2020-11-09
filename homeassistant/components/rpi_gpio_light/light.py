@@ -3,21 +3,20 @@
 import logging
 import time
 
+from homeassistant.components import rpi_gpio_light
 from homeassistant.components.light import LightEntity
 from homeassistant.const import CONF_NAME
 
-from homeassistant.components import rpi_gpio_light
-
 from .const import (
-DOMAIN,
-CONF_LIGHT,
-CONF_RELAY_PIN,
-CONF_LIGHT_BUTTON_PIN,
-CONF_LIGHT_BUTTON_PULL_MODE,
-CONF_INVERT_LIGHT_BUTTON,
-CONF_INVERT_RELAY,
-CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS,
-CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS
+    CONF_INVERT_LIGHT_BUTTON,
+    CONF_INVERT_RELAY,
+    CONF_LIGHT,
+    CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS,
+    CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS,
+    CONF_LIGHT_BUTTON_PIN,
+    CONF_LIGHT_BUTTON_PULL_MODE,
+    CONF_RELAY_PIN,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +84,17 @@ class RPiGPIOLight(LightEntity):
 
         def toggle_light_from_button(port):
             time.sleep(self._light_button_double_check_time_millis / 2000)
-            if rpi_gpio_light.read_input(self._light_button_pin) != self._invert_light_button:
+            if (
+                rpi_gpio_light.read_input(self._light_button_pin)
+                != self._invert_light_button
+            ):
                 time.sleep(
                     self._light_button_double_check_time_millis / 2000
                 )  # double check to avoid electrical disturbance
-                if rpi_gpio_light.read_input(self._light_button_pin) != self._invert_light_button:
+                if (
+                    rpi_gpio_light.read_input(self._light_button_pin)
+                    != self._invert_light_button
+                ):
                     self.toggle()
 
         if self._invert_light_button:
