@@ -301,7 +301,7 @@ async def test_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("device_class") == "temperature"
     assert state.attributes.get("friendly_name") == "Tasmota DHT11 Temperature"
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("unit_of_measurement") == "C"
+    assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_beer_CarbonDioxide")
     assert state.attributes.get("device_class") is None
@@ -371,7 +371,7 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("device_class") == "temperature"
     assert state.attributes.get("friendly_name") == "Tasmota Dummy1 Temperature 0"
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("unit_of_measurement") == "C"
+    assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_dummy2_carbondioxide_1")
     assert state.attributes.get("device_class") is None
