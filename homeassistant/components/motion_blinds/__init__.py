@@ -11,6 +11,8 @@ from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
+MOTION_PLATFORMS = ["cover", "sensor"]
+
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
     """Set up the Motion Blinds component."""
@@ -44,9 +46,10 @@ async def async_setup_entry(
         sw_version=motion_gateway.protecol,
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "cover")
-    )
+    for component in MOTION_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 

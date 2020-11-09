@@ -2,7 +2,7 @@
 
 import logging
 
-from motionblinds.motion_blinds import BlindType
+from motionblinds import BlindType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -22,49 +22,49 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the DenonAVR receiver from a config entry."""
+    """Set up the Motion Blind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id]
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
 
-        if blind.blind_type in [
-            BlindType.RollerBlind.name,
-            BlindType.RomanBlind.name,
-            BlindType.HoneycombBlind.name,
-            BlindType.ShangriLaBlind.name,
-            BlindType.DimmingBlind.name,
-            BlindType.DayNightBlind.name,
+        if blind.type in [
+            BlindType.RollerBlind,
+            BlindType.RomanBlind,
+            BlindType.HoneycombBlind,
+            BlindType.ShangriLaBlind,
+            BlindType.DimmingBlind,
+            BlindType.DayNightBlind,
         ]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_SHADE, config_entry)
             )
 
-        elif blind.blind_type in [BlindType.RollerShutter.name]:
+        elif blind.type in [BlindType.RollerShutter]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_SHUTTER, config_entry)
             )
 
-        elif blind.blind_type in [BlindType.RollerGate.name]:
+        elif blind.type in [BlindType.RollerGate]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_GATE, config_entry)
             )
 
-        elif blind.blind_type in [BlindType.Awning.name]:
+        elif blind.type in [BlindType.Awning]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_AWNING, config_entry)
             )
 
-        elif blind.blind_type in [
-            BlindType.Curtain.name,
-            BlindType.CurtainLeft.name,
-            BlindType.CurtainRight.name,
+        elif blind.type in [
+            BlindType.Curtain,
+            BlindType.CurtainLeft,
+            BlindType.CurtainRight,
         ]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_CURTAIN, config_entry)
             )
 
-        elif blind.blind_type in [BlindType.VenetianBlind.name]:
+        elif blind.type in [BlindType.VenetianBlind]:
             entities.append(MotionTiltDevice(blind, DEVICE_CLASS_BLIND, config_entry))
 
         else:
