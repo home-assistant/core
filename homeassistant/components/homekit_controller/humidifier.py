@@ -66,12 +66,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified valve on."""
-        await self.async_put_characteristics(
-            {
-                CharacteristicsTypes.ACTIVE: True,
-                CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 1,
-            }
-        )
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
@@ -145,7 +140,12 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
                 }
             )
         else:
-            await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+            await self.async_put_characteristics(
+                {
+                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 1,
+                    CharacteristicsTypes.ACTIVE: True,
+                }
+            )
 
     @property
     def min_humidity(self) -> int:
@@ -193,12 +193,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified valve on."""
-        await self.async_put_characteristics(
-            {
-                CharacteristicsTypes.ACTIVE: True,
-                CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 2,
-            }
-        )
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified valve off."""
@@ -272,7 +267,12 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
                 }
             )
         else:
-            await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+            await self.async_put_characteristics(
+                {
+                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 2,
+                    CharacteristicsTypes.ACTIVE: True,
+                }
+            )
 
     @property
     def min_humidity(self) -> int:
