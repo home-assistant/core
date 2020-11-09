@@ -10,6 +10,9 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "ozw"
 DATA_UNSUBSCRIBE = "unsubscribe"
+
+CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     COVER_DOMAIN,
