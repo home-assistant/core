@@ -398,9 +398,7 @@ async def test_device_update_listener(hass):
     mock_api, mock_entry, _ = await device.setup_entry(hass)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.broadlink.device.blk.gendevice", return_value=mock_api
-    ), device.patch_discovery():
+    with device.patch_setup():
         hass.config_entries.async_update_entry(mock_entry, title="New Name")
         await hass.async_block_till_done()
 
