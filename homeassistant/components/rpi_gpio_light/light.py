@@ -3,10 +3,10 @@
 import logging
 import time
 
-from . import *
 from homeassistant.components.light import LightEntity
 from homeassistant.const import CONF_NAME
 
+from . import *
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,17 +74,11 @@ class RPiGPIOLight(LightEntity):
 
         def toggle_light_from_button(port):
             time.sleep(self._light_button_double_check_time_millis / 2000)
-            if (
-                read_input(self._light_button_pin)
-                != self._invert_light_button
-            ):
+            if read_input(self._light_button_pin) != self._invert_light_button:
                 time.sleep(
                     self._light_button_double_check_time_millis / 2000
                 )  # double check to avoid electrical disturbance
-                if (
-                    read_input(self._light_button_pin)
-                    != self._invert_light_button
-                ):
+                if read_input(self._light_button_pin) != self._invert_light_button:
                     self.toggle()
 
         if self._invert_light_button:

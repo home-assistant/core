@@ -1,0 +1,7 @@
+{
+  "domain": "rpi_gpio_ligth",
+  "name": "Raspberry Pi GPIO ligth",
+  "documentation": "https://www.home-assistant.io/integrations/rpi_gpio_light",
+  "requirements": ["RPi.GPIO==0.7.0"],
+  "codeowners": []
+}

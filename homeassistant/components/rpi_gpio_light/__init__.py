@@ -11,16 +11,17 @@ from homeassistant.helpers import config_validation as cv, discovery
 
 from .const import *
 
-_LIGHT_SHEMA= vol.All(
+_LIGHT_SHEMA = vol.All(
     cv.ensure_list,
-    [vol.Schema(
+    [
+        vol.Schema(
             {
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_RELAY_PIN): cv.positive_int,
                 vol.Required(CONF_LIGHT_BUTTON_PIN): cv.positive_int,
             }
         )
-    ]
+    ],
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA
+    extra=vol.ALLOW_EXTRA,
 )
 
 
