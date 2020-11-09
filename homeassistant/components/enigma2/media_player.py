@@ -254,7 +254,7 @@ class Enigma2Device(MediaPlayerEntity):
         currservice_begin:  is in the format '21:00'.
         currservice_end:    is in the format '21:00'.
         """
-        if self.e2_box.in_standby or self.e2_box.is_offline:
+        if self.e2_box.in_standby:
             return {}
         return {
             ATTR_MEDIA_CURRENTLY_RECORDING: self.e2_box.status_info["isRecording"],
