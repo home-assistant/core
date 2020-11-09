@@ -20,6 +20,7 @@ FLOWS = [
     "arcam_fmj",
     "atag",
     "august",
+    "aurora",
     "avri",
     "awair",
     "axis",

@@ -293,6 +293,9 @@ asyncpysupla==0.0.5
 # homeassistant.components.aten_pe
 atenpdu==0.3.0
 
+# homeassistant.components.aurora
+auroranoaa==0.0.1
+
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
@@ -1019,7 +1022,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.1
+omnilogic==0.4.2
 
 # homeassistant.components.onkyo
 onkyo-eiscp==1.2.7
