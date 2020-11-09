@@ -32,6 +32,7 @@ def async_setup(hass: HomeAssistant):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/list",
+        vol.Optional("domain"): cv.string,
     }
 )
 async def ws_list_blueprints(hass, connection, msg):
@@ -41,12 +42,8 @@ async def ws_list_blueprints(hass, connection, msg):
     )
     results = {}
 
-    for domain, domain_results in zip(
-        domain_blueprints,
-        await asyncio.gather(
-            *[db.async_get_blueprints() for db in domain_blueprints.values()]
-        ),
-    ):
+    def get_domain_blueprint(domain, domain_results):
+        """List available blueprints for domain."""
         for path, value in domain_results.items():
             if isinstance(value, models.Blueprint):
                 domain_results[path] = {
@@ -56,6 +53,17 @@ async def ws_list_blueprints(hass, connection, msg):
                 domain_results[path] = {"error": str(value)}
 
         results[domain] = domain_results
+
+    if msg.get("domain"):
+        get_domain_blueprint(msg["domain"], domain_blueprints[msg["domain"]])
+    else:
+        for domain, domain_results in zip(
+            domain_blueprints,
+            await asyncio.gather(
+                *[db.async_get_blueprints() for db in domain_blueprints.values()]
+            ),
+        ):
+            get_domain_blueprint(domain, domain_results)
 
     connection.send_result(msg["id"], results)
 
@@ -116,7 +124,7 @@ async def ws_save_blueprint(hass, connection, msg):
             raise HomeAssistantError("File already exists")
 
         blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
-        if msg["source_url"]:
+        if msg.get("source_url"):
             blueprint.update_metadata(source_url=msg["source_url"])
 
         blueprint_path.parent.mkdir(parents=True, exist_ok=True)
