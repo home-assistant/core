@@ -12,18 +12,15 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_AREA_NAME = "area_name"
-ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
-ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_PICKUP_TYPES = "pickup_types"
-
+ATTR_AREA_NAME = "area_name"
+ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
+ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 CONF_PLACE_ID = "place_id"
 CONF_SERVICE_ID = "service_id"
-
-DEFAULT_ICON = "mdi:trash-can-outline"
 DEFAULT_NAME = "recollect_waste"
-DEFAULT_SCAN_INTERVAL = timedelta(days=1)
+ICON = "mdi:trash-can-outline"
+SCAN_INTERVAL = timedelta(days=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,19 +58,14 @@ class RecollectWasteSensor(Entity):
         self.client = client
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return DEFAULT_ICON
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.client.place_id}{self.client.service_id}"
 
     @property
     def state(self):
@@ -81,9 +73,14 @@ class RecollectWasteSensor(Entity):
         return self._state
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.client.place_id}{self.client.service_id}"
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return ICON
 
     async def async_update(self):
         """Update device state."""
@@ -98,7 +95,6 @@ class RecollectWasteSensor(Entity):
         pickup_event = pickup_event_array[0]
         next_pickup_event = pickup_event_array[1]
         next_date = str(next_pickup_event.date)
-
         self._state = pickup_event.date
         self._attributes.update(
             {
