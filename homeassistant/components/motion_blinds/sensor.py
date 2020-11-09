@@ -4,13 +4,12 @@ import logging
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,19 +17,16 @@ ATTR_BATTERY_VOLTAGE = "battery_voltage"
 TYPE_BLIND = "blind"
 TYPE_GATEWAY = "gateway"
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Motion Blinds."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id]
-    
+
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
-        entities.append(
-            MotionBatterySensor(blind, config_entry)
-        )
-        entities.append(
-            MotionSignalStrengthSensor(blind, TYPE_BLIND, config_entry)
-        )
+        entities.append(MotionBatterySensor(blind, config_entry))
+        entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND, config_entry))
 
     entities.append(
         MotionSignalStrengthSensor(motion_gateway, TYPE_GATEWAY, config_entry)
@@ -105,7 +101,7 @@ class MotionSignalStrengthSensor(Entity):
     def update(self):
         """
         Get the latest status information from gateway.
-        
+
         Blinds are updated by the cover platform
         """
         if self._type == TYPE_GATEWAY:
@@ -119,9 +115,7 @@ class MotionSignalStrengthSensor(Entity):
     @property
     def device_info(self):
         """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device.mac)}
-        }
+        device_info = {"identifiers": {(DOMAIN, self._device.mac)}}
 
         return device_info
 
@@ -129,7 +123,7 @@ class MotionSignalStrengthSensor(Entity):
     def name(self):
         """Return the name of the blind signal strenght sensor."""
         if self._type == TYPE_GATEWAY:
-            return f"Motion gateway signal strength"
+            return "Motion gateway signal strength"
         return f"{self._device.blind_type} signal strenght - {self._device.mac}"
 
     @property
