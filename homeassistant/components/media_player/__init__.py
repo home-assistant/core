@@ -903,11 +903,16 @@ class MediaPlayerEntity(Entity):
 
     def get_browse_image_url(self, media_content_type, media_content_id, browse_image):
         """Generate an url for a media browser image."""
-        base_url = get_url(self.hass)
-        url = (
-            f"{base_url}/api/media_player_proxy/{self.entity_id}"
-            f"?token={self.access_token}&media_content_type={media_content_type}"
-            f"&media_content_id={media_content_id}&browse_image={browse_image}"
+        url = str(
+            URL(f"/api/media_player_proxy/{self.entity_id}")
+            .with_query(
+                {
+                    "token": self.access_token,
+                    "media_content_type"; media_content_type,
+                    "media_content_id": media_content_id,
+                    "browse_image": browse_image,
+                }
+            )
         )
         return url
 
