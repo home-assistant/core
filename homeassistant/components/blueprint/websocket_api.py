@@ -1,5 +1,4 @@
 """Websocket API for blueprint."""
-import asyncio
 import logging
 import pathlib
 from typing import Dict, Optional
@@ -19,6 +18,10 @@ from .const import BLUEPRINT_FOLDER, DOMAIN
 _LOGGER = logging.getLogger(__package__)
 
 
+class FileAlreadyExists(HomeAssistantError):
+    """Error when file already exists."""
+
+
 @callback
 def async_setup(hass: HomeAssistant):
     """Set up the websocket API."""
@@ -32,7 +35,7 @@ def async_setup(hass: HomeAssistant):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/list",
-        vol.Optional("domain"): cv.string,
+        vol.Required("domain"): cv.string,
     }
 )
 async def ws_list_blueprints(hass, connection, msg):
@@ -42,32 +45,19 @@ async def ws_list_blueprints(hass, connection, msg):
     )
     results = {}
 
-    def get_domain_blueprint(domain, domain_results):
-        """List available blueprints for domain."""
-        for path, value in domain_results.items():
-            if isinstance(value, models.Blueprint):
-                domain_results[path] = {
-                    "metadata": value.metadata,
-                }
-            else:
-                domain_results[path] = {"error": str(value)}
+    if msg["domain"] not in domain_blueprints:
+        connection.send_result(msg["id"], results)
+        return
 
-        results[domain] = domain_results
+    domain_results = await domain_blueprints[msg["domain"]].async_get_blueprints()
 
-    if msg.get("domain"):
-        if msg["domain"] in domain_blueprints:
-            get_domain_blueprint(
-                msg["domain"],
-                await domain_blueprints[msg["domain"]].async_get_blueprints(),
-            )
-    else:
-        for domain, domain_results in zip(
-            domain_blueprints,
-            await asyncio.gather(
-                *[db.async_get_blueprints() for db in domain_blueprints.values()]
-            ),
-        ):
-            get_domain_blueprint(domain, domain_results)
+    for path, value in domain_results.items():
+        if isinstance(value, models.Blueprint):
+            results[path] = {
+                "metadata": value.metadata,
+            }
+        else:
+            results[path] = {"error": str(value)}
 
     connection.send_result(msg["id"], results)
 
@@ -125,18 +115,20 @@ async def ws_save_blueprint(hass, connection, msg):
             hass.config.path(BLUEPRINT_FOLDER, domain, f"{path}.yaml")
         )
         if blueprint_path.exists():
-            raise HomeAssistantError("File already exists")
+            raise FileAlreadyExists()
 
         blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
-        if msg.get("source_url"):
+        if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
 
         blueprint_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(blueprint_path, "x") as file:
-            file.write(blueprint.dump())
+        blueprint_path.write_text(blueprint.yaml())
 
     try:
         await hass.async_add_executor_job(create_file)
+    except FileAlreadyExists:
+        connection.send_error(msg["id"], "already_exists", "File already exists")
+        return
     except HomeAssistantError as err:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return

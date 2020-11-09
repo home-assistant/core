@@ -19,14 +19,14 @@ async def setup_bp(hass):
 async def test_list_blueprints(hass, hass_ws_client):
     """Test listing blueprints."""
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "blueprint/list"})
+    await client.send_json({"id": 5, "type": "blueprint/list", "domain": "automation"})
 
     msg = await client.receive_json()
 
     assert msg["id"] == 5
     assert msg["success"]
     blueprints = msg["result"]
-    assert blueprints.get("automation") == {
+    assert blueprints == {
         "test_event_service.yaml": {
             "metadata": {
                 "domain": "automation",
