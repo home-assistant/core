@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             domain_data[LOG_INTERVAL_SUB]()
 
         hass.components.persistent_notification.async_create(
-            "Object growth logging has started. See [the logs](/config/logs) for to track the growth of new objects.",
+            "Object growth logging has started. See [the logs](/config/logs) to track the growth of new objects.",
             title="Object growth logging started",
             notification_id="profile_object_logging",
         )
