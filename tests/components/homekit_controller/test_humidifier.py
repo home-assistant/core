@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.humidifier import DOMAIN
+from homeassistant.components.humidifier.const import MODE_AUTO, MODE_NORMAL
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -212,6 +213,52 @@ async def test_dehumidifier_set_humidity(hass, utcnow):
         blocking=True,
     )
     assert helper.characteristics[RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD].value == 20
+
+
+async def test_humidifier_set_mode(hass, utcnow):
+    """Test that we can set the mode of a HomeKit humidifier accessory."""
+    helper = await setup_test_component(hass, create_humidifier_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_mode",
+        {"entity_id": helper.entity_id, "mode": MODE_AUTO},
+        blocking=True,
+    )
+    assert helper.characteristics[TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE].value == 0
+    assert helper.characteristics[ACTIVE].value == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_mode",
+        {"entity_id": helper.entity_id, "mode": MODE_NORMAL},
+        blocking=True,
+    )
+    assert helper.characteristics[TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE].value == 1
+    assert helper.characteristics[ACTIVE].value == 1
+
+
+async def test_dehumidifier_set_mode(hass, utcnow):
+    """Test that we can set the mode of a HomeKit dehumidifier accessory."""
+    helper = await setup_test_component(hass, create_dehumidifier_service)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_mode",
+        {"entity_id": helper.entity_id, "mode": MODE_AUTO},
+        blocking=True,
+    )
+    assert helper.characteristics[TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE].value == 0
+    assert helper.characteristics[ACTIVE].value == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_mode",
+        {"entity_id": helper.entity_id, "mode": MODE_NORMAL},
+        blocking=True,
+    )
+    assert helper.characteristics[TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE].value == 2
+    assert helper.characteristics[ACTIVE].value == 1
 
 
 async def test_humidifier_read_only_mode(hass, utcnow):
