@@ -92,7 +92,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: ConfigType):
     """List trigger capabilities."""
-    zones = hass.states.async_entity_ids(DOMAIN_ZONE)
+    zones = {ent.entity_id: ent.name for ent in hass.states.async_all(DOMAIN_ZONE)}
     return {
         "extra_fields": vol.Schema(
             {
