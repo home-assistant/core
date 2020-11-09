@@ -10,6 +10,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name",
+                    "scan_interval": "Polling Interval (minutes)",
                     "threshold": "Threshold (%)"
                 }
             }
@@ -22,6 +23,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name",
+                    "scan_interval": "Polling Interval (minutes)",
                     "threshold": "Threshold (%)"
                 }
             }
