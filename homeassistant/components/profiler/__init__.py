@@ -1,14 +1,19 @@
 """The profiler integration."""
 import asyncio
 import cProfile
+from datetime import timedelta
+import logging
 import time
 
 from guppy import hpy
+import objgraph
 from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -16,7 +21,27 @@ from .const import DOMAIN
 
 SERVICE_START = "start"
 SERVICE_MEMORY = "memory"
+SERVICE_START_LOG_OBJECTS = "start_log_objects"
+SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
+SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+
+SERVICES = (
+    SERVICE_START,
+    SERVICE_MEMORY,
+    SERVICE_START_LOG_OBJECTS,
+    SERVICE_STOP_LOG_OBJECTS,
+    SERVICE_DUMP_LOG_OBJECTS,
+)
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+
 CONF_SECONDS = "seconds"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_TYPE = "type"
+
+LOG_INTERVAL_SUB = "log_interval_subscription"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -28,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Profiler from a config entry."""
 
     lock = asyncio.Lock()
+    domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall):
         async with lock:
@@ -36,6 +62,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def _async_run_memory_profile(call: ServiceCall):
         async with lock:
             await _async_generate_memory_profile(hass, call)
+
+    async def _async_start_log_objects(call: ServiceCall):
+        if LOG_INTERVAL_SUB in domain_data:
+            domain_data[LOG_INTERVAL_SUB]()
+
+        hass.components.persistent_notification.async_create(
+            "Object growth logging has started. See [the logs](/config/logs) to track the growth of new objects.",
+            title="Object growth logging started",
+            notification_id="profile_object_logging",
+        )
+        await hass.async_add_executor_job(_log_objects)
+        domain_data[LOG_INTERVAL_SUB] = async_track_time_interval(
+            hass, _log_objects, call.data[CONF_SCAN_INTERVAL]
+        )
+
+    async def _async_stop_log_objects(call: ServiceCall):
+        if LOG_INTERVAL_SUB not in domain_data:
+            return
+
+        hass.components.persistent_notification.async_dismiss("profile_object_logging")
+        domain_data.pop(LOG_INTERVAL_SUB)()
+
+    def _dump_log_objects(call: ServiceCall):
+        obj_type = call.data[CONF_TYPE]
+
+        _LOGGER.critical(
+            "%s objects in memory: %s",
+            obj_type,
+            objgraph.by_type(obj_type),
+        )
+
+        hass.components.persistent_notification.create(
+            f"Objects with type {obj_type} have been dumped to the log. See [the logs](/config/logs) to review the repr of the objects.",
+            title="Object dump completed",
+            notification_id="profile_object_dump",
+        )
 
     async_register_admin_service(
         hass,
@@ -57,12 +119,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ),
     )
 
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_START_LOG_OBJECTS,
+        _async_start_log_objects,
+        schema=vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period
+            }
+        ),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_STOP_LOG_OBJECTS,
+        _async_stop_log_objects,
+        schema=vol.Schema({}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_DUMP_LOG_OBJECTS,
+        _dump_log_objects,
+        schema=vol.Schema({vol.Required(CONF_TYPE): str}),
+    )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_START)
+    for service in SERVICES:
+        hass.services.async_remove(domain=DOMAIN, service=service)
+    if LOG_INTERVAL_SUB in hass.data[DOMAIN]:
+        hass.data[DOMAIN][LOG_INTERVAL_SUB]()
+    hass.data.pop(DOMAIN)
     return True
 
 
@@ -119,3 +215,7 @@ def _write_profile(profiler, cprofile_path, callgrind_path):
 
 def _write_memory_profile(heap, heap_path):
     heap.byrcs.dump(heap_path)
+
+
+def _log_objects(*_):
+    _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=100))
