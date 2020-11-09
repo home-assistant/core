@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -131,8 +132,10 @@ class Enigma2Device(MediaPlayerEntity):
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
-        if self.e2_box.in_standby or self.e2_box.is_offline:
+        if self.e2_box.in_standby:
             return STATE_OFF
+        if self.e2_box.is_offline:
+            return STATE_UNAVAILABLE
         return STATE_ON
 
     @property
