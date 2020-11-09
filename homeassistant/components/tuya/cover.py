@@ -68,10 +68,9 @@ class TuyaCover(TuyaDevice, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         if self._tuya.support_stop():
-            supported_features |= SUPPORT_STOP
-        return supported_features
+            return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def is_opening(self):
