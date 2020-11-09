@@ -121,10 +121,10 @@ class MotionSignalStrengthSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the blind signal strenght sensor."""
+        """Return the name of the blind signal strength sensor."""
         if self._type == TYPE_GATEWAY:
             return "Motion gateway signal strength"
-        return f"{self._device.blind_type} signal strenght - {self._device.mac}"
+        return f"{self._device.blind_type} signal strength - {self._device.mac}"
 
     @property
     def unit_of_measurement(self):
