@@ -318,7 +318,7 @@ async def test_missing_key(hass, missing_key, count):
 
     del light_config["light"]["lights"]["light_one"][missing_key]
     with assert_setup_component(count, light.DOMAIN):
-        assert await setup.async_setup_component(hass, light.DOMAIN, light_config)
+        assert await setup.async_setup_component(hass, "light", light_config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -568,8 +568,9 @@ async def test_white_value_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_WHITE_VALUE: 124},
         blocking=True,
     )
+
     assert len(calls) == 1
-    assert calls[0].data["white_value"] == "124"
+    assert calls[0].data["white_value"] == 124
 
     state = hass.states.get("light.test_template_light")
     assert state is not None
@@ -673,8 +674,9 @@ async def test_level_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_BRIGHTNESS: 124},
         blocking=True,
     )
+
     assert len(calls) == 1
-    assert calls[0].data["brightness"] == "124"
+    assert calls[0].data["brightness"] == 124
 
     state = hass.states.get("light.test_template_light")
     _LOGGER.info(str(state.attributes))
@@ -833,8 +835,9 @@ async def test_temperature_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 345},
         blocking=True,
     )
+
     assert len(calls) == 1
-    assert calls[0].data["color_temp"] == "345"
+    assert calls[0].data["color_temp"] == 345
 
     state = hass.states.get("light.test_template_light")
     _LOGGER.info(str(state.attributes))
@@ -934,6 +937,7 @@ async def test_icon_template(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_template_light")
+
     assert state.attributes["icon"] == "mdi:check"
 
 
@@ -1044,19 +1048,20 @@ async def test_color_action_no_template(hass, calls):
         {ATTR_ENTITY_ID: "light.test_template_light", ATTR_HS_COLOR: (40, 50)},
         blocking=True,
     )
+
     assert len(calls) == 2
-    assert calls[0].data["h"] == "40"
-    assert calls[0].data["s"] == "50"
-    assert calls[1].data["h"] == "40"
-    assert calls[1].data["s"] == "50"
+    assert calls[0].data["h"] == 40
+    assert calls[0].data["s"] == 50
+    assert calls[1].data["h"] == 40
+    assert calls[1].data["s"] == 50
 
     state = hass.states.get("light.test_template_light")
     _LOGGER.info(str(state.attributes))
     assert state is not None
-    assert calls[0].data["h"] == "40"
-    assert calls[0].data["s"] == "50"
-    assert calls[1].data["h"] == "40"
-    assert calls[1].data["s"] == "50"
+    assert calls[0].data["h"] == 40
+    assert calls[0].data["s"] == 50
+    assert calls[1].data["h"] == 40
+    assert calls[1].data["s"] == 50
 
 
 @pytest.mark.parametrize(
@@ -1112,7 +1117,7 @@ async def test_color_template(hass, expected_hs, template):
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("hs_color") == expected_hs
-    
+
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
