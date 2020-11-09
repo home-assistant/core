@@ -1,18 +1,20 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Bare en enkelt konfigurasjon av Abode er tillatt."
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kan ikke koble til Abode.",
             "identifier_exists": "Kontoen er allerede registrert.",
-            "invalid_credentials": "Ugyldig legitimasjon"
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_credentials": "Ugyldige innloggingsopplysninger"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-postadresse"
+                    "username": "E-post"
                 },
                 "title": "Fyll ut innloggingsinformasjonen for Abode"
             }

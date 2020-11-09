@@ -1,13 +1,11 @@
 """Lighting channels module for Zigbee Home Automation."""
-import logging
+from typing import Optional
 
 import zigpy.zcl.clusters.lighting as lighting
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ClientChannel, ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
@@ -45,14 +43,34 @@ class ColorChannel(ZigbeeChannel):
         self._max_mireds = 500
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this channel supports."""
-        return self._min_mireds
+    def color_loop_active(self) -> Optional[int]:
+        """Return cached value of the color_loop_active attribute."""
+        return self.cluster.get("color_loop_active")
 
     @property
-    def max_mireds(self):
+    def color_temperature(self) -> Optional[int]:
+        """Return cached value of color temperature."""
+        return self.cluster.get("color_temperature")
+
+    @property
+    def current_x(self) -> Optional[int]:
+        """Return cached value of the current_x attribute."""
+        return self.cluster.get("current_x")
+
+    @property
+    def current_y(self) -> Optional[int]:
+        """Return cached value of the current_y attribute."""
+        return self.cluster.get("current_y")
+
+    @property
+    def min_mireds(self) -> int:
+        """Return the coldest color_temp that this channel supports."""
+        return self.cluster.get("color_temp_physical_min", self._min_mireds)
+
+    @property
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this channel supports."""
-        return self._max_mireds
+        return self.cluster.get("color_temp_physical_max", self._max_mireds)
 
     def get_color_capabilities(self):
         """Return the color capabilities."""
@@ -78,8 +96,6 @@ class ColorChannel(ZigbeeChannel):
         ]
         results = await self.get_attributes(attributes, from_cache=from_cache)
         capabilities = results.get("color_capabilities")
-        self._min_mireds = results.get("color_temp_physical_min", 153)
-        self._max_mireds = results.get("color_temp_physical_max", 500)
 
         if capabilities is None:
             # ZCL Version 4 devices don't support the color_capabilities

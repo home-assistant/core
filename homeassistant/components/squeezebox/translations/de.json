@@ -4,9 +4,16 @@
             "edit": {
                 "data": {
                     "password": "Passwort",
+                    "port": "Port",
                     "username": "Benutzername"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
                 }
             }
         }
-    }
+    },
+    "title": "Logitech Squeezebox"
 }

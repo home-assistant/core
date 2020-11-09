@@ -1,11 +1,13 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Abode."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z Abode.",
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z Abode",
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
         },
         "step": {

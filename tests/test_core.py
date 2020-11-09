@@ -48,43 +48,43 @@ def test_split_entity_id():
     assert ha.split_entity_id("domain.object_id") == ["domain", "object_id"]
 
 
-def test_async_add_job_schedule_callback():
+def test_async_add_hass_job_schedule_callback():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
 
-    ha.HomeAssistant.async_add_job(hass, ha.callback(job))
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_partial_callback():
+def test_async_add_hass_job_schedule_partial_callback():
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock()
     job = MagicMock()
     partial = functools.partial(ha.callback(job))
 
-    ha.HomeAssistant.async_add_job(hass, partial)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 1
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_coroutinefunction(loop):
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=loop))
 
     async def job():
         pass
 
-    ha.HomeAssistant.async_add_job(hass, job)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_schedule_partial_coroutinefunction(loop):
+def test_async_add_hass_job_schedule_partial_coroutinefunction(loop):
     """Test that we schedule partial coros and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=loop))
 
@@ -93,20 +93,20 @@ def test_async_add_job_schedule_partial_coroutinefunction(loop):
 
     partial = functools.partial(job)
 
-    ha.HomeAssistant.async_add_job(hass, partial)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(partial))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_add_job_add_threaded_job_to_pool():
+def test_async_add_job_add_hass_threaded_job_to_pool():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
 
     def job():
         pass
 
-    ha.HomeAssistant.async_add_job(hass, job)
+    ha.HomeAssistant.async_add_hass_job(hass, ha.HassJob(job))
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
@@ -125,7 +125,7 @@ def test_async_create_task_schedule_coroutine(loop):
     assert len(hass.add_job.mock_calls) == 0
 
 
-def test_async_run_job_calls_callback():
+def test_async_run_hass_job_calls_callback():
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -133,12 +133,12 @@ def test_async_run_job_calls_callback():
     def job():
         calls.append(1)
 
-    ha.HomeAssistant.async_run_job(hass, ha.callback(job))
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(ha.callback(job)))
     assert len(calls) == 1
     assert len(hass.async_add_job.mock_calls) == 0
 
 
-def test_async_run_job_delegates_non_async():
+def test_async_run_hass_job_delegates_non_async():
     """Test that the callback annotation is respected."""
     hass = MagicMock()
     calls = []
@@ -146,9 +146,9 @@ def test_async_run_job_delegates_non_async():
     def job():
         calls.append(1)
 
-    ha.HomeAssistant.async_run_job(hass, job)
+    ha.HomeAssistant.async_run_hass_job(hass, ha.HassJob(job))
     assert len(calls) == 0
-    assert len(hass.async_add_job.mock_calls) == 1
+    assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
 def test_stage_shutdown():
@@ -268,49 +268,77 @@ async def test_add_job_with_none(hass):
         hass.async_add_job(None, "test_arg")
 
 
-class TestEvent(unittest.TestCase):
-    """A Test Event class."""
+def test_event_eq():
+    """Test events."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = [
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    ]
 
-    def test_eq(self):
-        """Test events."""
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
-        context = ha.Context()
-        event1, event2 = [
-            ha.Event("some_type", data, time_fired=now, context=context)
-            for _ in range(2)
-        ]
+    assert event1 == event2
 
-        assert event1 == event2
 
-    def test_repr(self):
-        """Test that repr method works."""
-        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
+def test_event_repr():
+    """Test that Event repr method works."""
+    assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
-        assert (
-            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
-            == "<Event TestEvent[R]: beer=nice>"
-        )
+    assert (
+        str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+        == "<Event TestEvent[R]: beer=nice>"
+    )
 
-    def test_as_dict(self):
-        """Test as dictionary."""
-        event_type = "some_type"
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
 
-        event = ha.Event(event_type, data, ha.EventOrigin.local, now)
-        expected = {
-            "event_type": event_type,
-            "data": data,
-            "origin": "LOCAL",
-            "time_fired": now,
-            "context": {
-                "id": event.context.id,
-                "parent_id": None,
-                "user_id": event.context.user_id,
-            },
-        }
-        assert expected == event.as_dict()
+def test_event_as_dict():
+    """Test an Event as dictionary."""
+    event_type = "some_type"
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    expected = {
+        "event_type": event_type,
+        "data": data,
+        "origin": "LOCAL",
+        "time_fired": now.isoformat(),
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
+    }
+    assert event.as_dict() == expected
+    # 2nd time to verify cache
+    assert event.as_dict() == expected
+
+
+def test_state_as_dict():
+    """Test a State as dictionary."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state = ha.State(
+        "happy.happy",
+        "on",
+        {"pig": "dog"},
+        last_updated=last_time,
+        last_changed=last_time,
+    )
+    expected = {
+        "context": {
+            "id": state.context.id,
+            "parent_id": None,
+            "user_id": state.context.user_id,
+        },
+        "entity_id": "happy.happy",
+        "attributes": {"pig": "dog"},
+        "last_changed": last_time.isoformat(),
+        "last_updated": last_time.isoformat(),
+        "state": "on",
+    }
+    assert state.as_dict() == expected
+    # 2nd time to verify cache
+    assert state.as_dict() == expected
+    assert state.as_dict() is state.as_dict()
 
 
 class TestEventBus(unittest.TestCase):
@@ -857,108 +885,132 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
 
 
-class TestConfig(unittest.TestCase):
-    """Test configuration methods."""
+def test_config_defaults():
+    """Test config defaults."""
+    hass = Mock()
+    config = ha.Config(hass)
+    assert config.hass is hass
+    assert config.latitude == 0
+    assert config.longitude == 0
+    assert config.elevation == 0
+    assert config.location_name == "Home"
+    assert config.time_zone == dt_util.UTC
+    assert config.internal_url is None
+    assert config.external_url is None
+    assert config.config_source == "default"
+    assert config.skip_pip is False
+    assert config.components == set()
+    assert config.api is None
+    assert config.config_dir is None
+    assert config.allowlist_external_dirs == set()
+    assert config.allowlist_external_urls == set()
+    assert config.media_dirs == {}
+    assert config.safe_mode is False
+    assert config.legacy_templates is False
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.config = ha.Config(None)
-        assert self.config.config_dir is None
 
-    def test_path_with_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("test.conf") == "/test/ha-config/test.conf"
+def test_config_path_with_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("test.conf") == "/test/ha-config/test.conf"
 
-    def test_path_with_dir_and_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
-    def test_as_dict(self):
-        """Test as dict."""
-        self.config.config_dir = "/test/ha-config"
-        self.config.hass = MagicMock()
-        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
-        expected = {
-            "latitude": 0,
-            "longitude": 0,
-            "elevation": 0,
-            CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-            "location_name": "Home",
-            "time_zone": "UTC",
-            "components": set(),
-            "config_dir": "/test/ha-config",
-            "whitelist_external_dirs": set(),
-            "allowlist_external_dirs": set(),
-            "allowlist_external_urls": set(),
-            "version": __version__,
-            "config_source": "default",
-            "safe_mode": False,
-            "state": "RUNNING",
-            "external_url": None,
-            "internal_url": None,
-        }
+def test_config_path_with_dir_and_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
-        assert expected == self.config.as_dict()
 
-    def test_is_allowed_path(self):
-        """Test is_allowed_path method."""
-        with TemporaryDirectory() as tmp_dir:
-            # The created dir is in /tmp. This is a symlink on OS X
-            # causing this test to fail unless we resolve path first.
-            self.config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
+def test_config_as_dict():
+    """Test as dict."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    config.hass = MagicMock()
+    type(config.hass.state).value = PropertyMock(return_value="RUNNING")
+    expected = {
+        "latitude": 0,
+        "longitude": 0,
+        "elevation": 0,
+        CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
+        "location_name": "Home",
+        "time_zone": "UTC",
+        "components": set(),
+        "config_dir": "/test/ha-config",
+        "whitelist_external_dirs": set(),
+        "allowlist_external_dirs": set(),
+        "allowlist_external_urls": set(),
+        "version": __version__,
+        "config_source": "default",
+        "safe_mode": False,
+        "state": "RUNNING",
+        "external_url": None,
+        "internal_url": None,
+    }
 
-            test_file = os.path.join(tmp_dir, "test.jpg")
-            with open(test_file, "w") as tmp_file:
-                tmp_file.write("test")
+    assert expected == config.as_dict()
 
-            valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
-            for path in valid:
-                assert self.config.is_allowed_path(path)
 
-            self.config.allowlist_external_dirs = {"/home", "/var"}
+def test_config_is_allowed_path():
+    """Test is_allowed_path method."""
+    config = ha.Config(None)
+    with TemporaryDirectory() as tmp_dir:
+        # The created dir is in /tmp. This is a symlink on OS X
+        # causing this test to fail unless we resolve path first.
+        config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
 
-            invalid = [
-                "/hass/config/secure",
-                "/etc/passwd",
-                "/root/secure_file",
-                "/var/../etc/passwd",
-                test_file,
-            ]
-            for path in invalid:
-                assert not self.config.is_allowed_path(path)
+        test_file = os.path.join(tmp_dir, "test.jpg")
+        with open(test_file, "w") as tmp_file:
+            tmp_file.write("test")
 
-            with pytest.raises(AssertionError):
-                self.config.is_allowed_path(None)
+        valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
+        for path in valid:
+            assert config.is_allowed_path(path)
 
-    def test_is_allowed_external_url(self):
-        """Test is_allowed_external_url method."""
-        self.config.allowlist_external_urls = [
-            "http://x.com/",
-            "https://y.com/bla/",
-            "https://z.com/images/1.jpg/",
-        ]
-
-        valid = [
-            "http://x.com/1.jpg",
-            "http://x.com",
-            "https://y.com/bla/",
-            "https://y.com/bla/2.png",
-            "https://z.com/images/1.jpg",
-        ]
-        for url in valid:
-            assert self.config.is_allowed_external_url(url)
+        config.allowlist_external_dirs = {"/home", "/var"}
 
         invalid = [
-            "https://a.co",
-            "https://y.com/bla_wrong",
-            "https://y.com/bla/../image.jpg",
-            "https://z.com/images",
+            "/hass/config/secure",
+            "/etc/passwd",
+            "/root/secure_file",
+            "/var/../etc/passwd",
+            test_file,
         ]
-        for url in invalid:
-            assert not self.config.is_allowed_external_url(url)
+        for path in invalid:
+            assert not config.is_allowed_path(path)
+
+        with pytest.raises(AssertionError):
+            config.is_allowed_path(None)
+
+
+def test_config_is_allowed_external_url():
+    """Test is_allowed_external_url method."""
+    config = ha.Config(None)
+    config.allowlist_external_urls = [
+        "http://x.com/",
+        "https://y.com/bla/",
+        "https://z.com/images/1.jpg/",
+    ]
+
+    valid = [
+        "http://x.com/1.jpg",
+        "http://x.com",
+        "https://y.com/bla/",
+        "https://y.com/bla/2.png",
+        "https://z.com/images/1.jpg",
+    ]
+    for url in valid:
+        assert config.is_allowed_external_url(url)
+
+    invalid = [
+        "https://a.co",
+        "https://y.com/bla_wrong",
+        "https://y.com/bla/../image.jpg",
+        "https://z.com/images",
+    ]
+    for url in invalid:
+        assert not config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1477,3 +1529,76 @@ async def test_async_all(hass):
     assert {
         state.entity_id for state in hass.states.async_all(["light", "switch"])
     } == {"light.bowl", "light.frog", "switch.link"}
+
+
+async def test_async_entity_ids_count(hass):
+    """Test async_entity_ids_count."""
+
+    hass.states.async_set("switch.link", "on")
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.frog", "on")
+    hass.states.async_set("vacuum.floor", "on")
+
+    assert hass.states.async_entity_ids_count() == 4
+    assert hass.states.async_entity_ids_count("light") == 2
+
+    hass.states.async_set("light.cow", "on")
+
+    assert hass.states.async_entity_ids_count() == 5
+    assert hass.states.async_entity_ids_count("light") == 3
+
+
+async def test_hassjob_forbid_coroutine():
+    """Test hassjob forbids coroutines."""
+
+    async def bla():
+        pass
+
+    coro = bla()
+
+    with pytest.raises(ValueError):
+        ha.HassJob(coro)
+
+    # To avoid warning about unawaited coro
+    await coro
+
+
+async def test_reserving_states(hass):
+    """Test we can reserve a state in the state machine."""
+
+    hass.states.async_reserve("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_set("light.bedroom", "on")
+    assert hass.states.async_available("light.bedroom") is False
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
+    hass.states.async_set("light.bedroom", "on")
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
+
+
+async def test_state_change_events_match_state_time(hass):
+    """Test last_updated and timed_fired only call utcnow once."""
+
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.bedroom")
+
+    assert state.last_updated == events[0].time_fired

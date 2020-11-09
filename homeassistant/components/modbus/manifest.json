@@ -3,5 +3,5 @@
   "name": "Modbus",
   "documentation": "https://www.home-assistant.io/integrations/modbus",
   "requirements": ["pymodbus==2.3.0"],
-  "codeowners": ["@adamchengtkc", "@janiversen"]
+  "codeowners": ["@adamchengtkc", "@janiversen", "@vzahradnik"]
 }

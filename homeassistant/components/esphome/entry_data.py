@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
 DATA_KEY = "esphome"
 
+SAVE_DELAY = 120
+
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM = {
     BinarySensorInfo: "binary_sensor",
@@ -159,7 +161,7 @@ class RuntimeEntryData:
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
-        await self.store.async_save(store_data)
+        self.store.async_delay_save(lambda: store_data, SAVE_DELAY)
 
 
 def _attr_obj_from_dict(cls, **kwargs):

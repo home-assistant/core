@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A Tibber account is already configured."
+            "already_configured": "Service is already configured"
         },
         "error": {
-            "connection_error": "Error connecting to Tibber",
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Failed to connect",
             "invalid_access_token": "Invalid access token",
             "timeout": "Timeout connecting to Tibber"
         },

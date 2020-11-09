@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "forbidden": "Ei saa \u00fchendust. Kontrolli oma forked-daapd sidumise v\u00f5rgu\u00f5igusi.",
+            "unknown_error": "Tundmatu viga",
+            "wrong_host_or_port": "\u00dchendust ei saa luua. Palun kontrolli hosti ja porti.",
+            "wrong_password": "Vale salas\u00f5na."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "S\u00f5bralik nimi",
+                    "port": ""
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "tts_volume": "TTS helitugevus (ujukoma vahemikus [0-1])"
+                },
+                "description": "M\u00e4\u00e4rake forked-daapd-i sidumise erinevad valikud.",
+                "title": "Forked- daapd valikute seadistamine"
+            }
+        }
+    }
+}

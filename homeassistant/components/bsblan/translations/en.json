@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
+            "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect to BSB-Lan device."
         },
         "flow_title": "BSB-Lan: {name}",

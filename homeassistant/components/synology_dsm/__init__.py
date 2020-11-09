@@ -6,11 +6,13 @@ from typing import Dict
 
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.exceptions import SynologyDSMRequestException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -25,8 +27,10 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -40,7 +44,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     ENTITY_CLASS,
     ENTITY_ENABLE,
@@ -61,7 +66,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_SSL, default=DEFAULT_USE_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DISKS): cv.ensure_list,
@@ -101,7 +107,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
-    api = SynoApi(hass, entry)
 
     # Migrate old unique_id
     @callback
@@ -161,8 +166,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
+    # Migrate existing entry configuration
+    if entry.data.get(CONF_VERIFY_SSL) is None:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
+        )
+
     # Continue setup
-    await api.async_setup()
+    api = SynoApi(hass, entry)
+    try:
+        await api.async_setup()
+    except SynologyDSMRequestException as err:
+        raise ConfigEntryNotReady from err
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
@@ -225,6 +240,7 @@ class SynoApi:
         self.information: SynoDSMInformation = None
         self.network: SynoDSMNetwork = None
         self.security: SynoCoreSecurity = None
+        self.upgrade: SynoCoreUpgrade = None
         self.storage: SynoStorage = None
         self.utilisation: SynoCoreUtilization = None
         self.surveillance_station: SynoSurveillanceStation = None
@@ -233,6 +249,7 @@ class SynoApi:
         self._fetching_entities = {}
         self._with_security = True
         self._with_storage = True
+        self._with_upgrade = True
         self._with_utilisation = True
         self._with_information = True
         self._with_surveillance_station = True
@@ -252,11 +269,12 @@ class SynoApi:
             self._entry.data[CONF_USERNAME],
             self._entry.data[CONF_PASSWORD],
             self._entry.data[CONF_SSL],
+            self._entry.data[CONF_VERIFY_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
             device_token=self._entry.data.get("device_token"),
         )
+        await self._hass.async_add_executor_job(self.dsm.login)
 
-        await self._hass.async_add_executor_job(self.dsm.discover_apis)
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
@@ -302,6 +320,7 @@ class SynoApi:
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
+        self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
         )
@@ -310,6 +329,8 @@ class SynoApi:
         )
         self._with_surveillance_station = bool(
             self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
+        ) or bool(
+            self._fetching_entities.get(SynoSurveillanceStation.HOME_MODE_API_KEY)
         )
 
         # Reset not used API, information is not reset since it's used in device_info
@@ -320,6 +341,10 @@ class SynoApi:
         if not self._with_storage:
             self.dsm.reset(self.storage)
             self.storage = None
+
+        if not self._with_upgrade:
+            self.dsm.reset(self.upgrade)
+            self.upgrade = None
 
         if not self._with_utilisation:
             self.dsm.reset(self.utilisation)
@@ -332,7 +357,6 @@ class SynoApi:
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
         self.information = self.dsm.information
-        self.information.update()
         self.network = self.dsm.network
         self.network.update()
 
@@ -341,6 +365,9 @@ class SynoApi:
 
         if self._with_storage:
             self.storage = self.dsm.storage
+
+        if self._with_upgrade:
+            self.upgrade = self.dsm.upgrade
 
         if self._with_utilisation:
             self.utilisation = self.dsm.utilisation

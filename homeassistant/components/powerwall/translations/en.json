@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "The powerwall is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error",
             "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved."
         },

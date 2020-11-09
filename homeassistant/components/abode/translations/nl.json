@@ -4,8 +4,10 @@
             "single_instance_allowed": "Slechts een enkele configuratie van Abode is toegestaan."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met Abode.",
             "identifier_exists": "Account is al geregistreerd.",
+            "invalid_auth": "Ongeldige authenticatie",
             "invalid_credentials": "Ongeldige inloggegevens."
         },
         "step": {

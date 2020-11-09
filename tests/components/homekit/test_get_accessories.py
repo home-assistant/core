@@ -120,6 +120,12 @@ def test_types(type_name, entity_id, state, attrs, config):
                 ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
             },
         ),
+        (
+            "Window",
+            "cover.set_position",
+            "open",
+            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
+        ),
         ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
         (
             "WindowCoveringBasic",

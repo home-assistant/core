@@ -49,7 +49,7 @@ async def test_connection_error(hass: HomeAssistant, aioclient_mock) -> None:
         data={CONF_HOST: "example.local", CONF_PORT: 8090},
     )
 
-    assert result["errors"] == {"base": "device_unavailable"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

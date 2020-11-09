@@ -1,14 +1,11 @@
 """Support for powering relays in a DoorBird video doorbell."""
 import datetime
-import logging
 
 from homeassistant.components.switch import SwitchEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
 from .entity import DoorBirdEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 IR_RELAY = "__ir_light__"
 
@@ -85,7 +82,7 @@ class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
         """Turn off the relays is not needed. They are time-based."""
         raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
-    def update(self):
+    async def async_update(self):
         """Wait for the correct amount of assumed time to pass."""
         if self._state and self._assume_off <= dt_util.utcnow():
             self._state = False

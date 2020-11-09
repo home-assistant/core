@@ -1,0 +1,38 @@
+{
+    "state": {
+        "wolflink__state": {
+            "1_x_warmwasser": "",
+            "aktiviert": "Aktiveeritud",
+            "aus": "Keelatud",
+            "auto": "Automaatne",
+            "betrieb_ohne_brenner": "T\u00f6\u00f6tamine ilma p\u00f5letita",
+            "cooling": "Jahutamine",
+            "deaktiviert": "Passiivne",
+            "dhw_prior": "",
+            "ein": "Lubatud",
+            "externe_deaktivierung": "V\u00e4line deaktiveerimine",
+            "fernschalter_ein": "Kaugjuhtimine on lubatud",
+            "frostschutz": "K\u00fclmumiskaitse",
+            "gasdruck": "Gaasi r\u00f5hk",
+            "heizbetrieb": "K\u00fcttere\u017eiim",
+            "heizung": "K\u00fcte",
+            "initialisierung": "L\u00e4htestamine",
+            "kalibration": "Kalibreerimine",
+            "kalibration_heizbetrieb": "K\u00fcttere\u017eiimi kalibreerimine",
+            "kalibration_kombibetrieb": "Kombire\u017eiimi kalibreerimine",
+            "kalibration_warmwasserbetrieb": "DHW kalibreerimine",
+            "permanent": "Alaline",
+            "permanentbetrieb": "P\u00fcsire\u017eiim",
+            "solarbetrieb": "P\u00e4ikesek\u00fctte re\u017eiim",
+            "sparbetrieb": "S\u00e4\u00e4sture\u017eiim",
+            "stabilisierung": "Rahunemine",
+            "standby": "Ootel",
+            "start": "K\u00e4ivitus",
+            "storung": "Viga",
+            "test": "Kontroll",
+            "tpw": "",
+            "warmwasser": "",
+            "zunden": "S\u00fc\u00fcde"
+        }
+    }
+}

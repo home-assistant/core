@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                }
+            }
+        }
+    }
+}

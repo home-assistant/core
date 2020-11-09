@@ -318,3 +318,8 @@ class NWSWeather(WeatherEntity):
         """
         await self.coordinator_observation.async_request_refresh()
         await self.coordinator_forecast.async_request_refresh()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.mode == DAYNIGHT

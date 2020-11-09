@@ -59,7 +59,7 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Atag integration in Home Assistant."""
 
-    aioclient_mock.get(
+    aioclient_mock.post(
         "http://127.0.0.1:10000/retrieve",
         json=RECEIVE_REPLY,
         headers={"Content-Type": CONTENT_TYPE_JSON},

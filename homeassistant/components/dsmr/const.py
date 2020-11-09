@@ -18,6 +18,9 @@ DEFAULT_RECONNECT_INTERVAL = 30
 
 DATA_TASK = "task"
 
+DEVICE_NAME_ENERGY = "Energy Meter"
+DEVICE_NAME_GAS = "Gas Meter"
+
 ICON_GAS = "mdi:fire"
 ICON_POWER = "mdi:flash"
 ICON_POWER_FAILURE = "mdi:flash-off"

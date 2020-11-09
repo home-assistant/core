@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "All linked servers already configured",
             "already_configured": "This Plex server is already configured",
-            "already_in_progress": "Plex is being configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "reauth_successful": "Re-authentication was successful",
             "token_request_timeout": "Timed out obtaining token",
-            "unknown": "Failed for unknown reason"
+            "unknown": "Unexpected error"
         },
         "error": {
             "faulty_credentials": "Authorization failed, verify Token",
@@ -20,7 +21,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Use SSL",
+                    "ssl": "Uses an SSL certificate",
                     "token": "Token (Optional)",
                     "verify_ssl": "Verify SSL certificate"
                 },

@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "credential_error": "\u53d6\u5f97\u6191\u8b49\u932f\u8aa4\u3002",
             "devices_configured": "\u6240\u6709\u8a2d\u5099\u90fd\u5df2\u8a2d\u5b9a\u5b8c\u6210\u3002",
-            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 PlayStation 4 \u8a2d\u5099\u3002",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u8a2d\u5099",
             "port_987_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 987\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002",
             "port_997_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 997\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002"
         },
         "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "credential_timeout": "\u6191\u8b49\u670d\u52d9\u903e\u6642\uff0c\u9ede\u9078\u300c\u50b3\u9001\u300d\u4ee5\u91cd\u555f\u3002",
             "login_failed": "PlayStation 4 \u914d\u5c0d\u5931\u6557\uff0c\u8acb\u78ba\u8a8d PIN \u78bc\u3002",
             "no_ipaddress": "\u8f38\u5165\u6240\u8981\u8a2d\u5b9a\u7684 PlayStation 4 \u4e4b IP \u4f4d\u5740\u3002",
@@ -20,12 +22,12 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN",
+                    "code": "PIN \u78bc",
                     "ip_address": "IP \u4f4d\u5740",
                     "name": "\u540d\u7a31",
                     "region": "\u5340\u57df"
                 },
-                "description": "\u8f38\u5165\u60a8\u7684 PlayStation 4 \u8cc7\u8a0a\uff0c\u300cPIN\u300d\u65bc PlayStation 4 \u4e3b\u6a5f\u7684\u300c\u8a2d\u5b9a\u300d\u5167\uff0c\u4e26\u65bc\u300c\u884c\u52d5\u7a0b\u5f0f\u9023\u7dda\u8a2d\u5b9a\uff08Mobile App Connection Settings\uff09\u300d\u4e2d\u9078\u64c7\u300c\u65b0\u589e\u8a2d\u5099\u300d\u3002\u8f38\u5165\u6240\u986f\u793a\u7684 PIN \u78bc\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002",
+                "description": "\u8f38\u5165\u60a8\u7684 PlayStation 4 \u8cc7\u8a0a\uff0c\u300cPIN \u78bc\u300d\u65bc PlayStation 4 \u4e3b\u6a5f\u7684\u300c\u8a2d\u5b9a\u300d\u5167\uff0c\u4e26\u65bc\u300c\u884c\u52d5\u7a0b\u5f0f\u9023\u7dda\u8a2d\u5b9a\uff08Mobile App Connection Settings\uff09\u300d\u4e2d\u9078\u64c7\u300c\u65b0\u589e\u8a2d\u5099\u300d\u3002\u8f38\u5165\u6240\u986f\u793a\u7684  PIN \u78bc\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002",
                 "title": "PlayStation 4"
             },
             "mode": {

@@ -7,7 +7,6 @@ A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
 import functools as ft
-import logging
 
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -19,7 +18,6 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
-_LOGGER = logging.getLogger(__name__)
 _KEY_INSTANCE = "configurator"
 
 DATA_REQUESTS = "configurator_requests"

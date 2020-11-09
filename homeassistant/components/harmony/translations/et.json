@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_configured_device": "Seade on juba h\u00e4\u00e4letatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "",
+        "step": {
+            "link": {
+                "description": "Kas soovid seadistada {name}({host})?",
+                "title": "Logitech Harmony keskuse seadistamine"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "L\u00fc\u00fcsi nimi"
+                },
+                "title": "Logitech Harmony keskuse seadistamine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "delay_secs": "Viivitus k\u00e4skude saatmise vahel."
+                }
+            }
+        }
+    }
+}

@@ -220,6 +220,7 @@ async def test_locate(hass):
         (RuntimeError, False),
     ],
 )
+@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
 async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Optional[Exception], success: bool
 ) -> None:

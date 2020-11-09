@@ -557,7 +557,7 @@ class MqttCover(
         position = kwargs[ATTR_POSITION]
         percentage_position = position
         if set_position_template is not None:
-            position = set_position_template.async_render(**kwargs)
+            position = set_position_template.async_render(parse_result=False, **kwargs)
         else:
             position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 

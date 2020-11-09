@@ -248,7 +248,7 @@ class CoverEntity(Entity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await self.hass.async_add_job(ft.partial(self.open_cover, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.open_cover, **kwargs))
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -256,7 +256,7 @@ class CoverEntity(Entity):
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.hass.async_add_job(ft.partial(self.close_cover, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.close_cover, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
@@ -277,35 +277,41 @@ class CoverEntity(Entity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        await self.hass.async_add_job(ft.partial(self.set_cover_position, **kwargs))
+        await self.hass.async_add_executor_job(
+            ft.partial(self.set_cover_position, **kwargs)
+        )
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self.hass.async_add_job(ft.partial(self.stop_cover, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.stop_cover, **kwargs))
 
     def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
 
     async def async_open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        await self.hass.async_add_job(ft.partial(self.open_cover_tilt, **kwargs))
+        await self.hass.async_add_executor_job(
+            ft.partial(self.open_cover_tilt, **kwargs)
+        )
 
     def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
 
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        await self.hass.async_add_job(ft.partial(self.close_cover_tilt, **kwargs))
+        await self.hass.async_add_executor_job(
+            ft.partial(self.close_cover_tilt, **kwargs)
+        )
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             ft.partial(self.set_cover_tilt_position, **kwargs)
         )
 
@@ -314,7 +320,9 @@ class CoverEntity(Entity):
 
     async def async_stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        await self.hass.async_add_job(ft.partial(self.stop_cover_tilt, **kwargs))
+        await self.hass.async_add_executor_job(
+            ft.partial(self.stop_cover_tilt, **kwargs)
+        )
 
     def toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""

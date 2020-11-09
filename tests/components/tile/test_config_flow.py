@@ -44,7 +44,7 @@ async def test_invalid_credentials(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_credentials"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_step_import(hass):

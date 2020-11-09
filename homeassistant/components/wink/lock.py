@@ -1,6 +1,4 @@
 """Support for Wink locks."""
-import logging
-
 import pywink
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_VACATION_MODE = "set_lock_vacation_mode"
 SERVICE_SET_ALARM_MODE = "set_lock_alarm_mode"

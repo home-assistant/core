@@ -1,6 +1,4 @@
 """Support for ADS light sources."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -21,7 +19,6 @@ from . import (
     AdsEntity,
 )
 
-_LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

@@ -16,6 +16,7 @@ import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
@@ -38,6 +39,7 @@ def async_watch_for_action(script_obj, message):
             flag.set()
 
     script_obj.change_listener = check_action
+    assert script_obj.change_listener is check_action
     return flag
 
 
@@ -193,8 +195,8 @@ async def test_multiple_runs_no_wait(hass):
 
         calls.append(service)
         logger.debug("simulated service (%s:%s) started", fire, listen)
-        unsub = hass.bus.async_listen(listen, service_done_cb)
-        hass.bus.async_fire(fire)
+        unsub = hass.bus.async_listen(str(listen), service_done_cb)
+        hass.bus.async_fire(str(fire))
         await service_done.wait()
         unsub()
 
@@ -833,14 +835,14 @@ async def test_wait_variables_out(hass, mode, action_type):
         assert not script_obj.is_running
         assert len(events) == 1
         if action_type == "template":
-            assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+            assert events[0].data["completed"] == (mode != "timeout_not_finish")
         elif mode != "timeout_not_finish":
             assert "'to_state': <state switch.test=off" in events[0].data["trigger"]
         else:
-            assert events[0].data["trigger"] == "None"
+            assert events[0].data["trigger"] is None
         remaining = events[0].data["remaining"]
         if mode == "no_timeout":
-            assert remaining == "None"
+            assert remaining is None
         elif mode == "timeout_finish":
             assert 0.0 < float(remaining) < 5
         else:
@@ -976,9 +978,9 @@ async def test_repeat_count(hass):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
-        assert event.data.get("last") == str(index == count - 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
+        assert event.data.get("last") == (index == count - 1)
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1051,8 +1053,8 @@ async def test_repeat_conditional(hass, condition, direct_template):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1088,8 +1090,8 @@ async def test_repeat_var_in_condition(hass, condition):
 @pytest.mark.parametrize(
     "variables,first_last,inside_x",
     [
-        (None, {"repeat": "None", "x": "None"}, "None"),
-        (MappingProxyType({"x": 1}), {"repeat": "None", "x": "1"}, "1"),
+        (None, {"repeat": None, "x": None}, None),
+        (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
     ],
 )
 async def test_repeat_nested(hass, variables, first_last, inside_x):
@@ -1167,14 +1169,14 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
     assert events[-1].data == first_last
     for index, result in enumerate(
         (
-            ("True", "1", "False", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("False", "2", "True", inside_x),
+            (True, 1, False, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (False, 2, True, inside_x),
         ),
         1,
     ):
@@ -1331,6 +1333,10 @@ async def test_referenced_entities(hass):
                 {
                     "service": "test.script",
                     "data": {"entity_id": ["light.service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"entity_id": "{{ 'light.service_template' }}"},
                 },
                 {
                     "condition": "state",
@@ -1822,5 +1828,116 @@ async def test_set_redefines_variable(hass, caplog):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == "1"
-    assert mock_calls[1].data["value"] == "2"
+    assert mock_calls[0].data["value"] == 1
+    assert mock_calls[1].data["value"] == 2
+
+
+async def test_validate_action_config(hass):
+    """Validate action config."""
+    configs = {
+        cv.SCRIPT_ACTION_CALL_SERVICE: {"service": "light.turn_on"},
+        cv.SCRIPT_ACTION_DELAY: {"delay": 5},
+        cv.SCRIPT_ACTION_WAIT_TEMPLATE: {
+            "wait_template": "{{ states.light.kitchen.state == 'on' }}"
+        },
+        cv.SCRIPT_ACTION_FIRE_EVENT: {"event": "my_event"},
+        cv.SCRIPT_ACTION_CHECK_CONDITION: {
+            "condition": "{{ states.light.kitchen.state == 'on' }}"
+        },
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: {
+            "domain": "light",
+            "entity_id": "light.kitchen",
+            "device_id": "abcd",
+            "type": "turn_on",
+        },
+        cv.SCRIPT_ACTION_ACTIVATE_SCENE: {"scene": "scene.relax"},
+        cv.SCRIPT_ACTION_REPEAT: {
+            "repeat": {"count": 3, "sequence": [{"event": "repeat_event"}]}
+        },
+        cv.SCRIPT_ACTION_CHOOSE: {
+            "choose": [
+                {
+                    "condition": "{{ states.light.kitchen.state == 'on' }}",
+                    "sequence": [{"event": "choose_event"}],
+                }
+            ],
+            "default": [{"event": "choose_default_event"}],
+        },
+        cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {
+            "wait_for_trigger": [
+                {"platform": "event", "event_type": "wait_for_trigger_event"}
+            ]
+        },
+        cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
+    }
+
+    for key in cv.ACTION_TYPE_SCHEMAS:
+        assert key in configs, f"No validate config test found for {key}"
+
+    # Verify we raise if we don't know the action type
+    with patch(
+        "homeassistant.helpers.config_validation.determine_script_action",
+        return_value="non-existing",
+    ), pytest.raises(ValueError):
+        await script.async_validate_action_config(hass, {})
+
+    for action_type, config in configs.items():
+        assert cv.determine_script_action(config) == action_type
+        try:
+            await script.async_validate_action_config(hass, config)
+        except vol.Invalid as err:
+            assert False, f"{action_type} config invalid: {err}"
+
+
+async def test_embedded_wait_for_trigger_in_automation(hass):
+    """Test an embedded wait for trigger."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "repeat": {
+                        "while": [
+                            {
+                                "condition": "template",
+                                "value_template": '{{ is_state("test.value1", "trigger-while") }}',
+                            }
+                        ],
+                        "sequence": [
+                            {"event": "trigger_wait_event"},
+                            {
+                                "wait_for_trigger": [
+                                    {
+                                        "platform": "template",
+                                        "value_template": '{{ is_state("test.value2", "trigger-wait") }}',
+                                    }
+                                ]
+                            },
+                            {"service": "test.script"},
+                        ],
+                    }
+                },
+            }
+        },
+    )
+
+    hass.states.async_set("test.value1", "trigger-while")
+    hass.states.async_set("test.value2", "not-trigger-wait")
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    async def trigger_wait_event(_):
+        # give script the time to attach the trigger.
+        await asyncio.sleep(0)
+        hass.states.async_set("test.value1", "not-trigger-while")
+        hass.states.async_set("test.value2", "trigger-wait")
+
+    hass.bus.async_listen("trigger_wait_event", trigger_wait_event)
+
+    # Start automation
+    hass.bus.async_fire("test_event")
+
+    await hass.async_block_till_done()
+
+    assert len(mock_calls) == 1

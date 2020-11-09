@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroler jest ju\u017c skonfigurowany.",
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 z kontrolerem za pomoc\u0105 adresu {base_url}"
+            "already_configured": "Kontroler jest ju\u017c skonfigurowany",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z kontrolerem za pomoc\u0105 adresu {base_url}"
         },
         "step": {
             "user": {
@@ -12,7 +12,7 @@
                     "vera_controller_url": "Adres URL kontrolera"
                 },
                 "description": "Podaj adres URL kontrolera Vera. Powinien on wygl\u0105da\u0107 tak: http://192.168.1.161:3480.",
-                "title": "Skonfiguruj kontroler Vera"
+                "title": "Konfiguracja kontrolera Vera"
             }
         }
     },

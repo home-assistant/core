@@ -1,11 +1,7 @@
 """Support for Spider switches."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config, async_add_entities):

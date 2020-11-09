@@ -73,7 +73,7 @@ class DeviceEntry:
     area_id: str = attr.ib(default=None)
     name_by_user: str = attr.ib(default=None)
     entry_type: str = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 

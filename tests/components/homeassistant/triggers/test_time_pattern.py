@@ -6,12 +6,12 @@ import voluptuous as vol
 
 import homeassistant.components.automation as automation
 import homeassistant.components.homeassistant.triggers.time_pattern as time_pattern
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_mock_service, mock_component
-from tests.components.automation import common
 
 
 @pytest.fixture
@@ -55,8 +55,12 @@ async def test_if_fires_when_hour_matches(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     async_fire_time_changed(hass, now.replace(year=now.year + 1, hour=0))
     await hass.async_block_till_done()

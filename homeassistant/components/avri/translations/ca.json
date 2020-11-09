@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta adre\u00e7a ja est\u00e0 configurada."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
             "invalid_country_code": "Codi de pa\u00eds desconegut.",

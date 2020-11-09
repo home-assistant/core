@@ -12,11 +12,11 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             },
             "reauth_confirm": {
                 "description": "La integraci\u00f3 de Spotify ha de tornar a autenticar-se amb el compte de Spotify: {account}",
-                "title": "Re-autenticaci\u00f3 amb Spotify"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
     }

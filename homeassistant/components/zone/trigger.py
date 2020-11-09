@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import condition, config_validation as cv, location
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -37,6 +37,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
+    job = HassJob(action)
 
     @callback
     def zone_automation_listener(zone_event):
@@ -65,8 +66,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
             and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": "zone",

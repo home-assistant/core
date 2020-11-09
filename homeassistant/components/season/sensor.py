@@ -10,7 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_entities([Season(hass, hemisphere, _type, name)])
+    add_entities([Season(hass, hemisphere, _type, name)], True)
 
     return True
 
@@ -117,9 +117,9 @@ class Season(Entity):
         self.hass = hass
         self._name = name
         self.hemisphere = hemisphere
-        self.datetime = dt_util.utcnow().replace(tzinfo=None)
+        self.datetime = None
         self.type = season_tracking_type
-        self.season = get_season(self.datetime, self.hemisphere, self.type)
+        self.season = None
 
     @property
     def name(self):
@@ -143,5 +143,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = dt_util.utcnow().replace(tzinfo=None)
+        self.datetime = utcnow().replace(tzinfo=None)
         self.season = get_season(self.datetime, self.hemisphere, self.type)

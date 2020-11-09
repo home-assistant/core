@@ -1,6 +1,4 @@
 """Support for HomeKit Controller locks."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.lock import LockEntity
@@ -8,8 +6,6 @@ from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_JAMMED = "jammed"
 

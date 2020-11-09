@@ -5,13 +5,13 @@
         },
         "step": {
             "pairing": {
-                "title": "HomeKit Bridge verbinden\n"
+                "title": "HomeKit verbinden"
             },
             "user": {
                 "data": {
                     "include_domains": "Einzubeziehende Domains"
                 },
-                "title": "HomeKit Bridge aktivieren\n"
+                "title": "HomeKit aktivieren"
             }
         }
     },
@@ -34,7 +34,17 @@
                     "exclude_entities": "Auszuschlie\u00dfende Entit\u00e4ten"
                 }
             },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e4ten",
+                    "mode": "Modus"
+                }
+            },
             "init": {
+                "data": {
+                    "mode": "Modus"
+                },
+                "description": "HomeKit kann so konfiguriert werden, dass eine Br\u00fccke oder ein einzelnes Zubeh\u00f6r verf\u00fcgbar gemacht wird. Im Zubeh\u00f6rmodus kann nur eine einzelne Entit\u00e4t verwendet werden. F\u00fcr Media Player mit der TV-Ger\u00e4teklasse ist ein Zubeh\u00f6rmodus erforderlich, damit sie ordnungsgem\u00e4\u00df funktionieren. Entit\u00e4ten in den \"einzuschlie\u00dfenden Dom\u00e4nen\" werden f\u00fcr HomeKit verf\u00fcgbar gemacht. Auf dem n\u00e4chsten Bildschirm k\u00f6nnen Sie ausw\u00e4hlen, welche Entit\u00e4ten in diese Liste aufgenommen oder aus dieser ausgeschlossen werden sollen.",
                 "title": "W\u00e4hlen Sie die zu \u00fcberbr\u00fcckenden Dom\u00e4nen aus."
             },
             "yaml": {

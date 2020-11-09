@@ -1,6 +1,5 @@
 """Platform for climate integration."""
 from datetime import timedelta
-import logging
 from typing import Any, Dict, List, Optional
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
@@ -46,8 +45,6 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 ATA_HVAC_MODE_LOOKUP = {

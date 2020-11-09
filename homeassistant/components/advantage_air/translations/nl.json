@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "flow_title": "Advantage Air instellen",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Poort"
+                },
+                "description": "Maak verbinding met de API van uw Advantage Air-tablet voor wandmontage.",
+                "title": "Verbind"
+            }
+        }
+    },
+    "title": "Advantage Air"
+}

@@ -13,7 +13,7 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     state = hass.states.get("climate.zone_lisa_wk")
     attrs = state.attributes
 
-    assert attrs["hvac_modes"] is None
+    assert attrs["hvac_modes"] == ["heat", "auto"]
 
     assert "preset_modes" in attrs
     assert "no_frost" in attrs["preset_modes"]
@@ -29,7 +29,7 @@ async def test_adam_climate_entity_attributes(hass, mock_smile_adam):
     state = hass.states.get("climate.zone_thermostat_jessie")
     attrs = state.attributes
 
-    assert attrs["hvac_modes"] is None
+    assert attrs["hvac_modes"] == ["heat", "auto"]
 
     assert "preset_modes" in attrs
     assert "no_frost" in attrs["preset_modes"]
