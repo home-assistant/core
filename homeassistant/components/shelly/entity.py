@@ -100,15 +100,15 @@ async def async_setup_entry_rest(
         config_entry.entry_id
     ][REST]
 
-    blocks = []
+    entities = []
     for sensor_id in sensors:
         _desc = sensors.get(sensor_id)
-        blocks.append(_desc)
+        entities.append(_desc)
 
-    if not blocks:
+    if not entities:
         return
 
-    async_add_entities([sensor_class(wrapper, description) for description in blocks])
+    async_add_entities([sensor_class(wrapper, description) for description in entities])
 
 
 @dataclass
