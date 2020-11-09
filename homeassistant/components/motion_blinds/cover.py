@@ -111,10 +111,11 @@ class MotionPositionDevice(CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return current position of cover.
+        """
+        Return current position of cover.
+        
         None is unknown, 0 is closed, 100 is fully open.
         """
-
         if self._blind.position is None:
             return None
         return 100 - self._blind.position
@@ -153,10 +154,11 @@ class MotionTiltDevice(MotionPositionDevice):
 
     @property
     def current_cover_tilt_position(self):
-        """Return current angle of cover.
+        """
+        Return current angle of cover.
+        
         None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
         """
-
         if self._blind.angle is None:
             return None
         return self._blind.angle * 100 / 180
