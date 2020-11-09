@@ -147,7 +147,7 @@ CONDITION_CLASSES = {
     "rainy": [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
     "snowy": [600, 601, 602, 611, 612, 620, 621, 622],
     "snowy-rainy": [511, 615, 616],
-    "sunny/clear-night": [800],
+    "sunny/clear-night": [WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT],
     "windy": [905, 951, 952, 953, 954, 955, 956, 957],
     "windy-variant": [958, 959, 960, 961],
     "exceptional": [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
