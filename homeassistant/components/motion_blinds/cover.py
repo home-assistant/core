@@ -2,13 +2,18 @@
 
 import logging
 
-from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION,
-                                            DEVICE_CLASS_AWNING,
-                                            DEVICE_CLASS_BLIND,
-                                            DEVICE_CLASS_CURTAIN,
-                                            DEVICE_CLASS_GATE,
-                                            DEVICE_CLASS_SHADE,
-                                            DEVICE_CLASS_SHUTTER, CoverEntity)
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DEVICE_CLASS_AWNING,
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_CURTAIN,
+    DEVICE_CLASS_GATE,
+    DEVICE_CLASS_SHADE,
+    DEVICE_CLASS_SHUTTER,
+    CoverEntity,
+)
+
 from motionblinds.motion_blinds import BlindType
 
 from .const import DOMAIN, MANUFACTURER
@@ -63,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(MotionTiltDevice(blind, DEVICE_CLASS_BLIND, config_entry))
 
         else:
-            _LOGGER.waring("Blind type '%s' not yet supported", blind.blind_type)
+            _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
 
     async_add_entities(entities)
 
@@ -109,6 +114,7 @@ class MotionPositionDevice(CoverEntity):
         """Return current position of cover.
         None is unknown, 0 is closed, 100 is fully open.
         """
+
         if self._blind.position is None:
             return None
         return 100 - self._blind.position
@@ -150,6 +156,7 @@ class MotionTiltDevice(MotionPositionDevice):
         """Return current angle of cover.
         None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
         """
+
         if self._blind.angle is None:
             return None
         return self._blind.angle * 100 / 180

@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant import config_entries, core
-from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 

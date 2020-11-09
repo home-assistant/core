@@ -543,9 +543,6 @@ elkm1-lib==0.8.7
 # homeassistant.components.mobile_app
 emoji==0.5.4
 
-# homeassistant.components.motion_blinds
-motionblinds==0.0.0
-
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
@@ -953,6 +950,9 @@ minio==4.0.9
 
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.3
+
+# homeassistant.components.motion_blinds
+motionblinds==0.0.0
 
 # homeassistant.components.tts
 mutagen==1.45.1
