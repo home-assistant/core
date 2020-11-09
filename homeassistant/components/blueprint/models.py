@@ -86,6 +86,10 @@ class Blueprint:
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
 
+    def dump(self) -> str:
+        """Dump blueprint as YAML."""
+        return yaml.dump(self.data)
+
 
 class BlueprintInputs:
     """Inputs for a blueprint."""

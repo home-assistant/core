@@ -7,7 +7,7 @@ from homeassistant.const import CONF_DOMAIN, CONF_NAME, CONF_PATH
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_BLUEPRINT, CONF_INPUT, CONF_USE_BLUEPRINT
+from .const import CONF_BLUEPRINT, CONF_INPUT, CONF_SOURCE_URL, CONF_USE_BLUEPRINT
 
 
 @callback
@@ -29,6 +29,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_NAME): str,
                 vol.Required(CONF_DOMAIN): str,
+                vol.Optional(CONF_SOURCE_URL): cv.url,
                 vol.Optional(CONF_INPUT, default=dict): {str: None},
             }
         ),

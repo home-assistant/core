@@ -9,7 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import yaml
 
 from . import importer, models
 from .const import BLUEPRINT_FOLDER, DOMAIN
@@ -96,40 +98,38 @@ async def ws_import_blueprint(hass, connection, msg):
         vol.Required("domain"): cv.string,
         vol.Required("path"): cv.path,
         vol.Required("data"): cv.string,
+        vol.Required("source_url"): cv.url,
     }
 )
 async def ws_save_blueprint(hass, connection, msg):
     """Save a blueprint."""
 
-    filename = msg["path"]
+    path = msg["path"]
     domain = msg["domain"]
-
-    blueprint_path = pathlib.Path(
-        hass.config.path(BLUEPRINT_FOLDER, domain, f"{path}.yaml")
-    )
-
-    if blueprint_path.exists():
-        connection.send_error(
-            msg["id"], websocket_api.ERR_UNKNOWN_ERROR, "File already exists"
-        )
-        return
 
     def create_file():
         """Create blueprint file."""
+        blueprint_path = pathlib.Path(
+            hass.config.path(BLUEPRINT_FOLDER, domain, f"{path}.yaml")
+        )
+        if blueprint_path.exists():
+            raise HomeAssistantError("File already exists")
+
+        blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
+        blueprint.update_metadata(source_url=msg["source_url"])
+
         blueprint_path.parent.mkdir(parents=True, exist_ok=True)
         with open(blueprint_path, "x") as file:
-            file.write(msg["data"])
+            file.write(blueprint.dump())
 
     try:
         await hass.async_add_executor_job(create_file)
+    except HomeAssistantError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
         return
-
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
-        DOMAIN, {}
-    )
-    domain_blueprints[domain].async_reset_cache()
 
     connection.send_result(
         msg["id"],
