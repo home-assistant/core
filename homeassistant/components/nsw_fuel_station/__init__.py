@@ -1,4 +1,5 @@
 """The nsw_fuel_station component."""
+import datetime
 import logging
 from typing import Optional
 
@@ -6,15 +7,13 @@ from nsw_fuel import FuelCheckClient, FuelCheckError
 
 from homeassistant.components.nsw_fuel_station.const import (
     DATA_NSW_FUEL_STATION,
-    MIN_TIME_BETWEEN_UPDATES,
-    DATA_ATTR_CLIENT,
-    DATA_ATTR_REFERENCE_DATA,
 )
 from homeassistant.util import Throttle
 
-DOMAIN = "nsw_fuel_station"
-
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "nsw_fuel_station"
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
 
 
 def setup(hass, config):
