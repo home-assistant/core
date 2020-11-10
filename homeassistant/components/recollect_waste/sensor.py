@@ -75,22 +75,22 @@ class RecollectWasteSensor(CoordinatorEntity):
         self._state = None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend."""
         return DEFAULT_ICON
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return DEFAULT_NAME
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -100,12 +100,12 @@ class RecollectWasteSensor(CoordinatorEntity):
         return f"{self._place_id}{self._service_id}"
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.update_from_latest_data()
