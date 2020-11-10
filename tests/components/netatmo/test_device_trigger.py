@@ -1,9 +1,12 @@
 """The tests for Netatmo device triggers."""
 import pytest
 
-from homeassistant.components.netatmo import (
-    DOMAIN as NETATMO_DOMAIN,
-    const as netatmo_const,
+from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
+from homeassistant.components.netatmo.const import (
+    INDOOR_CAMERA_TRIGGERS,
+    MODEL_NACAMERA,
+    MODEL_NOC,
+    OUTDOOR_CAMERA_TRIGGERS,
 )
 from homeassistant.helpers import device_registry
 
@@ -38,15 +41,8 @@ def calls(hass):
 @pytest.mark.parametrize(
     "camera_type,event_types",
     [
-        (netatmo_const.MODEL_NOC, ["animal", "human", "vehicle", "outdoor"]),
-        (
-            netatmo_const.MODEL_NACAMERA,
-            [
-                "person",
-                "person_away",
-                "movement",
-            ],
-        ),
+        (MODEL_NOC, OUTDOOR_CAMERA_TRIGGERS),
+        (MODEL_NACAMERA, INDOOR_CAMERA_TRIGGERS),
     ],
 )
 async def test_get_triggers_camera(
