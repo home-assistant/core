@@ -15,6 +15,7 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
 
 
 def setup(hass, config):
+    """Set up the NSW Fuel Station platform."""
     client = FuelCheckClient()
     fuel_check_data = FuelCheckData(client)
     fuel_check_data.update()
@@ -25,15 +26,17 @@ def setup(hass, config):
 
 
 class FuelCheckData:
+    """An object to fetch and cache the latest fuel check data."""
+
     def __init__(self, client: FuelCheckClient):
-        """An object to fetch and cache the latest fuel check data."""
+        """Initialize the shared data cache."""
         self._client = client
         self._stations = None
         self._prices = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Update the internal data using the API client."""
+        """Updates the internal data using the API client."""
         try:
             raw_price_data = self._client.get_fuel_prices()
             # Store prices and station details indexed by station code for

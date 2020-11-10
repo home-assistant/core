@@ -47,6 +47,7 @@ class FuelCheckClientMock:
     """Mock FuelCheckClient implementation."""
 
     def get_fuel_prices(self):
+        """Return a mock fuel prices response."""
         return MockGetFuelPricesResponse(
             prices=[
                 MockPrice(
