@@ -81,7 +81,7 @@ def build_item_response(coordinator, payload):
     )
 
 
-def item_payload(item, coordinator, get_thumbnail_url):
+def item_payload(item, coordinator, get_thumbnail_url=None):
     """
     Create response payload for a single media item.
 
@@ -92,7 +92,8 @@ def item_payload(item, coordinator, get_thumbnail_url):
     if "app_id" in item:
         media_content_type = MEDIA_TYPE_APP
         media_content_id = item["app_id"]
-        thumbnail = get_thumbnail_url(media_content_type, media_content_id)
+        if get_thumbnail_url;
+            thumbnail = get_thumbnail_url(media_content_type, media_content_id)
     elif "channel_number" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = item["channel_number"]
