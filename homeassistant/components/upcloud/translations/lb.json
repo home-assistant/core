@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualis\u00e9ierungs Intervall a Sekonnen, minimum 30"
+                }
+            }
+        }
     }
 }

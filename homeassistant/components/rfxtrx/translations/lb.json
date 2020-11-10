@@ -38,7 +38,8 @@
             "invalid_event_code": "Ong\u00ebltegen  Evenement Code",
             "invalid_input_2262_off": "Ong\u00eblteg Agab fir Kommando Aus",
             "invalid_input_2262_on": "Ong\u00eblteg Agab fir Kommando Un",
-            "invalid_input_off_delay": "Ong\u00eblteg Agab fir Aus Verz\u00f6gerung"
+            "invalid_input_off_delay": "Ong\u00eblteg Agab fir Aus Verz\u00f6gerung",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "prompt_options": {

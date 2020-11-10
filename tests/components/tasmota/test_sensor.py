@@ -124,7 +124,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     # Test polled state update
     async_fire_mqtt_message(
         hass,
-        "tasmota_49A3BC/stat/STATUS8",
+        "tasmota_49A3BC/stat/STATUS10",
         '{"StatusSNS":{"DHT11":{"Temperature":20.0}}}',
     )
     state = hass.states.get("sensor.tasmota_dht11_temperature")
@@ -169,7 +169,7 @@ async def test_nested_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     # Test polled state update
     async_fire_mqtt_message(
         hass,
-        "tasmota_49A3BC/stat/STATUS8",
+        "tasmota_49A3BC/stat/STATUS10",
         '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"}}}}',
     )
     state = hass.states.get("sensor.tasmota_tx23_speed_act")
@@ -214,7 +214,7 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     # Test polled state update
     async_fire_mqtt_message(
         hass,
-        "tasmota_49A3BC/stat/STATUS8",
+        "tasmota_49A3BC/stat/STATUS10",
         '{"StatusSNS":{"ENERGY":{"TotalTariff":[5.6,7.8]}}}',
     )
     state = hass.states.get("sensor.tasmota_energy_totaltariff_1")
@@ -412,11 +412,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow()
-        + timedelta(
-            seconds=config_entries.EntityRegistryDisabledHandler.RELOAD_AFTER_UPDATE_DELAY
-            + 1
-        ),
+        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -497,7 +493,7 @@ async def test_availability_poll_state(
         sensor.DOMAIN,
         config,
         poll_topic,
-        "8",
+        "10",
         sensor_config,
     )
 
@@ -559,7 +555,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     topics = [
         get_topic_tele_sensor(config),
-        get_topic_stat_status(config, 8),
+        get_topic_stat_status(config, 10),
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(

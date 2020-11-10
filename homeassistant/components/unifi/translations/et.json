@@ -26,8 +26,11 @@
         "step": {
             "client_control": {
                 "data": {
-                    "dpi_restrictions": "Luba DPI piirangugruppide juhtimine"
-                }
+                    "dpi_restrictions": "Luba DPI piirangugruppide juhtimine",
+                    "poe_clients": "Luba klientide POE kontroll"
+                },
+                "description": "Seadista kliendi juhtelemendid \n\n Loo seerianumbrite. mille v\u00f5rgule juurdep\u00e4\u00e4su soovite kontrollida, jaoks l\u00fclitid.",
+                "title": "UniFi valikud 2/3"
             },
             "device_tracker": {
                 "data": {
@@ -42,9 +45,11 @@
             },
             "statistics_sensors": {
                 "data": {
+                    "allow_bandwidth_sensors": "Ribalaiuse andurid v\u00f5rguklientidele",
                     "allow_uptime_sensors": "V\u00f5rguklientide t\u00f6\u00f6soleku andurid"
                 },
-                "description": "Seadista statistikaandurid"
+                "description": "Seadista statistikaandurid",
+                "title": "UniFi valikud 3/3"
             }
         }
     }

@@ -7,7 +7,8 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_pin_code": "Sisestatud PIN kood oli vale"
+            "invalid_pin_code": "Sisestatud PIN kood oli vale",
+            "not_connected": "Kkaug\u00fchenduse loomine Panasonic Viera TV-ga nurjus"
         },
         "step": {
             "pairing": {
@@ -22,7 +23,8 @@
                     "host": "IP aadress",
                     "name": "Nimi"
                 },
-                "description": "Sisesta oma Panasonic Viera TV IP-aadress"
+                "description": "Sisesta oma Panasonic Viera TV IP-aadress",
+                "title": "Teleri seadistamine"
             }
         }
     },
