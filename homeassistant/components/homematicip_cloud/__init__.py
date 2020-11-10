@@ -4,8 +4,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -83,6 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         return False
 
     await async_setup_services(hass)
+    await async_remove_obsolete_entities(hass, entry)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(
@@ -113,3 +115,14 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     await async_unload_services(hass)
 
     return await hap.async_reset()
+
+
+async def async_remove_obsolete_entities(hass: HomeAssistantType, entry: ConfigEntry):
+    """Remove obsolete entities from entity registry."""
+    entity_registry = await er.async_get_registry(hass)
+    er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+    for er_entry in er_entries:
+        if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
+            entity_registry.async_remove(er_entry.entity_id)
+        elif er_entry.unique_id == f"HomematicipBatterySensor_{entry.unique_id}":
+            entity_registry.async_remove(er_entry.entity_id)
