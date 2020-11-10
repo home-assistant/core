@@ -57,7 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input["name"])
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_LONGITUDE]}_{user_input[CONF_LATITUDE]}"
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"Aurora - {name}", data=user_input
@@ -119,20 +121,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_NAME,
                         default=self.config_entry.data.get(CONF_NAME),
                     ): str,
-                    vol.Required(
-                        CONF_LONGITUDE,
-                        default=self.config_entry.data.get(CONF_LONGITUDE),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=-180, max=180),
-                    ),
-                    vol.Required(
-                        CONF_LATITUDE,
-                        default=self.config_entry.data.get(CONF_LATITUDE),
-                    ): vol.All(
-                        vol.Coerce(float),
-                        vol.Range(min=-90, max=90),
-                    ),
                     vol.Required(
                         CONF_THRESHOLD,
                         default=self.config_entry.data.get(CONF_THRESHOLD),

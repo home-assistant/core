@@ -22,8 +22,6 @@
         "init": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
-            "longitude": "[%key:common::config_flow::data::longitude%]",
-            "latitude": "[%key:common::config_flow::data::latitude%]",
             "threshold": "Threshold (%)",
             "scan_interval": "Polling Interval (minutes)"
           }
