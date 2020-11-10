@@ -277,7 +277,7 @@ class NotionEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Respond to a DataUpdateCoordinator update."""
-        self.update_from_latest_data()
+        self._async_update_from_latest_data()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
