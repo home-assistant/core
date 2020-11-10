@@ -95,7 +95,7 @@ async def ws_import_blueprint(hass, connection, msg):
         vol.Required("type"): "blueprint/save",
         vol.Required("domain"): cv.string,
         vol.Required("path"): cv.path,
-        vol.Required("data"): cv.string,
+        vol.Required("yaml"): cv.string,
         vol.Optional("source_url"): cv.url,
     }
 )
@@ -110,7 +110,7 @@ async def ws_save_blueprint(hass, connection, msg):
     )
 
     try:
-        blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
+        blueprint = models.Blueprint(yaml.parse_yaml(msg["yaml"]))
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
     except HomeAssistantError as err:

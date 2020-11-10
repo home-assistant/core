@@ -105,7 +105,7 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
         hass.config.path("blueprints/automation/test_event_service.yaml")
     ).read_text()
 
-    with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
+    with patch("pathlib.Path.write_text") as write_mock:
         client = await hass_ws_client(hass)
         await client.send_json(
             {
@@ -130,9 +130,6 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
 
 async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
     """Test saving blueprints."""
-    raw_data = Path(
-        hass.config.path("blueprints/automation/test_event_service.yaml")
-    ).read_text()
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -140,7 +137,7 @@ async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
             "id": 7,
             "type": "blueprint/save",
             "path": "test_event_service",
-            "data": raw_data,
+            "data": "raw_data",
             "domain": "automation",
             "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }
