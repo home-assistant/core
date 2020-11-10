@@ -31,11 +31,13 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
+    DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
@@ -59,8 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import the platform into a config entry."""
@@ -79,6 +79,7 @@ async def async_setup_entry(
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
     config = entry.data
+    options = entry.options
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -148,6 +149,10 @@ async def async_setup_entry(
         ]
 
     async_add_entities(devices)
+
+    MIN_TIME_BETWEEN_UPDATES = timedelta(
+        seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update_entities_telegram(telegram):
