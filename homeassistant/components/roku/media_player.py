@@ -261,10 +261,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        async def _async_get_thumbnail_url(*args, **kwargs):
-            return await self.get_browse_image_url(*args, **kwargs)
+        def _get_thumbnail_url(*args, **kwargs):
+            return self.get_browse_image_url(*args, **kwargs)
 
-        response = build_item_response(self.coordinator, payload, _async_get_thumbnail_url)
+        response = build_item_response(self.coordinator, payload, _get_thumbnail_url)
 
         if response is None:
             raise BrowseError(
