@@ -34,7 +34,7 @@ EXPANDABLE_MEDIA_TYPES = [
 ]
 
 
-def build_item_response(coordinator, payload):
+def build_item_response(coordinator, payload, get_thumbnail_url=None):
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -75,7 +75,9 @@ def build_item_response(coordinator, payload):
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[item_payload(item, coordinator) for item in media],
+        children=[
+            item_payload(item, coordinator, get_thumbnail_url) for item in media
+        ],
         children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
