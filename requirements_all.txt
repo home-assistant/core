@@ -380,7 +380,7 @@ bond-api==0.1.8
 boto3==1.9.252
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.6
+bravia-tv==1.0.8
 
 # homeassistant.components.broadlink
 broadlink==0.16.0
