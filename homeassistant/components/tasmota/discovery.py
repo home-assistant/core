@@ -68,7 +68,9 @@ async def async_start(
                 tasmota_entity_config,
             )
         else:
-            tasmota_entity = tasmota_get_entity(tasmota_entity_config, tasmota_mqtt)
+            tasmota_entity = tasmota_get_entity(
+                tasmota_entity_config, tasmota_mqtt, hass.async_create_task
+            )
             _LOGGER.debug(
                 "Adding new entity: %s %s %s",
                 platform,

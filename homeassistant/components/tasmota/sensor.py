@@ -48,12 +48,12 @@ from hatasmota.const import (
     SENSOR_PROXIMITY,
     SENSOR_REACTIVE_POWERUSAGE,
     SENSOR_STATUS_IP,
+    SENSOR_STATUS_LAST_RESTART_TIME,
     SENSOR_STATUS_LINK_COUNT,
     SENSOR_STATUS_MQTT_COUNT,
-    SENSOR_STATUS_RESTART,
+    SENSOR_STATUS_RESTART_REASON,
     SENSOR_STATUS_RSSI,
     SENSOR_STATUS_SIGNAL,
-    SENSOR_STATUS_UPTIME,
     SENSOR_TEMPERATURE,
     SENSOR_TODAY,
     SENSOR_TOTAL,
@@ -84,6 +84,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     ELECTRICAL_CURRENT_AMPERE,
     ELECTRICAL_VOLT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
@@ -106,6 +107,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
@@ -150,10 +152,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     SENSOR_PRESSUREATSEALEVEL: {DEVICE_CLASS: DEVICE_CLASS_PRESSURE},
     SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     SENSOR_REACTIVE_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
-    SENSOR_STATUS_RESTART: {ICON: "mdi:information-outline"},
+    SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP},
+    SENSOR_STATUS_RESTART_REASON: {ICON: "mdi:information-outline"},
     SENSOR_STATUS_SIGNAL: {DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH},
     SENSOR_STATUS_RSSI: {ICON: "mdi:access-point"},
-    SENSOR_STATUS_UPTIME: {ICON: "mdi:progress-clock"},
     SENSOR_TEMPERATURE: {DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE},
     SENSOR_TODAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     SENSOR_TOTAL: {DEVICE_CLASS: DEVICE_CLASS_POWER},
@@ -256,6 +258,8 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
     @property
     def state(self):
         """Return the state of the entity."""
+        if self._state and self.device_class == DEVICE_CLASS_TIMESTAMP:
+            return dt_util.as_local(self._state)
         return self._state
 
     @property
