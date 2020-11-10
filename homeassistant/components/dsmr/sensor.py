@@ -150,11 +150,11 @@ async def async_setup_entry(
 
     async_add_entities(devices)
 
-    MIN_TIME_BETWEEN_UPDATES = timedelta(
+    min_time_between_updates = timedelta(
         seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
