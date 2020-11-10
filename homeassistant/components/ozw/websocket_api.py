@@ -30,6 +30,7 @@ OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
 PARAMETER = ATTR_CONFIG_PARAMETER
 VALUE = ATTR_CONFIG_VALUE
+SCHEMA = "schema"
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -230,6 +231,7 @@ def websocket_get_config_parameters(hass, connection, msg):
     config_params = []
 
     for param in raw_values:
+        schema = {}
 
         if param["type"] in ["Byte", "Int", "Short"]:
             schema = vol.Schema(
