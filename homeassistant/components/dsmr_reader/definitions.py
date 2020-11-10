@@ -5,6 +5,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
     VOLT,
     VOLUME_CUBIC_METERS,
 )
@@ -48,42 +49,42 @@ DEFINITIONS = {
     "dsmr/reading/electricity_currently_delivered": {
         "name": "Current power usage",
         "icon": "mdi:flash",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/electricity_currently_returned": {
         "name": "Current power return",
         "icon": "mdi:flash-outline",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_delivered_l1": {
         "name": "Current power usage L1",
         "icon": "mdi:flash",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_delivered_l2": {
         "name": "Current power usage L2",
         "icon": "mdi:flash",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_delivered_l3": {
         "name": "Current power usage L3",
         "icon": "mdi:flash",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_returned_l1": {
         "name": "Current power return L1",
         "icon": "mdi:flash-outline",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_returned_l2": {
         "name": "Current power return L2",
         "icon": "mdi:flash-outline",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/phase_currently_returned_l3": {
         "name": "Current power return L3",
         "icon": "mdi:flash-outline",
-        "unit": "kW",
+        "unit": POWER_KILO_WATT,
     },
     "dsmr/reading/extra_device_delivered": {
         "name": "Gas meter usage",
