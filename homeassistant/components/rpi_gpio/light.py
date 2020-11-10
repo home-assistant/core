@@ -1,6 +1,5 @@
 """Support for controlling a Raspberry Pi light."""
 
-import logging
 import time
 
 from homeassistant.components import rpi_gpio
@@ -20,8 +19,6 @@ from homeassistant.components.rpi_gpio.const import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.reload import setup_reload_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

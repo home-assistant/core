@@ -54,62 +54,69 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
     GPIO.setmode(GPIO.BCM)
 
-    config_sensor = config[DOMAIN][CONF_SENSOR]
-    hass.data[DOMAIN][CONF_SENSOR] = {
-        CONF_SENSOR_PORTS: config_sensor.get(CONF_SENSOR_PORTS),
-        CONF_SENSOR_BOUNCETIME: config_sensor.get(CONF_SENSOR_BOUNCETIME),
-        CONF_SENSOR_INVERT_LOGIC: config_sensor.get(CONF_SENSOR_INVERT_LOGIC),
-        CONF_SENSOR_PULL_MODE: config_sensor.get(CONF_SENSOR_PULL_MODE),
-    }
-    config_switch = config[DOMAIN][CONF_SWITCH]
-    hass.data[DOMAIN][CONF_SWITCH] = {
-        CONF_SWITCH_PORTS: config_switch.get(CONF_SWITCH_PORTS),
-        CONF_SWITCH_INVERT_LOGIC: config_switch.get(CONF_SWITCH_INVERT_LOGIC),
-    }
+    hass.data[DOMAIN] = {}
 
-    config_cover = config[DOMAIN][CONF_COVER]
-    hass.data[DOMAIN][CONF_COVER] = {
-        CONF_COVER_LIST: [],
-        CONF_COVER_RELAY_TIME: config_cover.get(CONF_COVER_RELAY_TIME),
-        CONF_COVER_STATE_PULL_MODE: config_cover.get(CONF_COVER_STATE_PULL_MODE),
-        CONF_COVER_INVERT_STATE: config_cover.get(CONF_COVER_INVERT_STATE),
-        CONF_COVER_INVERT_RELAY: config_cover.get(CONF_COVER_INVERT_RELAY),
-    }
-    for cover in config_cover.get(CONF_COVER_LIST):
-        hass.data[DOMAIN][CONF_COVER][CONF_COVER_LIST].append(
-            {
-                CONF_NAME: cover.get(CONF_NAME),
-                CONF_COVER_RELAY_PIN: cover.get(CONF_COVER_RELAY_PIN),
-                CONF_COVER_STATE_PIN: cover.get(CONF_COVER_STATE_PIN),
-            }
-        )
+    if CONF_SENSOR in config[DOMAIN]:
+        config_sensor = config[DOMAIN][CONF_SENSOR]
+        hass.data[DOMAIN][CONF_SENSOR] = {
+            CONF_SENSOR_PORTS: config_sensor.get(CONF_SENSOR_PORTS),
+            CONF_SENSOR_BOUNCETIME: config_sensor.get(CONF_SENSOR_BOUNCETIME),
+            CONF_SENSOR_INVERT_LOGIC: config_sensor.get(CONF_SENSOR_INVERT_LOGIC),
+            CONF_SENSOR_PULL_MODE: config_sensor.get(CONF_SENSOR_PULL_MODE),
+        }
+        discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 
-    config_light = config[DOMAIN][CONF_LIGHT]
-    hass.data[DOMAIN][CONF_LIGHT] = {
-        CONF_LIGHT_LIST: [],
-        CONF_LIGHT_BUTTON_PULL_MODE: config_light.get(CONF_LIGHT_BUTTON_PULL_MODE),
-        CONF_LIGHT_INVERT_BUTTON: config_light.get(CONF_LIGHT_INVERT_BUTTON),
-        CONF_LIGHT_INVERT_RELAY: config_light.get(CONF_LIGHT_INVERT_RELAY),
-        CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS: config_light.get(
-            CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS
-        ),
-        CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS: config_light.get(
-            CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS
-        ),
-    }
-    for light in config_light.get(CONF_LIGHT_LIST):
-        hass.data[DOMAIN][CONF_LIGHT][CONF_LIGHT_LIST].append(
-            {
-                CONF_NAME: light.get(CONF_NAME),
-                CONF_LIGHT_RELAY_PIN: light.get(CONF_LIGHT_RELAY_PIN),
-                CONF_LIGHT_BUTTON_PIN: light.get(CONF_LIGHT_BUTTON_PIN),
-            }
-        )
+    if CONF_SWITCH in config[DOMAIN]:
+        config_switch = config[DOMAIN][CONF_SWITCH]
+        hass.data[DOMAIN][CONF_SWITCH] = {
+            CONF_SWITCH_PORTS: config_switch.get(CONF_SWITCH_PORTS),
+            CONF_SWITCH_INVERT_LOGIC: config_switch.get(CONF_SWITCH_INVERT_LOGIC),
+        }
+        discovery.load_platform(hass, "switch", DOMAIN, {}, config)
 
-    discovery.load_platform(hass, "switch", DOMAIN, {}, config)
-    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    discovery.load_platform(hass, "cover", DOMAIN, {}, config)
-    discovery.load_platform(hass, "light", DOMAIN, {}, config)
+    if CONF_COVER in config[DOMAIN]:
+        config_cover = config[DOMAIN][CONF_COVER]
+        hass.data[DOMAIN][CONF_COVER] = {
+            CONF_COVER_LIST: [],
+            CONF_COVER_RELAY_TIME: config_cover.get(CONF_COVER_RELAY_TIME),
+            CONF_COVER_STATE_PULL_MODE: config_cover.get(CONF_COVER_STATE_PULL_MODE),
+            CONF_COVER_INVERT_STATE: config_cover.get(CONF_COVER_INVERT_STATE),
+            CONF_COVER_INVERT_RELAY: config_cover.get(CONF_COVER_INVERT_RELAY),
+        }
+        for cover in config_cover.get(CONF_COVER_LIST):
+            hass.data[DOMAIN][CONF_COVER][CONF_COVER_LIST].append(
+                {
+                    CONF_NAME: cover.get(CONF_NAME),
+                    CONF_COVER_RELAY_PIN: cover.get(CONF_COVER_RELAY_PIN),
+                    CONF_COVER_STATE_PIN: cover.get(CONF_COVER_STATE_PIN),
+                }
+            )
+        discovery.load_platform(hass, "switch", DOMAIN, {}, config)
+
+    if CONF_LIGHT in config[DOMAIN]:
+        config_light = config[DOMAIN][CONF_LIGHT]
+        hass.data[DOMAIN][CONF_LIGHT] = {
+            CONF_LIGHT_LIST: [],
+            CONF_LIGHT_BUTTON_PULL_MODE: config_light.get(CONF_LIGHT_BUTTON_PULL_MODE),
+            CONF_LIGHT_INVERT_BUTTON: config_light.get(CONF_LIGHT_INVERT_BUTTON),
+            CONF_LIGHT_INVERT_RELAY: config_light.get(CONF_LIGHT_INVERT_RELAY),
+            CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS: config_light.get(
+                CONF_LIGHT_BUTTON_BOUNCETIME_MILLIS
+            ),
+            CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS: config_light.get(
+                CONF_LIGHT_BUTTON_DOUBLE_CHECK_TIME_MILLIS
+            ),
+        }
+        for light in config_light.get(CONF_LIGHT_LIST):
+            hass.data[DOMAIN][CONF_LIGHT][CONF_LIGHT_LIST].append(
+                {
+                    CONF_NAME: light.get(CONF_NAME),
+                    CONF_LIGHT_RELAY_PIN: light.get(CONF_LIGHT_RELAY_PIN),
+                    CONF_LIGHT_BUTTON_PIN: light.get(CONF_LIGHT_BUTTON_PIN),
+                }
+            )
+
+        discovery.load_platform(hass, "light", DOMAIN, {}, config)
 
     return True
 
