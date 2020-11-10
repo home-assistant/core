@@ -94,10 +94,6 @@ async def handle_info(
     """Handle an info request via a subscription."""
     registrations: Dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
     data = {}
-    data["homeassistant"] = {
-        "info": await hass.helpers.system_info.async_get_system_info()
-    }
-
     pending_info = {}
 
     for domain, domain_data in zip(
