@@ -7,10 +7,10 @@ from .const import DOMAIN
 
 @callback
 def async_register(
-    hass: HomeAssistant, register: system_health.RegisterSystemHealth
+    hass: HomeAssistant, register: system_health.SystemHealthRegistration
 ) -> None:
     """Register system health callbacks."""
-    register.async_register_info(system_health_info)
+    register.async_register_info(system_health_info, "/config/lovelace")
 
 
 async def system_health_info(hass):
