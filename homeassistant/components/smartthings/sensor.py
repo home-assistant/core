@@ -315,7 +315,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensors.extend(
                     [
                         SmartThingsPowerConsumptionReportSensor(device, key)
-                        for key in POWER_CONSUMPTION_REPORT_NAMES.keys()
+                        for key in POWER_CONSUMPTION_REPORT_NAMES
                     ]
                 )
             elif capability == Capability.three_axis:
