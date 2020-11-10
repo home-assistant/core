@@ -112,7 +112,7 @@ async def test_save_blueprint(hass, aioclient_mock, hass_ws_client):
                 "id": 6,
                 "type": "blueprint/save",
                 "path": "test_save",
-                "data": raw_data,
+                "yaml": raw_data,
                 "domain": "automation",
                 "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             }
@@ -137,7 +137,7 @@ async def test_save_existing_file(hass, aioclient_mock, hass_ws_client):
             "id": 7,
             "type": "blueprint/save",
             "path": "test_event_service",
-            "data": "raw_data",
+            "yaml": 'blueprint: {name: "name", domain: "automation"}',
             "domain": "automation",
             "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }
@@ -159,7 +159,7 @@ async def test_save_file_error(hass, aioclient_mock, hass_ws_client):
                 "id": 8,
                 "type": "blueprint/save",
                 "path": "test_save",
-                "data": "raw_data",
+                "yaml": "raw_data",
                 "domain": "automation",
                 "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
             }
@@ -180,7 +180,7 @@ async def test_save_invalid_blueprint(hass, aioclient_mock, hass_ws_client):
             "id": 8,
             "type": "blueprint/save",
             "path": "test_wrong",
-            "data": "wrong_blueprint",
+            "yaml": "wrong_blueprint",
             "domain": "automation",
             "source_url": "https://github.com/balloob/home-assistant-config/blob/main/blueprints/automation/motion_light.yaml",
         }

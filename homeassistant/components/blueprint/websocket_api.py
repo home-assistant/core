@@ -109,8 +109,15 @@ async def ws_save_blueprint(hass, connection, msg):
         DOMAIN, {}
     )
 
+    if domain not in domain_blueprints:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
+
     try:
-        blueprint = models.Blueprint(yaml.parse_yaml(msg["yaml"]))
+        blueprint = models.Blueprint(
+            yaml.parse_yaml(msg["yaml"]), expected_domain=domain
+        )
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
     except HomeAssistantError as err:
@@ -148,6 +155,11 @@ async def ws_delete_blueprint(hass, connection, msg):
     domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
         DOMAIN, {}
     )
+
+    if domain not in domain_blueprints:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
 
     try:
         await domain_blueprints[domain].async_remove_blueprint(path)
