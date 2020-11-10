@@ -856,7 +856,7 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
-    async def _async_fetch_image_from_cache(self, url):
+    async def _async_fetch_image_from_cache(self, url: str):
         """Fetch image.
 
         Images are cached in memory (the images are typically 10-100kB in size).
@@ -883,7 +883,7 @@ class MediaPlayerEntity(Entity):
 
         return content, content_type
 
-    async def _async_fetch_image(self, url):
+    async def _async_fetch_image(self, url: str):
         """Retrieve an image."""
         content, content_type = (None, None)
         websession = async_get_clientsession(self.hass)
@@ -939,8 +939,8 @@ class MediaPlayerImageView(HomeAssistantView):
         self,
         request: web.Request,
         entity_id: str,
-        media_content_type: str = None,
-        media_content_id: str = None,
+        media_content_type: Optional[str] = None,
+        media_content_id: Optional[str] = None,
     ) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
