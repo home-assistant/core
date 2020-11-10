@@ -1,5 +1,6 @@
 """Web socket API for OpenZWave."""
 import logging
+
 from openzwavemqtt.const import (
     ATTR_CODE_SLOT,
     ATTR_LABEL,
