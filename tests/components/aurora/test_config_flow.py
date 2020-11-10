@@ -10,8 +10,6 @@ DATA = {
     "name": "Home",
     "latitude": -10,
     "longitude": 10.2,
-    "forecast_threshold": 50,
-    "scan_interval": 5,
 }
 
 
@@ -107,15 +105,9 @@ async def test_option_flow(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            "name": "Test",
-            "forecast_threshold": 65,
-            "scan_interval": 8,
-        },
+        user_input={"forecast_threshold": 65},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
-    assert result["data"]["name"] == "Test"
     assert result["data"]["forecast_threshold"] == 65
-    assert result["data"]["scan_interval"] == 8

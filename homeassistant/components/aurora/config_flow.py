@@ -5,22 +5,11 @@ from auroranoaa import AuroraForecast
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import (
-    CONF_THRESHOLD,
-    DEFAULT_NAME,
-    DEFAULT_POLLING_INTERVAL,
-    DEFAULT_THRESHOLD,
-    DOMAIN,
-)
+from .const import CONF_THRESHOLD, DEFAULT_NAME, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,16 +73,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Coerce(float),
                         vol.Range(min=-90, max=90),
                     ),
-                    vol.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=0, max=100),
-                    ),
-                    vol.Required(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_POLLING_INTERVAL
-                    ): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=1),
-                    ),
                 }
             ),
             errors=errors,
@@ -118,22 +97,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_NAME,
-                        default=self.config_entry.data.get(CONF_NAME),
-                    ): str,
-                    vol.Required(
                         CONF_THRESHOLD,
-                        default=self.config_entry.data.get(CONF_THRESHOLD),
+                        default=self.config_entry.options.get(
+                            CONF_THRESHOLD, DEFAULT_THRESHOLD
+                        ),
                     ): vol.All(
                         vol.Coerce(int),
                         vol.Range(min=0, max=100),
-                    ),
-                    vol.Required(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.data.get(CONF_SCAN_INTERVAL),
-                    ): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=1),
                     ),
                 }
             ),

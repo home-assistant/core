@@ -7,18 +7,20 @@ import logging
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import AURORA_API, CONF_THRESHOLD, COORDINATOR, DOMAIN
+from .const import (
+    AURORA_API,
+    CONF_THRESHOLD,
+    COORDINATOR,
+    DEFAULT_POLLING_INTERVAL,
+    DEFAULT_THRESHOLD,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,22 +38,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Aurora from a config entry."""
 
     conf = entry.data
+    options = entry.options
 
     session = aiohttp_client.async_get_clientsession(hass)
     api = AuroraForecast(session)
 
     longitude = conf[CONF_LONGITUDE]
     latitude = conf[CONF_LATITUDE]
-    polling_interval = conf[CONF_SCAN_INTERVAL]
-    threshold = conf[CONF_THRESHOLD]
+    polling_interval = DEFAULT_POLLING_INTERVAL
+    threshold = options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
     name = conf[CONF_NAME]
-
-    try:
-        await api.get_forecast_data(longitude, latitude)
-    except ConnectionError:
-        return False
-    except Exception as error:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady(error) from error
 
     coordinator = AuroraDataUpdateCoordinator(
         hass=hass,
@@ -129,6 +125,6 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch the data from the NOAA Aurora Forecast."""
 
         try:
-            return await self.api.get_forecast_data(self._longitude, self._latitude)
+            return await self.api.get_forecast_data(self.longitude, self.latitude)
         except ConnectionError as error:
             raise UpdateFailed(f"Error updating from NOAA: {error}") from error

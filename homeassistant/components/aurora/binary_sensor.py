@@ -37,9 +37,7 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
 
         self._name = name
         self.coordinator = coordinator
-        self._unique_id = (
-            f"{str(self.coordinator.latitude)}_{str(self.coordinator.longitude)}"
-        )
+        self._unique_id = f"{self.coordinator.latitude}_{self.coordinator.longitude}"
 
     @property
     def unique_id(self):

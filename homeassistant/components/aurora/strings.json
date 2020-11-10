@@ -6,24 +6,19 @@
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "longitude": "[%key:common::config_flow::data::longitude%]",
-            "latitude": "[%key:common::config_flow::data::latitude%]",
-            "threshold": "Threshold (%)",
-            "scan_interval": "Polling Interval (minutes)"
+            "latitude": "[%key:common::config_flow::data::latitude%]"
           }
         }
       },
       "error": {
-        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
       }
     },
     "options": {
       "step": {
         "init": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "threshold": "Threshold (%)",
-            "scan_interval": "Polling Interval (minutes)"
+            "threshold": "Threshold (%)"
           }
         }
       }

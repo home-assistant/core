@@ -1,17 +1,14 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name",
-                    "scan_interval": "Polling Interval (minutes)",
-                    "threshold": "Threshold (%)"
+                    "name": "Name"
                 }
             }
         }
@@ -20,10 +17,6 @@
         "step": {
             "init": {
                 "data": {
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "name": "Name",
-                    "scan_interval": "Polling Interval (minutes)",
                     "threshold": "Threshold (%)"
                 }
             }
