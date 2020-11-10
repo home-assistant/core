@@ -214,7 +214,6 @@ def websocket_get_code_slots(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    # _call_util_function(hass, connection, msg, True, get_config_parameters)
     try:
         node = get_node_from_manager(
             hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
@@ -234,7 +233,11 @@ def websocket_get_config_parameters(hass, connection, msg):
 
         if param["type"] in ["Byte", "Int", "Short"]:
             schema = vol.Schema(
-                {vol.Required(param["label"], default=param["value"]): int}
+                {
+                    vol.Required(param["label"], default=param["value"]): vol.All(
+                        vol.Coerce(int), vol.Range(min=param["min"], max=param["max"])
+                    )
+                }
             )
             data = {param["label"]: param["value"]}
 
