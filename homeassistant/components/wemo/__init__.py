@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry):
 
 def validate_static_config(host, port):
     """Handle a static config."""
-    url = pywemo.discovery.setup_url_for_address(host, port)
+    url = pywemo.setup_url_for_address(host, port)
 
     if not url:
         _LOGGER.error(
