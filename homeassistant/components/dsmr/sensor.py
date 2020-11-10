@@ -1,6 +1,7 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from asyncio import CancelledError
+from datetime import timedelta
 from functools import partial
 import logging
 from typing import Dict
@@ -22,6 +23,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -56,6 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
     }
 )
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -145,6 +149,7 @@ async def async_setup_entry(
 
     async_add_entities(devices)
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
@@ -245,7 +250,7 @@ class DSMREntity(Entity):
     def update_data(self, telegram):
         """Update data."""
         self.telegram = telegram
-        if self.hass:
+        if self.hass and self._obis in self.telegram:
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute):
