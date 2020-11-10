@@ -1,4 +1,6 @@
 """Support for HomematicIP Cloud devices."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,6 +22,8 @@ from .const import (
 from .generic_entity import HomematicipGenericEntity  # noqa: F401
 from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 from .services import async_setup_services, async_unload_services
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -84,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         return False
 
     await async_setup_services(hass)
-    await async_remove_obsolete_entities(hass, entry)
+    await async_remove_obsolete_entities(hass, entry, hap)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(
@@ -117,12 +121,20 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return await hap.async_reset()
 
 
-async def async_remove_obsolete_entities(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_remove_obsolete_entities(
+    hass: HomeAssistantType, entry: ConfigEntry, hap: HomematicipHAP
+):
     """Remove obsolete entities from entity registry."""
-    entity_registry = await er.async_get_registry(hass)
-    er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
-    for er_entry in er_entries:
-        if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
-            entity_registry.async_remove(er_entry.entity_id)
-        elif er_entry.unique_id == f"HomematicipBatterySensor_{entry.unique_id}":
-            entity_registry.async_remove(er_entry.entity_id)
+    try:
+        if hap.home.currentAPVersion >= "2.2.12":
+            entity_registry = await er.async_get_registry(hass)
+            er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+            for er_entry in er_entries:
+                if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
+                    entity_registry.async_remove(er_entry.entity_id)
+                else:
+                    for hapid in hap.home.accessPointUpdateStates.keys():
+                        if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
+                            entity_registry.async_remove(er_entry.entity_id)
+    except Exception as err:  # pylint: disable=broad-except:
+        _LOGGER.error("Error deleting obsolete entities: %s", err)
