@@ -579,9 +579,7 @@ class Context:
     parent_id: Optional[str] = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
-    def as_dict(self) -> dict:
-        """Return a dictionary representation of the context."""
-        return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
+    as_dict = attr.asdict
 
 
 class EventOrigin(enum.Enum):
