@@ -104,17 +104,21 @@ class NestCamera(Camera):
         if not self._stream:
             _LOGGER.debug("Fetching stream url")
             self._stream = await trait.generate_rtsp_stream()
-            _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
-            refresh_time = self._stream.expires_at - STREAM_EXPIRATION_BUFFER
-            # Schedule an alarm to extend the stream
-            self._stream_refresh_unsub = async_track_point_in_utc_time(
-                self.hass,
-                self._handle_stream_refresh,
-                refresh_time,
-            )
+            self._schedule_stream_refresh()
         if self._stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
         return self._stream.rtsp_stream_url
+
+    def _schedule_stream_refresh(self):
+        """Schedules an alarm to refresh the stream url before expiration."""
+        _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
+        refresh_time = self._stream.expires_at - STREAM_EXPIRATION_BUFFER
+        # Schedule an alarm to extend the stream
+        self._stream_refresh_unsub = async_track_point_in_utc_time(
+            self.hass,
+            self._handle_stream_refresh,
+            refresh_time,
+        )
 
     async def _handle_stream_refresh(self, now):
         """Alarm that fires to check if the stream should be refreshed."""
@@ -126,10 +130,10 @@ class NestCamera(Camera):
             self._stream = await self._stream.extend_rtsp_stream()
         except requests.HTTPError as err:
             _LOGGER.debug("Failed to extend stream: %s", err)
+            # Next attempt to catch a url will get a new one
             self._stream = None
             return
-        _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
-        self.async_write_ha_state()
+        self._schedule_stream_refresh()
 
     async def async_will_remove_from_hass(self):
         """Invalidates the RTSP token when unloaded."""

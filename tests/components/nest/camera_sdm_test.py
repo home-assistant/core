@@ -97,6 +97,13 @@ async def async_setup_camera(hass, traits={}, auth=None):
     return await async_setup_sdm_platform(hass, PLATFORM, devices)
 
 
+async def fire_alarm(hass, point_in_time):
+    """Fire an alarm and wait for callbacks to run."""
+    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+        async_fire_time_changed(hass, point_in_time)
+        await hass.async_block_till_done()
+
+
 async def test_no_devices(hass):
     """Test configuration that returns no devices."""
     await async_setup_camera(hass)
@@ -175,27 +182,40 @@ async def test_camera_stream(hass, aiohttp_client):
 async def test_refresh_expired_stream_token(hass, aiohttp_client):
     """Test a camera stream expiration and refresh."""
     now = utcnow()
-    expiration = now + datetime.timedelta(seconds=90)
-    new_expiration = now + datetime.timedelta(seconds=180)
+    stream_1_expiration = now + datetime.timedelta(seconds=90)
+    stream_2_expiration = now + datetime.timedelta(seconds=180)
+    stream_3_expiration = now + datetime.timedelta(seconds=360)
     responses = [
+        # Stream URL #1
         FakeResponse(
             {
                 "results": {
                     "streamUrls": {
-                        "rtspUrl": "rtsp://some/url?auth=g.0.streamingToken"
+                        "rtspUrl": "rtsp://some/url?auth=g.1.streamingToken"
                     },
                     "streamExtensionToken": "g.1.extensionToken",
-                    "streamToken": "g.0.streamingToken",
-                    "expiresAt": expiration.isoformat(timespec="seconds"),
+                    "streamToken": "g.1.streamingToken",
+                    "expiresAt": stream_1_expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
+        # Stream URL #2
+        FakeResponse(
+            {
+                "results": {
+                    "streamExtensionToken": "g.2.extensionToken",
+                    "streamToken": "g.2.streamingToken",
+                    "expiresAt": stream_2_expiration.isoformat(timespec="seconds"),
+                },
+            }
+        ),
+        # Stream URL #3
         FakeResponse(
             {
                 "results": {
                     "streamExtensionToken": "g.3.extensionToken",
-                    "streamToken": "g.2.streamingToken",
-                    "expiresAt": new_expiration.isoformat(timespec="seconds"),
+                    "streamToken": "g.3.streamingToken",
+                    "expiresAt": stream_3_expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
@@ -212,24 +232,31 @@ async def test_refresh_expired_stream_token(hass, aiohttp_client):
     assert cam.state == STATE_IDLE
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
-    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+    assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
-    # Fire alarm (> refresh interval). The stream has not yet expired, so the
-    # url is not refreshed
+    # Fire alarm before stream_1_expiration. The stream url is not refreshed
     next_update = now + datetime.timedelta(seconds=25)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+    await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
-    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+    assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
-    # Fire alarm when stream is nearing expiration, causing it to be extended
+    # Alarm is near stream_1_expiration which causes the stream extension
     next_update = now + datetime.timedelta(seconds=65)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+    await fire_alarm(hass, next_update)
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+
+    # Next alarm is well before stream_2_expiration, no change
+    next_update = now + datetime.timedelta(seconds=100)
+    await fire_alarm(hass, next_update)
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
+
+    # Alarm is near stream_2_expiration, causing it to be extended
+    next_update = now + datetime.timedelta(seconds=155)
+    await fire_alarm(hass, next_update)
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.3.streamingToken"
 
 
 async def test_camera_removed(hass, aiohttp_client):
@@ -273,18 +300,18 @@ async def test_camera_removed(hass, aiohttp_client):
 async def test_refresh_expired_stream_failure(hass, aiohttp_client):
     """Tests a failure when refreshing the stream."""
     now = utcnow()
-    expiration = now + datetime.timedelta(seconds=90)
-    new_expiration = now + datetime.timedelta(seconds=180)
+    stream_1_expiration = now + datetime.timedelta(seconds=90)
+    stream_2_expiration = now + datetime.timedelta(seconds=180)
     responses = [
         FakeResponse(
             {
                 "results": {
                     "streamUrls": {
-                        "rtspUrl": "rtsp://some/url?auth=g.0.streamingToken"
+                        "rtspUrl": "rtsp://some/url?auth=g.1.streamingToken"
                     },
                     "streamExtensionToken": "g.1.extensionToken",
-                    "streamToken": "g.0.streamingToken",
-                    "expiresAt": expiration.isoformat(timespec="seconds"),
+                    "streamToken": "g.1.streamingToken",
+                    "expiresAt": stream_1_expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
@@ -295,11 +322,11 @@ async def test_refresh_expired_stream_failure(hass, aiohttp_client):
             {
                 "results": {
                     "streamUrls": {
-                        "rtspUrl": "rtsp://some/url?auth=g.4.streamingToken"
+                        "rtspUrl": "rtsp://some/url?auth=g.2.streamingToken"
                     },
-                    "streamExtensionToken": "g.5.extensionToken",
-                    "streamToken": "g.4.streamingToken",
-                    "expiresAt": new_expiration.isoformat(timespec="seconds"),
+                    "streamExtensionToken": "g.2.extensionToken",
+                    "streamToken": "g.2.streamingToken",
+                    "expiresAt": stream_2_expiration.isoformat(timespec="seconds"),
                 },
             }
         ),
@@ -316,15 +343,13 @@ async def test_refresh_expired_stream_failure(hass, aiohttp_client):
     assert cam.state == STATE_IDLE
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
-    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+    assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"
 
     # Fire alarm when stream is nearing expiration, causing it to be extended.
     # The stream expires.
     next_update = now + datetime.timedelta(seconds=65)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+    await fire_alarm(hass, next_update)
 
     # The stream is entirely refreshed
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
-    assert stream_source == "rtsp://some/url?auth=g.4.streamingToken"
+    assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
