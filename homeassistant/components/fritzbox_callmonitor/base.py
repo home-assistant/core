@@ -1,4 +1,5 @@
 """Base class for fritzbox_callmonitor entities."""
+from datetime import timedelta
 import logging
 import re
 
@@ -6,9 +7,12 @@ from fritzconnection.lib.fritzphonebook import FritzPhonebook
 
 from homeassistant.util import Throttle
 
-from .const import MIN_TIME_PHONEBOOK_UPDATE, REGEX_NUMBER, UNKOWN_NAME
+from .const import REGEX_NUMBER, UNKOWN_NAME
 
 _LOGGER = logging.getLogger(__name__)
+
+# Return cached results if phonebook was downloaded less then this time ago.
+MIN_TIME_PHONEBOOK_UPDATE = timedelta(hours=6)
 
 
 class FritzBoxPhonebook:

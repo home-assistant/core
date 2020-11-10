@@ -1,5 +1,5 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from socket import (
     AF_INET,
@@ -44,7 +44,6 @@ from .const import (
     FRITZ_STATE_DISCONNECT,
     FRITZ_STATE_RING,
     ICON_PHONE,
-    INTERVAL_RECONNECT,
     MANUFACTURER,
     SERIAL_NUMBER,
     STATE_DIALING,
@@ -55,6 +54,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+RECONNECT_INTERVAL = 60
+SCAN_INTERVAL = timedelta(hours=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -255,7 +257,7 @@ class FritzBoxCallMonitor:
                 self.sock = None
                 while self.sock is None:
                     self.connect()
-                    sleep(INTERVAL_RECONNECT)
+                    sleep(RECONNECT_INTERVAL)
             else:
                 line = response.split("\n", 1)[0]
                 self._parse(line)
