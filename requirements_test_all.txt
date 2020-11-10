@@ -173,6 +173,9 @@ arcam-fmj==0.5.3
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
+# homeassistant.components.aurora
+auroranoaa==0.0.1
+
 # homeassistant.components.stream
 av==8.0.2
 
