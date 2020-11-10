@@ -591,7 +591,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return await build_item_response(self, self._player, payload)
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id = None
+        self, media_content_type, media_content_id, media_image_id=None
     ):
         """Get album art from Squeezebox server."""
         if media_image_id:
