@@ -29,6 +29,7 @@ class EntitySubscription:
     async def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
+            self.unsubscribe_callback = other.unsubscribe_callback
             return
 
         if other is not None and other.unsubscribe_callback is not None:
