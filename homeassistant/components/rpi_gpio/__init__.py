@@ -29,12 +29,14 @@ from homeassistant.components.rpi_gpio.const import (
     CONF_SWITCH_PORTS,
     DOMAIN,
 )
-from homeassistant.components.rpi_gpio.shema import CONFIG_SCHEMA
+from homeassistant.components.rpi_gpio.shema import RPI_GPIO_CONFIG_SCHEMA
 from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+
+CONFIG_SCHEMA = RPI_GPIO_CONFIG_SCHEMA
 from homeassistant.helpers import discovery
 
 

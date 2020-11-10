@@ -138,7 +138,7 @@ _CONFIG_SCHEMA_SWITCH = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+RPI_GPIO_CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
