@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Appareil d\u00e9ja configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Echec de la connection"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "title": "Projecteur Epson"
+}
