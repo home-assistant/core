@@ -907,13 +907,16 @@ class MediaPlayerEntity(Entity):
     ):
         """Generate an url for a media browser image."""
         url_path = (
-            f"/api/media_player_proxy/{self.entity_id}"
+            f"/api/media_player_proxy/{self.entity_id}/browse_media"
             f"/{media_content_type}/{media_content_id}"
             f"/{media_image_id}" if media_image_id
         )
         url = str(
             URL(url_path).with_query(
-                {"token": self.access_token}
+                {
+                    "token": self.access_token,
+                    "media_image_id": media_image_id,
+                }
             )
         )
         return url
@@ -926,8 +929,7 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        "/api/media_player_proxy/{entity_id}/{media_content_type}/{media_content_id}/{media_image_id}",
-        "/api/media_player_proxy/{entity_id}/{media_content_type}/{media_content_id}";
+        "{url}/browse_media/{media_content_type}/{media_content_id}",
     ]
 
     def __init__(self, component):
@@ -940,7 +942,6 @@ class MediaPlayerImageView(HomeAssistantView):
         entity_id: str,
         media_content_type: str = None,
         media_content_id: str = None,
-        media_image_id: str = None,
     ) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
@@ -957,6 +958,7 @@ class MediaPlayerImageView(HomeAssistantView):
             return web.Response(status=HTTP_UNAUTHORIZED)
 
         if media_content_type and media_content_id:
+            media_image_id = request.query.get("media_image_id")
             data, content_type = await player.async_get_browse_image(
                 media_content_type, media_content_id, media_image_id
             )
