@@ -120,10 +120,10 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         self.api = api
-        self._name = name
-        self._latitude = int(latitude)
-        self._longitude = int(longitude)
-        self._threshold = int(threshold)
+        self.name = name
+        self.latitude = int(latitude)
+        self.longitude = int(longitude)
+        self.threshold = int(threshold)
 
     async def _async_update_data(self):
         """Fetch the data from the NOAA Aurora Forecast."""

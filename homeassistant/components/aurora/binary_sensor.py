@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entries):
     """Set up the binary_sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    name = coordinator._name
+    name = coordinator.name
 
     entity = AuroraSensor(coordinator, name)
 
@@ -33,10 +33,12 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(self, coordinator: AuroraDataUpdateCoordinator, name):
         """Define the binary sensor for the Aurora integration."""
+        super().__init__(coordinator=coordinator)
+
         self._name = name
         self.coordinator = coordinator
         self._unique_id = (
-            f"{str(self.coordinator._latitude)}_{str(self.coordinator._longitude)}"
+            f"{str(self.coordinator.latitude)}_{str(self.coordinator.longitude)}"
         )
 
     @property
@@ -52,7 +54,7 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if aurora is visible."""
-        return self.coordinator.data > self.coordinator._threshold
+        return self.coordinator.data > self.coordinator.threshold
 
     @property
     def device_state_attributes(self):
@@ -69,7 +71,7 @@ class AuroraSensor(CoordinatorEntity, BinarySensorEntity):
         """Define the device based on name."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
-            ATTR_NAME: self.coordinator._name,
+            ATTR_NAME: self.coordinator.name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",
         }
