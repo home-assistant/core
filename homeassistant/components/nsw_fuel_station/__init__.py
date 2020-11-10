@@ -5,9 +5,7 @@ from typing import Optional
 
 from nsw_fuel import FuelCheckClient, FuelCheckError
 
-from homeassistant.components.nsw_fuel_station.const import (
-    DATA_NSW_FUEL_STATION,
-)
+from homeassistant.components.nsw_fuel_station.const import DATA_NSW_FUEL_STATION
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
