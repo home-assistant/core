@@ -10,10 +10,13 @@ from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOM
 from homeassistant.components.smartthings import sensor
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.const import (
+    ATTR_DATE,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_WATT_HOUR,
     PERCENTAGE,
     STATE_UNAVAILABLE,
+    POWER_WATT,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -72,6 +75,84 @@ async def test_entity_three_axis_invalid_state(hass, device_factory):
     state = hass.states.get("sensor.three_axis_y_coordinate")
     assert state.state == STATE_UNKNOWN
     state = hass.states.get("sensor.three_axis_z_coordinate")
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_entity_power_consumption_report_state(hass, device_factory):
+    """Test the state attributes."""
+    test_attr_values = {
+        "start": "00110501T000000-0800",  # Nov 5 2020 America/Los Angeles
+        "end": "00110601T000000-0800",  # Nov 6 2020 America/Los Angeles
+        "energy": 10000,
+        "power": 90,
+        "deltaEnergy": 100,
+        "powerEnergy": 80,
+        "energySaved": 300,
+        "persistedEnergy": 20000,
+    }
+    device = device_factory(
+        "Power Consumption Report",
+        [Capability.power_consumption_report],
+        {Attribute.power_consumption: test_attr_values},
+    )
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get("sensor.power_consumption_report_start_time")
+    assert state.state == "00110501T000000-0800"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Start Time"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ATTR_DATE
+    state = hass.states.get("sensor.power_consumption_report_end_time")
+    assert state.state == "00110601T000000-0800"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} End Time"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ATTR_DATE
+    state = hass.states.get("sensor.power_consumption_report_total_energy")
+    assert state.state == "10000"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Total Energy"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    state = hass.states.get("sensor.power_consumption_report_instantaneous_power")
+    assert state.state == "90"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Instantaneous Power"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    state = hass.states.get("sensor.power_consumption_report_load_energy")
+    assert state.state == "100"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Load Energy"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    state = hass.states.get("sensor.power_consumption_report_power_watt_hours")
+    assert state.state == "80"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Power Watt-hours"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    state = hass.states.get("sensor.power_consumption_report_energy_saved")
+    assert state.state == "300"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Energy Saved"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    state = hass.states.get("sensor.power_consumption_report_persisted_energy")
+    assert state.state == "20000"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Persisted Energy"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+
+
+async def test_entity_power_consumption_report_invalid_state(hass, device_factory):
+    """Test the state attributes."""
+    device = device_factory(
+        "Power Consumption Report",
+        [Capability.power_consumption_report],
+        {Attribute.power_consumption: {}},
+    )
+    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
+    state = hass.states.get("sensor.power_consumption_report_start_time")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_end_time")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_total_energy")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_instantaneous_power")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_load_energy")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_power_watt_hours")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_energy_saved")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.power_consumption_report_persisted_energy")
     assert state.state == STATE_UNKNOWN
 
 
