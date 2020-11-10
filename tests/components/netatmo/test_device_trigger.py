@@ -35,14 +35,30 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers_camera_indoor(hass, device_reg, entity_reg):
+@pytest.mark.parametrize(
+    "camera_type,event_types",
+    [
+        (netatmo_const.MODEL_NOC, ["animal", "human", "vehicle", "outdoor"]),
+        (
+            netatmo_const.MODEL_NACAMERA,
+            [
+                "person",
+                "person_away",
+                "movement",
+            ],
+        ),
+    ],
+)
+async def test_get_triggers_camera(
+    hass, device_reg, entity_reg, camera_type, event_types
+):
     """Test we get the expected triggers from a netatmo."""
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        model=netatmo_const.MODEL_NACAMERA,
+        model=camera_type,
     )
     entity_reg.async_get_or_create(
         "camera", NETATMO_DOMAIN, "5678", device_id=device_entry.id
@@ -51,70 +67,11 @@ async def test_get_triggers_camera_indoor(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": NETATMO_DOMAIN,
-            "type": "person",
+            "type": event_type,
             "device_id": device_entry.id,
             "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "person_away",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "movement",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-    ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert_lists_same(triggers, expected_triggers)
-
-
-async def test_get_triggers_camera_outdoor(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a netatmo."""
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        model=netatmo_const.MODEL_NOC,
-    )
-    entity_reg.async_get_or_create(
-        "camera", NETATMO_DOMAIN, "5678", device_id=device_entry.id
-    )
-    expected_triggers = [
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "animal",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "human",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "vehicle",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
-        {
-            "platform": "device",
-            "domain": NETATMO_DOMAIN,
-            "type": "outdoor",
-            "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
-        },
+        }
+        for event_type in event_types
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, expected_triggers)
