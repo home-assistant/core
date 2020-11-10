@@ -205,7 +205,7 @@ class DSMROptionFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
-                    ): int,
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
                 }
             ),
         )
