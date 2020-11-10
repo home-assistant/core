@@ -78,3 +78,7 @@ class MissingPlaceholder(BlueprintWithNameException):
             blueprint_name,
             f"Missing placeholder {', '.join(sorted(placeholder_names))}",
         )
+
+
+class FileAlreadyExists(HomeAssistantError):
+    """Error when file already exists."""

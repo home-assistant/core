@@ -1,6 +1,5 @@
 """Websocket API for blueprint."""
 import logging
-import pathlib
 from typing import Dict, Optional
 
 import async_timeout
@@ -13,13 +12,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import yaml
 
 from . import importer, models
-from .const import BLUEPRINT_FOLDER, DOMAIN
+from .const import DOMAIN
+from .errors import FileAlreadyExists
 
 _LOGGER = logging.getLogger(__package__)
-
-
-class FileAlreadyExists(HomeAssistantError):
-    """Error when file already exists."""
 
 
 @callback
@@ -109,28 +105,22 @@ async def ws_save_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    def create_file():
-        """Create blueprint file."""
-        blueprint_path = pathlib.Path(
-            hass.config.path(BLUEPRINT_FOLDER, domain, f"{path}.yaml")
-        )
-        if blueprint_path.exists():
-            raise FileAlreadyExists()
+    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+        DOMAIN, {}
+    )
 
+    try:
         blueprint = models.Blueprint(yaml.parse_yaml(msg["data"]))
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
-
-        blueprint_path.parent.mkdir(parents=True, exist_ok=True)
-        blueprint_path.write_text(blueprint.yaml())
-
-    try:
-        await hass.async_add_executor_job(create_file)
-    except FileAlreadyExists:
-        connection.send_error(msg["id"], "already_exists", "File already exists")
-        return
     except HomeAssistantError as err:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    try:
+        await domain_blueprints[domain].async_add_blueprint(blueprint, path)
+    except FileAlreadyExists:
+        connection.send_error(msg["id"], "already_exists", "File already exists")
         return
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
@@ -155,18 +145,15 @@ async def ws_delete_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    blueprint_path = pathlib.Path(hass.config.path(BLUEPRINT_FOLDER, domain, path))
-
-    try:
-        await hass.async_add_executor_job(blueprint_path.unlink)
-    except OSError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
-        return
-
     domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
         DOMAIN, {}
     )
-    domain_blueprints[domain].async_reset_cache()
+
+    try:
+        await domain_blueprints[domain].async_remove_blueprint(path)
+    except OSError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
 
     connection.send_result(
         msg["id"],

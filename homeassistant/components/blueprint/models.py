@@ -24,6 +24,7 @@ from .const import (
 from .errors import (
     BlueprintException,
     FailedToLoad,
+    FileAlreadyExists,
     InvalidBlueprint,
     InvalidBlueprintInputs,
     MissingPlaceholder,
@@ -233,3 +234,34 @@ class DomainBlueprints:
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs
+
+    async def async_remove_blueprint(self, blueprint_path: str) -> None:
+        """Remove a blueprint file."""
+        path = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
+        )
+
+        await self.hass.async_add_executor_job(path.unlink)
+        self._blueprints[blueprint_path] = None
+
+    def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
+        """Create blueprint file."""
+        path = pathlib.Path(
+            self.hass.config.path(
+                BLUEPRINT_FOLDER, self.domain, f"{blueprint_path}.yaml"
+            )
+        )
+        if path.exists():
+            raise FileAlreadyExists()
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(blueprint.yaml())
+
+    async def async_add_blueprint(
+        self, blueprint: Blueprint, blueprint_path: str
+    ) -> None:
+        """Add a blueprint."""
+        await self.hass.async_add_executor_job(
+            self._create_file, blueprint, blueprint_path
+        )
+        self._blueprints[blueprint_path] = blueprint
