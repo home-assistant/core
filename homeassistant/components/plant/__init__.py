@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
@@ -106,6 +107,14 @@ DOMAIN = "plant"
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
+WS_TYPE_PLANT_CONFIG = "plant/config"
+
+SCHEMA_WEBSOCKET_GET_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {
+        "type": WS_TYPE_PLANT_CONFIG,
+        "entity_id": cv.entity_id,
+    }
+)
 
 # Flag for enabling/disabling the loading of the history from the database.
 # This feature is turned off right now as its tests are not 100% stable.
@@ -123,6 +132,20 @@ async def async_setup(hass, config):
         entities.append(entity)
 
     await component.async_add_entities(entities)
+
+    @callback
+    def websocket_handle_get_config(hass, connection, msg):
+        """Handle getting a plant config."""
+
+        entity_id = msg["entity_id"].split(".")[1]
+        plant_config = config[DOMAIN][entity_id]
+        connection.send_result(msg["id"], plant_config)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_PLANT_CONFIG,
+        websocket_handle_get_config,
+        SCHEMA_WEBSOCKET_GET_CONFIG,
+    )
     return True
 
 
