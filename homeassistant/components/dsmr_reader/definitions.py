@@ -1,4 +1,4 @@
-i"""Definitions for DSMR Reader sensors added to MQTT."""
+"""Definitions for DSMR Reader sensors added to MQTT."""
 
 from homeassistant.const import (
     CURRENCY_EURO,
