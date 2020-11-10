@@ -114,6 +114,9 @@ class NestCamera(Camera):
         _LOGGER.debug("New stream url expires at %s", self._stream.expires_at)
         refresh_time = self._stream.expires_at - STREAM_EXPIRATION_BUFFER
         # Schedule an alarm to extend the stream
+        if self._stream_refresh_unsub is not None:
+            self._stream_refresh_unsub()
+
         self._stream_refresh_unsub = async_track_point_in_utc_time(
             self.hass,
             self._handle_stream_refresh,
