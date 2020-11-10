@@ -288,6 +288,9 @@ ATTR_ENTITY_ID = "entity_id"
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID = "area_id"
 
+# Contains one string, the device ID
+ATTR_DEVICE_ID = "device_id"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = "friendly_name"
 
