@@ -144,7 +144,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.connect",
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -152,10 +152,7 @@ async def test_form(hass):
     ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.plugwise.gateway.async_setup_entry_gw",
-        return_value=True,
-    ) as mock_setup_entry_gw:
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
@@ -173,7 +170,6 @@ async def test_form(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_setup_entry_gw.mock_calls) == 1
 
 
 async def test_zeroconf_form(hass):
@@ -188,7 +184,7 @@ async def test_zeroconf_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.connect",
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -225,7 +221,7 @@ async def test_form_username(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.connect",
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -265,7 +261,7 @@ async def test_form_username(hass):
     assert result3["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.connect",
+        "homeassistant.components.plugwise.config_flow.Smile.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",

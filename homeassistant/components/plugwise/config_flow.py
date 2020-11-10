@@ -71,10 +71,6 @@ def plugwise_stick_entries(hass):
 async def validate_usb_connection(self, device_path=None) -> Dict[str, str]:
     """Test if device_path is a real Plugwise USB-Stick."""
     errors = {}
-    if device_path is None:
-        errors[CONF_BASE] = "connection_failed"
-        return errors, None
-
     # Avoid creating a 2nd connection to an already configured stick
     if device_path in plugwise_stick_entries(self):
         errors[CONF_BASE] = "already_configured"
@@ -238,19 +234,13 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
-            user_input.pop(FLOW_TYPE, None)
             user_selection = user_input[CONF_USB_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_path()
-            if user_selection in list_of_ports:
-                port = ports[list_of_ports.index(user_selection)]
-                device_path = await self.hass.async_add_executor_job(
-                    get_serial_by_id, port.device
-                )
-            else:
-                device_path = await self.hass.async_add_executor_job(
-                    get_serial_by_id, user_selection
-                )
+            port = ports[list_of_ports.index(user_selection)]
+            device_path = await self.hass.async_add_executor_job(
+                get_serial_by_id, port.device
+            )
             errors, stick = await validate_usb_connection(self.hass, device_path)
             if not errors:
                 await self.async_set_unique_id(stick.get_mac_stick())
@@ -269,7 +259,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step when manual path to device."""
         errors = {}
         if user_input is not None:
-            user_input.pop(FLOW_TYPE, None)
             device_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, user_input.get(CONF_USB_PATH)
             )
