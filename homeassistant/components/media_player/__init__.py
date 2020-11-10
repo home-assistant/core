@@ -909,7 +909,6 @@ class MediaPlayerEntity(Entity):
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
             f"/{media_content_type}/{media_content_id}"
-            f"/{media_image_id}" if media_image_id
         )
         url = str(
             URL(url_path).with_query(
@@ -929,7 +928,7 @@ class MediaPlayerImageView(HomeAssistantView):
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
-        "{url}/browse_media/{media_content_type}/{media_content_id}",
+        url + "/browse_media/{media_content_type}/{media_content_id}",
     ]
 
     def __init__(self, component):
