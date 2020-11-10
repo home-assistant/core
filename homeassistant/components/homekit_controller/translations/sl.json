@@ -27,6 +27,9 @@
                 "description": "\u010ce \u017eeli\u0161 uporabiti to dodatno opremo, vnesi HomeKit kodo.",
                 "title": "Seznanite s HomeKit Opremo"
             },
+            "try_pair_later": {
+                "title": "Seznanjanje ni na voljo"
+            },
             "user": {
                 "data": {
                     "device": "Naprava"
@@ -34,6 +37,21 @@
                 "description": "Izberite napravo, s katero se \u017eelite seznaniti",
                 "title": "Seznanite s HomeKit Opremo"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Gumb 1",
+            "button10": "Gumb 10",
+            "button2": "Gumb 2",
+            "button3": "Gumb 3",
+            "button4": "Gumb 4",
+            "button5": "Gumb 5",
+            "button6": "Gumb 6",
+            "button7": "Gumb 7",
+            "button8": "Gumb 8",
+            "button9": "Gumb 9",
+            "doorbell": "Zvonec"
         }
     },
     "title": "HomeKit oprema"

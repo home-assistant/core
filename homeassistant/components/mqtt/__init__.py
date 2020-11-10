@@ -10,6 +10,7 @@ import os
 import ssl
 import time
 from typing import Any, Callable, List, Optional, Union
+import uuid
 
 import attr
 import certifi
@@ -322,7 +323,7 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 MQTT_PUBLISH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
+        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
         vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -567,7 +568,9 @@ async def async_setup_entry(hass, entry):
         retain: bool = call.data[ATTR_RETAIN]
         if payload_template is not None:
             try:
-                payload = template.Template(payload_template, hass).async_render()
+                payload = template.Template(payload_template, hass).async_render(
+                    parse_result=False
+                )
             except template.jinja2.TemplateError as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
@@ -709,9 +712,10 @@ class MQTT:
 
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
-            self._mqttc = mqtt.Client(protocol=proto)
-        else:
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
+            # PAHO MQTT relies on the MQTT server to generate random client IDs.
+            # However, that feature is not mandatory so we generate our own.
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+        self._mqttc = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._mqttc.enable_logger()

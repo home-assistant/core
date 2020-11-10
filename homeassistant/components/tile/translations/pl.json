@@ -5,7 +5,7 @@
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane logowania Tile."
+            "invalid_credentials": "Nieprawid\u0142owe dane logowania Tile"
         },
         "step": {
             "user": {

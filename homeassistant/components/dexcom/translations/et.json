@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
             "already_configured_account": "Konto on juba seadistatud"
         },
         "error": {
@@ -17,6 +18,7 @@
                     "server": "",
                     "username": "Kasutajanimi"
                 },
+                "description": "Sisesta Dexcom Share'i volitused",
                 "title": "Seadista Dexcom'i sidumine"
             }
         }

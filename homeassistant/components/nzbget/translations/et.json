@@ -8,6 +8,7 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -15,6 +16,7 @@
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
                     "port": "",
+                    "ssl": "Kasutab SSL serti",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },

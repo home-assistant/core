@@ -22,7 +22,8 @@
             "side_3": "\u7b2c 3 \u9762",
             "side_4": "\u7b2c 4 \u9762",
             "side_5": "\u7b2c 5 \u9762",
-            "side_6": "\u7b2c 6 \u9762"
+            "side_6": "\u7b2c 6 \u9762",
+            "turn_off": "\u5173\u95ed"
         },
         "trigger_type": {
             "remote_awakened": "\u8bbe\u5907\u5524\u9192",

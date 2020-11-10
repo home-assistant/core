@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "unknown": "Unerwarteter Fehler"
@@ -9,15 +12,24 @@
             "user": {
                 "data": {
                     "flow_type": "Verbindungstyp",
-                    "host": "Smile IP-Adresse",
-                    "password": "Smile ID"
+                    "host": "IP-Adresse",
+                    "password": "Smile ID",
+                    "port": "Port"
                 },
-                "description": "Details",
-                "title": "Stellen Sie eine Verbindung zu Smile her"
+                "description": "Details"
             },
             "user_gateway": {
                 "data": {
                     "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scanintervall (Sekunden)"
                 }
             }
         }

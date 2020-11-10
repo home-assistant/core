@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "select_single": "Wybierz jedn\u0105 z opcji."
+            "select_single": "Wybierz jedn\u0105 z opcji"
         },
         "step": {
             "hub1": {
@@ -43,7 +43,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Konfiguracja Huba Insteon \u2014 wersja 2.",
+                "description": "Konfiguracja Huba Insteon \u2014 wersja 2",
                 "title": "Hub Insteon \u2014 wersja 2"
             },
             "init": {
@@ -78,8 +78,8 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "input_error": "Nieprawid\u0142owe wpisy, sprawd\u017a wpisane warto\u015bci.",
-            "select_single": "Wybierz jedn\u0105 z opcji."
+            "input_error": "Nieprawid\u0142owe wpisy, sprawd\u017a wpisane warto\u015bci",
+            "select_single": "Wybierz jedn\u0105 z opcji"
         },
         "step": {
             "add_override": {

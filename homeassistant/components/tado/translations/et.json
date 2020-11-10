@@ -6,13 +6,23 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
+            "no_homes": "Selle Tado kontoga pole \u00fchtegi kodu seotud.",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
-                }
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Tado kontoga \u00fchenduse loomine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Kohanda Tado suvandeid."
             }
         }
     }

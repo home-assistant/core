@@ -17,7 +17,7 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": ""
+                    "select_ip": "IP adresse"
                 },
                 "description": "Kj\u00f8r oppsettet igjen hvis du vil koble til tilleggsportaler",
                 "title": "Velg Xiaomi Aqara Gateway som du \u00f8nsker \u00e5 koble til"

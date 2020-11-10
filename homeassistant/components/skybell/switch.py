@@ -58,7 +58,7 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
         setattr(self._device, self._switch_type, True)
 
     def turn_off(self, **kwargs):
-        """Turn on the switch."""
+        """Turn off the switch."""
         setattr(self._device, self._switch_type, False)
 
     @property

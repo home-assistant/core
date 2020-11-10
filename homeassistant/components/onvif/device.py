@@ -379,12 +379,14 @@ class ONVIFDevice:
                 await asyncio.sleep(continuous_duration)
                 req = ptz_service.create_type("Stop")
                 req.ProfileToken = profile.token
-                await ptz_service.Stop({"ProfileToken": req.ProfileToken})
+                await ptz_service.Stop(
+                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
+                )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz.relative:
                     LOGGER.warning(
-                        "ContinuousMove not supported on device '%s'", self.name
+                        "RelativeMove not supported on device '%s'", self.name
                     )
                     return
 
@@ -401,7 +403,7 @@ class ONVIFDevice:
                 # Guard against unsupported operation
                 if not profile.ptz.absolute:
                     LOGGER.warning(
-                        "ContinuousMove not supported on device '%s'", self.name
+                        "AbsoluteMove not supported on device '%s'", self.name
                     )
                     return
 

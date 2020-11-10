@@ -27,7 +27,7 @@ async def test_adam_climate_sensor_entities(hass, mock_smile_adam):
     )
 
     state = hass.states.get("sensor.zone_lisa_wk_battery")
-    assert float(state.state) == 34
+    assert int(state.state) == 34
 
 
 async def test_anna_climate_sensor_entities(hass, mock_smile_anna):
@@ -54,13 +54,25 @@ async def test_p1_dsmr_sensor_entities(hass, mock_smile_p1):
     assert float(state.state) == -2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_off_peak_cumulative")
-    assert int(state.state) == 551
+    assert float(state.state) == 551.1
 
     state = hass.states.get("sensor.p1_electricity_produced_peak_point")
     assert float(state.state) == 2761.0
 
     state = hass.states.get("sensor.p1_electricity_consumed_peak_cumulative")
-    assert int(state.state) == 442
+    assert float(state.state) == 442.9
 
     state = hass.states.get("sensor.p1_gas_consumed_cumulative")
     assert float(state.state) == 584.9
+
+
+async def test_stretch_sensor_entities(hass, mock_stretch):
+    """Test creation of power related sensor entities."""
+    entry = await async_init_integration(hass, mock_stretch)
+    assert entry.state == ENTRY_STATE_LOADED
+
+    state = hass.states.get("sensor.koelkast_92c4a_electricity_consumed")
+    assert float(state.state) == 53.2
+
+    state = hass.states.get("sensor.droger_52559_electricity_consumed_interval")
+    assert float(state.state) == 1.06

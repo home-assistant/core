@@ -21,7 +21,7 @@
                 "data": {
                     "discovery": "W\u0142\u0105cz wykrywanie"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
                 "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
             }
         }
@@ -34,8 +34,8 @@
             "button_4": "czwarty",
             "button_5": "pi\u0105ty",
             "button_6": "sz\u00f3sty",
-            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
             "button_double_press": "\"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
@@ -50,8 +50,8 @@
     },
     "options": {
         "error": {
-            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
-            "bad_will": "Nieprawid\u0142owy temat \"will\".",
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\"",
+            "bad_will": "Nieprawid\u0142owy temat \"will\"",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {

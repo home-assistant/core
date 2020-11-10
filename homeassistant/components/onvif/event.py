@@ -74,21 +74,26 @@ class EventManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         if await self.device.create_pullpoint_subscription():
-            # Initialize events
-            pullpoint = self.device.create_pullpoint_service()
-            await pullpoint.SetSynchronizationPoint()
-            req = pullpoint.create_type("PullMessages")
-            req.MessageLimit = 100
-            req.Timeout = dt.timedelta(seconds=5)
-            response = await pullpoint.PullMessages(req)
-
-            # Parse event initialization
-            await self.async_parse_messages(response.NotificationMessage)
-
             # Create subscription manager
             self._subscription = self.device.create_subscription_service(
                 "PullPointSubscription"
             )
+
+            # Renew immediately
+            await self.async_renew()
+
+            # Initialize events
+            pullpoint = self.device.create_pullpoint_service()
+            try:
+                await pullpoint.SetSynchronizationPoint()
+            except SUBSCRIPTION_ERRORS:
+                pass
+            response = await pullpoint.PullMessages(
+                {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
+            )
+
+            # Parse event initialization
+            await self.async_parse_messages(response.NotificationMessage)
 
             self.started = True
             return True
@@ -157,10 +162,9 @@ class EventManager:
         if self.hass.state == CoreState.running:
             try:
                 pullpoint = self.device.create_pullpoint_service()
-                req = pullpoint.create_type("PullMessages")
-                req.MessageLimit = 100
-                req.Timeout = dt.timedelta(seconds=60)
-                response = await pullpoint.PullMessages(req)
+                response = await pullpoint.PullMessages(
+                    {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=60)}
+                )
 
                 # Renew subscription if less than two hours is left
                 if (

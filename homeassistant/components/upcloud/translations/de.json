@@ -8,5 +8,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualisierungsintervall in Sekunden, mindestens 30"
+                }
+            }
+        }
     }
 }

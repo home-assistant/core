@@ -10,7 +10,7 @@
         "step": {
             "onvif_devices": {
                 "data": {
-                    "extra_arguments": "Ekstra FFMPEG arg\u00fcmanlar",
+                    "extra_arguments": "Ekstra FFMPEG arg\u00fcmanlar\u0131",
                     "rtsp_transport": "RTSP ta\u015f\u0131ma mekanizmas\u0131"
                 },
                 "title": "ONVIF Cihaz Se\u00e7enekleri"

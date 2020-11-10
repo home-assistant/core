@@ -3,8 +3,8 @@ from datetime import timedelta
 
 import pytest
 
-import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.components import automation, sensor
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -74,7 +74,6 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
         "input_datetime",
         {"input_datetime": {"trigger": {"has_date": has_date, "has_time": has_time}}},
     )
-
     now = dt_util.now()
 
     trigger_dt = now.replace(
@@ -392,3 +391,104 @@ async def test_untrack_time_change(hass):
     )
 
     assert len(mock_track_time_change.mock_calls) == 3
+
+
+async def test_if_fires_using_at_sensor(hass, calls):
+    """Test for firing at sensor time."""
+    now = dt_util.now()
+
+    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": "sensor.next_alarm"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": some_data},
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        calls[0].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
+    )
+
+    trigger_dt += timedelta(days=1, hours=1)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert (
+        calls[1].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
+    )
+
+    for broken in ("unknown", "unavailable", "invalid-ts"):
+        hass.states.async_set(
+            "sensor.next_alarm",
+            trigger_dt.isoformat(),
+            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "sensor.next_alarm",
+            broken,
+            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        # We should not have listened to anything
+        assert len(calls) == 2
+
+    # Now without device class
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    # We should not have listened to anything
+    assert len(calls) == 2

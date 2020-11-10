@@ -21,7 +21,8 @@
                     "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
                     "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
-                }
+                },
+                "description": "Nastavte svou instanci AdGuard Home pro monitorov\u00e1n\u00ed a \u0159\u00edzen\u00ed."
             }
         }
     }

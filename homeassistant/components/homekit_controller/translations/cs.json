@@ -15,6 +15,7 @@
             "max_peers_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee nem\u00e1 voln\u00e9 \u00falo\u017ei\u0161t\u011b pro p\u00e1rov\u00e1n\u00ed.",
             "max_tries_error": "Za\u0159\u00edzen\u00ed odm\u00edtlo p\u0159idat p\u00e1rov\u00e1n\u00ed, proto\u017ee p\u0159ijalo v\u00edce ne\u017e 100 ne\u00fasp\u011b\u0161n\u00fdch pokus\u016f o ov\u011b\u0159en\u00ed.",
             "pairing_failed": "P\u0159i pokusu o sp\u00e1rov\u00e1n\u00ed s t\u00edmto za\u0159\u00edzen\u00edm do\u0161lo k neo\u010dek\u00e1van\u00e9 chyb\u011b. M\u016f\u017ee se jednat o do\u010dasn\u00e9 selh\u00e1n\u00ed nebo va\u0161e za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt aktu\u00e1ln\u011b podporov\u00e1no.",
+            "protocol_error": "P\u0159i komunikaci s p\u0159\u00edslu\u0161enstv\u00edm do\u0161lo k chyb\u011b. Za\u0159\u00edzen\u00ed nemus\u00ed b\u00fdt v re\u017eimu p\u00e1rov\u00e1n\u00ed a m\u016f\u017ee vy\u017eadovat fyzick\u00e9 nebo virtu\u00e1ln\u00ed stisknut\u00ed tla\u010d\u00edtka.",
             "unable_to_pair": "Nelze sp\u00e1rovat, zkuste to pros\u00edm znovu.",
             "unknown_error": "Za\u0159\u00edzen\u00ed nahl\u00e1silo nezn\u00e1mou chybu. P\u00e1rov\u00e1n\u00ed se nezda\u0159ilo."
         },

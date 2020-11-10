@@ -1,6 +1,5 @@
 """Binary Sensor platform for Advantage Air integration."""
 
-from homeassistant.components.advantage_air import AdvantageAirEntity
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_PROBLEM,
@@ -8,6 +7,9 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .entity import AdvantageAirEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -15,19 +17,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    if "aircons" in instance["coordinator"].data:
-        entities = []
-        for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-            entities.append(AdvantageAirZoneFilter(instance, ac_key))
-            for zone_key, zone in ac_device["zones"].items():
-                # Only add motion sensor when motion is enabled
-                if zone["motionConfig"] == 2:
-                    entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
-        async_add_entities(entities)
+    entities = []
+    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
+        entities.append(AdvantageAirZoneFilter(instance, ac_key))
+        for zone_key, zone in ac_device["zones"].items():
+            # Only add motion sensor when motion is enabled
+            if zone["motionConfig"] >= 2:
+                entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+    async_add_entities(entities)
 
 
 class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
-    """AdvantageAir Filter."""
+    """Advantage Air Filter."""
 
     @property
     def name(self):
@@ -51,7 +52,7 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
 
 
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
-    """AdvantageAir Zone Motion."""
+    """Advantage Air Zone Motion."""
 
     @property
     def name(self):
@@ -72,8 +73,3 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     def is_on(self):
         """Return if motion is detect."""
         return self._zone["motion"]
-
-    @property
-    def device_state_attributes(self):
-        """Return additional motion configuration."""
-        return {"motionConfig": self._zone["motionConfig"]}
