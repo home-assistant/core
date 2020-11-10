@@ -274,15 +274,13 @@ class NotionEntity(CoordinatorEntity):
         """Update the entity from the latest data."""
         raise NotImplementedError
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _handle_coordinator_update(self):
+        """Respond to a DataUpdateCoordinator update."""
+        self.update_from_latest_data()
+        self.async_write_ha_state()
 
-        @callback
-        def update():
-            """Update the state."""
-            self._async_update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
         self._async_update_from_latest_data()
