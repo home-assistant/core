@@ -76,7 +76,11 @@ class DSMRSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of this sensor."""
-        return self._unit_of_measurement if self._unit_of_measurement is not None else self._device_class
+        return (
+           self._unit_of_measurement
+           if self._unit_of_measurement is not None
+           else self._device_class
+        )
 
     @property
     def icon(self):
