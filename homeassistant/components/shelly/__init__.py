@@ -23,7 +23,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 
-from .const import (  # pylint: disable=import-error
+from .const import (
     DATA_CONFIG_ENTRY,
     DOMAIN,
     POLLING_TIMEOUT_MULTIPLIER,
@@ -39,7 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
-    # pylint: disable=no-member
     context = aioshelly.COAP()
     await context.initialize()
 
