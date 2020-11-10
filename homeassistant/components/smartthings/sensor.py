@@ -439,10 +439,7 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
     def state(self):
         """Return the state of the sensor."""
         report = self._device.status.attributes[Attribute.power_consumption].value
-        try:
-            return report.get(self._key)
-        except TypeError:
-            return None
+        return report.get(self._key)
 
     @property
     def unit_of_measurement(self):
