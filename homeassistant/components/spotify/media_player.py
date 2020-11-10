@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
-from aiohttp import ClientError
+import requests
 from spotipy import Spotify, SpotifyException
 from yarl import URL
 
@@ -195,7 +195,7 @@ def spotify_exception_handler(func):
             result = func(self, *args, **kwargs)
             self.player_available = True
             return result
-        except (SpotifyException, ClientError):
+        except (SpotifyException, requests.RequestException):
             self.player_available = False
 
     return wrapper
