@@ -47,13 +47,14 @@ async def gather_system_health_info(hass, hass_ws_client):
 async def test_info_endpoint_return_info(hass, hass_ws_client):
     """Test that the info endpoint works."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "system_health", {})
 
     with patch(
-        "homeassistant.helpers.system_info.async_get_system_info",
+        "homeassistant.components.homeassistant.system_health.system_health_info",
         return_value={"hello": True},
     ):
-        data = await gather_system_health_info(hass, hass_ws_client)
+        assert await async_setup_component(hass, "system_health", {})
+
+    data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
     data = data["homeassistant"]

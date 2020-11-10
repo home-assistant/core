@@ -1,17 +1,20 @@
 {
   "system_health": {
     "info": {
-      "arch": "CPU Architecture",
-      "dev": "Development",
-      "docker": "Docker",
-      "hassio": "HassOS",
       "installation_type": "Installation Type",
+      "version": "Version",
+      "dev": "Development",
+      "virtualenv": "Virtual Environment",
+      "python_version": "Python Version",
+      "docker": "Docker",
+      "arch": "CPU Architecture",
+      "timezone": "Timezone",
       "os_name": "Operating System Name",
       "os_version": "Operating System Version",
-      "python_version": "Python Version",
-      "timezone": "Timezone",
-      "version": "Version",
-      "virtualenv": "Virtual Environment"
+      "supervisor": "Supervisor",
+      "host_os": "Home Assistant OS",
+      "chassis": "Chassis",
+      "docker_version": "Docker"
     }
   }
 }

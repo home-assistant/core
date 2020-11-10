@@ -14,4 +14,6 @@ def async_register(
 
 async def system_health_info(hass):
     """Get info for the info page."""
-    return await system_info.async_get_system_info(hass)
+    info = await system_info.async_get_system_info(hass)
+    info.pop("hassio")
+    return info
