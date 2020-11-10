@@ -1,6 +1,6 @@
 {
   "domain": "epson",
-  "name": "epson",
+  "name": "Epson",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epson",
   "requirements": ["epson-projector==0.2.3"],
