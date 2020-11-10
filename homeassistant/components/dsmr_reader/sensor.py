@@ -31,6 +31,7 @@ class DSMRSensor(Entity):
         self._topic = topic
 
         self._name = self._definition.get("name", topic.split("/")[-1])
+        self._device_class = self._definition.get("device_class")
         self._unit_of_measurement = self._definition.get("unit")
         self._icon = self._definition.get("icon")
         self._transform = self._definition.get("transform")
@@ -68,9 +69,14 @@ class DSMRSensor(Entity):
         return self._state
 
     @property
+    def device_class(self):
+        """Return the device_class of this sensor."""
+        return self._device_class
+
+    @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of this sensor."""
-        return self._unit_of_measurement
+        return self._unit_of_measurement if self._unit_of_measurement is not None else self._device_class
 
     @property
     def icon(self):
