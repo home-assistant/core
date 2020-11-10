@@ -1,5 +1,6 @@
 """The tests for the NSW Fuel Station sensor platform."""
 from homeassistant.components import sensor
+from homeassistant.components.nsw_fuel_station import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
@@ -33,49 +34,47 @@ class MockStation:
         self.code = code
 
 
-class MockGetReferenceDataResponse:
-    """Mock GetReferenceDataResponse implementation."""
+class MockGetFuelPricesResponse:
+    """Mock GetFuelPricesResponse implementation."""
 
-    def __init__(self, stations):
-        """Initialize a mock GetReferenceDataResponse instance."""
+    def __init__(self, prices, stations):
+        """Initialize a mock GetFuelPricesResponse instance."""
+        self.prices = prices
         self.stations = stations
 
 
 class FuelCheckClientMock:
     """Mock FuelCheckClient implementation."""
 
-    def get_fuel_prices_for_station(self, station):
-        """Return a fake fuel prices response."""
-        return [
-            MockPrice(
-                price=150.0,
-                fuel_type="P95",
-                last_updated=None,
-                price_unit=None,
-                station_code=350,
-            ),
-            MockPrice(
-                price=140.0,
-                fuel_type="E10",
-                last_updated=None,
-                price_unit=None,
-                station_code=350,
-            ),
-        ]
-
-    def get_reference_data(self):
-        """Return a fake reference data response."""
-        return MockGetReferenceDataResponse(
-            stations=[MockStation(code=350, name="My Fake Station")]
+    def get_fuel_prices(self):
+        return MockGetFuelPricesResponse(
+            prices=[
+                MockPrice(
+                    price=150.0,
+                    fuel_type="P95",
+                    last_updated=None,
+                    price_unit=None,
+                    station_code=350,
+                ),
+                MockPrice(
+                    price=140.0,
+                    fuel_type="E10",
+                    last_updated=None,
+                    price_unit=None,
+                    station_code=350,
+                ),
+            ],
+            stations=[MockStation(code=350, name="My Fake Station")],
         )
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient",
     new=FuelCheckClientMock,
 )
 async def test_setup(hass):
     """Test the setup with custom settings."""
+    assert await async_setup_component(hass, DOMAIN, {})
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
             hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
@@ -90,11 +89,12 @@ async def test_setup(hass):
 
 
 @patch(
-    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+    "homeassistant.components.nsw_fuel_station.FuelCheckClient",
     new=FuelCheckClientMock,
 )
 async def test_sensor_values(hass):
     """Test retrieval of sensor values."""
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()
 
