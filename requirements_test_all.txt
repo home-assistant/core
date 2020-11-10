@@ -78,7 +78,7 @@ aio_georss_gdacs==0.4
 aioambient==1.2.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.8
+aioasuswrt==1.3.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -752,7 +752,7 @@ pymata-express==1.19
 pymelcloud==2.5.2
 
 # homeassistant.components.somfy
-pymfy==0.9.0
+pymfy==0.9.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
