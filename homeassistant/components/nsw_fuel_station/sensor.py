@@ -1,14 +1,17 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
-import datetime
 import logging
 from typing import Optional
 
-from nsw_fuel import FuelCheckClient, FuelCheckError
 import voluptuous as vol
+from nsw_fuel import FuelCheckError, FuelCheckClient
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.nsw_fuel_station import (
+    DATA_NSW_FUEL_STATION,
+    DATA_ATTR_CLIENT, DATA_ATTR_REFERENCE_DATA, SharedReferenceData,
+    MIN_TIME_BETWEEN_UPDATES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -35,7 +38,6 @@ CONF_ALLOWED_FUEL_TYPES = [
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
 ATTRIBUTION = "Data provided by NSW Government FuelCheck"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.positive_int,
@@ -45,11 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
-
-NOTIFICATION_ID = "nsw_fuel_station_notification"
-NOTIFICATION_TITLE = "NSW Fuel Station Sensor Setup"
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NSW Fuel Station sensor."""
@@ -57,61 +54,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_id = config[CONF_STATION_ID]
     fuel_types = config[CONF_FUEL_TYPES]
 
-    client = FuelCheckClient()
+    client = hass.data[DATA_NSW_FUEL_STATION][DATA_ATTR_CLIENT]
+    reference_data = hass.data[DATA_NSW_FUEL_STATION][DATA_ATTR_REFERENCE_DATA]
+
     station_data = StationPriceData(client, station_id)
     station_data.update()
 
-    if station_data.error is not None:
-        message = ("Error: {}. Check the logs for additional information.").format(
-            station_data.error
-        )
-
-        hass.components.persistent_notification.create(
-            message, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
-        )
-        return
-
-    available_fuel_types = station_data.get_available_fuel_types()
-
     add_entities(
-        [
-            StationPriceSensor(station_data, fuel_type)
-            for fuel_type in fuel_types
-            if fuel_type in available_fuel_types
-        ]
-    )
+        [StationPriceSensor(station_id, reference_data, station_data,
+                            fuel_type) for
+         fuel_type in fuel_types])
 
 
 class StationPriceData:
     """An object to store and fetch the latest data for a given station."""
 
-    def __init__(self, client, station_id: int) -> None:
+    def __init__(self, client: FuelCheckClient, station_id: int) -> None:
         """Initialize the sensor."""
-        self.station_id = station_id
+        self._station_id = station_id
         self._client = client
         self._data = None
-        self._reference_data = None
-        self.error = None
-        self._station_name = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal data using the API client."""
-
-        if self._reference_data is None:
-            try:
-                self._reference_data = self._client.get_reference_data()
-            except FuelCheckError as exc:
-                self.error = str(exc)
-                _LOGGER.error(
-                    "Failed to fetch NSW Fuel station reference data. %s", exc
-                )
-                return
-
         try:
-            self._data = self._client.get_fuel_prices_for_station(self.station_id)
+            self._data = self._client.get_fuel_prices_for_station(
+                self._station_id)
         except FuelCheckError as exc:
-            self.error = str(exc)
             _LOGGER.error("Failed to fetch NSW Fuel station price data. %s", exc)
 
     def for_fuel_type(self, fuel_type: str):
@@ -126,37 +96,23 @@ class StationPriceData:
         """Return the available fuel types for the station."""
         return [price.fuel_type for price in self._data]
 
-    def get_station_name(self) -> str:
-        """Return the name of the station."""
-        if self._station_name is None:
-            name = None
-            if self._reference_data is not None:
-                name = next(
-                    (
-                        station.name
-                        for station in self._reference_data.stations
-                        if station.code == self.station_id
-                    ),
-                    None,
-                )
-
-            self._station_name = name or f"station {self.station_id}"
-
-        return self._station_name
-
 
 class StationPriceSensor(Entity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
-    def __init__(self, station_data: StationPriceData, fuel_type: str):
+    def __init__(self, station_id: int, reference_data: SharedReferenceData,
+                 station_data: StationPriceData, fuel_type: str):
         """Initialize the sensor."""
+        self._station_id = station_id
+        self._reference_data = reference_data
         self._station_data = station_data
         self._fuel_type = fuel_type
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"{self._station_data.get_station_name()} {self._fuel_type}"
+        station_name = self._reference_data.get_station_name(self._station_id)
+        return f"{station_name} {self._fuel_type}"
 
     @property
     def state(self) -> Optional[float]:
@@ -171,8 +127,9 @@ class StationPriceSensor(Entity):
     def device_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
         return {
-            ATTR_STATION_ID: self._station_data.station_id,
-            ATTR_STATION_NAME: self._station_data.get_station_name(),
+            ATTR_STATION_ID: self._station_id,
+            ATTR_STATION_NAME: self._reference_data.get_station_name(
+                self._station_id),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -183,4 +140,5 @@ class StationPriceSensor(Entity):
 
     def update(self):
         """Update current conditions."""
+        self._reference_data.update()
         self._station_data.update()
