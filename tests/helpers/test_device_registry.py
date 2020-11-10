@@ -145,9 +145,6 @@ async def test_loading_from_storage(hass, hass_storage):
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "id": "abcdefghijklm",
                     "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
-                    "inactive_config_entries": ["2345"],
-                    "inactive_connections": [["mac", "56:ab:cd:ef:12:34"]],
-                    "inactive_identifiers": [["other", "34:56:AB:CD:EF:12"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -186,21 +183,6 @@ async def test_loading_from_storage(hass, hass_storage):
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
-    assert isinstance(entry.inactive_config_entries, set)
-    assert isinstance(entry.inactive_connections, set)
-    assert isinstance(entry.inactive_identifiers, set)
-
-    entry = registry.async_get_or_create(
-        config_entry_id="2345",
-        connections={("mac", "56:AB:CD:EF:12:34")},
-        identifiers={("other", "34:56:AB:CD:EF:12")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    assert entry.id == "abcdefghijklm"
-    assert entry.inactive_config_entries == set()
-    assert entry.inactive_connections == set()
-    assert entry.inactive_identifiers == set()
 
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -503,9 +485,6 @@ async def test_loading_saving_data(hass, registry):
     )
 
     assert orig_light4.id == orig_light3.id
-    assert orig_light4.inactive_config_entries == {"abc"}
-    assert orig_light4.inactive_connections == set()
-    assert orig_light4.inactive_identifiers == {("abc", "123")}
 
     assert len(registry.devices) == 3
     assert len(registry.deleted_devices) == 1
@@ -936,12 +915,6 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert isinstance(entry2.config_entries, set)
     assert isinstance(entry2.connections, set)
     assert isinstance(entry2.identifiers, set)
-    assert isinstance(entry2.inactive_config_entries, set)
-    assert isinstance(entry2.inactive_connections, set)
-    assert isinstance(entry2.inactive_identifiers, set)
-    assert entry2.inactive_config_entries == {"234"}
-    assert entry2.inactive_connections == set()
-    assert entry2.inactive_identifiers == {("entry_234", "2345")}
 
     registry.async_remove_device(entry.id)
 
@@ -960,12 +933,6 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert isinstance(entry3.config_entries, set)
     assert isinstance(entry3.connections, set)
     assert isinstance(entry3.identifiers, set)
-    assert isinstance(entry3.inactive_config_entries, set)
-    assert isinstance(entry3.inactive_connections, set)
-    assert isinstance(entry3.inactive_identifiers, set)
-    assert entry3.inactive_config_entries == {"123"}
-    assert entry3.inactive_connections == set()
-    assert entry3.inactive_identifiers == {("entry_123", "0123")}
 
     entry4 = registry.async_get_or_create(
         config_entry_id="123",
@@ -982,12 +949,6 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert isinstance(entry4.config_entries, set)
     assert isinstance(entry4.connections, set)
     assert isinstance(entry4.identifiers, set)
-    assert isinstance(entry4.inactive_config_entries, set)
-    assert isinstance(entry4.inactive_connections, set)
-    assert isinstance(entry4.inactive_identifiers, set)
-    assert entry4.inactive_config_entries == set()
-    assert entry4.inactive_connections == set()
-    assert entry4.inactive_identifiers == set()
 
     await hass.async_block_till_done()
 
