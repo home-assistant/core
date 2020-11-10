@@ -75,7 +75,6 @@ PyXiaomiGateway==0.13.4
 # homeassistant.components.bmp280
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
-# homeassistant.components.rpi_gpio_light
 # RPi.GPIO==0.7.0
 
 # homeassistant.components.remember_the_milk
