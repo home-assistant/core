@@ -10,6 +10,7 @@ from typing import List
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
+from requests import HTTPError
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
@@ -43,16 +44,20 @@ DOMAIN = "nest"
 class FakeResponse:
     """A fake web response used for returning results of commands."""
 
-    def __init__(self, json):
+    def __init__(self, json=None, error=None):
         """Initialize the FakeResponse."""
         self._json = json
+        self._error = error
 
     def raise_for_status(self):
         """Mimics a successful response status."""
+        if self._error:
+            raise self._error
         pass
 
     async def json(self):
         """Return a dict with the response."""
+        assert self._json
         return self._json
 
 
@@ -263,3 +268,63 @@ async def test_camera_removed(hass, aiohttp_client):
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
     assert len(hass.states.async_all()) == 0
+
+
+async def test_refresh_expired_stream_failure(hass, aiohttp_client):
+    """Tests a failure when refreshing the stream."""
+    now = utcnow()
+    expiration = now + datetime.timedelta(seconds=90)
+    new_expiration = now + datetime.timedelta(seconds=180)
+    responses = [
+        FakeResponse(
+            {
+                "results": {
+                    "streamUrls": {
+                        "rtspUrl": "rtsp://some/url?auth=g.0.streamingToken"
+                    },
+                    "streamExtensionToken": "g.1.extensionToken",
+                    "streamToken": "g.0.streamingToken",
+                    "expiresAt": expiration.isoformat(timespec="seconds"),
+                },
+            }
+        ),
+        # Extending the stream fails
+        FakeResponse(error=HTTPError(response="Some Error")),
+        # Next attempt to get a stream fetches a new url
+        FakeResponse(
+            {
+                "results": {
+                    "streamUrls": {
+                        "rtspUrl": "rtsp://some/url?auth=g.4.streamingToken"
+                    },
+                    "streamExtensionToken": "g.5.extensionToken",
+                    "streamToken": "g.4.streamingToken",
+                    "expiresAt": new_expiration.isoformat(timespec="seconds"),
+                },
+            }
+        ),
+    ]
+    await async_setup_camera(
+        hass,
+        DEVICE_TRAITS,
+        auth=FakeAuth(responses),
+    )
+
+    assert len(hass.states.async_all()) == 1
+    cam = hass.states.get("camera.my_camera")
+    assert cam is not None
+    assert cam.state == STATE_IDLE
+
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    # Fire alarm when stream is nearing expiration, causing it to be extended.
+    # The stream expires.
+    next_update = now + datetime.timedelta(seconds=65)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    # The stream is entirely refreshed
+    stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
+    assert stream_source == "rtsp://some/url?auth=g.4.streamingToken"
