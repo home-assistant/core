@@ -3,7 +3,7 @@
 import logging
 import time
 
-from homeassistant.components import rpi_gpio_light
+from homeassistant.components import rpi_gpio
 from homeassistant.components.light import LightEntity
 from homeassistant.components.rpi_gpio.const import (
     CONF_LIGHT,
@@ -79,33 +79,30 @@ class RPiGPIOLight(LightEntity):
         )
         self._invert_light_button = invert_light_button
         self._invert_relay = invert_relay
-        rpi_gpio_light.setup_output(self._relay_pin)
-        rpi_gpio_light.setup_input(self._light_button_pin, self._light_button_pull_mode)
-        rpi_gpio_light.write_output(self._relay_pin, 1 if self._invert_relay else 0)
+        rpi_gpio.setup_output(self._relay_pin)
+        rpi_gpio.setup_input(self._light_button_pin, self._light_button_pull_mode)
+        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
 
         def toggle_light_from_button(port):
             time.sleep(self._light_button_double_check_time_millis / 2000)
-            if (
-                rpi_gpio_light.read_input(self._light_button_pin)
-                != self._invert_light_button
-            ):
+            if rpi_gpio.read_input(self._light_button_pin) != self._invert_light_button:
                 time.sleep(
                     self._light_button_double_check_time_millis / 2000
                 )  # double check to avoid electrical disturbance
                 if (
-                    rpi_gpio_light.read_input(self._light_button_pin)
+                    rpi_gpio.read_input(self._light_button_pin)
                     != self._invert_light_button
                 ):
                     self.toggle()
 
         if self._invert_light_button:
-            rpi_gpio_light.falling_edge_detect(
+            rpi_gpio.falling_edge_detect(
                 self._light_button_pin,
                 toggle_light_from_button,
                 self._light_button_bouncetime_millis,
             )
         else:
-            rpi_gpio_light.rising_edge_detect(
+            rpi_gpio.rising_edge_detect(
                 self._light_button_pin,
                 toggle_light_from_button,
                 self._light_button_bouncetime_millis,
@@ -123,10 +120,10 @@ class RPiGPIOLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """turn_on the light and trigger the timer."""
-        rpi_gpio_light.write_output(self._relay_pin, 0 if self._invert_relay else 1)
+        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
         self._state = True
 
     def turn_off(self, **kwargs):
         """turn_off the light."""
-        rpi_gpio_light.write_output(self._relay_pin, 1 if self._invert_relay else 0)
+        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
         self._state = False

@@ -35,9 +35,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers import discovery
 
 CONFIG_SCHEMA = RPI_GPIO_CONFIG_SCHEMA
-from homeassistant.helpers import discovery
 
 
 def setup(hass, config):
