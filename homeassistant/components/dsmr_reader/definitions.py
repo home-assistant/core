@@ -6,6 +6,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     VOLT,
     VOLUME_CUBIC_METERS,
+    DEVICE_CLASS_TIMESTAMP,
 )
 
 
@@ -122,7 +123,7 @@ DEFINITIONS = {
     "dsmr/reading/timestamp": {
         "name": "Telegram timestamp",
         "icon": "mdi:clock",
-        "unit": "",
+        "unit": DEVICE_CLASS_TIMESTAMP,
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
@@ -137,7 +138,7 @@ DEFINITIONS = {
     "dsmr/consumption/gas/read_at": {
         "name": "Gas meter read",
         "icon": "mdi:clock",
-        "unit": "",
+        "unit": DEVICE_CLASS_TIMESTAMP,
     },
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
