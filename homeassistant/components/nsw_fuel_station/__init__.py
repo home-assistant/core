@@ -5,8 +5,11 @@ from typing import Optional
 from nsw_fuel import FuelCheckClient, FuelCheckError
 
 from homeassistant.components.nsw_fuel_station.const import (
-    DATA_NSW_FUEL_STATION, MIN_TIME_BETWEEN_UPDATES, DATA_ATTR_CLIENT,
-    DATA_ATTR_REFERENCE_DATA)
+    DATA_NSW_FUEL_STATION,
+    MIN_TIME_BETWEEN_UPDATES,
+    DATA_ATTR_CLIENT,
+    DATA_ATTR_REFERENCE_DATA,
+)
 from homeassistant.util import Throttle
 
 DOMAIN = "nsw_fuel_station"
@@ -39,17 +42,15 @@ class FuelCheckData:
             # Store prices and station details indexed by station code for
             # O(1) lookup
             self._stations = {s.code: s for s in raw_price_data.stations}
-            self._prices = {(str(p.station_code), p.fuel_type): p.price for p
-                            in
-                            raw_price_data.prices}
+            self._prices = {
+                (str(p.station_code), p.fuel_type): p.price
+                for p in raw_price_data.prices
+            }
         except FuelCheckError as exc:
-            _LOGGER.error(
-                "Failed to fetch NSW Fuel station price data. %s", exc
-            )
+            _LOGGER.error("Failed to fetch NSW Fuel station price data. %s", exc)
             return
 
-    def get_fuel_price(self, station_code: int, fuel_type: str) -> Optional[
-        float]:
+    def get_fuel_price(self, station_code: int, fuel_type: str) -> Optional[float]:
         """Return the price of the given fuel type."""
         if self._prices is None:
             return None

@@ -7,7 +7,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.nsw_fuel_station import (
     DATA_NSW_FUEL_STATION,
-    FuelCheckData)
+    FuelCheckData,
+)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
 from homeassistant.helpers.entity import Entity
@@ -54,15 +55,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     fuel_check_data = hass.data[DATA_NSW_FUEL_STATION]
 
     add_entities(
-        [StationPriceSensor(fuel_check_data, station_id, fuel_type) for
-         fuel_type in fuel_types])
+        [
+            StationPriceSensor(fuel_check_data, station_id, fuel_type)
+            for fuel_type in fuel_types
+        ]
+    )
 
 
 class StationPriceSensor(Entity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
-    def __init__(self, fuel_check_data: FuelCheckData, station_id: int,
-                 fuel_type: str):
+    def __init__(self, fuel_check_data: FuelCheckData, station_id: int, fuel_type: str):
         """Initialize the sensor."""
         self._station_id = station_id
         self._fuel_type = fuel_type
@@ -77,16 +80,14 @@ class StationPriceSensor(Entity):
     @property
     def state(self) -> Optional[float]:
         """Return the state of the sensor."""
-        return self._fuel_check_data.get_fuel_price(
-            self._station_id, self._fuel_type)
+        return self._fuel_check_data.get_fuel_price(self._station_id, self._fuel_type)
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_id,
-            ATTR_STATION_NAME: self._fuel_check_data.get_station_name(
-                self._station_id),
+            ATTR_STATION_NAME: self._fuel_check_data.get_station_name(self._station_id),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
