@@ -137,17 +137,11 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 json.dump(json_token, json_file)
 
         except Exception as e:
-            return self.async_external_step_done(
-                next_step_id="token_error", user_input=str(e)
+            return self.async_abort(
+                reason="abort_by_error", description_placeholders={"error_info": str(e)}
             )
 
         return self.async_external_step_done(next_step_id="use_external_token")
-
-    async def async_step_token_error(self, user_input=None):
-        """Abort flow when time expires."""
-        return self.async_abort(
-            reason="abort_by_error", description_placeholders={"error_info": user_input}
-        )
 
     async def async_step_use_external_token(self, user_input=None):
         """Continue server validation with external token."""

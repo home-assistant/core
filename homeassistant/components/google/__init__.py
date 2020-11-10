@@ -204,11 +204,18 @@ def do_authentication(hass, hass_config, config):
 
 # ais
 async def async_setup_entry(hass, config):
-    """Set up drive as rclone config entry."""
+    """Set up google calendar config entry."""
     return True
 
 
 async def async_unload_entry(hass, config_entry):
+    # remove token from ais
+    from homeassistant.components import ais_cloud
+
+    ais_dom = ais_cloud.AisCloudWS(hass)
+    j_ret = await ais_dom.async_delete_oauth("google_calendar_callback")
+    _LOGGER.info(str(j_ret))
+
     # delete token and calendar file
     if os.path.isfile(hass.config.path(YAML_DEVICES)):
         await hass.async_add_executor_job(os.remove, hass.config.path(YAML_DEVICES))
