@@ -434,7 +434,7 @@ class MediaPlayerEntity(Entity):
         return await self._async_fetch_image_from_cache(url)
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, media_image_id
+        self, media_content_type, media_content_id, media_image_id = None
     ):
         """
         Optionally fetch internally accessible image for media browser.
