@@ -36,7 +36,7 @@ class FuelCheckData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Updates the internal data using the API client."""
+        """Fetch updated data using the API client."""
         try:
             raw_price_data = self._client.get_fuel_prices()
             # Store prices and station details indexed by station code for
