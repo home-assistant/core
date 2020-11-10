@@ -2,6 +2,7 @@
 from collections import deque
 from datetime import datetime, timedelta
 import logging
+from os import path
 
 import voluptuous as vol
 
@@ -184,7 +185,11 @@ class Plant(Entity):
         self._name = config.get(CONF_NAME, name)
         self._species = config.get(CONF_SPECIES)
         self._image = config.get(CONF_IMAGE)
-        if not self._image and self._species:
+        if (
+            not self._image
+            and self._species
+            and path.exists(hass.config.path(f"www/images/plants/{self._species}.jpg"))
+        ):
             self._image = f"/local/images/plants/{self._species}.jpg"
         self._battery = None
         self._moisture = None
