@@ -2,8 +2,6 @@
 import asyncio
 from functools import partial
 import logging
-import platform
-import subprocess
 from urllib.request import URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
@@ -130,13 +128,6 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def ping(host):
-    """Ping a host."""
-    param = "-n" if platform.system().lower() == "windows" else "-c"
-    command = ["ping", param, "1", host]
-    return subprocess.call(command) == 0
-
-
 class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
@@ -203,10 +194,6 @@ class Remote:
 
     def _update(self):
         """Retrieve the latest data."""
-        if not ping(self._host):
-            self.available = self._on_action is not None
-            return
-        self.available = True
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
@@ -261,14 +248,18 @@ class Remote:
         try:
             result = await self._hass.async_add_executor_job(func, *args)
             self.state = STATE_ON
+            self.available = True
             return result
         except EncryptionRequired:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
+            self.available = False
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
+            self.available = True
             await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF
+            self.available = self._on_action is not None
