@@ -591,11 +591,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return await build_item_response(self, self._player, payload)
 
     async def async_get_browse_image(
-        self, media_content_type, media_content_id, browse_image
+        self, media_content_type, media_content_id, media_image_id = None
     ):
         """Get album art from Squeezebox server."""
-        image_url = self._player.generate_image_url_from_track_id(browse_image)
-        result = await self._async_fetch_image(image_url)
-        if result == (None, None):
-            _LOGGER.info("Error retrieving proxied album art from %s", image_url)
-        return result
+        if media_image_id:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            result = await self._async_fetch_image(image_url)
+            if result == (None, None):
+                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+            return result
+
+        return (None, None)
