@@ -17,6 +17,7 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
+    STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE,
     TURN_OFF,
     TURN_ON,
     VOL_DOWN,
@@ -84,7 +85,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
         SERVICE_SELECT_CMODE,
     )
-    return True
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -128,7 +128,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 self._volume = volume
         elif power_state == BUSY:
             self._state = STATE_ON
-        elif power_state == STATE_UNAVAILABLE:
+        elif power_state == EPSON_STATE_UNAVAILABLE:
             self._state = STATE_UNAVAILABLE
         else:
             self._state = STATE_OFF
