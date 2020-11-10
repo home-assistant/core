@@ -8,7 +8,7 @@
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "create_entry": {
-            "default": "Autenticado correctamente con Somfy."
+            "default": "Autenticado correctamente"
         },
         "step": {
             "pick_implementation": {

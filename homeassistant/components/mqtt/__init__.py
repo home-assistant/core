@@ -10,6 +10,7 @@ import os
 import ssl
 import time
 from typing import Any, Callable, List, Optional, Union
+import uuid
 
 import attr
 import certifi
@@ -31,7 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
-from homeassistant.core import CoreState, Event, ServiceCall, callback
+from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -322,7 +323,7 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 MQTT_PUBLISH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
+        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
         vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -567,7 +568,9 @@ async def async_setup_entry(hass, entry):
         retain: bool = call.data[ATTR_RETAIN]
         if payload_template is not None:
             try:
-                payload = template.Template(payload_template, hass).async_render()
+                payload = template.Template(payload_template, hass).async_render(
+                    parse_result=False
+                )
             except template.jinja2.TemplateError as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
@@ -630,7 +633,7 @@ class Subscription:
 
     topic: str = attr.ib()
     matcher: Any = attr.ib()
-    callback: MessageCallbackType = attr.ib()
+    job: HassJob = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
 
@@ -709,9 +712,10 @@ class MQTT:
 
         client_id = self.conf.get(CONF_CLIENT_ID)
         if client_id is None:
-            self._mqttc = mqtt.Client(protocol=proto)
-        else:
-            self._mqttc = mqtt.Client(client_id, protocol=proto)
+            # PAHO MQTT relies on the MQTT server to generate random client IDs.
+            # However, that feature is not mandatory so we generate our own.
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+        self._mqttc = mqtt.Client(client_id, protocol=proto)
 
         # Enable logging
         self._mqttc.enable_logger()
@@ -839,7 +843,7 @@ class MQTT:
             raise HomeAssistantError("Topic needs to be a string!")
 
         subscription = Subscription(
-            topic, _matcher_for_topic(topic), msg_callback, qos, encoding
+            topic, _matcher_for_topic(topic), HassJob(msg_callback), qos, encoding
         )
         self.subscriptions.append(subscription)
         self._matching_subscriptions.cache_clear()
@@ -978,12 +982,12 @@ class MQTT:
                         msg.payload,
                         msg.topic,
                         subscription.encoding,
-                        subscription.callback,
+                        subscription.job,
                     )
                     continue
 
-            self.hass.async_run_job(
-                subscription.callback,
+            self.hass.async_run_hass_job(
+                subscription.job,
                 Message(
                     msg.topic,
                     payload,
@@ -1286,7 +1290,6 @@ class MqttDiscoveryUpdate(Entity):
             else:
                 await self.async_remove()
 
-        @callback
         async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
@@ -1480,14 +1483,16 @@ async def websocket_subscribe(hass, connection, msg):
 def async_subscribe_connection_status(hass, connection_status_callback):
     """Subscribe to MQTT connection changes."""
 
+    connection_status_callback_job = HassJob(connection_status_callback)
+
     @callback
     def connected():
-        hass.async_add_job(connection_status_callback, True)
+        hass.async_add_hass_job(connection_status_callback_job, True)
 
     @callback
     def disconnected():
         _LOGGER.error("Calling connection_status_callback, False")
-        hass.async_add_job(connection_status_callback, False)
+        hass.async_add_hass_job(connection_status_callback_job, False)
 
     subscriptions = {
         "connect": async_dispatcher_connect(hass, MQTT_CONNECTED, connected),

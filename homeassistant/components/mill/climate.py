@@ -1,6 +1,4 @@
 """Support for mill wifi-enabled home heaters."""
-import logging
-
 from mill import Mill
 import voluptuous as vol
 
@@ -35,8 +33,6 @@ from .const import (
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 

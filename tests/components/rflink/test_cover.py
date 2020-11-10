@@ -4,9 +4,6 @@ Test setup of RFLink covers component/platform. State tracking and
 control of RFLink cover devices.
 
 """
-
-import logging
-
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,8 +33,6 @@ CONFIG = {
         },
     },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_default_setup(hass, monkeypatch):

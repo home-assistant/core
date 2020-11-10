@@ -1,6 +1,5 @@
 """Support for the Environment Canada radar imagery."""
 import datetime
-import logging
 
 from env_canada import ECRadar  # pylint: disable=import-error
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_UPDATED = "updated"
 

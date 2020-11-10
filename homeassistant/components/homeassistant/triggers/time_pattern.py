@@ -1,6 +1,4 @@
 """Offer time listening automation rules."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -13,8 +11,6 @@ from homeassistant.helpers.event import async_track_time_change
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TimePattern:

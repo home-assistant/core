@@ -1,6 +1,4 @@
 """Family Hub camera for Samsung Refrigerators."""
-import logging
-
 from pyfamilyhublocal import FamilyHubCam
 import voluptuous as vol
 
@@ -8,8 +6,6 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "FamilyHub Camera"
 

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne adressen er allerede konfigurert."
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
             "invalid_country_code": "Ukjent landskode p\u00e5 2 bokstaver.",

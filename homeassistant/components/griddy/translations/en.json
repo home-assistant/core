@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Load Zone is already configured"
+            "already_configured": "Location is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",

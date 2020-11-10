@@ -12,8 +12,8 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
-                    "latitude": "[%key::common::config_flow::data::latitude%]",
-                    "longitude": "[%key::common::config_flow::data::longitude%]",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
                     "name": "Nazwa"
                 },
                 "description": "Konfiguracja integracji Airly. By wygenerowa\u0107 klucz API, przejd\u017a na stron\u0119 https://developer.airly.eu/register",

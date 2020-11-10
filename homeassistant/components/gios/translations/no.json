@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tjenesten er allerede konfigurert for denne m\u00e5lestasjonen"
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_sensors_data": "Ugyldig sensordata for denne m\u00e5lestasjonen",
             "wrong_station_id": "ID for m\u00e5lestasjon er ikke korrekt"
         },

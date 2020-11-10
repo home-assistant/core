@@ -1,6 +1,5 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
-import logging
 
 import pytest
 
@@ -56,8 +55,6 @@ from . import BASIC_CONFIG, MockConfig
 
 from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 

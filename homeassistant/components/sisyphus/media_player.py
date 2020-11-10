@@ -1,6 +1,4 @@
 """Support for track controls on the Sisyphus Kinetic Art Table."""
-import logging
-
 import aiohttp
 from sisyphus_control import Track
 
@@ -26,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 
 from . import DATA_SISYPHUS
-
-_LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRACK = "sisyphus_track"
 

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
             "credential_error": "Fout bij ophalen van inloggegevens.",
             "devices_configured": "Alle gevonden apparaten zijn al geconfigureerd.",
             "no_devices_found": "Geen PlayStation 4 apparaten gevonden op het netwerk.",

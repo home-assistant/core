@@ -20,7 +20,7 @@
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
-        "flow_title": "{name} via HomeKit Accessory Protocol",
+        "flow_title": "{name} via HomeKit tilbeh\u00f8rsprotokoll",
         "step": {
             "busy_error": {
                 "description": "Avbryt sammenkobling p\u00e5 alle kontrollere, eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter med \u00e5 fortsette sammenkoblingen.",
@@ -66,12 +66,12 @@
             "button7": "Knapp 7",
             "button8": "Knapp 8",
             "button9": "Knapp 9",
-            "doorbell": "D\u00f8r-klokke"
+            "doorbell": "D\u00f8rklokke"
         },
         "trigger_type": {
-            "double_press": "{subtype} trykket to ganger",
-            "long_press": "{subtype} trykket og holdt",
-            "single_press": "{subtype}\u00bb trykket"
+            "double_press": "\"{subtype}\" trykket to ganger",
+            "long_press": "\"{subtype}\" trykket og holdt",
+            "single_press": "\"{subtype}\" trykket"
         }
     },
     "title": "HomeKit-kontroller"

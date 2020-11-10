@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
@@ -13,7 +13,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Zaloguj si\u0119 na konto mijn.ithodaalderop.nl"
+                "title": "Logowanie na konto mijn.ithodaalderop.nl"
             }
         }
     }

@@ -4,16 +4,21 @@
             "already_configured": "Teenus on juba seadistatud"
         },
         "error": {
-            "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
-            "unknown": "Ootamatu t\u00f5rge"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
                     "flow_type": "\u00dchenduse t\u00fc\u00fcp",
+                    "host": "IP aadress",
                     "password": "Smile ID",
                     "port": "Smile pordi number"
-                }
+                },
+                "description": "Toode:",
+                "title": "Plugwise t\u00fc\u00fcp"
             },
             "user_gateway": {
                 "data": {

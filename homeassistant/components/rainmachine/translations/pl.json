@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
             "identifier_exists": "Konto jest ju\u017c skonfigurowane",
@@ -16,6 +16,16 @@
                     "port": "Port"
                 },
                 "title": "Wprowad\u017a dane"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Domy\u015blny czas dzia\u0142ania dla strefy (w sekundach)"
+                },
+                "title": "Konfiguracja RainMachine"
             }
         }
     }

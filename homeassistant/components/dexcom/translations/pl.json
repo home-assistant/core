@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
             "already_configured_account": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
@@ -13,12 +14,12 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "server": "Serwer",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Dexcom",
-                "title": "Skonfiguruj integracj\u0119 Dexcom"
+                "title": "Konfiguracja integracji Dexcom"
             }
         }
     },

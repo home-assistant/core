@@ -78,6 +78,8 @@ DISCOVERY_SOURCES = (
     SOURCE_UNIGNORE,
 )
 
+RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
+
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
 CONN_CLASS_CLOUD_PUSH = "cloud_push"
@@ -86,6 +88,8 @@ CONN_CLASS_LOCAL_PUSH = "local_push"
 CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
+
+RELOAD_AFTER_UPDATE_DELAY = 30
 
 
 class ConfigError(HomeAssistantError):
@@ -562,9 +566,18 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 title="New devices discovered",
                 message=(
                     "We have discovered new devices on your network. "
-                    "[Check it out](/config/integrations)"
+                    "[Check it out](/config/integrations)."
                 ),
                 notification_id=DISCOVERY_NOTIFICATION_ID,
+            )
+        elif source == SOURCE_REAUTH:
+            self.hass.components.persistent_notification.async_create(
+                title="Integration requires reconfiguration",
+                message=(
+                    "At least one of your integrations requires reconfiguration to "
+                    "continue functioning. [Check it out](/config/integrations)."
+                ),
+                notification_id=RECONFIGURE_NOTIFICATION_ID,
             )
 
 
@@ -1004,6 +1017,27 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
+    @callback
+    def async_abort(
+        self, *, reason: str, description_placeholders: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Abort the config flow."""
+        assert self.hass
+
+        # Remove reauth notification if no reauth flows are in progress
+        if self.source == SOURCE_REAUTH and not any(
+            ent["context"]["source"] == SOURCE_REAUTH
+            for ent in self.hass.config_entries.flow.async_progress()
+            if ent["flow_id"] != self.flow_id
+        ):
+            self.hass.components.persistent_notification.async_dismiss(
+                RECONFIGURE_NOTIFICATION_ID
+            )
+
+        return super().async_abort(
+            reason=reason, description_placeholders=description_placeholders
+        )
+
     async_step_hassio = async_step_discovery
     async_step_homekit = async_step_discovery
     async_step_mqtt = async_step_discovery
@@ -1043,6 +1077,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         """
         flow = cast(OptionsFlow, flow)
 
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return result
+
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)
@@ -1076,8 +1113,6 @@ class SystemOptions:
 
 class EntityRegistryDisabledHandler:
     """Handler to handle when entities related to config entries updating disabled_by."""
-
-    RELOAD_AFTER_UPDATE_DELAY = 30
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the handler."""
@@ -1135,7 +1170,7 @@ class EntityRegistryDisabledHandler:
             self._remove_call_later()
 
         self._remove_call_later = self.hass.helpers.event.async_call_later(
-            self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:

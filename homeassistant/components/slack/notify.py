@@ -118,7 +118,7 @@ def _async_templatize_blocks(hass, value):
         }
 
     tmpl = template.Template(value, hass=hass)
-    return tmpl.async_render()
+    return tmpl.async_render(parse_result=False)
 
 
 class SlackNotificationService(BaseNotificationService):

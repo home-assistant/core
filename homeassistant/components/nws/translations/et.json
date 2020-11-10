@@ -3,9 +3,14 @@
         "abort": {
             "already_configured": "Teenus on juba seadistatud"
         },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API v\u00f5ti",
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
                 },

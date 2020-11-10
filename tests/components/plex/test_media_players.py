@@ -26,7 +26,7 @@ async def test_plex_tv_clients(hass, entry, mock_plex_account, setup_plex_server
     # Ensure one more client is discovered
     await hass.config_entries.async_unload(entry.entry_id)
 
-    mock_plex_server = await setup_plex_server(config_entry=entry)
+    mock_plex_server = await setup_plex_server()
     plex_server = hass.data[DOMAIN][SERVERS][server_id]
 
     await plex_server._async_update_platforms()
@@ -38,7 +38,7 @@ async def test_plex_tv_clients(hass, entry, mock_plex_account, setup_plex_server
     # Ensure only plex.tv resource client is found
     await hass.config_entries.async_unload(entry.entry_id)
 
-    mock_plex_server = await setup_plex_server(config_entry=entry)
+    mock_plex_server = await setup_plex_server()
     mock_plex_server.clear_clients()
     mock_plex_server.clear_sessions()
 

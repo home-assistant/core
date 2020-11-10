@@ -10,7 +10,7 @@
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
                 "description": "Soll de {model} um {host} konfigur\u00e9iert ginn?\n\nVirum ariichten muss dat Batterie bedriwwen Ger\u00e4t aktiv\u00e9iert ginn andeems de Kn\u00e4ppchen um Apparat gedr\u00e9ckt g\u00ebtt."

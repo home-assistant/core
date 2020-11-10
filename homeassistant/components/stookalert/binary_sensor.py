@@ -1,6 +1,5 @@
 """This component provides support for Stookalert Binary Sensor."""
 from datetime import timedelta
-import logging
 
 import stookalert
 import voluptuous as vol
@@ -12,8 +11,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"

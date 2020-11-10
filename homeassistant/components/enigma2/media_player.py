@@ -1,6 +1,4 @@
 """Support for Enigma2 media players."""
-import logging
-
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
@@ -31,8 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
@@ -136,6 +132,11 @@ class Enigma2Device(MediaPlayerEntity):
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
+
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        return self.e2_box.is_offline
 
     @property
     def supported_features(self):

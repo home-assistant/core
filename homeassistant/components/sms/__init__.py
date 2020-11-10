@@ -1,6 +1,5 @@
 """The sms component."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -11,8 +10,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 

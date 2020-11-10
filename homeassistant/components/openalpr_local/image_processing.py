@@ -1,7 +1,6 @@
 """Component that will help set the OpenALPR local for ALPR processing."""
 import asyncio
 import io
-import logging
 import re
 
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.const import CONF_REGION
 from homeassistant.core import callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_callback_threadsafe
-
-_LOGGER = logging.getLogger(__name__)
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")

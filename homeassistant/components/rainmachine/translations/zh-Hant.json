@@ -18,5 +18,15 @@
                 "title": "\u586b\u5beb\u8cc7\u8a0a"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "\u9810\u8a2d\u5340\u57df\u57f7\u884c\u6642\u9593\uff08\u79d2\uff09"
+                },
+                "title": "\u8a2d\u5b9a RainMachine"
+            }
+        }
     }
 }

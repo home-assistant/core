@@ -5,7 +5,7 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Tilkobling mislyktes."
         },
         "step": {
@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn",
                     "verify_ssl": "Verifisere SSL-sertifikat"

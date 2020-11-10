@@ -1,12 +1,9 @@
 """Allows to configuration ecoal (esterownik.pl) pumps as switches."""
-import logging
 from typing import Optional
 
 from homeassistant.components.switch import SwitchEntity
 
 from . import AVAILABLE_PUMPS, DATA_ECOAL_BOILER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

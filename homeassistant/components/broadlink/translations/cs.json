@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa",
+            "not_supported": "Za\u0159\u00edzen\u00ed nen\u00ed podporov\u00e1no",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_host": "Neplatn\u00fd hostitel nebo IP adresa",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "flow_title": "{name} ({model} na {host})",
+        "step": {
+            "auth": {
+                "title": "Ov\u011b\u0159en\u00ed za\u0159\u00edzen\u00ed"
+            },
+            "finish": {
+                "data": {
+                    "name": "Jm\u00e9no"
+                },
+                "title": "Vyberte jm\u00e9no za\u0159\u00edzen\u00ed"
+            },
+            "reset": {
+                "description": "Va\u0161e za\u0159\u00edzen\u00ed je uzam\u010deno pro ov\u011b\u0159en\u00ed. Odemkn\u011bte jej podle pokyn\u016f:\n1. Obnovte tov\u00e1rn\u00ed nastaven\u00ed za\u0159\u00edzen\u00ed.\n2. Pomoc\u00ed ofici\u00e1ln\u00ed aplikace p\u0159idejte za\u0159\u00edzen\u00ed do m\u00edstn\u00ed s\u00edt\u011b.\n3. Stop. Neukon\u010dujte nastaven\u00ed. Zav\u0159ete aplikaci.\n4. Klikn\u011bte na Odeslat.",
+                "title": "Odemknout za\u0159\u00edzen\u00ed"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ano, ud\u011blej to."
+                },
+                "description": "Va\u0161e za\u0159\u00edzen\u00ed je uzam\u010deno. To m\u016f\u017ee v\u00e9st k probl\u00e9m\u016fm s ov\u011b\u0159ov\u00e1n\u00edm v Home Assistant. Chcete jej odemknout?",
+                "title": "Odemknut\u00ed za\u0159\u00edzen\u00ed (voliteln\u00e9)"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "timeout": "\u010casov\u00fd limit"
+                },
+                "title": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed"
+            }
+        }
+    }
+}

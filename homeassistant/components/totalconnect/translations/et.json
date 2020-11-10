@@ -4,13 +4,16 @@
             "already_configured": "Konto on juba seadistatud"
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "login": "Sisselogimisviga: palun kontrolli oma kasutajanime ja parooli"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
-                }
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": ""
             }
         }
     }

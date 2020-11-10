@@ -4,9 +4,9 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "no_homes": "Brak dom\u00f3w powi\u0105zanych z tym kontem Tado.",
+            "no_homes": "Brak dom\u00f3w powi\u0105zanych z tym kontem Tado",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {

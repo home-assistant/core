@@ -10,13 +10,14 @@
             "default": "Autenticaci\u00f3 exitosa amb Withings."
         },
         "error": {
+            "already_configured": "El compte ja ha estat configurat",
             "already_configured_account": "El compte ja ha estat configurat",
             "profile_exists": "El perfil ja est\u00e0 configurat. Proporciona un nom de perfil \u00fanic."
         },
         "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
-                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             },
             "profile": {
                 "data": {
@@ -27,7 +28,7 @@
             },
             "reauth": {
                 "description": "El perfil \"{profile}\" s'ha de tornar a autenticar per poder continuar rebent dades de Withings.",
-                "title": "Torna a autenticar perfil"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
     }

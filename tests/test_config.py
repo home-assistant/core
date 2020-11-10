@@ -1064,6 +1064,30 @@ async def test_component_config_exceptions(hass, caplog):
             in caplog.text
         )
 
+    # get_platform("config") raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_platform=Mock(
+                    side_effect=ImportError(
+                        "ModuleNotFoundError: No module named 'not_installed_something'",
+                        name="not_installed_something",
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert (
+        "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
+        in caplog.text
+    )
+
 
 @pytest.mark.parametrize(
     "domain, schema, expected",

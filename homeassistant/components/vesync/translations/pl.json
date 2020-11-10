@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dozwolona jest tylko jedna instancja Vesync",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",

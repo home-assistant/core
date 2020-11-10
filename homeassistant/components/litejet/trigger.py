@@ -1,6 +1,4 @@
 """Trigger an automation when a LiteJet switch is released."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
@@ -10,8 +8,6 @@ from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_NUMBER = "number"
 CONF_HELD_MORE_THAN = "held_more_than"

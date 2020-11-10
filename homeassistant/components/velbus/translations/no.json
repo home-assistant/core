@@ -6,7 +6,7 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_failed": "Velbus-tilkoblingen mislyktes",
             "port_exists": "Denne porten er allerede konfigurert"
         },

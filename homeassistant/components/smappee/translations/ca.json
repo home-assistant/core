@@ -25,7 +25,7 @@
                 "description": "Introdueix l'amfitri\u00f3 per iniciar la integraci\u00f3 local de Smappee"
             },
             "pick_implementation": {
-                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir el dispositiu Smappee amb n\u00famero de s\u00e8rie `{serialnumber}` a Home Assistant?",

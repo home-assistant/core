@@ -67,6 +67,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
             "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
             "remote_button_rotated": "Button rotated \"{subtype}\"",
+            "remote_button_rotated_fast": "Button rotated fast \"{subtype}\"",
             "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
             "remote_button_short_press": "\"{subtype}\" button pressed",
             "remote_button_short_release": "\"{subtype}\" button released",

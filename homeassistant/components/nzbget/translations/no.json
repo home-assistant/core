@@ -5,10 +5,10 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

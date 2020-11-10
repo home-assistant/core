@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -11,8 +11,8 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
-                    "latitude": "[%key::common::config_flow::data::latitude%]",
-                    "longitude": "[%key::common::config_flow::data::longitude%]"
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
                 },
                 "description": "Szeroko\u015b\u0107 i d\u0142ugo\u015b\u0107 geograficzna zostan\u0105 wykorzystane do znalezienia najbli\u017cszej stacji pogodowej.",
                 "title": "Po\u0142\u0105czenie z UK Met Office"

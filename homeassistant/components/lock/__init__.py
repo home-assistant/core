@@ -41,8 +41,6 @@ LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.st
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1
 
-_LOGGER = logging.getLogger(__name__)
-
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 

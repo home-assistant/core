@@ -4,7 +4,8 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "relay_modes": {
