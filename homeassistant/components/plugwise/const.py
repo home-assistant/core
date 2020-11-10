@@ -1,10 +1,39 @@
 """Constant for Plugwise component."""
-DOMAIN = "plugwise"
 
-SENSOR_PLATFORMS = ["sensor", "switch"]
-PLATFORMS_GATEWAY = ["binary_sensor", "climate", "sensor", "switch"]
-PW_TYPE = "plugwise_type"
+from homeassistant.components.switch import DEVICE_CLASS_OUTLET
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_STATE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TIME_MILLISECONDS,
+)
+
+ATTR_ENABLED_DEFAULT = "enabled_default"
+DOMAIN = "plugwise"
 GATEWAY = "gateway"
+PW_TYPE = "plugwise_type"
+SMILE = "smile"
+STICK = "stick"
+STRETCH = "stretch"
+USB = "usb"
+
+PLATFORMS_GATEWAY = ["binary_sensor", "climate", "sensor", "switch"]
+PLATFORMS_USB = ["binary_sensor", "sensor", "switch"]
+SENSOR_PLATFORMS = ["sensor", "switch"]
+PW_TYPE = "plugwise_type"
+
+FLOW_NET = "flow_network"
+FLOW_TYPE = "flow_type"
+FLOW_USB = "flow_usb"
+FLOW_SMILE = "smile (Adam/Anna/P1)"
+FLOW_STRETCH = "stretch (Stretch)"
 
 # Sensor mapping
 SENSOR_MAP_DEVICE_CLASS = 2
@@ -28,6 +57,7 @@ CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_POWER = "power"
 CONF_THERMOSTAT = "thermostat"
+CONF_USB_PATH = "usb_path"
 
 ATTR_ILLUMINANCE = "illuminance"
 
@@ -54,4 +84,130 @@ ZEROCONF_MAP = {
     "smile_thermo": "Anna",
     "smile_open_therm": "Adam",
     "stretch": "Stretch",
+}
+
+# Callback types
+CB_NEW_NODE = "NEW_NODE"
+
+# Sensor IDs
+AVAILABLE_SENSOR_ID = "available"
+CURRENT_POWER_SENSOR_ID = "power_1s"
+TODAY_ENERGY_SENSOR_ID = "power_con_today"
+MOTION_SENSOR_ID = "motion"
+
+ATTR_MAC_ADDRESS = "mac"
+SERVICE_DEVICE_ADD = "device_add"
+SERVICE_DEVICE_REMOVE = "device_remove"
+
+# Sensor types
+USB_SENSORS = {
+    AVAILABLE_SENSOR_ID: {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: "mdi:signal-off",
+        ATTR_NAME: "Available",
+        ATTR_STATE: "get_available",
+        ATTR_UNIT_OF_MEASUREMENT: None,
+    },
+    "ping": {
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: "mdi:speedometer",
+        ATTR_NAME: "Ping roundtrip",
+        ATTR_STATE: "get_ping",
+        ATTR_UNIT_OF_MEASUREMENT: TIME_MILLISECONDS,
+    },
+    CURRENT_POWER_SENSOR_ID: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power usage",
+        ATTR_STATE: "get_power_usage",
+        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+    },
+    "power_8s": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power usage 8 seconds",
+        ATTR_STATE: "get_power_usage_8_sec",
+        ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
+    },
+    "power_con_cur_hour": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power consumption current hour",
+        ATTR_STATE: "get_power_consumption_current_hour",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    "power_con_prev_hour": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power consumption previous hour",
+        ATTR_STATE: "get_power_consumption_prev_hour",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    TODAY_ENERGY_SENSOR_ID: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power consumption today",
+        ATTR_STATE: "get_power_consumption_today",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    "power_con_yesterday": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power consumption yesterday",
+        ATTR_STATE: "get_power_consumption_yesterday",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    "power_prod_cur_hour": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power production current hour",
+        ATTR_STATE: "get_power_production_current_hour",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    "power_prod_prev_hour": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: None,
+        ATTR_NAME: "Power production previous hour",
+        ATTR_STATE: "get_power_production_previous_hour",
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+    },
+    "RSSI_in": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: None,
+        ATTR_NAME: "Inbound RSSI",
+        ATTR_STATE: "get_in_RSSI",
+        ATTR_UNIT_OF_MEASUREMENT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    },
+    "RSSI_out": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH,
+        ATTR_ENABLED_DEFAULT: False,
+        ATTR_ICON: None,
+        ATTR_NAME: "Outbound RSSI",
+        ATTR_STATE: "get_out_RSSI",
+        ATTR_UNIT_OF_MEASUREMENT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    },
+}
+
+# Switch types
+SWITCHES = {
+    "relay": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_OUTLET,
+        ATTR_ENABLED_DEFAULT: True,
+        ATTR_ICON: None,
+        ATTR_NAME: "Relay state",
+        ATTR_STATE: "get_relay_state",
+        "switch": "set_relay_state",
+        ATTR_UNIT_OF_MEASUREMENT: "state",
+    }
 }

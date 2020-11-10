@@ -1,0 +1,12 @@
+device_add:
+  description: Manually add a new plugwise device.
+  fields:
+    mac:
+      description: The full 16 character MAC address of the plugwise device.
+      example: 0123456789ABCDEF
+device_remove:
+  description: Remove and un-register specified device (MAC) from plugwise network.
+  fields:
+    mac:
+      description: The full 16 character MAC address of the plugwise device.
+      example: 0123456789ABCDEF

@@ -52,7 +52,7 @@ def mock_smile():
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
     ) as smile_mock:
-        smile_mock.PlugwiseError = PlugwiseException
+        smile_mock.PlugwiseException = PlugwiseException
         smile_mock.InvalidAuthentication = InvalidAuthentication
         smile_mock.ConnectionFailedError = ConnectionFailedError
         smile_mock.return_value.connect.return_value = True
@@ -69,7 +69,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        "homeassistant.components.plugwise.config_flow.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -77,7 +77,10 @@ async def test_form(hass):
     ) as mock_setup, patch(
         "homeassistant.components.plugwise.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.plugwise.gateway.async_setup_entry_gw",
+        return_value=True,
+    ) as mock_setup_entry_gw:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
@@ -95,6 +98,7 @@ async def test_form(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry_gw.mock_calls) == 1
 
 
 async def test_zeroconf_form(hass):
@@ -109,7 +113,7 @@ async def test_zeroconf_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        "homeassistant.components.plugwise.config_flow.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -146,7 +150,7 @@ async def test_form_username(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        "homeassistant.components.plugwise.config_flow.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",
@@ -186,7 +190,7 @@ async def test_form_username(hass):
     assert result3["errors"] == {}
 
     with patch(
-        "homeassistant.components.plugwise.config_flow.Smile.connect",
+        "homeassistant.components.plugwise.config_flow.connect",
         return_value=True,
     ), patch(
         "homeassistant.components.plugwise.async_setup",

@@ -1,6 +1,10 @@
 {
   "options": {
     "step": {
+      "none": {
+        "title": "No Options available",
+        "description": "This Integration does not provide any Options"
+      },
       "init": {
         "description": "Adjust Plugwise Options",
         "data": {
@@ -10,6 +14,7 @@
     }
   },
   "config": {
+    "flow_title": "Smile: {name}",
     "step": {
       "user": {
         "title": "Plugwise type",
@@ -20,18 +25,34 @@
       },
       "user_gateway": {
         "title": "Connect to the Smile",
-        "description": "Please enter",
+        "description": "Please enter:",
         "data": {
           "password": "Smile ID",
+          "username" : "Smile Username",
           "host": "[%key:common::config_flow::data::ip%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username" : "Smile Username"
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "user_usb": {
+        "title": "Setup direct connection to legacy Plugwise USB-stick",
+        "description": "Please enter:",
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        }
+      },
+      "manual_path": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
         }
       }
     },
     "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "network_down": "Plugwise Zigbee network is down",
+      "network_timeout": "Network communication timeout",
+      "stick_init": "Initialization of Plugwise USB-stick failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
