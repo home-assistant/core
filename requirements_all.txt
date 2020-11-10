@@ -220,6 +220,9 @@ aiopvpc==2.0.2
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
 
+# homeassistant.components.recollect_waste
+aiorecollect==0.2.1
+
 # homeassistant.components.shelly
 aioshelly==0.5.1
 
@@ -1782,7 +1785,7 @@ python-nest==4.1.0
 python-nmap==0.6.1
 
 # homeassistant.components.ozw
-python-openzwave-mqtt==1.2.2
+python-openzwave-mqtt==1.3.2
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
@@ -1916,9 +1919,6 @@ raincloudy==0.0.7
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
-
-# homeassistant.components.recollect_waste
-recollect-waste==1.0.1
 
 # homeassistant.components.rainmachine
 regenmaschine==3.0.0

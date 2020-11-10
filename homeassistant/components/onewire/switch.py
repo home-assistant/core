@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_TYPE
 
 from .const import CONF_TYPE_OWSERVER, DOMAIN, SWITCH_TYPE_LATCH, SWITCH_TYPE_PIO
-from .onewire_entities import OneWireProxy
+from .onewire_entities import OneWireProxyEntity
 from .onewirehub import OneWireHub
 
 DEVICE_SWITCHES = {
@@ -173,7 +173,7 @@ def get_entities(onewirehub: OneWireHub):
                 os.path.split(device["path"])[0], device_switch["path"]
             )
             entities.append(
-                OneWireSwitch(
+                OneWireProxySwitch(
                     sensor_id,
                     device_file,
                     device_switch["type"],
@@ -187,7 +187,7 @@ def get_entities(onewirehub: OneWireHub):
     return entities
 
 
-class OneWireSwitch(SwitchEntity, OneWireProxy):
+class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     @property

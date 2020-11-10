@@ -24,7 +24,8 @@
                 "data": {
                     "host": "Adres IP",
                     "password": "Identyfikator Smile",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a:",
                 "title": "Po\u0142\u0105czenie ze Smile"

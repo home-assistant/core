@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Sunni autod k\u00e4ivitamisel \u00e4rkama (?)",
                     "scan_interval": "P\u00e4ringute vahe sekundites"
                 }
             }
