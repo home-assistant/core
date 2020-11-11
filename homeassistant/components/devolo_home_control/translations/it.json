@@ -13,10 +13,8 @@
                     "mydevolo_url": "URL di mydevolo",
                     "password": "Password",
                     "username": "E-mail / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "verify_ssl": "Verifisere SSL-sertifikat"
-                },
-                "title": "Koble til Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": ""
+    }
 }
