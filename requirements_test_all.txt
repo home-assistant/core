@@ -201,7 +201,7 @@ blinkpy==0.16.3
 bond-api==0.1.8
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.6
+bravia-tv==1.0.8
 
 # homeassistant.components.broadlink
 broadlink==0.16.0
