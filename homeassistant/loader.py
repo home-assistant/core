@@ -50,7 +50,7 @@ CUSTOM_WARNING = (
 )
 _UNDEF = object()
 
-MAX_LOAD_CONCURRENTLY = 6
+MAX_LOAD_CONCURRENTLY = 4
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
