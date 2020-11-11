@@ -49,6 +49,14 @@ class KulerSkyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Exception scanning for Kuler Sky devices", exc_info=exc)
             return self.async_abort(reason="scan_error")
 
+        # Because the pykulersky library can only discover nearby bluetooth
+        # devices, and can't identify which devices are Kuler Sky lights, we're
+        # showing all devices to the user, and having them select their device.
+        # The alternative is to attempt to connect to each discovered bluetooth
+        # device, which could potentially leave the user waiting at the spinner
+        # for a while if there are a lot of other bluetooth devices in the
+        # vicinity. See discussion:
+        # https://github.com/home-assistant/core/pull/42372#discussion_r521294651
         options = [
             "{} {}".format(device["address"], device["name"]) for device in devices
         ]
