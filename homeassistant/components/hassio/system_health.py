@@ -1,6 +1,11 @@
 """Provide info to system health."""
+import os
+
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+
+SUPERVISOR_PING = f"http://{os.environ['HASSIO']}/supervisor/ping"
+OBSERVER_URL = f"http://{os.environ['HASSIO']}:4357"
 
 
 @callback
@@ -14,29 +19,36 @@ def async_register(
 async def system_health_info(hass: HomeAssistant):
     """Get info for the info page."""
     info = hass.components.hassio.get_info()
-    host = hass.components.hassio.get_host_info()
-    os = hass.components.hassio.get_os_info()
-    supervisor = hass.components.hassio.get_supervisor_info()
+    host_info = hass.components.hassio.get_host_info()
+    supervisor_info = hass.components.hassio.get_supervisor_info()
 
     information = {
-        "host_os": host.get("operating_system"),
+        "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
         "supervisor_version": info.get("supervisor"),
         "docker_version": info.get("docker"),
-        "chassis": host.get("chassis"),
-        "disk_free": host.get("disk_free"),
-        "disk_total": host.get("disk_total"),
-        "disk_used": host.get("disk_used"),
-        "healthy": supervisor.get("healthy"),
-        "supported": supervisor.get("supported"),
+        "disk_total": f"{host_info.get('disk_total')} GB",
+        "disk_used": f"{host_info.get('disk_used')} GB",
+        "healthy": supervisor_info.get("healthy"),
+        "supported": supervisor_info.get("supported"),
     }
 
     if info.get("hassos") is not None:
-        information["board"] = os.get("board")
+        os_info = hass.components.hassio.get_os_info()
+        information["board"] = os_info.get("board")
+
+    information["supervisor_api"] = system_health.async_check_can_reach_url(
+        hass, SUPERVISOR_PING, OBSERVER_URL
+    )
+    information["version_api"] = system_health.async_check_can_reach_url(
+        hass,
+        f"https://version.home-assistant.io/{info.get('channel')}.json",
+        "/hassio/system",
+    )
 
     information["installed_addons"] = ", ".join(
         f"{addon['name']} ({addon['version']})"
-        for addon in supervisor.get("addons", [])
+        for addon in supervisor_info.get("addons", [])
     )
 
     return information

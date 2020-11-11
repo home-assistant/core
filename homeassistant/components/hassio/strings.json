@@ -3,17 +3,17 @@
   "system_health": {
     "info": {
       "board": "Board",
-      "chassis": "Chassis",
-      "disk_free": "Disk free (GB)",
-      "disk_total": "Disk Total (GB)",
-      "disk_used": "Disk Used (GB)",
+      "disk_total": "Disk Total",
+      "disk_used": "Disk Used",
       "docker_version": "Docker Version",
       "healthy": "Healthy",
       "host_os": "Host Operating System",
       "installed_addons": "Installed Add-ons",
+      "supervisor_api": "Supervisor API",
       "supervisor_version": "Supervisor Version",
       "supported": "Supported",
-      "update_channel": "Update Channel"
+      "update_channel": "Update Channel",
+      "version_api": "Version API"
     }
   }
 }
