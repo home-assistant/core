@@ -81,6 +81,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
@@ -96,7 +99,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -232,6 +235,9 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
@@ -244,7 +250,7 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -289,6 +295,9 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
@@ -301,7 +310,7 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -346,6 +355,9 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {
         BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
@@ -358,7 +370,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -400,11 +412,14 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
+    entry_options = {
+        "time_between_update": 0,
+    }
 
     telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)

@@ -3,13 +3,11 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchendamine nurjus",
-            "not_connected": "Kaug\u00fchendus Panasonic Viera teleriga katkes. Lisateavet leiad logidest.",
             "unknown": "Tundmatu viga"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_pin_code": "Sisestatud PIN kood oli vale",
-            "not_connected": "Kkaug\u00fchenduse loomine Panasonic Viera TV-ga nurjus"
+            "invalid_pin_code": "Sisestatud PIN kood oli vale"
         },
         "step": {
             "pairing": {
@@ -28,6 +26,5 @@
                 "title": "Teleri seadistamine"
             }
         }
-    },
-    "title": ""
+    }
 }

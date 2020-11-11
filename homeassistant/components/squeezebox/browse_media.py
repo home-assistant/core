@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
+from homeassistant.helpers.network import is_internal_request
 
 LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
@@ -67,6 +68,8 @@ BROWSE_LIMIT = 1000
 
 async def build_item_response(entity, player, payload):
     """Create response payload for search described by payload."""
+    internal_request = is_internal_request(entity.hass)
+
     search_id = payload["search_id"]
     search_type = payload["search_type"]
 
@@ -96,9 +99,14 @@ async def build_item_response(entity, player, payload):
 
             artwork_track_id = item.get("artwork_track_id")
             if artwork_track_id:
-                item_thumbnail = entity.get_browse_image_url(
-                    item_type, item_id, artwork_track_id
-                )
+                if internal_request:
+                    item_thumbnail = player.generate_image_url_from_track_id(
+                        artwork_track_id
+                    )
+                else:
+                    item_thumbnail = entity.get_browse_image_url(
+                        item_type, item_id, artwork_track_id
+                    )
 
             children.append(
                 BrowseMedia(

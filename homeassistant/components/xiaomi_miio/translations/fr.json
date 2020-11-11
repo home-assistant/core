@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "connect_error": "\u00c9chec de connexion",
             "no_device_selected": "Aucun appareil s\u00e9lectionn\u00e9, veuillez s\u00e9lectionner un appareil."
         },
         "flow_title": "Xiaomi Miio: {name}",

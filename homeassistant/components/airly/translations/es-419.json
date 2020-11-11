@@ -4,7 +4,6 @@
             "already_configured": "La integraci\u00f3n a\u00e9rea para estas coordenadas ya est\u00e1 configurada."
         },
         "error": {
-            "auth": "La clave API no es correcta.",
             "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
         },
         "step": {

@@ -5,7 +5,6 @@
             "unsupported_firmware": "\u8a2d\u5099\u4f7f\u7528\u7684\u97cc\u9ad4\u4e0d\u652f\u63f4\u3002"
         },
         "error": {
-            "auth_not_supported": "\u76ee\u524d\u4e0d\u652f\u63f4 Shelly \u8a2d\u5099\u6240\u9700\u8a8d\u8b49\u3002",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
@@ -28,6 +27,5 @@
                 "description": "\u958b\u59cb\u8a2d\u5b9a\u524d\uff0c\u5fc5\u9808\u6309\u4e0b\u8a2d\u5099\u4e0a\u7684\u6309\u9215\u4ee5\u559a\u9192\u96fb\u6c60\u4f9b\u96fb\u8a2d\u5099\u3002"
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

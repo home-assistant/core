@@ -8,8 +8,7 @@
             "onvif_error": "T\u00f5rge ONVIF-seadme seadistamisel.  Lisateabe saamiseks kontrolli logisid."
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_failed": "Pakutavate mandaatidega ei \u00f5nnestunud \u00fchendada ONVIF-teenusega."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "auth": {

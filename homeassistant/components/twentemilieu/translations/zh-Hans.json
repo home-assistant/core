@@ -1,11 +1,7 @@
 {
     "config": {
-        "abort": {
-            "address_exists": "\u5730\u5740\u5df2\u7ecf\u8bbe\u7f6e\u597d\u4e86\u3002"
-        },
         "error": {
-            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "connection_error": "\u8fde\u63a5\u5931\u8d25\u3002"
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
         }
     }
 }

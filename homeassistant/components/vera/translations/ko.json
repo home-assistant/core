@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\ucee8\ud2b8\ub864\ub7ec\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "cannot_connect": "URL {base_url} \uc5d0 \ucee8\ud2b8\ub864\ub7ec\ub97c \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "step": {

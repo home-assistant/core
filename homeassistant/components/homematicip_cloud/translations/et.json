@@ -6,7 +6,6 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "invalid_pin": "Vale PIN-kood. Palun  proovige uuesti.",
             "invalid_sgtin_or_pin": "Vale PIN, palun proovi uuesti",
             "press_the_button": "Palun vajuta sinist nuppu.",
             "register_failed": "Registreerimine nurjus, proovi uuesti.",

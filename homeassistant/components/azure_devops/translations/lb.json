@@ -5,9 +5,7 @@
             "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "error": {
-            "authorization_error": "Feeler bei der Authorisatioun. Iwwerpr\u00e9if ob d\u00e4in Kont den acc\u00e8s zum Projet souw\u00e9i d\u00e9i richteg Umeldungsinformatioune huet",
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Konnt sech net mat Azure DevOps verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "project_error": "Konnt keng Projet Informatiounen ausliesen."
         },
@@ -30,6 +28,5 @@
                 "title": "Azure DevOps Project dob\u00e4isetzen"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

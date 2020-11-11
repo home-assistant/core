@@ -4,8 +4,7 @@
             "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig brukernavn og/eller passord"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passord",
                     "username": "E-post / devolo ID"
-                },
-                "title": ""
+                }
             }
         }
-    },
-    "title": ""
+    }
 }

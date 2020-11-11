@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "authorization_error": "Feeler bei der Autorisatioun. Iwwerpr\u00e9if deng Verbindungs Informatiounen.",
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {

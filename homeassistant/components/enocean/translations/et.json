@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "Selle raja jaoks ei leitud kehtivat seadet"
         },
-        "flow_title": "ENOceani seadistamine",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Sisesta ENOcean seadme rada"
             }
         }
-    },
-    "title": ""
+    }
 }
