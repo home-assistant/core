@@ -246,13 +246,12 @@ class DomainBlueprints:
 
     def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
         """Create blueprint file."""
+
         path = pathlib.Path(
-            self.hass.config.path(
-                BLUEPRINT_FOLDER, self.domain, f"{blueprint_path}.yaml"
-            )
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
         )
         if path.exists():
-            raise FileAlreadyExists()
+            raise FileAlreadyExists(self.domain, blueprint_path)
 
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(blueprint.yaml())
@@ -261,7 +260,11 @@ class DomainBlueprints:
         self, blueprint: Blueprint, blueprint_path: str
     ) -> None:
         """Add a blueprint."""
+        if not blueprint_path.endswith(".yaml"):
+            blueprint_path = f"{blueprint_path}.yaml"
+
         await self.hass.async_add_executor_job(
             self._create_file, blueprint, blueprint_path
         )
+
         self._blueprints[blueprint_path] = blueprint
