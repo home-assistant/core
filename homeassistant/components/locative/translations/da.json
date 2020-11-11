@@ -1,9 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_internet_accessible": "Din Home Assistant-instans skal v\u00e6re tilg\u00e6ngelig fra internettet for at modtage Geofency-meddelelser.",
-            "one_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning"
-        },
         "create_entry": {
             "default": "For at sende lokationer til Home Assistant skal du konfigurere webhook funktionen i Locative applicationen.\n\n Udfyld f\u00f8lgende oplysninger: \n\n - URL: `{webhook_url}`\n - Metode: POST\n \n Se [dokumentationen]({docs_url}) for yderligere oplysninger."
         },

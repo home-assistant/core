@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
-            "unknown": "Onerwaarte Feeler",
-            "user_already_configured": "Kont ass scho konfigur\u00e9iert"
+            "unknown": "Onerwaarte Feeler"
         },
         "create_entry": {
             "default": "Fir erweidert Optiounen anzestellen, kuckt [Life360 Dokumentatioun]({docs_url})."
@@ -12,11 +10,8 @@
         "error": {
             "already_configured": "Kont ass scho konfigur\u00e9iert",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
             "invalid_username": "Ong\u00ebltege Benotzernumm",
-            "unexpected": "Onerwaarte Feeler bei der Kommunikatioun mam Life360 Server",
-            "unknown": "Onerwaarte Feeler",
-            "user_already_configured": "Kont ass scho konfigur\u00e9iert"
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

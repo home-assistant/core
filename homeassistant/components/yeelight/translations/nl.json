@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "IP adres"
+                    "host": "Host"
                 },
                 "description": "Als u host leeg laat, wordt detectie gebruikt om apparaten te vinden."
             }

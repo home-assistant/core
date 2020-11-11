@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken",
-            "unable_to_connect": "Kan geen verbinding maken met apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
             "one": "Leeg",

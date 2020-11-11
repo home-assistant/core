@@ -7,7 +7,6 @@
         "error": {
             "connection_error": "ESP-ga ei saa \u00fchendust luua. Veendu, et YAML-fail sisaldab rida 'api:'.",
             "invalid_auth": "Tuvastamise viga",
-            "invalid_password": "Vale salas\u00f5na!",
             "resolve_error": "ESP aadressi ei \u00f5nnestu lahendada. Kui see viga p\u00fcsib, m\u00e4\u00e4ra staatiline IP-aadress: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

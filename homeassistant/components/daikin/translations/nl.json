@@ -4,17 +4,11 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kon niet verbinden"
         },
-        "error": {
-            "device_fail": "Onverwachte fout",
-            "device_timeout": "Kon niet verbinden",
-            "forbidden": "Ongeldige authenticatie"
-        },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
                     "host": "Host",
-                    "key": "API-sleutel",
                     "password": "Wachtwoord"
                 },
                 "description": "Voer het IP-adres van uw Daikin AC in.",

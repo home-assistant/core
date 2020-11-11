@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
-            "unknown": "Ootamatu t\u00f5rge",
-            "user_already_configured": "Konto on juba seadistatud"
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "create_entry": {
             "default": "T\u00e4psemate suvandite kohta leiad teemat [Life360 documentation]({docs_url})."
@@ -12,11 +10,8 @@
         "error": {
             "already_configured": "Kasutaja on juba seadistatud",
             "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat",
             "invalid_username": "Vale kasutajanimi",
-            "unexpected": "Ootamatu t\u00f5rge Life360 serveriga suhtlemisel",
-            "unknown": "Ootamatu t\u00f5rge",
-            "user_already_configured": "Konto on juba seadistatud"
+            "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
             "user": {

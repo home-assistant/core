@@ -6,7 +6,6 @@
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
             "not_deconz_bridge": "To nie jest mostek deCONZ",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {

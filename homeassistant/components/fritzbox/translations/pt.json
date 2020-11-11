@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "auth_failed": "Nome de utilizador ou palavra passe incorretos"
-        },
         "step": {
             "confirm": {
                 "data": {

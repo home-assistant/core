@@ -201,7 +201,7 @@ blinkpy==0.16.3
 bond-api==0.1.8
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.6
+bravia-tv==1.0.8
 
 # homeassistant.components.broadlink
 broadlink==0.16.0
@@ -554,7 +554,7 @@ pillow==7.2.0
 plexapi==4.2.0
 
 # homeassistant.components.plex
-plexauth==0.0.5
+plexauth==0.0.6
 
 # homeassistant.components.plex
 plexwebsocket==0.0.12
@@ -743,7 +743,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.7.1
+pylutron-caseta==0.7.2
 
 # homeassistant.components.mailgun
 pymailgunner==1.4

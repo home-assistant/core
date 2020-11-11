@@ -7,7 +7,6 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "auth_error": "Autentimisviga, proovi uuesti",
             "invalid_auth": "Tuvastamise viga"
         },
         "step": {

@@ -6,11 +6,9 @@
             "not_huawei_lte": "Nem Huawei LTE eszk\u00f6z"
         },
         "error": {
-            "connection_failed": "Kapcsol\u00f3d\u00e1s sikertelen",
             "connection_timeout": "Kapcsolat id\u0151t\u00fall\u00e9p\u00e9se",
             "incorrect_password": "Hib\u00e1s jelsz\u00f3",
             "incorrect_username": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v",
-            "incorrect_username_or_password": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3",
             "invalid_url": "\u00c9rv\u00e9nytelen URL"
         },
         "step": {

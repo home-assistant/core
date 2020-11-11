@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "credential_error": "Feeler beim ausliesen vun den Umeldungs Informatiounen.",
-            "devices_configured": "All Apparater sinn schonn konfigur\u00e9iert",
             "no_devices_found": "Keng Apparater am Netzwierk fonnt.",
             "port_987_bind_error": "Konnt sech net mam Port 987 verbannen. Liest [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen.",
             "port_997_bind_error": "Konnt sech net mam Port 997 verbannen. Liest [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen."
@@ -12,8 +11,7 @@
             "cannot_connect": "Feeler beim verbannen",
             "credential_timeout": "Z\u00e4it Iwwerschreidung beim Service vun den Umeldungsinformatiounen. Dr\u00e9ck op ofsch\u00e9cke fir nach emol ze starten.",
             "login_failed": "Feeler beim verbanne mat der Playstation 4. Iwwerpr\u00e9if op de PIN Code korrekt ass.",
-            "no_ipaddress": "G\u00ebff d'IP Adresse vun der Playstation 4 d\u00e9i soll konfigur\u00e9iert ginn an:",
-            "not_ready": "PlayStation 4 ass net un oder mam Netzwierk verbonnen."
+            "no_ipaddress": "G\u00ebff d'IP Adresse vun der Playstation 4 d\u00e9i soll konfigur\u00e9iert ginn an:"
         },
         "step": {
             "creds": {

@@ -4,7 +4,6 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "connect_error": "Sikertelen csatlakoz\u00e1s",
             "no_device_selected": "Nincs kiv\u00e1lasztva eszk\u00f6z, k\u00e9rj\u00fck, v\u00e1lasszon egyet."
         },
         "step": {
