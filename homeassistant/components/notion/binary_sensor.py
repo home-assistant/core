@@ -79,14 +79,10 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
         """Fetch new state data for the sensor."""
         task = self.coordinator.data["tasks"][self._task_id]
 
-        if task["task_type"] == SENSOR_BATTERY:
-            self._state = self.coordinator.data["tasks"][self._task_id]["status"][
-                "data"
-            ]["to_state"]
-        else:
-            self._state = self.coordinator.data["tasks"][self._task_id]["status"][
-                "value"
-            ]
+        if "value" in task["status"]:
+            self._state = task["status"]["value"]
+        elif task["task_type"] == SENSOR_BATTERY:
+            self._state = task["status"]["data"]["to_state"]
 
     @property
     def is_on(self) -> bool:
