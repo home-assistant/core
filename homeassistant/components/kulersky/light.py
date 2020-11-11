@@ -150,9 +150,7 @@ class KulerskyLight(LightEntity):
             r, g, b, w = self._light.get_color()
         except pykulersky.PykulerskyException as exc:
             if self._available:
-                _LOGGER.warning(
-                    "Unable to connect to %s", self._light.address, exc_info=exc
-                )
+                _LOGGER.warning("Unable to connect to %s: %s", self._light.address, exc)
             self._available = False
             return
         if self._available is False:
