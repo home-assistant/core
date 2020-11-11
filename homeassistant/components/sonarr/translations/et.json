@@ -23,8 +23,7 @@
                     "port": "",
                     "ssl": "Kasutab SSL serti",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
-                },
-                "title": "Loo \u00fchendus Sonarr-iga"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": ""
+    }
 }

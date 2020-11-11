@@ -13,10 +13,8 @@
                     "mydevolo_url": "URL mydevolo",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika/identyfikator devolo"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

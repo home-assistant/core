@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
-                },
-                "description": "Oppgi brukernavn og passord for Smart Meter Texas."
+                }
             }
         }
-    },
-    "title": ""
+    }
 }

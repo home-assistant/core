@@ -7,10 +7,8 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "L\u00f6senord",
                     "username": "E-postadress / devolo-ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }
