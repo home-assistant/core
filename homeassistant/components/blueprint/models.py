@@ -24,6 +24,7 @@ from .const import (
 from .errors import (
     BlueprintException,
     FailedToLoad,
+    FileAlreadyExists,
     InvalidBlueprint,
     InvalidBlueprintInputs,
     MissingPlaceholder,
@@ -85,6 +86,10 @@ class Blueprint:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
+
+    def yaml(self) -> str:
+        """Dump blueprint as YAML."""
+        return yaml.dump(self.data)
 
 
 class BlueprintInputs:
@@ -229,3 +234,37 @@ class DomainBlueprints:
         inputs = BlueprintInputs(blueprint, config_with_blueprint)
         inputs.validate()
         return inputs
+
+    async def async_remove_blueprint(self, blueprint_path: str) -> None:
+        """Remove a blueprint file."""
+        path = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
+        )
+
+        await self.hass.async_add_executor_job(path.unlink)
+        self._blueprints[blueprint_path] = None
+
+    def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
+        """Create blueprint file."""
+
+        path = pathlib.Path(
+            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
+        )
+        if path.exists():
+            raise FileAlreadyExists(self.domain, blueprint_path)
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(blueprint.yaml())
+
+    async def async_add_blueprint(
+        self, blueprint: Blueprint, blueprint_path: str
+    ) -> None:
+        """Add a blueprint."""
+        if not blueprint_path.endswith(".yaml"):
+            blueprint_path = f"{blueprint_path}.yaml"
+
+        await self.hass.async_add_executor_job(
+            self._create_file, blueprint, blueprint_path
+        )
+
+        self._blueprints[blueprint_path] = blueprint
