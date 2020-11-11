@@ -1,6 +1,4 @@
 """Config flow for Dexcom integration."""
-import logging
-
 from pydexcom import AccountError, Dexcom, SessionError
 import voluptuous as vol
 
@@ -16,8 +14,6 @@ from .const import (  # pylint:disable=unused-import
     SERVER_OUS,
     SERVER_US,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {

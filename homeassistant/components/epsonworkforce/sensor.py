@@ -1,6 +1,5 @@
 """Support for Epson Workforce Printer."""
 from datetime import timedelta
-import logging
 
 from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
@@ -11,7 +10,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
     "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
     "photoblack": ["Ink level Photoblack", PERCENTAGE, "mdi:water"],

@@ -1,7 +1,4 @@
 """Support for Spider thermostats."""
-
-import logging
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -26,8 +23,6 @@ HA_STATE_TO_SPIDER = {
 
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Initialize a Spider thermostat."""
@@ -49,12 +44,9 @@ class SpiderThermostat(ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supports = SUPPORT_TARGET_TEMPERATURE
-
         if self.thermostat.has_fan_mode:
-            supports |= SUPPORT_FAN_MODE
-
-        return supports
+            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def unique_id(self):

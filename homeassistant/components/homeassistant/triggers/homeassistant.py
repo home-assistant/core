@@ -1,6 +1,4 @@
 """Offer Home Assistant core automation rules."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
@@ -10,7 +8,6 @@ from homeassistant.core import HassJob, callback
 
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
-_LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(
     {

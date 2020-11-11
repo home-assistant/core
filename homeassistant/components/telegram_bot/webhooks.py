@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config):
 
     bot = initialize_bot(config)
 
-    current_status = await hass.async_add_job(bot.getWebhookInfo)
+    current_status = await hass.async_add_executor_job(bot.getWebhookInfo)
     base_url = config.get(
         CONF_URL, get_url(hass, require_ssl=True, allow_internal=False)
     )
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config):
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
 
     if current_status and current_status["url"] != handler_url:
-        result = await hass.async_add_job(_try_to_set_webhook)
+        result = await hass.async_add_executor_job(_try_to_set_webhook)
         if result:
             _LOGGER.info("Set new telegram webhook %s", handler_url)
         else:

@@ -1,14 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
-            "already_configured_device": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "",
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",

@@ -1,1 +1,1 @@
-"""Tests for alarmdecoder."""
+"""The tests for AlarmDecoder integration."""

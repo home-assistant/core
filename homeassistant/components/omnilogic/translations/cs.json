@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ji\u017e nakonfigurov\u00e1no. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
@@ -17,5 +17,13 @@
             }
         }
     },
-    "title": "Omnilogic"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Interval dotazov\u00e1n\u00ed (v sekund\u00e1ch)"
+                }
+            }
+        }
+    }
 }

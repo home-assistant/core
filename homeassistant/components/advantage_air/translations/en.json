@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Address",
+                    "port": "Port"
+                },
+                "description": "Connect to the API of your Advantage Air wall mounted tablet.",
+                "title": "Connect"
+            }
+        }
+    }
+}

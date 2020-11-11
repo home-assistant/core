@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "Nie mo\u017cna znale\u017a\u0107 klasy systemu potrzebnej dla tego komponentu. Upewnij si\u0119, \u017ce j\u0105dro systemu jest aktualne, a sprz\u0119t obs\u0142ugiwany.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "step": {
             "confirm": {
@@ -10,5 +10,5 @@
             }
         }
     },
-    "title": "Sprawdzanie zasilacza Raspberry Pi"
+    "title": "Kontroler zasilacza Raspberry Pi"
 }

@@ -14,16 +14,16 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
-                "description": "Tom",
+                "description": "",
                 "title": "Totrinnsbekreftelse"
             },
             "user": {
                 "data": {
                     "authorization_code": "Godkjenningskode (kreves for manuell godkjenning)",
-                    "email": "E-postadresse",
+                    "email": "E-post",
                     "password": "Passord"
                 },
-                "description": "Tom",
+                "description": "",
                 "title": "Google Hangouts p\u00e5logging"
             }
         }

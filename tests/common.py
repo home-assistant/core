@@ -300,7 +300,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.pattern_utc_now",
+                "homeassistant.helpers.event.time_tracker_utcnow",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()
@@ -964,7 +964,7 @@ async def flush_store(store):
 
 async def get_system_health_info(hass, domain):
     """Get system health info."""
-    return await hass.data["system_health"]["info"][domain](hass)
+    return await hass.data["system_health"][domain].info_callback(hass)
 
 
 def mock_integration(hass, module):
@@ -972,6 +972,14 @@ def mock_integration(hass, module):
     integration = loader.Integration(
         hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
+
+    def mock_import_platform(platform_name):
+        raise ImportError(
+            f"Mocked unable to import platform '{platform_name}'",
+            name=f"{integration.pkg_path}.{platform_name}",
+        )
+
+    integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration

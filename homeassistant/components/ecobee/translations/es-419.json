@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_only": "Esta integraci\u00f3n actualmente solo admite una instancia de ecobee."
-        },
         "error": {
             "pin_request_failed": "Error al solicitar PIN de ecobee; verifique que la clave API sea correcta.",
             "token_request_failed": "Error al solicitar tokens de ecobee; Int\u00e9ntelo de nuevo."

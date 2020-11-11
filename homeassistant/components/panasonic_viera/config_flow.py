@@ -10,6 +10,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (  # pylint: disable=unused-import
+    ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -35,6 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: None,
             CONF_PORT: None,
             CONF_ON_ACTION: None,
+            ATTR_DEVICE_INFO: None,
         }
 
         self._remote = None
@@ -49,6 +53,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._remote = await self.hass.async_add_executor_job(
                     partial(RemoteControl, self._data[CONF_HOST], self._data[CONF_PORT])
                 )
+
+                self._data[ATTR_DEVICE_INFO] = await self.hass.async_add_executor_job(
+                    self._remote.get_device_info
+                )
             except (TimeoutError, URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 errors["base"] = "cannot_connect"
@@ -57,6 +65,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="unknown")
 
             if "base" not in errors:
+                await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
+                self._abort_if_unique_id_configured()
+
+                if self._data[CONF_NAME] == DEFAULT_NAME:
+                    self._data[CONF_NAME] = self._data[ATTR_DEVICE_INFO][
+                        ATTR_FRIENDLY_NAME
+                    ].replace("_", " ")
+
                 if self._remote.type == TV_TYPE_ENCRYPTED:
                     return await self.async_step_pairing()
 

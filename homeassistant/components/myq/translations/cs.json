@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
@@ -13,7 +13,8 @@
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "title": "P\u0159ipojen\u00ed k br\u00e1n\u011b MyQ"
             }
         }
     }

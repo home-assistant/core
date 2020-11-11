@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key::common::config_flow::abort::already_configured_account%]"
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane logowania Tile."
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {

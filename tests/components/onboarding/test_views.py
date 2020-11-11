@@ -73,6 +73,12 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_host_info",
         return_value={},
     ), patch(
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value={},
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_os_info",
+        return_value={},
+    ), patch(
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
@@ -86,6 +92,8 @@ async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
     client = await aiohttp_client(hass.http.app)
 
     with patch.object(views, "STEPS", ["hello", "world"]):
@@ -104,6 +112,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
 
     with patch.object(onboarding, "STEPS", ["hello", "world"]):
         assert await async_setup_component(hass, "onboarding", {})
+        await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -125,6 +134,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     """Test creating a new user."""
     assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -185,6 +195,7 @@ async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -206,6 +217,7 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -240,6 +252,7 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -282,6 +295,7 @@ async def test_onboarding_integration_invalid_redirect_uri(
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -305,6 +319,7 @@ async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await aiohttp_client(hass.http.app)
 
@@ -320,6 +335,7 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -339,6 +355,7 @@ async def test_onboarding_core_sets_up_rpi_power(
     await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -363,6 +380,7 @@ async def test_onboarding_core_no_rpi_power(
     await async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
 
     client = await hass_client()
 

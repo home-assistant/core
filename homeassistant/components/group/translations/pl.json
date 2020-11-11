@@ -2,15 +2,15 @@
     "state": {
         "_": {
             "closed": "zamkni\u0119te",
-            "home": "[%key::common::state::home%]",
-            "locked": "Zablokowane",
+            "home": "w domu",
+            "locked": "zamkni\u0119te",
             "not_home": "poza domem",
-            "off": "wy\u0142\u0105czony",
+            "off": "wy\u0142.",
             "ok": "ok",
-            "on": "w\u0142\u0105czony",
+            "on": "w\u0142.",
             "open": "otwarte",
             "problem": "problem",
-            "unlocked": "Odblokowany"
+            "unlocked": "otwarte"
         }
     },
     "title": "Grupa"

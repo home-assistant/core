@@ -3,10 +3,14 @@
         "abort": {
             "already_configured": "Konto on juba seadistatud"
         },
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus"
+        },
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
                 }
             }
         }

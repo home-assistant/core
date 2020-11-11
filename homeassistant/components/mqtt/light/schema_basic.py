@@ -348,17 +348,12 @@ class MqttLight(
                 "msg_callback": brightness_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._brightness = 255
         elif (
             self._optimistic_brightness
             and last_state
             and last_state.attributes.get(ATTR_BRIGHTNESS)
         ):
             self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
-        elif self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
-            self._brightness = 255
-        else:
-            self._brightness = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -382,15 +377,12 @@ class MqttLight(
                 "msg_callback": rgb_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._hs = (0, 0)
         if (
             self._optimistic_rgb
             and last_state
             and last_state.attributes.get(ATTR_HS_COLOR)
         ):
             self._hs = last_state.attributes.get(ATTR_HS_COLOR)
-        elif self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
-            self._hs = (0, 0)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -412,17 +404,12 @@ class MqttLight(
                 "msg_callback": color_temp_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._color_temp = 150
         if (
             self._optimistic_color_temp
             and last_state
             and last_state.attributes.get(ATTR_COLOR_TEMP)
         ):
             self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
-        elif self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
-            self._color_temp = 150
-        else:
-            self._color_temp = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -444,17 +431,12 @@ class MqttLight(
                 "msg_callback": effect_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._effect = "none"
         if (
             self._optimistic_effect
             and last_state
             and last_state.attributes.get(ATTR_EFFECT)
         ):
             self._effect = last_state.attributes.get(ATTR_EFFECT)
-        elif self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
-            self._effect = "none"
-        else:
-            self._effect = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -478,15 +460,12 @@ class MqttLight(
                 "msg_callback": hs_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._hs = (0, 0)
         if (
             self._optimistic_hs
             and last_state
             and last_state.attributes.get(ATTR_HS_COLOR)
         ):
             self._hs = last_state.attributes.get(ATTR_HS_COLOR)
-        elif self._topic[CONF_HS_COMMAND_TOPIC] is not None:
-            self._hs = (0, 0)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -510,17 +489,12 @@ class MqttLight(
                 "msg_callback": white_value_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._white_value = 255
         elif (
             self._optimistic_white_value
             and last_state
             and last_state.attributes.get(ATTR_WHITE_VALUE)
         ):
             self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
-        elif self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None:
-            self._white_value = 255
-        else:
-            self._white_value = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -541,15 +515,12 @@ class MqttLight(
                 "msg_callback": xy_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._hs = (0, 0)
         if (
             self._optimistic_xy
             and last_state
             and last_state.attributes.get(ATTR_HS_COLOR)
         ):
             self._hs = last_state.attributes.get(ATTR_HS_COLOR)
-        elif self._topic[CONF_XY_COMMAND_TOPIC] is not None:
-            self._hs = (0, 0)
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -575,12 +546,21 @@ class MqttLight(
     @property
     def hs_color(self):
         """Return the hs color value."""
+        if self._white_value:
+            return None
         return self._hs
 
     @property
     def color_temp(self):
         """Return the color temperature in mired."""
-        return self._color_temp
+        supports_color = (
+            self._topic[CONF_RGB_COMMAND_TOPIC]
+            or self._topic[CONF_HS_COMMAND_TOPIC]
+            or self._topic[CONF_XY_COMMAND_TOPIC]
+        )
+        if self._white_value or not supports_color:
+            return self._color_temp
+        return None
 
     @property
     def min_mireds(self):
@@ -598,7 +578,8 @@ class MqttLight(
         white_value = self._white_value
         if white_value:
             white_value = min(round(white_value), 255)
-        return white_value
+            return white_value
+        return None
 
     @property
     def should_poll(self):
@@ -781,8 +762,9 @@ class MqttLight(
             and ATTR_HS_COLOR not in kwargs
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
+            hs_color = self._hs if self._hs is not None else (0, 0)
             rgb = color_util.color_hsv_to_RGB(
-                self._hs[0], self._hs[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
+                hs_color[0], hs_color[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
             )
             tpl = self._command_templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl:

@@ -397,9 +397,9 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code"] = "0123"
-    config[alarm_control_panel.DOMAIN]["command_template"] = (
-        '{"action":"{{ action }}",' '"code":"{{ code }}"}'
-    )
+    config[alarm_control_panel.DOMAIN][
+        "command_template"
+    ] = '{"action":"{{ action }}","code":"{{ code }}"}'
     assert await async_setup_component(
         hass,
         alarm_control_panel.DOMAIN,
@@ -409,7 +409,7 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
 
     await common.async_alarm_disarm(hass, "0123")
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/command", {"action": "DISARM", "code": "0123"}, 0, False
+        "alarm/command", '{"action":"DISARM","code":"0123"}', 0, False
     )
 
 

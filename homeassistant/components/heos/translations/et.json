@@ -5,6 +5,15 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Sisesta Heos-seadme hosti nimi v\u00f5i IP-aadress (eelistatavalt v\u00f5rgukaabliga \u00fchendatud).",
+                "title": "\u00dchendu Heos'ega"
+            }
         }
     }
 }

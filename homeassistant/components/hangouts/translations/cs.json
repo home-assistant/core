@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Slu\u017eba je ji\u017e nakonfigurov\u00e1na",
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "error": {
@@ -18,6 +18,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Autoriza\u010dn\u00ed k\u00f3d (vy\u017eadov\u00e1n pro ru\u010dn\u00ed ov\u011b\u0159en\u00ed)",
                     "email": "E-mail",
                     "password": "Heslo"
                 },

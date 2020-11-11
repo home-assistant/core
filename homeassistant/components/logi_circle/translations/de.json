@@ -1,17 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Es kann nur ein einziges Logi Circle-Konto konfiguriert werden.",
             "external_error": "Es ist eine Ausnahme in einem anderen Flow aufgetreten.",
-            "external_setup": "Logi Circle wurde erfolgreich aus einem anderen Flow konfiguriert.",
-            "no_flows": "Logi Circle muss konfiguriert werden, bevor die Authentifizierung erfolgen kann. [Bitte lies die Anweisungen] (https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Erfolgreiche Authentifizierung mit Logi Circle."
+            "external_setup": "Logi Circle wurde erfolgreich aus einem anderen Flow konfiguriert."
         },
         "error": {
-            "auth_error": "Die API-Autorisierung ist fehlgeschlagen.",
-            "auth_timeout": "Zeit\u00fcberschreitung der Autorisierung beim Anfordern des Zugriffstokens.",
             "follow_link": "Bitte folge dem Link und authentifiziere dich, bevor du auf Senden klickst."
         },
         "step": {

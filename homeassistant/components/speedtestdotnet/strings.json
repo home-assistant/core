@@ -2,13 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up SpeedTest",
-        "description": "Are you sure you want to set up SpeedTest?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "wrong_server_id": "Server id is not valid"
+      "wrong_server_id": "Server ID is not valid"
     }
   },
   "options": {
@@ -20,9 +19,6 @@
           "server_name": "Select test server"
         }
       }
-    },
-    "error": {
-      "retrive_error": "Error retriving servers list"
     }
   }
 }

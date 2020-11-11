@@ -1,14 +1,9 @@
 """The Elv integration."""
-
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "elv"
 

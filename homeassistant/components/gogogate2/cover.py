@@ -1,5 +1,4 @@
 """Support for Gogogate2 garage Doors."""
-import logging
 from typing import Callable, List, Optional
 
 from gogogate2_api.common import (
@@ -35,9 +34,6 @@ from .common import (
     get_data_update_coordinator,
 )
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
-
 
 COVER_SCHEMA = vol.Schema(
     {

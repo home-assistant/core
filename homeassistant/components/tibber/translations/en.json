@@ -4,7 +4,7 @@
             "already_configured": "Service is already configured"
         },
         "error": {
-            "connection_error": "Failed to connect",
+            "cannot_connect": "Failed to connect",
             "invalid_access_token": "Invalid access token",
             "timeout": "Timeout connecting to Tibber"
         },
@@ -17,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

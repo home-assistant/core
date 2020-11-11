@@ -11,8 +11,10 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
-                }
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Loo \u00fchendus MyQ Gatewayga"
             }
         }
     }

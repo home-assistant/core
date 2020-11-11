@@ -111,7 +111,7 @@ class HassIOView(HomeAssistantView):
                 )
 
             # Stream response
-            response = web.StreamResponse(status=client.status)
+            response = web.StreamResponse(status=client.status, headers=client.headers)
             response.content_type = client.content_type
 
             await response.prepare(request)

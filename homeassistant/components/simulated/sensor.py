@@ -1,6 +1,5 @@
 """Adds a simulated sensor."""
 from datetime import datetime
-import logging
 import math
 from random import Random
 
@@ -11,8 +10,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_AMP = "amplitude"
 CONF_FWHM = "spread"

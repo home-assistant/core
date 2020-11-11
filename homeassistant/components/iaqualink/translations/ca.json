@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar una \u00fanica connexi\u00f3 d'iAqualink.",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_failure": "No s'ha pogut connectar amb iAqualink. Comprova el nom d'usuari i la contrasenya."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {

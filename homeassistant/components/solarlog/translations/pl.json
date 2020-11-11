@@ -5,7 +5,7 @@
         },
         "error": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

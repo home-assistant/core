@@ -1,6 +1,5 @@
 """Support for Avion dimmers."""
 import importlib
-import logging
 import time
 
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 

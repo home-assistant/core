@@ -2,7 +2,6 @@
 import copy
 from datetime import datetime
 import json
-from unittest import mock
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
@@ -11,7 +10,7 @@ from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY
+from tests.async_mock import ANY, patch
 from tests.common import async_fire_mqtt_message, mock_registry
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
@@ -834,7 +833,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         for i in range(0, debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
@@ -896,7 +895,7 @@ async def help_test_entity_debug_info_message(
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, topic, payload)
 

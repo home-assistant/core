@@ -81,11 +81,14 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntity, BinarySensorEntity):
         try:
             value = self.router.data[self.key][self.item]
         except KeyError:
+            value = None
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
+        if value is None:
+            self._raw_state = value
             self._available = False
-            return
-        self._available = True
-        self._raw_state = str(value)
+        else:
+            self._raw_state = str(value)
+            self._available = True
 
 
 CONNECTION_STATE_ATTRIBUTES = {

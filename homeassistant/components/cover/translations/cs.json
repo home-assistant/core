@@ -22,8 +22,8 @@
             "closing": "{entity_name} se zav\u00edr\u00e1",
             "opened": "{entity_name} otev\u0159ena",
             "opening": "{entity_name} se otv\u00edr\u00e1",
-            "position": "Pozice {entity_name} se zm\u011bnila",
-            "tilt_position": "N\u00e1klon {entity_name} se zm\u011bnil"
+            "position": "P\u0159i zm\u011bn\u011b pozice {entity_name}",
+            "tilt_position": "P\u0159i zm\u011bn\u011b n\u00e1klonu {entity_name}"
         }
     },
     "state": {

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API"
-                }
+                },
+                "description": "Budete pot\u0159ebovat API kl\u00ed\u010d z https://app.rach.io/. P\u0159ejd\u011bte do \"Nastaven\u00ed\" a pak klikn\u011bte na \"Z\u00cdSKAT API KL\u00cd\u010c\".",
+                "title": "P\u0159ipojen\u00ed k za\u0159\u00edzeni Rachio"
             }
         }
     }

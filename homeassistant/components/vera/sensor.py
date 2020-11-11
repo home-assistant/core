@@ -1,6 +1,5 @@
 """Support for Vera sensors."""
 from datetime import timedelta
-import logging
 from typing import Callable, List, Optional, cast
 
 import pyvera as veraApi
@@ -14,8 +13,6 @@ from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

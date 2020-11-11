@@ -6,7 +6,15 @@ import time
 
 import av
 
-from .const import MAX_TIMESTAMP_GAP, MIN_SEGMENT_DURATION, PACKETS_TO_WAIT_FOR_AUDIO
+from .const import (
+    MAX_MISSING_DTS,
+    MAX_TIMESTAMP_GAP,
+    MIN_SEGMENT_DURATION,
+    PACKETS_TO_WAIT_FOR_AUDIO,
+    STREAM_RESTART_INCREMENT,
+    STREAM_RESTART_RESET_TIME,
+    STREAM_TIMEOUT,
+)
 from .core import Segment, StreamBuffer
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +58,13 @@ def stream_worker(hass, stream, quit_event):
             _LOGGER.exception("Stream connection failed: %s", stream.source)
         if not stream.keepalive or quit_event.is_set():
             break
-        # To avoid excessive restarts, don't restart faster than once every 40 seconds.
-        wait_timeout = max(40 - (time.time() - start_time), 0)
+        # To avoid excessive restarts, wait before restarting
+        # As the required recovery time may be different for different setups, start
+        # with trying a short wait_timeout and increase it on each reconnection attempt.
+        # Reset the wait_timeout after the worker has been up for several minutes
+        if time.time() - start_time > STREAM_RESTART_RESET_TIME:
+            wait_timeout = 0
+        wait_timeout += STREAM_RESTART_INCREMENT
         _LOGGER.debug(
             "Restarting stream worker in %d seconds: %s",
             wait_timeout,
@@ -62,7 +75,13 @@ def stream_worker(hass, stream, quit_event):
 def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
-    container = av.open(stream.source, options=stream.options)
+    try:
+        container = av.open(
+            stream.source, options=stream.options, timeout=STREAM_TIMEOUT
+        )
+    except av.AVError:
+        _LOGGER.error("Error opening stream %s", stream.source)
+        return
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
@@ -81,13 +100,15 @@ def _stream_worker_internal(hass, stream, quit_event):
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
 
+    # Iterator for demuxing
+    container_packets = None
     # The presentation timestamps of the first packet in each stream we receive
     # Use to adjust before muxing or outputting, but we don't adjust internally
     first_pts = {}
     # The decoder timestamps of the latest packet in each stream we processed
     last_dts = None
     # Keep track of consecutive packets without a dts to detect end of stream.
-    last_packet_was_without_dts = False
+    missing_dts = 0
     # Holds the buffers for each stream provider
     outputs = None
     # Keep track of the number of segments we've processed
@@ -102,7 +123,8 @@ def _stream_worker_internal(hass, stream, quit_event):
     # 2 - seeking can be problematic https://trac.ffmpeg.org/ticket/7815
 
     def peek_first_pts():
-        nonlocal first_pts, audio_stream
+        nonlocal first_pts, audio_stream, container_packets
+        missing_dts = 0
 
         def empty_stream_dict():
             return {
@@ -111,25 +133,38 @@ def _stream_worker_internal(hass, stream, quit_event):
             }
 
         try:
+            container_packets = container.demux((video_stream, audio_stream))
             first_packet = empty_stream_dict()
             first_pts = empty_stream_dict()
             # Get to first video keyframe
             while first_packet[video_stream] is None:
-                packet = next(container.demux())
+                packet = next(container_packets)
                 if (
-                    packet.stream == video_stream
-                    and packet.is_keyframe
-                    and packet.dts is not None
-                ):
+                    packet.dts is None
+                ):  # Allow MAX_MISSING_DTS packets with no dts, raise error on the next one
+                    if missing_dts >= MAX_MISSING_DTS:
+                        raise StopIteration(
+                            f"Invalid data - got {MAX_MISSING_DTS+1} packets with missing DTS while initializing"
+                        )
+                    missing_dts += 1
+                    continue
+                if packet.stream == video_stream and packet.is_keyframe:
                     first_packet[video_stream] = packet
                     initial_packets.append(packet)
             # Get first_pts from subsequent frame to first keyframe
             while any(
                 [pts is None for pts in {**first_packet, **first_pts}.values()]
             ) and (len(initial_packets) < PACKETS_TO_WAIT_FOR_AUDIO):
-                packet = next(container.demux((video_stream, audio_stream)))
-                if packet.dts is None:
-                    continue  # Discard packets with no dts
+                packet = next(container_packets)
+                if (
+                    packet.dts is None
+                ):  # Allow MAX_MISSING_DTS packet with no dts, raise error on the next one
+                    if missing_dts >= MAX_MISSING_DTS:
+                        raise StopIteration(
+                            f"Invalid data - got {MAX_MISSING_DTS+1} packets with missing DTS while initializing"
+                        )
+                    missing_dts += 1
+                    continue
                 if (
                     first_packet[packet.stream] is None
                 ):  # actually video already found above so only for audio
@@ -151,13 +186,10 @@ def _stream_worker_internal(hass, stream, quit_event):
                 audio_stream = None
 
         except (av.AVError, StopIteration) as ex:
-            if not stream.keepalive:
-                # End of stream, clear listeners and stop thread
-                for fmt, _ in outputs.items():
-                    hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
+            finalize_stream()
             return False
         return True
 
@@ -203,7 +235,7 @@ def _stream_worker_internal(hass, stream, quit_event):
     def finalize_stream():
         if not stream.keepalive:
             # End of stream, clear listeners and stop thread
-            for fmt, _ in outputs.items():
+            for fmt in stream.outputs:
                 hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
 
     if not peek_first_pts():
@@ -217,16 +249,16 @@ def _stream_worker_internal(hass, stream, quit_event):
             if len(initial_packets) > 0:
                 packet = initial_packets.popleft()
             else:
-                packet = next(container.demux((video_stream, audio_stream)))
+                packet = next(container_packets)
             if packet.dts is None:
-                _LOGGER.error("Stream packet without dts detected, skipping...")
-                # Allow a single packet without dts before terminating the stream.
-                if last_packet_was_without_dts:
-                    # If we get a "flushing" packet, the stream is done
-                    raise StopIteration("No dts in consecutive packets")
-                last_packet_was_without_dts = True
+                # Allow MAX_MISSING_DTS consecutive packets without dts. Terminate the stream on the next one.
+                if missing_dts >= MAX_MISSING_DTS:
+                    raise StopIteration(
+                        f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
+                    )
+                missing_dts += 1
                 continue
-            last_packet_was_without_dts = False
+            missing_dts = 0
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
             finalize_stream()
@@ -234,20 +266,17 @@ def _stream_worker_internal(hass, stream, quit_event):
 
         # Discard packet if dts is not monotonic
         if packet.dts <= last_dts[packet.stream]:
-            if (last_dts[packet.stream] - packet.dts) > (
-                packet.time_base * MAX_TIMESTAMP_GAP
+            if (
+                packet.time_base * (last_dts[packet.stream] - packet.dts)
+                > MAX_TIMESTAMP_GAP
             ):
                 _LOGGER.warning(
-                    "Timestamp overflow detected: dts = %s, resetting stream",
+                    "Timestamp overflow detected: last dts %s, dts = %s, resetting stream",
+                    last_dts[packet.stream],
                     packet.dts,
                 )
                 finalize_stream()
                 break
-            _LOGGER.warning(
-                "Dropping out of order packet: %s <= %s",
-                packet.dts,
-                last_dts[packet.stream],
-            )
             continue
 
         # Check for end of segment

@@ -1,5 +1,4 @@
 """Support for HomematicIP Cloud sensors."""
-import logging
 from typing import Any, Dict
 
 from homematicip.aio.device import (
@@ -42,8 +41,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .generic_entity import ATTR_IS_GROUP, ATTR_MODEL_TYPE
 from .hap import HomematicipHAP
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_ILLUMINATION = "current_illumination"
 ATTR_LOWEST_ILLUMINATION = "lowest_illumination"

@@ -6,7 +6,7 @@
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
-    "ms-python.python",
+    "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
     "ms-azure-devops.azure-pipelines",
     "redhat.vscode-yaml",

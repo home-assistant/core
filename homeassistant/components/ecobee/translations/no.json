@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Denne integrasjonen st\u00f8tter forel\u00f8pig bare \u00e9n ecobee-forekomst.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -18,7 +17,7 @@
                     "api_key": "API-n\u00f8kkel"
                 },
                 "description": "Vennligst fyll inn API-n\u00f8kkel som er innhentet fra ecobee.com.",
-                "title": "ecobee API-n\u00f8kkel"
+                "title": "Ecobee API-n\u00f8kkel"
             }
         }
     }

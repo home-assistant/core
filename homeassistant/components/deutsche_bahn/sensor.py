@@ -1,6 +1,5 @@
 """Support for information about the German train system."""
 from datetime import timedelta
-import logging
 
 import schiene
 import voluptuous as vol
@@ -9,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = "to"
 CONF_START = "from"

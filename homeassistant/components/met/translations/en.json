@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Service is already configured",
-            "name_exists": "Location already exists"
+            "already_configured": "Service is already configured"
         },
         "step": {
             "user": {

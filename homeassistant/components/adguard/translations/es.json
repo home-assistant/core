@@ -5,8 +5,7 @@
             "single_instance_allowed": "S\u00f3lo se permite una \u00fanica configuraci\u00f3n de AdGuard Home."
         },
         "error": {
-            "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se conect\u00f3."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "hassio_confirm": {

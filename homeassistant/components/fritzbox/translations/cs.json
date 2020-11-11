@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no",
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
             "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
         },
@@ -14,14 +14,16 @@
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "description": "Chcete nastavit {name}?"
             },
             "user": {
                 "data": {
                     "host": "Hostitel",
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "description": "Zadejte informace o sv\u00e9m AVM FRITZ!"
             }
         }
     }

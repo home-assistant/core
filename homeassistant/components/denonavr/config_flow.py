@@ -158,7 +158,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.zone3,
         )
         if not await connect_denonavr.async_connect_receiver():
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
 
         mac_address = await self.async_get_mac(self.host)

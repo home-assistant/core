@@ -1,22 +1,18 @@
 """Smart energy channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.const import (
     POWER_WATT,
     TIME_HOURS,
     TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -67,8 +63,8 @@ class Metering(ZigbeeChannel):
 
     unit_of_measure_map = {
         0x00: POWER_WATT,
-        0x01: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
-        0x02: f"{VOLUME_CUBIC_FEET}/{TIME_HOURS}",
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
         0x03: f"ccf/{TIME_HOURS}",
         0x04: f"US gal/{TIME_HOURS}",
         0x05: f"IMP gal/{TIME_HOURS}",

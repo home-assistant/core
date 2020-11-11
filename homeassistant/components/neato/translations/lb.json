@@ -1,17 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Scho konfigur\u00e9iert",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "create_entry": {
             "default": "Kuckt [Neato Dokumentatioun]({docs_url})."
         },
         "error": {
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune",
-            "unexpected_error": "Onerwaarte Feeler"
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {
