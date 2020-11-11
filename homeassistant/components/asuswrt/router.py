@@ -252,11 +252,11 @@ class AsusWrtRouter:
         self.sensors_connection[SENSOR_TX_RATES] = rates[1]
 
         # Temperature sensors
-        # try:
-        #    temperatures = await self._api.async_get_temperature()
-        #    self.sensors_temperature = temperatures
-        # except OSError:
-        #    pass
+        try:
+            temperatures = await self._api.async_get_temperature()
+            self.sensors_temperature = temperatures
+        except OSError:
+            pass
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 

@@ -99,7 +99,7 @@ async def async_setup_entry(
             AsusWrtSensor(
                 router,
                 sensor_name,
-                {**TEMPERATURE_SENSOR_TEMPLATE, SENSOR_NAME: f"AsusWrt {sensor_name}"},
+                {**TEMPERATURE_SENSOR_TEMPLATE, SENSOR_NAME: f"{sensor_name} Temp."},
             )
         )
 
