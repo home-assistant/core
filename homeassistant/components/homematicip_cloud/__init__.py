@@ -125,16 +125,14 @@ async def async_remove_obsolete_entities(
     hass: HomeAssistantType, entry: ConfigEntry, hap: HomematicipHAP
 ):
     """Remove obsolete entities from entity registry."""
-    try:
-        if hap.home.currentAPVersion >= "2.2.12":
-            entity_registry = await er.async_get_registry(hass)
-            er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
-            for er_entry in er_entries:
-                if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
-                    entity_registry.async_remove(er_entry.entity_id)
-                else:
-                    for hapid in hap.home.accessPointUpdateStates.keys():
-                        if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
-                            entity_registry.async_remove(er_entry.entity_id)
-    except Exception as err:  # pylint: disable=broad-except:
-        _LOGGER.error("Error deleting obsolete entities: %s", err)
+
+    if hap.home.currentAPVersion >= "2.2.12":
+        entity_registry = await er.async_get_registry(hass)
+        er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+        for er_entry in er_entries:
+            if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
+                entity_registry.async_remove(er_entry.entity_id)
+            else:
+                for hapid in hap.home.accessPointUpdateStates.keys():
+                    if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
+                        entity_registry.async_remove(er_entry.entity_id)
