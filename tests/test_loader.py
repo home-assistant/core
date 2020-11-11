@@ -394,3 +394,12 @@ async def test_get_custom_components_safe_mode(hass):
     """Test that we get empty custom components in safe mode."""
     hass.config.safe_mode = True
     assert await loader.async_get_custom_components(hass) == {}
+
+
+async def test_async_preload_integrations_with_config_flows(hass):
+    """Test integrations with config flows are loaded."""
+
+    with patch("homeassistant.loader.async_get_config_flows", return_value={"hue"}):
+        await loader.async_preload_integrations_with_config_flows(hass)
+
+    assert "hue" in hass.data[loader.DATA_INTEGRATIONS]
