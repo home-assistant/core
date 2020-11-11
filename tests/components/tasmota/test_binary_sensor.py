@@ -96,6 +96,54 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_OFF
 
 
+async def test_pushon_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
+    """Test state update via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["swc"][0] = 13
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test normal state update
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"ON"}}'
+    )
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/RESULT", '{"Switch1":{"Action":"OFF"}}'
+    )
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    # Test periodic state update is ignored
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", '{"Switch1":"ON"}')
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    # Test polled state update is ignored
+    async_fire_mqtt_message(
+        hass, "tasmota_49A3BC/stat/STATUS10", '{"StatusSNS":{"Switch1":"ON"}}'
+    )
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+
 async def test_friendly_names(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
