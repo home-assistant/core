@@ -22,6 +22,24 @@ async def system_health_info(hass: HomeAssistant):
     host_info = hass.components.hassio.get_host_info()
     supervisor_info = hass.components.hassio.get_supervisor_info()
 
+    if supervisor_info.get("healthy"):
+        healthy = True
+    else:
+        healthy = {
+            "type": "failed",
+            "error": "Unhealthy",
+            "more_info": "/hassio/system",
+        }
+
+    if supervisor_info.get("supported"):
+        supported = True
+    else:
+        supported = {
+            "type": "failed",
+            "error": "Unsupported",
+            "more_info": "/hassio/system",
+        }
+
     information = {
         "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
@@ -29,8 +47,8 @@ async def system_health_info(hass: HomeAssistant):
         "docker_version": info.get("docker"),
         "disk_total": f"{host_info.get('disk_total')} GB",
         "disk_used": f"{host_info.get('disk_used')} GB",
-        "healthy": supervisor_info.get("healthy"),
-        "supported": supervisor_info.get("supported"),
+        "healthy": healthy,
+        "supported": supported,
     }
 
     if info.get("hassos") is not None:
