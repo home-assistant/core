@@ -71,9 +71,6 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
-    # Suppress logging
-    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
-
     config = entry.data
 
     dsmr_version = config[CONF_DSMR_VERSION]

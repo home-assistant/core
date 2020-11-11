@@ -684,7 +684,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.12
+google-nest-sdm==0.1.13
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1698,7 +1698,7 @@ pysonos==0.0.35
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.4
+pysqueezebox==0.5.5
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2350,7 +2350,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.6.2
+zigpy-zigate==0.7.0
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2

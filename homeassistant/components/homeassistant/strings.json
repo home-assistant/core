@@ -1,0 +1,20 @@
+{
+  "system_health": {
+    "info": {
+      "installation_type": "Installation Type",
+      "version": "Version",
+      "dev": "Development",
+      "virtualenv": "Virtual Environment",
+      "python_version": "Python Version",
+      "docker": "Docker",
+      "arch": "CPU Architecture",
+      "timezone": "Timezone",
+      "os_name": "Operating System Name",
+      "os_version": "Operating System Version",
+      "supervisor": "Supervisor",
+      "host_os": "Home Assistant OS",
+      "chassis": "Chassis",
+      "docker_version": "Docker"
+    }
+  }
+}

@@ -352,7 +352,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.1.12
+google-nest-sdm==0.1.13
 
 # homeassistant.components.gree
 greeclimate==0.9.5
@@ -845,7 +845,7 @@ pysonos==0.0.35
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.4
+pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.0
@@ -1128,7 +1128,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.6.2
+zigpy-zigate==0.7.0
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2
