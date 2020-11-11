@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "general_error": "Une erreur inconnue est survenue.",
-            "invalid_api_key": "La cl\u00e9 API fournie n'est pas valide.",
-            "unable_to_connect": "Impossible de se connecter \u00e0 l'unit\u00e9 Node / Pro."
+            "invalid_api_key": "La cl\u00e9 API fournie n'est pas valide."
         },
         "step": {
             "geography": {

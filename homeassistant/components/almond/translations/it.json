@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u00c8 possibile configurare un solo account Almond.",
             "cannot_connect": "Impossibile connettersi",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",

@@ -8,7 +8,7 @@
         "step": {
             "init": {
                 "data": {
-                "time_between_update": "Minimum time between entity updates [s]"
+                    "time_between_update": "Minimum time between entity updates [s]"
                 },
                 "title": "DSMR Options"
             }

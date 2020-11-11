@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Diese Home Control Zentral wird bereits verwendet."
         },
-        "error": {
-            "invalid_credentials": "Falscher Benutzername und/oder Passwort."
-        },
         "step": {
             "user": {
                 "data": {

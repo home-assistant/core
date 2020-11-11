@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Appareil d\u00e9ja configur\u00e9"
-        },
         "error": {
             "cannot_connect": "Echec de la connection"
         },

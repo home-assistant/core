@@ -5,10 +5,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kan ikke koble til Abode.",
-            "identifier_exists": "Kontoen er allerede registrert.",
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldige innloggingsopplysninger"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

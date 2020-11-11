@@ -1,3 +1,19 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "arch": "Architektura procesora",
+            "dev": "Rozw\u00f3j",
+            "docker": "Docker",
+            "docker_version": "Wersja Dockera",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Typ instalacji",
+            "os_name": "Nazwa systemu operacyjnego",
+            "os_version": "Wersja systemu operacyjnego",
+            "python_version": "Wersja Pythona",
+            "supervisor": "Supervisor",
+            "timezone": "Strefa czasowa",
+            "version": "Wersja",
+            "virtualenv": "\u015arodowisko wirtualne"
+        }
+    }
 }

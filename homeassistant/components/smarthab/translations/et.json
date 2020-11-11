@@ -3,9 +3,7 @@
         "error": {
             "invalid_auth": "Tuvastamise viga",
             "service": "Viga SmartHabiga \u00fchendumisel. Teenus v\u00f5ib olla h\u00e4iritud. Kontrolli oma \u00fchendust.",
-            "unknown": "Tundmatu viga",
-            "unknown_error": "Tundmatu viga",
-            "wrong_login": "Tuvastamine nurjus"
+            "unknown": "Tundmatu viga"
         },
         "step": {
             "user": {

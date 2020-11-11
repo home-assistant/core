@@ -1,0 +1,13 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa w\u0142\u0105czona",
+            "can_reach_cert_server": "Dost\u0119p do serwera certyfikat\u00f3w",
+            "can_reach_cloud": "Dost\u0119p do chmury Home Assistant",
+            "can_reach_cloud_auth": "Dost\u0119p do serwera uwierzytelniania",
+            "google_enabled": "Asystent Google w\u0142\u0105czony",
+            "logged_in": "Zalogowany",
+            "subscription_expiration": "Wyga\u015bni\u0119cie subskrypcji"
+        }
+    }
+}

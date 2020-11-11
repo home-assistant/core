@@ -7,9 +7,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "complete_pairing_failed": "No s'ha pogut completar la vinculaci\u00f3. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
-            "existing_config_entry_found": "Ja s'ha configurat una entrada de configuraci\u00f3 del Dispositiu VIZIO SmartCast amb el mateix n\u00famero de s\u00e8rie. Per poder configurar aquesta, has de suprimir l'entrada existent.",
-            "host_exists": "Dispositiu VIZIO SmartCast amb aquest nom d'amfitri\u00f3 ja configurat.",
-            "name_exists": "Dispositiu VIZIO SmartCast amb aquest nom ja configurat."
+            "existing_config_entry_found": "Ja s'ha configurat una entrada de configuraci\u00f3 del Dispositiu VIZIO SmartCast amb el mateix n\u00famero de s\u00e8rie. Per poder configurar aquesta, has de suprimir l'entrada existent."
         },
         "step": {
             "pair_tv": {

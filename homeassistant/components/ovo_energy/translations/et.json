@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Konto on juba seadistatud",
-            "authorization_error": "Tuvastusviga. Kontrollige oma volitusi.",
             "cannot_connect": "\u00dchendus nurjus",
-            "connection_error": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga"
         },
         "step": {
