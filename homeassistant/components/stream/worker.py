@@ -11,6 +11,8 @@ from .const import (
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    STREAM_RESTART_INCREMENT,
+    STREAM_RESTART_RESET_TIME,
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
@@ -56,8 +58,13 @@ def stream_worker(hass, stream, quit_event):
             _LOGGER.exception("Stream connection failed: %s", stream.source)
         if not stream.keepalive or quit_event.is_set():
             break
-        # To avoid excessive restarts, don't restart faster than once every 40 seconds.
-        wait_timeout = max(40 - (time.time() - start_time), 0)
+        # To avoid excessive restarts, wait before restarting
+        # As the required recovery time may be different for different setups, start
+        # with trying a short wait_timeout and increase it on each reconnection attempt.
+        # Reset the wait_timeout after the worker has been up for several minutes
+        if time.time() - start_time > STREAM_RESTART_RESET_TIME:
+            wait_timeout = 0
+        wait_timeout += STREAM_RESTART_INCREMENT
         _LOGGER.debug(
             "Restarting stream worker in %d seconds: %s",
             wait_timeout,
@@ -68,7 +75,13 @@ def stream_worker(hass, stream, quit_event):
 def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
-    container = av.open(stream.source, options=stream.options, timeout=STREAM_TIMEOUT)
+    try:
+        container = av.open(
+            stream.source, options=stream.options, timeout=STREAM_TIMEOUT
+        )
+    except av.AVError:
+        _LOGGER.error("Error opening stream %s", stream.source)
+        return
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError):
