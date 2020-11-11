@@ -6,7 +6,7 @@ import aioshelly
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry, entity
+from homeassistant.helpers import device_registry, entity, update_coordinator
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
@@ -273,13 +273,14 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.device_state_attributes(self.block)
 
 
-class ShellyRestAttributeEntity(entity.Entity):
+class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
     """Class to load info from REST."""
 
     def __init__(
         self, wrapper: ShellyDeviceWrapper, description: RestAttributeDescription
     ) -> None:
         """Initialize sensor."""
+        super().__init__(wrapper)
         self.wrapper = wrapper
         self.description = description
 
@@ -335,7 +336,7 @@ class ShellyRestAttributeEntity(entity.Entity):
     @property
     def unique_id(self):
         """Return unique ID of entity."""
-        return f"{self.wrapper.mac}-{self._name}"
+        return f"{self.wrapper.mac}-{self.description.path}"
 
     @property
     def device_state_attributes(self):
@@ -352,12 +353,3 @@ class ShellyRestAttributeEntity(entity.Entity):
         )
 
         return {_description: _attribute_value}
-
-    async def async_added_to_hass(self):
-        """When entity is added to HASS."""
-        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    @callback
-    def _update_callback(self):
-        """When device updates, clear control result that overrides state."""
-        self.async_write_ha_state()
