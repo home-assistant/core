@@ -1,5 +1,6 @@
 """Harmony data object which contains the Harmony Client."""
 
+import asyncio
 import logging
 from typing import Any, Callable, Iterable, NamedTuple, Optional
 
@@ -292,7 +293,10 @@ class HarmonyData:
         for subscription in self._subscriptions:
             current_callback = subscription.connected
             if current_callback:
-                current_callback()
+                if asyncio.iscoroutinefunction(current_callback):
+                    asyncio.create_task(current_callback())
+                else:
+                    current_callback()
 
     def _disconnected(self, _=None) -> None:
         _LOGGER.debug("disconnected")
@@ -300,7 +304,10 @@ class HarmonyData:
         for subscription in self._subscriptions:
             current_callback = subscription.disconnected
             if current_callback:
-                current_callback()
+                if asyncio.iscoroutinefunction(current_callback):
+                    asyncio.create_task(current_callback())
+                else:
+                    current_callback()
 
     def _activity_starting(self, activity_info: tuple) -> None:
         _LOGGER.debug("activity %s starting", activity_info)
