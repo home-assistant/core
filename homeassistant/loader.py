@@ -146,6 +146,22 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
+async def async_preload_integrations_with_config_flows(hass: "HomeAssistant") -> None:
+    """Preload integrations with config flows.
+
+    This function should not load the integration in
+    parallel.
+
+    Its current use case is to load each one in the background
+    to ensure the first time we load translations that we do
+    not fire off so many executor jobs that we overload
+    the executor in order to mitigate the impact of integrations
+    being converted to config flows.
+    """
+    for integration in await async_get_config_flows(hass):
+        await async_get_integration(hass, integration)
+
+
 async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of zeroconf types."""
     zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
