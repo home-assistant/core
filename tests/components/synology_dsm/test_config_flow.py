@@ -10,6 +10,7 @@ from synology_dsm.exceptions import (
 
 from homeassistant import data_entry_flow, setup
 from homeassistant.components import ssdp
+from homeassistant.components.synology_dsm import _async_setup_services
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
@@ -20,6 +21,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    SERVICES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
@@ -496,3 +498,23 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_TIMEOUT] == 30
+
+
+async def test_services_registered(hass: HomeAssistantType):
+    """Test if all services are registered."""
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_register", return_value=Mock(True)
+    ) as async_register:
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        await _async_setup_services(hass)
+        assert async_register.call_count == len(SERVICES)
