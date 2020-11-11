@@ -900,6 +900,9 @@ class MediaPlayerEntity(Entity):
         except asyncio.TimeoutError:
             pass
 
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
         return content, content_type
 
     def get_browse_image_url(
@@ -962,7 +965,6 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            _LOGGER.warning("Error retrieving proxied image from %s", image_url)
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
