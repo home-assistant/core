@@ -5,7 +5,6 @@
             "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku OpenZWave",
             "addon_set_config_failed": "Nie uda\u0142o si\u0119 ustawi\u0107 konfiguracji OpenZWave",
             "mqtt_required": "Integracja MQTT nie jest skonfigurowana",
-            "one_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
@@ -25,9 +24,6 @@
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
                 "title": "Wprowad\u017a konfiguracj\u0119 dodatku OpenZWave"
-            },
-            "user": {
-                "title": "Potwierd\u017a konfiguracj\u0119"
             }
         }
     }

@@ -24,14 +24,6 @@
                 "description": "Kas soovid lisada Kodi {name} Home Assistanti?",
                 "title": "Avastatud Kodi seadmed"
             },
-            "host": {
-                "data": {
-                    "host": "",
-                    "port": "",
-                    "ssl": "Loo \u00fchendus SSL-i kaudu"
-                },
-                "description": "Kodi \u00fchenduse teave. Veendu, et lubad jaotises S\u00fcsteem / Seaded / V\u00f5rk / Teenused valiku \"Luba Kodi juhtimine HTTP kaudu\"."
-            },
             "user": {
                 "data": {
                     "host": "",

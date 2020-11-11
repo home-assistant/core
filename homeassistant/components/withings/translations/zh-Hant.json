@@ -10,9 +10,7 @@
             "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Withings \u8a2d\u5099\u3002"
         },
         "error": {
-            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "already_configured_account": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "profile_exists": "\u4f7f\u7528\u8005\u500b\u4eba\u8a2d\u7f6e\u5df2\u7d93\u8a2d\u5b9a\uff0c\u8acb\u63d0\u4f9b\u7368\u4e00\u7684\u540d\u7a31\u3002"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "flow_title": "Withings\uff1a{profile}",
         "step": {

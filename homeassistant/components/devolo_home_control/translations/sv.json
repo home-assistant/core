@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "invalid_credentials": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord"
-        },
         "step": {
             "user": {
                 "data": {

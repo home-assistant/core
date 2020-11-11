@@ -34,13 +34,6 @@
                 },
                 "title": "Izberite video kodek kamere."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Subjekti, ki jih je treba izklju\u010diti"
-                },
-                "description": "Izberite entitete, ki jih NE \u017eelite premostiti.",
-                "title": "Iz mostu izklju\u010dite subjekte izbranih domen"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entitete"
@@ -59,6 +52,5 @@
                 "title": "Prilagodi mo\u017enosti mosta HomeKit."
             }
         }
-    },
-    "title": "Most za HomeKit"
+    }
 }

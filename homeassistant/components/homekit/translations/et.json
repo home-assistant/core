@@ -35,13 +35,6 @@
                 "description": "Vali k\u00f5iki kaameraid, mis toetavad kohalikku H.264 voogu. Kui kaamera ei edasta H.264 voogu, kodeerib s\u00fcsteem video HomeKiti jaoks versioonile H.264. \u00dcmberkodeerimine n\u00f5uab j\u00f5udsat protsessorit ja t\u00f5en\u00e4oliselt ei t\u00f6\u00f6ta see \u00fcheplaadilistes arvutites.",
                 "title": "Vali kaamera videokoodek."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "V\u00e4listatavad olemid"
-                },
-                "description": "Vali olemid, mida te ei soovi sillata.",
-                "title": "Valitud domeenide olemite v\u00e4listamine sillast"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Olemid",
@@ -63,6 +56,5 @@
                 "title": "Kohanda HomeKiti suvandeid"
             }
         }
-    },
-    "title": ""
+    }
 }

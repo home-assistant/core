@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd"
         },
-        "error": {
-            "invalid_credentials": "Verkeerde gebruikersnaam en/of wachtwoord."
-        },
         "step": {
             "user": {
                 "data": {

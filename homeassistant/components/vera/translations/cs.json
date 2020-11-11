@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ovlada\u010d je ji\u017e nastaven.",
             "cannot_connect": "Nelze se p\u0159ipojit k ovlada\u010di pomoc\u00ed URL adresy {base_url}"
         },
         "step": {

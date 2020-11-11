@@ -2,16 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "\u00da\u010det je ji\u017e nastaven",
-            "already_setup": "M\u016f\u017eete nastavit pouze jeden \u00fa\u010det Logi Circle.",
             "external_setup": "Logi Circle \u00fasp\u011b\u0161n\u011b nastaveno jin\u00fdm zp\u016fsobem.",
-            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
-            "no_flows": "P\u0159ed ov\u011b\u0159en\u00edm je t\u0159eba Logi Circle nastavit. [P\u0159e\u010dt\u011bte si pros\u00edm n\u00e1vod](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno pomoc\u00ed Logi Circle."
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
         },
         "error": {
-            "auth_error": "Autorizace API se nezda\u0159ila.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "follow_link": "Postupujte podle odkazu a prove\u010fte ov\u011b\u0159en\u00ed p\u0159ed stisknut\u00edm tla\u010d\u00edtka Odeslat.",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"

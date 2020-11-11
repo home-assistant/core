@@ -16,6 +16,5 @@
             "version": "Versione",
             "virtualenv": "Ambiente virtuale"
         }
-    },
-    "title": "Home Assistant"
+    }
 }

@@ -24,14 +24,6 @@
                 "description": "Vil du legge til Kodi ({name}) i Home Assistant?",
                 "title": "Oppdaget Kodi"
             },
-            "host": {
-                "data": {
-                    "host": "Vert",
-                    "port": "Port",
-                    "ssl": "Koble til via SSL"
-                },
-                "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
-            },
             "user": {
                 "data": {
                     "host": "Vert",
