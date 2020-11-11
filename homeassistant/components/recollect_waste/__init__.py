@@ -8,12 +8,11 @@ from aiorecollect.errors import RecollectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
-
-DATA_LISTENER = "listener"
 
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
@@ -23,7 +22,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}, DATA_LISTENER: {}}
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
     return True
 
 
@@ -33,12 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = Client(
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
     )
-
-    try:
-        await client.async_get_next_pickup_event()
-    except RecollectError as err:
-        LOGGER.error("Error setting up Recollect sensor platform: %s", err)
-        return False
 
     async def async_get_pickup_events() -> List[PickupEvent]:
         """Get the next pickup."""
@@ -51,9 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 f"Error while requesting data from Recollect: {err}"
             ) from err
 
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
-        entry.entry_id
-    ] = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name=f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}",
@@ -62,6 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
