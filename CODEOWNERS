@@ -48,6 +48,7 @@ homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/august/* @bdraco
+homeassistant/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
