@@ -6,11 +6,13 @@ from typing import Any, Dict, List, Optional, Set
 
 from homeassistant.core import callback
 from homeassistant.loader import (
+    MAX_LOAD_CONCURRENTLY,
     Integration,
     async_get_config_flows,
     async_get_integration,
     bind_hass,
 )
+from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
 from .typing import HomeAssistantType
@@ -151,8 +153,9 @@ async def async_get_component_strings(
     integrations = dict(
         zip(
             domains,
-            await asyncio.gather(
-                *[async_get_integration(hass, domain) for domain in domains]
+            await gather_with_concurrency(
+                MAX_LOAD_CONCURRENTLY,
+                *[async_get_integration(hass, domain) for domain in domains],
             ),
         )
     )

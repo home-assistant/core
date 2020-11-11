@@ -28,6 +28,7 @@ from homeassistant.setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
+from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -48,6 +49,8 @@ STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
+
+MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
@@ -442,7 +445,8 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await asyncio.gather(
+            for int_or_exc in await gather_with_concurrency(
+                loader.MAX_LOAD_CONCURRENTLY,
                 *(
                     loader.async_get_integration(hass, domain)
                     for domain in old_to_resolve
