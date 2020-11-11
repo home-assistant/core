@@ -144,7 +144,6 @@ DEFINITIONS = {
         "name": "Telegram timestamp",
         "icon": "mdi:clock",
         "device_class": DEVICE_CLASS_TIMESTAMP,
-        "unit": DEVICE_CLASS_TIMESTAMP,
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
@@ -162,7 +161,6 @@ DEFINITIONS = {
         "name": "Gas meter read",
         "icon": "mdi:clock",
         "device_class": DEVICE_CLASS_TIMESTAMP,
-        "unit": DEVICE_CLASS_TIMESTAMP,
     },
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
