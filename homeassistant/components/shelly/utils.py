@@ -6,8 +6,8 @@ from typing import Optional
 
 import aioshelly
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_registry
 
 from . import ShellyDeviceWrapper
@@ -76,6 +76,7 @@ def get_entity_name(
         entity_name = f"{entity_name} {description}"
 
     return entity_name
+
 
 def get_rest_value_from_path(status, device_class, path: str):
     """Parser for REST path from device status."""

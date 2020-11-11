@@ -10,7 +10,7 @@ from homeassistant.helpers import device_registry, entity, update_coordinator
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import get_rest_value_from_path
+from .utils import get_entity_name, get_rest_value_from_path
 
 
 def temperature_unit(block_info: dict) -> str:

@@ -19,7 +19,6 @@ from .entity import (
     ShellyRestAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
-    temperature_unit,
 )
 from .utils import temperature_unit
 
