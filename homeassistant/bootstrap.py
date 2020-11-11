@@ -446,7 +446,7 @@ async def _async_set_up_integrations(
         integrations_to_process = [
             int_or_exc
             for int_or_exc in await gather_with_concurrency(
-                MAX_LOAD_CONCURRENTLY,
+                loader.MAX_LOAD_CONCURRENTLY,
                 *(
                     loader.async_get_integration(hass, domain)
                     for domain in old_to_resolve
