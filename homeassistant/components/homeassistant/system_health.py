@@ -15,5 +15,17 @@ def async_register(
 async def system_health_info(hass):
     """Get info for the info page."""
     info = await system_info.async_get_system_info(hass)
-    info.pop("hassio")
-    return info
+
+    return {
+        "version": info.get("version"),
+        "installation_type": info.get("installation_type"),
+        "dev": info.get("dev"),
+        "hassio": info.get("hassio"),
+        "docker": info.get("docker"),
+        "virtualenv": info.get("virtualenv"),
+        "python_version": info.get("python_version"),
+        "os_name": info.get("os_name"),
+        "os_version": info.get("os_version"),
+        "arch": info.get("arch"),
+        "timezone": info.get("timezone"),
+    }
