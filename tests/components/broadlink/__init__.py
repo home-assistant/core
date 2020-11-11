@@ -126,19 +126,11 @@ class BroadlinkDevice:
         """Patch device setup."""
         mock_api = mock_api or self.get_mock_api()
         mock_discovery = mock_discovery or self.get_mock_discovery(mock_api)
-        broadcast_addrs = list(mock_discovery)
-        devices = list(mock_discovery.values())
 
         with patch(
-            "homeassistant.components.broadlink.get_broadcast_addrs",
-            return_value=broadcast_addrs,
-        ), patch(
-            "homeassistant.components.broadlink.discovery.blk.discover",
-            side_effect=devices,
-        ) as mock_discovery, patch(
             "homeassistant.components.broadlink.device.blk.gendevice",
             return_value=mock_api,
-        ):
+        ), patch_discovery(mock_discovery) as mock_discovery:
             yield mock_api, mock_discovery
 
     def get_mock_discovery(self, mock_api=None):
@@ -197,3 +189,19 @@ class BroadlinkDevice:
 def get_device(name):
     """Get a device by name."""
     return BroadlinkDevice(name, *BROADLINK_DEVICES[name])
+
+
+@contextmanager
+def patch_discovery(mock_discovery):
+    """Patch device discovery."""
+    broadcast_addrs = list(mock_discovery)
+    devices = list(mock_discovery.values())
+
+    with patch(
+        "homeassistant.components.broadlink.get_broadcast_addrs",
+        return_value=broadcast_addrs,
+    ), patch(
+        "homeassistant.components.broadlink.discovery.blk.discover",
+        side_effect=devices,
+    ) as mock_discovery:
+        yield mock_discovery
