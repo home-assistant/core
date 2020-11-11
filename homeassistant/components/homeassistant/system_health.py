@@ -15,5 +15,10 @@ def async_register(
 async def system_health_info(hass):
     """Get info for the info page."""
     info = await system_info.async_get_system_info(hass)
-    info.pop("hassio")
+
+    # Moved to homeassistant/components/hassio/system_health.py
+    for key in ["hassio", "supervisor", "host_os", "chassis", "docker_version"]:
+        if key in info:
+            info.pop(key)
+
     return info
