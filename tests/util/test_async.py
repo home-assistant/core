@@ -168,6 +168,4 @@ async def test_gather_with_concurrency():
         2, *[_increment_runs_if_in_time() for i in range(4)]
     )
 
-    import pprint
-
-    pprint.pprint(results)
+    assert results == [2, 2, -1, -1]
