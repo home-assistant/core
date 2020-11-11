@@ -319,57 +319,66 @@ def get_current_dt():
 
 
 def get_current_android_apk_version():
-    if not ais_global.has_root():
-        return "0", "0", "0", "0"
-
     try:
-        apk_dom_version = subprocess.check_output(
-            'su -c "dumpsys package pl.sviete.dom | grep versionName"',
-            shell=True,  # nosec
-            timeout=15,
-        )
-        apk_dom_version = (
-            apk_dom_version.decode("utf-8")
-            .replace("\n", "")
-            .strip()
-            .replace("versionName=", "")
-        )
+        apk_dom_version = "0"
+        apk_launcher_version = "0"
+        apk_tts_version = "0"
+        apk_stt_version = "0"
+        if ais_global.has_root():
+            apk_dom_version = subprocess.check_output(
+                'su -c "dumpsys package pl.sviete.dom | grep versionName"',
+                shell=True,  # nosec
+                timeout=15,
+            )
+            apk_dom_version = (
+                apk_dom_version.decode("utf-8")
+                .replace("\n", "")
+                .strip()
+                .replace("versionName=", "")
+            )
 
-        apk_launcher_version = subprocess.check_output(
-            'su -c "dumpsys package launcher.sviete.pl.domlauncherapp | grep versionName"',
-            shell=True,  # nosec
-            timeout=15,
-        )
-        apk_launcher_version = (
-            apk_launcher_version.decode("utf-8")
-            .replace("\n", "")
-            .strip()
-            .replace("versionName=", "")
-        )
+            apk_launcher_version = subprocess.check_output(
+                'su -c "dumpsys package launcher.sviete.pl.domlauncherapp | grep versionName"',
+                shell=True,  # nosec
+                timeout=15,
+            )
+            apk_launcher_version = (
+                apk_launcher_version.decode("utf-8")
+                .replace("\n", "")
+                .strip()
+                .replace("versionName=", "")
+            )
 
-        apk_tts_version = subprocess.check_output(
-            'su -c "dumpsys package com.google.android.tts | grep versionName"',
-            shell=True,  # nosec
-            timeout=15,
-        )
-        apk_tts_version = (
-            apk_tts_version.decode("utf-8")
-            .replace("\n", "")
-            .strip()
-            .replace("versionName=", "")
-        )
+            apk_tts_version = subprocess.check_output(
+                'su -c "dumpsys package com.google.android.tts | grep versionName"',
+                shell=True,  # nosec
+                timeout=15,
+            )
+            apk_tts_version = (
+                apk_tts_version.decode("utf-8")
+                .replace("\n", "")
+                .strip()
+                .replace("versionName=", "")
+            )
 
-        apk_stt_version = subprocess.check_output(
-            'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
-            shell=True,  # nosec
-            timeout=15,
-        )
-        apk_stt_version = (
-            apk_stt_version.decode("utf-8")
-            .replace("\n", "")
-            .strip()
-            .replace("versionName=", "")
-        )
+            apk_stt_version = subprocess.check_output(
+                'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
+                shell=True,  # nosec
+                timeout=15,
+            )
+            apk_stt_version = (
+                apk_stt_version.decode("utf-8")
+                .replace("\n", "")
+                .strip()
+                .replace("versionName=", "")
+            )
+        else:
+            # to work for not rooted devices - get the version from gate api
+            import requests
+
+            call = requests.get("http://localhost:8122/", timeout=5)
+            ws_resp = call.json()
+            apk_dom_version = ws_resp["AisServerVersion"]
 
         return apk_dom_version, apk_launcher_version, apk_tts_version, apk_stt_version
     except Exception as e:
