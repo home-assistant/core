@@ -546,9 +546,7 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert (
-        "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
-    )
+    assert "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
     assert msg["result"]["children"][3]["can_play"]
 
     # test channels
