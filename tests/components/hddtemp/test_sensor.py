@@ -23,7 +23,7 @@ VALID_CONFIG_MULTIPLE_DISKS = {
     }
 }
 
-VALID_CONFIG_HOST = {"sensor": {"platform": "hddtemp", "host": "alice.local"}}
+VALID_CONFIG_HOST_REFUSED = {"sensor": {"platform": "hddtemp", "host": "alice.local"}}
 
 VALID_CONFIG_HOST_UNREACHABLE = {"sensor": {"platform": "hddtemp", "host": "bob.local"}}
 
@@ -92,8 +92,8 @@ async def test_hddtemp_min_config(hass, telnetmock):
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
     await hass.async_block_till_done()
 
-    entity = hass.states.async_all()[0].entity_id
-    state = hass.states.get(entity)
+    entity_id = hass.states.async_all()[0].entity_id
+    state = hass.states.get(entity_id)
 
     reference = REFERENCE[state.attributes.get("device")]
 
@@ -113,8 +113,8 @@ async def test_hddtemp_rename_config(hass, telnetmock):
     assert await async_setup_component(hass, "sensor", VALID_CONFIG_NAME)
     await hass.async_block_till_done()
 
-    entity = hass.states.async_all()[0].entity_id
-    state = hass.states.get(entity)
+    entity_id = hass.states.async_all()[0].entity_id
+    state = hass.states.get(entity_id)
 
     reference = REFERENCE[state.attributes.get("device")]
 
@@ -180,8 +180,8 @@ async def test_hddtemp_multiple_disks(hass, telnetmock):
 
 
 async def test_hddtemp_host_refused(hass, telnetmock):
-    """Test hddtemp if host unreachable."""
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG_HOST)
+    """Test hddtemp if host is refused."""
+    assert await async_setup_component(hass, "sensor", VALID_CONFIG_HOST_REFUSED)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
