@@ -914,7 +914,7 @@ class MediaPlayerEntity(Entity):
             URL(url_path).with_query(
                 {
                     "token": self.access_token,
-                    "media_image_id": media_image_id,
+                    "media_image_id": media_image_id if media_image_id,
                 }
             )
         )
