@@ -94,7 +94,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
         task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_BATTERY:
-            return self._state != "critical"
+            return self._state == "critical"
         if task["task_type"] in (
             SENSOR_DOOR,
             SENSOR_GARAGE_DOOR,
