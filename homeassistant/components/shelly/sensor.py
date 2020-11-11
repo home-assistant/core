@@ -15,8 +15,8 @@ from .entity import (
     BlockAttributeDescription,
     ShellyBlockAttributeEntity,
     async_setup_entry_attribute_entities,
-    temperature_unit,
 )
+from .utils import temperature_unit
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
