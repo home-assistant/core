@@ -124,13 +124,13 @@ def protect_loop(func: Callable) -> Callable:
 
 
 async def gather_with_concurrency(
-    n: int, *tasks: Any, return_exceptions: bool = False
+    limit: int, *tasks: Any, return_exceptions: bool = False
 ) -> Any:
     """Wrap asyncio.gather to limit the number of concurrent tasks.
 
     From: https://stackoverflow.com/a/61478547/9127614
     """
-    semaphore = Semaphore(n)
+    semaphore = Semaphore(limit)
 
     async def sem_task(task: Awaitable[Any]) -> Any:
         async with semaphore:
