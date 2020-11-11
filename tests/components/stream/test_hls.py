@@ -147,7 +147,9 @@ async def test_stream_keepalive(hass):
 
     with patch("av.open") as av_open, patch(
         "homeassistant.components.stream.worker.time"
-    ) as mock_time:
+    ) as mock_time, patch(
+        "homeassistant.components.stream.worker.STREAM_RESTART_INCREMENT", 0
+    ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
         # Request stream
