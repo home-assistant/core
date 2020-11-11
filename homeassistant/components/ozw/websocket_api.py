@@ -108,6 +108,59 @@ def _call_util_function(hass, connection, msg, send_result, function, *args):
     connection.send_result(msg[ID])
 
 
+def _get_config_params(node, *args):
+    raw_values = get_config_parameters(node)
+    config_params = []
+
+    for param in raw_values:
+        schema = {}
+
+        if param["type"] in ["Byte", "Int", "Short"]:
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"], default=param["value"]): vol.All(
+                        vol.Coerce(int), vol.Range(min=param["min"], max=param["max"])
+                    )
+                }
+            )
+            data = {param["label"]: param["value"]}
+
+        if param["type"] == "List":
+
+            for options in param["options"]:
+                if options["Label"] == param["value"]:
+                    selected = options
+                    break
+
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"],): vol.In(
+                        {
+                            option["Value"]: option["Label"]
+                            for option in param["options"]
+                        }
+                    )
+                }
+            )
+            data = {param["label"]: selected["Value"]}
+
+        config_params.append(
+            {
+                "type": param["type"],
+                "label": param["label"],
+                "parameter": param["parameter"],
+                "help": param["help"],
+                "value": param["value"],
+                "schema": voluptuous_serialize.convert(
+                    schema, custom_serializer=cv.custom_serializer
+                ),
+                "data": data,
+            }
+        )
+
+    return config_params
+
+
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
 def websocket_get_instances(hass, connection, msg):
     """Get a list of OZW instances."""
@@ -215,68 +268,7 @@ def websocket_get_code_slots(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    try:
-        node = get_node_from_manager(
-            hass.data[DOMAIN][MANAGER], msg[OZW_INSTANCE], msg[NODE_ID]
-        )
-    except NotFoundError as err:
-        connection.send_error(
-            msg[ID],
-            websocket_api.const.ERR_NOT_FOUND,
-            err.args[0],
-        )
-        return
-
-    raw_values = get_config_parameters(node)
-    config_params = []
-
-    for param in raw_values:
-        schema = {}
-
-        if param["type"] in ["Byte", "Int", "Short"]:
-            schema = vol.Schema(
-                {
-                    vol.Required(param["label"], default=param["value"]): vol.All(
-                        vol.Coerce(int), vol.Range(min=param["min"], max=param["max"])
-                    )
-                }
-            )
-            data = {param["label"]: param["value"]}
-
-        if param["type"] == "List":
-
-            for options in param["options"]:
-                if options["Label"] == param["value"]:
-                    selected = options
-                    break
-
-            schema = vol.Schema(
-                {
-                    vol.Required(param["label"],): vol.In(
-                        {
-                            option["Value"]: option["Label"]
-                            for option in param["options"]
-                        }
-                    )
-                }
-            )
-            data = {param["label"]: selected["Value"]}
-
-        config_params.append(
-            {
-                "type": param["type"],
-                "label": param["label"],
-                "parameter": param["parameter"],
-                "help": param["help"],
-                "value": param["value"],
-                "schema": voluptuous_serialize.convert(
-                    schema, custom_serializer=cv.custom_serializer
-                ),
-                "data": data,
-            }
-        )
-
-    connection.send_result(msg[ID], config_params)
+    _call_util_function(hass, connection, msg, True, _get_config_params)
 
 
 @websocket_api.websocket_command(
