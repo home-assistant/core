@@ -92,7 +92,7 @@ DEFINITIONS = {
     },
     "dsmr/reading/extra_device_delivered": {
         "name": "Gas meter usage",
-        "icon": "mdi:fire"
+        "icon": "mdi:fire",
         "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/reading/phase_voltage_l1": {
@@ -131,12 +131,12 @@ DEFINITIONS = {
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
-        "icon": "mdi:fire"
+        "icon": "mdi:fire",
         "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/currently_delivered": {
         "name": "Current gas usage",
-        "icon": "mdi:fire"
+        "icon": "mdi:fire",
         "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/read_at": {
@@ -190,7 +190,7 @@ DEFINITIONS = {
     },
     "dsmr/day-consumption/gas": {
         "name": "Gas usage",
-        "icon": "mdi:fire"
+        "icon": "mdi:fire",
         "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/day-consumption/gas_cost": {
