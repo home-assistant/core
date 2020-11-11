@@ -75,9 +75,7 @@ def build_item_response(coordinator, payload, get_thumbnail_url=None):
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[
-            item_payload(item, coordinator, get_thumbnail_url) for item in media
-        ],
+        children=[item_payload(item, coordinator, get_thumbnail_url) for item in media],
         children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
