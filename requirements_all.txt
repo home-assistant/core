@@ -1134,7 +1134,7 @@ pizzapi==0.0.3
 plexapi==4.2.0
 
 # homeassistant.components.plex
-plexauth==0.0.5
+plexauth==0.0.6
 
 # homeassistant.components.plex
 plexwebsocket==0.0.12
