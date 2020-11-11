@@ -88,13 +88,17 @@
                     "cat": "Seadme kategooria (n\u00e4iteks 0x10)",
                     "subcat": "Seadme alamkategooria (n\u00e4iteks 0x0a)"
                 },
+                "description": "Lisa seadme alistamine.",
                 "title": ""
             },
             "add_x10": {
                 "data": {
+                    "housecode": "",
                     "platform": "Platvorm",
-                    "steps": "H\u00e4mardamise samm (ainult valgustite jaoks, vaikimisi 22)"
+                    "steps": "H\u00e4mardamise samm (ainult valgustite jaoks, vaikimisi 22)",
+                    "unitcode": ""
                 },
+                "description": "Muuda Insteon Hubi parooli.",
                 "title": ""
             },
             "change_hub_config": {
@@ -104,10 +108,12 @@
                     "port": "",
                     "username": "Kasutajanimi"
                 },
+                "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasutage rakendust Hub.",
                 "title": ""
             },
             "init": {
                 "data": {
+                    "add_override": "Lisa seadme alistamine.",
                     "add_x10": "Lisa X10 seade.",
                     "change_hub_config": "Muuda jaoturi konfiguratsiooni.",
                     "remove_override": "Seadme alistamise eemaldamine.",

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchendamine nurjus",
+            "not_connected": "Kaug\u00fchendus Panasonic Viera teleriga katkes. Lisateavet leiad logidest.",
             "unknown": "Tundmatu viga"
         },
         "error": {

@@ -12,7 +12,12 @@
             "agreement": {
                 "data": {
                     "agreement": "Leping"
-                }
+                },
+                "description": "Vali lisatav lepingu aadress.",
+                "title": "Vali oma leping"
+            },
+            "pick_implementation": {
+                "title": "Valige oma rentnik, kellega autentida"
             }
         }
     }

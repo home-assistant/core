@@ -78,7 +78,7 @@ aio_georss_gdacs==0.4
 aioambient==1.2.1
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.8
+aioasuswrt==1.3.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -848,7 +848,7 @@ pysonos==0.0.35
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.5.4
+pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.0
@@ -1131,7 +1131,7 @@ zigpy-deconz==0.11.0
 zigpy-xbee==0.13.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.6.2
+zigpy-zigate==0.7.0
 
 # homeassistant.components.zha
 zigpy-znp==0.2.2
