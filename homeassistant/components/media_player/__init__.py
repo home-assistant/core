@@ -900,6 +900,9 @@ class MediaPlayerEntity(Entity):
         except asyncio.TimeoutError:
             pass
 
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
         return content, content_type
 
     def get_browse_image_url(
@@ -910,15 +913,12 @@ class MediaPlayerEntity(Entity):
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
             f"/{media_content_type}/{media_content_id}"
         )
-        url = str(
-            URL(url_path).with_query(
-                {
-                    "token": self.access_token,
-                    "media_image_id": media_image_id,
-                }
-            )
-        )
-        return url
+
+        url_query = {"token": self.access_token}
+        if media_image_id:
+            url_query["media_image_id"] = media_image_id
+
+        return str(URL(url_path).with_query(url_query))
 
 
 class MediaPlayerImageView(HomeAssistantView):
