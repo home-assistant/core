@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Insteoni modemi \u00fchendus on juba seadistatud",
             "cannot_connect": "\u00dchendamine nurjus",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
@@ -10,24 +9,6 @@
             "select_single": "Vali \u00fcks suvand."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Jaoturi IP aadress",
-                    "port": ""
-                },
-                "description": "Insteon Hub ver 1 seadistamine (enne 2104).",
-                "title": ""
-            },
-            "hub2": {
-                "data": {
-                    "host": "Jaoturi IP aadress",
-                    "password": "Salas\u00f5na",
-                    "port": "",
-                    "username": "Kasutajanimi"
-                },
-                "description": "Insteon Hub ver 2 seadistamine.",
-                "title": ""
-            },
             "hubv1": {
                 "data": {
                     "host": "IP aagress",
@@ -44,15 +25,6 @@
                     "username": "Kasutajanimi"
                 },
                 "description": "Insteon Hub ver 2 seadistamine.",
-                "title": ""
-            },
-            "init": {
-                "data": {
-                    "hubv1": "",
-                    "hubv2": "",
-                    "plm": ""
-                },
-                "description": "Vali Insteoni modemi t\u00fc\u00fcp.",
                 "title": ""
             },
             "plm": {
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Insteoni modemi \u00fchendus on juba seadistatud",
-            "cannot_connect": "Insteoni modemiga ei saa \u00fchendust luua"
-        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "input_error": "Vigane sisestus, kontrolli andmeid",

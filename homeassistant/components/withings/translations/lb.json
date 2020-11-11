@@ -10,9 +10,7 @@
             "default": "Erfollegr\u00e4ich mat Withings authentifiz\u00e9iert."
         },
         "error": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "already_configured_account": "Kont ass scho konfigur\u00e9iert",
-            "profile_exists": "Benotzer Profil ass scho konfigur\u00e9iert. G\u00ebff eem eenzegartege Profil Numm un"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "flow_title": "Withing: {profile}",
         "step": {

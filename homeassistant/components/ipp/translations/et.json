@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Seade on juba seadistatud",
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchendamine nurjus",
             "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus kuna vajalik on \u00fchenduse uuendamine.",
             "ipp_error": "Ilmnes IPP viga.",
             "ipp_version_error": "Printer ei toeta seda IPP versiooni.",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchendamine nurjus",
             "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus. Proovige uuesti kui SSL/TLS-i suvand on m\u00e4rgitud."
         },
         "flow_title": "Printer: {name}",

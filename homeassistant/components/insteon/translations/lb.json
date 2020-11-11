@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Eng Insteon Modem Verbindung ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
             "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
         },
@@ -10,24 +9,6 @@
             "select_single": "Eng Optioun auswielen."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Hub IP Adress",
-                    "port": "IP Port"
-                },
-                "description": "Insteon Hub Versioun 1 (pre-2014) konfigur\u00e9ieren.",
-                "title": "Insteon Hub Versioun 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Hub IP Adress",
-                    "password": "Passwuert",
-                    "port": "IP Port",
-                    "username": "Benotzernumm"
-                },
-                "description": "Insteon Hub Versioun 2 konfigur\u00e9ieren.",
-                "title": "Insteon Hub Versioun 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "IP Adresse",
@@ -46,15 +27,6 @@
                 "description": "Insteon Hub Versioun 2 konfigur\u00e9ieren.",
                 "title": "Insteon Hub Versioun 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub Versioun 1 (Pre-2014)",
-                    "hubv2": "Hub Versioun 2",
-                    "plm": "Powerlink Modem (PLM)"
-                },
-                "description": "Insteon Modem Typ auswielen.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Pad vum USB Apparat"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Eng Insteon Modem Verbindung ass scho konfigur\u00e9iert",
-            "cannot_connect": "Keng Verbindung mam Insteon Modem m\u00e9iglech"
-        },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
             "input_error": "Ong\u00eblteg Entr\u00e9e\u00ebn, iwwerpr\u00e9if deng W\u00e4erter.",

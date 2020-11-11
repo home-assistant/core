@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "step": {

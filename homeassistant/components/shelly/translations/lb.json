@@ -5,7 +5,6 @@
             "unsupported_firmware": "Den Apparat benotzt eng net \u00ebnnerst\u00ebtzte Firmware Versioun."
         },
         "error": {
-            "auth_not_supported": "Shelly Apparaten d\u00e9i eng Authentifikatioun ben\u00e9idegen ginn aktuell net \u00ebnnerst\u00ebtzt.",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"

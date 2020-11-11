@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "Indirizzo IP"
+                    "host": "Host"
                 },
                 "description": "Se lasci l'host vuoto, il rilevamento verr\u00e0 utilizzato per trovare i dispositivi."
             }

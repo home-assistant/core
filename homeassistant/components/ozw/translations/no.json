@@ -5,7 +5,6 @@
             "addon_install_failed": "Kunne ikke installere OpenZWave-tillegget",
             "addon_set_config_failed": "Kunne ikke angi OpenZWave-konfigurasjon",
             "mqtt_required": "MQTT-integrasjonen er ikke satt opp",
-            "one_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -25,9 +24,6 @@
                     "usb_path": "USB enhetsbane"
                 },
                 "title": "Angi OpenZWave-tilleggskonfigurasjonen"
-            },
-            "user": {
-                "title": "Bekreft oppsett"
             }
         }
     }

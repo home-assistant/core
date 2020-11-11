@@ -4,7 +4,6 @@
             "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
         },
         "error": {
-            "identifier_exists": "Co\u00f6rdinaten al geregistreerd",
             "invalid_api_key": "Ongeldige API-sleutel"
         },
         "step": {

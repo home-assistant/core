@@ -5,7 +5,6 @@
             "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt.",
             "no_bridges": "Keine deCON-Bridges entdeckt",
             "not_deconz_bridge": "Keine deCONZ Bridge entdeckt",
-            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz",
             "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
         "error": {

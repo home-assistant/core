@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "general_error": "Se ha producido un error desconocido.",
-            "invalid_api_key": "Se proporciona una clave API no v\u00e1lida.",
-            "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
+            "invalid_api_key": "Se proporciona una clave API no v\u00e1lida."
         },
         "step": {
             "geography": {

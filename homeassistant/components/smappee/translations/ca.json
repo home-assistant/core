@@ -5,7 +5,6 @@
             "already_configured_local_device": "Dispositiu(s) local ja configurat. Elimina'ls primer abans de configurar un dispositiu al n\u00favol.",
             "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_error": "No s'ha pogut connectar amb el Smappee.",
             "invalid_mdns": "Dispositiu no compatible amb la integraci\u00f3 de Smappee.",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
             "no_url_available": "No hi ha cap URL disponible. Per a m\u00e9s informaci\u00f3 sobre aquest error, [consulta la secci\u00f3 d'ajuda]({docs_url})"
