@@ -146,12 +146,12 @@ SENSORS = {
     ),
     ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
-        name="Total Work Time",
+        name="Lamp life",
         unit=PERCENTAGE,
-        icon="mdi:briefcase-clock",
-        value=lambda value: round((value / 3600 / SHAIR_MAX_WORK_HOURS), 5),
+        icon="mdi:gauge",
+        value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
         device_state_attributes=lambda block: {
-            "Operational hours": round(block.totalWorkTime / 3600, 2)
+            "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
     ),
 }
