@@ -299,8 +299,8 @@ class OnkyoDevice(MediaPlayerEntity):
 
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = (
-            volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+        self._volume = volume_raw[1] / (
+            self._receiver_max_volume * self._max_volume / 100
         )
 
         if not hdmi_out_raw:

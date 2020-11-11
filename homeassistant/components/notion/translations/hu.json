@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "invalid_credentials": "\u00c9rv\u00e9nytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3",
             "no_devices": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a fi\u00f3kban"
         },
         "step": {

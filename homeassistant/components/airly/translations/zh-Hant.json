@@ -4,7 +4,6 @@
             "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "auth": "API \u5bc6\u9470\u4e0d\u6b63\u78ba\u3002",
             "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
             "wrong_location": "\u8a72\u5340\u57df\u6c92\u6709 Arily \u76e3\u6e2c\u7ad9\u3002"
         },

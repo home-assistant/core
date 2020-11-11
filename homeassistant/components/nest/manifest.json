@@ -2,11 +2,11 @@
   "domain": "nest",
   "name": "Nest",
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["ffmpeg", "http"],
   "documentation": "https://www.home-assistant.io/integrations/nest",
   "requirements": [
       "python-nest==4.1.0",
-      "google-nest-sdm==0.1.9"
+      "google-nest-sdm==0.1.14"
   ],
   "codeowners": [
       "@awarecan",

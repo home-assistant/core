@@ -10,9 +10,7 @@
             "default": "Vellykket godkjenning med Withings."
         },
         "error": {
-            "already_configured": "Kontoen er allerede konfigurert",
-            "already_configured_account": "Kontoen er allerede konfigurert",
-            "profile_exists": "Brukerprofilen er allerede konfigurert. Oppgi et unikt profilnavn."
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "flow_title": "",
         "step": {

@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "communication_error": "\u65e0\u6cd5\u4e0e Luftdaten API \u901a\u4fe1",
-            "invalid_sensor": "\u4f20\u611f\u5668\u4e0d\u53ef\u7528\u6216\u65e0\u6548",
-            "sensor_exists": "\u4f20\u611f\u5668\u5df2\u6ce8\u518c"
+            "invalid_sensor": "\u4f20\u611f\u5668\u4e0d\u53ef\u7528\u6216\u65e0\u6548"
         },
         "step": {
             "user": {

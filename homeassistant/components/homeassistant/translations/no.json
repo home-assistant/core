@@ -1,3 +1,20 @@
 {
-    "title": ""
+    "system_health": {
+        "info": {
+            "arch": "CPU-arkitektur",
+            "chassis": "Kabinett",
+            "dev": "Utvikling",
+            "docker": "",
+            "docker_version": "",
+            "host_os": "",
+            "installation_type": "Installasjonstype",
+            "os_name": "Operativsystemnavn",
+            "os_version": "Operativsystemversjon",
+            "python_version": "Python versjon",
+            "supervisor": "",
+            "timezone": "Tidssone",
+            "version": "Versjon",
+            "virtualenv": "Virtuelt milj\u00f8"
+        }
+    }
 }

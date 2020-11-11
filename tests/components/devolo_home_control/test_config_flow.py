@@ -40,7 +40,6 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "home_control_url": "https://homecontrol.mydevolo.com",
         "mydevolo_url": "https://www.mydevolo.com",
     }
 
@@ -114,7 +113,6 @@ async def test_form_advanced_options(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "home_control_url": "https://test_url.test",
                 "mydevolo_url": "https://test_mydevolo_url.test",
             },
         )
@@ -125,7 +123,6 @@ async def test_form_advanced_options(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "home_control_url": "https://test_url.test",
         "mydevolo_url": "https://test_mydevolo_url.test",
     }
 

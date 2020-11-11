@@ -15,8 +15,8 @@
                     "password": "Passwuert",
                     "port": "Port",
                     "site": "Site ID",
-                    "username": "Benotzer",
-                    "verify_ssl": "Kontroller benotzt g\u00ebltegen Zertifikat"
+                    "username": "Benotzernumm",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },
                 "title": "Unifi Kontroller ariichten"
             }

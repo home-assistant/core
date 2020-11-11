@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Cuenta ya registrada",
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
-            "invalid_credentials": "Credenciales no v\u00e1lidas",
             "still_awaiting_mfa": "Esperando todav\u00eda el clic en el correo electr\u00f3nico de MFA",
             "unknown": "Error inesperado"
         },
