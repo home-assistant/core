@@ -34,8 +34,8 @@ class ConnectMotionGateway:
             )
             return False
         _LOGGER.debug(
-            "Motion gateway mac: %s, protecol: %s detected",
+            "Motion gateway mac: %s, protocol: %s detected",
             self.gateway_device.mac,
-            self.gateway_device.protecol,
+            self.gateway_device.protocol,
         )
         return True

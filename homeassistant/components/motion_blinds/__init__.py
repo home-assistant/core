@@ -43,7 +43,7 @@ async def async_setup_entry(
         manufacturer=MANUFACTURER,
         name=entry.title,
         model="Wi-Fi bridge",
-        sw_version=motion_gateway.protecol,
+        sw_version=motion_gateway.protocol,
     )
 
     for component in MOTION_PLATFORMS:
