@@ -102,6 +102,9 @@ async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
     entity_comp = hass.data.get("entity_components", {}).get("media_player")
     assert entity_comp
 
+    player = entity_comp.get_entity("media_player.bedroom")
+    assert player
+
     client = await aiohttp_client(hass.http.app)
 
     with patch(
@@ -109,7 +112,7 @@ async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
         "async_get_browse_image",
         return_value=(b"image", "image/jpeg"),
     ):
-        url = entity_comp.get_browse_image_url("album", "abcd")
+        url = player.get_browse_image_url("album", "abcd")
         resp = await client.get(url)
         content = await resp.read()
 
