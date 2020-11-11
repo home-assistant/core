@@ -91,12 +91,12 @@ SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 
-EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
-EVENT_TYPE_LIGHT_MODE = "light_mode"
-EVENT_TYPE_OFF = "off"
-EVENT_TYPE_ON = "on"
+# Climate events
 EVENT_TYPE_SET_POINT = "set_point"
+EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
+# Camera events
+EVENT_TYPE_LIGHT_MODE = "light_mode"
 EVENT_TYPE_CAMERA_OUTDOOR = "outdoor"
 EVENT_TYPE_CAMERA_ANIMAL = "animal"
 EVENT_TYPE_CAMERA_HUMAN = "human"
@@ -104,6 +104,9 @@ EVENT_TYPE_CAMERA_VEHICLE = "vehicle"
 EVENT_TYPE_CAMERA_MOVEMENT = "movement"
 EVENT_TYPE_CAMERA_PERSON = "person"
 EVENT_TYPE_CAMERA_PERSON_AWAY = "person_away"
+EVENT_TYPE_ALARM_STARTED = "alarm_started"
+EVENT_TYPE_OFF = "off"
+EVENT_TYPE_ON = "on"
 
 OUTDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_CAMERA_ANIMAL,
@@ -116,6 +119,20 @@ INDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_CAMERA_PERSON,
     EVENT_TYPE_CAMERA_PERSON_AWAY,
 ]
+EVENT_ID_MAP = {
+    EVENT_TYPE_CAMERA_MOVEMENT: "device_id",
+    EVENT_TYPE_CAMERA_PERSON: "device_id",
+    EVENT_TYPE_CAMERA_PERSON_AWAY: "device_id",
+    EVENT_TYPE_CAMERA_ANIMAL: "device_id",
+    EVENT_TYPE_CAMERA_HUMAN: "device_id",
+    EVENT_TYPE_CAMERA_OUTDOOR: "device_id",
+    EVENT_TYPE_CAMERA_VEHICLE: "device_id",
+    EVENT_TYPE_LIGHT_MODE: "device_id",
+    EVENT_TYPE_ALARM_STARTED: "device_id",
+    EVENT_TYPE_CANCEL_SET_POINT: "room_id",
+    EVENT_TYPE_THERM_MODE: "room_id",
+    EVENT_TYPE_SET_POINT: "room_id",
+}
 
 MODE_LIGHT_ON = "on"
 MODE_LIGHT_OFF = "off"

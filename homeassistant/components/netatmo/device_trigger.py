@@ -7,6 +7,7 @@ from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -34,6 +35,7 @@ from .const import (
     MODEL_NRV,
     MODEL_NSD,
     MODEL_PUBLIC,
+    NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
 
@@ -104,12 +106,10 @@ async def async_attach_trigger(
     if device.model in CAMERAS:
         event_config = {
             event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: "netatmo_event",
+            event_trigger.CONF_EVENT_TYPE: NETATMO_EVENT,
             event_trigger.CONF_EVENT_DATA: {
-                "data": {
-                    "event_type": config[CONF_TYPE],
-                    "camera_id": next(iter(device.identifiers))[-1],
-                }
+                "type": config[CONF_TYPE],
+                ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
             },
         }
 
