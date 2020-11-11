@@ -244,10 +244,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Fetch media browser image to serve via proxy."""
         if media_content_type == MEDIA_TYPE_APP and media_content_id:
             image_url = self.coordinator.roku.app_icon_url(media_content_id)
-            result = await self._async_fetch_image(image_url)
-            if result == (None, None):
-                _LOGGER.debug("Error retrieving proxied image from %s", image_url)
-            return result
+            return await self._async_fetch_image(image_url)
 
         return (None, None)
 
