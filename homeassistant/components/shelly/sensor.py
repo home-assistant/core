@@ -8,13 +8,17 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
 
 from .entity import (
     BlockAttributeDescription,
+    RestAttributeDescription,
     ShellyBlockAttributeEntity,
+    ShellyRestAttributeEntity,
     async_setup_entry_attribute_entities,
+    async_setup_entry_rest,
 )
 from .utils import temperature_unit
 
@@ -142,16 +146,43 @@ SENSORS = {
     ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
 }
 
+REST_SENSORS = {
+    "rssi": RestAttributeDescription(
+        name="RSSI",
+        unit=SIGNAL_STRENGTH_DECIBELS,
+        device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        default_enabled=False,
+        path="wifi_sta/rssi",
+    ),
+    "uptime": RestAttributeDescription(
+        name="Uptime",
+        device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        path="uptime",
+    ),
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
     await async_setup_entry_attribute_entities(
         hass, config_entry, async_add_entities, SENSORS, ShellySensor
     )
+    await async_setup_entry_rest(
+        hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
+    )
 
 
 class ShellySensor(ShellyBlockAttributeEntity):
     """Represent a shelly sensor."""
+
+    @property
+    def state(self):
+        """Return value of sensor."""
+        return self.attribute_value
+
+
+class ShellyRestSensor(ShellyRestAttributeEntity):
+    """Represent a shelly REST sensor."""
 
     @property
     def state(self):

@@ -1,9 +1,12 @@
 """Shelly helpers functions."""
+
+from datetime import datetime, timedelta
 import logging
 from typing import Optional
 
 import aioshelly
 
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_registry
 
@@ -73,3 +76,20 @@ def get_entity_name(
         entity_name = f"{entity_name} {description}"
 
     return entity_name
+
+
+def get_rest_value_from_path(status, device_class, path: str):
+    """Parser for REST path from device status."""
+
+    if "/" not in path:
+        _attribute_value = status[path]
+    else:
+        _attribute_value = status[path.split("/")[0]][path.split("/")[1]]
+    if device_class == DEVICE_CLASS_TIMESTAMP:
+        last_boot = datetime.utcnow() - timedelta(seconds=_attribute_value)
+        _attribute_value = last_boot.replace(microsecond=0).isoformat()
+
+    if "new_version" in path:
+        _attribute_value = _attribute_value.split("/")[1].split("@")[0]
+
+    return _attribute_value
