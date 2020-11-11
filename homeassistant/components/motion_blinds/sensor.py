@@ -25,8 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
-        entities.append(MotionBatterySensor(blind, config_entry))
         entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND, config_entry))
+        if blind.battery_voltage > 0:
+            # Only add battery powered blinds
+            entities.append(MotionBatterySensor(blind, config_entry))
 
     entities.append(
         MotionSignalStrengthSensor(motion_gateway, TYPE_GATEWAY, config_entry)

@@ -114,7 +114,7 @@ class MotionPositionDevice(CoverEntity):
         """
         Return current position of cover.
 
-        None is unknown, 0 is closed, 100 is fully open.
+        None is unknown, 0 is open, 100 is closed.
         """
         if self._blind.position is None:
             return None
@@ -142,7 +142,7 @@ class MotionPositionDevice(CoverEntity):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            self._blind.Set_position(position)
+            self._blind.Set_position(100 - position)
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
