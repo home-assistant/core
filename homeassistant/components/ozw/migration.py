@@ -71,7 +71,7 @@ async def async_get_migration_data(hass):
                 "device_id": device_entry.id,
                 "command_class": entity_values.primary.command_class.value,
                 "command_class_label": entity_values.primary.label,
-                "value_index": entity_values.primary.index.value,
+                "value_index": entity_values.primary.index,
                 "unique_id": unique_id,
                 "entity_entry": unique_entries[unique_id],
             }
