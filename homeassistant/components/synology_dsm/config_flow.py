@@ -164,8 +164,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             return await self._show_setup_form(user_input, errors)
 
-        # Check if already configured
+        # unique_id should be serial for services purpose
         await self.async_set_unique_id(serial, raise_on_progress=False)
+
+        # Check if already configured
         self._abort_if_unique_id_configured()
 
         config_data = {
