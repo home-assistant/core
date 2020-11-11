@@ -94,10 +94,10 @@ class MotionBatterySensor(Entity):
 class MotionSignalStrengthSensor(Entity):
     """Representation of a Motion Signal Strength Sensor."""
 
-    def __init__(self, device, type, config_entry):
+    def __init__(self, device, device_type, config_entry):
         """Initialize the Motion Signal Strength Sensor."""
         self._device = device
-        self._type = type
+        self._device_type = device_type
         self._config_entry = config_entry
 
     def update(self):
@@ -106,7 +106,7 @@ class MotionSignalStrengthSensor(Entity):
 
         Blinds are updated by the cover platform
         """
-        if self._type == TYPE_GATEWAY:
+        if self._device_type == TYPE_GATEWAY:
             self._device.Update()
 
     @property
@@ -124,7 +124,7 @@ class MotionSignalStrengthSensor(Entity):
     @property
     def name(self):
         """Return the name of the blind signal strength sensor."""
-        if self._type == TYPE_GATEWAY:
+        if self._device_type == TYPE_GATEWAY:
             return "Motion gateway signal strength"
         return f"{self._device.blind_type} signal strength - {self._device.mac}"
 

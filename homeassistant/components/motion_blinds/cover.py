@@ -77,10 +77,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         elif blind.type in [BlindType.TopDownBottomUp]:
             entities.append(
-                MotionTDBUDevice(blind, "Top", DEVICE_CLASS_SHADE, config_entry)
+                MotionTDBUDevice(blind, DEVICE_CLASS_SHADE, config_entry, "Top")
             )
             entities.append(
-                MotionTDBUDevice(blind, "Bottom", DEVICE_CLASS_SHADE, config_entry)
+                MotionTDBUDevice(blind, DEVICE_CLASS_SHADE, config_entry, "Bottom")
             )
 
         else:
@@ -201,12 +201,10 @@ class MotionTiltDevice(MotionPositionDevice):
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, blind, motor, device_class, config_entry):
+    def __init__(self, blind, device_class, config_entry, motor):
         """Initialize the blind."""
-        self._blind = blind
+        super().__init__(blind, device_class, config_entry)
         self._motor = motor
-        self._device_class = device_class
-        self._config_entry = config_entry
 
     def update(self):
         """
