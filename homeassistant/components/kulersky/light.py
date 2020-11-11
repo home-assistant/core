@@ -153,7 +153,7 @@ class KulerskyLight(LightEntity):
                 _LOGGER.warning("Unable to connect to %s: %s", self._light.address, exc)
             self._available = False
             return
-        if self._available is False:
+        if not self._available:
             _LOGGER.info("Reconnected to %s", self.entity_id)
             self._available = True
 
