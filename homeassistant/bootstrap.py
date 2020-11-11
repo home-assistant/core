@@ -519,7 +519,6 @@ async def _async_set_up_integrations(
     asyncio.create_task(hass.helpers.device_registry.async_get_registry())
     asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
     asyncio.create_task(hass.helpers.area_registry.async_get_registry())
-    asyncio.create_task(loader.async_preload_integrations_with_config_flows(hass))
 
     # Start setup
     if stage_1_domains:
