@@ -1,10 +1,15 @@
 """Constants for the Shelly integration."""
 
+COAP = "coap"
 DATA_CONFIG_ENTRY = "config_entry"
 DOMAIN = "shelly"
+REST = "rest"
 
 # Used to calculate the timeout in "_async_update_data" used for polling data from devices.
 POLLING_TIMEOUT_MULTIPLIER = 1.2
+
+# Refresh interval for REST sensors
+REST_SENSORS_UPDATE_INTERVAL = 60
 
 # Timeout used for initial entry setup in "async_setup_entry".
 SETUP_ENTRY_TIMEOUT_SEC = 10

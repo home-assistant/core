@@ -296,6 +296,9 @@ asyncpysupla==0.0.5
 # homeassistant.components.aten_pe
 atenpdu==0.3.0
 
+# homeassistant.components.aurora
+auroranoaa==0.0.1
+
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 
@@ -699,7 +702,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==0.9.5
+greeclimate==0.9.6
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -1319,7 +1322,7 @@ pycoolmasternet-async==0.1.2
 pycountry==19.8.18
 
 # homeassistant.components.microsoft
-pycsspeechtts==1.0.3
+pycsspeechtts==1.0.4
 
 # homeassistant.components.cups
 # pycups==1.9.73
@@ -2332,7 +2335,7 @@ zengge==0.2
 zeroconf==0.28.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.45
+zha-quirks==0.0.46
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

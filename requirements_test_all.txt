@@ -173,6 +173,9 @@ arcam-fmj==0.5.3
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
+# homeassistant.components.aurora
+auroranoaa==0.0.1
+
 # homeassistant.components.stream
 av==8.0.2
 
@@ -355,7 +358,7 @@ google-cloud-pubsub==2.1.0
 google-nest-sdm==0.1.14
 
 # homeassistant.components.gree
-greeclimate==0.9.5
+greeclimate==0.9.6
 
 # homeassistant.components.griddy
 griddypower==0.1.0
@@ -1116,7 +1119,7 @@ zeep[async]==4.0.0
 zeroconf==0.28.6
 
 # homeassistant.components.zha
-zha-quirks==0.0.45
+zha-quirks==0.0.46
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2

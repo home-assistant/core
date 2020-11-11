@@ -42,9 +42,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_INFO = "hassio_info"
-DATA_HOST_INFO = "hassio_host_info"
 DATA_CORE_INFO = "hassio_core_info"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_INFO = "hassio_info"
+DATA_OS_INFO = "hassio_os_info"
+DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -220,6 +222,26 @@ def get_host_info(hass):
 
 @callback
 @bind_hass
+def get_supervisor_info(hass):
+    """Return Supervisor information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_SUPERVISOR_INFO)
+
+
+@callback
+@bind_hass
+def get_os_info(hass):
+    """Return OS information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_OS_INFO)
+
+
+@callback
+@bind_hass
 def get_core_info(hass):
     """Return Home Assistant Core information from Supervisor.
 
@@ -358,6 +380,8 @@ async def async_setup(hass, config):
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
+            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
+            hass.data[DATA_OS_INFO] = await hassio.get_os_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 
