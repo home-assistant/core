@@ -76,6 +76,11 @@ class FakeHarmonyClient:
         return self.hub_config.config
 
     @property
+    def json_config(self):
+        """Return the json config as a dict."""
+        return {}
+
+    @property
     def hub_config(self):
         """Return the client_config type."""
         config = MagicMock()
