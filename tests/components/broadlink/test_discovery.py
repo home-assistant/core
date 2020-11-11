@@ -124,3 +124,13 @@ async def test_setup_discover_do_not_change_hostname(hass):
 
     assert mock_host.call_count == 1
     assert mock_entry.data["host"] == "somethingthatworks"
+
+
+async def test_device_setup_do_not_rediscover(hass):
+    """Test we only run discovery once at startup."""
+    devices = ["Entrance", "Bedroom", "Living Room", "Office"]
+    num_calls = 0
+    for device in map(get_device, devices):
+        *_, mock_discovery = await device.setup_entry(hass)
+        num_calls += mock_discovery.call_count
+    assert num_calls == 1
