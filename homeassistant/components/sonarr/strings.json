@@ -1,10 +1,8 @@
 {
-  "title": "Sonarr",
   "config": {
     "flow_title": "Sonarr: {name}",
     "step": {
       "user": {
-        "title": "Connect to Sonarr",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
