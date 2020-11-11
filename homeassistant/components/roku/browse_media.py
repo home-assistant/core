@@ -116,7 +116,7 @@ def item_payload(item, coordinator, get_thumbnail_url=None):
     )
 
 
-def library_payload(coordinator):
+def library_payload(coordinator, get_thumbnail_url=None):
     """
     Create response payload to describe contents of a specific library.
 
@@ -148,6 +148,7 @@ def library_payload(coordinator):
             item_payload(
                 {"title": item["title"], "type": item["type"]},
                 coordinator,
+                get_thumbnail_url,
             )
         )
 
