@@ -910,15 +910,12 @@ class MediaPlayerEntity(Entity):
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
             f"/{media_content_type}/{media_content_id}"
         )
-        url = str(
-            URL(url_path).with_query(
-                {
-                    "token": self.access_token,
-                    "media_image_id": media_image_id if media_image_id,
-                }
-            )
-        )
-        return url
+
+        url_query = {"token": self.access_token}
+        if media_image_id:
+            url_query.update({"media_image_id": media_image_id})
+
+        return str(URL(url_path).with_query(url_query))
 
 
 class MediaPlayerImageView(HomeAssistantView):
