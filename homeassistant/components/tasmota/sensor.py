@@ -108,7 +108,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN as TASMOTA_DOMAIN
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
@@ -261,7 +260,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
     def state(self):
         """Return the state of the entity."""
         if self._state and self.device_class == DEVICE_CLASS_TIMESTAMP:
-            return dt_util.as_local(self._state)
+            return self._state.isoformat()
         return self._state
 
     @property

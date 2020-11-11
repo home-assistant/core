@@ -1,8 +1,10 @@
 """The tests for the Tasmota sensor platform."""
 import copy
+import datetime
 from datetime import timedelta
 import json
 
+import hatasmota
 from hatasmota.utils import (
     get_topic_stat_status,
     get_topic_tele_sensor,
@@ -29,7 +31,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_SENSOR_CONFIG = {
@@ -353,6 +355,56 @@ async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_t
     await hass.async_block_till_done()
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "Another reason"
+
+
+@pytest.mark.parametrize("status_sensor_disabled", [False])
+@patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=datetime.datetime))
+async def test_restart_time_status_sensor_state_via_mqtt(
+    hass, mqtt_mock, setup_tasmota
+):
+    """Test state update via MQTT."""
+    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+
+    # Pre-enable the status sensor
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        "tasmota",
+        "00000049A3BC_status_sensor_status_sensor_last_restart_time",
+        suggested_object_id="tasmota_status",
+        disabled_by=None,
+    )
+
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.tasmota_status")
+    assert state.state == "unavailable"
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    state = hass.states.get("sensor.tasmota_status")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Test polled state update
+    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt.UTC)
+    hatasmota.status_sensor.datetime.now.return_value = utc_now
+    async_fire_mqtt_message(
+        hass,
+        "tasmota_49A3BC/stat/STATUS11",
+        '{"StatusSTS":{"UptimeSec":"3600"}}',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.tasmota_status")
+    assert state.state == "2020-11-11T07:00:00+00:00"
 
 
 async def test_attributes(hass, mqtt_mock, setup_tasmota):
