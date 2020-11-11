@@ -76,8 +76,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(MotionTiltDevice(blind, DEVICE_CLASS_SHADE, config_entry))
 
         elif blind.type in [BlindType.TopDownBottomUp]:
-            entities.append(MotionTDBUDevice(blind, "Top" DEVICE_CLASS_SHADE, config_entry))
-            entities.append(MotionTDBUDevice(blind, "Bottom" DEVICE_CLASS_SHADE, config_entry))
+            entities.append(
+                MotionTDBUDevice(blind, "Top", DEVICE_CLASS_SHADE, config_entry)
+            )
+            entities.append(
+                MotionTDBUDevice(blind, "Bottom", DEVICE_CLASS_SHADE, config_entry)
+            )
 
         else:
             _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
@@ -193,6 +197,7 @@ class MotionTiltDevice(MotionPositionDevice):
         """Stop the cover."""
         self._blind.Stop()
 
+
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
@@ -207,9 +212,9 @@ class MotionTDBUDevice(MotionPositionDevice):
         """
         Get the latest status information from blind.
 
-        Top motor is beeing updated by the Bottom entitiy
+        Top motor is being updated by the Bottom entity
         """
-        if self._motor == "Bottom"
+        if self._motor == "Bottom":
             self._blind.Update()
 
     @property
@@ -232,12 +237,12 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
-        if self._motor == "Bottom"
+        if self._motor == "Bottom":
             return 100 - self._blind.position["B"]
 
-        if self._motor == "Top"
+        if self._motor == "Top":
             return 100 - self._blind.position["T"]
-        
+
         _LOGGER.error("Unknown motor '%s'", self._motor)
         return None
 
@@ -247,29 +252,29 @@ class MotionTDBUDevice(MotionPositionDevice):
         if self._blind.position is None:
             return None
 
-        if self._motor == "Bottom"
+        if self._motor == "Bottom":
             return self._blind.position["B"] == 100
 
-        if self._motor == "Top"
+        if self._motor == "Top":
             return self._blind.position["T"] == 100
-        
+
         _LOGGER.error("Unknown motor '%s'", self._motor)
         return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._blind.Open(motor = self._motor[0])
+        self._blind.Open(motor=self._motor[0])
 
     def close_cover(self, **kwargs):
         """Close cover."""
-        self._blind.Close(motor = self._motor[0])
+        self._blind.Close(motor=self._motor[0])
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            self._blind.Set_position(100 - position, motor = self._motor[0])
+            self._blind.Set_position(100 - position, motor=self._motor[0])
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._blind.Stop(motor = self._motor[0])
+        self._blind.Stop(motor=self._motor[0])
