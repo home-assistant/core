@@ -4,9 +4,11 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.tag import async_scan_tag
-from homeassistant.components.tag.const import DOMAIN, TAG_ID
+from homeassistant.components.tag.const import DEVICE_ID, DOMAIN, TAG_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 
@@ -94,7 +96,11 @@ async def test_multiple_tags_trigger(hass, tag_setup, calls):
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"platform": DOMAIN, TAG_ID: ["abc123", "def456"]},
+                    "trigger": {
+                        "platform": DOMAIN,
+                        TAG_ID: ["abc123", "def456"],
+                        DEVICE_ID: "ghi789",
+                    },
                     "action": {
                         "service": "test.automation",
                         "data": {"message": "service called"},
@@ -106,11 +112,54 @@ async def test_multiple_tags_trigger(hass, tag_setup, calls):
 
     await hass.async_block_till_done()
 
-    await async_scan_tag(hass, "abc123", None)
+    # Should not trigger
+    await async_scan_tag(hass, tag_id="abc123", device_id=None)
     await hass.async_block_till_done()
-    await async_scan_tag(hass, "def456", None)
+
+    # Should trigger
+    await async_scan_tag(hass, tag_id="abc123", device_id="ghi789")
+    await hass.async_block_till_done()
+    await async_scan_tag(hass, "def456", device_id="ghi789")
     await hass.async_block_till_done()
 
     assert len(calls) == 2
     assert calls[0].data["message"] == "service called"
     assert calls[1].data["message"] == "service called"
+
+
+async def test_remove_triggers(hass, tag_setup):
+    """Test removing tag triggers."""
+
+    mock_remove_attach_trigger = Mock()
+    with patch(
+        "homeassistant.components.tag.trigger.event_trigger.async_attach_trigger",
+        return_value=mock_remove_attach_trigger,
+    ):
+        assert await tag_setup()
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: [
+                    {
+                        "alias": "test",
+                        "trigger": {"platform": DOMAIN, TAG_ID: ["abc123", "def456"]},
+                        "action": {
+                            "service": "test.automation",
+                            "data": {"message": "service called"},
+                        },
+                    }
+                ]
+            },
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "automation.test"},
+            blocking=True,
+        )
+
+    assert len(mock_remove_attach_trigger.mock_calls) == 2
