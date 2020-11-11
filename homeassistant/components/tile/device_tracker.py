@@ -3,8 +3,6 @@ import logging
 
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from . import DATA_COORDINATOR, DOMAIN, TileEntity
@@ -28,30 +26,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         [
             TileDeviceTracker(coordinator, tile_uuid, tile)
             for tile_uuid, tile in coordinator.data.items()
-        ],
-        True,
+        ]
     )
-
-
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Detect a legacy configuration and import it."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-            },
-        )
-    )
-
-    _LOGGER.info(
-        "Your Tile configuration has been imported into the UI; "
-        "please remove it from configuration.yaml"
-    )
-
-    return True
 
 
 class TileDeviceTracker(TileEntity, TrackerEntity):

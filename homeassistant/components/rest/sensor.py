@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
@@ -56,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -90,6 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
+    params = config.get(CONF_PARAMS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -103,7 +106,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if resource_template is not None:
         resource_template.hass = hass
-        resource = resource_template.render()
+        resource = resource_template.async_render(parse_result=False)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -112,7 +115,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             auth = (username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(
+        method, resource, auth, headers, params, payload, verify_ssl, timeout
+    )
     await rest.async_update()
 
     if rest.data is None:
@@ -202,7 +207,7 @@ class RestSensor(Entity):
     async def async_update(self):
         """Get the latest data from REST API and update the state."""
         if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.render())
+            self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
         await self.rest.async_update()
 

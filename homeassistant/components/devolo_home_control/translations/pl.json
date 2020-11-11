@@ -4,8 +4,7 @@
             "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika i/lub has\u0142o"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "URL mydevolo",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika/identyfikator devolo"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

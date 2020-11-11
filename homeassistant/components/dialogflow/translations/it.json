@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "La tua istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi da Dialogflow.",
-            "one_instance_allowed": "\u00c8 necessaria una sola istanza.",
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "webhook_not_internet_accessible": "L'istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi webhook."
         },
         "create_entry": {
             "default": "Per inviare eventi a Home Assistant, dovrai configurare [l'integrazione webhook di Dialogflow]({dialogflow_url})\n\n Compila le seguenti informazioni: \n\n - URL: `{webhook_url}` \n - Method: POST \n - Content Type: application/json \n\n Vedi [la documentazione]({docs_url}) for ulteriori dettagli."

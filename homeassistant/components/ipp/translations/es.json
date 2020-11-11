@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Dispositivo ya configurado",
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "Error al conectar",
             "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n.",
             "ipp_error": "Error IPP encontrado.",
             "ipp_version_error": "Versi\u00f3n de IPP no compatible con la impresora.",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "Error al conectar",
             "connection_upgrade": "No se pudo conectar con la impresora. Int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
         },
         "flow_title": "Impresora: {name}",

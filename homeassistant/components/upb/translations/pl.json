@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "UPB PIM z takim adresem jest ju\u017c skonfigurowany",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {

@@ -5,9 +5,7 @@
             "updated_entry": "Tato polo\u017eka ji\u017e byla nastavena, ale jm\u00e9no, aplikace nebo mo\u017enosti definovan\u00e9 v konfiguraci neodpov\u00eddaj\u00ed d\u0159\u00edve importovan\u00e9 konfiguraci, tak\u017ee polo\u017eka konfigurace byla odpov\u00eddaj\u00edc\u00edm zp\u016fsobem aktualizov\u00e1na."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "host_exists": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se zadan\u00fdm hostitelem je ji\u017e nastaveno.",
-            "name_exists": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se zadan\u00fdm hostitelem je ji\u017e nastaveno."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "pair_tv": {

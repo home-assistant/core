@@ -224,8 +224,8 @@ async def async_setup_trigger(hass, tasmota_trigger, config_entry, discovery_has
     await device_trigger.arm_tasmota_trigger()
 
 
-async def async_device_removed(hass: HomeAssistant, device_id: str):
-    """Handle the removal of a Tasmota device - cleanup any device triggers."""
+async def async_remove_triggers(hass: HomeAssistant, device_id: str):
+    """Cleanup any device triggers for a Tasmota device."""
     triggers = await async_get_triggers(hass, device_id)
     for trig in triggers:
         device_trigger = hass.data[DEVICE_TRIGGERS].pop(trig[CONF_DISCOVERY_ID])
@@ -239,7 +239,7 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
-    """List device triggers for Tasmota devices."""
+    """List device triggers for a Tasmota device."""
     triggers = []
 
     if DEVICE_TRIGGERS not in hass.data:

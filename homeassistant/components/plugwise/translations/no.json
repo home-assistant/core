@@ -12,10 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Tilkoblingstype",
-                    "host": "IP adresse",
-                    "password": "",
-                    "port": "Port"
+                    "flow_type": "Tilkoblingstype"
                 },
                 "description": "Produkt:",
                 "title": ""
@@ -24,9 +21,10 @@
                 "data": {
                     "host": "IP adresse",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Smile brukernavn"
                 },
-                "description": "Vennligst skriv inn:",
+                "description": "Vennligst skriv inn",
                 "title": "Koble til Smile"
             }
         }

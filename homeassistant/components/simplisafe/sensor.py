@@ -4,36 +4,34 @@ from simplipy.entity import EntityTypes
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 
-from . import SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN
+from . import SimpliSafeBaseSensor
+from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe freeze sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    sensors = []
 
-    async_add_entities(
-        [
-            SimplisafeFreezeSensor(simplisafe, system, sensor)
-            for system in simplisafe.systems.values()
-            for sensor in system.sensors.values()
-            if sensor.type == EntityTypes.temperature
-        ]
-    )
+    for system in simplisafe.systems.values():
+        if system.version == 2:
+            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            continue
+
+        for sensor in system.sensors.values():
+            if sensor.type == EntityTypes.temperature:
+                sensors.append(SimplisafeFreezeSensor(simplisafe, system, sensor))
+
+    async_add_entities(sensors)
 
 
-class SimplisafeFreezeSensor(SimpliSafeEntity):
+class SimplisafeFreezeSensor(SimpliSafeBaseSensor):
     """Define a SimpliSafe freeze sensor entity."""
 
     def __init__(self, simplisafe, system, sensor):
         """Initialize."""
-        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
-        self._sensor = sensor
+        super().__init__(simplisafe, system, sensor)
         self._state = None
-
-        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
-        self._device_info["model"] = "Freeze Sensor"
-        self._device_info["name"] = sensor.name
 
     @property
     def device_class(self):

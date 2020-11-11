@@ -1,3 +1,9 @@
 {
-    "title": ""
+    "system_health": {
+        "info": {
+            "dashboards": "Dashboards",
+            "mode": "Modus",
+            "resources": "Ressurser"
+        }
+    }
 }

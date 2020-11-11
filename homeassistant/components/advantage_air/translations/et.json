@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "\u00dchendus nurjus"
         },
-        "flow_title": "Advantage Air-i seadistamine",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "\u00dchenda"
             }
         }
-    },
-    "title": ""
+    }
 }

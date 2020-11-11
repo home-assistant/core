@@ -8,6 +8,8 @@ from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -33,8 +35,8 @@ MOCK_ENCRYPTION_DATA = {
 
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-    ATTR_MANUFACTURER: "mock-manufacturer",
-    ATTR_MODEL_NUMBER: "mock-model-number",
+    ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+    ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
     ATTR_UDN: "mock-unique-id",
 }
 

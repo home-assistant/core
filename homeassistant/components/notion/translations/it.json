@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Nome utente o password non validi",
             "no_devices": "Nessun dispositivo trovato nell'account"
         },
         "step": {

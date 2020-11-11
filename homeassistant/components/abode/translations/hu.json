@@ -3,11 +3,6 @@
         "abort": {
             "single_instance_allowed": "Csak egyetlen Abode konfigur\u00e1ci\u00f3 enged\u00e9lyezett."
         },
-        "error": {
-            "connection_error": "Nem lehet csatlakozni az Abode-hez.",
-            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
-        },
         "step": {
             "user": {
                 "data": {
