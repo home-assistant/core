@@ -1322,7 +1322,7 @@ pycoolmasternet-async==0.1.2
 pycountry==19.8.18
 
 # homeassistant.components.microsoft
-pycsspeechtts==1.0.3
+pycsspeechtts==1.0.4
 
 # homeassistant.components.cups
 # pycups==1.9.73
