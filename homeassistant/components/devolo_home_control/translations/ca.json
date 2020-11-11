@@ -13,10 +13,8 @@
                     "mydevolo_url": "URL de mydevolo",
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic / ID de devolo"
-                },
-                "title": "Home Control devolo"
+                }
             }
         }
-    },
-    "title": "Home Control devolo"
+    }
 }

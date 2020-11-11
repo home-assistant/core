@@ -27,6 +27,5 @@
                 "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

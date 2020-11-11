@@ -27,6 +27,5 @@
                 "description": "Before set up, battery-powered devices must be woken up by pressing the button on the device."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

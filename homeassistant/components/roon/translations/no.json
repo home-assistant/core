@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP.",
-                "title": "Konfigurer Roon Server"
+                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP."
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -27,6 +27,5 @@
                 "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }
