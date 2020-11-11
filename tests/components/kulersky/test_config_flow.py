@@ -11,7 +11,10 @@ async def test_flow_success(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+        (
+            "homeassistant.components.kulersky.config_flow"
+            ".pykulersky.discover_bluetooth_devices"
+        ),
         return_value=[
             {"address": "AA:BB:CC:11:22:33", "name": "Bedroom"},
             {"address": "DD:EE:FF:44:55:66", "name": "Living room"},
@@ -54,7 +57,10 @@ async def test_discovery_error(hass):
     """Test an error in discovery."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+        (
+            "homeassistant.components.kulersky.config_flow"
+            ".pykulersky.discover_bluetooth_devices"
+        ),
         side_effect=pykulersky.PykulerskyException,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -68,7 +74,10 @@ async def test_connect_error(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+        (
+            "homeassistant.components.kulersky.config_flow"
+            ".pykulersky.discover_bluetooth_devices"
+        ),
         return_value=[
             {"address": "AA:BB:CC:11:22:33", "name": "Bedroom"},
             {"address": "DD:EE:FF:44:55:66", "name": "Living room"},
@@ -89,7 +98,10 @@ async def test_connect_error(hass):
     light.name = "Bedroom"
     light.connected = False
     with patch(
-        "homeassistant.components.kulersky.config_flow.pykulersky.discover",
+        (
+            "homeassistant.components.kulersky.config_flow"
+            ".pykulersky.discover_bluetooth_devices"
+        ),
         return_value=[
             {"address": "AA:BB:CC:11:22:33", "name": "Bedroom"},
             {"address": "DD:EE:FF:44:55:66", "name": "Living room"},

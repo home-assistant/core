@@ -42,7 +42,9 @@ class KulerSkyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["device"] = "cannot_connect"
 
         try:
-            devices = await self.hass.async_add_executor_job(pykulersky.discover)
+            devices = await self.hass.async_add_executor_job(
+                pykulersky.discover_bluetooth_devices
+            )
         except pykulersky.PykulerskyException as exc:
             _LOGGER.error("Exception scanning for Kuler Sky devices", exc_info=exc)
             return self.async_abort(reason="scan_error")
