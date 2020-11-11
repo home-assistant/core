@@ -83,3 +83,34 @@ async def test_exception_bad_trigger(hass, calls, caplog):
     )
     await hass.async_block_till_done()
     assert "Invalid config for [automation]" in caplog.text
+
+
+async def test_multiple_tags_trigger(hass, tag_setup, calls):
+    """Test multiple tag triggers."""
+    assert await tag_setup()
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": DOMAIN, TAG_ID: ["abc123", "def456"]},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    await async_scan_tag(hass, "abc123", None)
+    await hass.async_block_till_done()
+    await async_scan_tag(hass, "def456", None)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[0].data["message"] == "service called"
+    assert calls[1].data["message"] == "service called"
