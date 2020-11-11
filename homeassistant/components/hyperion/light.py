@@ -1,9 +1,12 @@
 """Support for Hyperion-NG remotes."""
+from __future__ import annotations
+
 import logging
 import re
-from typing import Any, Dict, List, Set
+from types import MappingProxyType
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, cast
 
-from hyperion import const
+from hyperion import client, const
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -18,6 +21,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +30,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 import homeassistant.util.color as color_util
 
 from . import async_create_connect_hyperion_client, get_hyperion_unique_id
@@ -64,7 +73,7 @@ DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
 DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST = []
+DEFAULT_EFFECT_LIST: List[str] = []
 
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
@@ -102,7 +111,12 @@ ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: Callable,
+    discovery_info: Optional[DiscoveryInfoType] = None,
+) -> None:
     """Set up Hyperion platform.."""
 
     # This is the entrypoint for the old YAML-style Hyperion integration. The goal here
@@ -165,7 +179,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             suggested_object_id=config[CONF_NAME],
         )
 
-    async def migrate_yaml_to_config_entry_and_options(host, port, priority):
+    async def migrate_yaml_to_config_entry_and_options(
+        host: str, port: int, priority: int
+    ) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -196,7 +212,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+) -> bool:
     """Set up a Hyperion platform from config entry."""
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
@@ -207,11 +225,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             return
         await async_instances_to_entities_raw(response[const.KEY_DATA])
 
-    async def async_instances_to_entities_raw(instances: Dict[str, Any]) -> None:
+    async def async_instances_to_entities_raw(instances: List[Dict[str, Any]]) -> None:
         registry = await async_get_registry(hass)
         entities_to_add: List[Hyperion] = []
         desired_unique_ids: Set[str] = set()
-        server_id = config_entry.unique_id
+        server_id = cast(str, config_entry.unique_id)
 
         # In practice, an instance can be in 3 states as seen by this function:
         #
@@ -256,7 +274,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Readability note: This variable is kept alive in the context of the callback to
     # async_instances_to_entities below.
-    current_entities = set()
+    current_entities: Set[str] = set()
 
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
@@ -268,12 +286,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_instances_to_entities,
         )
     )
+    return True
 
 
 class Hyperion(LightEntity):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, unique_id, name, options, hyperion_client):
+    def __init__(
+        self,
+        unique_id: str,
+        name: str,
+        options: MappingProxyType[str, Any],
+        hyperion_client: client.HyperionClient,
+    ) -> None:
         """Initialize the light."""
         self._unique_id = unique_id
         self._name = name
@@ -281,67 +306,69 @@ class Hyperion(LightEntity):
         self._client = hyperion_client
 
         # Active state representing the Hyperion instance.
-        self._set_internal_state(
-            brightness=255, rgb_color=DEFAULT_COLOR, effect=KEY_EFFECT_SOLID
-        )
-        self._effect_list = []
+        self._brightness: int = 255
+        self._rgb_color: Sequence[int] = DEFAULT_COLOR
+        self._effect: str = KEY_EFFECT_SOLID
+        self._icon: str = ICON_LIGHTBULB
+
+        self._effect_list: List[str] = []
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return whether or not this entity should be polled."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the light."""
         return self._name
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> Tuple[float, float]:
         """Return last color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if not black."""
-        return self._client.is_on()
+        return bool(self._client.is_on())
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return state specific icon."""
         return self._icon
 
     @property
-    def effect(self):
+    def effect(self) -> str:
         """Return the current effect."""
         return self._effect
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> List[str]:
         """Return the list of supported effects."""
         return (
             self._effect_list
-            + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            + list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
             + [KEY_EFFECT_SOLID]
         )
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_HYPERION
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return server availability."""
-        return self._client.has_loaded_state
+        return bool(self._client.has_loaded_state)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique id for this instance."""
         return self._unique_id
 
@@ -350,7 +377,7 @@ class Hyperion(LightEntity):
         defaults = {CONF_PRIORITY: DEFAULT_PRIORITY}
         return self._options.get(key, defaults[key])
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the lights on."""
         # == Turn device on ==
         # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
@@ -381,6 +408,7 @@ class Hyperion(LightEntity):
         # == Get key parameters ==
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         effect = kwargs.get(ATTR_EFFECT, self._effect)
+        rgb_color: Sequence[int]
         if ATTR_HS_COLOR in kwargs:
             rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
         else:
@@ -448,7 +476,7 @@ class Hyperion(LightEntity):
             ):
                 return
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the LED output component."""
         if not await self._client.async_send_set_component(
             **{
@@ -460,7 +488,12 @@ class Hyperion(LightEntity):
         ):
             return
 
-    def _set_internal_state(self, brightness=None, rgb_color=None, effect=None):
+    def _set_internal_state(
+        self,
+        brightness: Optional[int] = None,
+        rgb_color: Optional[Sequence[int]] = None,
+        effect: Optional[str] = None,
+    ) -> None:
         """Set the internal state."""
         if brightness is not None:
             self._brightness = brightness
@@ -475,11 +508,11 @@ class Hyperion(LightEntity):
             else:
                 self._icon = ICON_EFFECT
 
-    def _update_components(self, _=None):
+    def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 
-    def _update_adjustment(self, _=None):
+    def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion adjustments."""
         if self._client.adjustment:
             brightness_pct = self._client.adjustment[0].get(
@@ -492,7 +525,7 @@ class Hyperion(LightEntity):
             )
             self.async_write_ha_state()
 
-    def _update_priorities(self, _=None):
+    def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
         visible_priority = self._client.visible_priority
         if visible_priority:
@@ -512,11 +545,11 @@ class Hyperion(LightEntity):
                 )
             self.async_write_ha_state()
 
-    def _update_effect_list(self, _=None):
+    def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion effects."""
         if not self._client.effects:
             return
-        effect_list = []
+        effect_list: List[str] = []
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
                 effect_list.append(effect[const.KEY_NAME])
@@ -524,7 +557,7 @@ class Hyperion(LightEntity):
             self._effect_list = effect_list
             self.async_write_ha_state()
 
-    def _update_full_state(self):
+    def _update_full_state(self) -> None:
         """Update full Hyperion state."""
         self._update_adjustment()
         self._update_priorities()
@@ -540,13 +573,13 @@ class Hyperion(LightEntity):
             self._rgb_color,
         )
 
-    def _update_client(self, json):
+    def _update_client(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update client connection state."""
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
-
+        assert self.hass
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -567,8 +600,7 @@ class Hyperion(LightEntity):
 
         # Load initial state.
         self._update_full_state()
-        return True
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect from server."""
         await self._client.async_client_disconnect()

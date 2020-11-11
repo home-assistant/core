@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, Tuple
+from typing import Any, Optional, Tuple
 
 from hyperion import client, const as hyperion_const
 
@@ -50,7 +50,7 @@ def get_hyperion_unique_id(server_id: str, instance: int) -> str:
     return f"{server_id}_{instance}"
 
 
-def split_hyperion_unique_id(unique_id) -> Tuple[str, int]:
+def split_hyperion_unique_id(unique_id: str) -> Optional[Tuple[str, int]]:
     """Split a unique_id for a Hyperion instance."""
     try:
         server_id, instance = unique_id.rsplit("_", 1)
@@ -70,7 +70,7 @@ def create_hyperion_client(
 async def async_create_connect_hyperion_client(
     *args: Any,
     **kwargs: Any,
-):
+) -> Optional[client.HyperionClient]:
     """Create and connect a Hyperion Client."""
     hyperion_client = create_hyperion_client(*args, **kwargs)
 
@@ -79,13 +79,13 @@ async def async_create_connect_hyperion_client(
     return hyperion_client
 
 
-async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Hyperion component."""
     hass.data[DOMAIN] = {}
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hyperion from a config entry."""
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # the YAML->ConfigEntry migration code triggers an options update, which causes a
     # reload -- which clashes with the initial load (causing entity_id / unique_id
     # clashes).
-    async def setup_then_listen():
+    async def setup_then_listen() -> None:
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(config_entry, component)
@@ -133,12 +133,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def _async_options_updated(hass: HomeAssistantType, config_entry: ConfigType):
+async def _async_options_updated(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
