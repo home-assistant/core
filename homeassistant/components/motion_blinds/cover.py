@@ -32,7 +32,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             BlindType.RollerBlind,
             BlindType.RomanBlind,
             BlindType.HoneycombBlind,
-            BlindType.ShangriLaBlind,
             BlindType.DimmingBlind,
             BlindType.DayNightBlind,
         ]:
@@ -40,7 +39,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 MotionPositionDevice(blind, DEVICE_CLASS_SHADE, config_entry)
             )
 
-        elif blind.type in [BlindType.RollerShutter]:
+        elif blind.type in [
+            BlindType.RollerShutter,
+            BlindType.Switch,
+        ]:
             entities.append(
                 MotionPositionDevice(blind, DEVICE_CLASS_SHUTTER, config_entry)
             )
@@ -64,8 +66,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 MotionPositionDevice(blind, DEVICE_CLASS_CURTAIN, config_entry)
             )
 
-        elif blind.type in [BlindType.VenetianBlind]:
+        elif blind.type in [
+            BlindType.VenetianBlind,
+            BlindType.ShangriLaBlind,
+        ]:
             entities.append(MotionTiltDevice(blind, DEVICE_CLASS_BLIND, config_entry))
+
+        elif blind.type in [BlindType.DoubleRoller]:
+            entities.append(MotionTiltDevice(blind, DEVICE_CLASS_SHADE, config_entry))
+
+        elif blind.type in [BlindType.TopDownBottomUp]:
+            entities.append(MotionTDBUDevice(blind, "Top" DEVICE_CLASS_SHADE, config_entry))
+            entities.append(MotionTDBUDevice(blind, "Bottom" DEVICE_CLASS_SHADE, config_entry))
 
         else:
             _LOGGER.warning("Blind type '%s' not yet supported", blind.blind_type)
@@ -180,3 +192,84 @@ class MotionTiltDevice(MotionPositionDevice):
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
         self._blind.Stop()
+
+class MotionTDBUDevice(MotionPositionDevice):
+    """Representation of a Motion Top Down Bottom Up blind Device."""
+
+    def __init__(self, blind, motor, device_class, config_entry):
+        """Initialize the blind."""
+        self._blind = blind
+        self._motor = motor
+        self._device_class = device_class
+        self._config_entry = config_entry
+
+    def update(self):
+        """
+        Get the latest status information from blind.
+
+        Top motor is beeing updated by the Bottom entitiy
+        """
+        if self._motor == "Bottom"
+            self._blind.Update()
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the blind."""
+        return f"{self._blind.mac}-{self._motor}"
+
+    @property
+    def name(self):
+        """Return the name of the blind."""
+        return f"{self._blind.blind_type}-{self._motor}-{self._blind.mac}"
+
+    @property
+    def current_cover_position(self):
+        """
+        Return current position of cover.
+
+        None is unknown, 0 is open, 100 is closed.
+        """
+        if self._blind.position is None:
+            return None
+
+        if self._motor == "Bottom"
+            return 100 - self._blind.position["B"]
+
+        if self._motor == "Top"
+            return 100 - self._blind.position["T"]
+        
+        _LOGGER.error("Unknown motor '%s'", self._motor)
+        return None
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        if self._blind.position is None:
+            return None
+
+        if self._motor == "Bottom"
+            return self._blind.position["B"] == 100
+
+        if self._motor == "Top"
+            return self._blind.position["T"] == 100
+        
+        _LOGGER.error("Unknown motor '%s'", self._motor)
+        return None
+
+    def open_cover(self, **kwargs):
+        """Open the cover."""
+        self._blind.Open(motor = self._motor[0])
+
+    def close_cover(self, **kwargs):
+        """Close cover."""
+        self._blind.Close(motor = self._motor[0])
+
+    def set_cover_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        if ATTR_POSITION in kwargs:
+            position = kwargs[ATTR_POSITION]
+            self._blind.Set_position(100 - position, motor = self._motor[0])
+
+    def stop_cover(self, **kwargs):
+        """Stop the cover."""
+        self._blind.Stop(motor = self._motor[0])
