@@ -50,6 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FireServiceRota config entry."""
+    hass.data[DOMAIN][entry.entry_id].stop_listener()
+
     unload_ok = all(
         await asyncio.gather(
             *[

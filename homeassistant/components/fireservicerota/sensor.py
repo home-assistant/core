@@ -107,8 +107,6 @@ class IncidentsSensor(RestoreEntity, Entity):
             self._state_attributes = state.attributes
             _LOGGER.debug("Restored entity 'Incidents' state to: %s", self._state)
 
-        self.async_on_remove(self._coordinator.stop_listener)
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
