@@ -55,6 +55,7 @@ CONF_RESOLUTION = "resolution"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 CONF_CONTROL_LIGHT = "control_light"
+CONF_EVENTS = "events"
 
 DEFAULT_NAME = "Amcrest Camera"
 DEFAULT_PORT = 80
@@ -104,6 +105,7 @@ AMCREST_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
         ),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+        vol.Optional(CONF_EVENTS): vol.All(cv.ensure_list, vol.Unique()),
     }
 )
 
@@ -197,26 +199,36 @@ class AmcrestChecker(Http):
             pass
 
 
-def _monitor_events(hass, name, api, event_codes):
-    event_codes = ",".join(event_codes)
+def _monitor_events(hass, name, api, event_codes, events_to_pass):
+    event_codes = set(event_codes or ())
+    events_to_pass = set(events_to_pass or ())
+    if "All" in events_to_pass:
+        event_clist = "All"
+    else:
+        event_clist = ",".join(event_codes | events_to_pass)
     while True:
         api.available_flag.wait()
         try:
-            for code, start in api.event_actions(event_codes, retries=5):
-                signal = service_signal(SERVICE_EVENT, name, code)
-                _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                dispatcher_send(hass, signal, start)
+            for code, start in api.event_actions(event_clist, retries=5):
+                if code in event_codes:
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                    dispatcher_send(hass, signal, start)
+                if "All" in events_to_pass or code in events_to_pass:
+                    event_data = {"camera": name, "event": code, "payload": start}
+                    _LOGGER.debug("Firing amcrest event: %s", event_data)
+                    hass.bus.fire("amcrest", event_data)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
             )
 
 
-def _start_event_monitor(hass, name, api, event_codes):
+def _start_event_monitor(hass, name, api, event_codes, events_to_pass):
     thread = threading.Thread(
         target=_monitor_events,
         name=f"Amcrest {name}",
-        args=(hass, name, api, event_codes),
+        args=(hass, name, api, event_codes, events_to_pass),
         daemon=True,
     )
     thread.start()
@@ -241,6 +253,7 @@ def setup(hass, config):
         sensors = device.get(CONF_SENSORS)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
+        events_to_pass = device.get(CONF_EVENTS)
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
@@ -273,8 +286,11 @@ def setup(hass, config):
                 for sensor_type in binary_sensors
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
-            if event_codes:
-                _start_event_monitor(hass, name, api, event_codes)
+        else:
+            event_codes = []
+
+        if event_codes or events_to_pass:
+            _start_event_monitor(hass, name, api, event_codes, events_to_pass)
 
         if sensors:
             discovery.load_platform(
