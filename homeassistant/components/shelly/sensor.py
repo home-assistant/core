@@ -12,6 +12,7 @@ from homeassistant.const import (
     VOLT,
 )
 
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -144,6 +145,15 @@ SENSORS = {
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("relay", "totalWorkTime"): BlockAttributeDescription(
+        name="Lamp life",
+        unit=PERCENTAGE,
+        icon="mdi:progress-wrench",
+        value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
+        device_state_attributes=lambda block: {
+            "Operational hours": round(block.totalWorkTime / 3600, 1)
+        },
+    ),
 }
 
 REST_SENSORS = {
