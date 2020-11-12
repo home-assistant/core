@@ -545,7 +545,9 @@ class SimpliSafe:
                     )
                     return
                 except SimplipyError as err:
-                    raise UpdateFailed(f"Error while using stored refresh token: {err}")
+                    raise UpdateFailed(  # pylint: disable=raise-missing-from
+                        f"Error while using stored refresh token: {err}"
+                    )
 
             if isinstance(result, EndpointUnavailable):
                 # In case the user attempts an action not allowed in their current plan,
