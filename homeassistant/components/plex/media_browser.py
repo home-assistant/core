@@ -203,7 +203,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
         ) from err
 
     if media_content_type == "playlists":
-        return playlists_payload(entity)
+        return playlists_payload()
 
     payload = {
         "media_type": DOMAIN,
