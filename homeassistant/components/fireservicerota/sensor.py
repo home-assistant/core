@@ -68,30 +68,34 @@ class IncidentsSensor(RestoreEntity, Entity):
         attr = {}
         data = self._state_attributes
 
-        if data:
-            for value in (
-                "trigger",
-                "created_at",
-                "message_to_speech_url",
-                "prio",
-                "type",
-                "responder_mode",
-                "can_respond_until",
-            ):
-                if data.get(value):
-                    attr[value] = data[value]
-
-            if "address" in data:
-                for address_value in (
-                    "latitude",
-                    "longitude",
-                    "address_type",
-                    "formatted_address",
-                ):
-                    if address_value in data["address"]:
-                        attr[address_value] = data["address"][address_value]
-
+        if not data:
             return attr
+
+        for value in (
+            "trigger",
+            "created_at",
+            "message_to_speech_url",
+            "prio",
+            "type",
+            "responder_mode",
+            "can_respond_until",
+        ):
+            if data.get(value):
+                attr[value] = data[value]
+
+            if "address" not in data:
+                continue
+
+            for address_value in (
+                "latitude",
+                "longitude",
+                "address_type",
+                "formatted_address",
+            ):
+                if address_value in data["address"]:
+                    attr[address_value] = data["address"][address_value]
+
+        return attr
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
