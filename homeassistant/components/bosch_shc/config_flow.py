@@ -44,8 +44,6 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     await hass.async_add_executor_job(session.authenticate)
 
-    return {"title": session.information.name, "mac": session.information.mac_address}
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
@@ -61,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
-                info = await self._get_info(host)
+                self.info = info = await self._get_info(host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
             except SHCmDNSError:
@@ -85,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                device_info = await validate_input(self.hass, self.host, user_input)
+                await validate_input(self.hass, self.host, user_input)
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
@@ -98,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"],
+                    title=self.info["title"],
                     data={**user_input, CONF_HOST: self.host},
                 )
         else:
@@ -120,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, zeroconf_info):
         """Handle zeroconf discovery."""
         if not zeroconf_info.get("name", "").startswith("Bosch SHC"):
-            return self.async_abort(reason="not_shc")
+            return self.async_abort(reason="not_bosch_shc")
 
         try:
             self.info = info = await self._get_info(zeroconf_info["host"])
