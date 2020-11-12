@@ -128,17 +128,19 @@ class FSRDataUpdateCoordinator:
 
     async def async_response_update(self) -> None:
         """Get the latest incident response data."""
-        if self.incident_data:
-            self.incident_id = self.incident_data.get("id")
-            _LOGGER.debug("Incident id: %s", self.incident_id)
-            try:
-                self.response_data = await self._hass.async_add_executor_job(
-                    self.fsr_avail.get_incident_response, self.incident_id
-                )
-                _LOGGER.debug("Updating incident response data")
-            except (ExpiredTokenError, InvalidTokenError):
-                _LOGGER.debug("Refreshing expired tokens")
-                await self.async_refresh_tokens()
+        if self.incident_data is None:
+            return
+
+        self.incident_id = self.incident_data.get("id")
+        _LOGGER.debug("Incident id: %s", self.incident_id)
+        try:
+            self.response_data = await self._hass.async_add_executor_job(
+                self.fsr_avail.get_incident_response, self.incident_id
+            )
+            _LOGGER.debug("Updating incident response data")
+        except (ExpiredTokenError, InvalidTokenError):
+            _LOGGER.debug("Refreshing expired tokens")
+            await self.async_refresh_tokens()
 
     async def async_set_response(self, incident_id, value) -> None:
         """Set incident response status."""
