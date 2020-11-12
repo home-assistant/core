@@ -136,6 +136,9 @@ aiopvpc==2.0.2
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
 
+# homeassistant.components.recollect_waste
+aiorecollect==0.2.1
+
 # homeassistant.components.shelly
 aioshelly==0.5.1
 
