@@ -262,7 +262,6 @@ class SwitchSchema:
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_RESET_AFTER = CONF_RESET_AFTER
 
     DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
@@ -271,7 +270,6 @@ class SwitchSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_INVERT): cv.boolean,
-            vol.Optional(CONF_RESET_AFTER): vol.All(vol.Coerce(int), vol.Range(min=0)),
         }
     )
 
