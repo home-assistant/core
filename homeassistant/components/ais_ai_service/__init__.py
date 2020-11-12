@@ -2143,10 +2143,7 @@ def get_groups(hass):
             all_ais_locks.append(entity.entity_id)
         elif entity.entity_id.startswith("vacuum."):
             all_ais_vacuums.append(entity.entity_id)
-        elif (
-            entity.entity_id.startswith("camera.")
-            and entity.entity_id != "camera.remote_access"
-        ):
+        elif entity.entity_id.startswith("camera."):
             all_ais_cameras.append(entity.entity_id)
         elif entity.entity_id.startswith("fan."):
             all_ais_fans.append(entity.entity_id)

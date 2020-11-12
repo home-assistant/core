@@ -493,7 +493,6 @@ async def async_setup(hass, config):
                 "sensor.version_info",
                 "script.ais_update_system",
                 "input_boolean.ais_auto_update",
-                "camera.remote_access",
                 "input_boolean.ais_remote_access",
                 "sensor.ais_secure_android_id_dom",
                 "script.ais_cloud_sync",

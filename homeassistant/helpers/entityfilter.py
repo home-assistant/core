@@ -233,7 +233,6 @@ def convert_include_exclude_filter(
             "input_select.media_player_sound_mode",
             "binary_sensor.updater",
             "weather.dom",
-            "camera.remote_access",
             "binary_sensor.selected_entity",
         ],
         "entity_globs": [],

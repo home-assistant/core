@@ -274,6 +274,9 @@ def get_audio_speed_name(speed):
 
 
 def has_root():
+    if platform.machine() == "x86_64":
+        return False
+
     import subprocess
 
     try:
