@@ -35,11 +35,11 @@ async def test_form(hass):
             result["flow_id"],
             DATA,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Aurora - Home"
     assert result2["data"] == DATA
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -95,6 +95,8 @@ async def test_option_flow(hass):
     assert not entry.options
 
     with patch("homeassistant.components.aurora.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(
             entry.entry_id,
             data=None,
