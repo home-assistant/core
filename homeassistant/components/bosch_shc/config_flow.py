@@ -128,11 +128,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Error looking up mDNS entry")
             return self.async_abort(reason="cannot_connect")
 
+        local_name = zeroconf_info["hostname"][:-1]
+        node_name = local_name[: -len(".local")]
+
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"name": zeroconf_info["hostname"]}
+        self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(self, user_input=None):

@@ -367,7 +367,7 @@ async def test_zeroconf(hass):
             for flow in hass.config_entries.flow.async_progress()
             if flow["flow_id"] == result["flow_id"]
         )
-        assert context["title_placeholders"]["name"] == "shc012345.local."
+        assert context["title_placeholders"]["name"] == "shc012345"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

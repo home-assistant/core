@@ -1,7 +1,7 @@
 {
     "title": "Bosch SHC",
     "config": {
-        "flow_title": "{name}",
+        "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
                 "description": "Do you want to set up the {model} at {host}?"

@@ -7,8 +7,6 @@
   "zeroconf": [
     {"type": "_http._tcp.local.", "name": "Bosch SHC*"}
   ],
-  "codeowners": [
-    "@tschamm",
-    "@cabrust"
-  ]
+  "codeowners": ["@tschamm"],
+  "after_dependencies": ["zeroconf"]
 }
