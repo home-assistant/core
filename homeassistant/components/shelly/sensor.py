@@ -124,6 +124,7 @@ SENSORS = {
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         value=lambda value: value,
+        icon="mdi:gauge",
         # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
         available=lambda block: block.sensorOp == "normal",
     ),
@@ -144,7 +145,7 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
         name="Lamp life",
         unit=PERCENTAGE,
