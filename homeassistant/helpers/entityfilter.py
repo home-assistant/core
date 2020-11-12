@@ -81,7 +81,6 @@ def convert_include_exclude_filter(
             "ais_ingress",
             "ais_knowledge_service",
             "ais_mdns",
-            "ais_qrcode",
             "ais_shell_command",
             "ais_spotify_service",
             "ais_updater",
