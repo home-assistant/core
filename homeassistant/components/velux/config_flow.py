@@ -43,12 +43,12 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._password = user_input[CONF_PASSWORD]
+            await self.async_set_unique_id(self._host)
+            self._abort_if_unique_id_configured()
             self.bridge = PyVLX(host=self._host, password=self._password)
             try:
                 await self.bridge.connect()
                 await self.bridge.disconnect()
-                await self.async_set_unique_id(self._host)
-                self._abort_if_unique_id_configured()
                 return self._get_entry()
             except PyVLXException:
                 errors["base"] = "invalid_auth"
