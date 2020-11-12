@@ -32,6 +32,7 @@ class DSMRSensor(Entity):
 
         self._name = self._definition.get("name", topic.split("/")[-1])
         self._device_class = self._definition.get("device_class")
+        self._enable_default = self._definition.get("enable_default")
         self._unit_of_measurement = self._definition.get("unit")
         self._icon = self._definition.get("icon")
         self._transform = self._definition.get("transform")
@@ -77,6 +78,11 @@ class DSMRSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit_of_measurement of this sensor."""
         return self._unit_of_measurement
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enable_default
 
     @property
     def icon(self):
