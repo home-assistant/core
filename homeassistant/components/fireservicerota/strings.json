@@ -16,7 +16,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "create_entry": {
-      "default": "Successfully authenticated!"
+      "default": "[%key:common::config_flow::created_entry::authenticated%]"
     }
   }
 }
