@@ -3,7 +3,6 @@
         "step": {
             "user": {
                 "title": "FireServiceRota",
-                "description": "Enter your login credentials",
                 "data": {
                     "password": "Password",
                     "username": "Username",
