@@ -19,3 +19,6 @@ SLEEP_PERIOD_MULTIPLIER = 1.2
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER = 2.2
+
+# Shelly Air - Maximum work hours before lamp replacement
+SHAIR_MAX_WORK_HOURS = 9000
