@@ -7,9 +7,9 @@ from tests.async_mock import Mock, patch
 
 @pytest.fixture(autouse=True)
 def mock_cases():
-    """Mock garagesamsterdam cases."""
+    """Mock garages_amsterdam cases."""
     with patch(
-        "garagesamsterdam.get_cases",
+        "garages_amsterdam.get_cases",
         return_value=[
             Mock(
                 garage_name="IJDok",

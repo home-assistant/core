@@ -1,6 +1,6 @@
 """Test the Garages Amsterdam config flow."""
 from homeassistant import config_entries, setup
-from homeassistant.components.garagesamsterdam.const import DOMAIN
+from homeassistant.components.garages_amsterdam.const import DOMAIN
 
 
 async def test_form(hass):

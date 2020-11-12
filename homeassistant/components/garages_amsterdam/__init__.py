@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-import garagesamsterdam
+import garages_amsterdam
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -76,7 +76,7 @@ async def get_coordinator(hass):
         with async_timeout.timeout(10):
             return {
                 case.garage_name: case
-                for case in await garagesamsterdam.get_cases(
+                for case in await garages_amsterdam.get_cases(
                     aiohttp_client.async_get_clientsession(hass)
                 )
             }

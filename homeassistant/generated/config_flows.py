@@ -80,7 +80,7 @@ FLOWS = [
     "freebox",
     "fritz",
     "fritzbox",
-    "garagesamsterdam",
+    "garages_amsterdam",
     "garmin_connect",
     "gdacs",
     "geofency",

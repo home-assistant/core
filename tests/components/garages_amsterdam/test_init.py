@@ -1,5 +1,5 @@
 """Test init of Garages Amsterdam integration."""
-from homeassistant.components.garagesamsterdam.const import DOMAIN
+from homeassistant.components.garages_amsterdam.const import DOMAIN
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
@@ -7,7 +7,7 @@ from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_migration(hass):
-    """Test that we can migrate garagesamsterdam to stable unique ID."""
+    """Test that we can migrate Garages Amsterdam to stable unique ID."""
     garage_entry = MockConfigEntry(
         domain=DOMAIN, title="IJDok", data={"garage_name": "IJDok"}
     )
@@ -18,7 +18,7 @@ async def test_migration(hass):
             "sensor.ijdok_free_space_short": entity_registry.RegistryEntry(
                 entity_id="sensor.ijdok_free_space_short",
                 unique_id="IJDok-free_space_short",
-                platform="garagesamsterdam",
+                platform="garages_amsterdam",
                 config_entry_id=garage_entry.entry_id,
             )
         },
