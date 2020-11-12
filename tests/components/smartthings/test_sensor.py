@@ -95,30 +95,39 @@ async def test_entity_power_consumption_report_state(hass, device_factory):
         "persistedEnergy": 20000,
     }
     device = device_factory(
-        "Power Consumption Report",
+        "Appliance",
         [Capability.power_consumption_report],
         {Attribute.power_consumption: test_attr_values},
     )
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.power_consumption_report_energy")
+    state = hass.states.get("sensor.appliance_power_consumption_report")
     assert state.state == "10000"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Energy"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{device.label} Power Consumption Report"
+    )
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
-
-    for key in test_attr_values:
-        assert state.attributes[key] == test_attr_values[key]
+    # Only check for currently supported values
+    attributes = [
+        "power_consumption_start",
+        "power_consumption_power",
+        "power_consumption_energy",
+        "power_consumption_end",
+    ]
+    for attribute in attributes:
+        assert state.attributes[attribute] == test_attr_values[attribute[18:]]
 
 
 async def test_entity_power_consumption_report_invalid_state(hass, device_factory):
     """Test the state attributes."""
     device = device_factory(
-        "Power Consumption Report",
+        "Appliance",
         [Capability.power_consumption_report],
         {Attribute.power_consumption: {}},
     )
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.power_consumption_report_energy")
+    state = hass.states.get("sensor.appliance_power_consumption_report")
     assert state.state == STATE_UNKNOWN
 
 

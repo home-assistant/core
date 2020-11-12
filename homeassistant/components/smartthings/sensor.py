@@ -387,8 +387,8 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
         """Init the class."""
         super().__init__(device)
         self._attribute = Attribute.power_consumption
-        self._name = "Energy"
-        self._primary_state_key = "energy"
+        self._name = "Power Consumption Report"
+        self._primary_attribute = "power_consumption_energy"
         self._device_class = DEVICE_CLASS_ENERGY
         self._default_unit = ENERGY_WATT_HOUR
 
@@ -405,8 +405,7 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        report = self._device.status.attributes[self._attribute].value
-        return report.get(self._primary_state_key)
+        return getattr(self._device.status, self._primary_attribute)
 
     @property
     def device_class(self) -> str:
@@ -420,5 +419,16 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
 
     @property
     def device_state_attributes(self):
-        """Return all attributes of the sensor."""
-        return self._device.status.attributes[self._attribute].value
+        """Return attributes of the sensor."""
+        attributes = [
+            "power_consumption_start",
+            "power_consumption_power",
+            "power_consumption_energy",
+            "power_consumption_end",
+        ]
+        state_attributes = {}
+        for attribute in attributes:
+            value = getattr(self._device.status, attribute)
+            if value is not None:
+                state_attributes[attribute] = value
+        return state_attributes
