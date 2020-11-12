@@ -44,6 +44,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "show_on_map": "Uk\u00e1zat monitorovanou oblast na map\u011b"
+                },
                 "title": "Nastavte AirVisual"
             }
         }
