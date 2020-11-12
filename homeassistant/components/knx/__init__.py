@@ -190,8 +190,9 @@ async def async_setup(hass, config):
 
         await hass.data[DOMAIN].xknx.stop()
 
-        for platform in async_get_platforms(hass, DOMAIN):
-            await asyncio.gather(platform.async_reset())
+        await asyncio.gather(
+            *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
+        )
 
         await async_setup(hass, config)
 
