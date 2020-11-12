@@ -17,8 +17,8 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 
-CONTROLLER_MODES_INV = dict(reversed(item) for item in CONTROLLER_MODES.items())
-PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
+CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
+PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
