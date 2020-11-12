@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.camera import async_get_image
+from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -11,20 +12,30 @@ from homeassistant.helpers import config_validation as cv
 
 from .api import Clarifai
 from .const import (
-    ATTR_APP_ID,
-    ATTR_RESULT_FORMAT,
-    ATTR_WORKFLOW_ID,
+    APP_ID,
     DEFAULT,
     DOMAIN,
     EVENT_PREDICTION,
+    RESULT_FORMAT,
     SERVICE_PREDICT,
     WORKFLOW_ERROR,
+    WORKFLOW_ID,
 )
+from .image_processing import IMAGE_PROCESSING_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_ACCESS_TOKEN): cv.string,
+                vol.Optional(IMAGE_PROCESSING): vol.All(
+                    cv.ensure_list, [IMAGE_PROCESSING_SCHEMA]
+                ),
+            }
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -41,7 +52,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
         _LOGGER.error("Could not connect to Clarifai API with error: %s", err)
 
     # Store Clarifai API object in hass.data for later use
-    hass.data[DOMAIN] = clarifai
+    hass.data[DOMAIN] = {"api": clarifai}
+
+    # Set up image processing platform
+    if IMAGE_PROCESSING in config[DOMAIN]:
+        hass.data[DOMAIN][IMAGE_PROCESSING] = config[DOMAIN][IMAGE_PROCESSING]
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform(
+                IMAGE_PROCESSING, DOMAIN, {}, config
+            )
+        )
 
     register_services(hass)
     return True
@@ -53,18 +73,18 @@ def register_services(hass):
 
     predict_service_schema = vol.Schema(
         {
-            vol.Required(ATTR_APP_ID): cv.string,
-            vol.Required(ATTR_WORKFLOW_ID): cv.string,
+            vol.Required(APP_ID): cv.string,
+            vol.Required(WORKFLOW_ID): cv.string,
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Optional(ATTR_RESULT_FORMAT, default=DEFAULT): cv.string,
+            vol.Optional(RESULT_FORMAT, default=DEFAULT): cv.string,
         }
     )
 
     async def async_workflow_predict_service(service):
         """Make a prediction by getting the results from a workflow."""
-        app_id = service.data[ATTR_APP_ID]
-        workflow_id = service.data[ATTR_WORKFLOW_ID]
-        result_format = service.data[ATTR_RESULT_FORMAT]
+        app_id = service.data[APP_ID]
+        workflow_id = service.data[WORKFLOW_ID]
+        result_format = service.data[RESULT_FORMAT]
         camera_entity = service.data[ATTR_ENTITY_ID]
 
         try:

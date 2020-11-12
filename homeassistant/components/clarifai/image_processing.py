@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     CONF_ENTITY_ID,
     CONF_SOURCE,
-    PLATFORM_SCHEMA,
+    DOMAIN as IMAGE_PROCESSING,
     SOURCE_SCHEMA,
     ImageProcessingEntity,
 )
@@ -16,22 +16,22 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_APP_ID,
-    CONF_RESULT_FORMAT,
-    CONF_WORKFLOW_ID,
+    APP_ID,
     DEFAULT,
     DOMAIN,
     EVENT_PREDICTION,
+    RESULT_FORMAT,
     WORKFLOW_ERROR,
+    WORKFLOW_ID,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+IMAGE_PROCESSING_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_WORKFLOW_ID): cv.string,
-        vol.Optional(CONF_RESULT_FORMAT, default=DEFAULT): cv.string,
+        vol.Required(APP_ID): cv.string,
+        vol.Required(WORKFLOW_ID): cv.string,
+        vol.Optional(RESULT_FORMAT, default=DEFAULT): cv.string,
         vol.Required(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     }
 )
@@ -39,26 +39,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clarifai image processing platform."""
-    clarifai = hass.data[DOMAIN]
-    app_id = config[CONF_APP_ID]
-    workflow_id = config[CONF_WORKFLOW_ID]
-    result_format = config[CONF_RESULT_FORMAT]
+    if discovery_info is None:
+        return
 
-    # Set up an image processing entity for each camera in config
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            ClarifaiImageProcessingEntity(
-                camera[CONF_ENTITY_ID],
-                clarifai,
-                app_id,
-                workflow_id,
-                result_format,
-                camera.get(CONF_NAME),
+    clarifai = hass.data[DOMAIN]["api"]
+
+    for ip_config in hass.data[DOMAIN][IMAGE_PROCESSING]:
+        app_id = ip_config[APP_ID]
+        workflow_id = ip_config[WORKFLOW_ID]
+        result_format = ip_config[RESULT_FORMAT]
+        cameras = ip_config[CONF_SOURCE]
+
+        # Set up an image processing entity for each camera in config
+        entities = []
+        for camera in cameras:
+            entities.append(
+                ClarifaiImageProcessingEntity(
+                    camera[CONF_ENTITY_ID],
+                    clarifai,
+                    app_id,
+                    workflow_id,
+                    result_format,
+                    camera.get(CONF_NAME),
+                )
             )
-        )
 
-    add_entities(entities)
+        add_entities(entities)
 
 
 class ClarifaiImageProcessingEntity(ImageProcessingEntity):

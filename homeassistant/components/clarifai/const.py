@@ -2,9 +2,9 @@
 
 DOMAIN = "clarifai"
 
-CONF_APP_ID = ATTR_APP_ID = "app_id"
-CONF_WORKFLOW_ID = ATTR_WORKFLOW_ID = "workflow_id"
-CONF_RESULT_FORMAT = ATTR_RESULT_FORMAT = "result_format"
+APP_ID = "app_id"
+WORKFLOW_ID = "workflow_id"
+RESULT_FORMAT = "result_format"
 
 SERVICE_PREDICT = "predict"
 EVENT_PREDICTION = f"{DOMAIN}.prediction"
