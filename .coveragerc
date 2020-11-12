@@ -711,6 +711,7 @@ omit =
     homeassistant/components/rainforest_eagle/sensor.py
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
+    homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
