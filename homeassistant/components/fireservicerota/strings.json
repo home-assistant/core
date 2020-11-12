@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "FireServiceRota",
         "description": "Enter your login credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
