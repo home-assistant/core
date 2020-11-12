@@ -25,6 +25,7 @@ from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYI
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -622,9 +623,11 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(
             browse_media,
             self,
+            is_internal,
             media_content_type,
             media_content_id,
         )
