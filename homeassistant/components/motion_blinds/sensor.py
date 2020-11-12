@@ -1,6 +1,8 @@
 """Support for Motion Blinds sensors."""
 import logging
 
+from motionblinds import BlindType
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -26,7 +28,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for blind in motion_gateway.device_list.values():
         await hass.async_add_executor_job(blind.Update)
         entities.append(MotionSignalStrengthSensor(blind, TYPE_BLIND, config_entry))
-        if blind.battery_voltage > 0:
+        if blind.type == BlindType.TopDownBottomUp:
+            entities.append(MotionTDBUBatterySensor(blind, config_entry, "Bottom"))
+            entities.append(MotionTDBUBatterySensor(blind, config_entry, "Top"))
+        elif blind.battery_voltage > 0:
             # Only add battery powered blinds
             entities.append(MotionBatterySensor(blind, config_entry))
 
@@ -88,6 +93,44 @@ class MotionBatterySensor(Entity):
         """Return device specific state attributes."""
         attributes = {}
         attributes[ATTR_BATTERY_VOLTAGE] = self._blind.battery_voltage
+        return attributes
+
+
+class MotionTDBUBatterySensor(MotionBatterySensor):
+    """
+    Representation of a Motion Battery Sensor for a Top Down Bottom Up blind.
+
+    Updates are done by the cover platform.
+    """
+
+    def __init__(self, blind, config_entry, motor):
+        """Initialize the Motion Battery Sensor."""
+        super().__init__(blind, config_entry)
+        self._motor = motor
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the blind."""
+        return f"{self._blind.mac}-{self._motor}-battery"
+
+    @property
+    def name(self):
+        """Return the name of the blind battery sensor."""
+        return f"{self._blind.blind_type}-{self._motor}-battery-{self._blind.mac}"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._blind.battery_level is None:
+            return None
+        return self._blind.battery_level[self._motor[0]]
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._blind.battery_voltage is not None:
+            attributes[ATTR_BATTERY_VOLTAGE] = self._blind.battery_voltage[self._motor[0]]
         return attributes
 
 
