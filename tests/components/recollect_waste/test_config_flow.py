@@ -67,7 +67,7 @@ async def test_step_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
-
+        await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "12345, 12345"
         assert result["data"] == {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
@@ -85,7 +85,7 @@ async def test_step_user(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
-
+        await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "12345, 12345"
         assert result["data"] == {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
