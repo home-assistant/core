@@ -38,12 +38,10 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_access_point_cloud_connection_sensor(
-    hass, default_mock_hap_factory
-):
+async def test_hmip_home_cloud_connection_sensor(hass, default_mock_hap_factory):
     """Test HomematicipCloudConnectionSensor."""
-    entity_id = "binary_sensor.access_point_cloud_connection"
-    entity_name = "Access Point Cloud Connection"
+    entity_id = "binary_sensor.cloud_connection"
+    entity_name = "Cloud Connection"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
@@ -55,7 +53,7 @@ async def test_hmip_access_point_cloud_connection_sensor(
 
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, hmip_device, "connected", False)
+    await async_manipulate_test_data(hass, mock_hap.home, "connected", False)
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
