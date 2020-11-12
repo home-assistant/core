@@ -54,6 +54,11 @@ async def get_coap_context(hass):
     return context
 
 
+def get_device_name(device):
+    """Naming for device."""
+    return device.settings["name"] or device.settings["device"]["hostname"]
+
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
@@ -126,7 +131,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=device.settings["name"] or device.settings["device"]["hostname"],
+            name=get_device_name(device),
             update_interval=timedelta(seconds=update_interval),
         )
         self.hass = hass
@@ -186,7 +191,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=device.settings["name"] or device.settings["device"]["hostname"],
+            name=get_device_name(device),
             update_interval=timedelta(seconds=REST_SENSORS_UPDATE_INTERVAL),
         )
         self.device = device
@@ -195,9 +200,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         """Fetch data."""
         try:
             async with async_timeout.timeout(5):
-                _LOGGER.debug(
-                    "REST update for %s", self.device.settings["device"]["hostname"]
-                )
+                _LOGGER.debug("REST update for %s", get_device_name(self.device))
                 return await self.device.update_status()
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
