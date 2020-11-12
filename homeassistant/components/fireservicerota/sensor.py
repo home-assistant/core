@@ -28,7 +28,7 @@ class IncidentsSensor(RestoreEntity, Entity):
         """Initialize."""
         self._coordinator = coordinator
         self._entry_id = entry.entry_id
-        self._unique_id = entry.unique_id
+        self._unique_id = f"{entry.unique_id}_Incidents"
 
         self._state = None
         self._state_attributes = {}
@@ -57,7 +57,7 @@ class IncidentsSensor(RestoreEntity, Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{self._unique_id}_Incidents"
+        return self._unique_id
 
     @property
     def should_poll(self) -> bool:

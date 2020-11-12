@@ -123,7 +123,6 @@ class FSRDataUpdateCoordinator:
             )
             _LOGGER.debug("Updating availability data")
         except (ExpiredTokenError, InvalidTokenError):
-            _LOGGER.debug("Refreshing expired tokens")
             await self.async_refresh_tokens()
 
     async def async_response_update(self) -> None:
@@ -139,7 +138,6 @@ class FSRDataUpdateCoordinator:
             )
             _LOGGER.debug("Updating incident response data")
         except (ExpiredTokenError, InvalidTokenError):
-            _LOGGER.debug("Refreshing expired tokens")
             await self.async_refresh_tokens()
 
     async def async_set_response(self, incident_id, value) -> None:
@@ -150,14 +148,13 @@ class FSRDataUpdateCoordinator:
             )
             _LOGGER.debug("Setting incident response status")
         except (ExpiredTokenError, InvalidTokenError):
-            _LOGGER.debug("Refreshing expired tokens")
             await self.async_refresh_tokens()
 
     async def async_refresh_tokens(self) -> bool:
         """Refresh tokens and update config entry."""
         self.stop_listener()
 
-        _LOGGER.debug("Refreshing authentication tokens")
+        _LOGGER.debug("Refreshing authentication tokens after expiration")
         try:
             token_info = await self._hass.async_add_executor_job(
                 self.fsr_avail.refresh_tokens
@@ -165,7 +162,7 @@ class FSRDataUpdateCoordinator:
         except (InvalidAuthError, InvalidTokenError):
             _LOGGER.error("Error occurred while refreshing authentication tokens")
             self._hass.components.persistent_notification.async_create(
-                "Cannot refresh tokens, you need to re-add this integration and login to generate new ones.",
+                "Cannot refresh tokens, you need to re-add this integration to generate new ones.",
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
