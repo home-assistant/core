@@ -43,34 +43,37 @@ def get_entity_name(
     """Naming for switch and sensors."""
     entity_name = wrapper.name
 
-    channels = None
-    if block.type == "input":
-        channels = wrapper.device.shelly.get("num_inputs")
-    elif block.type == "emeter":
-        channels = wrapper.device.shelly.get("num_emeters")
-    elif block.type in ["relay", "light"]:
-        channels = wrapper.device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
-        channels = 1
+    if block:
+        channels = None
+        if block.type == "input":
+            channels = wrapper.device.shelly.get("num_inputs")
+        elif block.type == "emeter":
+            channels = wrapper.device.shelly.get("num_emeters")
+        elif block.type in ["relay", "light"]:
+            channels = wrapper.device.shelly.get("num_outputs")
+        elif block.type in ["roller", "device"]:
+            channels = 1
 
-    channels = channels or 1
+        channels = channels or 1
 
-    if channels > 1 and block.type != "device":
-        entity_name = None
-        mode = block.type + "s"
-        if mode in wrapper.device.settings:
-            entity_name = wrapper.device.settings[mode][int(block.channel)].get("name")
+        if channels > 1 and block.type != "device":
+            entity_name = None
+            mode = block.type + "s"
+            if mode in wrapper.device.settings:
+                entity_name = wrapper.device.settings[mode][int(block.channel)].get(
+                    "name"
+                )
 
-        if not entity_name:
-            if wrapper.model == "SHEM-3":
-                base = ord("A")
-            else:
-                base = ord("1")
-            entity_name = f"{wrapper.name} channel {chr(int(block.channel)+base)}"
+            if not entity_name:
+                if wrapper.model == "SHEM-3":
+                    base = ord("A")
+                else:
+                    base = ord("1")
+                entity_name = f"{wrapper.name} channel {chr(int(block.channel)+base)}"
 
-    # Shelly Dimmer has two input channels and missing "num_inputs"
-    if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
-        entity_name = f"{entity_name} channel {int(block.channel)+1}"
+        # Shelly Dimmer has two input channels and missing "num_inputs"
+        if wrapper.model in ["SHDM-1", "SHDM-2"] and block.type == "input":
+            entity_name = f"{entity_name} channel {int(block.channel)+1}"
 
     if description:
         entity_name = f"{entity_name} {description}"
