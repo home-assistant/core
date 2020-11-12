@@ -69,9 +69,7 @@ SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
         vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPES[0]): vol.In(
-            COMMAND_TYPES
-        ),
+        vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
         vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
@@ -353,7 +351,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 except (ReadError, StorageError):
                     continue
                 return b64encode(code).decode("utf8")
-            raise TimeoutError("No code received")
+
+            raise TimeoutError(
+                "No infrared code received within "
+                f"{LEARNING_TIMEOUT.seconds} seconds"
+            )
 
         finally:
             self.hass.components.persistent_notification.async_dismiss(
@@ -388,7 +390,10 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 await self._device.async_request(
                     self._device.api.cancel_sweep_frequency
                 )
-                raise TimeoutError("No radiofrequency found")
+                raise TimeoutError(
+                    "No radiofrequency found within "
+                    f"{LEARNING_TIMEOUT.seconds} seconds"
+                )
 
         finally:
             self.hass.components.persistent_notification.async_dismiss(
@@ -419,7 +424,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 except (ReadError, StorageError):
                     continue
                 return b64encode(code).decode("utf8")
-            raise TimeoutError("No code received")
+
+            raise TimeoutError(
+                "No radiofrequency code received within "
+                f"{LEARNING_TIMEOUT.seconds} seconds"
+            )
 
         finally:
             self.hass.components.persistent_notification.async_dismiss(
