@@ -41,9 +41,11 @@ class IncidentsSensor(RestoreEntity, Entity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if "prio" in self._state_attributes:
-            if self._state_attributes["prio"][0] == "a":
-                return "mdi:ambulance"
+        if (
+            "prio" in self._state_attributes
+            and self._state_attributes["prio"][0] == "a"
+        ):
+            return "mdi:ambulance"
 
         return "mdi:fire-truck"
 
