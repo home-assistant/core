@@ -9,7 +9,7 @@
       "type": "python",
       "request": "launch",
       "module": "homeassistant",
-      "args": ["-c", "config", "--debug"]
+      "args": ["--debug", "-c", "config"]
     }
   ]
 }
