@@ -126,13 +126,16 @@ async def async_remove_obsolete_entities(
 ):
     """Remove obsolete entities from entity registry."""
 
-    if hap.home.currentAPVersion >= "2.2.12":
-        entity_registry = await er.async_get_registry(hass)
-        er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
-        for er_entry in er_entries:
-            if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
+    if hap.home.currentAPVersion < "2.2.12":
+        return
+
+    entity_registry = await er.async_get_registry(hass)
+    er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+    for er_entry in er_entries:
+        if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
+            entity_registry.async_remove(er_entry.entity_id)
+            continue
+
+        for hapid in hap.home.accessPointUpdateStates:
+            if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
                 entity_registry.async_remove(er_entry.entity_id)
-            else:
-                for hapid in hap.home.accessPointUpdateStates.keys():
-                    if er_entry.unique_id == f"HomematicipBatterySensor_{hapid}":
-                        entity_registry.async_remove(er_entry.entity_id)
