@@ -1,4 +1,5 @@
 """Support KNX devices."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -29,9 +30,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
@@ -192,14 +190,8 @@ async def async_setup(hass, config):
 
         await hass.data[DOMAIN].xknx.stop()
 
-        registry = await async_get_entity_registry(hass)
-        platforms = async_get_platforms(hass, DOMAIN)
-
-        for platform in platforms:
-            for entity_id, entry in platform.entities.copy().items():
-                await entry.async_remove()
-                if entity_id in registry.entities:
-                    await registry.async_remove(entity_id)
+        for platform in async_get_platforms(hass, DOMAIN):
+            await asyncio.gather(platform.async_reset())
 
         await async_setup(hass, config)
 
