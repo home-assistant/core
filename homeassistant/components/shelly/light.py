@@ -30,18 +30,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for block in wrapper.device.blocks:
         if block.type == "light":
             blocks.append(block)
-        elif (
-            block.type == "relay"
-            and wrapper.device.settings["relays"][int(block.channel)].get(
+        elif block.type == "relay":
+            appliance_type = wrapper.device.settings["relays"][int(block.channel)].get(
                 "appliance_type"
             )
-            == "light"
-        ):
-            blocks.append(block)
-            unique_id = f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
-            await async_remove_entity_by_domain(
-                hass, "switch", unique_id, config_entry.entry_id
-            )
+            if appliance_type and appliance_type.lower() == "light":
+                blocks.append(block)
+                unique_id = (
+                    f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
+                )
+                await async_remove_entity_by_domain(
+                    hass, "switch", unique_id, config_entry.entry_id
+                )
 
     if not blocks:
         return
