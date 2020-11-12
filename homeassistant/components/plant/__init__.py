@@ -132,6 +132,8 @@ async def async_setup(hass, config):
         entity = Plant(plant_name, plant_config)
         entities.append(entity)
 
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
     if DATA_CONFIGS not in hass.data[DOMAIN]:
         hass.data[DOMAIN][DATA_CONFIGS] = {}
 
