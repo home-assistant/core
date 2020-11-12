@@ -31,6 +31,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "plant"
+DATA_CONFIGS = "configs"
 
 READING_BATTERY = "battery"
 READING_TEMPERATURE = ATTR_TEMPERATURE
@@ -131,14 +132,19 @@ async def async_setup(hass, config):
         entity = Plant(plant_name, plant_config)
         entities.append(entity)
 
+    if DATA_CONFIGS not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][DATA_CONFIGS] = {}
+
     await component.async_add_entities(entities)
 
     @callback
     def websocket_handle_get_config(hass, connection, msg):
         """Handle getting a plant config."""
 
-        entity_id = msg["entity_id"].split(".")[1]
-        plant_config = config[DOMAIN][entity_id]
+        plant_config = {}
+        entity_id = msg["entity_id"]
+        if entity_id in hass.data[DOMAIN][DATA_CONFIGS]:
+            plant_config = hass.data[DOMAIN][DATA_CONFIGS][entity_id]
         connection.send_result(msg["id"], plant_config)
 
     hass.components.websocket_api.async_register_command(
@@ -316,6 +322,8 @@ class Plant(Entity):
             state = self.hass.states.get(entity_id)
             if state is not None:
                 self.state_changed(entity_id, state)
+
+        self.hass.data[DOMAIN][DATA_CONFIGS][self.entity_id] = self._config
 
     def _load_history_from_db(self):
         """Load the history of the brightness values from the database.
