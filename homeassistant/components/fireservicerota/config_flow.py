@@ -9,9 +9,9 @@ from .const import DOMAIN, URL_LIST  # pylint: disable=unused-import
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_URL, default="www.brandweerrooster.nl"): vol.In(URL_LIST),
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_URL, default="www.brandweerrooster.nl"): vol.In(URL_LIST),
     }
 )
 
