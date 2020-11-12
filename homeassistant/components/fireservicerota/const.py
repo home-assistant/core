@@ -2,7 +2,10 @@
 
 DOMAIN = "fireservicerota"
 
-URL_LIST = ["www.brandweerrooster.nl", "www.fireservicerota.co.uk"]
+URL_LIST = {
+    "www.brandweerrooster.nl": "BrandweerRooster",
+    "www.fireservicerota.co.uk": "FireServiceRota",
+}
 WSS_BWRURL = "wss://{0}/cable?access_token={1}"
 
 NOTIFICATION_AUTH_TITLE = "FireServiceRota Error"
