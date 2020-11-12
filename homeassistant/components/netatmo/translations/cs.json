@@ -26,13 +26,17 @@
                     "lon_sw": "Zem\u011bpisn\u00e1 d\u00e9lka Jihoz\u00e1padn\u00ed roh",
                     "mode": "V\u00fdpo\u010det",
                     "show_on_map": "Zobrazit na map\u011b"
-                }
+                },
+                "description": "Nastavte ve\u0159ejn\u00fd senzor po\u010das\u00ed pro oblast.",
+                "title": "Ve\u0159ejn\u00fd senzor po\u010das\u00ed Netatmo"
             },
             "public_weather_areas": {
                 "data": {
                     "new_area": "Jm\u00e9no oblasti",
                     "weather_areas": "Oblasti po\u010das\u00ed"
-                }
+                },
+                "description": "Nastavte ve\u0159ejn\u00e9 senzory po\u010das\u00ed.",
+                "title": "Ve\u0159ejn\u00fd senzor po\u010das\u00ed Netatmo"
             }
         }
     }

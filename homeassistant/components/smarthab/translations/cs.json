@@ -9,7 +9,8 @@
                 "data": {
                     "email": "E-mail",
                     "password": "Heslo"
-                }
+                },
+                "title": "Nastaven\u00ed SmartHab"
             }
         }
     }
