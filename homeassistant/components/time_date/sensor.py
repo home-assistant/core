@@ -80,7 +80,7 @@ class TimeDateSensor(Entity):
         return "mdi:clock"
 
     async def async_added_to_hass(self) -> None:
-        """Set up next update."""
+        """Set up first update."""
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval()
         )
@@ -91,20 +91,24 @@ class TimeDateSensor(Entity):
             self.unsub()
             self.unsub = None
 
-    def get_next_interval(self, now=None):
+    def get_next_interval(self):
         """Compute next time an update should occur."""
-        if now is None:
-            now = dt_util.utcnow()
+        now = dt_util.utcnow()
+
         if self.type == "date":
             now = dt_util.start_of_local_day(dt_util.as_local(now))
             return now + timedelta(seconds=86400)
+
         if self.type == "beat":
             interval = 86.4
         else:
             interval = 60
         timestamp = int(dt_util.as_timestamp(now))
         delta = interval - (timestamp % interval)
-        return now + timedelta(seconds=delta)
+        next_interval = now + timedelta(seconds=delta)
+        _LOGGER.debug("%s + %s -> %s (%s)", now, delta, next_interval, self.type)
+
+        return next_interval
 
     def _update_internal_state(self, time_date):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
