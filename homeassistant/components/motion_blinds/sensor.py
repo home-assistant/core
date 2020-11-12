@@ -130,7 +130,9 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.battery_voltage is not None:
-            attributes[ATTR_BATTERY_VOLTAGE] = self._blind.battery_voltage[self._motor[0]]
+            attributes[ATTR_BATTERY_VOLTAGE] = self._blind.battery_voltage[
+                self._motor[0]
+            ]
         return attributes
 
 
