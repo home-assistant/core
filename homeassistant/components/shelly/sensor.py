@@ -124,6 +124,7 @@ SENSORS = {
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         value=lambda value: value,
+        icon="mdi:gauge",
         # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
         available=lambda block: block.sensorOp == "normal",
     ),
