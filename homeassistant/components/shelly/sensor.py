@@ -144,7 +144,7 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
         name="Lamp life",
         unit=PERCENTAGE,
