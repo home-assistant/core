@@ -695,7 +695,7 @@ async def test_version_log_warning(caplog, hass: HomeAssistantType) -> None:
     """Test warning on old version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.7")
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert any(["Please consider upgrading" in m for _, _, m in caplog.record_tuples])
 
@@ -704,7 +704,7 @@ async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None:
     """Test no warning on acceptable version."""
     client = create_mock_client()
     client.async_sysinfo_version = AsyncMock(return_value="2.0.0-alpha.8")
-    await setup_test_config_entry(hass, client=client)
+    await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert not any(
         ["Please consider upgrading" in m for _, _, m in caplog.record_tuples]
