@@ -53,7 +53,7 @@ def calls(hass):
 async def test_get_triggers_camera(
     hass, device_reg, entity_reg, camera_type, event_types
 ):
-    """Test we get the expected triggers from a netatmo."""
+    """Test we get the expected triggers from a netatmo cameras."""
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
@@ -83,16 +83,18 @@ async def test_get_triggers_camera(
     [(MODEL_NOC, trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
     + [(MODEL_NACAMERA, trigger) for trigger in INDOOR_CAMERA_TRIGGERS],
 )
-async def test_if_fires_on_event(
+async def test_if_fires_on_camera_event(
     hass, calls, device_reg, entity_reg, camera_type, event_type
 ):
-    """Test for event triggers firing."""
+    """Test for camera event triggers firing."""
+    mac_address = "12:34:56:AB:CD:EF"
+    connection = (device_registry.CONNECTION_NETWORK_MAC, mac_address)
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={(NETATMO_DOMAIN, "12:34:56:AB:CD:EF")},
+        connections={connection},
+        identifiers={(NETATMO_DOMAIN, mac_address)},
         model=camera_type,
     )
     entity_reg.async_get_or_create(
@@ -126,7 +128,7 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    device = device_reg.async_get_device(set(), {connection})
     assert device is not None
 
     # Fake that the entity is turning on.
