@@ -18,7 +18,10 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
 
-G_ZIGBEE_ID = "0451:16a8"
+G_ZIGBEE_DEVICES_ID = [
+    "0451:16a8",  # CC2531
+    "1cf1:0030"  # Conbee2
+]
 G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
 # ignore internal devices
@@ -70,7 +73,7 @@ def get_device_info(pathname):
 async def prepare_usb_device(hass, device_info):
     # start zigbee2mqtt service
     # add info in app
-    if device_info["id"] == G_ZIGBEE_ID:
+    if device_info["id"] in G_ZIGBEE_DEVICES_ID:
         # Register the built-in zigbee panel
         # hass.components.frontend.async_register_built_in_panel(
         #     "aiszigbee",
@@ -119,7 +122,7 @@ async def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
     ais_global.G_USB_DEVICES.remove(device_info)
 
-    if device_info["id"] == G_ZIGBEE_ID:
+    if device_info["id"] in G_ZIGBEE_DEVICES_ID:
         # Unregister the built-in zigbee panel
         # hass.components.frontend.async_remove_panel("aiszigbee")
         # stop pm2 zigbee service
@@ -210,7 +213,7 @@ async def async_setup(hass, config):
                 device_info = get_device_info(event.pathname)
                 if device_info is not None:
                     if (
-                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZIGBEE_ID)
+                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZIGBEE_DEVICES_ID)
                         and ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
                         if "info" in device_info:
@@ -310,7 +313,7 @@ async def async_setup(hass, config):
         # check if the call was from scheduler or service / web app
         ais_global.G_USB_DEVICES = _lsusb()
         for device in ais_global.G_USB_DEVICES:
-            if device["id"] == G_ZIGBEE_ID:
+            if device["id"] in G_ZIGBEE_DEVICES_ID:
                 # USB zigbee dongle
                 await prepare_usb_device(hass, device)
 
@@ -396,7 +399,7 @@ def _lsusb():
                 product = ""
                 if id_vendor_product not in G_AIS_INTERNAL_DEVICES_ID:
                     if id_vendor_product not in [
-                        G_ZIGBEE_ID,
+                        G_ZIGBEE_DEVICES_ID,
                         G_ZWAVE_ID,
                         G_AIS_REMOTE_ID,
                     ]:
@@ -443,7 +446,7 @@ def _lsusb():
                             device["product"] = product
                             device["manufacturer"] = manufacturer
                             # special cases
-                            if device["id"] == G_ZIGBEE_ID:
+                            if device["id"] in G_ZIGBEE_DEVICES_ID:
                                 # USB zigbee dongle
                                 device["info"] = (
                                     "urządzenie Zigbee" + product + manufacturer
