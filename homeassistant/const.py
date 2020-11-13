@@ -325,6 +325,7 @@ ATTR_WAKEUP = "wake_up_interval"
 # For devices which support a code attribute
 ATTR_CODE = "code"
 ATTR_CODE_FORMAT = "code_format"
+ATTR_CODE_FORMAT_PER_USER = "code_format_per_user"
 
 # For calling a device specific command
 ATTR_COMMAND = "command"

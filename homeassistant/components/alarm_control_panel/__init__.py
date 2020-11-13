@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    ATTR_CODE_FORMAT_PER_USER,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -48,15 +49,11 @@ ALARM_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.s
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
-    )
+    component = hass.data[DOMAIN] = EntityComponent(logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_ALARM_DISARM, ALARM_SERVICE_SCHEMA, "async_alarm_disarm"
-    )
+    component.async_register_entity_service(SERVICE_ALARM_DISARM, ALARM_SERVICE_SCHEMA, "async_alarm_disarm")
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME,
         ALARM_SERVICE_SCHEMA,
@@ -107,6 +104,11 @@ class AlarmControlPanelEntity(Entity):
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
+        return None
+
+    @property
+    def code_format_per_user(self):
+        """Code format dictionary by user identity as the key or None or {} if no code per user identity is required."""
         return None
 
     @property
@@ -179,6 +181,7 @@ class AlarmControlPanelEntity(Entity):
             ATTR_CODE_FORMAT: self.code_format,
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
+            ATTR_CODE_FORMAT_PER_USER: self.code_format_per_user,
         }
 
 
