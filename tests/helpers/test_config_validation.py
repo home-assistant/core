@@ -179,7 +179,12 @@ def test_entity_domain():
     """Test entity domain validation."""
     schema = vol.Schema(cv.entity_domain("sensor"))
 
-    for value in ("invalid_entity", "cover.demo"):
+    for value in (
+        "invalid_entity",
+        "cover.demo",
+        "cover.demo,sensor.another_entity",
+        "",
+    ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
