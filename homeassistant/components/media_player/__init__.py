@@ -906,8 +906,8 @@ class MediaPlayerEntity(Entity):
         return content, content_type
 
     def get_browse_image_url(
-        self, media_content_type, media_content_id, media_image_id=None
-    ):
+        self, media_content_type: str, media_content_id: str, media_image_id: Optional[str] = None
+    ) -> str:
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
