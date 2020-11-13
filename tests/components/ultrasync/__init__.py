@@ -27,16 +27,6 @@ USER_INPUT = {
     CONF_PIN: "5678",
 }
 
-MOCK_AREAS = [
-    {"bank": 0, "name": "Area 1", "sequence": 30, "status": "Ready"},
-]
-
-
-MOCK_ZONES = [
-    {"bank": 0, "name": "Front door", "sequence": 1, "status": "Ready"},
-    {"bank": 1, "name": "Back door", "sequence": 1, "status": "Ready"},
-]
-
 
 async def init_integration(
     hass,

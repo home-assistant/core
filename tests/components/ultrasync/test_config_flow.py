@@ -1,8 +1,10 @@
 """Test the UltraSync config flow."""
 
-from homeassistant.components.ultrasync.const import DOMAIN
+from homeassistant import data_entry_flow
+from homeassistant.components.ultrasync import config_flow
+from homeassistant.components.ultrasync.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -123,3 +125,29 @@ async def test_options_flow(hass, ultrasync_api):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 15
+
+
+def init_config_flow(hass):
+    """Init a configuration flow."""
+    flow = config_flow.UltraSyncConfigFlow()
+    flow.hass = hass
+    return flow
+
+
+async def test_options(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=CONF_NAME,
+        data=ENTRY_CONFIG,
+        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+    )
+    flow = init_config_flow(hass)
+    options_flow = flow.async_get_options_flow(entry)
+
+    result = await options_flow.async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_SCAN_INTERVAL] == 10
