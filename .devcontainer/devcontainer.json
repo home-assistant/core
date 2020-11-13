@@ -12,10 +12,6 @@
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode"
   ],
-  "mounts": [
-    "source=E:/home_assistant/frontend,target=/workspaces/frontend,type=bind,consistency=cached",
-    "source=E:/home_assistant/pyvisonic,target=/workspaces/pyvisonic,type=bind,consistency=cached"
-  ],
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.pylintEnabled": true,

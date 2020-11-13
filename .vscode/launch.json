@@ -10,19 +10,6 @@
       "request": "launch",
       "module": "homeassistant",
       "args": ["--debug", "-c", "config"]
-    },
-    {
-      "name": "Python: Attach Local",
-      "type": "python",
-      "request": "attach",
-      "port": 5678,
-      "host": "127.0.0.1", // same as the browser that was opened by Docker Desktop.
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}",
-          "remoteRoot": "."
-        }
-      ]
     }
   ]
 }
