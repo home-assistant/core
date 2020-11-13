@@ -1,20 +1,9 @@
-"""This component provides basic support for Reolink IP cameras."""
+"""This component is used to update the camera API and subscription."""
 import logging
 
-import reolink
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from reolink.cameraApi import api
 from reolink.subscriptionManager import manager
 
-from .const import DOMAIN  # pylint:disable=unused-import
 from .const import EVENT_DATA_RECEIVED, SESSION_RENEW_THRESHOLD
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +70,7 @@ class ReolinkBase:
         if self._sman.renewTimer <= SESSION_RENEW_THRESHOLD:
             if not (await self._sman.renew()):
                 _LOGGER.error(
-                    "Host {self._api.host} error renewing the Reolink subscription"
+                    f"Host {self._api.host} error renewing the Reolink subscription"
                 )
                 await self._sman.subscribe(self._webhookUrl)
 

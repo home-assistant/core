@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from .const import EVENT_DATA_RECEIVED, STATE_MOTION, STATE_NO_MOTION
+from .const import EVENT_DATA_RECEIVED
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-"""Config flow for Hello World integration."""
+"""Config flow for the Reolink camera component."""
 import logging
 
 import voluptuous as vol

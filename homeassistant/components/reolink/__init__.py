@@ -11,28 +11,17 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .base import ReolinkBase
 from .const import (
     BASE,
-    CONF_CHANNEL,  # pylint:disable=unused-import
-    CONF_PROTOCOL,
-    CONF_STREAM,
     COORDINATOR,
     DOMAIN,
     EVENT_DATA_RECEIVED,
-    STATE_IDLE,
-    STATE_MOTION,
-    STATE_NO_MOTION,
 )
 
 SCAN_INTERVAL = timedelta(minutes=1)
@@ -73,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {BASE: base}
 
     async def async_update_data():
-
+    """This is the actual update function."""
         async with async_timeout.timeout(10):
             """Fetch data from API endpoint."""
 
@@ -139,6 +128,7 @@ async def handle_webhook(hass, webhook_id, request):
 
 
 async def register_webhook(hass, event_id):
+    """Register a webhook for motion events."""
     webhook_id = hass.components.webhook.async_generate_id()
 
     hass.components.webhook.async_register(DOMAIN, event_id, webhook_id, handle_webhook)
@@ -147,6 +137,7 @@ async def register_webhook(hass, event_id):
 
 
 async def unregister_webhook(hass: HomeAssistant, entry: ConfigEntry):
+    """Unregister the webhook for motion events."""
     base = hass.data[DOMAIN][entry.entry_id][BASE]
     event_id = f"{EVENT_DATA_RECEIVED}-{base._api.mac_address.replace(':', '')}"
 

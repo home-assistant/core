@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import ToggleEntity
 
 from .const import BASE, DOMAIN
