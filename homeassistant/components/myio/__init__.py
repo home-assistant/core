@@ -30,7 +30,8 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data.setdefault(DOMAIN, {})[_server_name] = {}
 
-    hass.data[DOMAIN][_server_name]["state"] = "Offline"
+    # hass.data[DOMAIN][_server_name]["state"] = "Offline"
+    hass.states.async_set(f"{_server_name}.state", "Offline")
 
     _refresh_timer = config_entry.options.get(CONF_REFRESH_TIME, 4)
 
@@ -49,11 +50,8 @@ async def async_setup_entry(hass, config_entry):
     async def async_update_data():
         """Fetch data from API endpoint."""
         was_offline = False
-        _temp_coordinator = hass.data[DOMAIN][_server_name]["coordinator"]
-        _temp_server_state = hass.data[DOMAIN][_server_name]["state"]
 
-        del hass.data[DOMAIN][_server_name]["coordinator"]
-        del hass.data[DOMAIN][_server_name]["state"]
+        _temp_server_state = hass.states.get(f"{_server_name}.state").state
 
         if _temp_server_state == "Offline":
             hass.states.async_set(f"{_server_name}.available", False)
@@ -68,16 +66,13 @@ async def async_setup_entry(hass, config_entry):
         )
 
         hass.states.async_set(f"{_server_name}.state", _temp_server_state)
-        hass.data[DOMAIN][_server_name]["state"] = _temp_server_state
 
         if _temp_server_state.startswith("Online") and was_offline:
             hass.states.async_set(f"{_server_name}.available", True)
             await setup_config_entries()
         elif not was_offline and _temp_server_state == "Offline":
-            hass.data[DOMAIN][_server_name]["coordinator"] = _temp_coordinator
+            _LOGGER.debug("Platform Not Ready")
             raise PlatformNotReady
-
-        hass.data[DOMAIN][_server_name]["coordinator"] = _temp_coordinator
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -91,8 +86,6 @@ async def async_setup_entry(hass, config_entry):
 
     def listener():
         """Listen to coordinator."""
-
-    hass.data[DOMAIN][_server_name]["coordinator"] = coordinator.data
 
     await coordinator.async_refresh()
 
