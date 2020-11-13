@@ -8,7 +8,7 @@
             "docker_version": "",
             "host_os": "",
             "installation_type": "Installasjonstype",
-            "os_name": "Operativsystemnavn",
+            "os_name": "Familie for operativsystem",
             "os_version": "Operativsystemversjon",
             "python_version": "Python versjon",
             "supervisor": "",
