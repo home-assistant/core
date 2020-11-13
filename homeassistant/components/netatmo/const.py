@@ -148,8 +148,8 @@ EVENT_ID_MAP = {
     EVENT_TYPE_LIGHT_MODE: "device_id",
     EVENT_TYPE_ALARM_STARTED: "device_id",
     EVENT_TYPE_CANCEL_SET_POINT: "room_id",
-    EVENT_TYPE_THERM_MODE: "room_id",
     EVENT_TYPE_SET_POINT: "room_id",
+    EVENT_TYPE_THERM_MODE: "home_id",
 }
 
 MODE_LIGHT_ON = "on"

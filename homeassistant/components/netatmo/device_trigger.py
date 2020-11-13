@@ -19,8 +19,10 @@ from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .climate import STATE_NETATMO_AWAY, STATE_NETATMO_HG, STATE_NETATMO_SCHEDULE
 from .const import (
     CLIMATE_TRIGGERS,
+    EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
     MODEL_NACAMDOORTAG,
     MODEL_NACAMERA,
@@ -40,6 +42,8 @@ from .const import (
     OUTDOOR_CAMERA_TRIGGERS,
 )
 
+CONF_SUBTYPE = "subtype"
+
 DEVICES = {
     MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
     MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
@@ -58,6 +62,13 @@ DEVICES = {
 }
 
 SUPPORTED_DEVICES = {MODEL_NACAMERA, MODEL_NOC, MODEL_NATHERM1, MODEL_NRV}
+SUBTYPES = {
+    EVENT_TYPE_THERM_MODE: [
+        STATE_NETATMO_SCHEDULE,
+        STATE_NETATMO_HG,
+        STATE_NETATMO_AWAY,
+    ]
+}
 
 TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS + CLIMATE_TRIGGERS
 
@@ -65,6 +76,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        vol.Optional(CONF_SUBTYPE): str,
     }
 )
 
@@ -79,15 +91,28 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         device = device_registry.async_get(device_id)
 
         for trigger in DEVICES.get(device.model, []):
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: trigger,
-                }
-            )
+            if trigger in SUBTYPES:
+                for subtype in SUBTYPES[trigger]:
+                    triggers.append(
+                        {
+                            CONF_PLATFORM: "device",
+                            CONF_DEVICE_ID: device_id,
+                            CONF_DOMAIN: DOMAIN,
+                            CONF_ENTITY_ID: entry.entity_id,
+                            CONF_TYPE: trigger,
+                            CONF_SUBTYPE: subtype,
+                        }
+                    )
+            else:
+                triggers.append(
+                    {
+                        CONF_PLATFORM: "device",
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: trigger,
+                    }
+                )
 
     return triggers
 
@@ -113,6 +138,14 @@ async def async_attach_trigger(
                 ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
             },
         }
+        if config[CONF_TYPE] in SUBTYPES:
+            print(config)
+            print(config[CONF_TYPE])
+            print(config[CONF_SUBTYPE])
+            event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
+                "mode": config[CONF_SUBTYPE]
+            }
+            print(event_config)
 
         event_config = event_trigger.TRIGGER_SCHEMA(event_config)
         return await event_trigger.async_attach_trigger(
