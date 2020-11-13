@@ -744,7 +744,7 @@ class BaseTelegramBotEntity:
             _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
             return False, None
 
-        if msg_data["from"].get("id") not in self.allowed_chat_ids or (
+        if msg_data["from"].get("id") not in self.allowed_chat_ids and (
             "chat" in msg_data
             and msg_data["chat"].get("id") not in self.allowed_chat_ids
         ):
