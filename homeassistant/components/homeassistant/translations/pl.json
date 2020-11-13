@@ -2,12 +2,13 @@
     "system_health": {
         "info": {
             "arch": "Architektura procesora",
-            "dev": "Rozw\u00f3j",
+            "chassis": "Wersja komputera",
+            "dev": "Wersja rozwojowa",
             "docker": "Docker",
             "docker_version": "Wersja Dockera",
-            "host_os": "Home Assistant OS",
+            "host_os": "System operacyjny HA",
             "installation_type": "Typ instalacji",
-            "os_name": "Nazwa systemu operacyjnego",
+            "os_name": "Rodzina systemu operacyjnego",
             "os_version": "Wersja systemu operacyjnego",
             "python_version": "Wersja Pythona",
             "supervisor": "Supervisor",

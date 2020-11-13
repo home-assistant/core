@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "Dashboards",
             "mode": "Modus",
-            "resources": "Ressurser"
+            "resources": "Ressurser",
+            "views": "Visninger"
         }
     }
 }
