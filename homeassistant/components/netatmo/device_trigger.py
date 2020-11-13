@@ -139,13 +139,9 @@ async def async_attach_trigger(
             },
         }
         if config[CONF_TYPE] in SUBTYPES:
-            print(config)
-            print(config[CONF_TYPE])
-            print(config[CONF_SUBTYPE])
             event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
                 "mode": config[CONF_SUBTYPE]
             }
-            print(event_config)
 
         event_config = event_trigger.TRIGGER_SCHEMA(event_config)
         return await event_trigger.async_attach_trigger(
