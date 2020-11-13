@@ -245,13 +245,13 @@ class GoogleCloudTTSProvider(Provider):
         )
         options = options_schema(options)
 
-        _encoding = options.get(CONF_ENCODING)
-        _voice = options.get(CONF_VOICE)
+        _encoding = options[CONF_ENCODING]
+        _voice = options[CONF_VOICE]
         if _voice and not _voice.startswith(language):
             language = _voice[:5]
 
         try:
-            params = {options.get(CONF_TEXT_TYPE): message}
+            params = {options[CONF_TEXT_TYPE]: message}
             # pylint: disable=no-member
             synthesis_input = texttospeech.types.SynthesisInput(**params)
 
