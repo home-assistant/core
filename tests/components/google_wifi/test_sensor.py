@@ -31,9 +31,6 @@ MOCK_DATA_NEXT = (
 MOCK_DATA_MISSING = '{"software": {},' '"system": {},' '"wan": {}}'
 
 
-"""Tests for setting up the Google Wifi sensor platform."""
-
-
 async def test_setup_minimum(hass, requests_mock):
     """Test setup with minimum configuration."""
     resource = f"http://{google_wifi.DEFAULT_HOST}{google_wifi.ENDPOINT}"
@@ -91,12 +88,11 @@ def setup_api(data, requests_mock):
     return api, sensor_dict
 
 
-@ha.callback
 def fake_delay(hass, ha_delay):
     """Fake delay to prevent update throttle."""
     hass_now = dt_util.utcnow()
     shifted_time = hass_now + timedelta(seconds=ha_delay)
-    hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
 
 
 def test_name(requests_mock):
