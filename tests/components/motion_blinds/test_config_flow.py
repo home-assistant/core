@@ -1,4 +1,6 @@
 """Test the Motion Blinds config flow."""
+import socket
+
 import pytest
 
 from homeassistant import config_entries
@@ -49,3 +51,26 @@ async def test_config_flow_manual_host_success(hass):
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
     }
+
+
+async def test_config_flow_connection_error(hass):
+    """Failed flow manually initialized by the user with connection timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
+        side_effect=socket.timeout,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_API_KEY: TEST_API_KEY},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "connection_error"
