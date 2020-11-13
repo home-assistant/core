@@ -4,9 +4,12 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
+    CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
     MODEL_NACAMERA,
+    MODEL_NATHERM1,
     MODEL_NOC,
+    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -44,25 +47,27 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "camera_type,event_types",
+    "platform,device_type,event_types",
     [
-        (MODEL_NOC, OUTDOOR_CAMERA_TRIGGERS),
-        (MODEL_NACAMERA, INDOOR_CAMERA_TRIGGERS),
+        ("camera", MODEL_NOC, OUTDOOR_CAMERA_TRIGGERS),
+        ("camera", MODEL_NACAMERA, INDOOR_CAMERA_TRIGGERS),
+        ("climate", MODEL_NRV, CLIMATE_TRIGGERS),
+        ("climate", MODEL_NATHERM1, CLIMATE_TRIGGERS),
     ],
 )
-async def test_get_triggers_camera(
-    hass, device_reg, entity_reg, camera_type, event_types
+async def test_get_triggers(
+    hass, device_reg, entity_reg, platform, device_type, event_types
 ):
-    """Test we get the expected triggers from a netatmo cameras."""
+    """Test we get the expected triggers from a netatmo devices."""
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        model=camera_type,
+        model=device_type,
     )
     entity_reg.async_get_or_create(
-        "camera", NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
     )
     expected_triggers = [
         {
@@ -70,23 +75,31 @@ async def test_get_triggers_camera(
             "domain": NETATMO_DOMAIN,
             "type": event_type,
             "device_id": device_entry.id,
-            "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
+            "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
         }
         for event_type in event_types
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = [
+        trigger
+        for trigger in await async_get_device_automations(
+            hass, "trigger", device_entry.id
+        )
+        if trigger["domain"] == NETATMO_DOMAIN
+    ]
     assert_lists_same(triggers, expected_triggers)
 
 
 @pytest.mark.parametrize(
-    "camera_type,event_type",
-    [(MODEL_NOC, trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
-    + [(MODEL_NACAMERA, trigger) for trigger in INDOOR_CAMERA_TRIGGERS],
+    "platform,camera_type,event_type",
+    [("camera", MODEL_NOC, trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
+    + [("camera", MODEL_NACAMERA, trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
+    + [("climate", MODEL_NRV, trigger) for trigger in CLIMATE_TRIGGERS]
+    + [("climate", MODEL_NATHERM1, trigger) for trigger in CLIMATE_TRIGGERS],
 )
-async def test_if_fires_on_camera_event(
-    hass, calls, device_reg, entity_reg, camera_type, event_type
+async def test_if_fires_on_event(
+    hass, calls, device_reg, entity_reg, platform, camera_type, event_type
 ):
-    """Test for camera event triggers firing."""
+    """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (device_registry.CONNECTION_NETWORK_MAC, mac_address)
     config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
@@ -98,7 +111,7 @@ async def test_if_fires_on_camera_event(
         model=camera_type,
     )
     entity_reg.async_get_or_create(
-        "camera", NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
     )
     events = async_capture_events(hass, "netatmo_event")
 
@@ -112,7 +125,7 @@ async def test_if_fires_on_camera_event(
                         "platform": "device",
                         "domain": NETATMO_DOMAIN,
                         "device_id": device_entry.id,
-                        "entity_id": f"camera.{NETATMO_DOMAIN}_5678",
+                        "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
                         "type": event_type,
                     },
                     "action": {

@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 from .const import (
+    CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
     MODEL_NACAMDOORTAG,
     MODEL_NACAMERA,
@@ -43,8 +44,8 @@ DEVICES = {
     MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
     MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
     MODEL_NAPLUG: [],
-    MODEL_NATHERM1: [],
-    MODEL_NRV: [],
+    MODEL_NATHERM1: CLIMATE_TRIGGERS,
+    MODEL_NRV: CLIMATE_TRIGGERS,
     MODEL_NSD: [],
     MODEL_NACAMDOORTAG: [],
     MODEL_NHC: [],
@@ -56,9 +57,9 @@ DEVICES = {
     MODEL_PUBLIC: [],
 }
 
-CAMERAS = {MODEL_NACAMERA, MODEL_NOC}
+SUPPORTED_DEVICES = {MODEL_NACAMERA, MODEL_NOC, MODEL_NATHERM1, MODEL_NRV}
 
-TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS
+TRIGGER_TYPES = OUTDOOR_CAMERA_TRIGGERS + INDOOR_CAMERA_TRIGGERS + CLIMATE_TRIGGERS
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
@@ -103,7 +104,7 @@ async def async_attach_trigger(
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if device.model in CAMERAS:
+    if device.model in SUPPORTED_DEVICES:
         event_config = {
             event_trigger.CONF_PLATFORM: "event",
             event_trigger.CONF_EVENT_TYPE: NETATMO_EVENT,
