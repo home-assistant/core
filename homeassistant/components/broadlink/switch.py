@@ -122,11 +122,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif device.api.type == "SP2":
         switches = [BroadlinkSP2Switch(device)]
 
-    elif device.api.type == "BG1":
-        switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
-
     elif device.api.type in {"SP4", "SP4B"}:
         switches = [BroadlinkSP4Switch(device)]
+
+    elif device.api.type == "BG1":
+        switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
 
     elif device.api.type == "MP1":
         switches = [BroadlinkMP1Slot(device, slot) for slot in range(1, 5)]
