@@ -132,6 +132,8 @@ class VasttrafikDepartureSensor(Entity):
         else:
             for departure in self._departureboard:
                 line = departure.get("sname")
+                if "cancelled" in departure:
+                    continue
                 if not self._lines or line in self._lines:
                     if "rtTime" in departure:
                         self._state = departure["rtTime"]
