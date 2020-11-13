@@ -1,7 +1,17 @@
 """Test selectors."""
 import pytest
+import voluptuous as vol
 
 from homeassistant.helpers import selector
+
+
+@pytest.mark.parametrize(
+    "schema", ({}, {"non_existing": {}}, {"device": {}, "entity": {}})
+)
+def test_invalid_base_schema(schema):
+    """Test base schema validation."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector(schema)
 
 
 @pytest.mark.parametrize(
