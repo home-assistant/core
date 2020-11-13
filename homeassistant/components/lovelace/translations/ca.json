@@ -3,7 +3,8 @@
         "info": {
             "dashboards": "Panells",
             "mode": "Mode",
-            "resources": "Recursos"
+            "resources": "Recursos",
+            "views": "Visualitzacions"
         }
     }
 }
