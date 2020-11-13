@@ -12,7 +12,6 @@ from tests.async_mock import patch
 
 TEST_HOST = "1.2.3.4"
 TEST_API_KEY = "12ab345c-d67e-8f"
-TEST_MAC = "ab:cd:ef:gh"
 
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
