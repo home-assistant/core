@@ -6,6 +6,7 @@
             "dev": "Desarrollo",
             "docker": "Docker",
             "docker_version": "Docker",
+            "hassio": "Supervisor",
             "host_os": "SO Home Assistant",
             "installation_type": "Tipo de instalaci\u00f3n",
             "os_name": "Nombre del Sistema Operativo",

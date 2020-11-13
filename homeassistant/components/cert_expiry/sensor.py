@@ -10,13 +10,11 @@ from homeassistant.const import (
     CONF_PORT,
     DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_START,
-    TIME_DAYS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -55,7 +53,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
-        SSLCertificateDays(coordinator),
         SSLCertificateTimestamp(coordinator),
     ]
 
@@ -77,34 +74,6 @@ class CertExpiryEntity(CoordinatorEntity):
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
         }
-
-
-class SSLCertificateDays(CertExpiryEntity):
-    """Implementation of the Cert Expiry days sensor."""
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Cert Expiry ({self.coordinator.name})"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if not self.coordinator.is_cert_valid:
-            return 0
-
-        expiry = self.coordinator.data - dt.utcnow()
-        return expiry.days
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return TIME_DAYS
 
 
 class SSLCertificateTimestamp(CertExpiryEntity):

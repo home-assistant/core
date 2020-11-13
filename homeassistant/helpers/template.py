@@ -49,6 +49,8 @@ _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
+# Match "simple" ints and floats. -1.0, 1, +5, 5.0
+_IS_NUMERIC = re.compile(r"^[+-]?\d*(?:\.\d*)?$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -373,7 +375,19 @@ class Template:
             # render, by not returning right here. The evaluation of strings
             # resulting in strings impacts quotes, to avoid unexpected
             # output; use the original render instead of the evaluated one.
-            if not isinstance(result, str):
+            # Complex and scientific values are also unexpected. Filter them out.
+            if (
+                # Filter out string and complex numbers
+                not isinstance(result, (str, complex))
+                and (
+                    # Pass if not numeric and not a boolean
+                    not isinstance(result, (int, float))
+                    # Or it's a boolean (inherit from int)
+                    or isinstance(result, bool)
+                    # Or if it's a digit
+                    or _IS_NUMERIC.match(render_result) is not None
+                )
+            ):
                 return result
         except (ValueError, TypeError, SyntaxError, MemoryError):
             pass
