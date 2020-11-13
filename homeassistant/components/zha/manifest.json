@@ -11,7 +11,7 @@
     "zigpy-deconz==0.11.0",
     "zigpy==0.27.0",
     "zigpy-xbee==0.13.0",
-    "zigpy-zigate==0.7.0",
+    "zigpy-zigate==0.7.1",
     "zigpy-znp==0.2.2"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"]
