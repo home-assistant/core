@@ -1,14 +1,13 @@
 """The tests for the Google Wifi platform."""
 from datetime import datetime, timedelta
 
-from homeassistant import core as ha
 import homeassistant.components.google_wifi.sensor as google_wifi
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import Mock, patch
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 
 NAME = "foo"
 
@@ -92,7 +91,7 @@ def fake_delay(hass, ha_delay):
     """Fake delay to prevent update throttle."""
     hass_now = dt_util.utcnow()
     shifted_time = hass_now + timedelta(seconds=ha_delay)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: shifted_time})
+    async_fire_time_changed(hass, shifted_time)
 
 
 def test_name(requests_mock):
