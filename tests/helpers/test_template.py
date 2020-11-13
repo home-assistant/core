@@ -2426,5 +2426,6 @@ async def test_parse_result(hass):
         ("-1", -1),
         ("-1.0", -1.0),
         ("+1", 1),
+        ("5.", 5.0),
     ):
         assert template.Template(tpl, hass).async_render() == result
