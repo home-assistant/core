@@ -63,8 +63,15 @@ class VeluxModule:
         password = self._domain_config.get(CONF_PASSWORD)
         self.pyvlx = PyVLX(host=host, password=password)
 
+        self._hass.services.async_register(
+            DOMAIN, "reboot_gateway", self.async_reboot_gateway
+        )
+
     async def async_start(self):
         """Start velux component."""
         _LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
+
+    async def async_reboot_gateway(self, service_call):
+        await self.pyvlx.reboot_gateway()
