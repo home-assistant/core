@@ -73,7 +73,7 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict):
     if not await base.connectApi():
         raise CannotConnect
 
-    title = base._api.name
+    title = base.api.name
     base.disconnectApi()
     return {"title": title}
 
@@ -96,7 +96,7 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the Reolink devices options."""
         if user_input is not None:
             self.options.update(user_input)
-            await self.base._api.update_streaming_options(
+            await self.base.api.update_streaming_options(
                 user_input[CONF_STREAM],
                 user_input[CONF_PROTOCOL],
                 user_input[CONF_CHANNEL],
@@ -107,14 +107,14 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="configure_stream",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_STREAM, default=self.base._api.stream): vol.In(
+                    vol.Optional(CONF_STREAM, default=self.base.api.stream): vol.In(
                         ["main", "sub"]
                     ),
                     vol.Optional(
-                        CONF_PROTOCOL, default=self.base._api.protocol
+                        CONF_PROTOCOL, default=self.base.api.protocol
                     ): vol.In(["rtmp", "rtsp"]),
                     vol.Optional(
-                        CONF_CHANNEL, default=self.base._api.channel
+                        CONF_CHANNEL, default=self.base.api.channel
                     ): cv.positive_int,
                 }
             ),

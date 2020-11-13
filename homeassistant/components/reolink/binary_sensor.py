@@ -31,12 +31,12 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_motion_{self._base._api.mac_address}"
+        return f"reolink_motion_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} motion"
+        return f"{self._base.api.name} motion"
 
     @property
     def is_on(self):
@@ -46,7 +46,7 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._base._sman.renewTimer > 0
+        return self._base.sman.renewTimer > 0
 
     @property
     def device_class(self):
@@ -57,7 +57,7 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
         """Entity created."""
         await super().async_added_to_hass()
         event_id = (
-            f"{EVENT_DATA_RECEIVED}-{self._base._api.mac_address.replace(':', '')}"
+            f"{EVENT_DATA_RECEIVED}-{self._base.api.mac_address.replace(':', '')}"
         )
         self.hass.bus.async_listen(event_id, self.handle_event)
 

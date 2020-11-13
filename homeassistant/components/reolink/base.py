@@ -1,4 +1,4 @@
-"""This component is used to update the camera API and subscription."""
+"""This component updates the camera API and subscription."""
 import logging
 
 from reolink.cameraApi import api
@@ -25,7 +25,18 @@ class ReolinkBase:
     @property
     def eventId(self):
         """Create the event ID string."""
-        return f"{EVENT_DATA_RECEIVED}-{self._api.mac_address.replace(':', '')}"
+        eventId = self._api.mac_address.replace(':', '')
+        return f"{EVENT_DATA_RECEIVED}-{eventId}"
+
+    @property
+    def api:
+        """Return the API object."""
+        return self._api
+
+    @property
+    def sman:
+        """Return the Session Manager object."""
+        return self._sman
 
     async def connectApi(self):
         """Connect to the Reolink API and fetch initial dataset."""

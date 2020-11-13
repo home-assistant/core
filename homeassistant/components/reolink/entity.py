@@ -22,17 +22,17 @@ class ReolinkEntity(CoordinatorEntity):
     def device_info(self):
         """Information about this entity/device."""
         return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._base._api.mac_address)},
-            "name": self._base._api.name,
-            "sw_version": self._base._api.sw_version,
-            "model": self._base._api.model,
-            "manufacturer": self._base._api.manufacturer,
+            "connections": {(CONNECTION_NETWORK_MAC, self._base.api.mac_address)},
+            "name": self._base.api.name,
+            "sw_version": self._base.api.sw_version,
+            "model": self._base.api.model,
+            "manufacturer": self._base.api.manufacturer,
         }
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._base._api.session_active
+        return self._base.api.session_active
 
     async def request_refresh(self):
         """Call the coordinator to update the API."""

@@ -74,17 +74,17 @@ class ReolinkCamera(ReolinkEntity, Camera):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_{self._base._api.mac_address}"
+        return f"reolink_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return self._base._api.name
+        return self._base.api.name
 
     @property
     def hasPtz(self):
         """Return whether the camera has PTZ."""
-        return self._base._api._hasPtz
+        return self._base.api._hasPtz
 
     @property
     def supported_features(self):
@@ -93,7 +93,7 @@ class ReolinkCamera(ReolinkEntity, Camera):
 
     async def stream_source(self):
         """Return the source of the stream."""
-        return await self._base._api.get_stream_source()
+        return await self._base.api.get_stream_source()
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
@@ -115,14 +115,14 @@ class ReolinkCamera(ReolinkEntity, Camera):
 
     async def camera_image(self):
         """Return bytes of camera image."""
-        return self._base._api.get_still_image()
+        return self._base.api.get_still_image()
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        return await self._base._api.get_snapshot()
+        return await self._base.api.get_snapshot()
 
     async def ptz_control(self, command, **kwargs):
         """Pass PTZ command to the camera."""
-        await self._base._api.set_ptz_command(
+        await self._base.api.set_ptz_command(
             command=self._ptz_commands[command], **kwargs
         )

@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     devices = []
     base = hass.data[DOMAIN][config_entry.entry_id][BASE]
 
-    for capability in await base._api.get_switchCapabilities():
+    for capability in await base.api.get_switchCapabilities():
         if capability == "ftp":
             devices.append(ftpSwitch(hass, config_entry))
         elif capability == "email":
@@ -49,17 +49,17 @@ class ftpSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_ftpSwitch_{self._base._api.mac_address}"
+        return f"reolink_ftpSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} FTP"
+        return f"{self._base.api.name} FTP"
 
     @property
     def is_on(self):
         """Camera Motion FTP upload Status."""
-        return self._base._api.ftp_state
+        return self._base.api.ftp_state
 
     @property
     def device_class(self):
@@ -71,17 +71,17 @@ class ftpSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:folder-upload"
-        else:
-            return "mdi:folder-remove"
+
+        return "mdi:folder-remove"
 
     async def async_turn_on(self, **kwargs):
         """Enable motion ftp recording."""
-        await self._base._api.set_ftp(True)
+        await self._base.api.set_ftp(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable motion ftp recording."""
-        await self._base._api.set_ftp(False)
+        await self._base.api.set_ftp(False)
         await self.request_refresh()
 
 
@@ -96,17 +96,17 @@ class emailSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_emailSwitch_{self._base._api.mac_address}"
+        return f"reolink_emailSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} email"
+        return f"{self._base.api.name} email"
 
     @property
     def is_on(self):
         """Camera Motion email upload Status."""
-        return self._base._api.email_state
+        return self._base.api.email_state
 
     @property
     def device_class(self):
@@ -118,17 +118,17 @@ class emailSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:email"
-        else:
-            return "mdi:email-outline"
+
+        return "mdi:email-outline"
 
     async def async_turn_on(self, **kwargs):
         """Enable motion email notification."""
-        await self._base._api.set_email(True)
+        await self._base.api.set_email(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable motion email notification."""
-        await self._base._api.set_email(False)
+        await self._base.api.set_email(False)
         await self.request_refresh()
 
 
@@ -143,17 +143,17 @@ class irLightsSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_irLightsSwitch_{self._base._api.mac_address}"
+        return f"reolink_irLightsSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} IR lights"
+        return f"{self._base.api.name} IR lights"
 
     @property
     def is_on(self):
         """Camera Motion ir lights Status."""
-        return self._base._api.ir_state
+        return self._base.api.ir_state
 
     @property
     def device_class(self):
@@ -165,17 +165,17 @@ class irLightsSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:flashlight"
-        else:
-            return "mdi:flashlight-off"
+
+        return "mdi:flashlight-off"
 
     async def async_turn_on(self, **kwargs):
         """Enable motion ir lights."""
-        await self._base._api.set_ir_lights(True)
+        await self._base.api.set_ir_lights(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable motion ir lights."""
-        await self._base._api.set_ir_lights(False)
+        await self._base.api.set_ir_lights(False)
         await self.request_refresh()
 
 
@@ -190,17 +190,17 @@ class recordingSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_recordingSwitch_{self._base._api.mac_address}"
+        return f"reolink_recordingSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} recording"
+        return f"{self._base.api.name} recording"
 
     @property
     def is_on(self):
         """Camera recording upload Status."""
-        return self._base._api.recording_state
+        return self._base.api.recording_state
 
     @property
     def device_class(self):
@@ -212,17 +212,17 @@ class recordingSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:filmstrip"
-        else:
-            return "mdi:filmstrip-off"
+
+        return "mdi:filmstrip-off"
 
     async def async_turn_on(self, **kwargs):
         """Enable recording."""
-        await self._base._api.set_recording(True)
+        await self._base.api.set_recording(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable recording."""
-        await self._base._api.set_recording(False)
+        await self._base.api.set_recording(False)
         await self.request_refresh()
 
 
@@ -237,17 +237,17 @@ class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_motionDetectionSwitch_{self._base._api.mac_address}"
+        return f"reolink_motionDetectionSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} motion detection"
+        return f"{self._base.api.name} motion detection"
 
     @property
     def is_on(self):
         """Camera motion detection Status."""
-        return self._base._api.motion_detection_state
+        return self._base.api.motion_detection_state
 
     @property
     def device_class(self):
@@ -259,17 +259,17 @@ class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:motion-sensor"
-        else:
-            return "mdi:motion-sensor-off"
+        
+        return "mdi:motion-sensor-off"
 
     async def async_turn_on(self, **kwargs):
         """Enable motion detection."""
-        await self._base._api.set_motion_detection(True)
+        await self._base.api.set_motion_detection(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable motion detection."""
-        await self._base._api.set_motion_detection(False)
+        await self._base.api.set_motion_detection(False)
         await self.request_refresh()
 
 
@@ -284,17 +284,17 @@ class audioSwitch(ReolinkEntity, ToggleEntity):
     @property
     def unique_id(self):
         """Return Unique ID string."""
-        return f"reolink_audioSwitch_{self._base._api.mac_address}"
+        return f"reolink_audioSwitch_{self._base.api.mac_address}"
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return f"{self._base._api.name} record audio"
+        return f"{self._base.api.name} record audio"
 
     @property
     def is_on(self):
         """Camera audio switch Status."""
-        return self._base._api.audio_state
+        return self._base.api.audio_state
 
     @property
     def device_class(self):
@@ -306,15 +306,15 @@ class audioSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:volume-high"
-        else:
-            return "mdi:volume-off"
+
+        return "mdi:volume-off"
 
     async def async_turn_on(self, **kwargs):
         """Enable audio recording."""
-        await self._base._api.set_audio(True)
+        await self._base.api.set_audio(True)
         await self.request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Disable audio recording."""
-        await self._base._api.set_audio(False)
+        await self._base.api.set_audio(False)
         await self.request_refresh()
