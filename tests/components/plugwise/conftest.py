@@ -94,9 +94,6 @@ def mock_smile_adam():
         smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
             return_value=True
         )
-        smile_mock.return_value.delete_notification.side_effect = AsyncMock(
-            return_value=True
-        )
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"
@@ -142,8 +139,6 @@ def mock_smile_anna():
         smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
             return_value=True
         )
-
-        smile_mock.return_value.delete_notification.side_effect = Smile.PlugwiseError
 
         smile_mock.return_value.get_all_devices.return_value = _read_json(
             chosen_env, "get_all_devices"

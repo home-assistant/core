@@ -40,7 +40,6 @@ from .const import (
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-SERVICE_DELETE = "delete_notification"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,23 +134,10 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if single_master_thermostat is None:
         platforms = SENSOR_PLATFORMS
 
-    async def async_delete_notification(self):
-        """Service: delete the Plugwise Notification."""
-        try:
-            await api.delete_notification()
-        except Smile.PlugwiseError:
-            _LOGGER.error(
-                "Failed to delete the Plugwise Notification for %s", api.smile_name
-            )
-
     for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-        if component == "climate":
-            hass.services.async_register(
-                DOMAIN, SERVICE_DELETE, async_delete_notification, schema=vol.Schema({})
-            )
 
     return True
 

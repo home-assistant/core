@@ -154,10 +154,5 @@ class PwNotifySensor(PwBinarySensor, BinarySensorEntity):
             for notify_id, details in notify.items():
                 for msg_type, msg in details.items():
                     self._attributes[msg_type.upper()] = msg
-                    self._hass.components.persistent_notification.async_create(
-                        f"{msg_type.upper()}: {msg}",
-                        "Plugwise Notification:",
-                        f"{DOMAIN}.{notify_id}",
-                    )
 
         self.async_write_ha_state()
