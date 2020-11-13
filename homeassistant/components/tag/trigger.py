@@ -40,11 +40,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     @callback
     def handle_event(event):
         """Listen for tag scan events and calls the action when data matches."""
-        print(event.data)
         try:
             tag_data_schema(event.data)
         except vol.Invalid:
-            print("OMG PUPPIES!")
             # If event doesn't match, skip tag event
             return
 
