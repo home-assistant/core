@@ -4,10 +4,10 @@ import datetime
 import logging
 from typing import Optional
 
+from aiohttp.client_exceptions import ClientError
 from google_nest_sdm.camera_traits import CameraImageTrait, CameraLiveStreamTrait
 from google_nest_sdm.device import Device
 from haffmpeg.tools import IMAGE_JPEG
-import requests
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
@@ -130,7 +130,7 @@ class NestCamera(Camera):
         self._stream_refresh_unsub = None
         try:
             self._stream = await self._stream.extend_rtsp_stream()
-        except requests.HTTPError as err:
+        except ClientError as err:
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None
