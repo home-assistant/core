@@ -12,6 +12,7 @@ from homeassistant.const import (
     VOLT,
 )
 
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -123,6 +124,7 @@ SENSORS = {
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         value=lambda value: value,
+        icon="mdi:gauge",
         # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
         available=lambda block: block.sensorOp == "normal",
     ),
@@ -143,7 +145,16 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("relay", "totalWorkTime"): BlockAttributeDescription(
+        name="Lamp life",
+        unit=PERCENTAGE,
+        icon="mdi:progress-wrench",
+        value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
+        device_state_attributes=lambda block: {
+            "Operational hours": round(block.totalWorkTime / 3600, 1)
+        },
+    ),
 }
 
 REST_SENSORS = {

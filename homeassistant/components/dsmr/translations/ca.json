@@ -3,5 +3,15 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Temps m\u00ednim entre actualitzacions d'entitats [s]"
+                },
+                "title": "Opcions de DSMR"
+            }
+        }
     }
 }
