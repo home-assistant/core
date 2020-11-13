@@ -1,9 +1,10 @@
 """Reolink integration for HomeAssistant."""
 import asyncio
-import async_timeout
 from datetime import timedelta
 import logging
 import re
+
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -57,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {BASE: base}
 
     async def async_update_data():
-        """This function handles the actual update."""
+        """Perform the actual updates."""
 
         async with async_timeout.timeout(10):
             """Fetch data from API endpoint."""

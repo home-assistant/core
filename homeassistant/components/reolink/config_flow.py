@@ -109,7 +109,8 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                         ["main", "sub"]
                     ),
                     vol.Optional(CONF_PROTOCOL, default=self.base.api.protocol): vol.In(
-                        ["rtmp", "rtsp"]),
+                        ["rtmp", "rtsp"]
+                    ),
                     vol.Optional(
                         CONF_CHANNEL, default=self.base.api.channel
                     ): cv.positive_int,

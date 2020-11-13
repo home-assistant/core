@@ -23,9 +23,9 @@
       "step": {
         "configure_stream": {
           "data": {
-            "stream": "[%key:common::config_flow::data::stream%]",
-            "protocol": "[%key:common::config_flow::data::protocol%]",
-            "channel": "[%key:common::config_flow::data::channel%]"
+            "stream": "Stream",
+            "protocol": "Protocol",
+            "channel": "Channel"
           }
         }
       }

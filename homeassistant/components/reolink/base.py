@@ -25,7 +25,7 @@ class ReolinkBase:
     @property
     def eventId(self):
         """Create the event ID string."""
-        eventId = self._api.mac_address.replace(':', '')
+        eventId = self._api.mac_address.replace(":", "")
         return f"{EVENT_DATA_RECEIVED}-{eventId}"
 
     @property
@@ -58,11 +58,11 @@ class ReolinkBase:
         await self._api.logout()
 
     async def subscribe(self, webhookUrl):
-        """This method will subscribe to motion events and set the webhook as callback."""
+        """This method subscribes to motion events and sets the webhook as callback."""
         self._webhookUrl = webhookUrl
 
         if not self._api.session_active:
-            _LOGGER.error(f"Please connect with the camera API before subscribing")
+            _LOGGER.error("Please connect with the camera API before subscribing")
             return False
 
         self._sman = manager(
@@ -90,6 +90,6 @@ class ReolinkBase:
         return await self._sman.unsubscribe()
 
     async def stop(self):
-        """This method both disconnects the APi and unsubscribes."""
+        """Disconnect the APi and unsubscribe."""
         await self.disconnectApi()
         await self.unsubscribe()
