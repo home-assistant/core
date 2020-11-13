@@ -346,7 +346,7 @@ def test_tan(hass):
         (0, 0.0),
         (math.pi, -0.0),
         (math.pi / 180 * 45, 1.0),
-        (math.pi / 180 * 90, 1.633123935319537e16),
+        (math.pi / 180 * 90, "1.633123935319537e+16"),
         (math.pi / 180 * 135, -1.0),
         ("'error'", "error"),
     ]
@@ -2416,5 +2416,16 @@ async def test_parse_result(hass):
         ('{{ "{{}}" }}', "{{}}"),
         ("not-something", "not-something"),
         ("2a", "2a"),
+        ("123E5", "123E5"),
+        ("1j", "1j"),
+        ("1e+100", "1e+100"),
+        ("0xface", "0xface"),
+        ("123", 123),
+        ("123.0", 123.0),
+        (".5", 0.5),
+        ("-1", -1),
+        ("-1.0", -1.0),
+        ("+1", 1),
+        ("5.", 5.0),
     ):
         assert template.Template(tpl, hass).async_render() == result
