@@ -29,12 +29,12 @@ class ReolinkBase:
         return f"{EVENT_DATA_RECEIVED}-{eventId}"
 
     @property
-    def api:
+    def api(self):
         """Return the API object."""
         return self._api
 
     @property
-    def sman:
+    def sman(self):
         """Return the Session Manager object."""
         return self._sman
 

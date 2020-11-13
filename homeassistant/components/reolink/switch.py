@@ -259,7 +259,7 @@ class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
         """Icon of the switch."""
         if self.is_on:
             return "mdi:motion-sensor"
-        
+
         return "mdi:motion-sensor-off"
 
     async def async_turn_on(self, **kwargs):

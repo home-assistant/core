@@ -1,17 +1,14 @@
 """This component provides support for Reolink IP cameras."""
 import asyncio
 import logging
-
 import voluptuous as vol
+
 from haffmpeg.camera import CameraMjpeg
-from homeassistant.components.camera import (
-    SUPPORT_STREAM,
-    Camera,
-)
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)

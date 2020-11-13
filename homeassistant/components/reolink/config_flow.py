@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
@@ -58,10 +59,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 async def validate_input(hass: core.HomeAssistant, user_input: dict):
-    """
-    Validate the user input allows us to connect.
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     base = ReolinkBase(
         hass,
         user_input[CONF_HOST],
@@ -110,9 +108,8 @@ class ReolinkOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(CONF_STREAM, default=self.base.api.stream): vol.In(
                         ["main", "sub"]
                     ),
-                    vol.Optional(
-                        CONF_PROTOCOL, default=self.base.api.protocol
-                    ): vol.In(["rtmp", "rtsp"]),
+                    vol.Optional(CONF_PROTOCOL, default=self.base.api.protocol): vol.In(
+                        ["rtmp", "rtsp"]),
                     vol.Optional(
                         CONF_CHANNEL, default=self.base.api.channel
                     ): cv.positive_int,
