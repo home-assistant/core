@@ -94,17 +94,6 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_init(self, user_input: Optional[ConfigType] = None):
-        """Manage UltraSync options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
 
 class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle UltraSync client options."""
