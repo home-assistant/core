@@ -69,6 +69,8 @@ async def test_states(hass):
     device = time_date.TimeDateSensor(hass, "beat")
     device._update_internal_state(now)
     assert device.state == "@079"
+    device._update_internal_state(dt_util.utc_from_timestamp(1602952963.2))
+    assert device.state == "@738"
 
     device = time_date.TimeDateSensor(hass, "date_time_iso")
     device._update_internal_state(now)

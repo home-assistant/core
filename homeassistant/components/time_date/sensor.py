@@ -116,16 +116,6 @@ class TimeDateSensor(Entity):
         date = dt_util.as_local(time_date).date().isoformat()
         date_utc = time_date.date().isoformat()
 
-        # Calculate Swatch Internet Time.
-        time_bmt = time_date + timedelta(hours=1)
-        delta = timedelta(
-            hours=time_bmt.hour,
-            minutes=time_bmt.minute,
-            seconds=time_bmt.second,
-            microseconds=time_bmt.microsecond,
-        )
-        beat = int((delta.seconds + delta.microseconds / 1000000.0) / 86.4)
-
         if self.type == "time":
             self._state = time
         elif self.type == "date":
@@ -139,6 +129,19 @@ class TimeDateSensor(Entity):
         elif self.type == "time_utc":
             self._state = time_utc
         elif self.type == "beat":
+            # Calculate Swatch Internet Time.
+            time_bmt = time_date + timedelta(hours=1)
+            delta = timedelta(
+                hours=time_bmt.hour,
+                minutes=time_bmt.minute,
+                seconds=time_bmt.second,
+                microseconds=time_bmt.microsecond,
+            )
+
+            # Use integers to better handle rounding. For example,
+            # int(63763.2/86.4) = 737 but 637632//864 = 738.
+            beat = int(delta.total_seconds() * 10) // 864
+
             self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
             self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()
