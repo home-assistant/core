@@ -169,7 +169,7 @@ class BroadlinkBG1UpdateManager(BroadlinkUpdateManager):
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
 
-      
+
 class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
     """Manages updates for Broadlink SP4 devices."""
 
