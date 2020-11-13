@@ -44,7 +44,7 @@
     "trigger_subtype": {
       "away": "away",
       "schedule": "schedule",
-      "hg": "Frost Guard"
+      "hg": "frost guard"
     },
     "trigger_type": {
       "turned_off": "{entity_name} turned off",
@@ -56,9 +56,9 @@
       "animal": "{entity_name} detected an animal",
       "outdoor": "{entity_name} detected an outdoor event",
       "vehicle": "{entity_name} detected a vehicle",
-      "set_point": "{entity_name} set target temperature manually",
-      "cancel_set_point": "{entity_name} manual temperature was canceled",
-      "therm_mode": "{entity_name} \"{subtype}\" changed"
+      "set_point": "Target temperature {entity_name} set manually",
+      "cancel_set_point": "{entity_name} has resumed its schedule",
+      "therm_mode": "{entity_name} switched to \"{subtype}\""
     }
   }
 }
