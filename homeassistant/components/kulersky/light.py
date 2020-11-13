@@ -1,4 +1,6 @@
 """Kuler Sky light platform."""
+import asyncio
+from datetime import timedelta
 import logging
 from typing import Callable, List
 
@@ -14,8 +16,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -24,6 +27,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_KULERSKY = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
+
+DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 PARALLEL_UPDATES = 0
 
@@ -34,12 +39,54 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Kuler sky light devices."""
-    address = config_entry.data[CONF_ADDRESS]
-    name = config_entry.data[CONF_NAME]
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    if "devices" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["devices"] = set()
+    if "discovery" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["discovery"] = asyncio.Lock()
 
-    entities = [KulerskyLight(pykulersky.Light(address, name))]
+    async def discover(*args):
+        """Attempt to discover new lights."""
+        # Since discovery needs to connect to all discovered bluetooth devices, and
+        # only rules out devices after a timeout, it can potentially take a long
+        # time. If there's already a discovery running, just skip this poll.
+        if hass.data[DOMAIN]["discovery"].locked():
+            return
 
-    async_add_entities(entities, update_before_add=True)
+        async with hass.data[DOMAIN]["discovery"]:
+            bluetooth_devices = await hass.async_add_executor_job(
+                pykulersky.discover_bluetooth_devices
+            )
+
+            # Filter out already connected lights
+            new_devices = [
+                device
+                for device in bluetooth_devices
+                if device["address"] not in hass.data[DOMAIN]["devices"]
+            ]
+
+            for device in new_devices:
+                light = pykulersky.Light(device["address"], device["name"])
+                try:
+                    # Attempt to connect to this light and read the color. If the
+                    # connection fails, either this is not a Kuler Sky light, or
+                    # it's bluetooth connection is currently locked by another
+                    # device. If the vendor's app is connected to the light when
+                    # home assistant tries to connect, this connection will fail.
+                    await hass.async_add_executor_job(light.connect)
+                    await hass.async_add_executor_job(light.get_color)
+                except pykulersky.PykulerskyException:
+                    continue
+                # The light has successfully connected
+                hass.data[DOMAIN]["devices"].add(device["address"])
+                async_add_entities([KulerskyLight(light)], update_before_add=True)
+
+    # Start initial discovery
+    hass.async_add_job(discover)
+
+    # Perform recurring discovery of new devices
+    async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
 
 
 class KulerskyLight(LightEntity):

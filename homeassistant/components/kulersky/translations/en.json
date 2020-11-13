@@ -1,18 +1,12 @@
 {
     "config": {
         "abort": {
-            "scan_error": "Error scanning for bluetooth devices"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect"
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "user": {
-                "data": {
-                    "device": "Device"
-                },
-                "description": "These bluetooth devices have been discovered nearby",
-                "title": "Select your light"
+            "confirm": {
+                "description": "Do you want to start set up?"
             }
         }
     }

@@ -1,4 +1,6 @@
 """Test the Kuler Sky lights."""
+import asyncio
+
 import pykulersky
 import pytest
 
@@ -30,36 +32,43 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_light(hass):
+async def mock_entry(hass):
+    """Create a mock light entity."""
+    return MockConfigEntry(domain=DOMAIN)
+
+
+@pytest.fixture
+async def mock_light(hass, mock_entry):
     """Create a mock light entity."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "address": "AA:BB:CC:11:22:33",
-            "name": "Bedroom",
-        },
-    )
 
     light = MagicMock(spec=pykulersky.Light)
     light.address = "AA:BB:CC:11:22:33"
     light.name = "Bedroom"
     light.connected = False
     with patch(
-        "homeassistant.components.kulersky.light.pykulersky.Light"
-    ) as mockdevice, patch.object(light, "connect") as mock_connect, patch.object(
-        light, "get_color", return_value=(0, 0, 0, 0)
+        "homeassistant.components.kulersky.light.pykulersky.discover_bluetooth_devices",
+        return_value=[
+            {
+                "address": "AA:BB:CC:11:22:33",
+                "name": "Bedroom",
+            }
+        ],
     ):
-        mockdevice.return_value = light
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "homeassistant.components.kulersky.light.pykulersky.Light"
+        ) as mockdevice, patch.object(light, "connect") as mock_connect, patch.object(
+            light, "get_color", return_value=(0, 0, 0, 0)
+        ):
+            mockdevice.return_value = light
+            mock_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(mock_entry.entry_id)
+            await hass.async_block_till_done()
 
-    assert mock_connect.called
-    light.connected = True
+        assert mock_connect.called
+        light.connected = True
 
-    return light
+        yield light
 
 
 async def test_init(hass, mock_light):
@@ -78,6 +87,96 @@ async def test_init(hass, mock_light):
     ) as mock_disconnect:
         await hass.async_stop()
         await hass.async_block_till_done()
+
+    assert mock_disconnect.called
+
+
+async def test_discovery_lock(hass, mock_entry):
+    """Test discovery lock."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    discovery_finished = None
+    first_discovery_started = asyncio.Event()
+
+    async def mock_discovery(*args):
+        """Block to simulate multiple discovery calls while one still running."""
+        nonlocal discovery_finished
+        if discovery_finished:
+            first_discovery_started.set()
+            await discovery_finished.wait()
+        return []
+
+    with patch(
+        "homeassistant.components.kulersky.light.pykulersky.discover_bluetooth_devices",
+        return_value=[],
+    ), patch(
+        "homeassistant.components.kulersky.light.async_track_time_interval",
+    ) as mock_track_time_interval:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with patch.object(
+            hass, "async_add_executor_job", side_effect=mock_discovery
+        ) as mock_run_discovery:
+            discovery_coroutine = mock_track_time_interval.call_args[0][1]
+
+            discovery_finished = asyncio.Event()
+
+            # Schedule multiple discoveries
+            hass.async_create_task(discovery_coroutine())
+            hass.async_create_task(discovery_coroutine())
+            hass.async_create_task(discovery_coroutine())
+
+            # Wait until the first discovery call is blocked
+            await first_discovery_started.wait()
+
+            # Unblock the first discovery
+            discovery_finished.set()
+
+            # Flush the remaining jobs
+            await hass.async_block_till_done()
+
+            # The discovery method should only have been called once
+            mock_run_discovery.assert_called_once()
+
+
+async def test_discovery_connection_error(hass, mock_entry):
+    """Test that invalid devices are skipped."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    light = MagicMock(spec=pykulersky.Light)
+    light.address = "AA:BB:CC:11:22:33"
+    light.name = "Bedroom"
+    light.connected = False
+    with patch(
+        "homeassistant.components.kulersky.light.pykulersky.discover_bluetooth_devices",
+        return_value=[
+            {
+                "address": "AA:BB:CC:11:22:33",
+                "name": "Bedroom",
+            }
+        ],
+    ):
+        with patch(
+            "homeassistant.components.kulersky.light.pykulersky.Light"
+        ) as mockdevice, patch.object(
+            light, "connect", side_effect=pykulersky.PykulerskyException
+        ):
+            mockdevice.return_value = light
+            mock_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(mock_entry.entry_id)
+            await hass.async_block_till_done()
+
+    # Assert entity was not added
+    state = hass.states.get("light.bedroom")
+    assert state is None
+
+
+async def test_remove_entry(hass, mock_light, mock_entry):
+    """Test platform setup."""
+    with patch.object(mock_light, "disconnect") as mock_disconnect:
+        await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_disconnect.called
 
