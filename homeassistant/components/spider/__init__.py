@@ -62,7 +62,7 @@ async def async_setup_entry(hass, entry):
         return False
     except SpiderApiException as err:
         _LOGGER.error("Can't connect to the Spider API: %s", err)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = api
 
