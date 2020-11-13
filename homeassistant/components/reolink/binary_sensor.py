@@ -1,15 +1,9 @@
+"""This component provides support for Reolink motion events."""
 import asyncio
 import logging
-from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from lxml import etree
-
-from .const import DOMAIN  # pylint:disable=unused-import
-from .const import (COORDINATOR, EVENT_DATA_RECEIVED, STATE_IDLE, STATE_MOTION,
-                    STATE_NO_MOTION)
+from .const import EVENT_DATA_RECEIVED, STATE_MOTION, STATE_NO_MOTION
 from .entity import ReolinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +55,6 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-
         await super().async_added_to_hass()
         event_id = (
             f"{EVENT_DATA_RECEIVED}-{self._base._api.mac_address.replace(':', '')}"
@@ -70,6 +63,5 @@ class motionSensor(ReolinkEntity, BinarySensorEntity):
 
     async def handle_event(self, event):
         """Handle incoming webhook from Reolink for inbound messages and calls."""
-
         self._state = event.data["IsMotion"]
         self.async_schedule_update_ha_state()

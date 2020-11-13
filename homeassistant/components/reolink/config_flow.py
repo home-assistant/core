@@ -3,15 +3,12 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PASSWORD,
-                                 CONF_PORT, CONF_USERNAME)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .base import ReolinkBase
-from .const import (BASE, CONF_CHANNEL,  # pylint:disable=unused-import
-                    CONF_PROTOCOL, CONF_STREAM, DEFAULT_NAME, DOMAIN,
-                    MANUFACTURERURL)
+from .const import BASE, CONF_CHANNEL, CONF_PROTOCOL, CONF_STREAM, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +58,8 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 async def validate_input(hass: core.HomeAssistant, user_input: dict):
-    """Validate the user input allows us to connect.
+    """
+    Validate the user input allows us to connect.
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     base = ReolinkBase(

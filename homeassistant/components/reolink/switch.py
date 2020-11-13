@@ -64,10 +64,12 @@ class ftpSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:folder-upload"
         else:
@@ -109,10 +111,12 @@ class emailSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:email"
         else:
@@ -154,10 +158,12 @@ class irLightsSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:flashlight"
         else:
@@ -199,10 +205,12 @@ class recordingSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:filmstrip"
         else:
@@ -244,10 +252,12 @@ class motionDetectionSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:motion-sensor"
         else:
@@ -289,10 +299,12 @@ class audioSwitch(ReolinkEntity, ToggleEntity):
 
     @property
     def device_class(self):
+        """Device class of the switch."""
         return DEVICE_CLASS_SWITCH
 
     @property
     def icon(self):
+        """Icon of the switch."""
         if self.is_on:
             return "mdi:volume-high"
         else:

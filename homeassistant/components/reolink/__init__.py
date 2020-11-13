@@ -6,22 +6,34 @@ from datetime import timedelta
 
 import async_timeout
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_PORT,
-                                 CONF_USERNAME, CONF_WEBHOOK_ID,
-                                 EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_WEBHOOK_ID,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                      UpdateFailed)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import Throttle
 
 from .base import ReolinkBase
-from .const import (BASE, CONF_CHANNEL,  # pylint:disable=unused-import
-                    CONF_PROTOCOL, CONF_STREAM, COORDINATOR, DOMAIN,
-                    EVENT_DATA_RECEIVED, STATE_IDLE, STATE_MOTION,
-                    STATE_NO_MOTION)
+from .const import (
+    BASE,
+    CONF_CHANNEL,  # pylint:disable=unused-import
+    CONF_PROTOCOL,
+    CONF_STREAM,
+    COORDINATOR,
+    DOMAIN,
+    EVENT_DATA_RECEIVED,
+    STATE_IDLE,
+    STATE_MOTION,
+    STATE_NO_MOTION,
+)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
