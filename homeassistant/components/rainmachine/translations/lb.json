@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse RainMachine Kontroller ass scho konfigur\u00e9iert."
+            "already_configured": "Apparat ass scho konfigur\u00e9iert."
         },
         "error": {
-            "identifier_exists": "Konto ass scho registr\u00e9iert",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Login Informatioune"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "user": {
@@ -16,6 +14,13 @@
                     "port": "Port"
                 },
                 "title": "F\u00ebllt \u00e4r Informatiounen aus"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "RainMachine konfigur\u00e9ieren"
             }
         }
     }

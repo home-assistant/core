@@ -1,7 +1,6 @@
 """Tests for Vizio config flow."""
 from contextlib import asynccontextmanager
 from datetime import timedelta
-import logging
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -77,8 +76,6 @@ from .const import (
 
 from tests.async_mock import call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _add_config_entry_to_hass(

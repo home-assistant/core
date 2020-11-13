@@ -1,11 +1,6 @@
 """Entity tests for mobile_app."""
-
-import logging
-
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_sensor(hass, create_registrations, webhook_client):

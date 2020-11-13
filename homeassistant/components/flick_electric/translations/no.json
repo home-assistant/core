@@ -4,7 +4,7 @@
             "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -19,6 +19,5 @@
                 "title": "Flick p\u00e5loggingsinformasjon"
             }
         }
-    },
-    "title": ""
+    }
 }

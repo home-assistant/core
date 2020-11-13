@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}",
-                "title": "Re-authenticate with Sonarr"
+                "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {
@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
                     "verify_ssl": "Verify SSL certificate"
-                },
-                "title": "Connect to Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

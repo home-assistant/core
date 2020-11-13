@@ -52,7 +52,8 @@
                     "poll_interval": "Poll interval (minuten) (optioneel)",
                     "type": "Type sensor"
                 },
-                "description": "{zone} opties"
+                "description": "{zone} opties",
+                "title": "Configureer digitale sensor"
             },
             "options_io": {
                 "data": {
@@ -62,8 +63,10 @@
                     "4": "Zone 4",
                     "5": "Zone 5",
                     "6": "Zone 6",
-                    "7": "Zone 7"
+                    "7": "Zone 7",
+                    "out": "UIT"
                 },
+                "description": "Heeft een {model} bij {host} . Selecteer hieronder de basisconfiguratie van elke I / O - afhankelijk van de I / O kan het binaire sensoren (open / dicht contacten), digitale sensoren (dht en ds18b20) of schakelbare uitgangen mogelijk maken. U kunt in de volgende stappen gedetailleerde opties configureren.",
                 "title": "Configureer I/O"
             },
             "options_io_ext": {
@@ -77,11 +80,13 @@
                     "alarm2_out2": "OUT2 / ALARM2",
                     "out1": "OUT1"
                 },
+                "description": "Selecteer hieronder de configuratie van de resterende I/O. U kunt in de volgende stappen gedetailleerde opties configureren.",
                 "title": "Configureer uitgebreide I/O"
             },
             "options_misc": {
                 "data": {
                     "api_host": "API host-URL overschrijven (optioneel)",
+                    "blink": "Led knipperen bij het verzenden van statuswijziging",
                     "override_api_host": "Overschrijf standaard Home Assistant API hostpaneel-URL"
                 },
                 "description": "Selecteer het gewenste gedrag voor uw paneel",
@@ -89,11 +94,14 @@
             },
             "options_switch": {
                 "data": {
+                    "activation": "Uitvoer wanneer ingeschakeld",
+                    "momentary": "Pulsduur (ms) (optioneel)",
                     "more_states": "Aanvullende statussen voor deze zone configureren",
                     "name": "Naam (optioneel)",
                     "pause": "Pauze tussen de pulsen (ms) (optioneel)",
                     "repeat": "Aantal herhalingen (-1=oneindig) (optioneel)"
                 },
+                "description": "{zone} opties: status {state}",
                 "title": "Schakelbare uitgang configureren"
             }
         }

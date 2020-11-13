@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Klienti s p\u0159\u00edstupem k s\u00edti",
+                    "dpi_restrictions": "Povolit kontrolu nad skupinami omezen\u00ed DPI",
                     "poe_clients": "Povolit u klient\u016f ovl\u00e1d\u00e1n\u00ed POE"
                 },
                 "description": "Nakonfigurujte ovl\u00e1dac\u00ed prvky klienta\n\nVytvo\u0159te vyp\u00edna\u010de pro s\u00e9riov\u00e1 \u010d\u00edsla, pro kter\u00e1 chcete \u0159\u00eddit p\u0159\u00edstup k s\u00edti.",

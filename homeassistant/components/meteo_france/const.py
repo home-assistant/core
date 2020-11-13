@@ -133,6 +133,7 @@ CONDITION_CLASSES = {
         "Brume",
         "Brouillard",
         "Brouillard givrant",
+        "Bancs de Brouillard",
     ],
     "hail": ["Risque de grêle", "Risque de grèle"],
     "lightning": ["Risque d'orages", "Orages"],

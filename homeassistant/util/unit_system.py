@@ -1,6 +1,4 @@
 """Unit system helper class and methods."""
-
-import logging
 from numbers import Number
 from typing import Optional
 
@@ -32,8 +30,6 @@ from homeassistant.util import (
     temperature as temperature_util,
     volume as volume_util,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 LENGTH_UNITS = distance_util.VALID_UNITS
 

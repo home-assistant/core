@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Poort"
+                },
+                "description": "Maak verbinding met de API van uw Advantage Air-tablet voor wandmontage.",
+                "title": "Verbind"
+            }
+        }
+    }
+}

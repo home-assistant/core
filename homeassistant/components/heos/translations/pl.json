@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno po\u0142\u0105czenie Heos, poniewa\u017c b\u0119dzie ono obs\u0142ugiwa\u0107 wszystkie urz\u0105dzenia w sieci.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failure": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z okre\u015blonym hostem."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

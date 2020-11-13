@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi",
             "snmp_error": "Server SNMP spento o stampante non supportata.",
             "wrong_host": "Nome host o indirizzo IP non valido."
         },

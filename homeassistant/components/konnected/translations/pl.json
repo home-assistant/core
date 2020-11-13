@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "not_konn_panel": "Nie rozpoznano urz\u0105dzenia Konnected.io.",
+            "not_konn_panel": "Nie rozpoznano urz\u0105dzenia Konnected.io",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
@@ -90,7 +90,7 @@
                     "api_host": "Zast\u0119powanie adresu URL hosta API (opcjonalnie)",
                     "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
                     "discovery": "Odpowiadaj na \u017c\u0105dania wykrywania w Twojej sieci",
-                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistanta"
+                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistant"
                 },
                 "description": "Wybierz po\u017c\u0105dane zachowanie dla swojego panelu",
                 "title": "R\u00f3\u017cne opcje"

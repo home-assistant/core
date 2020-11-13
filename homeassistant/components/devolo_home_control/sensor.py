@@ -29,35 +29,37 @@ async def async_setup_entry(
     """Get all sensor devices and setup them via config entry."""
     entities = []
 
-    for device in hass.data[DOMAIN]["homecontrol"].multi_level_sensor_devices:
-        for multi_level_sensor in device.multi_level_sensor_property:
-            entities.append(
-                DevoloGenericMultiLevelDeviceEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=multi_level_sensor,
-                )
-            )
-    for device in hass.data[DOMAIN]["homecontrol"].devices.values():
-        if hasattr(device, "consumption_property"):
-            for consumption in device.consumption_property:
-                for consumption_type in ["current", "total"]:
-                    entities.append(
-                        DevoloConsumptionEntity(
-                            homecontrol=hass.data[DOMAIN]["homecontrol"],
-                            device_instance=device,
-                            element_uid=consumption,
-                            consumption=consumption_type,
-                        )
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.multi_level_sensor_devices:
+            for multi_level_sensor in device.multi_level_sensor_property:
+                entities.append(
+                    DevoloGenericMultiLevelDeviceEntity(
+                        homecontrol=gateway,
+                        device_instance=device,
+                        element_uid=multi_level_sensor,
                     )
-        if hasattr(device, "battery_level"):
-            entities.append(
-                DevoloBatteryEntity(
-                    homecontrol=hass.data[DOMAIN]["homecontrol"],
-                    device_instance=device,
-                    element_uid=f"devolo.BatterySensor:{device.uid}",
                 )
-            )
+        for device in gateway.devices.values():
+            if hasattr(device, "consumption_property"):
+                for consumption in device.consumption_property:
+                    for consumption_type in ["current", "total"]:
+                        entities.append(
+                            DevoloConsumptionEntity(
+                                homecontrol=gateway,
+                                device_instance=device,
+                                element_uid=consumption,
+                                consumption=consumption_type,
+                            )
+                        )
+            if hasattr(device, "battery_level"):
+                entities.append(
+                    DevoloBatteryEntity(
+                        homecontrol=gateway,
+                        device_instance=device,
+                        element_uid=f"devolo.BatterySensor:{device.uid}",
+                    )
+                )
+
     async_add_entities(entities, False)
 
 
@@ -109,6 +111,9 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
 
         if self._device_class is None:
             self._name += f" {self._multi_level_sensor_property.sensor_type}"
+
+        if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
+            self._enabled_default = False
 
 
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):

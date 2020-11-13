@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Koordinate \u017ee registrirane",
             "invalid_api_key": "Neveljaven API klju\u010d"
         },
         "step": {

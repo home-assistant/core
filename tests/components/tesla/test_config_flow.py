@@ -42,6 +42,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@email.com"
@@ -49,7 +50,6 @@ async def test_form(hass):
         CONF_TOKEN: "test-refresh-token",
         CONF_ACCESS_TOKEN: "test-access-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

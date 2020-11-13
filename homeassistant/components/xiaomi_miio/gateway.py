@@ -65,7 +65,7 @@ class XiaomiGatewayDevice(Entity):
         self._entry = entry
         self._unique_id = sub_device.sid
         self._name = f"{sub_device.name} ({sub_device.sid})"
-        self._available = None
+        self._available = False
 
     @property
     def unique_id(self):
@@ -100,5 +100,6 @@ class XiaomiGatewayDevice(Entity):
             await self.hass.async_add_executor_job(self._sub_device.update)
             self._available = True
         except gateway.GatewayException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)

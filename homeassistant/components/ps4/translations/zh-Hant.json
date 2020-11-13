@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "credential_error": "\u53d6\u5f97\u6191\u8b49\u932f\u8aa4\u3002",
-            "devices_configured": "\u6240\u6709\u8a2d\u5099\u90fd\u5df2\u8a2d\u5b9a\u5b8c\u6210\u3002",
             "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u8a2d\u5099",
             "port_987_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 987\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002",
             "port_997_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 997\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002"
@@ -12,8 +11,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "credential_timeout": "\u6191\u8b49\u670d\u52d9\u903e\u6642\uff0c\u9ede\u9078\u300c\u50b3\u9001\u300d\u4ee5\u91cd\u555f\u3002",
             "login_failed": "PlayStation 4 \u914d\u5c0d\u5931\u6557\uff0c\u8acb\u78ba\u8a8d PIN \u78bc\u3002",
-            "no_ipaddress": "\u8f38\u5165\u6240\u8981\u8a2d\u5b9a\u7684 PlayStation 4 \u4e4b IP \u4f4d\u5740\u3002",
-            "not_ready": "PlayStation 4 \u4e26\u672a\u958b\u555f\u6216\u672a\u9023\u7dda\u81f3\u7db2\u8def\u3002"
+            "no_ipaddress": "\u8f38\u5165\u6240\u8981\u8a2d\u5b9a\u7684 PlayStation 4 \u4e4b IP \u4f4d\u5740\u3002"
         },
         "step": {
             "creds": {

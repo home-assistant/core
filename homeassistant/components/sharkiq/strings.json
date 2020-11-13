@@ -20,7 +20,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

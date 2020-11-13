@@ -30,7 +30,7 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
     )
 
     assert result
-    assert result["errors"]["base"] == "already_configured_account"
+    assert result["errors"]["base"] == "already_configured"
 
 
 async def test_config_reauth_profile(

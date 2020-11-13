@@ -1,5 +1,4 @@
 """Helper and wrapper classes for Gree module."""
-import logging
 from typing import List
 
 from greeclimate.device import Device, DeviceInfo
@@ -7,8 +6,6 @@ from greeclimate.discovery import Discovery
 from greeclimate.exceptions import DeviceNotBoundError
 
 from homeassistant import exceptions
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DeviceHelper:

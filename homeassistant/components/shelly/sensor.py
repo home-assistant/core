@@ -8,15 +8,20 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
 
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
+    RestAttributeDescription,
     ShellyBlockAttributeEntity,
+    ShellyRestAttributeEntity,
     async_setup_entry_attribute_entities,
-    temperature_unit,
+    async_setup_entry_rest,
 )
+from .utils import temperature_unit
 
 SENSORS = {
     ("device", "battery"): BlockAttributeDescription(
@@ -119,6 +124,7 @@ SENSORS = {
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
         value=lambda value: value,
+        icon="mdi:gauge",
         # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
         available=lambda block: block.sensorOp == "normal",
     ),
@@ -139,7 +145,31 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("relay", "totalWorkTime"): BlockAttributeDescription(
+        name="Lamp life",
+        unit=PERCENTAGE,
+        icon="mdi:progress-wrench",
+        value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
+        device_state_attributes=lambda block: {
+            "Operational hours": round(block.totalWorkTime / 3600, 1)
+        },
+    ),
+}
+
+REST_SENSORS = {
+    "rssi": RestAttributeDescription(
+        name="RSSI",
+        unit=SIGNAL_STRENGTH_DECIBELS,
+        device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        default_enabled=False,
+        path="wifi_sta/rssi",
+    ),
+    "uptime": RestAttributeDescription(
+        name="Uptime",
+        device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        path="uptime",
+    ),
 }
 
 
@@ -148,10 +178,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_entry_attribute_entities(
         hass, config_entry, async_add_entities, SENSORS, ShellySensor
     )
+    await async_setup_entry_rest(
+        hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
+    )
 
 
 class ShellySensor(ShellyBlockAttributeEntity):
     """Represent a shelly sensor."""
+
+    @property
+    def state(self):
+        """Return value of sensor."""
+        return self.attribute_value
+
+
+class ShellyRestSensor(ShellyRestAttributeEntity):
+    """Represent a shelly REST sensor."""
 
     @property
     def state(self):

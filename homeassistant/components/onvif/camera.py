@@ -3,8 +3,7 @@ import asyncio
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -86,7 +85,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             == HTTP_BASIC_AUTHENTICATION
         )
         self._stream_uri = None
-        self._snapshot_uri = None
 
     @property
     def supported_features(self) -> int:
@@ -119,29 +117,16 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         image = None
 
         if self.device.capabilities.snapshot:
-            auth = None
-            if self.device.username and self.device.password:
-                if self._basic_auth:
-                    auth = HTTPBasicAuth(self.device.username, self.device.password)
-                else:
-                    auth = HTTPDigestAuth(self.device.username, self.device.password)
-
-            def fetch():
-                """Read image from a URL."""
-                try:
-                    response = requests.get(self._snapshot_uri, timeout=5, auth=auth)
-                    if response.status_code < 300:
-                        return response.content
-                except requests.exceptions.RequestException as error:
-                    LOGGER.error(
-                        "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
-                        self.device.name,
-                        error,
-                    )
-
-                return None
-
-            image = await self.hass.async_add_executor_job(fetch)
+            try:
+                image = await self.device.device.get_snapshot(
+                    self.profile.token, self._basic_auth
+                )
+            except ONVIFError as err:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
+                    self.device.name,
+                    err,
+                )
 
         if image is None:
             ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
@@ -186,9 +171,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._stream_uri = uri_no_auth.replace(
             "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
         )
-
-        if self.device.capabilities.snapshot:
-            self._snapshot_uri = await self.device.async_get_snapshot_uri(self.profile)
 
     async def async_perform_ptz(
         self,

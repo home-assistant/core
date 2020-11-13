@@ -1,12 +1,8 @@
 """Support for N26 bank account sensors."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN, timestamp_ms_to_date
 from .const import DATA
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 

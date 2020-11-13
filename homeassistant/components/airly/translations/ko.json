@@ -4,7 +4,6 @@
             "already_configured": "\uc774 \uc88c\ud45c\uc5d0 \ub300\ud55c Airly \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
         "error": {
-            "auth": "API \ud0a4\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
             "wrong_location": "\uc774 \uc9c0\uc5ed\uc5d0\ub294 Airly \uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
         "step": {

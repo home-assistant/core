@@ -5,6 +5,7 @@
         },
         "step": {
             "config": {
+                "description": "Pros\u00edm zajdete nastaven\u00ed pro Tasmota.",
                 "title": "Tasmota"
             },
             "confirm": {

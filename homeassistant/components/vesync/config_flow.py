@@ -1,6 +1,5 @@
 """Config flow utilities."""
 from collections import OrderedDict
-import logging
 
 from pyvesync import VeSync
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

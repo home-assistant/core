@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     bus = smbus.SMBus(bus_number)
 
-    sensor = await hass.async_add_job(
+    sensor = await hass.async_add_executor_job(
         partial(
             BH1750,
             bus,
@@ -130,7 +130,7 @@ class BH1750Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BH1750 and update the states."""
-        await self.hass.async_add_job(self.bh1750_sensor.update)
+        await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
             self._state = int(round(self.bh1750_sensor.light_level * self._multiplier))
         else:

@@ -82,7 +82,7 @@ class DoorBirdSwitch(DoorBirdEntity, SwitchEntity):
         """Turn off the relays is not needed. They are time-based."""
         raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
-    def update(self):
+    async def async_update(self):
         """Wait for the correct amount of assumed time to pass."""
         if self._state and self._assume_off <= dt_util.utcnow():
             self._state = False

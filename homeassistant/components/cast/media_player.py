@@ -9,6 +9,7 @@ from typing import Optional
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.controllers.plex import PlexController
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
@@ -38,6 +39,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
@@ -536,6 +539,15 @@ class CastDevice(MediaPlayerEntity):
                 quick_play(self._chromecast, app_name, app_data)
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
+        # Handle plex
+        elif media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            media, _ = lookup_plex_media(self.hass, media_type, media_id)
+            if media is None:
+                return
+            controller = PlexController()
+            self._chromecast.register_handler(controller)
+            controller.play_media(media)
         else:
             self._chromecast.media_controller.play_media(
                 media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})

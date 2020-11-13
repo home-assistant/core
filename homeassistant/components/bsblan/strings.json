@@ -1,5 +1,4 @@
 {
-  "title": "BSB-Lan",
   "config": {
     "flow_title": "BSB-Lan: {name}",
     "step": {

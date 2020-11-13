@@ -5,7 +5,7 @@
             "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen."
         },
         "error": {
-            "connect_error": "Feeler beim verbannen",
+            "cannot_connect": "Feeler beim verbannen",
             "no_device_selected": "Keen Apparat ausgewielt, wiel een Apparat aus w.e.g."
         },
         "flow_title": "Xiaomi Miio: {name}",
@@ -16,7 +16,7 @@
                     "name": "Numm vum Gateway",
                     "token": "API Jeton"
                 },
-                "description": "Du brauchs den 32 stellegen API Jeton, kuck https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token fir Instruktiounen. Remarque, d\u00ebst ass een aaneren jeton w\u00e9i en vun der Xiaomi Aqara Integratioun benotzt g\u00ebtt.",
+                "description": "Du brauchs den 32 stellegen API Jeton, kuck https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token fir Instruktiounen. Remarque, d\u00ebst ass een aaneren API Jeton w\u00e9i en vun der Xiaomi Aqara Integratioun benotzt g\u00ebtt.",
                 "title": "Mat enger Xiaomi Gateway verbannen"
             },
             "user": {

@@ -1,7 +1,16 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "Time-out genereren autorisatie-URL.",
+            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie."
+        },
         "create_entry": {
             "default": "Succesvol geauthenticeerd met Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies de verificatiemethode"
+            }
         }
     },
     "options": {
