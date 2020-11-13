@@ -55,14 +55,14 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
             }
 
             # Update our details
-            details = self.hub.details()
+            details = self.hub.details(max_age_sec=0)
             if details:
-                for bank, zone in self.hub.zones.items():
+                for zone in details["zones"]:
                     if self._zone_delta.get(zone["bank"]) != zone["sequence"]:
                         self.hass.bus.fire(
                             "ultrasync_sensor_update",
                             {
-                                "sensor": bank + 1,
+                                "sensor": zone["bank"] + 1,
                                 "name": zone["name"],
                                 "status": zone["status"],
                             },
@@ -71,7 +71,7 @@ class UltraSyncDataUpdateCoordinator(DataUpdateCoordinator):
                         # Update our sequence
                         self._zone_delta[zone["bank"]] = zone["sequence"]
 
-                for area in details.get("areas", []):
+                for area in details["areas"]:
                     if self._area_delta.get(area["bank"]) != area["sequence"]:
                         self.hass.bus.fire(
                             "ultrasync_area_update",
