@@ -18,18 +18,17 @@ async def async_setup_entry(
     """Set up FireServiceRota sensor based on a config entry."""
     coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id]
 
-    async_add_entities([IncidentsSensor(coordinator, entry)])
+    async_add_entities([IncidentsSensor(coordinator)])
 
 
 class IncidentsSensor(RestoreEntity, Entity):
     """Representation of FireServiceRota incidents sensor."""
 
-    def __init__(self, coordinator, entry):
+    def __init__(self, coordinator):
         """Initialize."""
         self._coordinator = coordinator
-        self._entry_id = entry.entry_id
-        self._unique_id = f"{entry.unique_id}_Incidents"
-
+        self._entry_id = self._coordinator._entry.entry_id
+        self._unique_id = f"{self._coordinator._entry.unique_id}_Incidents"
         self._state = None
         self._state_attributes = {}
 
