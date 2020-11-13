@@ -50,7 +50,6 @@ async def test_async_setup_entry_bad_cert(hass):
         unique_id=f"{HOST}:{PORT}",
     )
 
-
     with patch(
         "homeassistant.components.cert_expiry.helper.get_cert",
         side_effect=ssl.SSLError("some error"),
