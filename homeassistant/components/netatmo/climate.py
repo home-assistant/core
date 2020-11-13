@@ -32,6 +32,7 @@ from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -236,6 +237,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     self.handle_event,
                 )
             )
+
+        registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = registry.async_get_device({(DOMAIN, self._id)}, set())
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._home_id] = device.id
 
     async def handle_event(self, event):
         """Handle webhook events."""
