@@ -32,6 +32,13 @@ def get_service(hass, config, discovery_info=None):
     except YesssSMS.UnsupportedProviderError as ex:
         _LOGGER.error("Unknown provider: %s", ex)
         return None
+
+    _LOGGER.debug(
+        "initialized; library version: %s, with %s",
+        yesss.version(),
+        yesss.get_provider(),
+    )
+
     try:
         if not yesss.login_data_valid():
             _LOGGER.error(
@@ -47,11 +54,6 @@ def get_service(hass, config, discovery_info=None):
             yesss.get_provider(),
         )
 
-    _LOGGER.debug(
-        "initialized; library version: %s, with %s",
-        yesss.version(),
-        yesss.get_provider(),
-    )
     return YesssSMSNotificationService(yesss, config[CONF_RECIPIENT])
 
 

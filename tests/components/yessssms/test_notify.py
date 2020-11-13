@@ -115,10 +115,10 @@ async def test_init_success(hass, caplog, valid_settings, valid_login_data):
             and record.name == "homeassistant.components.yessssms.notify"
         ):
             messages.append(record.message)
-    assert "Login data for 'educom' valid" in messages[0]
+    assert "Login data for 'educom' valid" in messages[1]
     assert (
         "initialized; library version: {}".format(yessssms.YesssSMS("", "").version())
-        in messages[1]
+        in messages[0]
     )
 
 
@@ -255,9 +255,15 @@ async def test_send_message(yessssms, requests_mock, caplog):
         status_code=200,
         text=f"test...{login}</a>",
     )
+    requests_mock.get(
+        # pylint: disable=protected-access
+        yessssms.yesss._sms_form_url,
+        status_code=200,
+        text='<form id=\'smsform\'><input name="token" value="testtoken">',
+    )
     requests_mock.post(
         # pylint: disable=protected-access
-        yessssms.yesss._websms_url,
+        yessssms.yesss._send_sms_url,
         status_code=200,
         text="<h1>Ihre SMS wurde erfolgreich verschickt!</h1>",
     )
@@ -277,7 +283,7 @@ async def test_send_message(yessssms, requests_mock, caplog):
             assert "SMS sent" in record.message
 
     assert requests_mock.called is True
-    assert requests_mock.call_count == 4
+    assert requests_mock.call_count == 5
     assert (
         requests_mock.last_request.scheme
         + "://"
@@ -323,9 +329,15 @@ async def test_sms_sending_error(yessssms, requests_mock, caplog):
         status_code=200,
         text=f"test...{login}</a>",
     )
+    requests_mock.get(
+        # pylint: disable=protected-access
+        yessssms.yesss._sms_form_url,
+        status_code=200,
+        text='<form id=\'smsform\'><input name="token" value="testtoken">',
+    )
     requests_mock.post(
         # pylint: disable=protected-access
-        yessssms.yesss._websms_url,
+        yessssms.yesss._send_sms_url,
         status_code=HTTP_INTERNAL_SERVER_ERROR,
     )
 
@@ -335,7 +347,7 @@ async def test_sms_sending_error(yessssms, requests_mock, caplog):
         yessssms.send_message(message)
 
     assert requests_mock.called is True
-    assert requests_mock.call_count == 3
+    assert requests_mock.call_count == 4
     for record in caplog.records:
         if (
             record.levelname == "ERROR"
